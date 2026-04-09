@@ -492,10 +492,22 @@ namespace ToolCalender
                 else if (days <= 7) { bg = CRowWarn;   fg = CRowWarnTxt; }
                 else                { bg = CRowOk;     fg = CRowOkTxt; }
 
-                row.DefaultCellStyle.BackColor          = bg;
-                row.DefaultCellStyle.ForeColor          = fg;
-                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(219, 234, 254);
-                row.DefaultCellStyle.SelectionForeColor = CText;
+                row.DefaultCellStyle.BackColor      = bg;
+                row.DefaultCellStyle.ForeColor      = fg;
+                
+                // Giữ nguyên màu gốc khi được chọn, chỉ làm đậm chữ
+                row.DefaultCellStyle.SelectionBackColor = ControlPaint.Dark(bg, 0.05f); // Chỉ hơi sậm lại 5% để phân biệt
+                row.DefaultCellStyle.SelectionForeColor = fg;
+
+                // Tạo hiệu ứng đậm chữ khi dòng được chọn (Focus)
+                if (row.Selected)
+                {
+                    row.DefaultCellStyle.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+                }
+                else
+                {
+                    row.DefaultCellStyle.Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+                }
             }
         }
 
