@@ -457,12 +457,14 @@ namespace ToolCalender
         private void UpdateStats()
         {
             int tong   = _allDocs.Count;
-            int sap    = _allDocs.Count(d => d.SoNgayConLai is >= 0 and <= 7);
+            int sap    = _allDocs.Count(d => d.SoNgayConLai is >= 1 and <= 7);
             int qua    = _allDocs.Count(d => d.SoNgayConLai < 0);
+            int homNay = _allDocs.Count(d => d.SoNgayConLai == 0);
 
             lblTong.Text   = tong.ToString();
             lblSapHan.Text = sap.ToString();
             lblQuaHan.Text = qua.ToString();
+            lblHomNay.Text = homNay.ToString();
 
             // Highlight if urgent
             pnlStatQua.BackColor  = qua > 0
@@ -470,6 +472,9 @@ namespace ToolCalender
                 : Color.FromArgb(50, 70, 100);
             pnlStatSap.BackColor  = sap > 0
                 ? Color.FromArgb(217, 119, 6)
+                : Color.FromArgb(50, 70, 100);
+            pnlStatHomNay.BackColor = homNay > 0
+                ? Color.FromArgb(239, 68, 68)
                 : Color.FromArgb(50, 70, 100);
         }
 

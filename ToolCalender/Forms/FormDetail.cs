@@ -236,21 +236,43 @@ namespace ToolCalender.Forms
             tbl.Controls.Add(chkDaTaoLich, 3, r);
             r++;
 
-            // Row 4: Trích yếu
-            AddLabel(tbl, r, 0, "Trích yếu / Nội dung");
+            // Row 4: Spacer
+            r++;
+
+            grpInfo.Controls.Add(tbl);
+
+            // ── Trích yếu (Full Width outside table) ────────────
+            var pnlTrichYeu = new Panel
+            {
+                Dock    = DockStyle.Top,
+                Height  = 160,
+                Padding = new Padding(10, 5, 5, 0)
+            };
+            var lblTrichYeuTitle = new Label
+            {
+                Text      = "Trích yếu / Nội dung chính của văn bản:",
+                ForeColor = CLabel,
+                Font      = new Font("Segoe UI", 9f, FontStyle.Bold),
+                Dock      = DockStyle.Top,
+                Height    = 22
+            };
             txtTrichYeu = new TextBox
             {
-                Multiline   = true,
-                Height      = 72,
-                BorderStyle = BorderStyle.FixedSingle,
-                BackColor   = CCard,
-                ForeColor   = CLabel,
-                Font        = new Font("Segoe UI", 9.5f),
-                ScrollBars  = ScrollBars.Vertical,
-                Margin      = new Padding(0, 4, 0, 4)
+                Multiline     = true,
+                AcceptsReturn = true,
+                Dock          = DockStyle.Fill,
+                BorderStyle   = BorderStyle.FixedSingle,
+                BackColor     = CCard,
+                ForeColor     = CLabel,
+                Font          = new Font("Segoe UI", 10f),
+                ScrollBars    = ScrollBars.Vertical
             };
-            tbl.Controls.Add(txtTrichYeu, 1, r);
-            tbl.SetColumnSpan(txtTrichYeu, 3);
+            pnlTrichYeu.Controls.Add(txtTrichYeu);
+            pnlTrichYeu.Controls.Add(lblTrichYeuTitle);
+
+            grpInfo.Controls.Add(pnlTrichYeu);
+            pnlTrichYeu.BringToFront();
+            tbl.BringToFront(); // Table stays at top
             r++;
 
             // Row 5: File path

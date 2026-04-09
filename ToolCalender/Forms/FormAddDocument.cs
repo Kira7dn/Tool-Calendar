@@ -28,6 +28,8 @@ namespace ToolCalender.Forms
         private Label      lblDropHint   = new();
         private Label      lblFileName   = new();
         private Label      lblStatus     = new();
+        private Panel      grpInfo       = new();
+        private Panel      grpDeadline   = new();
         private Panel      pnlDeadline   = new();
         private Label      lblDeadlineTxt = new();
 
@@ -231,14 +233,15 @@ namespace ToolCalender.Forms
             uploadFlow.BringToFront();
 
             // ── 2. Thông tin văn bản ─────────────────────────────
-            var grpInfo = MakeSectionPanel("📋  BƯỚC 2: THÔNG TIN VĂN BẢN");
+            grpInfo = MakeSectionPanel("📋  BƯỚC 2: THÔNG TIN VĂN BẢN");
+            grpInfo.Visible = false;
 
             var tbl = new TableLayoutPanel
             {
                 ColumnCount = 4,
                 AutoSize    = true,
                 Dock        = DockStyle.Top,
-                Padding     = new Padding(0, 6, 0, 0)
+                Padding     = new Padding(0, 6, 0, 10)
             };
             tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 240f));
             tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
@@ -282,28 +285,47 @@ namespace ToolCalender.Forms
             tbl.SetColumnSpan(chkKhongThoiHan, 3);
             r++;
 
-            // Row 4: Trích yếu / nội dung (full width)
-            AddLabel(tbl, r, 0, "Trích yếu / Nội dung");
-            txtTrichYeu = new TextBox
-            {
-                Multiline   = true,
-                Height      = 65,
-                BorderStyle = BorderStyle.FixedSingle,
-                BackColor   = CCard,
-                ForeColor   = CLabel,
-                Font        = new Font("Segoe UI", 9.5f),
-                ScrollBars  = ScrollBars.Vertical,
-                Margin      = new Padding(0, 4, 0, 4)
-            };
-            tbl.Controls.Add(txtTrichYeu, 1, r);
-            tbl.SetColumnSpan(txtTrichYeu, 3);
+            // Row 4: Empty row for spacing
             r++;
 
             grpInfo.Controls.Add(tbl);
             tbl.BringToFront();
 
+            // ── Trích yếu (Full Width outside table) ────────────
+            var pnlTrichYeu = new Panel
+            {
+                Dock    = DockStyle.Top,
+                Height  = 160,
+                Padding = new Padding(10, 5, 5, 0)
+            };
+            var lblTrichYeuTitle = new Label
+            {
+                Text      = "Trích yếu / Nội dung chính của văn bản:",
+                ForeColor = CLabel,
+                Font      = new Font("Segoe UI", 9f, FontStyle.Bold),
+                Dock      = DockStyle.Top,
+                Height    = 22
+            };
+            txtTrichYeu = new TextBox
+            {
+                Multiline     = true,
+                AcceptsReturn = true,
+                Dock          = DockStyle.Fill,
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor   = CCard,
+                ForeColor   = CLabel,
+                Font        = new Font("Segoe UI", 10f),
+                ScrollBars  = ScrollBars.Vertical
+            };
+            pnlTrichYeu.Controls.Add(txtTrichYeu);
+            pnlTrichYeu.Controls.Add(lblTrichYeuTitle);
+            
+            grpInfo.Controls.Add(pnlTrichYeu);
+            pnlTrichYeu.BringToFront();
+
             // ── 3. Preview thông báo deadline ────────────────────
-            var grpDeadline = MakeSectionPanel("🔔  BƯỚC 3: THÔNG BÁO ĐẾN HẠN");
+            grpDeadline = MakeSectionPanel("🔔  BƯỚC 3: THÔNG BÁO ĐẾN HẠN");
+            grpDeadline.Visible = false;
 
             pnlDeadline = new Panel
             {
@@ -602,7 +624,7 @@ namespace ToolCalender.Forms
                 LoadFile(dlg.FileName);
         }
 
-        private void LoadFile(string filePath)
+        private async void LoadFile(string filePath)
         {
             _filePath = filePath;
             string name = Path.GetFileName(filePath);
@@ -614,13 +636,16 @@ namespace ToolCalender.Forms
             lblDropHint.Font      = new Font("Segoe UI", 9.5f, FontStyle.Bold);
             lblFileName.Text      = $"{icon}  {filePath}";
 
-            lblStatus.Text      = "⏳  Đang phân tích văn bản, vui lòng chờ...";
+            lblStatus.Text      = "⏳  Đang phân tích văn bản (OCR), vui lòng chờ...";
             lblStatus.ForeColor = CAccent;
-            Application.DoEvents();
+
+            // Reveal sections
+            grpInfo.Visible     = true;
+            grpDeadline.Visible = true;
 
             try
             {
-                var record = DocumentExtractorService.ExtractFromFile(filePath);
+                var record = await DocumentExtractorService.ExtractFromFileAsync(filePath);
                 PopulateFields(record);
                 lblStatus.Text      = "✅  Trích xuất thành công! Kiểm tra thông tin bên dưới và điều chỉnh nếu cần.";
                 lblStatus.ForeColor = Color.FromArgb(21, 128, 61);
