@@ -303,6 +303,12 @@ namespace ToolCalender
             dgv.DataBindingComplete += DgvColorRows;
             dgv.SelectionChanged   += DgvColorRows;
 
+            // Xử lý tự động dãn rộng cột Trích Yếu khi Form/Grid thay đổi kích thước
+            dgv.Resize += (s, e) => AutoSizeTrichYeuColumn();
+            dgv.ColumnWidthChanged += (s, e) => {
+                if (e.Column.Name != "colTrichYeu") AutoSizeTrichYeuColumn();
+            };
+
             pnlGrid.Controls.Add(dgv);
 
             // ── Assembly ─────────────────────────────────────────
@@ -332,23 +338,17 @@ namespace ToolCalender
             });
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name       = "colSoVb",
-                HeaderText = "Số Văn Bản",
-                Width      = 150,
-                DefaultCellStyle = new DataGridViewCellStyle
-                {
-                    Font = new Font("Segoe UI", 9.5f, FontStyle.Bold)
-                }
+                Name         = "colSoVb",
+                HeaderText   = "Số Văn Bản",
+                Width        = 180, // Có thể kéo dãn bằng tay
+                DefaultCellStyle = new DataGridViewCellStyle { Font = new Font("Segoe UI", 9.5f, FontStyle.Bold) }
             });
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name         = "colTrichYeu",
                 HeaderText   = "Trích Yếu / Nội Dung",
-                Width        = 250,
-                DefaultCellStyle = new DataGridViewCellStyle
-                {
-                    WrapMode = DataGridViewTriState.True
-                }
+                Width        = 350, // Khởi tạo, sẽ được tự động tính lại ở dưới
+                DefaultCellStyle = new DataGridViewCellStyle { WrapMode = DataGridViewTriState.True }
             });
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -778,6 +778,31 @@ namespace ToolCalender
                         ToolTipIcon.Info);
                 }
             };
+        }
+
+        private void AutoSizeTrichYeuColumn()
+        {
+            if (dgv.Columns.Count == 0 || !dgv.Columns.Contains("colTrichYeu")) return;
+
+            // Tính tổng độ rộng của tất cả các cột NGOẠI TRỪ cột Trích yếu
+            int otherColumnsWidth = 0;
+            foreach (DataGridViewColumn col in dgv.Columns)
+            {
+                if (col.Name != "colTrichYeu" && col.Visible)
+                {
+                    otherColumnsWidth += col.Width;
+                }
+            }
+
+            // Độ rộng khả dụng của Grid (trừ đi khoảng cho scrollbar nếu có)
+            int availableWidth = dgv.ClientSize.Width - 2; 
+            
+            // Cập nhật độ rộng cho cột Trích yếu
+            int newWidth = availableWidth - otherColumnsWidth;
+            if (newWidth > 200) // Đảm bảo không quá nhỏ
+            {
+                dgv.Columns["colTrichYeu"].Width = newWidth;
+            }
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
