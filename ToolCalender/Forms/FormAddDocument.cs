@@ -59,20 +59,20 @@ namespace ToolCalender.Forms
         private void BuildUI()
         {
             this.Text              = "Thêm Văn Bản Mới";
-            this.Size              = new Size(820, 750);
-            this.MinimumSize       = new Size(740, 680);
+            this.Size              = new Size(1000, 850);
+            this.MinimumSize       = new Size(950, 750);
             this.StartPosition     = FormStartPosition.CenterParent;
             this.BackColor         = CBg;
             this.Font              = new Font("Segoe UI", 9.5f);
-            this.FormBorderStyle   = FormBorderStyle.FixedDialog;
-            this.MaximizeBox       = false;
+            this.FormBorderStyle   = FormBorderStyle.Sizable;
+            this.MaximizeBox       = true;
             this.AutoScroll        = false;
 
             // ── Header ──────────────────────────────────────────
             var pnlHeader = new Panel
             {
                 Dock      = DockStyle.Top,
-                Height    = 64,
+                Height    = 75,
                 BackColor = CHeader
             };
             pnlHeader.Paint += (s, e) =>
@@ -87,16 +87,22 @@ namespace ToolCalender.Forms
                 Text      = "📄  THÊM VĂN BẢN MỚI",
                 ForeColor = Color.White,
                 Font      = new Font("Segoe UI", 15f, FontStyle.Bold),
-                AutoSize  = true,
-                Location  = new Point(20, 12)
+                AutoSize  = false,
+                UseCompatibleTextRendering = true,
+                Width     = 400,
+                Height    = 35,
+                Location  = new Point(20, 10)
             };
             var lblSubTitle = new Label
             {
                 Text      = "Tải lên và nhập thông tin hành chính - Hệ thống sẽ tự động nhắc nhở khi đến hạn",
                 ForeColor = Color.FromArgb(147, 197, 253),
                 Font      = new Font("Segoe UI", 8.5f, FontStyle.Italic),
-                AutoSize  = true,
-                Location  = new Point(22, 37)
+                AutoSize  = false,
+                UseCompatibleTextRendering = true,
+                Width     = 800,
+                Height    = 25,
+                Location  = new Point(22, 45)
             };
             pnlHeader.Controls.AddRange(new Control[] { lblTitle, lblSubTitle });
 
@@ -104,7 +110,7 @@ namespace ToolCalender.Forms
             var pnlButtons = new Panel
             {
                 Dock      = DockStyle.Bottom,
-                Height    = 60,
+                Height    = 80,
                 BackColor = Color.FromArgb(248, 250, 252),
                 Padding   = new Padding(20, 12, 20, 0)
             };
@@ -112,21 +118,21 @@ namespace ToolCalender.Forms
                 e.Graphics.DrawLine(new Pen(CBorder), 0, 0, pnlButtons.Width, 0);
 
             btnSaveCalendar = MakeButton("💾  Lưu & Tạo Lịch Nhắc", Color.FromArgb(21, 128, 61), Color.White);
-            btnSaveCalendar.Size   = new Size(185, 36);
+            btnSaveCalendar.Size   = new Size(240, 42);
             btnSaveCalendar.Left   = 20;
-            btnSaveCalendar.Top    = 12;
+            btnSaveCalendar.Top    = 15;
             btnSaveCalendar.Click += BtnSaveCalendar_Click;
 
             btnSaveOnly = MakeButton("📋  Chỉ Lưu", CAccent, Color.White);
-            btnSaveOnly.Size   = new Size(110, 36);
-            btnSaveOnly.Left   = 213;
-            btnSaveOnly.Top    = 12;
+            btnSaveOnly.Size   = new Size(140, 42);
+            btnSaveOnly.Left   = 275;
+            btnSaveOnly.Top    = 15;
             btnSaveOnly.Click += BtnSaveOnly_Click;
 
             btnCancel = MakeButton("✖  Hủy", Color.FromArgb(100, 116, 139), Color.White);
-            btnCancel.Size   = new Size(90, 36);
-            btnCancel.Left   = 331;
-            btnCancel.Top    = 12;
+            btnCancel.Size   = new Size(120, 42);
+            btnCancel.Left   = 430;
+            btnCancel.Top    = 15;
             btnCancel.Click += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
 
             // Tooltip hint
@@ -136,7 +142,7 @@ namespace ToolCalender.Forms
                 ForeColor = Color.FromArgb(100, 116, 139),
                 Font      = new Font("Segoe UI", 8f, FontStyle.Italic),
                 AutoSize  = true,
-                Location  = new Point(20, 52)
+                Location  = new Point(20, 60)
             };
 
             pnlButtons.Controls.AddRange(new Control[] { btnSaveCalendar, btnSaveOnly, btnCancel, lblBtnHint });
@@ -155,7 +161,7 @@ namespace ToolCalender.Forms
             pnlDropZone = new Panel
             {
                 Height      = 90,
-                Width       = 740,
+                Dock        = DockStyle.Top,
                 BackColor   = Color.FromArgb(239, 246, 255),
                 Cursor      = Cursors.Hand,
                 Margin      = new Padding(0, 6, 0, 4)
@@ -192,8 +198,10 @@ namespace ToolCalender.Forms
                 TextAlign = ContentAlignment.MiddleCenter,
                 Dock      = DockStyle.Fill,
                 ForeColor = Color.FromArgb(71, 116, 185),
-                Font      = new Font("Segoe UI", 10f)
+                Font      = new Font("Segoe UI", 10f),
+                Cursor    = Cursors.Hand
             };
+            lblDropHint.Click += (s, e) => BrowseFile();
             pnlDropZone.Controls.Add(lblDropHint);
 
             lblFileName = new Label
@@ -202,22 +210,25 @@ namespace ToolCalender.Forms
                 ForeColor = Color.FromArgb(21, 128, 61),
                 Font      = new Font("Segoe UI", 9f, FontStyle.Bold | FontStyle.Italic),
                 Height    = 22,
-                Width     = 740,
+                Dock      = DockStyle.Top,
                 Margin    = new Padding(0, 2, 0, 0)
             };
 
-            var uploadFlow = new FlowLayoutPanel
+            var uploadFlow = new Panel
             {
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents  = false,
-                Width         = 740,
                 AutoSize      = true,
+                Dock          = DockStyle.Top,
                 Padding       = new Padding(0)
             };
-            pnlDropZone.Width = 740;
-            uploadFlow.Controls.Add(pnlDropZone);
             uploadFlow.Controls.Add(lblFileName);
+            uploadFlow.Controls.Add(pnlDropZone);
+            
+            // Re-order Z-index to dock correctly top-down: pnlDropZone THEN lblFileName
+            pnlDropZone.BringToFront();
+            lblFileName.BringToFront();
+
             grpUpload.Controls.Add(uploadFlow);
+            uploadFlow.BringToFront();
 
             // ── 2. Thông tin văn bản ─────────────────────────────
             var grpInfo = MakeSectionPanel("📋  BƯỚC 2: THÔNG TIN VĂN BẢN");
@@ -226,12 +237,12 @@ namespace ToolCalender.Forms
             {
                 ColumnCount = 4,
                 AutoSize    = true,
-                Width       = 740,
+                Dock        = DockStyle.Top,
                 Padding     = new Padding(0, 6, 0, 0)
             };
-            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 185f));
+            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 240f));
             tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 185f));
+            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 300f));
             tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
 
             int r = 0;
@@ -289,13 +300,14 @@ namespace ToolCalender.Forms
             r++;
 
             grpInfo.Controls.Add(tbl);
+            tbl.BringToFront();
 
             // ── 3. Preview thông báo deadline ────────────────────
             var grpDeadline = MakeSectionPanel("🔔  BƯỚC 3: THÔNG BÁO ĐẾN HẠN");
 
             pnlDeadline = new Panel
             {
-                Width     = 740,
+                Dock      = DockStyle.Top,
                 Height    = 95,
                 BackColor = COk,
                 Margin    = new Padding(0, 6, 0, 4),
@@ -319,7 +331,7 @@ namespace ToolCalender.Forms
 
             var pnlNotifyInfo = new Panel
             {
-                Width     = 740,
+                Dock      = DockStyle.Top,
                 Height    = 34,
                 BackColor = Color.FromArgb(239, 246, 255),
                 Margin    = new Padding(0, 2, 0, 0)
@@ -340,17 +352,20 @@ namespace ToolCalender.Forms
             };
             pnlNotifyInfo.Controls.Add(lblNotifyInfo);
 
-            var deadlineFlow = new FlowLayoutPanel
+            var deadlineFlow = new Panel
             {
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents  = false,
-                Width         = 740,
                 AutoSize      = true,
+                Dock          = DockStyle.Top,
                 Padding       = new Padding(0)
             };
-            deadlineFlow.Controls.Add(pnlDeadline);
             deadlineFlow.Controls.Add(pnlNotifyInfo);
+            deadlineFlow.Controls.Add(pnlDeadline);
+
+            pnlDeadline.BringToFront();
+            pnlNotifyInfo.BringToFront();
+
             grpDeadline.Controls.Add(deadlineFlow);
+            deadlineFlow.BringToFront();
 
             // ── Status bar ───────────────────────────────────────
             lblStatus = new Label
@@ -358,28 +373,33 @@ namespace ToolCalender.Forms
                 Text      = "",
                 ForeColor = Color.FromArgb(21, 128, 61),
                 Font      = new Font("Segoe UI", 9f),
-                Height    = 24,
-                Width     = 740,
-                TextAlign = ContentAlignment.MiddleLeft
+                Height    = 40,
+                Dock      = DockStyle.Top,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding   = new Padding(8, 0, 0, 0)
             };
 
             // ── Stack all sections ───────────────────────────────
-            var mainStack = new FlowLayoutPanel
+            var mainStack = new Panel
             {
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents  = false,
-                AutoSize      = true,
-                Padding       = new Padding(0)
+                Dock      = DockStyle.Top,
+                AutoSize  = true,
+                Padding   = new Padding(0)
             };
 
-            grpUpload.Width   = 760;
-            grpInfo.Width     = 760;
-            grpDeadline.Width = 760;
+            grpUpload.Dock   = DockStyle.Top;
+            grpInfo.Dock     = DockStyle.Top;
+            grpDeadline.Dock = DockStyle.Top;
 
-            mainStack.Controls.Add(grpUpload);
-            mainStack.Controls.Add(grpInfo);
-            mainStack.Controls.Add(grpDeadline);
             mainStack.Controls.Add(lblStatus);
+            mainStack.Controls.Add(grpDeadline);
+            mainStack.Controls.Add(grpInfo);
+            mainStack.Controls.Add(grpUpload);
+            
+            grpUpload.BringToFront();
+            grpInfo.BringToFront();
+            grpDeadline.BringToFront();
+            lblStatus.BringToFront();
 
             pnlScroll.Controls.Add(mainStack);
 
@@ -401,7 +421,7 @@ namespace ToolCalender.Forms
                 AutoSize    = true,
                 BackColor   = CCard,
                 Margin      = new Padding(0, 0, 0, 12),
-                Padding     = new Padding(14, 8, 14, 12)
+                Padding     = new Padding(14, 0, 14, 12) // Removed top padding internally, lblTitle will provide it naturally
             };
             pnl.Paint += (s, e) =>
             {
@@ -413,15 +433,28 @@ namespace ToolCalender.Forms
 
                 using var borderPen = new Pen(Color.FromArgb(37, 99, 235), 3);
                 e.Graphics.DrawLine(borderPen, 0, 0, 0, 34);
-
-                using var txtBrush = new SolidBrush(CHeader);
-                using var fnt = new Font("Segoe UI", 9.5f, FontStyle.Bold);
-                e.Graphics.DrawString(title, fnt, txtBrush, new PointF(16, 9));
             };
 
-            // Spacer for the header height
-            var spacer = new Panel { Height = 40, BackColor = Color.Transparent };
+            var lblTitle = new Label
+            {
+                Text = title,
+                ForeColor = CHeader,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                AutoSize = false,
+                UseCompatibleTextRendering = true,
+                Height = 34,
+                Dock = DockStyle.Top,
+                BackColor = CSectionHdr,
+                Padding = new Padding(2, 9, 0, 0)
+            };
+            pnl.Controls.Add(lblTitle);
+
+            // Add an empty space below title
+            var spacer = new Panel { Dock = DockStyle.Top, Height = 6, BackColor = Color.Transparent };
             pnl.Controls.Add(spacer);
+
+            lblTitle.BringToFront();
+            spacer.BringToFront();
 
             return pnl;
         }
@@ -515,9 +548,7 @@ namespace ToolCalender.Forms
                 ForeColor = CLabel,
                 Font      = new Font("Segoe UI", 9f, FontStyle.Bold),
                 Anchor    = AnchorStyles.Right | AnchorStyles.Top,
-                AutoSize  = false,
-                Height    = 26,
-                Width     = 175,
+                AutoSize  = true,
                 TextAlign = ContentAlignment.MiddleRight,
                 Margin    = new Padding(0, 6, 8, 0)
             };

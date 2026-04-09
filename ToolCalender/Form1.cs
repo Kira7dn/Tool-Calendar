@@ -261,8 +261,8 @@ namespace ToolCalender
                 SelectionMode                  = DataGridViewSelectionMode.FullRowSelect,
                 MultiSelect                    = false,
                 AutoSizeRowsMode               = DataGridViewAutoSizeRowsMode.AllCells,
-                ColumnHeadersHeightSizeMode        = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
-                ColumnHeadersHeight            = 40,
+                AutoSizeColumnsMode            = DataGridViewAutoSizeColumnsMode.None,
+                ColumnHeadersHeightSizeMode        = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
                 RowTemplate                    = { Height = 38 },
                 Font                           = new Font("Segoe UI", 9.5f),
                 CellBorderStyle                = DataGridViewCellBorderStyle.SingleHorizontal,
@@ -275,9 +275,10 @@ namespace ToolCalender
                 ForeColor  = Color.White,
                 Font       = new Font("Segoe UI", 9.5f, FontStyle.Bold),
                 Alignment  = DataGridViewContentAlignment.MiddleLeft,
-                Padding    = new Padding(10, 0, 0, 0),
+                Padding    = new Padding(10, 8, 10, 8),
                 SelectionBackColor = Color.FromArgb(30, 41, 59),
-                SelectionForeColor = Color.White
+                SelectionForeColor = Color.White,
+                WrapMode   = DataGridViewTriState.True
             };
             dgv.DefaultCellStyle = new DataGridViewCellStyle
             {
