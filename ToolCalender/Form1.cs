@@ -99,6 +99,16 @@ namespace ToolCalender
                 e.Graphics.DrawLine(pen, 0, pnlHeader.Height - 3, pnlHeader.Width, pnlHeader.Height - 3);
             };
 
+            var lblUser = new Label {
+                Text = $"👤 {SessionService.CurrentUser?.Username} ({SessionService.CurrentUser?.Role})",
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                AutoSize = true,
+                Location = new Point(pnlHeader.Width - 200, 16),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+            pnlHeader.Controls.Add(lblUser);
+
             var lblTitle = new Label
             {
                 Text      = "🏛  HỆ THỐNG QUẢN LÝ VĂN BẢN HÀNH CHÍNH",
@@ -136,6 +146,7 @@ namespace ToolCalender
             pnlHeader.Resize += (s, e) =>
             {
                 lblClock.Location = new Point(pnlHeader.Width - lblClock.Width - 20, 26);
+                lblUser.Location = new Point(pnlHeader.Width - 200, 16);
             };
 
             // ── Stats Bar ────────────────────────────────────────
@@ -195,6 +206,9 @@ namespace ToolCalender
             var btnRefresh = MakeToolButton("🔄  Làm Mới", Color.FromArgb(71, 85, 105));
             btnRefresh.Click += (s, e) => LoadData();
 
+            var btnImport = MakeToolButton("📥  Nhập Dữ Liệu", Color.FromArgb(71, 85, 105));
+            btnImport.Click += BtnImport_Click;
+
             // Search box — dùng TextBox đơn giản với icon trong Paint để tránh bị che chữ
             var pnlSearch = new Panel
             {
@@ -235,9 +249,17 @@ namespace ToolCalender
             };
             toolFlow.Controls.AddRange(new Control[]
             {
-                btnAdd, btnEdit, btnDelete, btnCalendar, btnOpenFile, btnRefresh, pnlSearch
+                btnAdd, btnEdit, btnDelete, btnCalendar, btnOpenFile, btnImport, btnRefresh, pnlSearch
             });
             pnlToolbar.Controls.Add(toolFlow);
+
+            // Áp dụng phân quyền Main
+            if (!SessionService.IsAdmin)
+            {
+                btnAdd.Visible = false;
+                btnDelete.Visible = false;
+                btnImport.Visible = false;
+            }
 
             // ── DataGridView ─────────────────────────────────────
             var pnlGrid = new Panel

@@ -42,10 +42,12 @@ namespace ToolCalender.Forms
         private Panel  pnlDeadlineBanner = new();
         private Label  lblDeadlineBanner = new();
         private Label  lblNgayThem       = new();
-        private Button btnSave           = new();
-        private Button btnCalendar       = new();
-        private Button btnOpenFile       = new();
         private Button btnClose          = new();
+        
+        // ── Comment Controls ──────────────────────────────────
+        private FlowLayoutPanel pnlCommentsList = new();
+        private TextBox txtCommentInput = new();
+        private Button btnSendComment = new();
 
         private readonly DocumentRecord _original;
         public DocumentRecord? UpdatedRecord { get; private set; }
@@ -56,7 +58,9 @@ namespace ToolCalender.Forms
             _original = doc;
             BuildUI();
             PopulateFields(doc);
+            ApplyPermissions();
             UpdateDeadlineBanner();
+            LoadComments();
         }
 
         // ════════════════════════════════════════════════════════
@@ -318,9 +322,48 @@ namespace ToolCalender.Forms
 
             grpRemind.Controls.Add(pnlReminderInfo);
 
+            // ── Section 4: Thảo luận / Comment (Facebook style) ────────
+            var grpComments = MakeSectionBox("💬  THẢO LUẬN & GHI CHÚ", 780);
+            
+            pnlCommentsList = new FlowLayoutPanel {
+                Width = 740,
+                Height = 250,
+                AutoScroll = true,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                BackColor = Color.FromArgb(248, 250, 252),
+                Padding = new Padding(5),
+                Margin = new Padding(0, 5, 0, 5)
+            };
+
+            var pnlInput = new Panel { Width = 740, Height = 80, Margin = new Padding(0, 5, 0, 0) };
+            txtCommentInput = new TextBox {
+                Multiline = true,
+                Dock = DockStyle.Fill,
+                PlaceholderText = "Nhập nội dung thảo luận hoặc ghi chú tại đây...",
+                Font = new Font("Segoe UI", 10)
+            };
+            btnSendComment = new Button {
+                Text = "Gửi",
+                Dock = DockStyle.Right,
+                Width = 80,
+                BackColor = CAccent,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold)
+            };
+            btnSendComment.Click += BtnSendComment_Click;
+
+            pnlInput.Controls.Add(txtCommentInput);
+            pnlInput.Controls.Add(btnSendComment);
+
+            grpComments.Controls.Add(pnlCommentsList);
+            grpComments.Controls.Add(pnlInput);
+
             mainStack.Controls.Add(pnlDeadlineBanner);
             mainStack.Controls.Add(grpInfo);
             mainStack.Controls.Add(grpRemind);
+            mainStack.Controls.Add(grpComments);
 
             pnlScroll.Controls.Add(mainStack);
 
@@ -535,6 +578,77 @@ namespace ToolCalender.Forms
                 UseShellExecute = true
             });
         }
+
+        // ════════════════════════════════════════════════════════
+        // Comment Logic
+        // ════════════════════════════════════════════════════════
+        private void LoadComments()
+        {
+            pnlCommentsList.Controls.Clear();
+            var comments = DatabaseService.GetComments(_original.Id);
+            foreach (var c in comments)
+            {
+                AddCommentUI(c);
+            }
+            pnlCommentsList.VerticalScroll.Value = pnlCommentsList.VerticalScroll.Maximum;
+        }
+
+        private void AddCommentUI(Comment c)
+        {
+            var pnl = new Panel { Width = 710, AutoSize = true, Margin = new Padding(0, 0, 0, 10), Padding = new Padding(8), BackColor = Color.White };
+            pnl.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, pnl.Width, 100, 10, 10)); // Sẽ fix autosize sau
+
+            var lblUser = new Label { Text = c.Username, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = CAccent, AutoSize = true, Location = new Point(8, 5) };
+            var lblTime = new Label { Text = c.CreatedAt.ToString("HH:mm dd/MM/yyyy"), Font = new Font("Segoe UI", 8), ForeColor = CMuted, AutoSize = true, Location = new Point(lblUser.Right + 10, 6) };
+            var lblMsg = new Label { Text = c.Content, Font = new Font("Segoe UI", 10), AutoSize = true, Location = new Point(8, 25), MaximumSize = new Size(680, 0) };
+
+            pnl.Controls.Add(lblUser);
+            pnl.Controls.Add(lblTime);
+            pnl.Controls.Add(lblMsg);
+            pnlCommentsList.Controls.Add(pnl);
+        }
+
+        private void BtnSendComment_Click(object? sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtCommentInput.Text)) return;
+            if (SessionService.CurrentUser == null) return;
+
+            var c = new Comment {
+                DocumentId = _original.Id,
+                UserId = SessionService.CurrentUser.Id,
+                Username = SessionService.CurrentUser.Username,
+                Content = txtCommentInput.Text.Trim()
+            };
+
+            DatabaseService.InsertComment(c);
+            txtCommentInput.Clear();
+            LoadComments();
+        }
+
+        private void ApplyPermissions()
+        {
+            bool isAdmin = SessionService.IsAdmin;
+            
+            // Nếu không phải admin, không cho sửa nội dung chính
+            txtSoVanBan.ReadOnly = !isAdmin;
+            txtTrichYeu.ReadOnly = !isAdmin;
+            dtpNgayBanHanh.Enabled = isAdmin;
+            txtCoQuanBH.ReadOnly = !isAdmin;
+            txtChuQuan.ReadOnly = !isAdmin;
+            dtpThoiHan.Enabled = isAdmin;
+            txtDonViChiDao.ReadOnly = !isAdmin;
+            chkKhongThoiHan.Enabled = isAdmin;
+
+            btnSave.Visible = isAdmin;
+            btnCalendar.Visible = isAdmin;
+            
+            if (!isAdmin) {
+                this.Text = "Xem Chi Tiết Văn Bản (Chỉ đọc)";
+            }
+        }
+
+        [System.Runtime.InteropServices.DllImport("Gdi32.dll", EntryPoint = "CreateRoundRectRgn")]
+        private static extern IntPtr CreateRoundRectRgn(int nLeftRect, int nTopRect, int nRightRect, int nBottomRect, int nWidthEllipse, int nHeightEllipse);
 
         // ════════════════════════════════════════════════════════
         // Helpers
