@@ -1,89 +1,102 @@
 namespace ToolCalender.Forms
 {
-    /// <summary>
-    /// Dialog xác nhận thao tác nguy hiểm (xóa, v.v.) với thiết kế đẹp thay cho MessageBox mặc định.
-    /// </summary>
     public class FormConfirm : Form
     {
-        private static readonly Color CHeader    = Color.FromArgb(15, 40, 80);
-        private static readonly Color CBg        = Color.FromArgb(248, 250, 252);
-        private static readonly Color CBorder    = Color.FromArgb(203, 213, 225);
-        private static readonly Color CText      = Color.FromArgb(30, 41, 59);
+        private static readonly Color CHeader    = Color.FromArgb(15, 35, 65);
+        private static readonly Color CBorder    = Color.FromArgb(226, 232, 240);
+        private static readonly Color CText      = Color.FromArgb(15, 23, 42);
+        private static readonly Color CSubText   = Color.FromArgb(71, 85, 105);
 
         public FormConfirm(string title, string message, string confirmText, Color confirmColor)
         {
+            // Thiết kế cửa sổ
             this.Text            = title;
-            this.Size            = new Size(480, 240);
+            this.Size            = new Size(480, 280);
+            this.MinimumSize     = new Size(480, 240);
             this.StartPosition   = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox     = false;
             this.MinimizeBox     = false;
-            this.BackColor       = CBg;
-            this.Font            = new Font("Segoe UI", 9.5f);
+            this.BackColor       = Color.White;
+            this.Font            = new Font("Segoe UI", 10f);
 
-            // Header
-            var pnlHeader = new Panel
-            {
-                Dock      = DockStyle.Top,
-                Height    = 50,
-                BackColor = CHeader
-            };
-            pnlHeader.Paint += (s, e) =>
-            {
-                using var pen = new Pen(confirmColor, 3);
-                e.Graphics.DrawLine(pen, 0, pnlHeader.Height - 3, pnlHeader.Width, pnlHeader.Height - 3);
-            };
+            // 1. Header (Top)
+            var pnlHeader = new Panel { Dock = DockStyle.Top, Height = 56, BackColor = CHeader };
             var lblTitle = new Label
             {
                 Text      = title,
                 ForeColor = Color.White,
-                Font      = new Font("Segoe UI", 12f, FontStyle.Bold),
-                AutoSize  = true,
-                Location  = new Point(18, 13)
+                Font      = new Font("Segoe UI", 11f, FontStyle.Bold),
+                Dock      = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding   = new Padding(20, 0, 0, 0)
             };
             pnlHeader.Controls.Add(lblTitle);
 
-            // Message
-            var lblMsg = new Label
-            {
-                Text      = message,
-                ForeColor = CText,
-                Font      = new Font("Segoe UI", 10f),
-                Location  = new Point(20, 62),
-                Size      = new Size(440, 80),
-                TextAlign = ContentAlignment.TopLeft
-            };
+            // 2. Đường kẻ Accent (Top)
+            var pnlAccent = new Panel { Dock = DockStyle.Top, Height = 4, BackColor = confirmColor };
 
-            // Buttons
-            var btnConfirm = new Button
+            // 3. Vùng nút bấm (Bottom)
+            var pnlActions = new Panel { Dock = DockStyle.Bottom, Height = 70, BackColor = Color.FromArgb(248, 250, 252), Padding = new Padding(0, 0, 15, 0) };
+            
+            // Dùng FlowLayoutPanel để căn phải nút bấm tự động
+            var flowButtons = new FlowLayoutPanel
             {
-                Text       = confirmText,
-                BackColor  = confirmColor,
-                ForeColor  = Color.White,
-                FlatStyle  = FlatStyle.Flat,
-                Font       = new Font("Segoe UI", 9.5f, FontStyle.Bold),
-                Size       = new Size(130, 34),
-                Location   = new Point(210, 162),
-                Cursor     = Cursors.Hand,
-                DialogResult = DialogResult.OK,
-                FlatAppearance = { BorderSize = 0 }
+                Dock      = DockStyle.Fill,
+                FlowDirection = FlowDirection.RightToLeft,
+                Padding   = new Padding(0, 14, 0, 0)
             };
 
             var btnCancel = new Button
             {
-                Text         = "✖  Hủy",
-                BackColor    = Color.FromArgb(100, 116, 139),
-                ForeColor    = Color.White,
+                Text         = "Hủy",
+                Size         = new Size(110, 42),
+                BackColor    = Color.White,
+                ForeColor    = CSubText,
                 FlatStyle    = FlatStyle.Flat,
-                Font         = new Font("Segoe UI", 9.5f, FontStyle.Bold),
-                Size         = new Size(100, 34),
-                Location     = new Point(350, 162),
+                Font         = new Font("Segoe UI", 10f, FontStyle.Bold),
                 Cursor       = Cursors.Hand,
                 DialogResult = DialogResult.Cancel,
-                FlatAppearance = { BorderSize = 0 }
+                Margin       = new Padding(5, 0, 5, 0)
             };
+            btnCancel.FlatAppearance.BorderColor = CBorder;
 
-            this.Controls.AddRange(new Control[] { pnlHeader, lblMsg, btnConfirm, btnCancel });
+            var btnConfirm = new Button
+            {
+                Text       = confirmText,
+                Size       = new Size(130, 42),
+                BackColor  = confirmColor,
+                ForeColor  = Color.White,
+                FlatStyle  = FlatStyle.Flat,
+                Font       = new Font("Segoe UI", 10f, FontStyle.Bold),
+                Cursor     = Cursors.Hand,
+                DialogResult = DialogResult.OK,
+                Margin       = new Padding(5, 0, 5, 0)
+            };
+            btnConfirm.FlatAppearance.BorderSize = 0;
+
+            flowButtons.Controls.Add(btnCancel);
+            flowButtons.Controls.Add(btnConfirm);
+            pnlActions.Controls.Add(flowButtons);
+
+            // 4. Vùng nội dung (Fill)
+            var pnlContent = new Panel { Dock = DockStyle.Fill, Padding = new Padding(25, 20, 25, 10) };
+            var lblMsg = new Label
+            {
+                Text      = message,
+                ForeColor = CText,
+                Font      = new Font("Segoe UI Semibold", 10.5f),
+                Dock      = DockStyle.Fill,
+                TextAlign = ContentAlignment.TopLeft
+            };
+            pnlContent.Controls.Add(lblMsg);
+
+            // Thứ tự Add rất quan trọng để Dock hoạt động đúng: Fill Add cuối cùng
+            this.Controls.Add(pnlContent);
+            this.Controls.Add(pnlActions);
+            this.Controls.Add(pnlAccent);
+            this.Controls.Add(pnlHeader);
+
             this.AcceptButton = btnConfirm;
             this.CancelButton = btnCancel;
         }
