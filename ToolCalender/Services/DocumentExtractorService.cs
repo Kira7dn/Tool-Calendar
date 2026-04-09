@@ -16,16 +16,26 @@ namespace ToolCalender.Services
         public static async Task<DocumentRecord> ExtractFromFileAsync(string filePath)
         {
             string ext = Path.GetExtension(filePath).ToLower();
-            string text = ext switch
-            {
-                ".pdf" => ExtractFromPdf(filePath),
-                ".docx" or ".doc" => ExtractFromWord(filePath),
-                _ => throw new NotSupportedException($"Định dạng '{ext}' không hỗ trợ. Chỉ hỗ trợ PDF và DOCX.")
-            };
+            string text = "";
 
-            // DEBUG: Ghi text trích xuất ra file tạm để kiểm tra
-            string debugPath = Path.Combine(Path.GetTempPath(), "ToolCalendar_ExtractedText_DEBUG.txt");
-            File.WriteAllText(debugPath, text, System.Text.Encoding.UTF8);
+            if (ext == ".pdf")
+            {
+                // Ưu tiên dùng OCR Native Windows theo yêu cầu của bạn
+                // Quét hình ảnh để tránh lỗi font chữ/mã hóa
+                text = await OcrService.ExtractTextFromPdfOcrAsync(filePath);
+                
+                // Bổ sung thêm text thô (nếu có) để tăng cường kết quả
+                string rawText = ExtractFromPdf(filePath);
+                if (!string.IsNullOrWhiteSpace(rawText)) text += "\n" + rawText;
+            }
+            else if (ext == ".doc" || ext == ".docx")
+            {
+                text = ExtractFromWord(filePath);
+            }
+            else
+            {
+                throw new NotSupportedException($"Định dạng '{ext}' không hỗ trợ.");
+            }
 
             return await ParseTextAsync(text, filePath);
         }
@@ -146,24 +156,20 @@ namespace ToolCalender.Services
                 NgayThem = DateTime.Now
             };
 
-            string t = text.Replace("\r\n", "\n").Replace("\r", "\n");
+            // ── 0. Làm sạch văn bản (Xử lý lỗi mã hóa PDF: ƣ -> ư và khoảng trắng thừa)
+            string t = text.Replace("ƣ", "ư").Replace("Ƣ", "Ư");
+            t = Regex.Replace(t, @"\s+", " "); // Thu gọn mọi loại khoảng trắng (kể cả khoảng trắng khổng lồ)
 
             // ── 1. Số văn bản 
-            // Chiến thuật: 
-            // - Ưu tiên text TRƯỚC dòng "V/v".
-            // - Chấp nhận cả "Số:...", "Field_...: ..." hoặc chỉ số hiệu đứng một mình.
+            // Chiến thuật OCR: Chữ "Số" rất hay bị đọc sai thành S6, S0, Sô...
             int vVIndex = t.IndexOf("V/v", StringComparison.OrdinalIgnoreCase);
             if (vVIndex < 0) vVIndex = t.IndexOf("Về việc", StringComparison.OrdinalIgnoreCase);
-            
             string searchArea = vVIndex > 0 ? t.Substring(0, vVIndex) : (t.Length > 1500 ? t.Substring(0, 1500) : t);
 
-            // Regex cải tiến: 
-            // 1. Nhóm 1: Tiền tố (Số:, Field_...:) 
-            // 2. Nhóm 2: Số (1-6 chữ số)
-            // 3. Nhóm 3: Toàn bộ phần ký hiệu (Bao gồm /, -, &, các chữ cái...)
+            // Tìm có tiền tố (Số, S0, S6, Sô, Field...)
             var mSoVb = Regex.Match(searchArea,
-                @"(?:[Ss]ố|Field_[^:]+)[:\s]*(\d{1,6})\s*([/\-][A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]+)",
-                RegexOptions.Multiline);
+                @"(?:[Ss][ốo06ô]|Field_[^:]+)[:\s]*(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]+)",
+                RegexOptions.IgnoreCase);
             
             if (mSoVb.Success)
             {
@@ -171,47 +177,59 @@ namespace ToolCalender.Services
             }
             else
             {
-                // Fallback 1: Tìm mẫu bất kỳ có gạch chéo và chữ/số đằng sau
-                var mLegacy = Regex.Match(searchArea, @"(\d{1,6}\s*[/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]{2,})", RegexOptions.Multiline);
+                // Fallback: Tìm thẳng mẫu Số/Ký hiệu (ví dụ: 1234/SNN-CNTY) mà không cần chữ "Số"
+                var mLegacy = Regex.Match(searchArea, @"(\d{1,6}\s*[/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]{2,})", RegexOptions.IgnoreCase);
                 if (mLegacy.Success) record.SoVanBan = mLegacy.Value.Replace(" ", "").Trim();
             }
 
-            // ── 2. Ngày ban hành ("ngày 08 tháng 4 năm 2026")
+            // ── 2. Ngày ban hành (Cực kỳ linh hoạt)
             var mNgayBH = Regex.Match(t,
-                @"ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})",
+                @"(?:ngày|Ngày)\s*(\d{1,2})\s*(?:tháng|Tháng)\s*(\d{1,2})\s*(?:năm|Năm)\s*(\d{4})",
                 RegexOptions.IgnoreCase);
+            
             if (mNgayBH.Success)
             {
-                int d = int.Parse(mNgayBH.Groups[1].Value);
-                int mo = int.Parse(mNgayBH.Groups[2].Value);
-                int yr = int.Parse(mNgayBH.Groups[3].Value);
-                try { record.NgayBanHanh = new DateTime(yr, mo, d); } catch { }
+                if (int.TryParse(mNgayBH.Groups[1].Value, out int d) &&
+                    int.TryParse(mNgayBH.Groups[2].Value, out int mo) &&
+                    int.TryParse(mNgayBH.Groups[3].Value, out int yr))
+                {
+                    try { record.NgayBanHanh = new DateTime(yr, mo, d); } catch { }
+                }
             }
 
-            // ── 3. Thời hạn: "trước ngày DD/MM/YYYY"
-            var mThoiHan = Regex.Match(t,
-                @"trước ngày\s+(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})",
-                RegexOptions.IgnoreCase);
-            if (mThoiHan.Success)
+            // ── 3. Thời hạn: Hỗ trợ cả chữ "trƣớc" (lỗi font) và "trước"
+            var deadlinePatterns = new[] {
+                @"(?:trước|trƣớc|đến|hạn|xong|trình)\s+ngày\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{4})",
+                @"(?:trước|trƣớc|đến|hạn|xong|trình)\s+ngày\s*(\d{1,2})\s+tháng\s*(\d{1,2})\s+năm\s*(\d{4})"
+            };
+
+            foreach (var pattern in deadlinePatterns)
             {
-                int d = int.Parse(mThoiHan.Groups[1].Value);
-                int mo = int.Parse(mThoiHan.Groups[2].Value);
-                int yr = int.Parse(mThoiHan.Groups[3].Value);
-                try { record.ThoiHan = new DateTime(yr, mo, d); } catch { }
-            }
-            else
-            {
-                // "trước ngày NN tháng MM năm YYYY"
-                var mThoiHan2 = Regex.Match(t,
-                    @"trước ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})",
-                    RegexOptions.IgnoreCase);
-                if (mThoiHan2.Success)
+                var match = Regex.Match(t, pattern, RegexOptions.IgnoreCase);
+                if (match.Success)
                 {
-                    int d = int.Parse(mThoiHan2.Groups[1].Value);
-                    int mo = int.Parse(mThoiHan2.Groups[2].Value);
-                    int yr = int.Parse(mThoiHan2.Groups[3].Value);
-                    try { record.ThoiHan = new DateTime(yr, mo, d); } catch { }
+                    if (int.TryParse(match.Groups[1].Value, out int d) &&
+                        int.TryParse(match.Groups[2].Value, out int mo) &&
+                        int.TryParse(match.Groups[3].Value, out int yr))
+                    {
+                        try { record.ThoiHan = new DateTime(yr, mo, d); break; } catch { }
+                    }
                 }
+            }
+
+            // Nếu vẫn không thấy hạn, tìm ngày lớn nhất
+            if (record.ThoiHan == DateTime.MinValue && record.NgayBanHanh.HasValue)
+            {
+                var allDates = Regex.Matches(t, @"(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{4})");
+                DateTime maxD = record.NgayBanHanh.Value;
+                foreach (Match m in allDates)
+                {
+                    if (DateTime.TryParseExact(m.Value.Replace(" ", ""), new[] { "d/M/yyyy", "dd/MM/yyyy" }, null, System.Globalization.DateTimeStyles.None, out var d))
+                    {
+                        if (d > maxD) maxD = d;
+                    }
+                }
+                if (maxD != record.NgayBanHanh) record.ThoiHan = maxD;
             }
 
             // ── 4. Cơ quan ban hành (dòng đầu có "Sở", "UBND", "Ban", "Ủy ban")
@@ -291,37 +309,6 @@ namespace ToolCalender.Services
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
                 var mFile = Regex.Match(fileName, @"(\d{1,6}\s*[/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]{2,})");
                 if (mFile.Success) record.SoVanBan = mFile.Value.Trim();
-            }
-
-            // ── Fallback 2: OCR - VŨ KHÍ CUỐI CÙNG cho ảnh hoặc văn bản bị che
-            if (string.IsNullOrWhiteSpace(record.SoVanBan) && Path.GetExtension(filePath).ToLower() == ".pdf")
-            {
-                string ocrText = await OcrService.ExtractTextFromPdfOcrAsync(filePath);
-                if (!string.IsNullOrWhiteSpace(ocrText))
-                {
-                    // Quét OCR toàn bộ ký hiệu đến hết chuỗi (Bao gồm các dấu & và -)
-                    var mOcr = Regex.Match(ocrText, @"(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]+)");
-                    if (mOcr.Success)
-                    {
-                        record.SoVanBan = (mOcr.Groups[1].Value + mOcr.Groups[2].Value).Replace(" ", "").Trim();
-                    }
-                    else
-                    {
-                         // Tìm con số đi kèm chữ "Số"
-                         var mNumOcr = Regex.Match(ocrText, @"[Ss][ốo][:\s]*(\d{1,6})");
-                         if (mNumOcr.Success) record.SoVanBan = mNumOcr.Groups[1].Value;
-                    }
-
-                    // Nếu OCR lấy được trích yếu (thường ở dòng V/v đầu tiên)
-                    if (string.IsNullOrWhiteSpace(record.TrichYeu))
-                    {
-                         int vV = ocrText.IndexOf("V/v", StringComparison.OrdinalIgnoreCase);
-                         if (vV >= 0) {
-                             string sub = ocrText.Substring(vV).Split('\n')[0];
-                             record.TrichYeu = sub.Trim();
-                         }
-                    }
-                }
             }
 
             return record;
