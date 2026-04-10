@@ -1,6 +1,6 @@
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2Interop;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ToolCalender.Data;
 using ToolCalender.Services;
@@ -12,7 +12,6 @@ namespace ToolCalender.Forms
         private TextBox txtUsername;
         private TextBox txtPassword;
         private Button btnLogin;
-        private Label lblRegister;
         private Panel mainPanel;
 
         public FormLogin()
@@ -69,19 +68,6 @@ namespace ToolCalender.Forms
             btnLogin.FlatAppearance.BorderSize = 0;
             btnLogin.Click += BtnLogin_Click;
 
-            lblRegister = new Label {
-                Text = "Chưa có tài khoản? Đăng ký ngay",
-                Font = new Font("Segoe UI", 9, FontStyle.Underline),
-                ForeColor = Color.FromArgb(41, 128, 185),
-                TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Bottom,
-                Height = 40,
-                Cursor = Cursors.Hand
-            };
-            lblRegister.Click += (s, e) => {
-                var frm = new FormRegister();
-                frm.ShowDialog();
-            };
 
             var btnClose = new Label {
                 Text = "✕",
@@ -98,7 +84,6 @@ namespace ToolCalender.Forms
 
             mainPanel.Controls.Add(pnlContainer);
             mainPanel.Controls.Add(btnLogin);
-            mainPanel.Controls.Add(lblRegister);
             mainPanel.Controls.Add(lblSub);
             mainPanel.Controls.Add(lblTitle);
             mainPanel.Controls.Add(btnClose);
@@ -164,56 +149,5 @@ namespace ToolCalender.Forms
 
         [System.Runtime.InteropServices.DllImport("Gdi32.dll", EntryPoint = "CreateRoundRectRgn")]
         private static extern IntPtr CreateRoundRectRgn(int nLeftRect, int nTopRect, int nRightRect, int nBottomRect, int nWidthEllipse, int nHeightEllipse);
-    }
-
-    public class FormRegister : Form
-    {
-        private TextBox txtUser, txtPass, txtConfirm;
-        private ComboBox cbRole;
-        private Button btnReg;
-
-        public FormRegister()
-        {
-            this.Text = "Đăng ký tài khoản";
-            this.Size = new Size(350, 450);
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-
-            var lbl = new Label { Text = "ĐĂNG KÝ MỚI", Font = new Font("Segoe UI", 16, FontStyle.Bold), Dock = DockStyle.Top, Height = 60, TextAlign = ContentAlignment.MiddleCenter };
-            
-            txtUser = new TextBox { PlaceholderText = "Tên đăng nhập", Width = 280, Location = new Point(35, 80), Font = new Font("Segoe UI", 11) };
-            txtPass = new TextBox { PlaceholderText = "Mật khẩu", PasswordChar = '●', Width = 280, Location = new Point(35, 130), Font = new Font("Segoe UI", 11) };
-            txtConfirm = new TextBox { PlaceholderText = "Xác nhận mật khẩu", PasswordChar = '●', Width = 280, Location = new Point(35, 180), Font = new Font("Segoe UI", 11) };
-            
-            cbRole = new ComboBox { Width = 280, Location = new Point(35, 230), Font = new Font("Segoe UI", 11), DropDownStyle = ComboBoxStyle.DropDownList };
-            cbRole.Items.AddRange(new string[] { "Guest", "Admin" });
-            cbRole.SelectedIndex = 0;
-
-            btnReg = new Button { Text = "HOÀN TẤT ĐĂNG KÝ", Width = 280, Height = 45, Location = new Point(35, 300), BackColor = Color.FromArgb(41, 128, 185), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
-            btnReg.Click += BtnReg_Click;
-
-            this.Controls.AddRange(new Control[] { lbl, txtUser, txtPass, txtConfirm, cbRole, btnReg });
-        }
-
-        private void BtnReg_Click(object? sender, EventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(txtUser.Text) || string.IsNullOrWhiteSpace(txtPass.Text)) {
-                MessageBox.Show("Vui lòng nhập đầy đủ thông tin."); return;
-            }
-            if (txtPass.Text != txtConfirm.Text) {
-                MessageBox.Show("Mật khẩu xác nhận không khớp."); return;
-            }
-
-            if (DatabaseService.Register(txtUser.Text, txtPass.Text, cbRole.SelectedItem?.ToString() ?? "Guest"))
-            {
-                MessageBox.Show("Đăng ký thành công! Bạn có thể đăng nhập ngay.");
-                this.Close();
-            }
-            else
-            {
-                MessageBox.Show("Tên đăng nhập đã tồn tại.");
-            }
-        }
     }
 }

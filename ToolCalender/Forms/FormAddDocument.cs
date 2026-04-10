@@ -55,6 +55,28 @@ namespace ToolCalender.Forms
             BuildUI();
         }
 
+        public FormAddDocument(DocumentRecord prefilledData)
+        {
+            BuildUI();
+            this.Result = prefilledData;
+            _filePath   = prefilledData.FilePath;
+            
+            txtSoVanBan.Text   = prefilledData.SoVanBan;
+            txtTrichYeu.Text   = prefilledData.TrichYeu;
+            txtCoQuanBH.Text   = prefilledData.CoQuanBanHanh;
+            txtChuQuan.Text    = prefilledData.CoQuanChuQuan;
+            txtDonViChiDao.Text = prefilledData.DonViChiDao;
+            
+            if (prefilledData.NgayBanHanh.HasValue) 
+                dtpNgayBanHanh.Value = prefilledData.NgayBanHanh.Value;
+            
+            if (prefilledData.ThoiHan.HasValue) 
+                dtpThoiHan.Value = prefilledData.ThoiHan.Value;
+
+            lblStatus.Text = "Đã bóc tách dữ liệu tự động. Vui lòng kiểm tra lại trước khi lưu.";
+            lblStatus.ForeColor = Color.DarkGreen;
+        }
+
         // ════════════════════════════════════════════════════════
         // UI Construction
         // ════════════════════════════════════════════════════════

@@ -65,11 +65,17 @@ namespace ToolCalender.Data
             cmd.CommandText = createCommentsTable;
             cmd.ExecuteNonQuery();
 
-            // Khởi tạo tài khoản Admin mặc định nếu chưa có
-            cmd.CommandText = "SELECT COUNT(*) FROM Users";
+            // Đảm bảo tài khoản admin luôn đúng mật khẩu admin@123456
+            cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', 'admin123', 'Admin', datetime('now'))";
+                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', 'admin@123456', 'Admin', datetime('now'))";
+                cmd.ExecuteNonQuery();
+            }
+            else
+            {
+                // Nếu đã có admin, ép cập nhật mật khẩu mới cho chắc chắn
+                cmd.CommandText = "UPDATE Users SET PasswordHash='admin@123456' WHERE Username='admin'";
                 cmd.ExecuteNonQuery();
             }
         }

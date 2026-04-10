@@ -1,5 +1,6 @@
 using ToolCalender.Models;
 using ToolCalender.Services;
+using ToolCalender.Data;
 
 namespace ToolCalender.Forms
 {
@@ -42,6 +43,9 @@ namespace ToolCalender.Forms
         private Panel  pnlDeadlineBanner = new();
         private Label  lblDeadlineBanner = new();
         private Label  lblNgayThem       = new();
+        private Button btnSave           = new();
+        private Button btnCalendar       = new();
+        private Button btnOpenFile       = new();
         private Button btnClose          = new();
         
         // ── Comment Controls ──────────────────────────────────

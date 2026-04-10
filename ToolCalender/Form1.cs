@@ -99,15 +99,52 @@ namespace ToolCalender
                 e.Graphics.DrawLine(pen, 0, pnlHeader.Height - 3, pnlHeader.Width, pnlHeader.Height - 3);
             };
 
+            // --- User Info Pill (Góc phải trên) ---
+            var pnlUserPill = new Panel {
+                BackColor = Color.FromArgb(40, 255, 255, 255), // Màu trắng trong suốt mờ
+                Height = 34,
+                AutoSize = true,
+                Padding = new Padding(10, 0, 10, 0),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+            pnlUserPill.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, 300, 34, 15, 15)); // Sẽ resize sau
+
             var lblUser = new Label {
                 Text = $"👤 {SessionService.CurrentUser?.Username} ({SessionService.CurrentUser?.Role})",
                 ForeColor = Color.White,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(pnlHeader.Width - 200, 16),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right
+                BackColor = Color.Transparent,
+                Location = new Point(10, 8)
             };
-            pnlHeader.Controls.Add(lblUser);
+
+            var btnLogout = new Label {
+                Text = "🚪 Đăng xuất",
+                ForeColor = Color.FromArgb(254, 202, 202),
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Underline),
+                AutoSize = true,
+                BackColor = Color.Transparent,
+                Cursor = Cursors.Hand,
+                Location = new Point(10, 8) // Sẽ chỉnh lại trong sự kiện Resize
+            };
+            btnLogout.Click += (s, e) => {
+                SessionService.Logout();
+                Application.Restart();
+            };
+
+            pnlUserPill.Controls.Add(lblUser);
+            pnlUserPill.Controls.Add(btnLogout);
+            pnlHeader.Controls.Add(pnlUserPill);
+
+            // Cập nhật vị trí và kích thước linh hoạt
+            pnlHeader.Resize += (s, e) => {
+                pnlUserPill.Width = lblUser.Width + btnLogout.Width + 35;
+                pnlUserPill.Location = new Point(pnlHeader.Width - pnlUserPill.Width - 20, 12);
+                lblUser.Location = new Point(10, 8);
+                btnLogout.Location = new Point(lblUser.Right + 10, 9);
+                
+                lblClock.Location = new Point(pnlHeader.Width - lblClock.Width - 25, 48); // Đẩy đồng hồ xuống dưới Pill
+            };
 
             var lblTitle = new Label
             {
@@ -143,11 +180,7 @@ namespace ToolCalender
             clockTimer.Start();
 
             pnlHeader.Controls.AddRange(new Control[] { lblTitle, lblSub, lblClock });
-            pnlHeader.Resize += (s, e) =>
-            {
-                lblClock.Location = new Point(pnlHeader.Width - lblClock.Width - 20, 26);
-                lblUser.Location = new Point(pnlHeader.Width - 200, 16);
-            };
+            pnlHeader.Controls.Add(lblTitle);
 
             // ── Stats Bar ────────────────────────────────────────
             var pnlStats = new Panel
@@ -845,5 +878,46 @@ namespace ToolCalender
             _notifyIcon.Dispose();
             base.OnFormClosed(e);
         }
+        private async void BtnImport_Click(object? sender, EventArgs e)
+        {
+            using var ofd = new OpenFileDialog { Filter = "Văn bản (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc", Title = "Chọn văn bản để nhập" };
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                await ProcessFileImport(ofd.FileName);
+            }
+        }
+
+        private async Task ProcessFileImport(string filePath)
+        {
+            try
+            {
+                // Hiện thông báo đang xử lý
+                var loading = new Form { Text = "Đang xử lý...", Size = new Size(300, 100), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedToolWindow };
+                loading.Controls.Add(new Label { Text = "Đang bóc tách dữ liệu từ văn bản...\nVui lòng đợi trong giây lát.", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter });
+                loading.Show(this);
+                this.Enabled = false;
+
+                var result = await DocumentExtractorService.ExtractFromFileAsync(filePath);
+                
+                loading.Close();
+                this.Enabled = true;
+
+                // Mở Form xác nhận thông tin
+                using var formAdd = new FormAddDocument(result);
+                if (formAdd.ShowDialog(this) == DialogResult.OK && formAdd.Result != null)
+                {
+                    int id = DatabaseService.Insert(formAdd.Result);
+                    LoadData();
+                    ShowSuccessToast("Đã nhập văn bản thành công!");
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Enabled = true;
+                MessageBox.Show($"Lỗi khi bóc tách văn bản: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        [System.Runtime.InteropServices.DllImport("Gdi32.dll", EntryPoint = "CreateRoundRectRgn")]
+        private static extern IntPtr CreateRoundRectRgn(int nLeftRect, int nTopRect, int nRightRect, int nBottomRect, int nWidthEllipse, int nHeightEllipse);
     }
 }
