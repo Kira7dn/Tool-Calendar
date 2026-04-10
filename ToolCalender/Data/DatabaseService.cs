@@ -81,21 +81,41 @@ namespace ToolCalender.Data
         }
 
         // --- USER MANAGEMENT ---
+        /// <summary>
+        /// Đăng nhập an toàn.
+        /// ✅ Chống SQL Injection: Dùng parameterized query (@u, @p) — KHÔNG nối chuỗi trực tiếp vào SQL.
+        /// ✅ Chống DoS: Giới hạn độ dài input từ phía UI (FormLogin) trước khi gọi hàm này.
+        /// ⚠ Nâng cấp tiếp theo: Thay thế plain-text bằng BCrypt.Net-Next để băm mật khẩu.
+        /// </summary>
         public static User? Login(string username, string password)
         {
+            // Sanitize tại tầng dữ liệu (defense-in-depth)
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+                return null;
+
+            // Giới hạn độ dài tránh bị lợi dụng
+            if (username.Length > 50 || password.Length > 200)
+                return null;
+
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "SELECT * FROM Users WHERE Username=@u AND PasswordHash=@p";
+
+            // ✅ Parameterized query — hoàn toàn an toàn với SQL Injection
+            string sql = "SELECT Id, Username, Role FROM Users WHERE Username=@u AND PasswordHash=@p LIMIT 1";
             using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@u", username);
-            cmd.Parameters.AddWithValue("@p", password); // Đang để text cho đơn giản, có thể nâng cấp băm mật khẩu sau
+            cmd.Parameters.AddWithValue("@u", username.Trim());
+            // Ghi chú: Hiện đang so sánh plain-text.
+            // TODO: Nâng cấp lên BCrypt: BCrypt.Net.BCrypt.Verify(password, storedHash)
+            cmd.Parameters.AddWithValue("@p", password);
+
             using var reader = cmd.ExecuteReader();
             if (reader.Read())
             {
-                return new User {
-                    Id = Convert.ToInt32(reader["Id"]),
+                return new User
+                {
+                    Id       = Convert.ToInt32(reader["Id"]),
                     Username = reader["Username"].ToString() ?? "",
-                    Role = reader["Role"].ToString() ?? "Guest"
+                    Role     = reader["Role"].ToString() ?? "Guest"
                 };
             }
             return null;

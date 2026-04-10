@@ -9,144 +9,342 @@ namespace ToolCalender.Forms
 {
     public class FormLogin : Form
     {
-        private TextBox txtUsername;
-        private TextBox txtPassword;
-        private Button btnLogin;
-        private Panel mainPanel;
+        // ── Controls ───────────────────────────────────────────
+        private TextBox  txtUsername  = new();
+        private TextBox  txtPassword  = new();
+        private Button   btnLogin     = new();
+        private Label    lblEye       = new();   // Toggle hiện/ẩn mật khẩu
+        private Label    lblError     = new();   // Thông báo lỗi inline
+
+        // ── Security: Rate-limit ────────────────────────────────
+        private int      _failCount   = 0;
+        private DateTime _lockUntil   = DateTime.MinValue;
+        private bool     _pwdVisible  = false;
+
+        // ── Colors ──────────────────────────────────────────────
+        private static readonly Color C1 = Color.FromArgb(15,  32,  68);   // nền tối
+        private static readonly Color C2 = Color.FromArgb(26,  54, 110);   // nền card
+        private static readonly Color CA = Color.FromArgb(56, 139, 253);   // accent xanh
+        private static readonly Color CT = Color.White;
+        private static readonly Color CE = Color.FromArgb(252, 129, 129);  // lỗi
 
         public FormLogin()
         {
-            SetupUI();
+            BuildUI();
         }
 
-        private void SetupUI()
+        // ════════════════════════════════════════════════════════
+        private void BuildUI()
         {
-            this.Text = "Đăng nhập hệ thống - Tool Calendar";
-            this.Size = new Size(400, 500);
-            this.StartPosition = FormStartPosition.CenterScreen;
+            this.Text            = "Đăng nhập - Hệ thống Quản lý Văn bản";
+            this.Size            = new Size(420, 560);
+            this.MinimumSize     = new Size(420, 560);
+            this.MaximumSize     = new Size(420, 560);
+            this.StartPosition   = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.None;
-            this.BackColor = Color.FromArgb(245, 247, 251);
+            this.BackColor       = C1;
+            this.Region          = Region.FromHrgn(CreateRoundRectRgn(0, 0, Width, Height, 20, 20));
 
-            // Bo góc Form
-            this.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, Width, Height, 25, 25));
-
-            mainPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(30) };
-            
-            var lblTitle = new Label {
-                Text = "XIN CHÀO!",
-                Font = new Font("Segoe UI", 24, FontStyle.Bold),
-                ForeColor = Color.FromArgb(41, 128, 185),
-                TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Top,
-                Height = 80
+            // ── Gradient background ─────────────────────────────
+            this.Paint += (s, e) =>
+            {
+                using var brush = new LinearGradientBrush(
+                    this.ClientRectangle,
+                    Color.FromArgb(15, 32, 68),
+                    Color.FromArgb(22, 48, 95),
+                    LinearGradientMode.ForwardDiagonal);
+                e.Graphics.FillRectangle(brush, this.ClientRectangle);
             };
 
-            var lblSub = new Label {
-                Text = "Vui lòng đăng nhập để tiếp tục",
-                Font = new Font("Segoe UI", 10),
-                ForeColor = Color.Gray,
+            // ── Drag to move ────────────────────────────────────
+            bool dragging = false; Point dragStart = Point.Empty;
+            this.MouseDown += (s, e) => { dragging = true; dragStart = e.Location; };
+            this.MouseMove += (s, e) => { if (dragging) { var p = PointToScreen(e.Location); Location = new Point(p.X - dragStart.X, p.Y - dragStart.Y); }};
+            this.MouseUp   += (s, e) => dragging = false;
+
+            // ── ✕ Close button (góc phải trên) ──────────────────
+            var btnClose = new Label
+            {
+                Text      = "✕",
+                Size      = new Size(36, 36),
+                Location  = new Point(Width - 44, 8),
+                Font      = new Font("Segoe UI", 13f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(150, 180, 220),
+                BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Top,
-                Height = 30
+                Cursor    = Cursors.Hand
+            };
+            btnClose.Click    += (s, e) => Application.Exit();
+            btnClose.MouseEnter += (s, e) => btnClose.ForeColor = CE;
+            btnClose.MouseLeave += (s, e) => btnClose.ForeColor = Color.FromArgb(150, 180, 220);
+
+            // ── Logo / Icon ──────────────────────────────────────
+            var lblIcon = new Label
+            {
+                Text      = "📋",
+                Size      = new Size(72, 72),
+                Location  = new Point((Width - 72) / 2, 55),
+                Font      = new Font("Segoe UI Emoji", 34f),
+                ForeColor = CT,
+                BackColor = Color.FromArgb(40, CA),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            lblIcon.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, 72, 72, 36, 36));
+
+            // ── Tiêu đề ──────────────────────────────────────────
+            var lblTitle = new Label
+            {
+                Text      = "XIN CHÀO!",
+                Size      = new Size(Width - 60, 44),
+                Location  = new Point(30, 148),
+                Font      = new Font("Segoe UI", 22f, FontStyle.Bold),
+                ForeColor = CT,
+                BackColor = Color.Transparent,
+                TextAlign = ContentAlignment.MiddleCenter
             };
 
-            var pnlContainer = new Panel { Dock = DockStyle.Top, Height = 250, Padding = new Padding(0, 20, 0, 0) };
+            var lblSub = new Label
+            {
+                Text      = "Vui lòng đăng nhập để tiếp tục",
+                Size      = new Size(Width - 60, 26),
+                Location  = new Point(30, 192),
+                Font      = new Font("Segoe UI", 10f),
+                ForeColor = Color.FromArgb(140, 170, 215),
+                BackColor = Color.Transparent,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
 
-            txtUsername = CreateStyledTextBox("Tên đăng nhập", 30);
-            txtPassword = CreateStyledTextBox("Mật khẩu", 100, true);
+            // ── Card panel ───────────────────────────────────────
+            var card = new Panel
+            {
+                Size      = new Size(360, 240),
+                Location  = new Point(30, 232),
+                BackColor = C2
+            };
+            card.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, 360, 240, 14, 14));
 
-            btnLogin = new Button {
-                Text = "ĐĂNG NHẬP",
-                Dock = DockStyle.Bottom,
-                Height = 50,
-                BackColor = Color.FromArgb(41, 128, 185),
-                ForeColor = Color.White,
+            // ── Username field ───────────────────────────────────
+            var lblUName = new Label
+            {
+                Text      = "TÊN ĐĂNG NHẬP",
+                Location  = new Point(20, 20),
+                Size      = new Size(320, 18),
+                Font      = new Font("Segoe UI", 8f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(100, 150, 220),
+                BackColor = Color.Transparent
+            };
+
+            var pnlUser = MakeInputPanel(20, 42, 320, out txtUsername, false);
+
+            // ── Password field ───────────────────────────────────
+            var lblPwd = new Label
+            {
+                Text      = "MẬT KHẨU",
+                Location  = new Point(20, 112),
+                Size      = new Size(320, 18),
+                Font      = new Font("Segoe UI", 8f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(100, 150, 220),
+                BackColor = Color.Transparent
+            };
+
+            var pnlPwd = MakeInputPanel(20, 134, 320, out txtPassword, true);
+
+            // ── Eye toggle ───────────────────────────────────────
+            lblEye = new Label
+            {
+                Text      = "👁",
+                Size      = new Size(30, 30),
+                Location  = new Point(310, 140),   // sẽ tính lại dưới
+                Font      = new Font("Segoe UI Emoji", 14f),
+                ForeColor = Color.FromArgb(100, 140, 200),
+                BackColor = Color.Transparent,
+                Cursor    = Cursors.Hand,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            lblEye.Location = new Point(
+                pnlPwd.Left + pnlPwd.Width - 34,
+                pnlPwd.Top + (pnlPwd.Height - 30) / 2);
+            lblEye.Click += TogglePassword;
+            lblEye.MouseEnter += (s, e) => lblEye.ForeColor = CT;
+            lblEye.MouseLeave += (s, e) => lblEye.ForeColor = Color.FromArgb(100, 140, 200);
+
+            card.Controls.AddRange(new Control[] { lblUName, pnlUser, lblPwd, pnlPwd, lblEye });
+
+            // ── Thông báo lỗi inline ─────────────────────────────
+            lblError = new Label
+            {
+                Text      = "",
+                Size      = new Size(360, 26),
+                Location  = new Point(30, 484),
+                Font      = new Font("Segoe UI", 9f),
+                ForeColor = CE,
+                BackColor = Color.Transparent,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
+            // ── Login button ─────────────────────────────────────
+            btnLogin = new Button
+            {
+                Text      = "ĐĂNG NHẬP",
+                Size      = new Size(360, 50),
+                Location  = new Point(30, 492),
+                BackColor = CA,
+                ForeColor = CT,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Font      = new Font("Segoe UI", 11f, FontStyle.Bold),
+                Cursor    = Cursors.Hand
             };
             btnLogin.FlatAppearance.BorderSize = 0;
-            btnLogin.Click += BtnLogin_Click;
+            btnLogin.Click      += BtnLogin_Click;
+            btnLogin.MouseEnter += (s, e) => btnLogin.BackColor = Color.FromArgb(80, 160, 255);
+            btnLogin.MouseLeave += (s, e) => btnLogin.BackColor = CA;
+            // Bo góc nút
+            btnLogin.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, 360, 50, 10, 10));
 
+            // ── Enter key support ────────────────────────────────
+            txtUsername.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; txtPassword.Focus(); }};
+            txtPassword.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; BtnLogin_Click(s, e); }};
 
-            var btnClose = new Label {
-                Text = "✕",
-                Font = new Font("Arial", 14, FontStyle.Bold),
-                ForeColor = Color.Gray,
-                Location = new Point(370, 10),
-                Size = new Size(20, 20),
-                Cursor = Cursors.Hand
+            // ── Footer ───────────────────────────────────────────
+            var lblFooter = new Label
+            {
+                Text      = "© 2026 Hệ thống Quản lý Văn bản Hành chính",
+                Size      = new Size(Width, 22),
+                Location  = new Point(0, 530),
+                Font      = new Font("Segoe UI", 7.5f),
+                ForeColor = Color.FromArgb(70, 100, 140),
+                BackColor = Color.Transparent,
+                TextAlign = ContentAlignment.MiddleCenter
             };
-            btnClose.Click += (s, e) => Application.Exit();
 
-            pnlContainer.Controls.Add(txtPassword);
-            pnlContainer.Controls.Add(txtUsername);
-
-            mainPanel.Controls.Add(pnlContainer);
-            mainPanel.Controls.Add(btnLogin);
-            mainPanel.Controls.Add(lblSub);
-            mainPanel.Controls.Add(lblTitle);
-            mainPanel.Controls.Add(btnClose);
-
-            this.Controls.Add(mainPanel);
+            this.Controls.AddRange(new Control[]
+            {
+                btnClose, lblIcon, lblTitle, lblSub, card,
+                lblError, btnLogin, lblFooter
+            });
         }
 
-        private TextBox CreateStyledTextBox(string placeholder, int y, bool isPassword = false)
+        // ════════════════════════════════════════════════════════
+        // Input Panel Factory (box tối + viền accent khi focus)
+        // ════════════════════════════════════════════════════════
+        private Panel MakeInputPanel(int x, int y, int w, out TextBox txt, bool isPassword)
         {
-            var txt = new TextBox {
-                Location = new Point(0, y),
-                Width = 340,
-                Font = new Font("Segoe UI", 12),
+            var pnl = new Panel
+            {
+                Location  = new Point(x, y),
+                Size      = new Size(w, 46),
+                BackColor = Color.FromArgb(12, 28, 62),
+                Padding   = new Padding(12, 8, isPassword ? 38 : 12, 8)
+            };
+            pnl.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, w, 46, 9, 9));
+            pnl.Paint += (s, e) =>
+            {
+                bool focused = pnl.ContainsFocus;
+                using var pen = new Pen(focused ? CA : Color.FromArgb(45, 70, 110), focused ? 2 : 1);
+                e.Graphics.DrawRectangle(pen, new Rectangle(0, 0, pnl.Width - 1, pnl.Height - 1));
+            };
+
+            txt = new TextBox
+            {
+                Dock        = DockStyle.Fill,
                 BorderStyle = BorderStyle.None,
-                ForeColor = Color.Gray,
-                Text = placeholder
+                BackColor   = Color.FromArgb(12, 28, 62),
+                ForeColor   = CT,
+                Font        = new Font("Segoe UI", 11f),
+                PasswordChar = isPassword ? '●' : '\0'
             };
+            txt.GotFocus  += (s, e) => pnl.Invalidate();
+            txt.LostFocus += (s, e) => pnl.Invalidate();
 
-            if (isPassword) txt.PasswordChar = '\0';
-
-            txt.Enter += (s, e) => {
-                if (txt.Text == placeholder) {
-                    txt.Text = "";
-                    txt.ForeColor = Color.Black;
-                    if (isPassword) txt.PasswordChar = '●';
-                }
-            };
-
-            txt.Leave += (s, e) => {
-                if (string.IsNullOrWhiteSpace(txt.Text)) {
-                    txt.Text = placeholder;
-                    txt.ForeColor = Color.Gray;
-                    if (isPassword) txt.PasswordChar = '\0';
-                }
-            };
-
-            // Vẽ gạch ngang phía dưới
-            var line = new Panel {
-                Location = new Point(0, y + 30),
-                Width = 340,
-                Height = 2,
-                BackColor = Color.FromArgb(41, 128, 185)
-            };
-            txt.ParentChanged += (s,e) => { if(txt.Parent != null) txt.Parent.Controls.Add(line); };
-
-            return txt;
+            pnl.Controls.Add(txt);
+            return pnl;
         }
 
+        // ════════════════════════════════════════════════════════
+        // Toggle hiện / ẩn mật khẩu
+        // ════════════════════════════════════════════════════════
+        private void TogglePassword(object? sender, EventArgs e)
+        {
+            _pwdVisible = !_pwdVisible;
+            txtPassword.PasswordChar = _pwdVisible ? '\0' : '●';
+            lblEye.Text = _pwdVisible ? "🙈" : "👁";
+            txtPassword.Focus();
+        }
+
+        // ════════════════════════════════════════════════════════
+        // Login Logic + Rate-Limit (chống brute-force)
+        // ════════════════════════════════════════════════════════
         private void BtnLogin_Click(object? sender, EventArgs e)
         {
-            var user = DatabaseService.Login(txtUsername.Text, txtPassword.Text);
+            // ── Kiểm tra khóa ─────────────────────────────────
+            if (DateTime.Now < _lockUntil)
+            {
+                int secs = (int)(_lockUntil - DateTime.Now).TotalSeconds;
+                ShowError($"⛔ Quá nhiều lần thử sai. Vui lòng chờ {secs}s.");
+                return;
+            }
+
+            // ── Validate input ─────────────────────────────────
+            string username = txtUsername.Text.Trim();
+            string password = txtPassword.Text;   // Không Trim mật khẩu
+
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                ShowError("⚠ Vui lòng nhập tên đăng nhập."); txtUsername.Focus(); return;
+            }
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                ShowError("⚠ Vui lòng nhập mật khẩu."); txtPassword.Focus(); return;
+            }
+            // Giới hạn độ dài tránh DoS
+            if (username.Length > 50 || password.Length > 200)
+            {
+                ShowError("⚠ Thông tin đăng nhập không hợp lệ."); return;
+            }
+
+            // ── Gọi DB (đã dùng parameterized query) ──────────
+            var user = DatabaseService.Login(username, password);
+
             if (user != null)
             {
+                _failCount = 0;
                 SessionService.CurrentUser = user;
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
             else
             {
-                MessageBox.Show("Sai tài khoản hoặc mật khẩu!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _failCount++;
+                if (_failCount >= 3)
+                {
+                    _lockUntil = DateTime.Now.AddSeconds(30);
+                    _failCount = 0;
+                    ShowError("⛔ Sai 3 lần liên tiếp. Hệ thống khóa 30 giây.");
+                }
+                else
+                {
+                    ShowError($"❌ Sai tài khoản hoặc mật khẩu! (Lần {_failCount}/3)");
+                }
+                txtPassword.Clear();
+                txtPassword.Focus();
             }
         }
 
+        // ════════════════════════════════════════════════════════
+        private void ShowError(string msg)
+        {
+            lblError.Text = msg;
+            // Hiệu ứng rung nhẹ
+            var pos = btnLogin.Location;
+            for (int i = 0; i < 3; i++)
+            {
+                btnLogin.Left = pos.X + 5; Application.DoEvents(); System.Threading.Thread.Sleep(30);
+                btnLogin.Left = pos.X - 5; Application.DoEvents(); System.Threading.Thread.Sleep(30);
+            }
+            btnLogin.Left = pos.X;
+        }
+
+        // ════════════════════════════════════════════════════════
         [System.Runtime.InteropServices.DllImport("Gdi32.dll", EntryPoint = "CreateRoundRectRgn")]
         private static extern IntPtr CreateRoundRectRgn(int nLeftRect, int nTopRect, int nRightRect, int nBottomRect, int nWidthEllipse, int nHeightEllipse);
     }
