@@ -20,7 +20,7 @@ namespace ToolCalender.Data
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            string createTable = @"
+            string createDocumentsTable = @"
                 CREATE TABLE IF NOT EXISTS Documents (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     SoVanBan TEXT,
@@ -32,10 +32,124 @@ namespace ToolCalender.Data
                     DonViChiDao TEXT,
                     FilePath TEXT,
                     NgayThem TEXT,
-                    DaTaoLich INTEGER DEFAULT 0
+                    DaTaoLich INTEGER DEFAULT 0,
+                    UploadedByUserId INTEGER DEFAULT 1
                 )";
 
-            using var cmd = new SqliteCommand(createTable, connection);
+            string createUsersTable = @"
+                CREATE TABLE IF NOT EXISTS Users (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Username TEXT UNIQUE,
+                    PasswordHash TEXT,
+                    Role TEXT,
+                    CreatedAt TEXT
+                )";
+
+            string createCommentsTable = @"
+                CREATE TABLE IF NOT EXISTS Comments (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    DocumentId INTEGER,
+                    UserId INTEGER,
+                    Username TEXT,
+                    Content TEXT,
+                    CreatedAt TEXT,
+                    FOREIGN KEY(DocumentId) REFERENCES Documents(Id)
+                )";
+
+            using var cmd = new SqliteCommand(createDocumentsTable, connection);
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = createUsersTable;
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = createCommentsTable;
+            cmd.ExecuteNonQuery();
+
+            // Đảm bảo tài khoản admin luôn đúng mật khẩu admin@123456
+            cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
+            if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
+            {
+                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', 'admin@123456', 'Admin', datetime('now'))";
+                cmd.ExecuteNonQuery();
+            }
+            else
+            {
+                // Nếu đã có admin, ép cập nhật mật khẩu mới cho chắc chắn
+                cmd.CommandText = "UPDATE Users SET PasswordHash='admin@123456' WHERE Username='admin'";
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        // --- USER MANAGEMENT ---
+        public static User? Login(string username, string password)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = "SELECT * FROM Users WHERE Username=@u AND PasswordHash=@p";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@u", username);
+            cmd.Parameters.AddWithValue("@p", password); // Đang để text cho đơn giản, có thể nâng cấp băm mật khẩu sau
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new User {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    Username = reader["Username"].ToString() ?? "",
+                    Role = reader["Role"].ToString() ?? "Guest"
+                };
+            }
+            return null;
+        }
+
+        public static bool Register(string username, string password, string role = "Guest")
+        {
+            try {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                string sql = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES (@u, @p, @r, datetime('now'))";
+                using var cmd = new SqliteCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@u", username);
+                cmd.Parameters.AddWithValue("@p", password);
+                cmd.Parameters.AddWithValue("@r", role);
+                cmd.ExecuteNonQuery();
+                return true;
+            } catch { return false; }
+        }
+
+        // --- COMMENT MANAGEMENT ---
+        public static List<Comment> GetComments(int docId)
+        {
+            var list = new List<Comment>();
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = "SELECT * FROM Comments WHERE DocumentId=@id ORDER BY CreatedAt ASC";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@id", docId);
+            using var reader = cmd.ExecuteReader();
+            while(reader.Read())
+            {
+                list.Add(new Comment {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    DocumentId = Convert.ToInt32(reader["DocumentId"]),
+                    UserId = Convert.ToInt32(reader["UserId"]),
+                    Username = reader["Username"].ToString() ?? "",
+                    Content = reader["Content"].ToString() ?? "",
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.Now.ToString())
+                });
+            }
+            return list;
+        }
+
+        public static void InsertComment(Comment c)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = "INSERT INTO Comments (DocumentId, UserId, Username, Content, CreatedAt) VALUES (@docId, @uId, @uName, @c, datetime('now'))";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@docId", c.DocumentId);
+            cmd.Parameters.AddWithValue("@uId", c.UserId);
+            cmd.Parameters.AddWithValue("@uName", c.Username);
+            cmd.Parameters.AddWithValue("@c", c.Content);
             cmd.ExecuteNonQuery();
         }
 

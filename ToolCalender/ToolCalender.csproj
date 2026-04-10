@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -16,6 +16,8 @@
     <PackageReference Include="itext7" Version="8.0.5" />
     <!-- Đọc file Word (.docx) -->
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.2.0" />
+    <PackageReference Include="itext7.bouncy-castle-adapter" Version="9.6.0" />
+    <PackageReference Include="itext7.font-asian" Version="9.6.0" />
     <!-- Lưu trữ SQLite cục bộ -->
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.4" />
   </ItemGroup>

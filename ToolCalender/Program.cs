@@ -14,7 +14,18 @@ namespace ToolCalender
             // Khởi tạo database SQLite (tạo file nếu chưa có)
             DatabaseService.Initialize();
 
-            Application.Run(new Form1());
+            // Hiển thị Form Đăng nhập
+            using (var login = new Forms.FormLogin())
+            {
+                if (login.ShowDialog() == DialogResult.OK)
+                {
+                    Application.Run(new Form1());
+                }
+                else
+                {
+                    Application.Exit();
+                }
+            }
         }
     }
 }

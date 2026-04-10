@@ -82,6 +82,7 @@ namespace ToolCalender.Services
             var mainForm = Application.OpenForms.Count > 0 ? Application.OpenForms[0] : null;
             Action show = () =>
             {
+                System.Media.SystemSounds.Asterisk.Play();
                 _notifyIcon.BalloonTipTitle = title;
                 _notifyIcon.BalloonTipText = message;
                 _notifyIcon.BalloonTipIcon = icon;
