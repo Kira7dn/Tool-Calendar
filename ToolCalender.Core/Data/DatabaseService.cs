@@ -94,6 +94,34 @@ namespace ToolCalender.Data
         }
 
         // --- USER MANAGEMENT ---
+        public static List<User> GetUsers()
+        {
+            var list = new List<User>();
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = "SELECT Id, Username, Role FROM Users";
+            using var cmd = new SqliteCommand(sql, connection);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list.Add(new User {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    Username = reader["Username"].ToString() ?? "",
+                    Role = reader["Role"].ToString() ?? ""
+                });
+            }
+            return list;
+        }
+
+        public static void DeleteUser(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var cmd = new SqliteCommand("DELETE FROM Users WHERE Id=@Id AND Username != 'admin'", connection);
+            cmd.Parameters.AddWithValue("@Id", id);
+            cmd.ExecuteNonQuery();
+        }
+
         public static User? Login(string username, string password)
         {
             using var connection = new SqliteConnection(_connectionString);

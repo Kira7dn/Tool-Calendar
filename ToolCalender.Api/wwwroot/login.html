@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập | Hệ Thống Điều Phối Công Văn</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .login-page {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+        }
+        
+        .login-card {
+            width: 400px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .login-logo {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 24px;
+        }
+
+        .login-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .login-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: white;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+        }
+
+        .login-btn {
+            width: 100%;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.8rem;
+            margin-top: 16px;
+            display: none;
+        }
+    </style>
+</head>
+<body class="login-page">
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="login-card">
+        <img src="assets/LINK STRATEGY.png" alt="Logo" class="login-logo" onerror="this.src='https://via.placeholder.com/64'">
+        <h2>Chào mừng trở lại</h2>
+        <p>Vui lòng đăng nhập để quản lý công văn</p>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label>Tên đăng nhập</label>
+                <input type="text" id="username" placeholder="admin" required autofocus>
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary login-btn" id="submit-btn">
+                <span>Đăng nhập ngay</span>
+            </button>
+            <div id="error-alert" class="error-msg"></div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorAlert = document.getElementById('error-alert');
+            const submitBtn = document.getElementById('submit-btn');
+
+            errorAlert.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Đang xác thực...';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('auth_token', data.token);
+                    localStorage.setItem('user_name', data.username);
+                    localStorage.setItem('user_role', data.role);
+                    window.location.href = 'index.html';
+                } else {
+                    const err = await res.json();
+                    errorAlert.innerText = err.message || 'Đăng nhập thất bại.';
+                    errorAlert.style.display = 'block';
+                }
+            } catch (error) {
+                errorAlert.innerText = 'Lỗi kết nối máy chủ.';
+                errorAlert.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Đăng nhập ngay';
+            }
+        });
+
+        // Kiểm tra nếu đã login thì chuyển thẳng vào dashboard
+        if (localStorage.getItem('auth_token')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
