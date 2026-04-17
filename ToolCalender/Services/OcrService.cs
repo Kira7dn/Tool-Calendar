@@ -1,70 +1,70 @@
 using System.Text;
-using Windows.Data.Pdf;
-using Windows.Graphics.Imaging;
-using Windows.Media.Ocr;
-using Windows.Storage;
-using Windows.Storage.Streams;
+using Tesseract;
+using PDFtoImage;
 
 namespace ToolCalender.Services
 {
     public class OcrService
     {
+        private static string GetTessDataPath()
+        {
+            // Kiểm tra đường dẫn mặc định trên Linux (Docker)
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
+            {
+                if (Directory.Exists("/usr/share/tesseract-ocr/5/tessdata")) return "/usr/share/tesseract-ocr/5/tessdata";
+                if (Directory.Exists("/usr/share/tesseract-ocr/4.00/tessdata")) return "/usr/share/tesseract-ocr/4.00/tessdata";
+            }
+            
+            // Mặc định cho Windows hoặc local
+            string localPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tessdata");
+            if (!Directory.Exists(localPath)) Directory.CreateDirectory(localPath);
+            return localPath;
+        }
+
         public static async Task<string> ExtractTextFromPdfOcrAsync(string filePath)
         {
             var sb = new StringBuilder();
+            string tessDataPath = GetTessDataPath();
 
             try
             {
-                // 1. Load file PDF thông qua Windows Storage
-                StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
+                // 1. Chuyển đổi trang PDF đầu tiên thành hình ảnh (PNG stream)
+                // Sử dụng PDFtoImage (dựa trên PDFium & SkiaSharp) - chạy được trên Linux
+                using var pdfStream = File.OpenRead(filePath);
                 
-                PdfDocument pdfDoc = await PdfDocument.LoadFromFileAsync(file);
-                if (pdfDoc.PageCount == 0) return string.Empty;
+                // Render trang 0 với DPI 300 để OCR chính xác
+                using var imageStream = new MemoryStream();
+                Conversion.SavePng(imageStream, pdfStream, pageIndex: 0, dpi: 300);
+                imageStream.Position = 0;
 
-                // Chỉ quét trang 1 (thường chứa đủ thông tin Header) để đảm bảo tốc độ
-                PdfPage page = pdfDoc.GetPage(0);
-                
-                using (var stream = new InMemoryRandomAccessStream())
+                // 2. Khởi tạo Tesseract Engine
+                // Lưu ý: Cần có thư mục 'tessdata' chứa file 'vie.traineddata'
+                if (!Directory.Exists(TessDataPath))
                 {
-                    // 2. Render trang PDF thành hình ảnh trong bộ nhớ (DPI cao để OCR chuẩn)
-                    var options = new PdfPageRenderOptions { DestinationWidth = 2048 }; 
-                    await page.RenderToStreamAsync(stream, options);
-
-                    // 3. Khởi tạo bộ giải mã hình ảnh
-                    BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
-                    using (SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync())
-                    {
-                        // 4. Khởi tạo bộ máy OCR (Ưu tiên tiếng Việt)
-                        OcrEngine ocrEngine;
-                        var language = new Windows.Globalization.Language("vi-VN");
-                        
-                        if (OcrEngine.IsLanguageSupported(language))
-                        {
-                            ocrEngine = OcrEngine.TryCreateFromLanguage(language);
-                        }
-                        else
-                        {
-                            // Fallback về ngôn ngữ hệ thống nếu chưa cài gói tiếng Việt
-                            ocrEngine = OcrEngine.TryCreateFromUserProfileLanguages();
-                        }
-
-                        if (ocrEngine != null)
-                        {
-                            // 5. Thực hiện nhận diện
-                            var result = await ocrEngine.RecognizeAsync(softwareBitmap);
-                            sb.AppendLine(result.Text);
-                        }
-                    }
+                    Directory.CreateDirectory(TessDataPath);
                 }
-                
-                page.Dispose(); // PdfPage thường có Dispose hoặc Close
+
+                using var engine = new TesseractEngine(tessDataPath, "vie", EngineMode.Default);
+                using var img = Pix.LoadFromMemory(imageStream.ToArray());
+                using var page = engine.Process(img);
+
+                string text = page.GetText();
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    sb.AppendLine(text);
+                }
             }
             catch (Exception ex)
             {
-                sb.AppendLine($"[OCR Error]: {ex.Message}");
+                sb.AppendLine($"[Tesseract OCR Error]: {ex.Message}");
+                // Nếu thiếu dữ liệu ngôn ngữ, thông báo cho người dùng
+                if (ex.Message.Contains("tessdata"))
+                {
+                    sb.AppendLine("Gợi ý: Đảm bảo thư mục 'tessdata' tồn tại và chứa file 'vie.traineddata'.");
+                }
             }
 
-            return sb.ToString();
+            return await Task.FromResult(sb.ToString());
         }
     }
 }

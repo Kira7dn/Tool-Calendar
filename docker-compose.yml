@@ -1,0 +1,27 @@
+services:
+  official-doc-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: doc-coordination-system
+    expose:
+      - "5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DB_PATH=/app/data/documents.db
+    volumes:
+      - ./data:/app/data
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - official-doc-backend
+    restart: always

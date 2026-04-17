@@ -9,12 +9,25 @@ namespace ToolCalender.Data
 
         public static void Initialize()
         {
-            string appData = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "ToolCalender"
-            );
-            Directory.CreateDirectory(appData);
-            string dbPath = Path.Combine(appData, "documents.db");
+            string dbPath;
+            string? envPath = Environment.GetEnvironmentVariable("DB_PATH");
+
+            if (!string.IsNullOrEmpty(envPath))
+            {
+                dbPath = envPath;
+                string? dir = Path.GetDirectoryName(dbPath);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+            }
+            else
+            {
+                string appData = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "ToolCalender"
+                );
+                Directory.CreateDirectory(appData);
+                dbPath = Path.Combine(appData, "documents.db");
+            }
+
             _connectionString = $"Data Source={dbPath}";
 
             using var connection = new SqliteConnection(_connectionString);
