@@ -11,20 +11,24 @@ using ToolCalender.Models;
 
 namespace ToolCalender.Services
 {
-    public static class DocumentExtractorService
+    public class DocumentExtractorService : IDocumentExtractorService
     {
-        public static async Task<DocumentRecord> ExtractFromFileAsync(string filePath)
+        private readonly IOcrService _ocrService;
+
+        public DocumentExtractorService(IOcrService ocrService)
+        {
+            _ocrService = ocrService;
+        }
+
+        public async Task<DocumentRecord> ExtractFromFileAsync(string filePath)
         {
             string ext = Path.GetExtension(filePath).ToLower();
             string text = "";
 
             if (ext == ".pdf")
             {
-                // Ưu tiên dùng OCR Native Windows theo yêu cầu của bạn
-                // Quét hình ảnh để tránh lỗi font chữ/mã hóa
-                text = await OcrService.ExtractTextFromPdfOcrAsync(filePath);
+                text = await _ocrService.ExtractTextFromPdfOcrAsync(filePath);
                 
-                // Bổ sung thêm text thô (nếu có) để tăng cường kết quả
                 string rawText = ExtractFromPdf(filePath);
                 if (!string.IsNullOrWhiteSpace(rawText)) text += "\n" + rawText;
             }
@@ -41,13 +45,12 @@ namespace ToolCalender.Services
         }
 
         // ------- Đọc PDF -------
-        private static string ExtractFromPdf(string filePath)
+        private string ExtractFromPdf(string filePath)
         {
             var sb = new StringBuilder();
             using var reader = new PdfReader(filePath);
             using var pdf = new PdfDocument(reader);
 
-            // 1. Trích xuất text tĩnh từ các trang
             for (int i = 1; i <= pdf.GetNumberOfPages(); i++)
             {
                 var page = pdf.GetPage(i);
@@ -55,14 +58,11 @@ namespace ToolCalender.Services
                 string pageText = PdfTextExtractor.GetTextFromPage(page, strategy);
                 sb.AppendLine(pageText);
 
-                // 2. Trích xuất text từ các Annotations (Ghi chú, Stamp...)
                 foreach (var ann in page.GetAnnotations())
                 {
-                    // Lấy text trực tiếp từ nội dung ghi chú
                     var content = ann.GetContents();
                     if (content != null) sb.AppendLine(content.ToString());
                     
-                    // Xử lý Appearance Streams (Phần hiển thị đồ họa của ghi chú)
                     var appearance = ann.GetAppearanceObject(PdfName.N);
                     if (appearance is PdfStream appStream)
                     {
@@ -81,11 +81,9 @@ namespace ToolCalender.Services
                     }
                 }
 
-                // 2.1 Quét đệ quy các XObjects (Form XObjects) - Đôi khi text nằm ẩn ở đây
                 ExtractTextFromXObjects(page.GetResources(), sb, new HashSet<PdfStream>());
             }
 
-            // 3. Trích xuất dữ liệu từ các ô nhập liệu (AcroForm)
             var form = PdfAcroForm.GetAcroForm(pdf, false);
             if (form != null)
             {
@@ -103,7 +101,7 @@ namespace ToolCalender.Services
             return sb.ToString();
         }
 
-        private static void ExtractTextFromXObjects(PdfResources resources, StringBuilder sb, HashSet<PdfStream> visited)
+        private void ExtractTextFromXObjects(PdfResources resources, StringBuilder sb, HashSet<PdfStream> visited)
         {
             if (resources == null) return;
             var xObjectsDict = resources.GetResource(PdfName.XObject);
@@ -136,7 +134,7 @@ namespace ToolCalender.Services
         }
 
         // ------- Đọc Word -------
-        private static string ExtractFromWord(string filePath)
+        private string ExtractFromWord(string filePath)
         {
             var sb = new StringBuilder();
             using var doc = WordprocessingDocument.Open(filePath, false);
@@ -148,7 +146,7 @@ namespace ToolCalender.Services
         }
 
         // ------- Phân tích văn bản -------
-        private static async Task<DocumentRecord> ParseTextAsync(string text, string filePath)
+        private async Task<DocumentRecord> ParseTextAsync(string text, string filePath)
         {
             var record = new DocumentRecord
             {
@@ -156,27 +154,17 @@ namespace ToolCalender.Services
                 NgayThem = DateTime.Now
             };
 
-            // ── 0. Làm sạch văn bản chuyên sâu
-            // Chuẩn hóa Unicode (Dựng sẵn) để Regex hoạt động chính xác hơn
             string t = text.Normalize(NormalizationForm.FormC);
-            
-            // Xử lý lỗi font chữ PDF phổ biến
             t = t.Replace("ƣ", "ư").Replace("Ƣ", "Ư");
-            
-            // Sửa lỗi OCR phổ biến cho từ khóa quan trọng
             t = Regex.Replace(t, @"\b[Ss][06óOô]\b", "Số");
             t = Regex.Replace(t, @"\b[Hh]ạn\s+[Xx]ử\s+[Ll]ỹ\b", "Hạn xử lý");
             t = Regex.Replace(t, @"\b[Tt]rƣớc\b", "trước");
+            t = Regex.Replace(t, @"\s+", " ");
 
-            t = Regex.Replace(t, @"\s+", " "); // Thu gọn khoảng trắng
-
-            // ── 1. Số văn bản 
-            // Chiến thuật OCR: Chữ "Số" rất hay bị đọc sai thành S6, S0, Sô...
             int vVIndex = t.IndexOf("V/v", StringComparison.OrdinalIgnoreCase);
             if (vVIndex < 0) vVIndex = t.IndexOf("Về việc", StringComparison.OrdinalIgnoreCase);
             string searchArea = vVIndex > 0 ? t.Substring(0, vVIndex) : (t.Length > 1500 ? t.Substring(0, 1500) : t);
 
-            // ── 1. Số hiệu văn bản (Ưu tiên có tiền tố "Số:" hoặc "Số hiệu:")
             var soPatterns = new[] {
                 @"(?:Số|Số hiệu|Về việc)[:\s]*(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪa-z0-9&\.\-/]+)",
                 @"(?:Field_[^:]+)[:\s]*(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪa-z0-9&\.\-/]+)"
@@ -201,12 +189,10 @@ namespace ToolCalender.Services
             
             if (string.IsNullOrWhiteSpace(record.SoVanBan))
             {
-                // Fallback: Tìm thẳng mẫu Số/Ký hiệu (ví dụ: 1234/SNN-CNTY) mà không cần chữ "Số"
                 var mLegacy = Regex.Match(searchArea, @"(\d{1,6}\s*[/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]{2,})", RegexOptions.IgnoreCase);
                 if (mLegacy.Success) record.SoVanBan = mLegacy.Value.Replace(" ", "").Trim();
             }
 
-            // ── 2. Ngày ban hành (Cực kỳ linh hoạt)
             var mNgayBH = Regex.Match(t,
                 @"(?:ngày|Ngày)\s*(\d{1,2})\s*(?:tháng|Tháng)\s*(\d{1,2})\s*(?:năm|Năm)\s*(\d{4})",
                 RegexOptions.IgnoreCase);
@@ -221,7 +207,6 @@ namespace ToolCalender.Services
                 }
             }
 
-            // ── 3. Thời hạn: Hỗ trợ cả chữ "trƣớc" (lỗi font) và "trước"
             var deadlinePatterns = new[] {
                 @"(?:trước|truoc|trướt|trình|xong|hạn|đến|ngày|kỳ)\s+(?:ngày|này|ngảy|ngay)?\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{4})",
                 @"(?:trước|truoc|trình|xong|hạn|đến|ngày)\s+(?:ngày|này|ngay)\s*(\d{1,2})\s+(?:tháng|thảng|thang)\s*(\d{1,2})\s+(?:năm|nảm|nam)\s*(\d{4})",
@@ -233,7 +218,7 @@ namespace ToolCalender.Services
 
             foreach (var pattern in deadlinePatterns)
             {
-                var matches = Regex.Matches(text, pattern, RegexOptions.IgnoreCase);
+                var matches = Regex.Matches(t, pattern, RegexOptions.IgnoreCase);
                 foreach (Match match in matches)
                 {
                     if (int.TryParse(match.Groups[1].Value, out int day) &&
@@ -245,12 +230,14 @@ namespace ToolCalender.Services
                             int currentPriority = 1; 
                             string context = match.Value.ToLower();
                             
-                            // Hạn xử lý phải là tương lai so với 2020 (Ngày căn cứ thường là cũ)
-                            if (year > 2023) currentPriority += 2;
+                            if (year > 2024) currentPriority += 2;
 
-                            if (context.Contains("hạn") || context.Contains("xong") || context.Contains("hoàn thành")) 
+                            if (context.Contains("hạn") || context.Contains("han") || 
+                                context.Contains("xong") || 
+                                context.Contains("hoàn thành") || context.Contains("hoan thanh")) 
                                 currentPriority += 10;
-                            else if (context.Contains("trước") || context.Contains("trình"))
+                            else if (context.Contains("trước") || context.Contains("truoc") || 
+                                     context.Contains("trình") || context.Contains("trinh"))
                                 currentPriority += 5;
 
                             if (currentPriority > bestPriority)
@@ -263,12 +250,8 @@ namespace ToolCalender.Services
                 }
             }
 
-            if (bestMatchDate.HasValue)
-            {
-                record.ThoiHan = bestMatchDate.Value;
-            }
+            if (bestMatchDate.HasValue) record.ThoiHan = bestMatchDate.Value;
 
-            // Nếu vẫn không thấy hạn, tìm ngày lớn nhất
             if (record.ThoiHan == DateTime.MinValue && record.NgayBanHanh.HasValue)
             {
                 var allDates = Regex.Matches(t, @"(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{4})");
@@ -283,7 +266,6 @@ namespace ToolCalender.Services
                 if (maxD != record.NgayBanHanh) record.ThoiHan = maxD;
             }
 
-            // ── 4. Cơ quan ban hành (dòng đầu có "Sở", "UBND", "Ban", "Ủy ban")
             var lines = t.Split('\n');
             var coQuanLine = lines.Take(30).FirstOrDefault(l =>
                 Regex.IsMatch(l, @"(Sở|UBND|Ủy ban|Phòng|Ban|Cục|Chi cục|Tổng cục)",
@@ -291,7 +273,6 @@ namespace ToolCalender.Services
             if (!string.IsNullOrWhiteSpace(coQuanLine))
                 record.CoQuanBanHanh = coQuanLine.Trim();
 
-            // ── 5. Cơ quan chủ quản tham mưu (sau "qua" hoặc "gửi" hoặc trong "Nơi nhận")
             var mChuQuan = Regex.Match(t,
                 @"\(qua\s+([^\)]{5,100})\)",
                 RegexOptions.IgnoreCase);
@@ -299,14 +280,12 @@ namespace ToolCalender.Services
                 record.CoQuanChuQuan = mChuQuan.Groups[1].Value.Trim();
             else
             {
-                // Fallback: tìm Chi cục, Phòng... ở khoảng đầu
                 var mCQ = Regex.Match(t,
                     @"(Chi cục[^\n,;\.]{3,60}|Phòng [^\n,;\.]{3,50})",
                     RegexOptions.IgnoreCase);
                 if (mCQ.Success) record.CoQuanChuQuan = mCQ.Groups[1].Value.Trim();
             }
 
-            // ── 6. Đơn vị bị chỉ đạo (phòng, ban nhận chỉ thị)
             var donViPatterns = new[]
             {
                 @"Kinh tế[/\s]*Kinh tế",
@@ -332,16 +311,12 @@ namespace ToolCalender.Services
             if (donViList.Count > 0)
                 record.DonViChiDao = string.Join("; ", donViList.Distinct());
 
-            // ── 7. Trích yếu (dòng có "V/v" hoặc "Về việc")
-            // Cho phép lấy nhiều dòng vì trích yếu thường dài (dùng [\s\S] để match cả xuống dòng)
-            // Thêm "Quảng Ninh", "ngày" và các từ khóa ngắt dòng để tránh lấy nhầm thông tin địa danh
             var mTrichYeu = Regex.Match(t,
                 @"[Vv]/[vV]\s*[:\.]?\s*([\s\S]{10,400}?)(\n\s*\n|\n\s*-|Kính gửi|Độc lập|Địa danh|Quảng Ninh|ngày\s+\d|tháng\s+\d|$)",
                 RegexOptions.IgnoreCase);
             if (mTrichYeu.Success)
             {
                 string val = mTrichYeu.Groups[1].Value.Trim();
-                // Làm sạch: bỏ các dấu xuống dòng thừa, thay bằng dấu cách để text liền mạch
                 record.TrichYeu = Regex.Replace(val, @"\r?\n", " ").Replace("  ", " ").Trim();
             }
             else
@@ -354,7 +329,6 @@ namespace ToolCalender.Services
                 }
             }
 
-            // ── Fallback 1: Nếu vẫn chưa thấy số, thử tìm trong tên file
             if (string.IsNullOrWhiteSpace(record.SoVanBan))
             {
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
@@ -362,7 +336,7 @@ namespace ToolCalender.Services
                 if (mFile.Success) record.SoVanBan = mFile.Value.Trim();
             }
 
-            return record;
+            return await Task.FromResult(record);
         }
 
     }
