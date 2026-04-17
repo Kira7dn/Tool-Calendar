@@ -12,6 +12,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Đăng ký OCR & Extraction Services
+using ToolCalender.Services;
+builder.Services.AddSingleton<IOcrService, OcrService>();
+builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();
+
 // Cấu hình JWT
 var key = "LinkStrategy_SecretKey_2026_Secure_GiamSatCongVan"; // Key bí mật cho GĐ 1
 builder.Services.AddAuthentication(x =>

@@ -9,6 +9,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - DB_PATH=/app/data/documents.db
+      - OcrSettings__TessDataPath=/usr/share/tesseract-ocr/5/tessdata
     volumes:
       - ./data:/app/data
     restart: always
