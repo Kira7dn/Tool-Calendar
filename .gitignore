@@ -16,4 +16,8 @@ packages/
 *.db-shm
 *.db-wal
 
-tests/test_results/actual_test/debug_images
+# Generated test artifacts
+tests/test_results/**/debug_images/
+tests/test_results/**/*.pdf
+tests/test_results/**/Comparison_*.md
+tests/test_results/actual_test/*_result.md

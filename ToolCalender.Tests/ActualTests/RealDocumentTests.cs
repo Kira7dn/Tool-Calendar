@@ -1,4 +1,5 @@
 using Xunit;
+using ToolCalender.Models;
 using ToolCalender.Services;
 using ToolCalender.Tests.Helpers;
 using System.IO;
@@ -8,6 +9,8 @@ namespace ToolCalender.Tests.ActualTests
 {
     public class RealDocumentTests
     {
+        private static bool _debugReset;
+        private static readonly object DebugResetLock = new();
         private readonly IConfiguration _configuration;
         private readonly IOcrService _ocrService;
 
@@ -15,6 +18,7 @@ namespace ToolCalender.Tests.ActualTests
         {
             var resultsPath = Path.Combine(@"d:\Business Analyze\ToolCalendar\tests\test_results", "actual_test");
             var debugPath = Path.Combine(resultsPath, "debug_images");
+            ResetDirectoryOnce(debugPath);
 
             var configData = new Dictionary<string, string?> {
                 {"OcrSettings:TessDataPath", @"d:\Business Analyze\ToolCalendar\ToolCalender.Core\tessdata"},
@@ -28,6 +32,22 @@ namespace ToolCalender.Tests.ActualTests
                 .Build();
 
             _ocrService = new OcrService(_configuration);
+        }
+
+        private static void ResetDirectoryOnce(string path)
+        {
+            lock (DebugResetLock)
+            {
+                if (_debugReset) return;
+
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(path, true);
+                }
+
+                Directory.CreateDirectory(path);
+                _debugReset = true;
+            }
         }
 
         private string GetResultsFolder()
@@ -47,11 +67,11 @@ namespace ToolCalender.Tests.ActualTests
             if (!File.Exists(pdfPath)) return;
 
             // --- ACT ---
-            string extractedText = await _ocrService.ExtractTextFromPdfOcrAsync(pdfPath);
+            OcrExtractionResult ocrResult = await _ocrService.ExtractPdfOcrResultAsync(pdfPath);
 
             // --- REPORT ---
             string reportPath = Path.Combine(resultsFolder, "Quyết định 189_result.md");
-            string report = $"# Kết quả OCR - Quyết định 189.pdf\n\n```\n{extractedText}\n```";
+            string report = $"# Kết quả OCR - Quyết định 189.pdf\n\n```\n{ocrResult.FullText}\n```";
             File.WriteAllText(reportPath, report);
         }
     }

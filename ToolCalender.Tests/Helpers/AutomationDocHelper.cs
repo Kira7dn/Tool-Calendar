@@ -189,7 +189,7 @@ namespace ToolCalender.Tests.Helpers
 
         public static string GenerateRotatedScannedPdf(string outputPath)
         {
-            string groundTruth = "VĂN BẢN QUÉT BỊ XOAY NGANG 90 ĐỘ\n" + LongAdministrativeTemplate;
+            string groundTruth = "VĂN BẢN QUÉT GÓC 90 ĐỘ (XOAY NGANG)\n" + LongAdministrativeTemplate;
             int width = 2480; int height = 3508; // Khổ đứng chuẩn
             using var surface = SKSurface.Create(new SKImageInfo(width, height));
             var canvas = surface.Canvas;
@@ -207,7 +207,13 @@ namespace ToolCalender.Tests.Helpers
             paint.Typeface = SKTypeface.FromFile(TimesPath);
             float y = 250;
             foreach (var line in LongAdministrativeTemplate.Split('\n')) {
-                canvas.DrawText(line, 100, y, paint);
+                string text = line;
+                while (text.Length > 80) {
+                    canvas.DrawText(text.Substring(0, 80), 100, y, paint);
+                    text = text.Substring(80);
+                    y += 60;
+                }
+                canvas.DrawText(text, 100, y, paint);
                 y += 80;
             }
 

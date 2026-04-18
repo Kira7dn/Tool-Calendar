@@ -1,5 +1,6 @@
 using Xunit;
 using FluentAssertions;
+using ToolCalender.Models;
 using ToolCalender.Services;
 using ToolCalender.Tests.Helpers;
 using System.IO;
@@ -9,16 +10,23 @@ namespace ToolCalender.Tests
 {
     public class OcrAutomationTests
     {
+        private static bool _debugReset;
+        private static readonly object DebugResetLock = new();
         private readonly IConfiguration _configuration;
         private readonly IOcrService _ocrService;
         private readonly IDocumentExtractorService _extractorService;
 
         public OcrAutomationTests()
         {
+            string debugPath = Path.Combine(@"d:\Business Analyze\ToolCalendar\tests\test_results", "unit_test", "debug_images", "automation");
+            ResetDirectoryOnce(debugPath);
+
             // Thiết lập cấu hình giả lập trỏ về folder Core/tessdata
             var configData = new Dictionary<string, string?> {
                 {"OcrSettings:TessDataPath", @"d:\Business Analyze\ToolCalendar\ToolCalender.Core\tessdata"},
-                {"OcrSettings:Language", "vie+eng"}
+                {"OcrSettings:Language", "vie+eng"},
+                {"OcrSettings:EnableDebug", "true"},
+                {"OcrSettings:DebugPath", debugPath}
             };
 
             _configuration = new ConfigurationBuilder()
@@ -27,6 +35,22 @@ namespace ToolCalender.Tests
 
             _ocrService = new OcrService(_configuration);
             _extractorService = new DocumentExtractorService(_ocrService);
+        }
+
+        private static void ResetDirectoryOnce(string path)
+        {
+            lock (DebugResetLock)
+            {
+                if (_debugReset) return;
+
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(path, true);
+                }
+
+                Directory.CreateDirectory(path);
+                _debugReset = true;
+            }
         }
 
         private string GetResultsFolder()
@@ -50,16 +74,16 @@ namespace ToolCalender.Tests
             string groundTruth = AutomationDocHelper.GenerateProfessionalImagePdf(pdfPath, expectedSoVb, expectedThoiHan);
 
             // --- ACT ---
-            var docData = await _extractorService.ExtractFromFileAsync(pdfPath);
-            string extractedText = await _ocrService.ExtractTextFromPdfOcrAsync(pdfPath);
-            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, extractedText);
+            OcrExtractionResult ocrResult = await _ocrService.ExtractPdfOcrResultAsync(pdfPath);
+            var docData = await _extractorService.ExtractFromFileAsync(pdfPath, ocrResult);
+            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, ocrResult.FullText);
 
             // Xuất báo cáo đối chiếu
             string reportPath = Path.Combine(resultsFolder, "Comparison_Professional_Doc.md");
             string report = $"# Báo cáo đối chiếu OCR - Professional Doc\n\n" +
                             $"**Tỷ lệ trùng khớp: {accuracy}%**\n\n" +
                             $"## Văn bản gốc (Ground Truth):\n```\n{groundTruth}\n```\n\n" +
-                            $"## Văn bản AI đọc được:\n```\n{extractedText}\n```\n";
+                            $"## Văn bản AI đọc được:\n```\n{ocrResult.FullText}\n```\n";
             File.WriteAllText(reportPath, report);
 
             // --- ASSERT ---
@@ -78,16 +102,16 @@ namespace ToolCalender.Tests
             string groundTruth = AutomationDocHelper.GenerateStandardPdf(pdfPath, "777/TEST-VB", "18/04/2026", "01/01/2027");
             
             // --- ACT ---
-            var docData = await _extractorService.ExtractFromFileAsync(pdfPath);
-            string extractedText = await _ocrService.ExtractTextFromPdfOcrAsync(pdfPath); 
-            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, extractedText);
+            OcrExtractionResult ocrResult = await _ocrService.ExtractPdfOcrResultAsync(pdfPath);
+            var docData = await _extractorService.ExtractFromFileAsync(pdfPath, ocrResult);
+            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, ocrResult.FullText);
 
             // Xuất báo cáo
             string reportPath = Path.Combine(resultsFolder, "Comparison_Standard_Doc.md");
             string report = $"# Báo cáo đối chiếu OCR - Standard Doc\n\n" +
                             $"**Tỷ lệ trùng khớp: {accuracy}%**\n\n" +
                             $"## Văn bản gốc:\n```\n{groundTruth}\n```\n\n" +
-                            $"## Văn bản AI đọc được:\n```\n{extractedText}\n```\n";
+                            $"## Văn bản AI đọc được:\n```\n{ocrResult.FullText}\n```\n";
             File.WriteAllText(reportPath, report);
 
             // --- ASSERT ---
