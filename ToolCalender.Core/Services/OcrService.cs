@@ -54,29 +54,55 @@ namespace ToolCalender.Services
             var sb = new StringBuilder();
             string tessDataPath = GetTessDataPath();
             string lang = _configuration["OcrSettings:Language"] ?? "vie+eng";
+            
+            // Xác định thư mục debug tại Root Solution (Hỗ trợ cả .sln và .slnx)
+            string rootDir = AppDomain.CurrentDomain.BaseDirectory;
+            while (rootDir != null)
+            {
+                if (Directory.GetFiles(rootDir, "*.sln*").Length > 0) break;
+                rootDir = Path.GetDirectoryName(rootDir);
+            }
+            string debugPath = Path.Combine(rootDir ?? AppDomain.CurrentDomain.BaseDirectory, "tests", "test_results", "actual_test", "debug_images");
+            Directory.CreateDirectory(debugPath);
 
             try
             {
-                // --- 1. LẤY TỔNG SỐ TRANG ---
+                // --- 1. LẤY TỔNG SỐ TRANG (Mở stream riêng để đếm trang) ---
                 int totalPages = 0;
-                using (var reader = new iText.Kernel.Pdf.PdfReader(filePath))
+                using (var fsCount = File.OpenRead(filePath))
+                using (var reader = new iText.Kernel.Pdf.PdfReader(fsCount))
                 using (var pdfDoc = new iText.Kernel.Pdf.PdfDocument(reader))
                 {
                     totalPages = pdfDoc.GetNumberOfPages();
                 }
 
-                // --- 2. DUYỆT TỪNG TRANG ĐỂ OCR ---
+                // --- 2. KHỞI TẠO ENGINE MỘT LẦN DUY NHẤT (QUAN TRỌNG ĐỂ CỨU FLOW) ---
+                using var mainEngine = new TesseractEngine(tessDataPath, lang, EngineMode.Default);
+                using var osdEngine = new TesseractEngine(tessDataPath, "osd", EngineMode.Default);
+                mainEngine.SetVariable("preserve_interword_spaces", "1");
+
+                // --- 3. DUYỆT TỪNG TRANG ---
                 for (int i = 0; i < totalPages; i++)
                 {
-                    using var pdfStream = File.OpenRead(filePath);
-                    using var pageImageStream = new MemoryStream();
-                    
-                    // Render từng trang (DPI 300 để cân bằng tốc độ/chất lượng cho file dài)
+                    try
+                    {
+                        using var pdfStream = File.OpenRead(filePath);
+                        using var pageImageStream = new MemoryStream();
+                    // Render từng trang (DPI 300 là tối ưu để tránh nhiễu hạt quá mức)
                     Conversion.SavePng(pageImageStream, pdfStream, page: i, dpi: 300);
                     pageImageStream.Position = 0;
 
                     using var bitmap = SKBitmap.Decode(pageImageStream);
                     if (bitmap == null) continue;
+
+                    // --- LƯU DEBUG: STAGE 1 (RAW IMAGE) ---
+                    try
+                    {
+                        string fileName = $"{Path.GetFileNameWithoutExtension(filePath)}_p{i + 1}_1_raw.png";
+                        using var debugFs = File.Create(Path.Combine(debugPath, fileName));
+                        bitmap.Encode(debugFs, SKEncodedImageFormat.Png, 100);
+                    }
+                    catch { }
 
                     // --- 3. TIỀN XỬ LÝ ẢNH TỪNG TRANG ---
                     using var finalBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
@@ -92,8 +118,8 @@ namespace ToolCalender.Services
                         };
                         using var cf = SKColorFilter.CreateColorMatrix(grayscaleMatrix);
                         
-                        // Sharpening
-                        float[] sharpenKernel = { 0, -1, 0, -1, 5, -1, 0, -1, 0 };
+                        // Sharpening mạnh hơn để tăng độ tương phản nét chữ
+                        float[] sharpenKernel = { -1, -1, -1, -1, 9, -1, -1, -1, -1 };
                         using var filter = SKImageFilter.CreateMatrixConvolution(
                             new SKSizeI(3, 3), sharpenKernel, 1f, 0f, new SKPointI(1, 1), 
                             SKShaderTileMode.Clamp, false);
@@ -102,54 +128,135 @@ namespace ToolCalender.Services
                         canvas.DrawBitmap(bitmap, 0, 0, paint);
                     }
 
-                    // --- 4. NHẬN DIỆN HƯỚNG VÀ XOAY ẢNH VẬT LÝ (OSD) ---
-                    using var stream = new SKDynamicMemoryWStream();
-                    finalBitmap.Encode(stream, SKEncodedImageFormat.Png, 100);
-                    using var pix = Pix.LoadFromMemory(stream.DetachAsData().ToArray());
-
-                    SKBitmap rotatedBitmap = null;
-                    string osdInfo = "";
-                    using (var osdEngine = new TesseractEngine(tessDataPath, lang, EngineMode.Default))
+                    // --- LƯU DEBUG: STAGE 2 (PREPROCESSED) ---
+                    try
                     {
-                        using (var osdPage = osdEngine.Process(pix, PageSegMode.AutoOsd))
+                        string fileName = $"{Path.GetFileNameWithoutExtension(filePath)}_p{i + 1}_2_preprocessed.png";
+                        using var debugFs = File.Create(Path.Combine(debugPath, fileName));
+                        finalBitmap.Encode(debugFs, SKEncodedImageFormat.Png, 100);
+                    }
+                    catch { }
+
+                    // --- 4. NHẬN DIỆN HƯỚNG VÀ XOAY ẢNH VẬT LÝ (OSD) ---
+                    // --- 4. NHẬN DIỆN HƯỚNG CHUYÊN BIỆT (PROFESSIONAL OSD PIPELINE) ---
+                    SKBitmap? rotatedBitmap = null;
+                    string osdInfo = "";
+                    
+                    try
+                    {
+                        // Bước A: Chuẩn bị ảnh chuyên dụng cho OSD (Best Practice: Grayscale + Median Blur + 10% Crop)
+                        int osdMargin = (int)(finalBitmap.Width * 0.1); 
+                        var osdRect = new SKRectI(osdMargin, osdMargin, finalBitmap.Width - osdMargin, finalBitmap.Height - osdMargin);
+                        
+                        using var osdSurface = SKSurface.Create(new SKImageInfo(osdRect.Width, osdRect.Height, SKColorType.Gray8));
+                        using var osdCanvas = osdSurface.Canvas;
+                        
+                        // Ma trận Gray BT.601
+                        float[] GrayMatrix = {
+                            0.299f, 0.587f, 0.114f, 0, 0,
+                            0.299f, 0.587f, 0.114f, 0, 0,
+                            0.299f, 0.587f, 0.114f, 0, 0,
+                            0, 0, 0, 1, 0
+                        };
+
+                        using (var osdPaint = new SKPaint { 
+                            ColorFilter = SKColorFilter.CreateColorMatrix(GrayMatrix),
+                            // Median Blur ẩn trong thư viện SkiaSharp thường được giả lập qua Blur nhẹ để giữ cạnh
+                            ImageFilter = SKImageFilter.CreateBlur(0.8f, 0.8f) 
+                        })
+                        {
+                            osdCanvas.DrawBitmap(finalBitmap, -osdMargin, -osdMargin, osdPaint);
+                        }
+
+                        using var osdImage = osdSurface.Snapshot();
+                        using var osdData = osdImage.Encode(SKEncodedImageFormat.Png, 100);
+                        byte[] osdBytes = osdData.ToArray();
+
+                        // Bước B: Nhận diện với OSD Engine đã khởi tạo sẵn
+                        using (var osdPix = Pix.LoadFromMemory(osdBytes))
+                        using (var osdPage = osdEngine.Process(osdPix, PageSegMode.OsdOnly))
                         {
                             osdPage.DetectBestOrientation(out Orientation orientation, out float confidence);
-                            osdInfo = $" [OSD: {orientation}({confidence:F1})]";
                             
-                            // Nếu phát hiện ảnh bị xoay và độ tự tin đủ tốt
-                            if (orientation != Orientation.PageUp && confidence > 3.0f)
+                            if (orientation != Orientation.PageUp && confidence > 10.0f) // OsdOnly confidence scale thường thấp hơn
                             {
-                                rotatedBitmap = FixOrientation(finalBitmap, orientation);
+                                bool isPortrait = finalBitmap.Height > finalBitmap.Width;
+                                bool is180 = (orientation == Orientation.PageDown);
+                                bool isSideways = (orientation == Orientation.PageLeft || orientation == Orientation.PageRight);
+
+                                // Logic an toàn: 
+                                // - Ưu tiên tuyệt đối xoay 180 vì không đổi Aspect Ratio.
+                                // - Chỉ xoay 90/270 nếu cực kỳ tin tưởng (Confidence cao) để tránh phá layout A4 Portrait.
+                                bool shouldRotate = is180 || (!isPortrait || !isSideways || confidence > 15.0f);
+
+                                if (shouldRotate)
+                                {
+                                    rotatedBitmap = FixOrientation(finalBitmap, orientation);
+                                    osdInfo = $" [OSD Fixed: {orientation}/Conf: {confidence:F1}]";
+                                }
+                                else
+                                {
+                                    osdInfo = $" [OSD Blocked: Portrait-Lock for {orientation}/Conf: {confidence:F1}]";
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        osdInfo = $" [OSD Error: {ex.Message}]";
+                    }
+
+                    // --- 5. OCR CHÍNH THỨC ---
+                    var bitmapToProcess = rotatedBitmap ?? finalBitmap;
+                    
+                    using (var ms = new MemoryStream())
+                    {
+                        if (bitmapToProcess.Encode(ms, SKEncodedImageFormat.Png, 100))
+                        {
+                            byte[] finalImageBytes = ms.ToArray();
+                            using (var finalPix = Pix.LoadFromMemory(finalImageBytes))
+                            {
+                                // --- 6. CHỐNG NGHIÊNG (DESKEW) ---
+                                using var deskewedPix = finalPix.Deskew();
+                                
+                                // NHẬN DIỆN VĂN BẢN (Ưu tiên hàng đầu để cứu Flow)
+                                using var page = mainEngine.Process(deskewedPix ?? finalPix, PageSegMode.Auto); 
+                                string resultText = page.GetText();
+                                if (!string.IsNullOrWhiteSpace(resultText)) {
+                                    sb.AppendLine($"--- Trang {i + 1}{osdInfo} ---");
+                                    sb.AppendLine(resultText);
+                                }
+
+                                // --- LƯU DEBUG (Sau khi đã OCR xong để an toàn) ---
+                                try
+                                {
+                                    // Lưu ảnh Stage 3: Sau OSD, trước Deskew
+                                    string osdFileName = $"{Path.GetFileNameWithoutExtension(filePath)}_p{i + 1}_3_osd_result.png";
+                                    using var osdFs = File.Create(Path.Combine(debugPath, osdFileName));
+                                    bitmapToProcess.Encode(osdFs, SKEncodedImageFormat.Png, 100);
+
+                                    // Lưu ảnh Stage 4: Sau Deskew (Tạm thời tắt để đảm bảo build pass và OCR chạy trước)
+                                    // string finalFileName = $"{Path.GetFileNameWithoutExtension(filePath)}_p{i + 1}_4_final_ocr.png";
+                                    // using var deskewedMs = new MemoryStream();
+                                    // (deskewedPix ?? finalPix).Save(deskewedMs, ImageFormat.Png);
+                                    // File.WriteAllBytes(Path.Combine(debugPath, finalFileName), deskewedMs.ToArray());
+                                }
+                                catch { /* Bỏ qua lỗi debug */ }
                             }
                         }
                     }
 
-                    // --- 5. OCR CHÍNH THỨC ---
-                    using (var engine = new TesseractEngine(tessDataPath, lang, EngineMode.Default)) 
-                    {
-                        engine.SetVariable("preserve_interword_spaces", "1");
-                        
-                        using var finalStream = new SKDynamicMemoryWStream();
-                        var bitmapToProcess = rotatedBitmap ?? finalBitmap;
-                        bitmapToProcess.Encode(finalStream, SKEncodedImageFormat.Png, 100);
-                        
-                        using var finalPix = Pix.LoadFromMemory(finalStream.DetachAsData().ToArray());
-                        // Sau khi xoay vật lý, ta dùng PageSegMode.Auto (PSM 3) để bóc tách tốt nhất
-                        using var page = engine.Process(finalPix, PageSegMode.Auto); 
-                        
-                        string resultText = page.GetText();
-                        if (!string.IsNullOrWhiteSpace(resultText)) {
-                            sb.AppendLine($"--- Trang {i + 1}{osdInfo} ---");
-                            sb.AppendLine(resultText);
-                        }
-                    }
-
                     rotatedBitmap?.Dispose();
+                    }
+                    catch (Exception pageEx)
+                    {
+                        sb.AppendLine($"--- Trang {i + 1} [Lỗi: {pageEx.Message}] ---");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                sb.AppendLine($"[OCR Error]: {ex.Message}");
+                sb.AppendLine($"[OCR Total Error]: {ex.Message}");
             }
 
             return await Task.FromResult(sb.ToString());

@@ -1,801 +1,875 @@
 # Kết quả OCR - Quyết định 189.pdf
 
 ```
---- Trang 1 [Deskewed] ---
-of yi   NHI  ñ   .
-sername madman) dugg nag,
+--- Trang 1 [OSD Fixed: PageDown/Conf: 19.7] ---
+C0 lal Te TNO 029235 94) RR To SIAR ed Jl ga đi 4
 
-LIED THỦ] -
-Tung) 27031 EL nog 7b -
+F436) Thine   SAO Y; PHONG PV01; Thời gian ký: 2026-01-28109:49:40 1 07:60
 
-OE Lug A KH hư kế
-QLD 2| H041 11828] -
-RRC JET 3° TRE] — On RT GO DR -
-By
+                              
+ 
+ 
+  
 
-% là Sant tĩnh Lum TU] TU DU ape mig THỊ. TIẾT, SF omgd Cee
-pe Fy me (101 oe Func song Food wea Suen mga Fug ey 'Ẹ mạng
-“dg SORE amy aq 200) mang cn map Remy CT mang
+ 
 
-J FL LT EE a SE wd
+ 
 
-ter use 2g vagy Suge Buda deg wo ey "Sug um wie See UE) gen mT Sy
-ấu Sipe apne 0) unl vey Sung Swen Fug, we a pad 2g CT mang
+_        BO CÔNG AI                CỘNG HOA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+CONG AN TINH QUANG NINH              Độc lập - Tự do - Hạnh phúc
+Số: A§9 /QĐ-CAT-CSMT            Quảng Ninh, ngày«2Ÿ tháng 04 nam 2026
+QUYET ĐỊNH
 
-Him TE 1.7 8% TA
-ol (AI
-inl pa Ee NE ar Tema ena ny Ste owe de ae may
-"ETD hE A vg EE
-vpn TL 1 — Fup 08T og me Sm ew wien ma nes Genk ga, Sn mu ua
-ent mann rg ween te lodge wm đại LL, WE 3T warp gape wee wee Soe deg
-EU x07 weg op Sue 17 Seu EIT-V JE-E0 EEE © 0s tuịp thắng: nã ng
-"wen Som) deg 209.1 gga wpueagy TL we Sen
-LE go ra Ea, LIÊM) La ảnh th aod “Ruger aang ge quip Ginko Fug
-lập Soon gg H3 ETHWC/THUETI RR XAH-LLUSDDUUBD TÔ Fupgl na uel)
-NET ngu nạp
-srg PHI Fuge Fumgpd snd mk n  MY 17H] Sg mH MEE n1] orp Tá mp
-H sat ten k7 LT eT te THEI  is  1adnh II XE wan
+Phé duyệt Đề án “Tăng cường công tác quản lý, giáo dục, dạy nghề,
+tạo việc làm, vay vốn tín dụng, tái hòa nhập cộng đồng cho
+c viền cai nghiện ma túy trên địa bàn tỉnh Quảng Ninh?
 
-jig Wk Lưỡi) 3 Td ho HT H0 CTITUEET EF iy ls es In ti hiến
-Gi]  we wr ll ny “" by ra ¬ Xu '  xi  HỶWETITEN I KE vad ing3s na ng
+  
+ 
 
-WU \N WY    et Mr
+  
+ 
 
-ORT TI ue En man TE Ig Sos HEH BE hf
-Pa Tomy Rugg eee) ome on wey DỤ EDOU Fuge "3U weg I  na ues       an mặn Ì 4 lận ng
-:                                                                                                                L                                                       he            toons                "                     “wah
+CONG AN TINH QUANG NINH,
+zo AN nh CAM PHA
 
-HMILMVYOMO22DOGENYIO | TT   rte TL
+ĐẾN Na) ne
 
-LL KỶ 9802 200 Wy      TITHE NE
-lll th 2  CR sc CO OT "4 tll Là
-UG snd 2 dE BE 5 * E9) L
+17075775255 7775/779575577/55.0.59/55
+’
 
-UIT TT TT wien Sw ves mans m
+   
 
-mop gn dio ode woo 1E] Sig om wo Ses wee) ds ni      m
-Langu Xếp adh pone 8p wenb amg Suna Juana TE lu, HE MẸ phẳng Nd
+GIAM POC CONG AN TÍNH
 
-HIE L350
+  
+  
 
-NI Ral ud   Wi ns eae |         \     [
-WTVH BT Ra) ST R  = led `  NHƯ uy (           LIS 1% De Oa fy
+bd sung nam 2025 (có hiệu lực từ 01/7/2026);
 
-any! HẠ g - op hp - ul i) Mig
-fen LARLY WHEW THD BH WX VOH DONOD
+Căn cứ Nghị quyết số 163/2024/QH15, ngày 27/1 1/2024 của Quốc hoi và
+Nghị quyét sô 50/NQ-CP ngày 13/3/2025 của Chính phủ về ban hành Kê hoach
+trién khai Nghị quyết sô 163/2024/QHI5, ngày 27/11/2024 của Quốc hor pie
+duyệt chương trình đầu tư Chương trình .mục tiêu quốc gia phòng, chong ma tủy
+đền năm 2030;
 
-FEMA 13V TI HDL SW 0
+Căn cứ Thông tư 09/2025/TT- BCA ngày 25/02/2025 của Bộ trưởng Bo
+Công an quy định về chức năng, nhiệm vụ, quyên hạn và cơ chu tổ chức bộ máy
+của Công an tỉnh, thành phố trực thuộc Trung ương;
 
-+  CIMCI CY EVE
+Căn cứ Quyết định số 984/QĐ-BCA-C04 ngày 21 tháng 02 năm 2025 cua
+Bộ Công an v/v phê duyệt Đê án “Tiệp nhận nhiệm vụ quản lý nhà nước ve củi
 
-CES R08 04L1 7 | RO) GAD RB 019/11
+rYx
 
- \     ni          | LRN apn 4 bir
-mA Mey ofa DI TM en Bev Là Nha
+ 
 
---- Trang 2 [Deskewed] ---
-BH CÔNG M                    CỰMG HOM XÃ HỘI CHU MGHLS VIỆT NAM
-CỦNG AN TĨNH QUANG NIMH               Tiệc lắp - Tự ha - Hạnh phủc
+và Xã hội về Bộ Công an”.                           |
 
-BE ÂM
+Theo đề nghị của dong chi Trưởng phòng Cảnh sát điều ra tôi phạm về
+ma ty.
 
-Tăng rưữmg cũng tàu quan by, giảm duc, day mn  hề, hủ Amy tạm việc làm,
-way wim tin dụng, tii hia nhập cộng dong cho hype viên
-wai nghiệm ma tay trêm địa bản tìmh Coding Mim bh
-lam hôn Soden (han | (huy: định nổ BY SETS TC AT
-mg beet o een JOO avin (Co mer Tình (hang lim
+QUYET ĐỊNH
+
+Điều 1. Phê duyệt Đề án “Tang cường công tác quản ly, giáo dục, dạy nghề,
+hỗ trợ tạo việc làm, vay vôn tín dụng, tái hòa nhập cộng đông cho học viên cai
+nghiện ma túy trên địa bản tỉnh Quảng Ni
+
+Điều 2. Quyết định có hiệu lực kể từ ngày ký.
+
+Điều 3. Các đồng chí Trưởng các phòng thuộc Công an tinh và Công an
+xã, phường, đặc khu chịu trách nhiệm thi hành Quyết nh ky 4 ậ
+Nơi nhận:                                                     2 GIÁMðĐC
+
+Cục V01, X01, C04 - BCA (dé báo cáo);
+
+- UBND tỉnh (đê báo cáo);
+- Các đ/c Phó Giám đốc (dé chỉ đạo);
+
+- Như Điều 3 (đề thực hiện);
+- Lưu: VT, CSMT,
+
+ 
+
+IY SA      HP
+Thiêu tướng Nguyên Tiên Trung
+
+ 
+
+ 
+
+--- Trang 2 ---
+BỘ CÔNG AN                   CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+CÔNG AN TINH QUANG NINH                 Độc lập - Tự do - Hạnh phúc
+
+PE AN
+Tăng cường công tác quản lý, giáo dục, dạy nghề, hỗ trợ tạo việc làm,
+vay von tín dung, tái hòa nhập cộng dong cho học viên
+cai nghiện ma túy trên địa bàn tính Quảng Ninh
+
+(Ban hành kèm theo Quyết định số 41V /OP-CAT-CSMT
+ngày) tháng0u năm 2026 của Công an tinh Quảng Ninh)
 
 PHAN I
-PAC DIEM TINH HINH
-1. Đặt điểm tình hình chung của Tỉnh
-# huảmg, Mirah Dade dug Trung nom, wae định ed wi trị chiêm lope về chink iy,
-kinh tổ, quốc phúng, am mình xà đi người, lá tình duy nhãn trung Lãi runes. cd dni
-hiển giới cả trên bộ và trên hiểm với Trung Ce, giảp ranh với   CAE tình, thánh phủ Hải
-Phúng, Lạng Sir, Bào Minh; trên địa bản tính củ 3 cửa kha quốc 18 wi nhiều đườmg
-mua, lầu rue,  thing - Ey co font động mua lại làm wei, luôn liàm, thm thăm a ou
-thăm 3 Tiếm bid gid, là địa bo trgnng điểm trumg vùng động lực kinh bẻ phia Ba, lá
-Irunig Lim cùng mghidp, dịch god lịch, thaeong, road làm cia cd mime, Củ bức obi oi
-thị hữu GT ty lệ diăm nhập oun bin cả hình, thánh khảo. đến hưu tấp, làm Tiệp,
-wih sống ram, cùng emi sẽ lượng làn khách du leh trung nome và quảc tế đền
-Thang Minh, Ede điểm,  tình hinh trêm đề tam choo Quảng Minh những thuận Doi dé
-phải triển về kinh tế - xã hội, nhưng cũng đặt ra rất nhiều thách tee, kh khan
-trong công tắc đảm hàn am ninh, trật tự mãi chung, công the phòng chẳng hội phạm,
-tệ mam mai hy mài ring.
+ĐẶC ĐIỂM TINH HÌNH
+1. Đặc điểm tình hình chung của Tỉnh
 
-+, Tình hủnh hủ phạm, bị nam ma thủy
+Quang Ninh luôn được Trung ương xác định có vị trí chiến lược về chính trị,
+kinh tế, quốc phòng, an ninh và đối ngoại,  là tỉnh duy nhất trong cả nước có đường
+biên giới cả trên bộ và trên biển với Trung Quốc,  giáp ranh với các tỉnh,  thành phố Hải
+Phòng, Lạng Sơn,  Bắc Ninh; trên địa bàn tỉnh có 03 cửa khâu quốc tế và nhiều đường
+mòn, lồi mở, thường xuyên có hoạt động qua lại làm việc, buôn bán, thăm thân của cư
+dân 2 bên biên giới, là địa ban trọng điêm trong vùng động lực kinh tế phía Bắc, là
+trung tâm công nghiệp, dịch vụ du lịch, thương mại lớn của cả nước; có tốc độ đô
+thị hóa nhanh, tỷ lệ dân nhập cư từ các tỉnh, thành khác đến học tập, làm việc,
+sinh sóng cao, cùng với số lượng lớn khách du lịch trong nước và quốc tế đến
+Quảng Ninh. Đặc điểm, tình hình trên đã tạo cho Quảng Ninh những thuận lợi dé
+phat triển về kinh tế - xã hội, nhưng cũng đặt ra rất nhiều thách thức, khó khăn
+trong công tác đảm bảo an ninh, trật tự nói chung, công tác phòng chồng tội phạm,
+tệ nạn ma túy nói riêng.
 
-Quảng Minh được xác định là địa bám tiếu thụ ma hủy, tin gran qua, tinh hình
-hi pham „ DE nạn ma tuy) trên địa hàm tính cự bản được kiếm chế và kiếm sod bh; uy
-iki, iin tiệm am nhiều diễn hiển phức, tạp da chịu bắc động của tính ink ma tùy trêm
-thẻ giới, khu vục wh các tình, thánh phd trên các mabe; đặc biệt là ảnh hung, tử tinh
-hunh lại pham mua hủy tại khu vục Tam giải váng vá cde nước làmg giếng; ti lệ phạm
-hôi nỗ ma tủ tông hoger ni xu hướng gia lăng sử với giai đưan tru, trung, hình chiêm
-tít BS tàng sự Wg nhiam hận we mua hủy hámg Tiêm; mete mai ty edo địa hàm tình chủ
-4244 Lại sie Lu là cận giáp ranh, nhu 1a gu, Hai Phưông và cae tính Tấn Bac  Trung
-nấm JQ, mà dực luong chu: năng ba hình Quảng Mình đã hãi gil, wir by hùng, Bil
-506 si 1,480 di tung lin quan den ma tùy, thu giữ trên 17 kg mũ tủy cde loại và
-mhiễu tang vật khác mà idm quer
+2. Tình hình tội phạm, tệ nạn ma túy
 
-3, Tình hình người nghiệm, người sử dụng trải phép chit ma tay, người sau
-nai nghiệm ma thủy xà nũng te cai mghiệm mua hủy bại Co sử nai mghiêm mua tay tình
-Lluảrg Minh
+Quảng Ninh được xác định là địa bàn tiêu thụ ma túy; thời gian qua,  tình hình
+tội phạm, tệ nạn ma tuý trên địa ban tỉnh cơ bản được kiềm chế và kiểm soát tốt; tuy
+nhiên, vẫn tiềm ẩn nhiều diễn biến phức tạp do chịu tác động của tình hình ma túy trên
+thế giới, khu vực và các tỉnh, thành phố trên các nước; đặc biệt là ảnh hướng từ tình
+hình toi phạm ma túy tại khu vực Tam giác vàng và các nước lang giéng; tỷ lệ phạm
+tội về ma túy tổng hợp có xu hướng gia tăng so với giai đoạn trước, trung bình chiếm
 
---- Trang 3 [Deskewed] ---
-Tung  "Thi wd qua, tình Quảng Minh đã quyền liệt lắm mi cũng be đâu ai,
-phúng chẳng mua tùy qua đại dã kiện phẩm sử người nghuễn, ng su dung Trái phe I
-cht mi tùy: min địa bán; số người nghiện, người sự dụng trải phep chải In Ty Lệ Si
-huưởng trẻ bod, người nghiện mụa tùy heroine giảm, mguyờn nghiêm mma tùy beg bop og
-Tình đến ngắn 1412  12025, tuân tính có tùng số 1.2 Lễ ng nghiện ein hỗ sự quản
-lệ frog oli: số ở  To nữ TS OO ĩ Tg a ed dưng chiều fe 0d cule cự hỗ điều
-te dd nme, meee coe mgt gi giữ dã II med Ce nữ cee mendes mee tình
-lá 471 người; B93 người sử dung trải phiêp chất ma wi; 513 ngein gud Dy sa
-cai nghiệm, ï  TÃ mgumin mà biểu hiệm "ngắn đã”, nam th ấm. Sm wii wig bok mâm 200
-sử người nghiền giảm 3680 031 RD RIN, sử ca. SH dg DƯ ong co, lì
-Be giảm 31,75) 893/1 13411, số đổi tượng ngắn da, loạn thần tầng 1,385) Toke |
+| từ 80% tổng số vụ phạm tội về ma túy hàng năm;  nguồn ma túy vào địa bàn tỉnh chủ
 
-- Tú HH) ngây WO 1J322A 5, Coe sử wi nghiệm mụi ty hình (huậng, Minh thuyôn:
-Br La đẳng -   Thuơmg bình wa Xã hận dung: chuyên vẽ Phương Cảnh sải điêu tra
-tội phạm: về ma tùy Công am tình tiếp nhậm vá vấn hanh Ci sử cấu ghost mu oy
-đảm bản an todn, ding que định, kháng bị ngất quãng, BE quá đã tà chức ca
-nghiện chủ 1.117 người ERIEA, hoán thánh chươmg trình cae nghuên om ie khí
-Bill garded trú VỀ công đông § 258 mga cu nghiệm hấp bode, 334 mae va mgd
-tự nguyên), hiểm trung Co sử cãi nghiệm dang mà 5 là lige viêm 0i
+2x4 bd cac linh lần cận giáp ranh, như Hà Nội, Hải Phòng và các tỉnh Tây Bắc.  Trong
+năm 2025, các lực lượng chức năng toàn tinh Quảng Ninh đã bắt giữ, xử lý tổng số
+596 vụ 1.489 đối tượng liên quan đến ma túy, thu giữ trên 17 Tke ma túy các loại va
+nhiều tang vật khác có liên quan.
 
-PHAM [I
-CAN CỬ CHỈNH TRI, PHAP LÝ, CƠ SỞ THỊUC TIỀN
+3. Tình hình người nghiện, người sử dụng trái phép chất ma túy, người sau
+cai nghiện ma túy và công tác cai nghiện ma túy tại Cơ sở cai nghiện ma túy tinh
+Quảng Ninh
 
-1. ấm rử nhính trị
+--- Trang 3 ---
+2
 
-- (Chí thị số 36-CTITNW, ngày DECEIT của Bi (Chính trị we ing caning, 1g
+Trong những năm qua, tinh Quảng Ninh đã quyết liệt làm tốt công tác đầu tranh,
+phòng chống ma túy qua đó đã kéo giảm số người nghiện, người sử dung trái phép
+chất ma túy trên địa bàn; số người nghiện, người sử dụng trái phép chất ma tủy có xu
+hướng trẻ hóa, người nghiện ma túy heroine giảm, người nghiện ma túy tổng hợp tăng.
+Tính đến ngày 14/12/2025, toàn tỉnh có tổng số 1.218 người nghiện có hồ sơ quản
+lý (trong đó: số ở ngoài xã hội là 685 người (638 đang điều trị tai các cơ sở điều
+tri Methadone), trong cơ sở giam giữ là 60 người, Cơ sở cai nghiện ma túy tinh
+là 473 người); 893 người sử dụng trái phép chất ma túy; 513 người quản lý sau
+cai nghiện; 73 người có biểu hiện “ngáo đá”,  loạn thần. So với cùng kỳ năm 2024
+số người nghiện giảm 36,8%   (1. 218/1.929), số người sử dụng trái pip cli
+túy giảm 21,2% (893/1 134), số đối tượng ngáo đá, loan than tăng 7,3% (73/68).
 
-can hiệu quả cũng tắc phúng, chồng và kiểm sod ma ny,
+- Từ 0h00 ngày 01/3/2025, Cơ sở cai nghiện ma túy tỉnh Quảng Ninh thuộc =
 
-- Két luận số 132-KLUTMM, ngán 18/3/2025 của Bộ  (hinh tr i Tiệp moe i
-hiện Chí thị số 36-CTTW ngây DESCDO0H của Bộ Chink trị wi Lãng Cun, mag ©
-bug quả ong, bác pod, whole, và kiểm sn mua by,
+Sở Lao động — Thương binh và Xã hội được chuyên về Phòng Cảnh sát điều tra
+tội phạm về ma túy Công an tỉnh tiếp nhận và vận hành Cơ sở cai nghiện ma túy
+đảm bảo an toàn, đúng quy định, không bị ngắt quãng. Kết quả đã tô chức cai
+nghiện cho 1.117 người nghiện, hoàn thành chương trình cai nghiện ma túy cho
+601 người trở về cộng đồng (254 người cai nghiện bắt buộc, 334 người cai nghiện
+tự nguyện), hiện trong Cơ sở cai nghiện đang có 516 học viên(),
 
-- (Chỉ thị sử 13-CT/TLI, ngây 05/5/2173 của Ban thường wn Tinh ty 0 oud Purl
-WE lãng cường, TILE, (Ca hiệu quả năng bày pling, chẳng vá kiếm sod ma tùy wong
-tính húnh muốn.
+„                   PHAN II
+CAN CU CHÍNH TRI, PHAP LY, CƠ SO THỰC TIEN
 
-- Ke hich số 542-KHUTU, mgd 1605/2025 của Ban thung wu Tinh wie wi kế
-hnạch số 31 4IE.H-LIBMT), ngây 1808/0075 của LIBMD tỉnh "sẽ thục huận Bb. 1 luận số
-132-kLUTW ngân 18030225 cua Bùi hard trị WE WE TOE Ie thn Hiền Lin ne nh
-CTTW của Be (hình trị WE tăng cường, ming can hiệu quả cưng bày phẩmg, chee sô
-kiểm soc mg TU  Kẻ hoạch số 250/KH-LIEMI ngây 14417009135 mùa Lhe hàm nhẫn:
-dàn tỉnh sẽ Lune huậm các tiểu chỉ xã, phương, đặc khu không ma tùy; chui: làm hung iy
-bản trung, điểm pide: tap sẽ ma ty tiêm địa bám tình dng, Mind giai đoạm 200
-1130... trung Gio điểm mấm JO tình Duadeng nh od sede IIE din fn xã hee le
-du Aefocinge na dai, hung điền mập eng mình Chiang Mình lá id dnb mai min
+1. Căn cứ chính tri
 
-4, (âm cử pháp lạ
+- Chỉ thị số 36-CT/TW,  ngày 16/8/2019 của Bộ Chính trị về tăng cường, nâng
+cao hiệu quả công tác phòng, chông và kiểm soát ma túy.
 
-Ì iu nh BÀ gật: Heft Li, Bm i muliu i mg in JfH tan 1, eon of min Boch ocho mềm lun tore L, aad nocd ue dr
-MF hrm rầp, cam img, hen hậu, ode chs Bob Dip 12
+- Kết luận số 132-KL/TW, ngày 18/3/2025 của Bộ: Chính trị về tiếp tục thực
+hiện Chỉ thị số 36-CT/TW ngày 16/8/2019 của Bộ Chính trị về tăng cường, nâng cao
+hiệu quả công tác phòng, chông và kiểm soát ma túy.
 
---- Trang 4 [Deskewed] ---
-pobierz ode dầu khoảng: mua tui Bence đến nade dung ình (huảng hình là mình hông
-ng T1!
+- Chỉ thi số32-CT/TU,  ngày 05/5/2023 của Ban thường vụ Tỉnh ủy Quảng Ninh
+về tăng cường, nâng cao hiệu quả công tác phòng, chồng và kiềm soát ma túy trong
+tình hình mới.
 
-3 Tân rử nhập bì
+- Kế hoạch số 542-KH/TU, ngày 26/5/2025 của Ban thường vụ Tỉnh ủy và Ké
+hoach s6 214/KH-UBND;  ngày 18/8/2025 của UBND tỉnh về thực hiện Kết luận số
+132-KL/TW ngày 18/3/2025 của Bộ chính trị về việc tiếp tục thực hiện (hi thị soe
+CT/TW của Bộ Chính trị về tăng cường, nâng cao hiệu quả công tác phòng,  chống và
+kiểm soát ma tuý; Kế hoạch số 259/KH-UBND ngày 14/10/2025 của Ủy, ban nhân
+dân tỉnh về thực hiện các tiêu chí xã, phường, đặc khu không ma túy; chuye én hóa địa
+bàn trọng điểm phức tạp về ma túy trên địa bàn tỉnh Quảng Ninh giai đoạn 2025-
+2030... trong đó đến năm 2030 tỉnh Quảng Ninh có trên 50% địa ban xã, phường, đặc
+khu không ma túy, hướng đến xây dựng tinh Quảng Ninh là tỉnh không ma túy.
 
-- Luật sửa đùi ha ung, Bb luật bird sự năm I1,
+2. Căn cứ pháp lý
 
-- Logit rlhông, ching mua tury năm) ED wd Luật Pldoug, chuông mua nly sia dod,
+! Đa số có sức khỏe tốt,  trong độ mỗi lao động (từ 25-40 tuổi); trình độ văn hóa chủ yếu hết lớp 12, số ít có trình
+độ trung cấp, cao đẳng, đại học hoặc chưa hết lớp 12.
 
-hủ sung mãm T25 pio hiển dục ie 0N Tỉ
-- Nghị định sử 118/1/121/9EEICT ngày 2000 202031 của Chink pho (huy định
-khu bi Epo sở điểm của Luật Phing, chúng mua wy, Luật ir by vì pham hành chủnh
+ 
 
-wi rãi nghiệm ma tùy wa quan lệ sau cai nghiệm ma mù ew Se woe hấp hãi Nh định
-NHA VU
+--- Trang 4 ---
+ 
 
-- Mh quyền số 1  3203 4IQHI 5, ngân À70/11/0H04 ca L he hội và Mghị
-aul sử  SIIMICYCP ngây [3/3122 5 của Chink phu wi ham hảnh Kẻ hạch triển khai
-Meh quyết số 183/212.4)H15, ngã yr INTIS wba ade hội phẽ duyệt chung
-Irính đứu tư (huơmg trinh mục liệu quận gia pling, ching ma tủy đến năm 03H
+3
 
-- (Quyết định sử SEVEN BIC AA-CHM ngày 20 tháng 02 năm 4H35 của Bà
-Công an whe phê duyệt P án "Tiền nhãn nhiệm wu quan bị nhá mước về cai
-nghiên ma hy wd quản lì saw cai mghuệm mua tủy từ Be Laun đưmg — Thuong bank
-wit Xã hãi vẻ Bộ Công an".
+phường, đặc khu không ma tủy, hướng đến xây dựng tỉnh Quảng Ninh là tỉnh không
+ma túy.
 
-- Mghi quyền số TM4/2A15/MHQ-HIPTMI, ngây 14/12/0135 mùa Hải đắng nhằm
-dim edn Chiầng Wind qpuw định chủnh sành huy: huần can mghuỜn ms ey, oun ị sew
-cal nghiêm mua tùy wd bof mo (ue lượng trục tiến phông, chồng bi pham ma vy trên
-đụ ham tình usr, Minh,
+3. Căn cứ pháp lý
 
-Cit định số 11210] ID-BICA ngày 200A HUÔ5 của Bộ Công am quy
-dindv chore ning, nhiễm Wii, (Jun hạn vá bd chức hệ mầu của Phưmg Cank sản
-điểu tra tận phạm sẽ ma tùy thie Công an tình, thánh phủ trực thuậc Trung
-ng;
+- Luật sửa đồi bô sung Bộ luật hình sự năm 2025;
 
-"Quyết dịnh sẽ 114D00E-BCA, ngây 2600012025 của Bà Công an quy
-thịnh hides rudy, nhiệm VỤ, DƯ Cấu bi chide, ca Zo sử cod mghuậm ma tùy ie
-Phưng (ảnh sảt điều tra bội phạm về ma hùy thuốc (Công, an tính, thành phd trực
-Khun: Hur mong,
+- Luật phòng, chống ma túy năm 2021 và Luật Phòng, chống ma túy sửa đổi,
+bb sung năm 2025 (có hiệu lực từ 01/7/2026);
 
-4. (Cấm rử TT hiểm
+- Nghị định số 116/2021/NĐ-CP _"ngày 21/12/2021 của Chính phủ Quy định
+chi tiết một số điều của Luật Phòng, chống ma túy, Luật Xử lý vi phạm hành chính
+về cai nghiện ma túy và quản lý sau cai nghiện ma túy (sau đây viết tat là Nghị định
+116/2021/NĐ-CP);
 
-- Sử người nghiệm ma tủy san khu hư thámh choo, tind cai nghiệm mua ty
-tt Lm sử cai nghuên ma tủy trữ we Li hóa nhận cộng đáng phản lơm không, vay. Fumo
-wi tìn dụng đề đầu tư phat triển kinh tế, không tim due viếc làm phi bop để od
-sửng hàn thin, gia đính. Tử di dẫn đếm nguy om hài phạm tỏi, hải nghiệm can” bd
-khăn chu wigs thun huậm mm thêu xăm dung xã, phinmg, đặc khuu không mua big,
-husởng hi xăm dụng tính Chuảng Minh “khống wea nhìu”. Mguyễẽn nhằm chủ xếu mùa
-tính trạng én doc /ÏJ (Chung nà sự vân owe manh mẽ của cá hệ thing chỉnh trị trung
-cũng tae hủ trụ người buon thánh chưng trinh cai nghiệm; (i Công tắc tử chine dạy
-nghề, cải foal đồng tao wide lam cha ngành Lam Dioyg, Thomo band vá Mã hận
+- Nghị quyết số 163/2024/QH15,  ngày 27/1 1/2024 của Quốc hội và Nghị
+quyết số 50/NQ-CP ngày 13/3/2025 của Chính phủ về ban hành Kế hoạch triển khai
+Nghị quyềt sô 163/2024/QH15, ngày. 27/11/2024 của Quốc hội phê duyệt chương
+trình đầu tư Chương trình mục tiêu quốc gia phòng, chồng ma túy đến năm 2030.
 
-Phe như mg Đi, imdb nhóm nhương 170 3, sole mye hầu mghon, lần oul 10 nhặt săn ăn mgduuồm nu Dung as A bồng TNrền
-DUG
+- Quyết định số 984/QĐ- BCA- C04 ngày 21 tháng 02 năm 2025 của Bộ
+Công an v/v phê duyệt Đề án “Tiếp nhận nhiệm vụ quản lý nhà nước về cai
+nghiện ma túy và quản lý sau cai nghiện ma túy từ Bộ Lao động — Thương binh
+và Xã hội về Bộ Công an”.
 
---- Trang 5 [Deskewed] ---
-endo aiid mdi chung Ì huậu quả khủng man, thiêu noe điểm, khômg củ dink giả giữa
-nằmg the đám tạm wed kiết oped mủ wide làm oben Sa G1] ca ng brim, whims mà mỹ nhìn
-hop chất chế với các dom wi, danh nghiệp nên "đâu ra” cha ng Ls thánh Lit
-nghiệm oo hạm chế; nhuêu mg dome i on, Gì ap chưng chi nghề nhi: 1h
-đu: wide lâm: phút bee, bo đủ kiệt quá hường nghiếp vá đản tan | chủ NHI TH)
-tình húnh thửc chung sắt thực tiến; trính địt rủa điềi mpũ cảm be thun hiểm ong ha
-hạm chế; thiểu cae chong wink đán tạn mằmg ram: (Wie hủ trút hầu bon nhập con
-đồng, quản hệ s sau cai nghiệm tại địa plwomg cứm lưng léu, chủ we mang tình hính
-thuc ÚC chua củ tô chức tin dụng năm hỗ tự nên vay chủ Boe wien sau cai nghiên im
-we địa phương,
+- Nghị quyết số 94/2025/NQ-HĐND, ngày 16/12/2025 của Hội đồng nhân
+dân tỉnh Quảng Ninh quy định chính sách thực hiện cai nghiện ma túy, quản lý sau
+cai nghiện ma túy và hỗ trợ lực lượng trực tiếp phòng, chống tội phạm ma túy trên
+địa bản tính Quảng Ninh.
 
-- Cầm cù nhu câu của nguni nghiện ma ty trưng thei giam cãi ghd oa ni
-dune: đán tan nghề và được hồ im wan som pin di hry, tum dune wie Lim pie beg san
-khi boo thánh chươmg trình cai nghiệm mua ny để nuôi sing hàn thần, gia đính, ri ke
-mua hy, (ng khuẩn sát nhu cầu của 991 ngu mghuạm mua tùy dang cầu nghiên NHI
-Sử, ch 155 rygmde [chim IAN cà rho cầu dune Co sử cãi mghiên hủ tron đán ar
-nghề; 55 người (chiểm 11,299 muữmng đun s way wim tin dung đề plan triển hình nề;
-457 goin | chidm 93 0 I mumg, mui wd wig Dâm phù bop sầu khu dám dd,
-(hung trính can nghiệm:  sử nấm lại chú nu Da sử người nghuêm oo sine khỏe WELL, Ll
-hẽnh ném khẳng ddim bản sửc khúc để huge tấp, làn đẳng.
+- Quyết định số 1121/QĐ-BCA ngày 26/02/2025 của Bộ Công an quy
+định chức năng, nhiệm vụ, quyên hạn và tô chức bộ máy của Phòng Cảnh sát
+điều tra tội phạm về ma túy thuộc Công an tính, thành phô trực thuộc Trung
+ương;
 
-- Căn cử kết un khỉ điểm wid pid Fone woe CC coon guess, ory seg, trường, Bog ofl
-fr lạm nghề wil gửi thuật việc arm choo booe muêm za cad mghuễm ms mee meg mẩu
-NRE: Co sử cai nghuận ma hủy đã plod Fup wind Trung tâm 05 thiệu sod lắm ind nà
-chine H4 Hg ngân tor win, gic thiệu wise làm, định hug nghề nghuêp chút bom 000
-mg ca nghiêm bại Cio sử, Phil burp woe trường lam đẳng May dụmg, và og mg lhe -
-Xã hội oui 02 Din đán tạn và cấp chứng chỉ sự cấp nghề ne ede SF st ie deg od
-làn nghề điểm, munir| chủ TỪ người cai nghiện, Exe huật, trong thẳng 13/2015 đã phải
-hp wiry Trung, (an đẳng Tham khoảng sảm Việt Mam - Tip dean Than khung sie
-Việt IMam bù chức hư vân, bop hợp đúng tiếp nhằm (15 rg sa cau nghiêm dome muốn
-phủ huấn hán hanh phủ hộ: tấp, âm ử, sinh hạt bại Trung, sau 4 thames
-xưng khỏa hoc sẽ due kỷ lợp đẳng lắm việt tại các (ông ty than trêm des be tình
-(huảng Minh, Cua khán si com 1050473 be wid darn ca nghiện hại Cu SỨ TOT
-tuổi lan đồng rủ nguyêm wong dome đi foe nghề wd lâm wide bại cae Dap ee thời
-Whur Tập ebro nửng nghiệp tham khoảng sảm Nhiệt Mam.
+- Quyết định số 1140/QĐ-BCA, ngày 26/02/2025 của Bộ Công an quy
+dịnh chức năng, nhiệm vụ, cơ cấu tô chức của Cơ sở cai nghiện ma túy thuộc
+Phòng Cảnh sát điều tra tội phạm về ma túy thuộc Công an tỉnh, thành phố trực
+thuộc trung ương.
 
-- (Cân rử nhu cầu lim kiểm ngưuàêi lan ding của edo oon quan, công Tụ, danh
-nghuêp én địa bám tình (huảng Mink hàm: Tink Quảng Minh là địa phươmg nà bào đủ
-phát triểm kinh 0F cam trung: cả muốn, tấp trung vân ce ngánh nghề:  thu lạnh, dịch vui
-khai thắc khuảng sảm (than, các khu cũng nghuễp... củ nd cấu sử Jum lạm dng
-can, nhiều ngán nghề we cu trình dd Lao ding phú thống, trung, banh thấp |  HN
-đhyựn vol sấu nd eng ga cand nghiêm ma mập bầu hãi in mầu nông aig, chế chủ lu
-đãi hàn vir giai đạm day nghệ đềm khi lam wise fein ph Sho too, oo ese fd go vinh
-co COT oc cc Des ll LS truốn
+3. Căn cứ thực tiễn
 
-© The: thềm gus cdo moe oko tre nhìn th, oto moe wf dm wy bho dhs fog mày on pg gaan Lộ nh
-wun, bode hoes good bg mu dig don mgt sn an ka bp thủ, mbm fo io sự Bm amc thor: wesc lở mi
-khhừmg of nhìu mis Foe nhu mhãm rằn aha, Nuuềm xá gum sen cos me de beg oa rls eo     (
-Haim Dạ thé dn dbz me name
+- Số người nghiện ma túy sau khi hoàn thành chương trình cai nghiện ma túy
+từ Cơ sở cai nghiện ma túy trở về tái hòa nhập cộng đồng phần lớn không vay được
+vốn tín dụng dé đầu tư phát triển kinh tế; không tìm được việc làm phù hợp dé nuôi
+sống bản thân, gia đình. Từ đó dẫn đến nguy cơ tái phạm tội, tái nghiện cao”, khó
+khăn cho việc thực hiện mục tiêu xây dựng xã, phường, đặc khu không ma túy,
+hướng tới xây dung tinh Quảng Ninh “không ma túy”. Nguyên nhân chủ yếu của
+tình trạng trên do: (f) Chưa có sự vào cuộc mạnh mẽ của cả hệ thống chính trị trong
+công tác hỗ trợ người hoàn thành chương trình cai nghiện; (7) Công tác tổ chức day
+nghề, các hoạt động tạo việc làm của ngành Lao động, Thương bình và Xã hội
 
---- Trang 6 [Deskewed] ---
-Ẽ
+` The: thông kê, tính đến thang 12/2025, số người tái nghiện, tái phạm tội sau cai nghiện ma túy chiếm trên
+60%.
 
-ing Wing, chế đã đãi ngũ lan ding iit, nà nhiều sine bud wd người lan đồng Tuy
-nhiền qua khản sản lâu hit các cũng tự, dưanh nghiệp cân e ngại việc tiên nhằm người
-wad cãi sánh Bm wigs mit plu do mgr oo tải nghiệm cam, mt nhăn din thiểu sự cam
-bot peti boo, quản lệ của lực lương (ông, an.
+ 
 
-- Trumne tính hình thuc tiềm nếu trên đang dit ra nhiệm "nu cảm phản mug hu r Uru
-ci dE dn cụ thE, tạm “nông nêm khám Ri", lây người đang cai nghiêm rma hủy wi
-rigupim quảm ly 2 cai nghiện làm "trưng Sie", mong rm là: fil Tủ whine phần lại,
-lu su), gần dục”     - định hung nghề nghiệ DE,  đáo hạn cằm chim chỉ sat nhi du wigs
-larrn thun: ĐỖ phổ bain evga dw cde oo nở cau nghiêm i  I Hũ trụ Wi wiry Nir dụng ; Ji
-Chu đông liền kết với cặc cũng ty, danh nghiận trêm địa hàn tiện nhậm, phùp dữ, tan
-việc  lạm ngày hui mgunii huảm thánh chong, tink cai nghiệm hải Tiêu nhấp ong
-kh ig   "fin Tip trung, phhòi hip, siết chit quản bị theo “oo chế 5 hẻm"  giữa chinh
-en địa phương, cự quan (ông am, doanh nghiệp (Toe dung han đăng 0, gia định wi
-hàm lắm ngu Sa cad mghiễm trung sui quả trinh sinh sống, làm việc.
+--- Trang 5 ---
+4
 
-(âm củ oo sử chỉnh trì, phản lì, thun: tiền như trên, wide ban hámh Đề gry ™ Tien
-caning Công tac quad fi, giùm nhục, mm nghề,  bedi trực hạn wig hắn, waa wie fim ping,
-Nhi oii nhắn cổng đông chm lạc niềm cụ nghiện mm nhập nh đu đuâm mình (hung
-Vinh " là cản thiểu, gop phẩm kiếm chẽ, kn idm hẻm wimg hậi pham vá tệ nan ma
-ti, mguời nigh ge, người sử dụng trải phêp chất ma tùy vá khấc phục tình trạng tải
+(trước đây) nhìn chung hiệu quả không cao, thiéu toàn diện,  không có đánh gia giữa
+công tác đào tạo và kêt quả có việc làm của ni sau cai nghiện, chưa có sự phéi
+hợp chặt chẽ với các đơn vị, doanh nghiệp nên “đầu ra” của người hoàn tl thành cai
+nghiện còn hạn chế; nhiều người được đào tạo, cấp chứng chỉ nghề nhưng khôn
 
-mghiện, gầm wii khu: hiệm mục dvd wine dụng xã, phunmg, đặc khu không mua tùy,
-nhân đu wong mg tình hung Minh cm hàn đạp cac liều chỉ là tình không mạ tùy.
+được việc làm phù hợp, do đó kết quả hướng nghiệp và đào tạo nghề chủ um mang
+tính hình thức chưa sát thực tiền; trình độ của đội ngũ cán bộ thực hiện công tác còn
+hạn chế; thiếu các chương trình đào tạo nâng cao; (fji) Việc hỗ trợ ái hoa nhập cộng
+đồng, quan lý sau cai nghiện tai địa phương còn lỏng léo, chủ yếu mang tính hình
+thức  ở} chưa có tổ chức tín dụng nào hỗ trợ vốn vay cho học viên sau cai nghiện trở
 
-PHÁN 1
+về địa phương.
 
-NỘI DUNG ĐỀ AN TẦNG CƯỜNG CÔNG TÁC QUAN LÝ, GIÁO DỤC,
-DẠY NGHÉ, HO TRỢ TẠO VIỆC LAM, VAY VỐN TIN DỤNG, TAL HÒA
-NHẬP CỘNG BONG CHO HỌC VIÊN CAI NGHIEM Ma TUY
+- Căn cứ nhu cầu của người nghiện ma túy trong thời gian cai nghiện ma túy
+được đào tạo nghề và được hỗ trợ vay vốn tín dụng, tìm được việc làm phù hợp sau
+khi hoàn thành chương trình cai nghiện ma túy dé nuôi sống bản thân, gia đình, từ bỏ
+ma túy. Qua khảo sát nhu cầu của 491 người nghiện ma túy đang cai nghiện tại cơ
+sở, có 155 người (chiếm 31,5%) có nhu cầu được Cơ sở cai nghiện hỗ trợ đào tạo
+nghề; 55 người (chiếm 11,2%) mong, được vay vốn tín dụng để phát triển kinh tế;
+457 người (chiếm 93 0%). mong muốn có việc làm phù hợp sau khi hoàn thành
+chương trình cai nghiện; số còn lại chủ yếu là số người nghiện có sức khóe yêu, co
+bệnh nền không đảm bảo sức khỏe dé hoc tập, lao động.
 
-1„(JUUAM ĐIỂM CHÍ ĐẠO
+- Căn cứ kết quả thí điểm việc phối hợp với các cơ quan, đơn vị, trường học dé
+đào tạo nghề và giới thiệu việc làm cho học viên sau cai nghiện ma túy trong năm
+2025: Cơ sở cai nghiện ma túy đã phối hợp với Trung tâm Giới thiệu việc làm tinh 16
+chức 04 Hội nghị tư vân, giới thiệu việc làm, định hướng nghề nghiệp cho hơn 500
+người cai nghiện tại Cơ sở; Phối hợp với trường Cao ding Xây dung va Công nghệ -
+Xã hội mở 02 lớp đào tạo và cấp chứng chỉ sơ cấp nghề (sơ cấp kỹ thuật xây đựng và
+lớp nghề điện, nước) cho 70 người cai nghiện. Đặc biệt, trong tháng 12/2025 đã phối
+hợp với Trường Cao đẳng Than khoáng sản Việt Nam - Tập đoàn Than khoáng sản
+Việt Nam tổ chức tư van, ký hợp đồng tiếp nhận 05 người sau cai nghiện được miễn
+phí hoàn toàn kinh phí học tập, ăn ở, sinh hoạt tại Trường, sau 4 tháng hoàn thành
+xong khóa học sẽ được ký hợp đồng làm việc tại các Công ty than trên địa ban tỉnh
+Quảng Ninh.  Qua khảo sát còn 105/473 học viên đang cai nghiện tại cơ sở trong do
+tuổi lao động có nguyện vọng được đi học nghề va làm việc tại các Công tư then
+thuộc Tập đoàn công nghiệp than khoáng sản Việt Nam.
 
-1. Chuẩn triệt vả triểm khai thục hiệm mghhêm tùy chủ dan của Trung ng, Tình
-wry, Ll bar nhằm bin tình we cũng bàc cal mghuêm và quan by sau cãi mghuậm mua wi
-win si Lãng cod hiệu quả lãnh đam, quản bộ, điểu hành của chính quyềm cE cp
-mhãm phải bug ian trú, trách mhuệm con cde om qui, ba, nga, didn thi, hệ thẳng
-chình trị và tạm sụ đăng thuận trám din tham gia win cống bac cai mglhêm wa gus là
-sa ai rughigee roe ty trêm dia bean tình
+- Căn cứ nhu cầu tìm kiếm nguồn lao động của các cơ quan, công ty,  doanh
+nghiệp trên địa ban tỉnh Quang Ninh lớn: Tỉnh Quảng Ninh là địa phương có tốc độ
+phát triển kinh tế cao trong cả nước, tập trung vào các ngành nghề:  du lịch, dịch vụ,
+khai thác khoáng sản (than), các khu công nghiệp... có nhu cầu số lượng lao động
+cao, nhiều ngành nghề yêu cầu trình độ lao động phd thông, trung bình thấp (phù
+hợp với da sô người sau cai nghiện ma túy khi tái hỏa nhập cộng đông), chế độ ưu
+đãi lớn từ giai đoạn dạy nghề đến khi làm việc (mién phí đào tạo, có mức hỗ trợ sinh
+hoạt hàng tháng)... mức lương cho người lao động cao (rung bình từ 10-25 triệu
 
-Phi Cảnh sat điểm trụ hội phạm về mạ vie và Cũng an cần wi phấn mii
-thun: ec "bor der and wnpntigien, Eman TIPM cand mg iu Nhã mg cle thd olde beg, win
-là vaggunini wl plug phấp luật - là mgười bid - là mạm nn, căn dune itp df, hỗ trụ ở
-mune ca nhắn, đề bu liệt thin han cai nghiện troy sẻ gia đinh, xã hiậi rim dune sự
-tàng hành, chia sẻ, phùp dữ, hồ Inợ giải quyyền wide lãm, way ode tn dung, hải hi
+3 Thực tiễn qua công tác kiểm tra cho thấy, còn một số đơn vị không thực hiện các biện pháp quản lý thường
+xuyên, hoặc chưa phù hợp với đặc điểm người sau cai (bị kỳ thị, phân biệt đối xử không tìm được viée làm
+không có thu nhập hoặc thu nhập rất thấp, thiểu sự quan tâm của gia đình, không có sự chia sẽ ca cape ae
+tâm ly dé dat thiếu tự tin....);
 
-Hon tpg, wm Đấu su ym trần poi chin mos wine Eo 3a, En thor ĐỀ woke buekm UrungÊm pdhầp Duận wm
-mgs 8 wh Mme rau mgfogm sung 18cm ni gìn rim Se can ms lỗ mguntg 6m Độ guuam Ngang, So in
-igs nit ghia wid mgm qui | sau xi,
+ 
 
-: gà rg cấp mg bog imag, bua lan mg bạn om sử ca mglhuEm khuêm oil BE az, KDE mm begin HussEm nh uễ mm
-Wed, its Vr frit ranh mgliugm oduogor agus Wm hài Me mg, Doe lone dang, Wit tur climbs sorb bode wa mn mem of
-VL th vf on Efe: mglễ sả kia gia bạn org xăng dt dn Moin nhập năng bog
+--- Trang 6 ---
+TH rm NI HH Aa mee 2 ember eee ee — HN
 
---- Trang 7 [Deskewed] ---
-Sor mon 20%: oq pgm) cheap worded 19 Buogepg se Bump ms Suey Sng eo
-wiz ngài mes Gi) ungnb mộng Buoy ou gg we ENE WE up rE WE age wa
-fre mn wn ve en gy dead ng nv TU ge Fumip ns Fuoapg wy ded ena quip
-ill ng) Sng mr udm Ex mes 5) wen L- ni đun WE mg QTE IE |
+dong! tháng),  chế độ đãi ngộ lao động tốt, có nhiều sức hút với người lao động. Tuy
+nhiên qua khảo sát hầu hết các công ty, doanh nghiệp còn e ngại việc tiếp nhận người
+sau cai vào làm việc một phần do nguy cơ tái nghiện cao, một phần do thiếu sự cam
+kết phối hợp, quản lý của lực lượng Công an.
 
-in ged ag Fagen 1 Cd) 230 MED MU Ge J EI UAE TE NES LE ty aa
-19C) (7 1MNEUI Ap re ume an LE DEN im Ln dmg re ms Ler ge TELL II Wm
-Er mm 000) wipe ng dmg apg 0 Sop oe uo die ood qi weep) l1
+- Trước tình hình thực tiễn nêu trên đang đặt ra nhiệm vụ cần phải nghiên cứu
+có đề án cụ thể, tạo “vòng tròn khép kín”, lấy người đang cai nghiện ma túy va
+người quản lý on cai nghiện làm “frung fn”, trong tâm la: (i) Tổ chức phân loại,
+tư vân, giáo duc     - định hướng nghề nghiệp, đào tạo cấp chứng chỉ sát nhu câu việc
+làm thực té (16 chức ngay tại các cơ sở cai nghiện); (if) Hỗ trợ Vay vốn tín dụng: (iii)
+Chú động liên kết với các công ty, doanh nghiệp trên địa ban tiếp nhận, giúp đỡ, tạo
+việc làm ngay khi người hoàn thành chương trình cai nghiện tái hòa nhập cộng
+dong!   ` (iv) Tập trung phối hợp, siết chặt quản lý theo “cơ chế 5 bên” giữa chính
+quyền địa phương,  cơ quan Công an, doanh nghiệp (Sử dung lao đồng), gia đình và
+bản thân người sau cai nghiện trong suốt quá trình sinh sống, làm việc.
 
-Apr ny greed gn Sm Lg uv WE SOE TUE TLL I LT IE DỊP LE 20)
-cis soup i ay mm EIT ELD La rig wg sa hil un peng 2p Sump ung wi JB
-RON TIT TID TED f= = ER RE [ TE 14 023 dy n0) 1U] eg fp way ‘Sump
-011 mg wea ue cig oon gi 2/17 ng Tiệm] ded em yup Skog 20 ur wen ged
-Ap Bump up we See 2 usp Sweeny ur Soge mw dạn ST ME A mr )g
+Căn cứ cơ sở chính trị, pháp lý, thực tiễn như trên, việc ban hành Đề an “Tang
+cường công tác quản lý, giáo duc, dạy nghề, hỗ trợ tạo việc làm, vay von tin dụng,
+tai hoa nhập cộng đồng cho học viên cai nghiện ma túy trên địa ban tinh Quảng
+Ninh” là cần thiết, góp phân kiềm chế, kéo giảm bền vững tội phạm và tệ nạn ma
+túy, người nghiện, người sử dụng trái phép chất ma túy và khắc phục tình trạng tái
+nghiện, găn với thực hiện mục tiêu xây dựng xã, phường, đặc khu không ma túy,
+phần đầu xây dựng tinh Quảng Ninh cơ bản đạt các tiêu chí là tinh không ma túy.
 
-“uur Sk man
-207210 op ngã Fuga den me geo mới op ep men mi a we nop np Sng ew
-AT TH 09/18, TU) ST PENT MAE Han ME ged  BAY ma mg en Sir En năm Eu
-102 052: 29 Ry mg ump Srl nce miầu  moog nen mỹ Sumy da ga auf mi mgp
-A7172 LU LR) EP Ug Sf oy CEE Da ROE TỰ: Lo cling nope WIE WER i51
+PHAN 111
+NOI DUNG ĐÈ AN TANG CƯỜNG CONG TAC QUAN LY, GIÁO DỤC,
+DẠY NGHE, HỖ TRỢ TAO VIỆC LAM, VAY VON TÍN DỤNG, TÁI HÒA
+NHẬP CỘNG ĐÔNG CHO HỌC VIÊN CAI NGHIỆN MA TÚY
 
-Co FIU ng rea res | umboe Soc ae erly rong umm go |g eee Sng
-Cv kia oud Lig (M2 ros) ull gana ge ie ug RR sil ) E1
+I. QUAN ĐIỀM CHI ĐẠO
 
-ki
+1. Quán triệt và triển khai thực hiện nghiêm túc chỉ đạo của Trung ương, Tỉnh
+ủy,  Uy ban nhân dân tỉnh về công tác cai nghiện và quản lý sau cai nghiện ma túy
+gan với tăng cường hiệu quả lãnh đạo, quản lý, điều hành của chính quyên các câp
+nham phat huy vai trò, trách nhiệm của các cơ quan,  ban, ngành, đoàn thể, hệ thống
+chính trị và tạo sự đồng thuận toàn dân tham gia vào công tác cai nghiện và quản lý
+sau cai nghiện ma túy trên địa bàn tính.
 
-ga mus ep xông ved ua 60 mn) |
+2. Phòng Cảnh sát điều tra tội phạm về ma túy và Công an cấp xã phải nhận
+thức rõ “hoc viên cai nghiện, người sau cai nghiện là những chu thé đặc biệt , vừa
+là người vi phạm pháp luật - là người bệnh - là nạn nhân; can được giúp đỡ, hỗ trợ ở
+mức cao nhất, đề khi hết thời hạn cai nghiện trở về gia đình,  xã hội nhận được sự
+đồng hành, chia sẻ, giúp đỡ, hỗ trợ giải quyết việc làm, vay vốn tín dụng... tái hòa
 
-rg) dmprl mmorpg Sink n2ng1 Soc Sen dbp ee) reg dom ou) ge SEL mE my
-FL RUT Tg uy mạn mi Sr ER ATE re es ea n1] L7
-‘un dan) mons wad any ung coe Fg “Fugen i "oe cep wey di up
-SLE TATE ve A nd pg wendy gw ea nes Jf wen `  Am tu wd ma xq | ge
-DNB YL LL ie mrs TE TẾ dep angry Ey amp gq ung Bum of)
+* Chú trọng vào tội sử dụng trái phép, chất ma túy (Điều 256a), trên thực tế việc tuyên truyền pháp luật với
+người đã và đang cai nghiện vừa là chế tài mạnh có sức răn đe cao vừa là ngưỡng tâm lý quan trọng đối với
+người nghiện vả người quản lý sau cai;
 
-mip wid nao yg "mạn dingy cq
+ˆ Số người cai nghiện trong độ tuổi lao động tại cơ sở cai nghiện chiếm tỉ lệ cao; ti lệ mắc bệnh truyền nhiễm
+thập, qua trình cai nghiện được quan tâm tai tạo năng lực lao động tốt từ chính sách hỗ trợ của tinh nên có đủ
+điều kiện dé học nghề và tham gia lao động sau khi tái hòa nhập cộng đồng.
 
-MỸ 4 TA, DAWEH VÀ TULL TH TVA 20 1
-"TTL 2/101 T001 gu Fuge WEL op
-Tuna gt og usin vend wag diy cing Sun enka TỰ po en  J um my
-ST OUI Te Tur Fou |  dieu: 01 Fn ou at) won se ek năm) rp vg Sy
-ro AE BU LE = 0 UY udu Eg puny Foun 202: D209, dag Ly
-Ee mn ru Suwon “Fug me Soo Rump no TÔ Lo ug LBM LL LL Ey "hi
+x Ea eas te mr ————————————— | Y,
 
-LE EB up RTE ng ga gen dp Fun ue ou dey dor ee wang
-Irae An Ep vm nang wed inpuyd dod Lm mu woo ra mes wu mựụa Tung
-Fun dy vo meg TU] I 2 Fung |, ory clang soa Fu oy op ng tue Fug quyền
-tt TL LIT "MT a T19, HO un boan Je uo doy nog ae Sug oy gL nã
-gd wi a gun un Foes uum uy my trạp IEE ve uma ner og ws iy
-rp Fe ws Ee wp ume a gg den wo ong dex ng 6) usenby gue nh ae ug
-9g ty Giang) i Se uang@ me mes J nhi ey đunp mune dma woe) TP] Ap ump
-QL IRASRN ET RT TET aug Sp tapooerE ae Huma mnh mặm) me Hep) op
+--- Trang 7 [OSD Fixed: PageDown/Conf: 17.0] ---
+ 
 
-gE
+6
 
-veer stu 19T ded ssp wo Sooo po ump Tung aun pg oun 20 Sung Sud dea
+nhập cộng đồng đề trở thành những công dân tốt, không vi phạm pháp luật, không tái
+nghiện.
 
+3. Nâng cao hiệu quả công tác giáo dục, dạy nghề, tạo việc làm, hỗ Trợ vay tin
+dụng dé tái hòa nhập cộng đồng và quản lý sau cai nghiện; xây dựng,  triển khai bài
+bản các quy trình quản lý từ cấp tỉnh tới cấp xã, hỗ trợ toàn diện và bên vững cho
+học viên từ giai đoạn cai nghiện đến khi hoàn thành chương trình trở về địa phương:
+cụ thể hóa công tác phối hợp Với các cơ quan, đơn vị, tô chức, doanh nghiệp với
+ngành Công an; từ đó tạo “vòng tròn khép kin”  trong việc hỗ trợ tái hòa nhập cộng
+đồng cho người sau cai nghiện ma túy; góp phần giảm thiểu tối đa nguy cơ tái
+nghiện và giúp họ trở thành công dân có ích cho gia đình và xã hội.
 
---- Trang 8 [Deskewed] ---
-Ph.ini vi
+4. Quá trình thực hiện gan với các nội dung công tác phòng, chóng ma tuy va
+lồng ghép với các chương trình phát triển kinh tế - xã hội của địa phương nhằm nh:
+huy tôi đa hiệu quả các nguồn lực cho công tác nay. Thường xuyên rà soát, dánh gia,
+ghi nhận kết quả một cách khách quan, trung thực; kịp thời phát hiện, tháo gỡ những
+khó khăn, vướng mắc trong thực hiện.
 
-- Thun giam tứ nằm JIE — JIC,
+I. MỤC TIÊU, CHÍ TIEU VA PHAM VI ĐÈ ÁN
+1. Mục tiêu, chỉ tiêu phần dau
+(1) Hàng năm, tổ chức tập huấn được ít nhất cho 50% cán bộ, nhân viên làm
 
-- Pham vũ: Tình idan Mir,
+công tác cai nghiện ma túy, quản lý sau cai và quản lý nhà nước vé cai nghiện ma túy
+được tập huấn, đào tạo, bồi dưỡng, nâng cao năng lực chuyên môn nghiệp vụ.
 
-- Đài mg: Mgnt dang cai nghiện ma tùy tại Cie sở cai nghiệm ma mr; người
-damp trung third giam muản l saw cai nghiệm mua hy.
+(2) 100% người sau cai nghiện ma túy đủ điều kiện được hỗ trợ phòng, chong
+tái nghiện ma túy và ho trợ tái hòa nhập cộng dong theo quy định của pháp luật.
+
+(3) 100% học viên phải được xóa mù chữ.
+
+(4) 100% địa bàn cấp xã có người quản lý sau cai nghiện phải vây đựng và
+duy trì ít nhât 01 mô hình hiệu quả về công tác quan lý sau cai nghiện ma túy;
+
+(5) Năm 2026 phối hợp với các đơn vị đào tạo nghề trên địa bản tỉnh tổ chức
+dao tạo nghề và cap chứng chỉ đào tạo nghề theo quy định cho 30% học viên cai
+nghiện ma túy có đủ điêu kiện; phân dau đền năm 2030 có 100% học viên cai nghiện
+ma túy đủ dieu kiện có nhu cau được đào tạo nghệ va cap chứng chi dao tạo nghệ
+theo quy định.
+
+(6) 100% học viên được tiếp cận thông tin, hướng dẫn về vay von tin dung dé
+phát triển kinh tê theo quy định của pháp luật; năm 2026 phôi hợp với các tô chức tín
+dụng trên địa bàn tỉnh ho trợ cho ít nhật 10% học viên đủ điều kiện có nhu cầu được
+vay von tín dụng để phát triển kinh tế; phần đầu đến năm 2030 hỗ trợ giúp cho 50%
+học viên đủ điều kiện có nhu cầu được vay vốn tín dụng để phát triển kinh tế.
+
+(7) Năm 2026 phối hợp với các công ty, doanh nghiệp trên địa ban uni uep
+nhận ít nhất 20% người sau cai nghiện ma túy vào làm việc,  phần đầu đến năm 2030
+có 50% người sau cai nghiện ma túy có nhu cầu được bồ trí công việc phù hợp.
+
+(8) Năm 2026 số người trong diện quản lý sau cai nghiện ma túy theo quy
+định của pháp luật không sử dụng và không vi phạm pháp luật khác về ma túy đạt
+trên 40%, phan đấu đến năm 2030 có 80% người trong diện quản lý sau cai nghiện
+ma túy không sử dụng và không vi phạm pháp luật khác về ma túy.
+
+ 
+
+--- Trang 8 ---
+Ee san rùa s0 Na Ga na DU T02 000000800000000000002000000000 000000 ..._„aưNNHING
+
+ˆ
+bor
+
+Pham vi
+
+- Thời gian: từ năm 2026 — 2030.
+
+- Phạm vi: Tinh Quảng Ninh.
+
+- Đối tượng: Người đang cai nghiện ma túy tại Cơ sở cai nghiện ma túy; người
+đang trong thời gian quản lý sau cai nghiện ma túy.
 
 II. NỘI DUNG, GIẢI PHÁP
 
-1, Cù động tham mu wi cấp ủy, chính quyền Dưa i ham hãm ese wn
-whi, chính sich để triển khai hoạt ding hiệu quả Thể án
+1. Chủ động tham mưu với cấp ủy, chính quyền các cấp ban hành các cơ
+chế, chính sách dé triển khai hoạt động hiệu qua Đề án
 
-- Tham mung win Tỉnh ủy, HED, LIBMD tỉnh chủ đạa các on quan, sử, ban,
-ngánh, đưảm thể, huy động sửc mạnh của cả hệ thẳng chính tri, quan chủng nhằm din
-hur giới ode Be pling, chứng mma thu màn chiang, cũng, te cai nigh tua bùn, qu
-lý sai cái nghiềm ma hày dd riểmg, sặc định công tắc phang, chang ma try lá nhiệm
-wg khí, lân khái, cảm sự kham gia cua cả hệ thẳng cl hình trị, trung, dài lục lương (Co ùng
-am là hoe lung “ning oot”. Trung, tam tam hy triển khai thực hiện: kiệt luận sử
-ILRI, ngày: 1503/2015 của Hộ Chink trị về liên toe thục hiển Chủ thị sử 3h
-SR RV của Bi Chi trị we Lãng, CDE, ChE, war FEL quả wiry Las
-plum, chẳng wh kiếm sodt ma tùy; Chi thi số 33-CTCTL, mgd HA HO cia Ban
-nhung: wu Tình ty Fung Minh sẻ ting rung, nămg can hig ud wom, be phodog,
-chưng và kiềm soét mua bine omg tình hình mi; Lad phing, chống mua hy WE cde
-„âm han bain dâm thi hành Ldn phòng, chẳng mua tiny, Maha quyết sử SIMI CT
-mgắy (303225 của Chink phi sẽ ban hành Rẻ hưạch triển khai Whi quyết sử
-In3/0224 H115, ngày 474110224 của Quốc hậu phê duyệt hương trinh đâu Tu
-Chung trình mục tiếu quốc gia phóng, chẳng ma tùy dén năm 2030,
+- Tham mưu với Tinh ủy, HĐND, UBND tinh chi đạo các cơ quan, sở, ban,
+ngành, đoàn thể, huy động sức mạnh của cả hệ thống chính trị, quần chúng nhân dân
+tham gia công tác phòng, chống ma túy nói chung, công tác cai nghiện ma túy, quản
+lý sau cai nghiện ma túy nói riêng, xác định công tác phòng, chống ma túy là nhiệm
+vụ khó, lâu dài, cần sự tham gia của cả hệ thống chính trị, trong đó lực lượng Công
+an là lực lượng “nòng cốt”. Trọng tâm tham mưu triển khai thực hiện: Kết luận so
+132-KL/TW, ngày 18/3/2025 của Bộ Chính trị về tiếp tục thực hiện Chỉ thị số 36-
+CT/TW ngày 16/8/2019 của Bộ Chính trị về tăng cường, nâng cao hiệu qua cong tác
+phòng, chống và kiểm soát ma túy; Chỉ thị sô 32-CT/TU, ngày 05/5/2023 của Ban
+thường vụ Tỉnh ủy Quảng Ninh về tăng cường, nâng cao hiệu qua công tác phòng,
+chóng và kiểm soát ma túy trong tình hình mới; Luật phòng, chống ma tủy và các
+văn bản hướng dẫn thi hành Luật phòng, chống ma túy; Nghị quyêt số 50/NQ-CP
+ngày 13/3/2025 của Chính phủ về ban hành Kế hoạch triển khai Nghị quyết số
+163/2024/QH15, ngày 27/11/2024 của Quốc hội phê duyệt chương trình đầu tư
+Chương trình mục tiêu quốc gia phòng, chống ma túy đến năm 2030...
 
-- Tham muïru soci LUBMT) tình chỉ đạn các oo gua, ben, ngành, đưàn the phải
-mm oi (ông, an tính one công tác giản dục, dio tu nghề, cấp chừng chi đấm hạn
-riko Lime quy định; Bois trụ Lig nhằm gunn san cai ugg win lary vige wis odo cl i
-LOB J DTT Ol ST tiếp nhậm rug lan bing là rugosa
-cai nghiệm, Trực tiền khản sat, liên be, tran đời và bof các. quy chè phải hợp mời on
-prt, cũng ty, dori mg big trêm die ám tink, trọng, tâm là cào doanh nghiệp mgánh
-tua, các khu công nghiệp trên địa hàm tình để người may ra nghiệm mài điểm bag Dua
-chạm cũng việc phú up wo hàn thân và So định gia định.
+- Tham mưu với UBND tỉnh chỉ đạo các cơ quan, ban, ngành, đoàn thể phối
+hơn với Công an tỉnh trong công tác giáo dục, đào tạo nghề, cấp chứng chỉ đào tạo
+nghe theo quy định; Bồ trí tiếp nhận người sau cai nghiện vào làm việc và có cơ chê
+tu đãi với cơ quan, doanh nghiệp, công ty khi tiếp nhận nguồn lao dộng là người sau
+cai nghiện; Trực tiếp khảo sát, liên hệ, trao đồi và ký các quy chế phối hợp với cơ
+quan, công ty, doanh nghiệp trên địa bàn tỉnh, trọng tâm là các doanh nghiệp ngành
+than, các khu công nghiệp trên địa bản tỉnh để người sau cai nghiện có điều kiện lựa
+chọn công việc phù hợp với bản thân và ồn định gia đình.
 
-- Tham you LIBPMD tình chỉ đạn Sử Tải chính, Wein hing nhà nước wi
-cặc boheme lim dung trém địa hán tỉnh (huáng Minh triểm khai nhục hiện (Huyền
-định của Thủ tưởng wé tìm dụng đi với người sau cai nghiện ma hủy ph thắn
-(huy! đình chu Thal tude g đang đu: trình dể ham Bae, trạm dai, phải hop để
-rằm khu tz, nguy trình wa xâm tìm dụmg, tạm điều kiệm cho người ham thánh
-chum trình cần nghiệm ma tùy tài hoe nhập cing đúng được tiếp can, way dupe
-xuân phục vụ phải triển kinh tỂ,
+- Tham mưu UBND tỉnh chỉ đạo Sở Tài chính, Ngân hàng nhà nước và
+các tổ chức tín dụng trên địa bàn tỉnh Quảng Ninh triển khai thực hiện Quyết
+định của Thủ tướng về tín dụng đối với người sau cai nghiện ma túy (dự thao
+Quyết định của Thủ tướng đang được trình ky ban hành); trao đổi, phối hợp dé
+năm thủ tục,  quy trình vay vốn tín dụng, tạo điều kiện cho người hoàn thành
+chương trình cai nghiện ma túy tái hòa nhập cộng đồng được tiếp cận, vay được
+vôn phục vụ phát triển kinh té.
 
-- “phù hư si (Cục (Cảnh sảt điều tra bôi phạm sẻ mu hủy, cae Trườmg lông mm
-tin? kìm wd ae ee pa, don sp chuyến mâm bode ae tiếp tà whine các lớp bp boda,
-dan tan,  lui dung, măng cam ning lục chuyên min nghiệ Ep vụ WE Ding tác cai nghiên
-ma hủ? wd quảm [0 sang can mghogn mea tùy. Bien soa cae choo trunhh, tấu liệu tấp
+- Phối hợp với Cục Cảnh sát điều tra tội phạm về ma tủy, các Trường Công an
+nhân dân và các cơ quan, don vị chuyên môn hoặc trực tiếp tổ chức các lớp tập huấn,
+đào tạo, bồi dưỡng, nâng cao năng lực chuyên môn nghiệp vụ về công tác cai nghiện
+ma túy và quản lý sau cai nghiện ma túy. Biên soạn các chương trình, tài liệu tập
 
+--- Trang 9 ---
+ 
 
---- Trang 9 [Deskewed] ---
-pC x]
+8
 
-huấn, hưởng dam, cấp nhật kiến thine, cứng mghe, kB măng cheng Lắp ofog Lân kul
-nghuên mui HN, quản Dự sau cầu ghd,
+huan, hướng dan, cập nhật kiến thức, công nghệ, kỹ năng cho người làm công tác cai
+nghiện ma túy, quản lý sau cai nghiện.
 
-- Tham mun Uy ben nhằm dân ninh, phi hy le han nhầm dâm r pw KHH
-dum thi diểm các md hình oud hộ, phóng, ngứa tàn nghiện wd hồ trp tôi hức oh
-Dry đựng: ty mg tâm lá hủ tre ae việc làm chủ meme sau cần nghiên mua nin,  | HTT 01
+- Tham mưu Ủy ban nhân dân tỉnh, phối hợp Ủy ban nhân dân cấp xã xây
+dựng thí điểm các mô hình quản lý, phòng ngừa tái nghiện và hỗ trợ tái hòa nhập
+cộng đồng trọng tâm là hỗ trợ tạo việc làm cho người sau cai nghiện ma túy; làm cơ
 
-mah mui mig mua hùnh trêm phẩm si ted tình
+sở nhân rộng mô hình trên phạm vi toàn tỉnh.
 
-- Thuymg xuyêm chủ dạn lạ kiêm tra, giảm  sil, hung dẫn xuất triển khái nhu
-hiện các mùi dung cia Chế dn;  gần v wh đánh giả, sư, băng kết rủt b nh nghiêm, up nhọn
-thản gã khô khâm, vunảng mặc chủ các dom vị trung quả trình triểm khấn thun: hiển
-ruin wu.
+- Thường xuyên chỉ đạo, kiểm tra, giám sát, hướng dẫn việc triển khai thực
+hiện các nội dung của Đề án;  gắn với đánh giá, sơ, tông kết rút kinh nghiệm, kịp thời
+tháo gỡ khó khăn, vướng mắc cho các đơn vị trong quá trình triển khai thực hiện
 
-1, Măng cam hiệu quả cũng the tuyển truyền giủp di, hi Be HO Sa 0Ì
-nghiệm ma tủy tải hàn nhập cing ding
+nhiệm vụ.
 
-- Thuc hiện ad cùng lắc mdm truyền giùp đỡ, hỗ trí người. sau cai nghiện mui
-tìm tải hưu nhập cùng ding, trưng chủ dp trung vân eae mãi dumg: Tuyển truyền ki
-quà nữmng tae cau nghuêm ma ee; odog bác die bạn, giảm doe mghE mghiềp chúa sg nd
-cai nghiệm, kết quá cing the hiếp nhằm rug unix ann cad nghiệm ms te wie Lắng wii na
-DREN quan, cùng ty, doanh nghiệp đề nhân răng, lam hứa ra doar gã hậu; cae inning
-fro ngi mind man cai nghuễm dum hỗ. tự way wie Lin dụng phản mign kink bố de định
-CC Soy lr bed roa hủy;  TT) vn thăm ngưng muã buds “gan gio Bos SH UV 1001
-hình hiếu quá khác sẽ phản triïn kinh bế của những một sing sau cầu min
+2. Nâng cao hiệu quả công tác tuyên truyền giúp đỡ, hỗ trợ người sau cai
+nghiện ma túy tái hòa nhập cộng đồng
 
-- Cũng tắc tuyến truyền phải đưa: tin khai bằng nhiều hính dine, hiện plo
-khác nhïu, đặc huết Lá wn truer trêm ce plug nếm thăng tìm da chide, Trang
-xã hậu nhị man, lIm2rliraok,,.. Am bedi: ndulmg soci dE wo mga 5291 „TH
-nghiện ma bi để tải ha nhấp cộng đụng: di là sự bo thị của gia dink, sã hội bi san
-người nghiệm; cae on quan, công ty, doanh nghiệp nè wank win dung ng sau cái
-nghiên mạ tùy vàn làm việc; các tử chuc, cả nhằn due gian nhiễm "su quản bộ, wing
-di yn sau cal nghuễn chủ wêu thục hiểm coe công tác quản bị hánh chin, chua co
-việc làm cụ thể để giủp đỡ người sau cai nghiệm, ... Mường tid mus tiểu tám sÄ bi
+- Thực hiện tốt công tác tuyên truyền giúp đỡ, hỗ trợ người sau cai nghiện ma
+túy tái hòa nhập cộng đồng, trong đó tập trung vào các nội dung: Tuyên truyền kết
+quả công tác cai nghiện ma túy; công tác dào tạo, giáo dục nghề nghiệp cho người
+cai nghiện;  kết quả công tác tiếp nhận người sau cai nghiện ma túy vào làm việc tại
+các cơ quan,  công ty, doanh nghiệp đề nhân rộng, lan tỏa ra toàn xã hội; các trường
+hợp người sau cai nghiện được hỗ trợ vay vôn tín dụng phát triển kinh tế ổn định
+cuộc sông từ bỏ ma túy; tuyển truyền nhân rộng mo hình “ban giúp bạn va cac mo
+hình hiệu quả khác về phát triển kinh tế của những người sau cai nghiện neị ly
 
-"Oh tee going BE ged’ đang can nghiêm ai fc wie ening wii od bus wily uo
-năng cao dum: hiểu qua công tác phúng, ching ma wy wea xăm dimp ob, phos, da
-khu bbw mua tai trên địa hám vid  huậng Tình,
+- Công tác tuyên truyền phải được triển khai bằng nhiều hình thức, biện pháp
+khác nhau, đặc biệt là tuyên truyền trên các phương tiện thông tin đại chúng, mạng
+xã hội như zalo, facebook,... Xóa bỏ được những rào cản đối với người sau cai
+nghiện ma túy dé tái hòa nhập cộng đồng: đó là sự kỳ thị của gia đình, xã hội đối với
+người nghiện; các cơ quan, công ty, doanh nghiệp né tránh tuyển dụng người sau cai
+nghiện ma túy vào làm việc; các tổ chức, cá nhân được giao nhiệm vụ quản lý, giúp
+đỡ người sau cai nghiện chủ yếu thực hiện các công tác quản lý hành chính, chưa có
+việc làm cụ thể để giúp đỡ người sau cai nghiện;.... Hướng tới mục tiêu toàn xã hội
 
-1, Ming cao hiệu qui cũng tic giảm dục dao tao nghệ vi hing nghiệp
-trung Ce sử ni mph gn mua hủy
+“chung tay giup đỡ người sau cai nghiện tái hoa nhập cộng đông ” có như vậy mới
+nâng cáo được hiệu quả công tác phòng, chóng ma túy và xây dựng xã, phường, dặc
+khu không ma túy trên địa bản tỉnh Quảng Ninh.
 
-- Phủi huy wii Sở Gide due vú Exo too, cậc Trung dám lạm nghề, II
-nghuễp trên dua hán tink đề boy quy chế phải bop mở các lớp đá tan nghề gay mony
-nữ sử cai nghiện vá cap chứng chi đếm tan nghệ then quy định phú bus win
-Flvodng thin giam cai nghiện của ng cai mphiệm ma my we nguin, cai nghiên bd
-wiz; i Đhậc điểm bản thẩm, nhu câu của người nghiêm củ thể lim đưa: wide lam
-mudi song bén than, gia đính sau khu vẽ địa phưïmg: eid Mu cầu ween dụng lao
-động của cài oo quan, cing Tự, doar nghiệp đã bop quy chế phải fro; ab
-ebm, chăm: đam tạm nghề nhái thục nể, hạn dune ©  "hấu ra" cho maine sau cầu nud
-ma tùy tài hung nhãm cộng ding.
+3. Nâng cao hiệu quả công tác giáo dục đào tạo nghề và hướng nghiệp
+trong Cơ sở cai nghiện ma túy
 
---- Trang 10 [Deskewed] ---
-lạ
+- Phối hợp với Sở Giáo dục và Đào tạo, các Trường đào tạo nghề, hướng
+nghiệp trên địa bản tỉnh để ký quy chế phối hợp mở các lớp đào tạo nghề ngay trong
+cơ SỞ Cai nghiện và cấp chứng chỉ đào tạo nghề theo quy định phù hợp với:  (i)
+Khoảng thời gian cai nghiện của người cai nghiện ma túy tự nguyện, cai nghiện bắt
+buộc; (ii) Đặc điểm bản thân, nhu cầu của người nghiện có thể tìm được việc làm
+nuôi sống bản thân, gia đình sau khi về địa phương: @i?) Nhu cầu tuyển dụng lao
+động của các cơ quan, công ty, doanh nghiệp đã ký quy chế phối hợp; ... theo
+phương châm đào tạo nghề phải thực tế, tạo được “đầu ra” cho người sau cai nghiện
+ma túy tái hòa nhập cộng đồng.
 
-- Làm i căng tác khám zn, Tun true lung, nghiệp chủ người dang Cai
-mpghiên mua i tại on sự cal nghién, dé ngunii righ ra tiny thảy: nữ dune gid trì cua
-sửa lun đăng, wide lắm xã thi dung: sự căn thiết trung thivi gian cai nghiêm mi icy lai
-win sự cai mghiệm due io bạn mui nghề gitp bo mằng can co hội kiểm dune việt
-lắm, muỗi sống bi thin, gia định, không, nhái râug thuuậc wo mui khác, tt doo ý
-thin, thải đội bốn omg việc wep thu, hãng say boc dp đảm Lạm n  nghề nghiệm, tránh
-trung Foe sé luật, huấn thư.
+ 
 
-4. Triểm khai the hiiệm be điều kiệm đảm bám, ĐỀU ww, cw thứ phụn vo iad
-Arm tii hie mip cộng ding mùa mgd huấn thánh chương trình cai nghiệm ma
-tù
+ 
 
-- Xây dựng kế hnạch thục hiện cùng lắc tải iva nhập cộng đẳng, củ sụp phản
-lian, đành giả cụ thế vẻ: trình dê, năng, lực, dia bán, quả trinh cai nghiên... di bùi chúc
-pass lạ, phầm chục, đinh unin trung, thi gian tiểp thus, quái trinhh thuế: hiệm hàm s sùi
-ngu? trình cần mghuồm thun (huyết định sử 1565/0IA-EICA ngây IF tháng 3 năm THỨ 5
-cu Td trung, Bio ng am,
+--- Trang 10 ---
+9
 
-- Trumine khu hủa nhấp cog ding, người cai nghiệm đun: trang hủ bl bE thine I:
-khủnh trị, phảp luật, các hi động, hủ trợ giải hàn áp lục vẽ tâm bộ, kệ năng, ha tiện
-căn thiết khi tử sẽ với gia đình, địa phunmg; tu wn định hung nghề nghuệp cho lun:
-xiên, định bmi, giúp hệ củ ngugeén vững cu khẽ; ri hiển, thăng tim để I TUDE 5L
-HN TU We i bruins bn way wd tr ang, wag ir kiêu kihgri Wun bE Ci fui Ji lư
-iter, hạn tn b's buco
+- Làm tốt công tác khảo sát, tuyên truyền hướng nghiệp cho người đang cai
+nghiện ma túy tại cơ sở cai nghiện, dé người nghiện ma túy thấy rõ được giá trị của
+sức lao động, việc làm và thấy được sự cân thiết trong thời gian cai nghiện ma túy tại
+cơ sở cai nghiện được dao tạo một nghề giúp họ nâng cao cơ hội kiếm được việc
+làm, nuôi sông bản thân, gia đình, không phải phụ thuộc vào người khác, từ đó có ý
+thức, thái độ tốt trong việc tiếp thu, hăng say học tập đào tạo nghề nghiệp, tránh
+trường hợp ép buộc, hình thức.
 
-5, Tang coon, quản lý, bi eg gid sau cai nghiệm ma hủy tại địa ban or sử
+4. Triển khai thực hiện các điều kiện đầm bảo, tối ưu, cụ thé phục vụ giai
+đoạn tái hòa nhập cộng đồng của người hoàn thành chương trình cai nghiện ma
+túy
 
-- Sau khu người nghiệm mua tủy bodn thánh chong trinh cầu nghiệm ma tủy trở
-wi dia phim, Phưmp Lành sài điểm tra bid phạm we mạ hùy nà vẫn bn tro didi xui
-LIBMI vũ Công am cấp xã mm người đó cư trù we kết quả công tc cai nghiệm cũng
-nhụự kết quả cưng oe đàn lan giùm dục nghề nghiên "ủi Gà: Tug dung khảu mủ liếm quam
-Ji VIEWED cần xã ra quyết tinh oun hệ sau rau wi phầm omg hủ chuc, cả mhằm củ
-tràch nhiễm quản by, giùp đỡ người sau cad nghiêm tải hia rhập cộng ding,
+- Xây dựng kế hoạch thực hiện công tác tái hòa nhập cộng đồng: có sự phân
+loại, đánh giá cụ thé về trình độ, năng lực, địa bản, quá trình cai nghiện...   để tổ chức
+quản lý, giáo dục, định hướng trong thời gian tiếp theo; quá trình thực hiện bám sát
+quy trình cai nghiện theo Quyết định số 1565/QĐ-BCA ngày 08 tháng 3 năm 2025
+của Bộ trưởng Bộ Công an.
 
-- Tham muïnu Uy ham nhân dâm cap xã, đề nghị tô chức, cả mhằm dime gian
-uso lộ, giủp dix gun sau cấu nghiệm ma tùy phán cà trách nhiễm hủ tự mguhời sau
-cat nghiệm mạ tủy liếm cận way dupe win kìm dụng de phản triển hình k; liên hệ wo
+- Trước khi hòa nhập cộng đồng, người cai nghiện được trang bị kiến thức về
+chính trị, pháp luật, các hoạt động hỗ trợ giải tỏa áp lực về tâm lý, kỹ năng giao tiếp
+cần thiết khi trở về với gia đình, địa phương; tư van định hướng nghề nghiệp cho học
 
-s3 19, phun: nghiẫp trên dua húm tuyển dụng, tiền nhầm, sẵp sếp cũng việc phi
-luựp với năng lực và nghề nghuập đã dupe đám tao tại củ sử rãi nghiệm đề nhimg
-rum wy Go TT cance Seg, bir Lư mma oy.
+viên, định hướng, giúp họ có nguyện vọng cụ thé; phô biến, thong tin den ngudi sau
+cai nghiện ve các chính sách vay von tín dụng, căn cứ điều kiện thực tế của họ để tư
+vấn. hỗ trợ phù hợp.
 
-- Tãng r ing mãi quan hệ phải hơn gira Dục lung Công am, hà ch, cà nhằm
-umm: gian quảm ging đã gui san cai nghiệm, gia đình wd chink hảm thẩm ng in
+5, Tăng cường quan lý, hỗ trợ người sau cai nghiện ma túy tại địa bàn cơ sở
 
-sau cai nghiện để lãng nghe, thản gã những kh khăm, vung mất, giúp ngs sau
-cat nghuồn tài hie nhập cộng ding thánh cảng.
+- Sau khi người nghiện ma túy hoàn thành chương trình cai nghiện ma túy trở
+về địa phương, Phòng Cảnh sát điều tra tội phạm về ma túy có văn bản trao đổi với
+UBND và Công an cấp xã nơi người đó cư trú về kết quả công tác cai nghiện cũng
+như kết quả công tác đào tạo giáo dục nghề nghiệp và các nội dung khác có liên quan
+để UBND cấp xã ra quyết định quản lý sau cai và phân công tô chức, cá nhân có
+trách nhiệm quản lý, giúp đỡ người sau cai nghiện tái hòa nhập cộng đồng.
 
-fi, Đây. mạnh phung trăm: kip tid khôn thường, nhằm rộng ede điềm
-sai” lung mũng tie muảm Độ sau cai mghiệm mua hủy; Sng runirmg mE un lụm,
-hinh phí thực hiệm Dé ẩn
+- Tham mưu Ủy ban nhân dân cấp xã, đề nghị tổ chức, cá nhân được giao
+quản lý, giúp đỡ người sau cai nghiện ma túy phải có trách nhiệm hỗ trợ người sau
+cai i nghiện ma túy tiếp cận vay được vốn tín dụng đề phát triển kinh tế; liên hệ với
 
-- Xây dụng vớ dua trí cae mã hình wé tuyến truyềm, phúmg, chẳng ma big, ca
-nghiệm m by ta cặc oo quan, don vị và địa phumpg trêm địa hám tình nhằm đem lại
+suông 1Á, doanh nghiệp trên địa ban tuyển dụng, tiếp nhận, sắp xếp công việc phù
+hợp với. năng lực và nghề nghiệp đã được đào tạo tại cơ sở cai nghiện dé những
+người này ôn định cuộc sông, từ bỏ ma tủy.
 
---- Trang 11 [Deskewed] ---
-Ji
+- Tăng cường mồi quan hệ phối hợp giữa lực lượng Công an, tổ chức, cá nhân
+được giao quản lý giúp đỡ người sau cai nghiện, gia đình và chính bản thân người
+sau cai nghiện dé lắng nghe, tháo gỡ những khó khăn, vướng mắc, giúp người sau
+cai nghiện tái hòa nhập cộng đồng thành công.
 
-bug quả hoi thee wo soi phưmg, chăm hương vế oo sử, lây phimy mgui du phun,
-phản huy bun quả của cặc mô hình xây dụmg pcg, tám boda dâm háo: mẽ wn mình lui
-quốc, mũ hình dn ninh co sử trung công ter phông, chủng ma my
-- kịp thái khem thường ddd si tipo thể, cả nhằm cử thánh tick In mg nhận hiên
+6. Đẩy mạnh phong trào; kịp thời khen thưởng, nhân rộng các “điểm
+sáng" trong công tác quần lý sau cai nghiện ma túy; tăng cường nguồn lực,
+kinh phí thực hiện Đề án
 
-Bé ân Tăng ruơmg cũng Le quản by, giản dục, day nghề, ud trữ Làm wei Lum, 9 HY WI
-tìm dụng, tải bie nhằm cùng đúng ch hope viềm cad mghuêm mua tùy trêm de ben tình
-Chuảng Minh; tham mun, đề xuất thu: huậm các chong minh, phòng sĩ, nhim năng:
-can gnome điểm hình tick cục sẽ wi hôn mu Cg đồng.
+- Xây dựng và duy trì các mô hình về tuyên truyền, phòng, chống ma túy, cai
+nghiện ma túy tại các cơ quan, đơn vị va địa phương trên địa ban tinh nhằm đem lại
 
-- Tham muữu ving cung, um lun nguuini Dun dâu tu, Toi na nh phu clone wns
-Li phưmg, chủng wil uêm moet ma my mock charg, og te quid lọ, Iu tự utr yy 5211)
-ai nghiện mudi riêng, mong băm tại các đua hán, lĩnh vụn trung điểm va lun: lung
-những, Mi Be beim mot mua ming.
+--- Trang 11 ---
+ 
 
-PHAM IW
-PHAM CÔNG NHIỆM VI
+10
 
-1. Phúng Cảnh sắt diéu tra vii phạm vé ma tủy
+hiệu quả thiết thực với với phương châm hướng về cơ sở, lấy phòng ngừa làm chính,
+phát huy hiệu quả của các mô hình xây dựng phong trào toàn dân bảo vệ an ninh Tú
+quốc, mô hình An ninh cơ sở trong công tác phòng, chống ma túy.
 
-- hủ động tham muïu ode Đảng ủy, Lãnh đạm Ung am tình than moms Tính
-ủy, HEPMID, LIBMD tính ban hành các (Chỉ thị, Wahi quyền, Chom trinh, Bo hanh,
-win hán chỉ đạn công tie phòng, ching ma nig mới chung, triển khai thun: hiệm Fé ân
-Tăng cubmg ping bbe quản hệ, giản de, day nghề, tạm wise lám, woe ein no dune, lui
-re tái hoi nhập cộng thông chú mguoêi ood thánh chung: trình cải mghiềm mui hp oo
-wi địa phonon trên địa bản tính Chuảng, Mình dạn hiệu quá.
+- Kịp thời khen thưởng đối với tập thể, cá nhân có thành tích trong thực hiện
+Đề án Tăng cường công tác quản lý, giáo dục, dạy nghề,  hỗ trợ tạo việc làm,  vay von
+tín dụng, tái hòa nhập cộng đồng cho học viên cai nghiện ma túy trên dia ban tinh
+Quảng Ninh; tham mưu, đề xuất thực hiện các chương trình, phóng sự, nhân rộng
+các gương điền hình tích cực về tái hòa nhập cộng đồng.
 
-- Trực tiếp phùi hợn, tran đổi và tham mu Công am tình boy qua chế pla
-hp với các cơ quan, ban, ngắnh, đưám thể, công be, doanh nghiệp trên dis hán hình
-để triển khai thục hiện Để dm,
+- Tham mưu tăng cường, ưu tiên nguồn lực dau tư, hỗ trợ kinh phi cho cong
+tac phòng, chồng và kiểm soát ma túy nói chung, công tác quản lý, hỗ trợ quản lý sau
+cai nghiện nói riêng, trọng tâm tại các địa bản, lĩnh vực trọng điểm và lực lượng
+phòng, chống, kiểm soát ma túy.
 
-- Chủ trí phủi hp với các Phúng nghiệp su của Ce anh sìi lin Ha lu
-phạm si mui hìy vũ các phẳng, rgb pow Cig am tình, Cog an cap xã rn hân cả
-mhuậm si trung, Phê án Tăng cường cũng bho quản lộ, gio de, day mahi, Bork trọ on
-việc làm, wary win tin dụng, tải bbe nhận cộng đẳng chủ học xuên ci nghiền mũ i
-mm ha hàm tình Cdr Mir diem Bone Boon Sade came AM” ig, cl nis nhĩ kh mạ.
+PHAN IV
+PHAN CONG NHIỆM VỤ
 
-- Phi hợp, tham mu tô chuc thục huện kiếm tra, mam sát, hương dâm ï triển
-khai, thực huấn EME ám; tham mun khem thundmgg các dom wi, cả nn oo thánh tích su  wai
-sac, nhin năng các gươmg điểm húnh mguời sau cai nghiềm tải bia nhãp ofng dưng,
-gần wới đánh giả, so, bằng kết nủt kinh nghiệm, kịp thing tham muïu thio gấ khí hâm,
-xung mã;
+1. Phòng Cảnh sát điều tra tội phạm về ma túy
 
-- Phủi hựp Phúng Thun moun,  Phúng Hi Call Cũng am Lids han mi fd i
-mgr him phỉ đảm hàn thn hiệm Ev ẩn tí nguẫn mgân sách rid mình: then mịụ
-định, gầm wi Une hoàn (hung: tind roe Liều quan giá xế plod, cle neo lu,
-đam xã — JG,
+- Chủ động tham mưu với Đảng ủy, Lãnh đạo Công an tỉnh tham mưu Tỉnh
+ủy, HĐND, UBND tỉnh ban hành các Chỉ thị, Nghị quyết, Chương trình, Kế hoạch,
+văn bản chỉ đạo công tác phòng, chong ma túy nói chung, triển khai thực hiện Đề án
+Tăng cường công tác quản lý, giáo dục, dạy nghề, tạo việc làm, vay von tín dung, hỗ
+trợ tái hòa nhập cộng dong cho người hoàn thành chương trình cai nghiện ma túy uo
+về địa phương trên địa ban tỉnh Quảng Ninh đạt hiệu qua.
 
-- Thư rium triển khu mỗi hình “quan bộ ogee san cad nghuễm mui nầy we địa
-ham ioe man, mâm sài thun huậm mod hunhh xây ume vã, phươmg, Se khu bling mone,
+- Trực tiếp phối hợp, trao đổi và tham mưu Công an tinh ký quy chế phi
+hợp với các cơ quan, ban, ngành, đoàn thể, công ty, doanh nghiệp trên địa bàn tính
+dé triển khai thực hiện Đề án.
 
---- Trang 12 [Deskewed] ---
-wa rác mặ hind phưng trán tám dâm ban wé an mình Tô q   wide wi mãi hnh Man mình co
-AI
+- Chủ trì phối hợp với các Phòng nghiệp vụ của Cục Cảnh sát điều tra tội
+phạm về ma túy và các phòng nghiệp vụ Công an tỉnh, Công an cấp xã triển khai các
+nhiệm vụ trong : Đề án Tăng cường công tác quản lý, giáo dục, dạy nghề, hỗ trợ tạo
+việc làm, vay vốn tín dụng, tái hòa nhập cộng đồng cho học viên cai nghiện ma túy
+trên địa bản tinh Quảng Ninh đảm báo hoàn thành các mục tiêu, chỉ tiêu đã dé ra.
 
-3. Photog Tham mown
+- Phối hợp, tham mưu tổ chức thực hiện kiểm tra, giám sát, hướng dẫn triển
+khai, thực hiện Dé án; tham mưu khen thưởng các đơn vị, cá nhân có thành tích xuất
+sắc, nhân rộng các gương điển hình người sau cai nghiện tái hòa nhập cộng dong;
+gắn với đánh giá, sơ, tổng kết rút kinh nghiệm, kịp thời tham mưu tháo gỡ khó khăn,
+vướng mắc;
 
-- Phi hợp win Phúng Cảnh sit điều tra 030 pham sẽ ma nig tham mm si
-Phang ty, Lãnh đạm Ù Cũng am tình tham mn Tình ủy, HHDMI, LIBMD tink ban bib
-cả hi thị, Mghị (UY, (hung trình, kế hạch, win bám chủ đam pũng, bắc nhưứmg,
-chẳng ma DOR TT triển khai thục hiện BV án đảm hàn hoán thánh các mục
-tiểu, chi tiểu đã đề ra.
+- Phối hợp Phòng Tham mưu,  Phòng Hậu can Công an tinh tham mưu bố trí
+nguồn kinh phí đảm bảo thực hiện Đề án từ nguồn ngân sách nhà nước theo anv
+định, gắn với thực hiện Chương trình mục tiều quốc gia về phòng, c   chóng ma Ly gia,
+đoạn 2025 — 2030.
 
-- Phi hp Phong (Cảnh sát điều tra td phạm we mua hủy tham mun wid lãnh
-đạn (ng, an tink xây dựmg cde chong trinh, quy chẽ phải hp với rắc sở, ban,
+- Tham mưu triển khai mô hình “quản lý người sai cai nghiện ma túy tại địa
+bàn cơ sở”, gắn với thực hiện mô hình xây dựng xã, phường, đặc khu không ma túy
 
-gan, nản th lẻ, con quan, dian nghiệp đề hỗ trụ giản due đản hạn nghề, way vân tin
+en Eb ASA SSE ARAN ERE
 
-in tiếp nhận người sau cai nghiêm vn làm việc |
+ 
 
-^. Phim (mg tie chính trị
+--- Trang 12 ---
+ 
 
-- Chu trì  phd lop xui Phòng Lành sút điểm tra tội phạm sẽ mụa ing và (ông,
-EN Pn wl dhs muah deg bầu. HE rune trêm Tramg Tung tor điệm tử (ông, am tink
-wii cae plo, thảm thie to đạn chong we kết quả thực hiện Đề dr, who dim đùi
-mi, sàng tan, da dạng hia hình thie, phương php tuyến truyền én cde nêm ting
-msn xã boda | men, Sabo, Til Tobe, |.
+11
 
-- Phối hợp sửi Phúng (Cảnh sắt điểm tra bi phugm we ma hủy và các dom wi lhêm
-quan làm tôi cũng tảo tuyến truyền pháp huật, định hunởng, tư wan nghệ nghiệp chủ
-qui viên đamg coi nghuận, Fh Fone ini rắc phúng thuộc (Công, am tình, Công an cấp
-wil chủ đam cae nấy sử Eve, Phận Công am bod hình nghuễỜm co, sấy ding các ofmng
-rir, mã húnh, phẩm wide hỗ trợ người sau cai nghiệm ma ty tải hóa nhập cùng đẳng,
+va các mô hình phong trào toàn dân bảo vệ an ninh Tổ quốc và mô hình An ninh cơ
+SỞ.
 
-- Chủ trí phải hơn wei Phòng Cảnh sốt điều tra tôi phạm sẽ mã tùy để xuất
-Lãnh đạn (Dũng, an tình khen thường si các Lâm thể, cả nhằm củ thánh tich xuất sắc
-trung triểm khai thục hiệm EVE dm,
+2. Phòng Tham mưu
 
-4. Phùng Hậu cần
+- Phối hợp với Phòng Cảnh sát điều tra tội phạm về ma túy tham mưu với
+Đảng ủy, Lãnh đạo Công an tỉnh tham mưu Tỉnh ủy, HĐND, UBND tính ban hành.
+các Chỉ thị, Nghị quyết,  Chương trình, Kế hoạch, văn bản chỉ đạo công tác phòng,
+chống ma túy nói chung, triển khai thực hiện Đề án đảm bảo hoàn thành các mục
+tiêu, chỉ tiêu đã đề ra.
 
-- Pho hạm Phòng (Cảnh sởi điều tra tối pham w ma hùy tham mun lông am
-tính hàn cản, để wal với LIEMTI tình triển khai thục hiện (huyết định của Tìm cig
-chunh ibis wo weary năm bin dụmg G3 oc rgd san cai nghiệm ma ting,
+- Phối hợp Phòng Cảnh sát điều tra tội phạm về ma túy tham mưu với lãnh
+đạo Công an tỉnh xây dựng các chương trình, quy chế phối hợp với các sở, ban,
+ngành, đoàn thể, cơ quan, doanh nghiệp dé hỗ trợ giáo dục đào tạo nghề, vay vốn tín
+dụng, tiếp nhận người sau cai nghiện vào làm việc ...
 
-- Tham mun bi tri nguồn kinh phí của Trung ương và của tính dé triển khai
-thun huận cae mặt dang, mhuềm ww cos Thế án due: huậu quả.
+3. Phòng Công tác chính trị
 
-5. Plime $n ninh Chink trị mặi loặ
+- Chủ trì, phối hợp với Phòng Cảnh sát điều tra tội phạm về ma túy và Công
+an cấp xã đây mạnh công tác tuyên truyền trên Trang Thông tin điện tử Công an tinh
+và các phương tiện thông tin đại chúng về kết quả thực hiện Đề án; chủ động đổi
+mới, sáng tạo, đa dạng hóa hình thức, phương pháp tuyên truyền trên các nên tảng
+mạng xã hội (facebook, Zalo, TikTok,...).
 
-Phải bo với Thông (Cảnh sat điểu tra tii nhạm we mua ty nhỉi hợp xi Sứ
-(hàn cae và Phân tạm, eae on so đám too nghề trêm địa hám đề tham moma wom lăng am
-(hs cầu duy chế phải hữp trong, cũng tắc đám bao và cầp chủng chỉ chữ hoe viên
-ra roger mua Boe bại Coe sử cad mgđuum ma tùy tình Oude Wind đám hư digg quay
-khinh.
+- Phối hợp với Phòng Cảnh sát điều tra tội phạm về ma túy và các đơn vị liên
+quan làm tốt công tác tuyên truyền pháp luật, định hướng, tư vấn nghề nghiệp cho
+học viên đang cai nghiện. Phối hợp với các phòng thuộc Công an tỉnh, Công an cấp
+xã chi đạo các cơ sở Doan, Hội Công an toàn tinh nghiên cứu, xây dựng các công
+trình, mo hình, phân việc ho trợ người sau cai nghiện ma túy tái hòa nhập cộng dong.
 
-fi. Phủng Am minh hình tế
+- Chủ trì phối hợp với Phòng Cảnh sát điều tra tội phạm về ma túy đề xuất
+Lãnh đạo Công an tỉnh khen thưởng với các tập thé, cá nhân có thành tích xuất sac
+trong triển khai thực hiện Đê án.
 
-Frodo boop với Phưng Cảnh sát điều tra tii phạm về ma tùy trung công the phải
-hơn si cậc khu bình tế, khu công nghiên, Tập đnản cing nghiệp Than - Khuảng sản
+4. Phòng Hậu cần
 
---- Trang 13 [Deskewed] ---
-ấm phải hue, hung dân, biết mù, sân dưng, bo gậy chế eh a Foren ire
-wel ce on pur, thưa mghuỜp trêm địa khán linh tro wud bi chức thì Làn, tiếp mika
-gun sau cai nghiện ma tuy ván lắm wiếc Phid bop wed Mgdn hang Whi owe khn
-we #5, Sử Tái chinh huơmg dâm thủ ne way odo tin dung cho ng sau cai mghunry mu
+- Phối hợp Phòng Cảnh sát điều tra tội phạm về ma túy tham mưu Công an
+tinh báo cáo, đề xuất với UBND tỉnh triển khai thực hiện Quyết định của Thủ tướng
+chính phủ về vay vốn tín dụng đối với người sau cai nghiện ma túy.
 
-Wut Than, các dinanh nghuễp trêm dus bám tình trung trun khau thun: luận Boe an, 0 ose
+- Tham mưu bố trí nguồn kinh phí của Trung ương và của tỉnh dé triển khai
+thực hiện các nội dung, nhiệm vụ của Đê án được hiệu quả.
 
-li
+5. Phòng An ninh Chính trị nội bộ
 
-7. Phủng Cảnh sắt điểu tra tội phạm về rit tự xã ii
+Phối hợp với Phòng Cảnh sát điều tra tội phạm về ma túy phối hợp với Sở
+Giáo dục và Đào tạo,  các cơ sở đảo tạo nghề trên địa bàn đề tham mưu với Công an
+tidi ký các quy chế phối hợp trong công tác đào tạo và cấp chứng chỉ cho học viên
 
-Phu bore oni Phòng (Cảnh sản điều tra tậi pham wé ma tùy trường củng Le nhàm
-lệ cày din mugen sa cai nghogn mua tùy người xã fil,  nhất là các điều tưng) oo tiễn si,
-từ sự wi các bid phạm hind sự không đề các đi omg tiếp tục pham oi, kì phạm mhảri
+cai nghiện ma túy tại Cơ sở cai nghiện ma túy tỉnh Quảng Ninh đảm bảo đúng quy
+định.
+
+6. Phòng An ninh kinh tế
+
+Phối hợp với Phòng Cảnh sát điều tra tội phạm về ma túy trong công tác phối
+hợp với các khu kinh tế, khu công nghiệp, Tập đoàn công nghiệp Than - Khoáng sản
+
+--- Trang 13 ---
+12
+
+Việt Nam, các doanh nghiệp trên địa bản tỉnh trong triển khai thực hiện Đề án. /7 ong
+tâm: phối hop, hướng dẫn, kết nối, xây dựng, ký quy chế phối hợp giữa CAng an +!
+Với các cơ quan, doanh nghiệp trên địa bàn tỉnh trong việc tô chức đào tạo,  ily nhận
+người sau cai nghiện ma túy vào làm việc. Phối hợp với Ngân hàng Nhà nước khu
+vực 6, Sở Tài chính hướng dẫn thủ tục vay vốn tín dụng cho người sau cai nghiện ma
+túy.
+
+7. Phòng Cảnh sát điều tra tội phạm về trật tự xã hội
+
+Phối hợp với Phòng Cảnh sát điều tra tội phạm về ma túy trong công tác quản
+lý các đối tượng sau cai nghiện ma túy ngoài xã hội,  nhất là các đối tượng có tiền án,
+từ sự về các tội phạm hình sự;  không dé các đối tượng tiếp tục phạm tội, vi phạm pháp
 luật.
 
-ñ, (Cũng am ede xã, phưuờmg, dic khu
+8. Công an các xã, phường, đặc khu
 
-- Lam wit căng, bác than oom vi cấp cre, chùnh quyền cấp si, pho bo il HH
-chế edn ode oo quam, ders vị tại dân hán om sử, cheb trì thun: hiểm Bơi hãm vĩ hišm mộ
+- Làm tốt công tác tham mưu với cấp ủy, chính quyền cấp xã, phói hợp chặt
+chẽ với các cơ quan, đơn vị tại địa ban cơ sở, chủ trì thực hiện bài bản, có hiện and
+công tác cai nghiện và quan lý sau cai nghiện ma túy theo quy định của Lut phòng,
+chống ma tủy sửa đổi, bd sung năm 2025 và các văn bản hướng dẫn thi hành; phát
+huy hiệu quả, vai trò của các tổ quản lý người sau cai nghiện ma túy tại địa bàn cơ
+sở.
 
-wing bắc cầu nguồn wd dun bY San) cad nghiện rv ùn? ec quật id cn Lous pd odong,
-chủng ma ty sửa đu, hỗ sung năm 2025 và ede wan hám huong dâm thu hành; ph
+- Thục hiện có bài bản công tác tuyên truyền, chú trọng đăng tải, thông tin
+(trên các kênh, hội nhóm Zalo, Facebook trên địa ban...) về tình hình tội phạm, tệ
+nạn ma túy, các tắm gương tích cực trong tái hòa nhập cộng đồng...; kết hợp chặt
+chẽ giữa tuyên truyền xã hội và phòng ngừa nghiệp vụ, thông qua nhiều “kênh” khác
+nhau (gia đình, quần chúng tốt trên địa bàn..) để nắm tình hình, thường xuyên tác
+động tâm lý, nhận thức, phòng ngừa người sau cai nghiện ma túy vi phạm pháp luật.
 
-hoy hiệu quả, vai trú của các tô quản by ng sau cai nghuêm ma tùy tal dis ben co
-RY,
+- Chủ trì, phối hợp chặt chẽ với gia đình, các đơn vị, doanh nghiệp sử dụng lao
+động là người sau cai nghiện... trong việc quản lý những người này tại địa phương:
+tuyệt đối không dé xảy ra tình trạng “buông long quản lý” "bo mặc” nguoi sii
+cai nghiện, nhất là những người đang được tạo điều kiện việc làm tại các công
+ty, doanh nghiệp; hàng tháng, cán bộ và người được phân công quản lý phải trực
+tiếp làm việc với người đang trong thời gian quản lý sau cai, cảm hóa, giáo dục, kịp
+thời nắm bắt tư tưởng, nguyện vọng dé tư vấn, giúp đỡ phù hợp; tổ chức xét nghiệm
+đột xuất trong cơ thé dé chủ động phòng ngừa, kịp thời phát hiện các trường hợp vi
+phạm; tổ chức thực hiện hiệu quả biện pháp giám sát điện tử đối với diện người
+nghiện và quản lý sau cai nghiện theo quy định của Luật phòng, chống ma túy sửa
+đôi, bo sung năm 2025 (có hiệu lực từ ngày 01/7/2026).
 
-- Theos huệm ob bed hảm nũng bày meen rug, chu trung đãng tấn, tho n1
-liền mày bord, hậi nhằm Talo, Facebook mến địa hám.. | sẻ tính hình ii phụm, hệ
-nạ mua Đầy, cấp  tâm png, tình come trung tài hiểm nhầm cứng đông . ; kết hog hd
-chẽ iin huyền truyền xã hội vá phòng ngưaa nghiệp vụ, thông qua nhu éu “kinh” khắc
-nhau (gia đính, quản ching bất min địa hản..| đề nim tình hick, ting uyên bấy
-dir, tăm lì, nhậm thuc, phẩmg: mira mgt sa cad mghuậm ma thu sĩ plus phần luận.
+PHAN V
+TO CHỨC THỰC HIỆN
+1. Lộ trình thực hiện Đề án gồm:
 
-- (Chủ tr, phải hợp chất chế vời gia định, các don vị, doanh nghiệp sử dụng lau
-Sy là muon sau cai nghiễn.. trumg việt goin Độ rhững ngs me ti dis whee:
+1.1. Giai đoạn chuẩn bị và triển khai bước đầu (hon rhành trước ngà)
+15/03/2026), các nhiệm vụ trọng tâm:
 
-upg di hing dé nay ra tind trim boing hàng quan lạ, hoe mn digs bins i
-wand mg bug mm, mbit là mhiữmg người đang đun: tan điều kiệm việc làm bại cầu ong
-ly, doanh nghiện; hing thug, cảm Ed wed mg dun: phân wong cpr lì [huấn tr:
-tiền lắm woe wi mguni dang trumg tin giam quản lệ sau cãi, cảm ha, giảm dụ, kip
-twin nằm hãi tu tung, nguyện WG đề tư vẫn, giúp đữ phút hy; bố nhi: wet nghuồm
-dit xuất Trong cor thể dé chủ đúng phòng ngữa, kịp thái phản hiệm các trường hog wo
-phạm, bú chức thee hiển hiệu quá biện phản giảm sat điểm tử ddd wi diểm ogo
-mghuậm xá quản hộ sau cai mghiện then quy định cửa Luật phúng, chẳng mua mie sửa
-khâu, bode srg nấm: SORE Po Sig dane te ngưĩp TC
+ 
 
-PHAM W
-TỦ CHÚC THỰC HIỆN
+--- Trang 14 ---
+13
 
-l. Luậ trnh thụn hiện Đề dn gữm:
+- Tham mưu hội nghị triển khai thực hiện Đề án, tạo sự đồng thuận, lan tỏa
+việc triển khai Đề án trên địa bàn tỉnh Quảng Ninh;
 
-DA (hai doar chuẩn bị wh wien khăn boo đâu pham shied trình wii
-MIE Wet UR Ti 10:9 wu trung tấm:
+- Tiến hành khảo sát nhu cầu đào tạo nghề, hướng nghiệp của học viên đang
+cai nghiện ma túy tại cơ sở cai nghiện và làm việc với Sở Giáo dục và Đào tạo, các
+mường dav nghề trên địa ban tinh dé tham mưu Công an tỉnh ký quy chế phối hợp.
+xây dựng chương trình, kế hoạch mở các lớp đào tạo nghề và cấp chứng chỉ dao tạo
+nghề theo quy định.
 
---- Trang 14 [Deskewed] ---
-- Tham muu bli nghị triển khai thực hiện BY dn, tạm sự ding thuận, lan tra
-wie triển khai Eh án trên địa bản tình thuảng, Minh;
+- Làm việc, trao đổi và tham mưu Công an tỉnh ký quy chế phối hợp các cơ
+quan, công ty, doanh nghiệp trên địa ban tinh, trọng tâm là các doanh nghiệp ngành
+than, các khu công nghiệp dé tổ chức dao tạo nghề và tiếp nhận người sau cai nghiện
+ma túy vào làm việc.                         m
 
-- Tiền hành khán sin nhu cầu đản Lạn nghề, hưng nghiệp của hoe viên đang
-watt nghiên mua tùy tại oo sử cai nghiệm vá lâm việc vn Sử Giao dục vớ Phần tee, ca
-"nh mu! ofa mphề trêm dha hám tính để tham mu (ông an tính Ly quy chế phd hop,
-adn em bmg trim, bế beach mua cde Ding đam ta mglue wed csp chung chu da ton
-ng hws puny định
-- Làm việc, tran di và tham mưu Công an tink bop quy chế phải bp các on
-quan, công ty, danh nghiệp trên địa bản tink, trung, tâm lá các doar nghiệp ngã
-tham, wie khu cũng nghiên đề tà chức đán tạn nghệ sả tiệp nhậm người san cai nghiên
-vm ny wed Dim wig,
+- Tổ chức tong rà soát, đánh giá tình hình người nghiện ma túy, người sử dụng
+trái phép chất ma túy và người sau cai nghiện ma túy, tập trung khảo sát, đánh giá
+thực trạng công tác quản lý sau cai nghiện, tạo việc làm,  vay vốn tin dụng, những
+khó khăn, vướng mắc đề có cơ sở tham mưu triển khai Đề án giai đoạn tiếp theo.
 
-- Ti chức tàng rã sot, đánh giá tình hình người nghiệm ma ty, ng sử dụng
-trải phép chấn ma we vá muni sau cần nghuậm ma ty, tắm lrung khám sản, đánh giả
-thun trang, cũng tắc quản lý saw cal nghuộn, hạn việt làm, way wan bir dmg, nhung:
-khà khẩm, vương mặc dê cử co sử tham mu triển khan EVE dn giai doa tiếp the.
+- Tổ chức sơ kết, đánh giá kết quả đạt được ban đầu của Đề án.
 
-- Tủ chức sơ kết, đánh giả Dot quả đạt dung ham đầu của PM án.
+1.2. Giai đoạn triển khai đồng bộ, mở rộng (bắt dau từ 16/03/2026); các
+nhiệm vụ trọng tâm:
 
-LA imi nam triển hat dáng bộ, md nông nhất đâu we 0890037000084; các
-mhiêm xu trung tâm:
+- Tổ chức các hoạt động liên kết dạy, học nghề với các đơn vị cho học viên
 
-- Tô chine cae hại động én kết day, hug nghề với cae dom vị cho lục xiên
-dam cãi nghiệm tại Cosi cai nghiên mại hy, phd hợp bỏ trí, lạn diều kiệm việt lắm,
-wary wien tim dmg; biết bump thục hiện che hiện pháp ngâm hộ rigid san cad mg luhệm bại
-địa phimmeg Troe giai dog 2, teén cơ sử sử bet giai doan 1, đẳnh giả kỹ những điểm
-tỉch conc, hôm Lại, hạm chế, vung, mặc, mi rộng digo liên kết Sarg, cab fou ty, khinh
-nghiện, khu công ngheép khác trên địa han (xy ding, may mặc, lip rip... để da
-dụng bia ngành nghề, tạn điều kiện lựa chạm cho người san cai nghiệm.
+đang cai nghiện tại Cơ sở cai nghiện ma túy; phối hợp bó trí, tạo điều kiện việc làm,
 
-- Tủ chức sơ kết l6 tháng thực hiện trước ngày 309D6/2/26, đánh giá khách
-quan kết quả thực luôn của de an; qua thục tế triển khai thục hiệm, đề mo cae giải
-php, kiến righ, « đề xuất thane hiểm tiếp thư, Trầm coo sử kết CLE Hi loi, nghiên Ci,
-Hham muu đề xuất Li ham nhằm dâm tình xây dựng chong trinh, đề ảm gầm wi triểm
-wit righ Hang, kh ng: tà bùn dm NCS,
+vay von tín dụng: kết hợp thực hiện các biện pháp quản lý người sau cai nghiện tại
 
-'           yo     la    ũ         ..                `          "             .w             1w              ù      v             MU
-LL Thu vn các nhiậm vụ khác, phímng nghiệp sụ, Cũng sm cấm vã thun hiếm
-khung sued hoes chức rong, rin sụp ra do wp người khu EVE ảm Junge: lun bub,
+địa phương. Trong giai đoạn 2, trên cơ sở sơ kêt giai đoạn 1, đánh giá kỹ những điểm
 
-3, Can cir dé dn nay,   Plhocng Cink si điều tra tậi phạm về ma diy, lông an cân
-wo sâu dụng kế hoch triển khan thuc hiện phế hạch đim hàn chỉ hết, oo nhé, nã
-nga, Ein, ĐỂ ae Điền, of HIỂU, nữ tach mhuồm, mã the gua, mã tiền đi hôn
-havnt, pb foe ase’ donde lông hạn tiền cai đa? phang, min wg (Công am tình Jigs
-(hung Cie nát điểm tra hấp gba mổ mi tind trước ngàn 05/0/26,
+tích cực, ton tại, hạn chế, vướng mắc; mở rộng diện liên kết sang các công ty, doanh
 
-1, Wi bình phí thục hiểm: Phúng (Cảnh sai điểm tra hội phạm wế mạ hủy phi
-huyệt wien Pwd, Thiam mu, Phúng Hậu cắn Công am hình tham mun Củ drug an Tình
-bình phi thuc hiện Phê an Ji mugen đinh phi thu hiếm Chung tried moi hiểu gic
-in cis chúng HÀ điên mắm JUG wd Nghi quyên nã Ba 5M HEINE, ngà
+nghiệp, khu công nghiệp khác trên địa bản (xây dựng, may mặc,  lắp ráp...) để đa
+dạng hóa ngành nghề, tạo điều kiện lựa chọn cho người sau cai nghiện.
 
-FD SNE 5 1 hữu cổ Fl LP dễ HN đình MC CT TT nh ưa Am: Te
+- Tổ chức sơ kết 06 tháng thực hiện trước ngày 30/06/2026, đánh giá khách
+quan kết quả thực hiện của đề án; qua thực tế triển khai thực hiện, đề ra các giải
+pháp, kiến nghị, đề xuất thực hiện tiếp theo. Trên cơ sở kết quả sơ kết, nghiên cứu,
+tham mưu đề xuất Uỷ ban nhân dân tỉnh xây dựng chương trình, đề án gắn với triển
+ana ud Phòng, chống ma túy năm 2025.
 
---- Trang 15 [Deskewed] ---
-1 gaả nh nữ diag ngopd
-19915 101/1 T/ } A ELA 2 ALE DO E4] TORN VRS AE) Sn) ek any we Fy mà Ey
-ng wougt lg in og 283  "gn F0guLe WELT OUR] YI MRL IAL JOEL LU Eng TẾ
+1.3. Dối với các nhiệm vụ khác, phòng nghiệp vụ, Công an cấp xã thực hiện
+thường xuyên theo chức năng, nhiệm vụ của đơn vị ngay khi Dé án được ban hành.
 
-TM nang ane fe sata oo on sae org Sarg Era
-OT {YR JC RC PT Cl A FTC JO A EE đrut
+2. Căn cứ đề án này, Phòng Cảnh sát điều tra tội phạm về ma túy,  Công an cấp
+xã xây dựng kế hoạch triển khai thực hiện (kế hoạch dam bảo chỉ tiết, cu thé, ro
+/igưỜi, rÕ việc, rõ mục tiêu, chỉ tiêu, rõ trách nhiệm, rõ thời gian, rõ tiến độ hoàn
+thành, phù hợp với tinh hình thực tiên của địa phương); gửi về Công an tỉnh (qua
+Phòng Cảnh sát điều tra tội phạm về ma úy) trước ngày 05/02/2026.
 
-fr
+3. Về kinh phí thực hiện: Phòng Cảnh sát điều tra tội phạm về ma túy phối
+hợp với Phòng Tham mưu, Phòng Hậu cần Công an tỉnh tham mưu Công an tỉnh
+kinh phí thực hiện Đề án (từ nguồn kinh phí thực hiện Chương trình mục tiêu quốc
+gia phòng, chống ma túy đến năm 2030 và Nghị quyết số 94/2025/NQ-HĐND,  ngày
+16/12/2025 của Hội dong nhân dân tinh Quảng Ninh quy định chính sách thực hiện
+
+--- Trang 15 ---
+ 
+
+/19Ánb te18 doy toud
+
+‘naw Weyl 9D (Am ew 9A weyd TÔI ey naIp jes Yue) UQU4 enb) yun ue 3uo 2 9A 0vd
+orq 10t) diy iA UOp 292 og Fupna UB OU 09 NYU ‘TINY 2U) Yul) Bnd 'p
+
+(yuan Supngy yu HQ. vip ua. Ang vw wpyd TỎI Suoyo ‘uoyd
+
+dan ana đun) ony 04 oy pa Ẩn] DỤI udrydu 150 nos A) uonb ‘Ani pu uFIYSu 100
+
+bỊ
 
 
 ```

@@ -22,12 +22,18 @@ namespace ToolCalender.Services
 
         public async Task<DocumentRecord> ExtractFromFileAsync(string filePath)
         {
+            return await ExtractFromFileAsync(filePath, null);
+        }
+
+        public async Task<DocumentRecord> ExtractFromFileAsync(string filePath, OcrExtractionResult? ocrResult)
+        {
             string ext = Path.GetExtension(filePath).ToLower();
             string text = "";
 
             if (ext == ".pdf")
             {
-                text = await _ocrService.ExtractTextFromPdfOcrAsync(filePath);
+                var resolvedOcrResult = ocrResult ?? await _ocrService.ExtractPdfOcrResultAsync(filePath);
+                text = resolvedOcrResult.FullText;
                 
                 string rawText = ExtractFromPdf(filePath);
                 if (!string.IsNullOrWhiteSpace(rawText)) text += "\n" + rawText;
