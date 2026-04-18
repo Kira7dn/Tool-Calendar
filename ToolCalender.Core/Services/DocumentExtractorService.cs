@@ -238,38 +238,40 @@ namespace ToolCalender.Services
                 }
             }
 
-            var deadlinePatterns = new[] {
-                @"(?:trước|truoc|trướt|trình|xong|hạn|đến|ngày|kỳ)\s+(?:ngày|này|ngảy|ngay)?\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{4})",
-                @"(?:trước|truoc|trình|xong|hạn|đến|ngày)\s+(?:ngày|này|ngay)\s*(\d{1,2})\s+(?:tháng|thảng|thang)\s*(\d{1,2})\s+(?:năm|nảm|nam)\s*(\d{4})",
-                @"(?:Hạn|Thời hạn|Xong|Trình)\s+(?:giải\s+quyết|hoàn\s+thành|Xử\s+lý)?\s*[:\-]?\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{4})"
+            // Lấy từ khóa từ cấu hình
+            string kwSource = Data.DatabaseService.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành, đến hạn");
+            var kwList = kwSource.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
+            string kwPattern = string.Join("|", kwList.Select(x => Regex.Escape(x)));
+
+            var deadlinePatterns = new List<string> {
+                // 1. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [Ngày/Tháng/Năm]
+                $@"(?:{kwPattern})\s+[^0-9\n]{{0,12}}?\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})",
+                // 2. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [ngày... tháng... năm...] (Linh hoạt keyword có thể bao gồm chữ ngày)
+                $@"(?:{kwPattern})\s+[^0-9\n]{{0,12}}?\s*(?:ngày|này|ngay)?\s*(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})",
+                // 3. Mẫu: [Ngày/Tháng/Năm] + [Từ đệm linh hoạt] + [Từ khóa]
+                $@"(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})\s+[^0-9\n]{{0,12}}?\s*(?:{kwPattern})",
+                // 4. Mẫu: [ngày... tháng... năm...] + [Từ đệm linh hoạt] + [Từ khóa]
+                $@"(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})\s+[^0-9\n]{{0,12}}?\s*(?:{kwPattern})"
             };
 
             DateTime? bestMatchDate = null;
-            int bestPriority = -1; 
+            int bestPriority = -1;
 
             foreach (var pattern in deadlinePatterns)
             {
                 var matches = Regex.Matches(t, pattern, RegexOptions.IgnoreCase);
-                foreach (Match match in matches)
+                foreach (Match m in matches)
                 {
-                    if (int.TryParse(match.Groups[1].Value, out int day) &&
-                        int.TryParse(match.Groups[2].Value, out int month) &&
-                        int.TryParse(match.Groups[3].Value, out int year))
+                    if (int.TryParse(m.Groups[1].Value, out int day) &&
+                        int.TryParse(m.Groups[2].Value, out int month) &&
+                        int.TryParse(m.Groups[3].Value, out int year))
                     {
                         try {
                             var detectedDate = new DateTime(year, month, day);
-                            int currentPriority = 1; 
-                            string context = match.Value.ToLower();
-                            
-                            if (year > 2024) currentPriority += 2;
+                            int currentPriority = 10; // Mặc định có Keyword là priority 10
 
-                            if (context.Contains("hạn") || context.Contains("han") || 
-                                context.Contains("xong") || 
-                                context.Contains("hoàn thành") || context.Contains("hoan thanh")) 
-                                currentPriority += 10;
-                            else if (context.Contains("trước") || context.Contains("truoc") || 
-                                     context.Contains("trình") || context.Contains("trinh"))
-                                currentPriority += 5;
+                            // Cộng thêm điểm nếu khoảng cách cực gần (dưới 5 ký tự)
+                            if (m.Length < 25) currentPriority += 5;
 
                             if (currentPriority > bestPriority)
                             {
@@ -281,21 +283,50 @@ namespace ToolCalender.Services
                 }
             }
 
-            if (bestMatchDate.HasValue) record.ThoiHan = bestMatchDate.Value;
-
-            if (record.ThoiHan == null && record.NgayBanHanh.HasValue)
+            // Fallback: Tìm Ngày/Tháng/Năm đơn lẻ lớn nhất (nếu chưa tìm thấy qua Keyword)
+            // Lưu ý: Ta bỏ qua ngày trùng với NgayBanHanh vì đó thường là meta-data, không phải hạn
+            if (bestMatchDate == null)
             {
-                var allDates = Regex.Matches(t, @"(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{4})");
-                DateTime maxD = record.NgayBanHanh.Value;
+                var allDates = Regex.Matches(t, @"(\d{1,2})\s*[\/\-\.\s]\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{4})");
+                string[] formats = { "dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "dd.MM.yyyy" };
+                
                 foreach (Match m in allDates)
                 {
-                    if (DateTime.TryParseExact(m.Value.Replace(" ", ""), new[] { "d/M/yyyy", "dd/MM/yyyy" }, null, System.Globalization.DateTimeStyles.None, out var d))
+                    string dateStr = Regex.Replace(m.Value, @"\s+", "");
+                    if (DateTime.TryParseExact(dateStr, formats, null, System.Globalization.DateTimeStyles.None, out DateTime dt)
+                        && dt > DateTime.Today.AddYears(-5))
                     {
-                        if (d > maxD) maxD = d;
+                        if (record.NgayBanHanh.HasValue && dt.Date == record.NgayBanHanh.Value.Date) continue;
+
+                        if (bestMatchDate == null || dt > bestMatchDate) bestMatchDate = dt;
                     }
                 }
-                if (maxD != record.NgayBanHanh) record.ThoiHan = maxD;
             }
+
+            // Fallback 2: Tìm ngày dạng chữ Việt "ngày... tháng... năm..." đơn lẻ
+            if (bestMatchDate == null)
+            {
+                var allVnDates = Regex.Matches(t, @"(?:ngày|ngay)\s+(\d{1,2})\s+(?:tháng|thang)\s+(\d{1,2})\s+(?:năm|nam)\s+(\d{4})", RegexOptions.IgnoreCase);
+                foreach (Match m in allVnDates)
+                {
+                    if (int.TryParse(m.Groups[1].Value, out int day) &&
+                        int.TryParse(m.Groups[2].Value, out int month) &&
+                        int.TryParse(m.Groups[3].Value, out int year))
+                    {
+                        try {
+                            var dt = new DateTime(year, month, day);
+                            if (dt > DateTime.Today.AddYears(-5))
+                            {
+                                if (record.NgayBanHanh.HasValue && dt.Date == record.NgayBanHanh.Value.Date) continue;
+
+                                if (bestMatchDate == null || dt > bestMatchDate) bestMatchDate = dt;
+                            }
+                        } catch { }
+                    }
+                }
+            }
+
+            if (bestMatchDate.HasValue) record.ThoiHan = bestMatchDate.Value;
 
             var lines = t.Split('\n');
             var coQuanLine = lines.Take(30).FirstOrDefault(l =>
@@ -365,6 +396,34 @@ namespace ToolCalender.Services
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
                 var mFile = Regex.Match(fileName, @"(\d{1,6}\s*[/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]{2,})");
                 if (mFile.Success) record.SoVanBan = mFile.Value.Trim();
+            }
+
+            // --- TÍCH HỢP LUẬT TỰ ĐỘNG (AUTO RULES) ---
+            var rules = Data.DatabaseService.GetAutoRules();
+            foreach (var rule in rules)
+            {
+                if (!string.IsNullOrEmpty(rule.Keyword) && 
+                    t.Contains(rule.Keyword, StringComparison.OrdinalIgnoreCase))
+                {
+                    // 1. Tự động dán nhãn
+                    record.LabelId = rule.LabelId;
+
+                    // 2. Tự động giao việc (Phòng ban)
+                    if (rule.DepartmentId.HasValue)
+                    {
+                        record.DepartmentId = rule.DepartmentId;
+                    }
+
+                    // 3. Tự động tính hạn (nếu chưa tìm thấy hạn trong văn bản)
+                    if (record.ThoiHan == null && rule.DefaultDeadlineDays > 0)
+                    {
+                        var baseDate = record.NgayBanHanh ?? DateTime.Today;
+                        record.ThoiHan = baseDate.AddDays(rule.DefaultDeadlineDays);
+                    }
+                    
+                    // Chỉ áp dụng luật đầu tiên khớp (có thể thay đổi nếu cần ưu tiên khác)
+                    break;
+                }
             }
 
             return await Task.FromResult(record);

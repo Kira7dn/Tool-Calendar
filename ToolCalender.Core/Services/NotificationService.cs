@@ -56,10 +56,20 @@ namespace ToolCalender.Services
         private async Task ScanDeadlinesAsync()
         {
             using var scope = _serviceProvider.CreateScope();
-            var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+            var notificationManager = scope.ServiceProvider.GetRequiredService<INotificationManager>();
 
             try
             {
+                // 1. Kiểm tra ngày quét cuối cùng
+                string todayStr = DateTime.Today.ToString("yyyy-MM-dd");
+                string lastScanDate = DatabaseService.GetAppSetting("Notification_LastScanDate", "");
+
+                if (lastScanDate == todayStr)
+                {
+                    _logger.LogInformation("[DeadlineWorker] Hôm nay đã quét thời hạn rồi. Bỏ qua.");
+                    return;
+                }
+
                 var docs = DatabaseService.GetAll();
                 var activeDocs = docs.Where(d => d.Status != "Đã hoàn thành" && d.ThoiHan.HasValue);
 
@@ -69,34 +79,24 @@ namespace ToolCalender.Services
                 {
                     int daysRemaining = (doc.ThoiHan.Value.Date - today).Days;
 
+                    // Chỉ thông báo các mốc quan trọng 7, 3, 1 ngày
                     if (daysRemaining == 7 || daysRemaining == 3 || daysRemaining == 1)
                     {
-                        string actionKey = $"Deadline_{daysRemaining}_Doc_{doc.Id}_{today:yyyyMMdd}";
-                        
-                        // Kiểm tra xem hôm nay đã thông báo cho văn bản này ở mốc này chưa
-                        // Thực tế ta có thể query AuditLogs, nhưng để đơn giản ta cứ gửi.
-                        // Vì worker này chỉ chạy 1 lần duy nhất lúc 08:30 nên không sợ lặp.
-
-                        string message = $"[CẢNH BÁO] Văn bản số {doc.SoVanBan} còn {daysRemaining} ngày để hoàn thành ({doc.ThoiHan:dd/MM/yyyy}).";
-                        
-                        // 1. Ghi log hệ thống
-                        DatabaseService.InsertAuditLog(null, message);
-
-                        // 2. Gửi Email (Stub)
-                        string emailSubject = $"[ToolCalendar] Cảnh báo thời hạn: {doc.SoVanBan}";
-                        string emailBody = $@"Chào bạn, 
-Văn bản: {doc.TenCongVan} (Số: {doc.SoVanBan})
-Trích yếu: {doc.TrichYeu}
-CÒN {daysRemaining} NGÀY ĐỂ HOÀN THÀNH.
-Hạn xử lý: {doc.ThoiHan:dd/MM/yyyy}.
-Vui lòng kiểm tra và xử lý đúng hạn.";
-
-                        await emailService.SendEmailAsync("assigned_user@example.com", emailSubject, emailBody);
-                        
-                        _logger.LogInformation($"[DeadlineWorker] Đã tạo thông báo mốc {daysRemaining} ngày cho văn bản ID {doc.Id}");
+                        if (doc.AssignedTo.HasValue)
+                        {
+                            await notificationManager.SendToUserAsync(
+                                doc.AssignedTo.Value,
+                                "Nhắc nhở hạn xử lý",
+                                $"Văn bản {doc.SoVanBan} còn {daysRemaining} ngày để hoàn thành ({doc.ThoiHan:dd/MM/yyyy}).",
+                                new { docId = doc.Id, type = "deadline", days = daysRemaining }
+                            );
+                        }
                     }
                 }
-                _logger.LogInformation("[DeadlineWorker] Đã hoàn tất lượt quét hàng ngày.");
+
+                // 2. Cập nhật ngày quét cuối cùng
+                DatabaseService.SaveAppSetting("Notification_LastScanDate", todayStr);
+                _logger.LogInformation("[DeadlineWorker] Đã hoàn tất lượt quét hàng ngày và lưu trạng thái.");
             }
             catch (Exception ex)
             {

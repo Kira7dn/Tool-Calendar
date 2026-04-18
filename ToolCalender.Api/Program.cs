@@ -25,6 +25,8 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<OcrQueueService>()
 
 // Cấu hình Email & Thông báo tự động
 builder.Services.AddSingleton<IEmailService, EmailService>();
+builder.Services.AddSingleton<IVapidService, VapidService>();
+builder.Services.AddScoped<INotificationManager, NotificationManager>();
 builder.Services.AddHostedService<DeadlineWorker>();
 
 // Cấu hình JWT

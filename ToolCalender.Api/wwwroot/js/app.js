@@ -23,7 +23,72 @@ document.addEventListener('DOMContentLoaded', () => {
     initNav();
     fetchData();
     initUpload();
+    initNotifications();
 });
+
+async function initNotifications() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.warn('Push notifications not supported');
+        return;
+    }
+
+    try {
+        // Register Service Worker
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        console.log('SW Registered');
+
+        // Check for permission
+        if (Notification.permission === 'denied') return;
+        
+        if (Notification.permission !== 'granted') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+        }
+
+        // Get VAPID public key
+        const token = localStorage.getItem('auth_token');
+        const vapidRes = await fetch('/api/notification/vapid-public-key', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const { publicKey } = await vapidRes.json();
+
+        // Subscribe
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+
+        // Send to backend
+        const subData = subscription.toJSON();
+        await fetch('/api/notification/subscribe', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                endpoint: subData.endpoint,
+                p256dh: subData.keys.p256dh,
+                auth: subData.keys.auth
+            })
+        });
+
+        console.log('Push subscription successful');
+    } catch (error) {
+        console.error('Push notification setup failed:', error);
+    }
+}
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
 
 function applyRoleRestrictions(role) {
     // 1. Chỉ Admin mới thấy Tab Nhân sự

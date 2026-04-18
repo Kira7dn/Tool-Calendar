@@ -6,11 +6,11 @@
   * Sử dụng máy chủ nội bộ (Local Server) trong mạng LAN.
 * **Hệ thống Thông báo & Cảnh báo**:
 
-  * Sử dụng **Web Notifications API** để tạo thông báo đẩy (Push Notification) từ trình duyệt mà không cần Internet.
-  * Sử dụng **In-app Toast** (thông báo nhỏ trong ứng dụng) để cảnh báo khi đang mở Dashboard.
-  * **Logic nhắc việc 7-3-1**: Cảnh báo theo các mốc 7 ngày, 3 ngày và 1 ngày trước hạn.
-  * Cho phép tải file **.ics** (Calendar) để nạp lịch nhắc việc vào Outlook/Lịch của Windows. (chuyển sang GD2)
-  * Gửi thông báo nhắc việc qua **Email** (GĐ 1 - Yêu cầu kết nối Internet từ máy chủ).
+  * Sử dụng **Web Push API (VAPID)** kết hợp với **Service Worker** để tạo thông báo đẩy (Push Notification) có thể hiển thị ngay cả khi **đã đóng trình duyệt/tab ứng dụng** (Lưu ý: Cần kết nối Internet để liên hệ với Push Service của trình duyệt, nhưng không cần tạo tài khoản FCM).
+  * Sử dụng **In-app Toast** (thông báo nhỏ trong ứng dụng) và **SignalR** để cảnh báo tức thời khi đang mở Dashboard.
+  * **Logic nhắc việc 7-3-1**: Cảnh báo tự động theo các mốc 7 ngày, 3 ngày và 1 ngày trước hạn.
+  * Cho phép tải file **.ics** (Calendar) để nạp lịch nhắc việc vào Outlook/Lịch của Windows (chuyển sang GD2).
+  * Gửi thông báo nhắc việc qua **Email** (GĐ 1 - Tự động lấy email từ hồ sơ User; Hiện tại đang ở dạng **Stub/Log** để kiểm tra logic, cần cấu hình SMTP Server để gửi thật).
   * Gửi thông báo nhắc việc qua **Zalo** (chuyển sang GD2).
 * **Số hóa & Nhập liệu**:
 
@@ -120,6 +120,12 @@ Tập trung vào số liệu tổng quan và xử lý các điểm nghẽn.
 ### 7. AuditLog (Nhật ký hệ thống)
 - `Id`, `UserId`, `Action`, `Timestamp`: Lưu vết 100% các thao tác Xem/Sửa/Xóa của mọi người dùng.
 
+### 8. PushSubscription (Đăng ký nhận tin)
+- `Id`, `UserId`: Liên kết với người dùng.
+- `Endpoint`: URL dịch vụ push của trình duyệt.
+- `P256dh`, `Auth`: Khóa mã hóa bảo mật thông báo (VAPID).
+- `CreatedAt`: Thời điểm đăng ký.
+
 ---
 
 # 📋 TODO LIST (LỘ TRÌNH TRIỂN KHAI GĐ 1)
@@ -134,7 +140,7 @@ Tập trung vào số liệu tổng quan và xử lý các điểm nghẽn.
 - [x] **Auth Service**: Xử lý Đăng nhập, cấp Token JWT và kiểm tra quyền RBAC. 🔹 *Next: Cập nhật Token để chứa thêm thông tin FullName/Department.*
 - [x] **OCR Service**: Tích hợp Tesseract, xử lý **Hàng đợi Batch (Queue)** và bóc tách thông tin (gồm cả Tên công văn). 🔹 *Next: Đã hoàn thành xử lý nền và bóc tách nâng cao.*
 - [x] **Document Service**: Xử lý Upload PDF, CRUD văn bản, Gán việc và cập nhật trạng thái kèm **nhiều file bằng chứng**. 🔹 *Next: Đã hoàn thành luồng điều phối và báo cáo kết quả.*
-- [x] **Notification Service**: Quét mốc 7-3-1 ngày, gửi Email/Web Notification và lưu vết thông báo vào **AuditLog**. 🔹 *Next: Đã hoàn thành Background Worker quét 08:30 hàng ngày.*
+- [x] **Notification Service**: Quét mốc 7-3-1 ngày, gửi Web Notification và lưu vết thông báo vào **AuditLog**. 🔹 *Next: Đã hoàn thành triển khai Web Push (VAPID) và tự động tạo khóa.*
 - [x] **Admin & Backup Service**: Quản lý Rule dán nhãn, **Quản lý Phòng ban**, Cấu hình SMTP và cơ chế Auto-backup CSV. 🔹 *Next: Đã hoàn thành CRUD danh mục và xuất CSV.*
 - [x] **Stats Service**: Tính toán dữ liệu tổng hợp theo Phòng ban/Cán bộ cho Dashboard. 🔹 *Next: Đã hoàn thành API thống kê tổng hợp.*
 
@@ -143,7 +149,8 @@ Tập trung vào số liệu tổng quan và xử lý các điểm nghẽn.
 - [x] **Data Table**: Danh sách văn bản hỗ trợ lọc, tìm kiếm và phân trang chuyên sâu. 🔹 *Next: Thêm bộ lọc nhanh theo Phòng ban.*
 - [x] **Status Badge**: Các nhãn màu sắc thể hiện Trạng thái và Mức độ khẩn. 🔹 *Next: Duy trì.*
 - [ ] **PDF Previewer**: Component nhúng PDF hỗ trợ **điều hướng từng trang** để rà soát. 🔹 *Next: Tích hợp thư viện hiển thị PDF (như PDF.js).*
-- [ ] **Notification UI**: Toast thông báo tức thời và danh sách thông báo chưa đọc. 🔹 *Next: Thêm thư viện Toast (như Toastify hoặc tự viết CSS).*
+- [x] **Notification UI**: Toast thông báo tức thời và danh sách thông báo chưa đọc. 🔹 *Next: Đã triển khai Service Worker cho Web Push.*
+- [ ] **FE Approval Logic**: Xây dựng UI/Logic để xin quyền người dùng (Notification Permission), lấy Subscription và gửi về API `/api/Notification/subscribe`.
 
 ### 4. UI Scene (Main Views)
 - [x] **Login Scene**: Trang đăng nhập bảo mật. 🔹 *Next: Hoàn thành.*

@@ -92,6 +92,7 @@ namespace ToolCalender.Data
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Keyword TEXT,
                     LabelId INTEGER,
+                    DepartmentId INTEGER,
                     DefaultDeadlineDays INTEGER
                 )";
 
@@ -120,6 +121,16 @@ namespace ToolCalender.Data
                     FOREIGN KEY(DocumentId) REFERENCES Documents(Id)
                 )";
 
+            string createPushSubscriptionsTable = @"
+                CREATE TABLE IF NOT EXISTS PushSubscriptions (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    UserId INTEGER,
+                    Endpoint TEXT UNIQUE,
+                    P256dh TEXT,
+                    Auth TEXT,
+                    CreatedAt TEXT
+                )";
+
             using var cmd = new SqliteCommand(createDocumentsTable, connection);
             cmd.ExecuteNonQuery();
 
@@ -144,6 +155,9 @@ namespace ToolCalender.Data
             cmd.CommandText = createAuditLogsTable;
             cmd.ExecuteNonQuery();
 
+            cmd.CommandText = createPushSubscriptionsTable;
+            cmd.ExecuteNonQuery();
+
             // --- SEED SETTINGS ---
             cmd.CommandText = "SELECT COUNT(*) FROM AppSettings WHERE [Key] = 'Notification_ScanTime'";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
@@ -151,6 +165,20 @@ namespace ToolCalender.Data
                 cmd.CommandText = "INSERT INTO AppSettings ([Key], [Value]) VALUES ('Notification_ScanTime', '08:30')";
                 cmd.ExecuteNonQuery();
             }
+
+            cmd.CommandText = "SELECT COUNT(*) FROM AppSettings WHERE [Key] = 'Document_DeadlineKeywords'";
+            if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
+            {
+                // Mặc định các từ bóc tách hạn xử lý
+                cmd.CommandText = "INSERT INTO AppSettings ([Key], [Value]) VALUES ('Document_DeadlineKeywords', 'hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành')";
+                cmd.ExecuteNonQuery();
+            }
+
+            // --- MIGRATION: AutoRules.DepartmentId ---
+            try {
+                cmd.CommandText = "ALTER TABLE AutoRules ADD COLUMN DepartmentId INTEGER";
+                cmd.ExecuteNonQuery();
+            } catch { /* Column already exists */ }
 
             // Đảm bảo tài khoản admin luôn đúng mật khẩu admin@123456
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
@@ -249,6 +277,29 @@ namespace ToolCalender.Data
                     Id = Convert.ToInt32(reader["Id"]),
                     Username = reader["Username"].ToString() ?? "",
                     FullName = reader["FullName"]?.ToString() ?? "",
+                    Role = reader["Role"].ToString() ?? "Guest",
+                    DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"])
+                };
+            }
+            return null;
+        }
+
+        public static User? GetUserById(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = "SELECT * FROM Users WHERE Id=@id";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@id", id);
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new User
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    Username = reader["Username"].ToString() ?? "",
+                    FullName = reader["FullName"]?.ToString() ?? "",
+                    Email = reader["Email"]?.ToString() ?? "",
                     Role = reader["Role"].ToString() ?? "Guest",
                     DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"])
                 };
@@ -583,7 +634,8 @@ namespace ToolCalender.Data
                 list.Add(new AutoRule {
                     Id = Convert.ToInt32(reader["Id"]),
                     Keyword = reader["Keyword"].ToString() ?? "",
-                    LabelId = Convert.ToInt32(reader["LabelId"]),
+                    LabelId = reader["LabelId"] == DBNull.Value ? null : Convert.ToInt32(reader["LabelId"]),
+                    DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"]),
                     DefaultDeadlineDays = Convert.ToInt32(reader["DefaultDeadlineDays"])
                 });
             }
@@ -594,9 +646,11 @@ namespace ToolCalender.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("INSERT INTO AutoRules (Keyword, LabelId, DefaultDeadlineDays) VALUES (@k, @l, @d); SELECT last_insert_rowid();", connection);
+            string sql = "INSERT INTO AutoRules (Keyword, LabelId, DepartmentId, DefaultDeadlineDays) VALUES (@k, @l, @dept, @d); SELECT last_insert_rowid();";
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@k", r.Keyword);
-            cmd.Parameters.AddWithValue("@l", r.LabelId);
+            cmd.Parameters.AddWithValue("@l", (object?)r.LabelId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@dept", (object?)r.DepartmentId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@d", r.DefaultDeadlineDays);
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
@@ -690,6 +744,55 @@ namespace ToolCalender.Data
                 Overdue = overdue,
                 ByDepartment = deptDict
             };
+        }
+
+        // --- PUSH SUBSCRIPTION MANAGEMENT ---
+        public static List<PushSubscription> GetPushSubscriptions(int userId)
+        {
+            var list = new List<PushSubscription>();
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = "SELECT * FROM PushSubscriptions WHERE UserId=@uId";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@uId", userId);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list.Add(new PushSubscription {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    UserId = Convert.ToInt32(reader["UserId"]),
+                    Endpoint = reader["Endpoint"].ToString() ?? "",
+                    P256dh = reader["P256dh"].ToString() ?? "",
+                    Auth = reader["Auth"].ToString() ?? "",
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.Now.ToString())
+                });
+            }
+            return list;
+        }
+
+        public static void InsertPushSubscription(PushSubscription sub)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = @"
+                INSERT INTO PushSubscriptions (UserId, Endpoint, P256dh, Auth, CreatedAt) 
+                VALUES (@uId, @e, @p, @a, datetime('now'))
+                ON CONFLICT(Endpoint) DO UPDATE SET UserId=@uId, P256dh=@p, Auth=@a, CreatedAt=datetime('now')";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@uId", sub.UserId);
+            cmd.Parameters.AddWithValue("@e", sub.Endpoint);
+            cmd.Parameters.AddWithValue("@p", sub.P256dh);
+            cmd.Parameters.AddWithValue("@a", sub.Auth);
+            cmd.ExecuteNonQuery();
+        }
+
+        public static void DeletePushSubscription(string endpoint)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var cmd = new SqliteCommand("DELETE FROM PushSubscriptions WHERE Endpoint=@e", connection);
+            cmd.Parameters.AddWithValue("@e", endpoint);
+            cmd.ExecuteNonQuery();
         }
 
         private static string EscapeCsv(string? val)

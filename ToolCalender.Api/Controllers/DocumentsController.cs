@@ -13,12 +13,14 @@ namespace ToolCalender.Api.Controllers
     {
         private readonly IDocumentExtractorService _extractor;
         private readonly IOcrQueueService _ocrQueue;
+        private readonly INotificationManager _notificationManager;
         private readonly IWebHostEnvironment _env;
 
-        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, IWebHostEnvironment env)
+        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, INotificationManager notificationManager, IWebHostEnvironment env)
         {
             _extractor = extractor;
             _ocrQueue = ocrQueue;
+            _notificationManager = notificationManager;
             _env = env;
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -103,10 +105,28 @@ namespace ToolCalender.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpPost("{id}/assign")]
-        public IActionResult Assign(int id, [FromBody] AssignmentRequest request)
+        public async Task<IActionResult> Assign(int id, [FromBody] AssignmentRequest request)
         {
             if (request == null) return BadRequest();
+            
+            // 1. Thực hiện gán trong DB
             DatabaseService.AssignDocument(id, request.DepartmentId, request.UserId);
+
+            // 2. Gửi thông báo tức thời cho Cán bộ (nếu có user được gán)
+            if (request.UserId.HasValue)
+            {
+                var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+                if (doc != null)
+                {
+                    await _notificationManager.SendToUserAsync(
+                        request.UserId.Value,
+                        "Giao việc mới",
+                        $"Bạn được giao xử lý văn bản số {doc.SoVanBan}: {doc.TenCongVan}",
+                        new { docId = id, type = "assignment" }
+                    );
+                }
+            }
+
             return Ok(new { message = "Giao việc thành công." });
         }
 

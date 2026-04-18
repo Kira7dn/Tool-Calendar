@@ -60,7 +60,7 @@ namespace ToolCalender.Tests
             DatabaseService.Register(username, password, role);
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             Client.Dispose();
             Factory.Dispose();
