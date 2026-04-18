@@ -26,38 +26,41 @@ namespace ToolCalender.Tests.Helpers
             "3. Các đơn vị thụ hưởng có trách nhiệm cung cấp dữ liệu kiểm thử và phản hồi kịp thời các lỗi phát sinh trong quá trình vận hành thử nghiệm. Yêu cầu hoàn thành báo cáo tổng kết giai đoạn 1 trước ngày {0} để trình UBND tỉnh xem xét.\n\n" +
             "Trong quá trình triển khai, nếu có khó khăn, vướng mắc phát sinh vượt quá thẩm quyền, các đơn vị cần kịp thời báo cáo về Ban Chỉ đạo (qua Văn phòng Sở) để tổng hợp, trình Lãnh đạo Sở xem xét, quyết định. Yêu cầu các đơn vị nghiêm túc, khẩn trương thực hiện nhiệm vụ này.";
 
-        public static string GenerateProfessionalImagePdf(string outputPath, string soVb, string thoiHan)
+        public static string GenerateProfessionalImagePdf(string outputPath, string soVb, string thoiHan, bool includeNoise = true, bool includeSkew = true)
         {
             int width = 2480; int height = 3508;
             var rand = new Random();
             using var surface = SKSurface.Create(new SKImageInfo(width, height));
             var canvas = surface.Canvas;
             canvas.Clear(SKColors.White);
-
+ 
             string fullText = string.Format(FullContentTemplate, thoiHan);
             string header = $"SO THONG TIN VA TRUYEN THONG\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc\nSố hiệu: {soVb}\n";
             string groundTruth = header + fullText;
-
+ 
             // --- GIẢ LẬP ĐỘ NGHIÊNG (5 độ) ---
-            canvas.RotateDegrees(5.0f, width/2, height/2);
-
+            if (includeSkew)
+            {
+                canvas.RotateDegrees(5.0f, width / 2, height / 2);
+            }
+ 
             using var arialBold = SKTypeface.FromFile(ArialBoldPath);
             using var times = SKTypeface.FromFile(TimesPath);
             using var timesBold = SKTypeface.FromFile(TimesBoldPath);
             
             using var blurFilter = SKImageFilter.CreateBlur(1.2f, 1.2f);
             using var paint = new SKPaint { IsAntialias = true, Color = SKColors.Black, ImageFilter = blurFilter };
-
+ 
             // Header
             paint.Typeface = arialBold; paint.TextSize = 40;
             canvas.DrawText("SO THONG TIN VA TRUYEN THONG", 150, 200, paint);
             paint.Typeface = timesBold; paint.TextSize = 42;
             canvas.DrawText("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", width - 1000, 150, paint);
             canvas.DrawText("Độc lập - Tự do - Hạnh phúc", width - 850, 210, paint);
-
+ 
             paint.Typeface = timesBold; paint.TextSize = 65;
             canvas.DrawText("Số hiệu: " + soVb, 150, 400, paint);
-
+ 
             // Body
             paint.Typeface = times; paint.TextSize = 44;
             fullText = string.Format(FullContentTemplate, thoiHan);
@@ -72,29 +75,32 @@ namespace ToolCalender.Tests.Helpers
                 }
                 y += 75;
             }
-
+ 
             // Stamp
             string stampPath = @"d:\Business Analyze\ToolCalendar\tests\assets\stamp.png";
             if (File.Exists(stampPath)) {
                 using var stampBmp = SKBitmap.Decode(stampPath);
                 canvas.DrawBitmap(stampBmp, new SKRect(width - 900, y + 50, width - 400, y + 550));
             }
-
-            // Heavy Noise
-            paint.ImageFilter = null;
-            paint.Color = SKColors.Gray.WithAlpha(50);
-            for (int i = 0; i < 3000; i++) canvas.DrawCircle(rand.Next(width), rand.Next(height), 2, paint);
-
+ 
+            // Heavy Noise (12,000 chấm đen đậm để nhìn thấy rõ)
+            if (includeNoise)
+            {
+                paint.ImageFilter = null;
+                paint.Color = SKColors.Black.WithAlpha(150);
+                for (int i = 0; i < 12000; i++) canvas.DrawCircle(rand.Next(width), rand.Next(height), 1.5f, paint);
+            }
+ 
             using var snap = surface.Snapshot();
             using var encoded = snap.Encode(SKEncodedImageFormat.Png, 85);
             byte[] bytes = encoded.ToArray();
-
+ 
             using var writer = new PdfWriter(outputPath);
             using var pdf = new PdfDocument(writer);
             var doc = new Document(pdf);
             doc.Add(new Image(iText.IO.Image.ImageDataFactory.Create(bytes)).SetAutoScale(true));
             doc.Close();
-
+ 
             return groundTruth;
         }
 
@@ -189,13 +195,15 @@ namespace ToolCalender.Tests.Helpers
 
         public static string GenerateRotatedScannedPdf(string outputPath)
         {
-            string groundTruth = "VĂN BẢN QUÉT BỊ XOAY NGANG 90 ĐỘ\n" + LongAdministrativeTemplate;
-            int width = 2480; int height = 3508; // Khổ đứng chuẩn
+            string groundTruth = "VĂN BẢN QUÉT GÓC 90 ĐỘ (XOAY NGANG)\n" + LongAdministrativeTemplate;
+            int width = 2480; int height = 3508; 
             using var surface = SKSurface.Create(new SKImageInfo(width, height));
             var canvas = surface.Canvas;
             canvas.Clear(SKColors.White);
 
-            // Xoay canvas 90 độ để giả lập bản scan bị đặt ngang
+            // Xoay canvas 90 độ quanh tâm hoặc tịnh tiến để vẽ văn bản dọc theo chiều dài tờ giấy
+            // Khi xoay 90 độ CW, trục X mới chạy dọc theo chiều cao gốc (0 -> 3508)
+            // Trục Y mới chạy ngược lại chiều rộng gốc
             canvas.Translate(width, 0);
             canvas.RotateDegrees(90);
 
@@ -203,12 +211,21 @@ namespace ToolCalender.Tests.Helpers
             using var typeface = SKTypeface.FromFile(ArialBoldPath);
             paint.Typeface = typeface;
             
-            canvas.DrawText("VĂN BẢN QUÉT GÓC 90 ĐỘ (XOAY NGANG)", 100, 100, paint);
+            // Bây giờ ta vẽ trên vùng có kích thước "ảo" là Height x Width (3508 x 2480)
+            canvas.DrawText("VĂN BẢN QUÉT GÓC 90 ĐỘ (XOAY NGANG)", 150, 150, paint);
+            
             paint.Typeface = SKTypeface.FromFile(TimesPath);
-            float y = 250;
+            float y = 300;
             foreach (var line in LongAdministrativeTemplate.Split('\n')) {
-                canvas.DrawText(line, 100, y, paint);
-                y += 80;
+                string text = line;
+                // Word wrap dựa trên chiều cao 3508 (trừ đi lề)
+                while (text.Length > 110) {
+                    canvas.DrawText(text.Substring(0, 110), 150, y, paint);
+                    text = text.Substring(110);
+                    y += 65;
+                }
+                canvas.DrawText(text, 150, y, paint);
+                y += 85;
             }
 
             using var snap = surface.Snapshot();

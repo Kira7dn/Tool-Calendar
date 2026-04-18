@@ -5,7 +5,7 @@ using ToolCalender.Tests.Helpers;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 
-namespace ToolCalender.Tests
+namespace ToolCalender.Tests.UnitTests
 {
     public class OcrStressTests
     {
@@ -28,7 +28,7 @@ namespace ToolCalender.Tests
 
         private string GetResultsFolder()
         {
-            string path = @"d:\Business Analyze\ToolCalendar\tests\test_results\stress_tests";
+            string path = @"d:\Business Analyze\ToolCalendar\tests\test_results\unit_test";
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
             return path;
         }
@@ -53,7 +53,6 @@ namespace ToolCalender.Tests
             File.WriteAllText(reportPath, report);
 
             // --- ASSERT ---
-            // Sau khi tối ưu, accuracy phải đạt mức cao (>90%)
             accuracy.Should().BeGreaterThan(90.0, "Hệ thống đã hỗ trợ đa trang nên phải bóc tách đủ nội dung");
         }
 
@@ -77,7 +76,6 @@ namespace ToolCalender.Tests
             File.WriteAllText(reportPath, report);
 
             // --- ASSERT ---
-            // Sau khi tối ưu dùng OSD, Accuracy phải đạt mức cao
             accuracy.Should().BeGreaterThan(90.0, "Hệ thống đã hỗ trợ Auto-OSD nên phải tự xoay đúng chiều");
         }
 

@@ -1,10 +1,10 @@
 # Báo cáo Stress Test - Xoay hướng
 
-**Tỷ lệ trùng khớp: 22.86%**
+**Tỷ lệ trùng khớp: 87.49%**
 
 ## Văn bản gốc:
 ```
-VĂN BẢN QUÉT BỊ XOAY NGANG 90 ĐỘ
+VĂN BẢN QUÉT GÓC 90 ĐỘ (XOAY NGANG)
 Căn cứ Quyết định số 749/QĐ-TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyệt 'Chương trình Chuyển đổi số quốc gia đến năm 2025, định hướng đến năm 2030';
 Sở Thông tin và Truyền thông xác định việc triển khai Hệ thống Điều phối Công văn tích hợp trí tuệ nhân tạo (AI) là nhiệm vụ trọng tâm nhằm nâng cao hiệu quả quản lý hành chính nhà nước, hiện thực hóa mục tiêu chuyển đổi số toàn diện của tỉnh.
 Để đảm bảo đúng tiến độ đề ra, Giám đốc Sở yêu cầu các phòng, đơn vị trực thuộc tập trung thực hiện các nội dung sau:
@@ -17,19 +17,41 @@ Mọi sự chậm trễ không có lý do chính đáng sẽ được đưa vào
 
 ## AI trích xuất:
 ```
---- Trang 1 [OSD: PageLeft(250.0)] ---
-Qn opo opq AY QUÍP SA 10p 091) 0S SuQyd UgA "uenb ur] UpU po ÿA 9U) đội eNO WEU 19nd 3uong) USYY BNP IY) LIS [UEP [YO ng OPA BNP oónp 9s TURP YUIYO Op A 90 80013) 91 UIỆUO Ais TO]
-9S 0D que quis ‘doy Sug) 9D (0S Suoyd ugA enb) OÈD TỤO ee 9A 0d 09g 10U) dix] uo ia UOp 202 “UOÁnb tens gnb 10nA quis jeyd opw Suona ULE OU 00 NYU Tey UYLY UUH] pnb Suory
-ugOp 1813 193 SQ) 059 09g UUPU) UpoU Ngo nọ X "WINYSU NY) Yugy ug qui pnb Suon UU1S 1pyd 197 ovo 101) diy 197 UpUd ĐA ny) UIOD] nội] 4p dgo 3uno uộïgU yop: 9 Suony Ary lA UOp 08) '€
-b ep Urq ugA ‘OBO NYIYU Óp QO Uợq URA OBO OPX YUIYD UIP UợUU OPg wep reyd 301) IH "YIO NIT LP Yop) 90q Apt 0q UIT) Ugoy [IND BIS UgÁnU9 ovo TỌA doy 194d II nyo og Sueyd ug 'C
-[Uip Bur BOY UENYD 901A Á NN] 1ộ1g OB "LOW LA 10 8U0U) $U 080 90/8 0q SUQP Yul okq wep ‘Ueq ug UỆUU don quiy Anb ộq Ugo) 120s LT WITYU Yor: niyo QS DO 98 10p UANYD) 0p IY) ue |
+--- Trang 1 [OSD Blocked:90deg/Conf:9.2/Reason:Portrait-Lock] [Deskewed] ---
+VĂN BẢN QUÉT GÓC 90 ĐỘ (XOAY NGANG)
 
-‘nes Sunp TÔU 269 Udy ony Suny độ] ogni) 9) ia UOD “SUOUd ovo ngó ngÁ ọs 20p WELD “eI 9p Óp UPN 3unp opq wep 9q
-nu pụu qu1go yuey £1 ugnb pnb nộïg oeo 8ugU urguu we) 3ô) fa uộïgu pỊ (IV) O%) UEUU Ôn) 1) doy yon uga Sue) 10Ud nor Sugy) 9H Tey ULL o9IA quip 9PX Suoy) UOÁDỊ ĐÁ ur 3U0UT OS
+Căn cứ Quyêt định số 749/QĐ-TTg ngày 03/6/2020 của Thu tướng Chính phu phê duyêt 'Chương trình Chuyên đồi số q
+uốc gia đến năm 2025, định hướng đến năm 2030,
 
-s0€0Z wey up Suony UUïp “€Z0Z Wey ugp ĐI 50nb os 10p U9ÁnUQ yur Suony, 384np oud nud qui) Suom nif, eno 0707/9/60 Ấ9ổu 3 ,L-QÒ/6E/, 9S TUẬp 19400 n9 Ug)
+Sơ Thông tin và Truyền thông xác định việc triển khai Hệ thống Điều phối Công văn tích hop trí tué nhân tao (A
+I) là nhiêm vu trong tâm nhằm nâng cao hiêu qua quan lý hành chính nhà nước, hiên thực hóa muc tiêu chuyên đổi
+sô toàn diện của tinh.
 
-(9NVON AVOX) OG 06 209 13ND NVS NYA
+Đề đam bao đúng tiền đô dé ra, Giám đốc Sơ yêu cầu các phòng, đơn vi trực thuộc tập trung thực hiện các nôi du
+ng sau
+
+1. Ban Chị đao Chuyên đồi số của Sơ chịu trách nhiêm rà soát toàn bô quy trình tiép nhân văn ban, đam bao tinh
+đồng bô giữa các hê thống cũ và mới Dic biêt lưu ý vide chuân hóa mã định danh văn ban theo quy định hiên hà
+
+nh đôi với các tai liêu lưu trữ tư năm 2010 đến nay.
+
+2. Văn phòng Sơ chu trì phối hop với các chuyên gia CNTT hoàn thiên bô máy bóc tách dữ hêu OCR Hé thống phai
+đam bao nhân diên chính xác các văn ban có đô nhiễu cao, văn ban đã qua lưu trữ lâu năm hoăc văn ban có con d
+
+âu đe lên thông tin quan trong Muc tiêu tị lê nhân diện phai dat trên 95% đôi với các trương thông tin cơ ban
+
+3. Các đơn vi thu hưởng co trách nhiệm cung cấp dữ liêu kiêm thử va phan hồi kip thời các lỗi phát sinh trong
+quá trình vân hành thư nghiêm Yêu câu hoàn thành báo cáo tông kết giai đoan 1 trước ngày 01/01/2027 đê trình
+UBND tinh xem xét, đánh giá hiệu qua thực tê va phê duyêt kinh phi cho giai đoan tiệp theo
+
+Trong quá trinh triên khai, nêu co khó khăn, vương mac phat sinh vươt quá thâm quyên, cac đơn vi can kip thời
+báo cáo vê Ban Chi đao (qua Văn phòng Sơ) đê tông hop, trình Lãnh đao Sở xem xét, quyêt định. Yêu cầu các đơn
+vi nghiêm túc, khan trương thực hiên nhiêm vu này dé đam bao chi sô đánh giá DDCI của Sơ năm 2026 dat kết qua
+tốt nhất
+
+Mor sư châm trễ không có lý do chinh đáng sẽ được đưa vào tiêu chí đánh giá thị đua khen thương cuôi năm cua t
+
+ap thê và cá nhân liên quan Van phòng Sơ theo dõi và định ky báo cáo tiên đô vào ngày 25 hàng tháng
 
 
 ```

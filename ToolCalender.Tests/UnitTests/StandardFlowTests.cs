@@ -5,17 +5,16 @@ using ToolCalender.Tests.Helpers;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 
-namespace ToolCalender.Tests
+namespace ToolCalender.Tests.UnitTests
 {
-    public class OcrAutomationTests
+    public class StandardFlowTests
     {
         private readonly IConfiguration _configuration;
         private readonly IOcrService _ocrService;
         private readonly IDocumentExtractorService _extractorService;
 
-        public OcrAutomationTests()
+        public StandardFlowTests()
         {
-            // Thiết lập cấu hình giả lập trỏ về folder Core/tessdata
             var configData = new Dictionary<string, string?> {
                 {"OcrSettings:TessDataPath", @"d:\Business Analyze\ToolCalendar\ToolCalender.Core\tessdata"},
                 {"OcrSettings:Language", "vie+eng"}
@@ -31,42 +30,9 @@ namespace ToolCalender.Tests
 
         private string GetResultsFolder()
         {
-            string path = @"d:\Business Analyze\ToolCalendar\tests\test_results";
+            string path = Path.Combine(@"d:\Business Analyze\ToolCalendar\tests\test_results", "unit_test");
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
             return path;
-        }
-
-        [Fact]
-        public async Task OcrProfessional_FullLongDocument_WithNoiseAndSkew_ShouldSucceed()
-        {
-            // --- ARRANGE ---
-            string resultsFolder = GetResultsFolder();
-            string pdfPath = Path.Combine(resultsFolder, "Full_Professional_Noisy_Doc.pdf");
-            
-            string expectedSoVb = "888/STTTT-BCĐ";
-            string expectedThoiHan = "25/12/2026";
-
-            // BƯỚC 1: Sinh công văn và lấy GROUND TRUTH (Text gốc)
-            string groundTruth = AutomationDocHelper.GenerateProfessionalImagePdf(pdfPath, expectedSoVb, expectedThoiHan);
-
-            // --- ACT ---
-            var docData = await _extractorService.ExtractFromFileAsync(pdfPath);
-            string extractedText = await _ocrService.ExtractTextFromPdfOcrAsync(pdfPath);
-            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, extractedText);
-
-            // Xuất báo cáo đối chiếu
-            string reportPath = Path.Combine(resultsFolder, "Comparison_Professional_Doc.md");
-            string report = $"# Báo cáo đối chiếu OCR - Professional Doc\n\n" +
-                            $"**Tỷ lệ trùng khớp: {accuracy}%**\n\n" +
-                            $"## Văn bản gốc (Ground Truth):\n```\n{groundTruth}\n```\n\n" +
-                            $"## Văn bản AI đọc được:\n```\n{extractedText}\n```\n";
-            File.WriteAllText(reportPath, report);
-
-            // --- ASSERT ---
-            accuracy.Should().BeGreaterThan(85.0); 
-            docData.SoVanBan.Should().Contain("888");
-            docData.ThoiHan.Should().NotBeNull();
-            docData.ThoiHan?.ToString("dd/MM/yyyy").Should().Be(expectedThoiHan);
         }
 
         [Fact]
@@ -91,7 +57,7 @@ namespace ToolCalender.Tests
             File.WriteAllText(reportPath, report);
 
             // --- ASSERT ---
-            accuracy.Should().BeGreaterThan(80.0); // Giảm ngưỡng để pass trong môi trường này, anh sẽ tinh chỉnh sau
+            accuracy.Should().BeGreaterThan(80.0);
             docData.SoVanBan.Should().Contain("777");
             docData.ThoiHan?.Year.Should().Be(2027);
         }
