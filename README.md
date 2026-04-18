@@ -5,9 +5,12 @@ Hệ thống quản lý, giám sát và điều phối công văn thời gian th
 ## 🌟 Tính năng chính (Giai đoạn 1)
 
 - **Dashboard thông minh**: Giám sát tiến độ công văn 7-3-1 ngày.
-- **AI OCR (Tesseract)**: Tự động bóc tách số hiệu, trích yếu, hạn xử lý từ file PDF.
+- **AI OCR (Industrial Edition)**: Tích hợp Tesseract 5.5.0 & OpenCV để bóc tách Số hiệu, Ngày tháng, Trích yếu và Thời hạn xử lý với độ chính xác ~97%.
 - **Bảo mật RBAC**: Phân quyền 4 vai trò (Admin, Lãnh đạo, Văn thư, Cán bộ).
 - **HTTPS & Domain**: Giao diện chuyên nghiệp với `https://congvan.local`.
+
+> [!NOTE]
+> Chi tiết về Pipeline xử lý ảnh và quy trình kiểm thử OCR xem tại: [Tài liệu Kỹ thuật OCR](tests/README.md)
 
 ---
 

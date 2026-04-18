@@ -1,0 +1,184 @@
+# Báo cáo Stress Test - Đa trang
+
+**Tỷ lệ trùng khớp: 85.55%**
+
+## Văn bản gốc:
+```
+--- BÁO CÁO CÔNG TÁC TRANG 1 ---
+
+Căn cứ Quyết định số 749/QĐ-TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyệt 'Chương trình Chuyển đổi số quốc gia đến năm 2025, định hướng đến năm 2030';
+Sở Thông tin và Truyền thông xác định việc triển khai Hệ thống Điều phối Công văn tích hợp trí tuệ nhân tạo (AI) là nhiệm vụ trọng tâm nhằm nâng cao hiệu quả quản lý hành chính nhà nước, hiện thực hóa mục tiêu chuyển đổi số toàn diện của tỉnh.
+Để đảm bảo đúng tiến độ đề ra, Giám đốc Sở yêu cầu các phòng, đơn vị trực thuộc tập trung thực hiện các nội dung sau:
+1. Ban Chỉ đạo Chuyển đổi số của Sở chịu trách nhiệm rà soát toàn bộ quy trình tiếp nhận văn bản, đảm bảo tính đồng bộ giữa các hệ thống cũ và mới. Đặc biệt lưu ý việc chuẩn hóa mã định danh văn bản theo quy định hiện hành đối với các tài liệu lưu trữ từ năm 2010 đến nay.
+2. Văn phòng Sở chủ trì phối hợp với các chuyên gia CNTT hoàn thiện bộ máy bóc tách dữ liệu OCR. Hệ thống phải đảm bảo nhận diện chính xác các văn bản có độ nhiễu cao, văn bản đã qua lưu trữ lâu năm hoặc văn bản có con dấu đè lên thông tin quan trọng. Mục tiêu tỉ lệ nhận diện phải đạt trên 95% đối với các trường thông tin cơ bản.
+3. Các đơn vị thụ hưởng có trách nhiệm cung cấp dữ liệu kiểm thử và phản hồi kịp thời các lỗi phát sinh trong quá trình vận hành thử nghiệm. Yêu cầu hoàn thành báo cáo tổng kết giai đoạn 1 trước ngày 01/01/2027 để trình UBND tỉnh xem xét, đánh giá hiệu quả thực tế và phê duyệt kinh phí cho giai đoạn tiếp theo.
+Trong quá trình triển khai, nếu có khó khăn, vướng mắc phát sinh vượt quá thẩm quyền, các đơn vị cần kịp thời báo cáo về Ban Chỉ đạo (qua Văn phòng Sở) để tổng hợp, trình Lãnh đạo Sở xem xét, quyết định. Yêu cầu các đơn vị nghiêm túc, khẩn trương thực hiện nhiệm vụ này để đảm bảo chỉ số đánh giá DDCI của Sở năm 2026 đạt kết quả tốt nhất.
+Mọi sự chậm trễ không có lý do chính đáng sẽ được đưa vào tiêu chí đánh giá thi đua khen thưởng cuối năm của tập thể và cá nhân liên quan. Văn phòng Sở theo dõi và định kỳ báo cáo tiến độ vào ngày 25 hàng tháng.
+Nội dung bổ sung cho trang 1: Đảm bảo tính bảo mật và an toàn thông tin trong suốt quá trình xử lý văn bản quy phạm pháp luật.
+--- BÁO CÁO CÔNG TÁC TRANG 2 ---
+
+Căn cứ Quyết định số 749/QĐ-TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyệt 'Chương trình Chuyển đổi số quốc gia đến năm 2025, định hướng đến năm 2030';
+Sở Thông tin và Truyền thông xác định việc triển khai Hệ thống Điều phối Công văn tích hợp trí tuệ nhân tạo (AI) là nhiệm vụ trọng tâm nhằm nâng cao hiệu quả quản lý hành chính nhà nước, hiện thực hóa mục tiêu chuyển đổi số toàn diện của tỉnh.
+Để đảm bảo đúng tiến độ đề ra, Giám đốc Sở yêu cầu các phòng, đơn vị trực thuộc tập trung thực hiện các nội dung sau:
+1. Ban Chỉ đạo Chuyển đổi số của Sở chịu trách nhiệm rà soát toàn bộ quy trình tiếp nhận văn bản, đảm bảo tính đồng bộ giữa các hệ thống cũ và mới. Đặc biệt lưu ý việc chuẩn hóa mã định danh văn bản theo quy định hiện hành đối với các tài liệu lưu trữ từ năm 2010 đến nay.
+2. Văn phòng Sở chủ trì phối hợp với các chuyên gia CNTT hoàn thiện bộ máy bóc tách dữ liệu OCR. Hệ thống phải đảm bảo nhận diện chính xác các văn bản có độ nhiễu cao, văn bản đã qua lưu trữ lâu năm hoặc văn bản có con dấu đè lên thông tin quan trọng. Mục tiêu tỉ lệ nhận diện phải đạt trên 95% đối với các trường thông tin cơ bản.
+3. Các đơn vị thụ hưởng có trách nhiệm cung cấp dữ liệu kiểm thử và phản hồi kịp thời các lỗi phát sinh trong quá trình vận hành thử nghiệm. Yêu cầu hoàn thành báo cáo tổng kết giai đoạn 1 trước ngày 01/01/2027 để trình UBND tỉnh xem xét, đánh giá hiệu quả thực tế và phê duyệt kinh phí cho giai đoạn tiếp theo.
+Trong quá trình triển khai, nếu có khó khăn, vướng mắc phát sinh vượt quá thẩm quyền, các đơn vị cần kịp thời báo cáo về Ban Chỉ đạo (qua Văn phòng Sở) để tổng hợp, trình Lãnh đạo Sở xem xét, quyết định. Yêu cầu các đơn vị nghiêm túc, khẩn trương thực hiện nhiệm vụ này để đảm bảo chỉ số đánh giá DDCI của Sở năm 2026 đạt kết quả tốt nhất.
+Mọi sự chậm trễ không có lý do chính đáng sẽ được đưa vào tiêu chí đánh giá thi đua khen thưởng cuối năm của tập thể và cá nhân liên quan. Văn phòng Sở theo dõi và định kỳ báo cáo tiến độ vào ngày 25 hàng tháng.
+Nội dung bổ sung cho trang 2: Đảm bảo tính bảo mật và an toàn thông tin trong suốt quá trình xử lý văn bản quy phạm pháp luật.
+--- BÁO CÁO CÔNG TÁC TRANG 3 ---
+
+Căn cứ Quyết định số 749/QĐ-TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyệt 'Chương trình Chuyển đổi số quốc gia đến năm 2025, định hướng đến năm 2030';
+Sở Thông tin và Truyền thông xác định việc triển khai Hệ thống Điều phối Công văn tích hợp trí tuệ nhân tạo (AI) là nhiệm vụ trọng tâm nhằm nâng cao hiệu quả quản lý hành chính nhà nước, hiện thực hóa mục tiêu chuyển đổi số toàn diện của tỉnh.
+Để đảm bảo đúng tiến độ đề ra, Giám đốc Sở yêu cầu các phòng, đơn vị trực thuộc tập trung thực hiện các nội dung sau:
+1. Ban Chỉ đạo Chuyển đổi số của Sở chịu trách nhiệm rà soát toàn bộ quy trình tiếp nhận văn bản, đảm bảo tính đồng bộ giữa các hệ thống cũ và mới. Đặc biệt lưu ý việc chuẩn hóa mã định danh văn bản theo quy định hiện hành đối với các tài liệu lưu trữ từ năm 2010 đến nay.
+2. Văn phòng Sở chủ trì phối hợp với các chuyên gia CNTT hoàn thiện bộ máy bóc tách dữ liệu OCR. Hệ thống phải đảm bảo nhận diện chính xác các văn bản có độ nhiễu cao, văn bản đã qua lưu trữ lâu năm hoặc văn bản có con dấu đè lên thông tin quan trọng. Mục tiêu tỉ lệ nhận diện phải đạt trên 95% đối với các trường thông tin cơ bản.
+3. Các đơn vị thụ hưởng có trách nhiệm cung cấp dữ liệu kiểm thử và phản hồi kịp thời các lỗi phát sinh trong quá trình vận hành thử nghiệm. Yêu cầu hoàn thành báo cáo tổng kết giai đoạn 1 trước ngày 01/01/2027 để trình UBND tỉnh xem xét, đánh giá hiệu quả thực tế và phê duyệt kinh phí cho giai đoạn tiếp theo.
+Trong quá trình triển khai, nếu có khó khăn, vướng mắc phát sinh vượt quá thẩm quyền, các đơn vị cần kịp thời báo cáo về Ban Chỉ đạo (qua Văn phòng Sở) để tổng hợp, trình Lãnh đạo Sở xem xét, quyết định. Yêu cầu các đơn vị nghiêm túc, khẩn trương thực hiện nhiệm vụ này để đảm bảo chỉ số đánh giá DDCI của Sở năm 2026 đạt kết quả tốt nhất.
+Mọi sự chậm trễ không có lý do chính đáng sẽ được đưa vào tiêu chí đánh giá thi đua khen thưởng cuối năm của tập thể và cá nhân liên quan. Văn phòng Sở theo dõi và định kỳ báo cáo tiến độ vào ngày 25 hàng tháng.
+Nội dung bổ sung cho trang 3: Đảm bảo tính bảo mật và an toàn thông tin trong suốt quá trình xử lý văn bản quy phạm pháp luật.
+
+```
+
+## AI trích xuất:
+```
+--- Trang 1 [Deskewed] ---
+-- BÁO CÁO CÔNG TÁC TRANG 1 ---
+
+Căn cư Quyêt định sô 749/QĐ-TTg ngay 03/6/2020 cua Thu tương Chinh phu phê duyêt
+'Chương trinh Chuyên đôi sô quôc gia đền năm 2025, định hương đên nam 2030',
+
+Sơ Thông tin va Truyên thông xac định việc trién khai Hệ thông Điều phối Cong va
+n tích hợp trị tuê nhân tao (Al) la nhiêm vu trong tâm nhăm nâng cao hiéu qua qu
+an lý hành chinh nhà nươc, hiên thưc hoa muc tiêu chuyên đồi số toàn dién cua tí
+nh
+
+Dé đam bao dung tiền đô đề ra, Glam đốc Sơ yêu cầu cac phòng, đơn v1 trực thuộc
+
+tap trung thưc hiên cac nôi dung sau
+
+1 Ban Chị đao Chuyên đổi sô cua Sơ chịu trach nhiêm ra soat toan bô quy trình t
+1ép nhân văn ban, đam bao tính đồng bô giữa cac hé thống cũ va mơi Đặc biêt lưu
+y việc chuẩn hoa mã định danh văn ban theo quy định hiện hành đối vơi cac tại |
+lêu lưu trữ tư năm 2010 đên nay
+
+2 Văn phong Sơ chu trị phối hop vơi các chuyên gia CNTT hoan thiên bô may bóc t
+ach dữ liêu OCR Hệ thống phai đam bao nhân dién chinh xac các văn ban co đô nhị
+ễu cao, văn bản đã qua lưu trữ lâu năm hoặc văn bản co con dâu đe lên thông tin
+quan trong Muc tiêu t1 lê nhân diên phai dat trên 95% đối với cac trường thông
+
+tin cơ ban
+
+3 Cac đơn vi thu hương co trách nhiêm cung cấp dữ liêu kiểm thư va phan hồi kip
+thời cac lỗi phát sinh trong qua trình vân hành thư nghiêm Yêu cầu hoan thanh
+bao cao tông kết giai đoạn 1 trược ngày 01/01/2027 đê trình UBND tinh xem xét, đ
+anh gia hiệu qua thực tê va phê duyêt kinh phi cho giai đoan tiếp theo
+
+Trong qua trinh triển khai, nếu co kho khăn, vướng mic phat sinh vươt quá thâm q
+uyên, cac don vi cần kip thơi bao cao về Ban Chi dao (qua Văn phong Sơ) đê tông
+hop, trình Lãnh đao Sở xem xet, quyêt định Yêu cau các đơn vi nghiêm tuc, khân
+trương thưc hiên nhiệm vu nay đề đam bao chi số đanh gia DDCI cua Sơ năm 2026 da
+t kết qua tốt nhất
+
+Mot sư châm trễ không co lý do chính đang sẽ được đưa vào tiêu chí đanh giá thị
+đua khen thương cuối năm cua tập thê và ca nhân liên quan Văn phong Sơ theo dõi
+va định ky bao cao tiên đô vao ngay 25 hang thang
+
+Nôi dung bd sung cho trang 1 Đam bao tinh bao mât va an toàn thông tin trong su
+
+ốt qua trình xu ly văn ban quy pham pháp luât
+
+--- Trang 2 [Deskewed] ---
+-- BÁO CÁO CONG TAC TRANG 2 ---
+
+Căn cư Quyêt định sô 749/QĐ-TTg ngay 03/6/2020 cua Thu tương Chinh phu phê duyêt
+'Chương trinh Chuyên đôi sô quôc gia đền năm 2025, định hương đên nam 2030',
+
+Sơ Thông tin va Truyên thông xac định việc trién khai Hệ thông Điều phối Cong va
+n tích hợp trị tuê nhân tao (Al) la nhiêm vu trong tâm nhăm nâng cao hiéu qua qu
+an lý hành chinh nhà nươc, hiên thưc hoa muc tiêu chuyên đồi số toàn dién cua tí
+nh
+
+Dé đam bao dung tiền đô đề ra, Glam đốc Sơ yêu cầu cac phòng, đơn v1 trực thuộc
+
+tap trung thưc hiên cac nôi dung sau
+
+1 Ban Chị đao Chuyên đổi sô cua Sơ chịu trach nhiêm ra soat toan bô quy trình t
+1ép nhân văn ban, đam bao tính đồng bô giữa cac hé thống cũ va mơi Đặc biêt lưu
+y việc chuẩn hoa mã định danh văn ban theo quy định hiện hành đối vơi cac tại |
+lêu lưu trữ tư năm 2010 đên nay
+
+2 Văn phong Sơ chu trị phối hop vơi các chuyên gia CNTT hoan thiên bô may bóc t
+ach dữ liêu OCR Hệ thống phai đam bao nhân dién chinh xac các văn ban co đô nhị
+ễu cao, văn bản đã qua lưu trữ lâu năm hoặc văn bản co con dâu đe lên thông tin
+quan trong Muc tiêu t1 lê nhân diên phai dat trên 95% đối với cac trường thông
+
+tin cơ ban
+
+3 Cac đơn vi thu hương co trách nhiêm cung cấp dữ liêu kiểm thư va phan hồi kip
+thời cac lỗi phát sinh trong qua trình vân hành thư nghiêm Yêu cầu hoan thanh
+bao cáo tông kết giai đoạn 1 trược ngày 01/01/2027 đê trình UBND tinh xem xét, đ
+anh gia hiệu qua thực tê va phê duyêt kinh phi cho giai đoan tiếp theo
+
+Trong qua trinh triển khai, nếu co kho khăn, vướng mic phat sinh vươt quá thâm q
+uyên, cac don vi cần kip thơi bao cao về Ban Chi dao (qua Văn phong Sơ) đê tông
+hop, trình Lãnh đao Sở xem xet, quyêt định Yêu cau các đơn vi nghiêm tuc, khân
+trương thưc hiên nhiệm vu nay đề đam bao chi số đanh gia DDCI cua Sơ năm 2026 da
+t kết qua tốt nhất
+
+Mot sư châm trễ không co lý do chính đang sẽ được đưa vào tiêu chí đanh giá thị
+đua khen thương cuối năm cua tập thê và ca nhân liên quan Văn phong Sơ theo dõi
+va định ky bao cao tiên đô vao ngay 25 hang thang
+
+Nôi dung bd sung cho trang 2 Pam bao tinh bao mit va an toàn thông tin trong su
+
+ốt qua trình xu ly văn ban quy pham pháp luât
+
+--- Trang 3 [Deskewed] ---
+-- BÁO CÁO CONG TAC TRANG 3 ---
+
+Căn cư Quyêt định sô 749/QĐ-TTg ngay 03/6/2020 cua Thu tương Chinh phu phê duyêt
+'Chương trinh Chuyên đôi sô quôc gia đền năm 2025, định hương đên nam 2030',
+
+Sơ Thông tin va Truyên thông xac định việc trién khai Hệ thông Điều phối Cong va
+n tích hợp trị tuê nhân tao (Al) la nhiêm vu trong tâm nhăm nâng cao hiéu qua qu
+an lý hành chinh nhà nươc, hiên thưc hoa muc tiêu chuyên đồi số toàn dién cua tí
+nh
+
+Dé đam bao dung tiền đô đề ra, Glam đốc Sơ yêu cầu cac phòng, đơn v1 trực thuộc
+
+tap trung thưc hiên cac nôi dung sau
+
+1 Ban Chị đao Chuyên đổi sô cua Sơ chịu trach nhiêm ra soat toan bô quy trình t
+1ép nhân văn ban, đam bao tính đồng bô giữa cac hé thống cũ va mơi Đặc biêt lưu
+y việc chuẩn hoa mã định danh văn ban theo quy định hiện hành đối vơi cac tại |
+lêu lưu trữ tư năm 2010 đên nay
+
+2 Văn phong Sơ chu trị phối hop vơi các chuyên gia CNTT hoan thiên bô may bóc t
+ach dữ liêu OCR Hệ thống phai đam bao nhân dién chinh xac các văn ban co đô nhị
+ễu cao, văn bản đã qua lưu trữ lâu năm hoặc văn bản co con dâu đe lên thông tin
+quan trong Muc tiêu t1 lê nhân diên phai dat trên 95% đối với cac trường thông
+
+tin cơ ban
+
+3 Cac đơn vi thu hương co trách nhiêm cung cấp dữ liêu kiểm thư va phan hồi kip
+thời cac lỗi phát sinh trong qua trình vân hành thư nghiêm Yêu cầu hoan thanh
+bao cáo tông kết giai đoạn 1 trược ngày 01/01/2027 đê trình UBND tinh xem xét, đ
+anh gia hiệu qua thực tê va phê duyêt kinh phi cho giai đoan tiếp theo
+
+Trong qua trinh triển khai, nếu co kho khăn, vướng mic phat sinh vươt quá thâm q
+uyên, cac don vi cần kip thơi bao cao về Ban Chi dao (qua Văn phong Sơ) đê tông
+hop, trình Lãnh đao Sở xem xet, quyêt định Yêu cau các đơn vi nghiêm tuc, khân
+trương thưc hiên nhiệm vu nay đề đam bao chi số đanh gia DDCI cua Sơ năm 2026 da
+t kết qua tốt nhất
+
+Mot sư châm trễ không co lý do chính đang sẽ được đưa vào tiêu chí đanh giá thị
+đua khen thương cuối năm cua tập thê và ca nhân liên quan Văn phong Sơ theo dõi
+va định ky bao cao tiên đô vao ngay 25 hang thang
+
+Nôi dung bd sung cho trang 3 Đam bao tinh bao mit va an toàn thông tin trong su
+
+ốt qua trình xu ly văn ban quy pham pháp luât
+
+
+```
