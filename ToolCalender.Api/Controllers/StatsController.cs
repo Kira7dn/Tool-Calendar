@@ -9,7 +9,7 @@ namespace ToolCalender.Api.Controllers
     [Route("api/[controller]")]
     public class StatsController : ControllerBase
     {
-        [HttpGet("summary")]
+        [HttpGet]
         public IActionResult GetSummary()
         {
             try

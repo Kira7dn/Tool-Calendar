@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace ToolCalender.Models
 {
     public class DocumentRecord
@@ -9,7 +11,7 @@ namespace ToolCalender.Models
         public string FullText { get; set; } = "";
         public DateTime? NgayBanHanh { get; set; }
         public string CoQuanBanHanh { get; set; } = "";
-        public string CoQuanChuQuan { get; set; } = "";  // Cơ quan chủ quản tham mưu
+        public string CoQuanChuQuan { get; set; } = "";  // Cơ quan chủ quan tham mưu
         public DateTime? ThoiHan { get; set; }
         public string DonViChiDao { get; set; } = "";    // Đơn vị/phòng bị chỉ đạo
         public string FilePath { get; set; } = "";
@@ -24,6 +26,7 @@ namespace ToolCalender.Models
         public DateTime NgayThem { get; set; } = DateTime.Now;
         public bool DaTaoLich { get; set; } = false;
 
+        [JsonInclude]
         public int SoNgayConLai
         {
             get
@@ -33,6 +36,7 @@ namespace ToolCalender.Models
             }
         }
 
+        [JsonInclude]
         public string TrangThai
         {
             get
