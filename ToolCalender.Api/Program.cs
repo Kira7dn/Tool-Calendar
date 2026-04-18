@@ -3,6 +3,8 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using ToolCalender.Services;
+
 using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,9 +15,17 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Đăng ký OCR & Extraction Services
-using ToolCalender.Services;
 builder.Services.AddSingleton<IOcrService, OcrService>();
 builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();
+
+// Cấu hình Hàng đợi OCR xử lý nền
+builder.Services.AddSingleton<OcrQueueService>();
+builder.Services.AddSingleton<IOcrQueueService>(sp => sp.GetRequiredService<OcrQueueService>());
+builder.Services.AddHostedService(sp => sp.GetRequiredService<OcrQueueService>());
+
+// Cấu hình Email & Thông báo tự động
+builder.Services.AddSingleton<IEmailService, EmailService>();
+builder.Services.AddHostedService<DeadlineWorker>();
 
 // Cấu hình JWT
 var key = "LinkStrategy_SecretKey_2026_Secure_GiamSatCongVan"; // Key bí mật cho GĐ 1
@@ -74,3 +84,6 @@ app.MapControllers();
 
 // Chạy ứng dụng
 app.Run();
+
+public partial class Program { }
+

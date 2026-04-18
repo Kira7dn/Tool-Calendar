@@ -5,7 +5,7 @@ using ToolCalender.Tests.Helpers;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 
-namespace ToolCalender.Tests.ActualTests
+namespace ToolCalender.Tests
 {
     public class RealDocumentTests
     {

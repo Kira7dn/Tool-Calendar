@@ -7,7 +7,11 @@ namespace ToolCalender.Models
         public int Id { get; set; }
         public string Username { get; set; } = "";
         public string PasswordHash { get; set; } = "";
-        public string Role { get; set; } = "Guest"; // Admin hoặc Guest
+        public string FullName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string PhoneNumber { get; set; } = "";
+        public string Role { get; set; } = "Guest"; // Admin, LanhDao, VanThu, CanBo
+        public int? DepartmentId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 

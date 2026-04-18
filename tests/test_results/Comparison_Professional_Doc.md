@@ -1,6 +1,6 @@
 # Báo cáo đối chiếu OCR - Professional Doc
 
-**Tỷ lệ trùng khớp: 87.15%**
+**Tỷ lệ trùng khớp: 87.03%**
 
 ## Văn bản gốc (Ground Truth):
 ```
@@ -23,7 +23,7 @@ Trong quá trình triển khai, nếu có khó khăn, vướng mắc phát sinh 
 ## Văn bản AI đọc được:
 ```
 --- Trang 1 [Deskewed: -5.00deg] ---
-CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAN.
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIET NAM
 SO THONG TIN VA TRUYEN THONG                                                        Độc lập - Tự do - Hạnh phúc
 
 Số hiệu: 888/STTTT-BCĐ
@@ -38,9 +38,9 @@ n đồi số tỉnh Quảng Ninh đến năm 2025, định hướng đến năm
 
 Sở Thông tin và Truyền thông xác định việc triển khai Hệ thống Điều phối Công văn tíc
 
-h hợp trí tuệ nhân tạo (AI) là nhiệm vụ trọng tâm nhằm nâng cao hiệu quả quản lý hành chính nhà nước.
+h hợp trí tuệ nhân tạo (AT) là nhiệm vụ trọng tâm nhằm nâng cao hiệu quả quản lý hành chính nhà nước.
 
-Đề đảm bảo đúng tiền độ đề ra, Giám đốc Sở yêu cầu các phòng, đơn vị trực thuộc tập t
+Đề đảm bảo đúng tiền độ đề:ra, Giám đốc Sở yêu cầu các phòng, đơn vị trực thuộc tập t
 
 rung thực hiện các nội dung sau:
 
@@ -54,7 +54,7 @@ hận văn bản, đảm bảo tính đồng bộ giữa các hệ thống cũ v
 
 các lỗi phát sinh trong quá trình vận hành thử nghiệm. Vêu cầu hoàn thành báo cáo tổng kết giai đoạn 1 trước ngày 25/12/2026 d
 
-Trong quá trình triển khai, nếu có khó khăn, vướng mắc phát sinh vượt quá thẩm quyền,
+Trong quá trình triển khai, nếu có khó khăn, vướng mắc phat sinh vượt quá thẩm quyền,
 các đơn vị cần kịp thời báo cáo về Ban Chỉ đạo (qua Văn phòng Sở) đề tổng hợp, trình Lãnh đạo Sở xem xét, quyết định. Yêu cầu
 
  

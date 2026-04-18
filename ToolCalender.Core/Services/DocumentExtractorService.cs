@@ -146,8 +146,10 @@ namespace ToolCalender.Services
             using var doc = WordprocessingDocument.Open(filePath, false);
             var body = doc.MainDocumentPart?.Document?.Body;
             if (body != null)
+            {
                 foreach (var para in body.Descendants<Paragraph>())
                     sb.AppendLine(para.InnerText);
+            }
             return sb.ToString();
         }
 
@@ -157,7 +159,9 @@ namespace ToolCalender.Services
             var record = new DocumentRecord
             {
                 FilePath = filePath,
-                NgayThem = DateTime.Now
+                FullText = text,
+                NgayThem = DateTime.Now,
+                Status = "Chưa xử lý"
             };
 
             string t = text.Normalize(NormalizationForm.FormC);
@@ -170,6 +174,27 @@ namespace ToolCalender.Services
             int vVIndex = t.IndexOf("V/v", StringComparison.OrdinalIgnoreCase);
             if (vVIndex < 0) vVIndex = t.IndexOf("Về việc", StringComparison.OrdinalIgnoreCase);
             string searchArea = vVIndex > 0 ? t.Substring(0, vVIndex) : (t.Length > 1500 ? t.Substring(0, 1500) : t);
+
+            // Bóc tách Tên công văn (QUYẾT ĐỊNH, THÔNG BÁO, CÔNG VĂN...)
+            var tenCVPatterns = new[] {
+                @"QUYẾT[ ]+ĐỊNH", @"THÔNG[ ]+BÁO", @"CÔNG[ ]+VĂN", @"TỜ[ ]+TRÌNH", 
+                @"KẾ[ ]+HOẠCH", @"PHƯƠNG[ ]+ÁN", @"BÁO[ ]+CÁO", @"CHỈ[ ]+THỊ", @"NGHỊ[ ]+QUYẾT"
+            };
+            foreach (var pattern in tenCVPatterns)
+            {
+                var match = Regex.Match(searchArea, pattern, RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    record.TenCongVan = match.Value.ToUpper();
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(record.TenCongVan)) record.TenCongVan = "CÔNG VĂN";
+
+            // Xác định mức độ khẩn
+            if (t.Contains("HỎA TỐC", StringComparison.OrdinalIgnoreCase)) record.Priority = "Hỏa tốc";
+            else if (t.Contains("KHẨN", StringComparison.OrdinalIgnoreCase)) record.Priority = "Khẩn";
+            else record.Priority = "Thường";
 
             var soPatterns = new[] {
                 @"(?:Số|Số hiệu|Về việc)[:\s]*(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪa-z0-9&\.\-/]+)",
@@ -258,7 +283,7 @@ namespace ToolCalender.Services
 
             if (bestMatchDate.HasValue) record.ThoiHan = bestMatchDate.Value;
 
-            if (record.ThoiHan == DateTime.MinValue && record.NgayBanHanh.HasValue)
+            if (record.ThoiHan == null && record.NgayBanHanh.HasValue)
             {
                 var allDates = Regex.Matches(t, @"(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{4})");
                 DateTime maxD = record.NgayBanHanh.Value;

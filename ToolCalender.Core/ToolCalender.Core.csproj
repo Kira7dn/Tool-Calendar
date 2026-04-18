@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.6" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
     <PackageReference Include="PDFtoImage" Version="2.6.0" />
     <PackageReference Include="itext7" Version="8.0.5" />
