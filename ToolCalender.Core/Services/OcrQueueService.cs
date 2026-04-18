@@ -37,6 +37,24 @@ namespace ToolCalender.Services
         {
             _logger.LogInformation("[OcrQueue] Worker đang chạy...");
 
+            // Tự động quét và đẩy các văn bản đang chờ xử lý vào hàng đợi khi khởi động
+            try
+            {
+                var pendingDocs = DatabaseService.GetAll().Where(d => 
+                    d.Status == "Đang xử lý" || 
+                    d.Status == "Lỗi OCR" ||
+                    (d.Status == "Chưa xử lý" && (string.IsNullOrEmpty(d.FullText) || d.FullText.Contains("[OCR Total Error]"))));
+                
+                foreach (var doc in pendingDocs)
+                {
+                    await EnqueueAsync(doc.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[OcrQueue] Lỗi khi quét văn bản tồn đọng lúc khởi động.");
+            }
+
             await foreach (var docId in _queue.Reader.ReadAllAsync(stoppingToken))
             {
                 try

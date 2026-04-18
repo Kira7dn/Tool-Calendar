@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.6" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
     <PackageReference Include="PDFtoImage" Version="2.6.0" />
+    <PackageReference Include="bblanchon.PDFium.Linux" Version="124.0.6358" />
     <PackageReference Include="itext7" Version="8.0.5" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.2.0" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" />

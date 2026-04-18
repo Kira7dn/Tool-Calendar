@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'login.html';
         return;
     }
-    
+
     // Hiển thị thông tin người dùng
     const username = localStorage.getItem('user_name') || 'User';
     const role = localStorage.getItem('user_role') || 'CanBo';
@@ -39,7 +39,7 @@ async function initNotifications() {
 
         // Check for permission
         if (Notification.permission === 'denied') return;
-        
+
         if (Notification.permission !== 'granted') {
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') return;
@@ -62,7 +62,7 @@ async function initNotifications() {
         const subData = subscription.toJSON();
         await fetch('/api/notification/subscribe', {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
@@ -198,7 +198,7 @@ function renderTables() {
 let myChart;
 function renderChart() {
     const ctx = document.getElementById('statChart').getContext('2d');
-    
+
     if (myChart) myChart.destroy();
 
     myChart = new Chart(ctx, {
@@ -266,10 +266,11 @@ async function handleFile(file) {
         if (!res.ok) throw new Error('OCR Failed');
 
         const result = await res.json();
-        
+
         // Populate Result Form
         document.getElementById('ocr-so').value = result.soVanBan || '';
         document.getElementById('ocr-trichyeu').value = result.trichYeu || '';
+        document.getElementById('ocr-coquan').value = result.coQuanChuQuan || '';
         if (result.thoiHan) {
             document.getElementById('ocr-han').value = result.thoiHan.split('T')[0];
         }
@@ -284,19 +285,31 @@ async function handleFile(file) {
     }
 }
 
-async function saveDocument() {
+window._isSaving = false;
+
+async function saveDocument(btn) {
+    if (window._isSaving) return;
+    window._isSaving = true;
+
+    const originalText = btn ? btn.innerText : 'Lưu vào hệ thống';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Đang lưu...';
+    }
+
     const data = {
         ...window._currentTempData,
         soVanBan: document.getElementById('ocr-so').value,
         trichYeu: document.getElementById('ocr-trichyeu').value,
+        coQuanChuQuan: document.getElementById('ocr-coquan').value,
         thoiHan: document.getElementById('ocr-han').value ? document.getElementById('ocr-han').value + "T00:00:00" : null
     };
 
     try {
         const token = localStorage.getItem('auth_token');
-        const res = await fetch('/api/documents', {
-            method: 'POST',
-            headers: { 
+        const res = await fetch(`/api/documents/${data.id}`, {
+            method: 'PUT',
+            headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
@@ -311,6 +324,12 @@ async function saveDocument() {
         }
     } catch (error) {
         alert('Lỗi khi lưu: ' + error.message);
+    } finally {
+        window._isSaving = false;
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
     }
 }
 

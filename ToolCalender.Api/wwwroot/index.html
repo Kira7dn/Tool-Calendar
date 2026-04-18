@@ -172,13 +172,17 @@
                                 <input type="date" id="ocr-han" style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
                             </div>
                             <div style="grid-column: span 2;">
+                                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Cơ quan chủ quản/Tham mưu</label>
+                                <input type="text" id="ocr-coquan" style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
+                            </div>
+                            <div style="grid-column: span 2;">
                                 <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Trích yếu</label>
                                 <textarea id="ocr-trichyeu" style="width: 100%; height: 100px; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;"></textarea>
                             </div>
                         </div>
                         <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
                             <button class="btn" style="background: rgba(255,255,255,0.1); color: white;" onclick="cancelUpload()">Hủy bỏ</button>
-                            <button class="btn btn-primary" onclick="saveDocument()">Lưu vào hệ thống</button>
+                            <button class="btn btn-primary" onclick="saveDocument(this)">Lưu vào hệ thống</button>
                         </div>
                     </div>
                 </div>

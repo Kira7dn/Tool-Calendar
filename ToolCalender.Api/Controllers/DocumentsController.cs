@@ -60,20 +60,22 @@ namespace ToolCalender.Api.Controllers
 
             try 
             {
-                // 2. Tạo bản ghi tạm thời trong DB
-                var record = new DocumentRecord
-                {
-                    SoVanBan = Path.GetFileNameWithoutExtension(file.FileName),
-                    FilePath = filePath,
-                    Status = "Đang xử lý",
-                    NgayThem = DateTime.Now
-                };
+                // 2. Gọi OCR trực tiếp để Client nhận được kết quả ngay lập tức
+                var record = await _extractor.ExtractFromFileAsync(filePath);
                 
+                // Nếu SoVanBan trống thì mặc định lấy theo tên file
+                if (string.IsNullOrWhiteSpace(record.SoVanBan))
+                {
+                    record.SoVanBan = Path.GetFileNameWithoutExtension(file.FileName);
+                }
+
+                record.FilePath = filePath;
+                record.Status = "Chưa xử lý";
+                record.NgayThem = DateTime.Now;
+                
+                // Lưu vào DB
                 int id = DatabaseService.Insert(record);
                 record.Id = id;
-
-                // 3. Đẩy vào hàng đợi OCR xử lý nền
-                await _ocrQueue.EnqueueAsync(id);
                 
                 return Ok(record);
             }

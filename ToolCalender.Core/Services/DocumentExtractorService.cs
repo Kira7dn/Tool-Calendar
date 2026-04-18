@@ -205,7 +205,7 @@ namespace ToolCalender.Services
             int bestSoPrio = -1;
 
             foreach (var pattern in soPatterns) {
-                var matches = Regex.Matches(text, pattern, RegexOptions.IgnoreCase);
+                var matches = Regex.Matches(t, pattern, RegexOptions.IgnoreCase);
                 foreach (Match match in matches) {
                     int prio = 1;
                     if (match.Value.ToLower().Contains("số") || match.Value.ToLower().Contains("số hiệu")) prio = 10;
@@ -239,19 +239,19 @@ namespace ToolCalender.Services
             }
 
             // Lấy từ khóa từ cấu hình
-            string kwSource = Data.DatabaseService.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành, đến hạn");
+            string kwSource = Data.DatabaseService.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành, đến hạn, thực hiện trước, báo cáo trước, kết thúc, thời hạn, hạn cuối");
             var kwList = kwSource.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
             string kwPattern = string.Join("|", kwList.Select(x => Regex.Escape(x)));
 
             var deadlinePatterns = new List<string> {
                 // 1. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [Ngày/Tháng/Năm]
-                $@"(?:{kwPattern})\s+[^0-9\n]{{0,12}}?\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})",
-                // 2. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [ngày... tháng... năm...] (Linh hoạt keyword có thể bao gồm chữ ngày)
-                $@"(?:{kwPattern})\s+[^0-9\n]{{0,12}}?\s*(?:ngày|này|ngay)?\s*(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})",
+                $@"(?:{kwPattern})\s+[^0-9\n]{{0,20}}?\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})",
+                // 2. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [ngày... tháng... năm...]
+                $@"(?:{kwPattern})\s+[^0-9\n]{{0,20}}?\s*(?:ngày|này|ngay)?\s*(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})",
                 // 3. Mẫu: [Ngày/Tháng/Năm] + [Từ đệm linh hoạt] + [Từ khóa]
-                $@"(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})\s+[^0-9\n]{{0,12}}?\s*(?:{kwPattern})",
+                $@"(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})\s+[^0-9\n]{{0,20}}?\s*(?:{kwPattern})",
                 // 4. Mẫu: [ngày... tháng... năm...] + [Từ đệm linh hoạt] + [Từ khóa]
-                $@"(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})\s+[^0-9\n]{{0,12}}?\s*(?:{kwPattern})"
+                $@"(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})\s+[^0-9\n]{{0,20}}?\s*(?:{kwPattern})"
             };
 
             DateTime? bestMatchDate = null;
@@ -288,7 +288,7 @@ namespace ToolCalender.Services
             if (bestMatchDate == null)
             {
                 var allDates = Regex.Matches(t, @"(\d{1,2})\s*[\/\-\.\s]\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{4})");
-                string[] formats = { "dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "dd.MM.yyyy" };
+                string[] formats = { "dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "dd.MM.yyyy", "dd/M/yyyy", "d/MM/yyyy", "d-M-yyyy", "dd-M-yyyy", "d-MM-yyyy", "d.M.yyyy", "dd.M.yyyy", "d.MM.yyyy" };
                 
                 foreach (Match m in allDates)
                 {
@@ -391,11 +391,21 @@ namespace ToolCalender.Services
                 }
             }
 
+            if (string.IsNullOrWhiteSpace(record.TrichYeu) && !string.IsNullOrEmpty(record.TenCongVan))
+            {
+                var mTitle = Regex.Match(t, $@"{record.TenCongVan}\s*[^:\n]{{0,50}}?\s*(?:số|Số)?\s*\d+[^\n]{{0,100}}?\s+([^ \n][^\n]{{10,300}})", RegexOptions.IgnoreCase);
+                if (mTitle.Success)
+                {
+                    record.TrichYeu = mTitle.Groups[1].Value.Trim();
+                }
+            }
+
             if (string.IsNullOrWhiteSpace(record.SoVanBan))
             {
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
                 var mFile = Regex.Match(fileName, @"(\d{1,6}\s*[/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]{2,})");
                 if (mFile.Success) record.SoVanBan = mFile.Value.Trim();
+                else record.SoVanBan = fileName.Length > 20 ? fileName.Substring(0, 20) : fileName;
             }
 
             // --- TÍCH HỢP LUẬT TỰ ĐỘNG (AUTO RULES) ---
