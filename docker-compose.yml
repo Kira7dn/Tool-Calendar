@@ -10,8 +10,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - DB_PATH=/app/data/documents.db
       - OcrSettings__TessDataPath=/usr/share/tesseract-ocr/5/tessdata
+      - TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
     volumes:
       - ./data:/app/data
+      - ./ToolCalender.Api/Uploads:/app/Uploads
     restart: always
 
   nginx:

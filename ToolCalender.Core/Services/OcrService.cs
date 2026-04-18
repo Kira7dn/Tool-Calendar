@@ -29,7 +29,15 @@ namespace ToolCalender.Services
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
             {
                 if (Directory.Exists("/usr/share/tesseract-ocr/5/tessdata")) 
+                {
+                    Environment.SetEnvironmentVariable("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/5/tessdata");
                     return "/usr/share/tesseract-ocr/5/tessdata";
+                }
+                if (Directory.Exists("/usr/share/tesseract-ocr/tessdata"))
+                {
+                    Environment.SetEnvironmentVariable("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/tessdata");
+                    return "/usr/share/tesseract-ocr/tessdata";
+                }
             }
 
             // 3. Tự động tìm thư mục ToolCalender.Core/tessdata (Dành cho Dev Local khi không set config)
@@ -84,7 +92,16 @@ namespace ToolCalender.Services
             }
             catch (Exception ex)
             {
-                result.FullText = $"[OCR Total Error]: {ex.Message}";
+                var sb = new StringBuilder();
+                sb.AppendLine($"[OCR Total Error]: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    sb.AppendLine($"[Inner Error]: {ex.InnerException.Message}");
+                    if (ex.InnerException.InnerException != null)
+                        sb.AppendLine($"[Inner Inner Error]: {ex.InnerException.InnerException.Message}");
+                }
+                sb.AppendLine($"[Stack Trace]: {ex.StackTrace}");
+                result.FullText = sb.ToString();
             }
 
             if (string.IsNullOrWhiteSpace(result.FullText))

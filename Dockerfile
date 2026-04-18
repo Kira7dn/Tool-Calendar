@@ -28,6 +28,24 @@ RUN apt-get update && apt-get install -y \
     libtesseract-dev \
     tesseract-ocr \
     tesseract-ocr-vie \
+    libc6-dev \
+    && (dir="/usr/lib/aarch64-linux-gnu"; if [ -d "$dir" ]; then \
+        ln -s "$dir/liblept.so.5" "$dir/libleptonica-1.82.0.so" && \
+        ln -s "$dir/libtesseract.so.5" "$dir/libtesseract-5.so" && \
+        ln -s "$dir/libtesseract.so.5" "$dir/libtesseract50.so" && \
+        ln -s "$dir/libdl.so.2" "$dir/libdl.so"; fi) \
+    && (dir="/usr/lib/x86_64-linux-gnu"; if [ -d "$dir" ]; then \
+        ln -s "$dir/liblept.so.5" "$dir/libleptonica-1.82.0.so" && \
+        ln -s "$dir/libtesseract.so.5" "$dir/libtesseract-5.so" && \
+        ln -s "$dir/libtesseract.so.5" "$dir/libtesseract50.so" && \
+        ln -s "$dir/libdl.so.2" "$dir/libdl.so"; fi) \
+    && mkdir -p /app/x64 /app/arm64 \
+    && ln -s /usr/lib/aarch64-linux-gnu/liblept.so.5 /app/arm64/libleptonica-1.82.0.so \
+    && ln -s /usr/lib/aarch64-linux-gnu/libtesseract.so.5 /app/arm64/libtesseract-5.so \
+    && ln -s /usr/lib/aarch64-linux-gnu/libtesseract.so.5 /app/arm64/libtesseract50.so \
+    && ln -s /usr/lib/aarch64-linux-gnu/liblept.so.5 /app/x64/libleptonica-1.82.0.so \
+    && ln -s /usr/lib/aarch64-linux-gnu/libtesseract.so.5 /app/x64/libtesseract-5.so \
+    && ln -s /usr/lib/aarch64-linux-gnu/libtesseract.so.5 /app/x64/libtesseract50.so \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=publish /app/publish .
