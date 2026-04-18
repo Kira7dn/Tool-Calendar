@@ -1,5 +1,6 @@
 using Xunit;
 using FluentAssertions;
+using ToolCalender.Models;
 using ToolCalender.Services;
 using ToolCalender.Tests.Helpers;
 using System.IO;
@@ -9,14 +10,21 @@ namespace ToolCalender.Tests
 {
     public class OcrStressTests
     {
+        private static bool _debugReset;
+        private static readonly object DebugResetLock = new();
         private readonly IConfiguration _configuration;
         private readonly IOcrService _ocrService;
 
         public OcrStressTests()
         {
+            string debugPath = Path.Combine(@"d:\Business Analyze\ToolCalendar\tests\test_results", "stress_tests", "debug_images");
+            ResetDirectoryOnce(debugPath);
+
             var configData = new Dictionary<string, string?> {
                 {"OcrSettings:TessDataPath", @"d:\Business Analyze\ToolCalendar\ToolCalender.Core\tessdata"},
-                {"OcrSettings:Language", "vie+eng"}
+                {"OcrSettings:Language", "vie+eng"},
+                {"OcrSettings:EnableDebug", "true"},
+                {"OcrSettings:DebugPath", debugPath}
             };
 
             _configuration = new ConfigurationBuilder()
@@ -24,6 +32,22 @@ namespace ToolCalender.Tests
                 .Build();
 
             _ocrService = new OcrService(_configuration);
+        }
+
+        private static void ResetDirectoryOnce(string path)
+        {
+            lock (DebugResetLock)
+            {
+                if (_debugReset) return;
+
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(path, true);
+                }
+
+                Directory.CreateDirectory(path);
+                _debugReset = true;
+            }
         }
 
         private string GetResultsFolder()
@@ -42,14 +66,14 @@ namespace ToolCalender.Tests
             string groundTruth = AutomationDocHelper.GenerateMultiPageScannedPdf(pdfPath, 3);
 
             // --- ACT ---
-            string extractedText = await _ocrService.ExtractTextFromPdfOcrAsync(pdfPath);
-            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, extractedText);
+            OcrExtractionResult ocrResult = await _ocrService.ExtractPdfOcrResultAsync(pdfPath);
+            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, ocrResult.FullText);
 
             // --- REPORT ---
             string reportPath = Path.Combine(resultsFolder, "Comparison_Stress_MultiPage.md");
             string report = $"# Báo cáo Stress Test - Đa trang\n\n**Tỷ lệ trùng khớp: {accuracy:F2}%**\n\n" +
                             $"## Văn bản gốc:\n```\n{groundTruth}\n```\n\n" +
-                            $"## AI trích xuất:\n```\n{extractedText}\n```";
+                            $"## AI trích xuất:\n```\n{ocrResult.FullText}\n```";
             File.WriteAllText(reportPath, report);
 
             // --- ASSERT ---
@@ -66,14 +90,14 @@ namespace ToolCalender.Tests
             string groundTruth = AutomationDocHelper.GenerateRotatedScannedPdf(pdfPath);
 
             // --- ACT ---
-            string extractedText = await _ocrService.ExtractTextFromPdfOcrAsync(pdfPath);
-            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, extractedText);
+            OcrExtractionResult ocrResult = await _ocrService.ExtractPdfOcrResultAsync(pdfPath);
+            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, ocrResult.FullText);
 
             // --- REPORT ---
             string reportPath = Path.Combine(resultsFolder, "Comparison_Stress_Rotated.md");
             string report = $"# Báo cáo Stress Test - Xoay hướng\n\n**Tỷ lệ trùng khớp: {accuracy:F2}%**\n\n" +
                             $"## Văn bản gốc:\n```\n{groundTruth}\n```\n\n" +
-                            $"## AI trích xuất:\n```\n{extractedText}\n```";
+                            $"## AI trích xuất:\n```\n{ocrResult.FullText}\n```";
             File.WriteAllText(reportPath, report);
 
             // --- ASSERT ---
@@ -90,14 +114,14 @@ namespace ToolCalender.Tests
             string groundTruth = AutomationDocHelper.GenerateBorderNoiseScannedPdf(pdfPath);
 
             // --- ACT ---
-            string extractedText = await _ocrService.ExtractTextFromPdfOcrAsync(pdfPath);
-            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, extractedText);
+            OcrExtractionResult ocrResult = await _ocrService.ExtractPdfOcrResultAsync(pdfPath);
+            double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, ocrResult.FullText);
 
             // --- REPORT ---
             string reportPath = Path.Combine(resultsFolder, "Comparison_Stress_BorderNoise.md");
             string report = $"# Báo cáo Stress Test - Nhiễu viền\n\n**Tỷ lệ trùng khớp: {accuracy:F2}%**\n\n" +
                             $"## Văn bản gốc:\n```\n{groundTruth}\n```\n\n" +
-                            $"## AI trích xuất:\n```\n{extractedText}\n```";
+                            $"## AI trích xuất:\n```\n{ocrResult.FullText}\n```";
             File.WriteAllText(reportPath, report);
 
             // --- ASSERT ---

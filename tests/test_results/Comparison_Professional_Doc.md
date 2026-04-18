@@ -1,6 +1,6 @@
 # Báo cáo đối chiếu OCR - Professional Doc
 
-**Tỷ lệ trùng khớp: 87.62%**
+**Tỷ lệ trùng khớp: 87.15%**
 
 ## Văn bản gốc (Ground Truth):
 ```
@@ -22,15 +22,15 @@ Trong quá trình triển khai, nếu có khó khăn, vướng mắc phát sinh 
 
 ## Văn bản AI đọc được:
 ```
---- Trang 1 ---
-CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-SO THONG TIN VA TRUYEN THONG                                                        Đột lập - Tự do - Hạnh phúc
+--- Trang 1 [Deskewed: -5.00deg] ---
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAN.
+SO THONG TIN VA TRUYEN THONG                                                        Độc lập - Tự do - Hạnh phúc
 
 Số hiệu: 888/STTTT-BCĐ
 
 Căn cứ Quyết định số 749/QĐ-TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyệt 'Chư
 
-ong trình Chuyển đồi số quốc gia đến năm 2025, định hướng đến năm 2030';
+ong trình Chuyền đồi số quốc gia đến năm 2025, định hướng đến năm 2030';
 
 Căn cứ Nghị quyết số 01-NQ/TU ngày 16/11/2020 của Ban Chấp hành Đảng bộ tỉnh về chuyé
 
