@@ -4,13 +4,23 @@ namespace ToolCalender.Models
     {
         public int Id { get; set; }
         public string SoVanBan { get; set; } = "";
+        public string TenCongVan { get; set; } = "";
         public string TrichYeu { get; set; } = "";
+        public string FullText { get; set; } = "";
         public DateTime? NgayBanHanh { get; set; }
         public string CoQuanBanHanh { get; set; } = "";
         public string CoQuanChuQuan { get; set; } = "";  // Cơ quan chủ quản tham mưu
         public DateTime? ThoiHan { get; set; }
         public string DonViChiDao { get; set; } = "";    // Đơn vị/phòng bị chỉ đạo
         public string FilePath { get; set; } = "";
+        public string Status { get; set; } = "Chưa xử lý"; // Chưa xử lý, Đang xử lý, Đã hoàn thành, Quá hạn
+        public string Priority { get; set; } = "Thường"; // Thường, Khẩn, Hỏa tốc
+        public int? DepartmentId { get; set; }
+        public int? AssignedTo { get; set; }
+        public string EvidencePaths { get; set; } = "[]"; // JSON array
+        public string EvidenceNotes { get; set; } = "";
+        public DateTime? CompletionDate { get; set; }
+        public int? LabelId { get; set; }
         public DateTime NgayThem { get; set; } = DateTime.Now;
         public bool DaTaoLich { get; set; } = false;
 

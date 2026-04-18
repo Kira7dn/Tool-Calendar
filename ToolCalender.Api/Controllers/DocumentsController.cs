@@ -11,6 +11,16 @@ namespace ToolCalender.Api.Controllers
     [Route("api/[controller]")]
     public class DocumentsController : ControllerBase
     {
+        private readonly IDocumentExtractorService _extractor;
+        private readonly IOcrQueueService _ocrQueue;
+        private readonly IWebHostEnvironment _env;
+
+        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, IWebHostEnvironment env)
+        {
+            _extractor = extractor;
+            _ocrQueue = ocrQueue;
+            _env = env;
+        }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
         public IActionResult GetAll()
@@ -34,24 +44,40 @@ namespace ToolCalender.Api.Controllers
         {
             if (file == null || file.Length == 0) return BadRequest("Không có file.");
 
-            // Lưu file tạm thời để xử lý OCR
-            var tempPath = Path.Combine(Path.GetTempPath(), file.FileName);
-            using (var stream = new FileStream(tempPath, FileMode.Create))
+            // 1. Lưu file vào thư mục Uploads
+            var uploadsDir = Path.Combine(_env.ContentRootPath, "Uploads");
+            Directory.CreateDirectory(uploadsDir);
+            
+            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+            var filePath = Path.Combine(uploadsDir, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
 
             try 
             {
-                // Gọi Logic bóc tách dữ liệu (đã chuyển sang Tesseract)
-                var record = await DocumentExtractorService.ExtractFromFileAsync(tempPath);
+                // 2. Tạo bản ghi tạm thời trong DB
+                var record = new DocumentRecord
+                {
+                    SoVanBan = Path.GetFileNameWithoutExtension(file.FileName),
+                    FilePath = filePath,
+                    Status = "Đang xử lý",
+                    NgayThem = DateTime.Now
+                };
                 
-                // Trả về dữ liệu đã bóc tách để người dùng rà soát trên Web UI
+                int id = DatabaseService.Insert(record);
+                record.Id = id;
+
+                // 3. Đẩy vào hàng đợi OCR xử lý nền
+                await _ocrQueue.EnqueueAsync(id);
+                
                 return Ok(record);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi xử lý OCR: {ex.Message}");
+                return StatusCode(500, $"Lỗi khởi tạo upload: {ex.Message}");
             }
         }
 
@@ -75,6 +101,47 @@ namespace ToolCalender.Api.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin,VanThu")]
+        [HttpPost("{id}/assign")]
+        public IActionResult Assign(int id, [FromBody] AssignmentRequest request)
+        {
+            if (request == null) return BadRequest();
+            DatabaseService.AssignDocument(id, request.DepartmentId, request.UserId);
+            return Ok(new { message = "Giao việc thành công." });
+        }
+
+        [Authorize(Roles = "Admin,CanBo")]
+        [HttpPost("{id}/submit-evidence")]
+        public async Task<IActionResult> SubmitEvidence(int id, [FromForm] List<IFormFile> files, [FromForm] string notes)
+        {
+            if (files == null || files.Count == 0) return BadRequest("Cần ít nhất một file bằng chứng.");
+
+            var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+            if (doc == null) return NotFound();
+
+            // 1. Tạo thư mục lưu bằng chứng cho văn bản này
+            var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
+            Directory.CreateDirectory(evidenceDir);
+
+            var savedPaths = new List<string>();
+            foreach (var file in files)
+            {
+                var fileName = $"{DateTime.Now:yyyyMMddHHmmss}_{file.FileName}";
+                var filePath = Path.Combine(evidenceDir, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+                savedPaths.Add(filePath);
+            }
+
+            // 2. Cập nhật vào DB (Lưu danh sách path dưới dạng JSON)
+            var evidenceJson = System.Text.Json.JsonSerializer.Serialize(savedPaths);
+            DatabaseService.SubmitEvidence(id, evidenceJson, notes);
+
+            return Ok(new { message = "Nộp bằng chứng hoàn thành thành công.", paths = savedPaths });
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
@@ -82,5 +149,11 @@ namespace ToolCalender.Api.Controllers
             DatabaseService.Delete(id);
             return NoContent();
         }
+    }
+
+    public class AssignmentRequest
+    {
+        public int? DepartmentId { get; set; }
+        public int? UserId { get; set; }
     }
 }
