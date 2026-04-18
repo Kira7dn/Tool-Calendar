@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <div class="bg-blobs">
         <div class="blob blob-1"></div>
@@ -23,7 +25,7 @@
                 <img src="/assets/logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/32'">
                 <h2>UBND phường Cẩm Phả</h2>
             </div>
-            
+
             <ul class="nav-menu">
                 <li class="nav-item active" data-tab="dashboard">
                     <span>📊 Dashboard</span>
@@ -45,7 +47,8 @@
                 </li>
             </ul>
 
-            <div class="user-pill" style="margin-top: auto; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 12px; font-size: 0.8rem;">
+            <div class="user-pill"
+                style="margin-top: auto; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 12px; font-size: 0.8rem;">
                 <p style="color: var(--text-secondary)">Đang truy cập:</p>
                 <p style="font-weight: 600;">Admin User</p>
             </div>
@@ -107,8 +110,9 @@
                             </tbody>
                         </table>
                     </div>
-                    
-                    <div class="data-section" style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+
+                    <div class="data-section"
+                        style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                         <h3 style="margin-bottom: 20px; align-self: flex-start;">Tỷ lệ hoàn thành</h3>
                         <canvas id="statChart" style="max-width: 250px;"></canvas>
                     </div>
@@ -140,19 +144,36 @@
                             <!-- Data injected by JS -->
                         </tbody>
                     </table>
+                    <div id="all-docs-pagination" class="pagination"
+                        style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; align-items: center; padding-bottom: 20px;">
+                        <button class="btn" onclick="prevDocPage()" id="btn-prev-docs"
+                            style="background: rgba(255,255,255,0.1); color: white;">Trước</button>
+                        <span id="docs-page-info" style="color: var(--text-secondary);">Trang 1 / 1</span>
+                        <button class="btn" onclick="nextDocPage()" id="btn-next-docs"
+                            style="background: rgba(255,255,255,0.1); color: white;">Sau</button>
+                    </div>
                 </div>
             </section>
 
             <!-- Upload Tab -->
             <section id="tab-upload" class="tab-content" style="display: none;">
                 <div class="data-section" style="padding: 40px; text-align: center;">
-                    <div style="border: 2px dashed var(--border-color); padding: 60px; border-radius: 20px; background: rgba(255,255,255,0.02);" id="drop-zone">
+                    <div style="border: 2px dashed var(--border-color); padding: 60px; border-radius: 20px; background: rgba(255,255,255,0.02);"
+                        id="drop-zone">
                         <h2 style="margin-bottom: 12px;">📂 Kéo thả file PDF vào đây</h2>
-                        <p style="color: var(--text-secondary); margin-bottom: 24px;">Hệ thống sẽ tự động bóc tách (OCR) thông tin văn bản</p>
-                        <input type="file" id="file-input" style="display: none;" accept=".pdf">
-                        <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
-                            Chọn file từ máy tính
-                        </button>
+                        <p style="color: var(--text-secondary); margin-bottom: 24px;">Hệ thống sẽ tự động bóc tách (OCR)
+                            thông tin văn bản</p>
+                        <input type="file" id="file-input" multiple style="display: none;" accept=".pdf">
+                        <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+                        <div id="upload-actions" style="display: flex; gap: 12px; justify-content: center;">
+                            <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                                Chọn file từ máy tính
+                            </button>
+                            <button class="btn" style="background: rgba(255,255,255,0.1); color: white;"
+                                onclick="document.getElementById('folder-input').click()">
+                                📁 Chọn thư mục
+                            </button>
+                        </div>
                     </div>
 
                     <div id="upload-processing" style="display: none; margin-top: 30px;">
@@ -160,72 +181,94 @@
                         <p style="margin-top: 15px;">Đang bóc tách dữ liệu AI (Tesseract)...</p>
                     </div>
 
-                    <div id="ocr-result" style="display: none; margin-top: 40px; text-align: left; padding: 30px; background: rgba(255,255,255,0.05); border-radius: 16px;">
-                        <h3 style="margin-bottom: 20px;">Kiểm tra kết quả bóc tách</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div>
-                                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Số hiệu</label>
-                                <input type="text" id="ocr-so" style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
-                            </div>
-                            <div>
-                                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Hạn xử lý</label>
-                                <input type="date" id="ocr-han" style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
-                            </div>
-                            <div style="grid-column: span 2;">
-                                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Cơ quan chủ quản/Tham mưu</label>
-                                <input type="text" id="ocr-coquan" style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
-                            </div>
-                            <div style="grid-column: span 2;">
-                                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Trích yếu</label>
-                                <textarea id="ocr-trichyeu" style="width: 100%; height: 100px; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;"></textarea>
+                    <div id="batch-upload-result"
+                        style="display: none; margin-top: 40px; text-align: left; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>Kết quả bóc tách hàng loạt</h3>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-primary" onclick="confirmAllBatch()"
+                                    style="padding: 8px 20px; font-weight: 600;">
+                                    Xác nhận & Lưu toàn bộ
+                                </button>
+                                <button class="btn" style="background: rgba(255,59,48,0.1); color: #ff3b30;"
+                                    onclick="clearBatch()">Xóa danh sách này</button>
                             </div>
                         </div>
-                        <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
-                            <button class="btn" style="background: rgba(255,255,255,0.1); color: white;" onclick="cancelUpload()">Hủy bỏ</button>
-                            <button class="btn btn-primary" onclick="saveDocument(this)">Lưu vào hệ thống</button>
+                        <div style="overflow-x: auto;">
+                            <table id="batch-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tên File</th>
+                                        <th>Số hiệu</th>
+                                        <th>CQ Chủ quản</th>
+                                        <th>Thời hạn</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination"
+                            style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; align-items: center;">
+                            <button class="btn" onclick="prevBatchPage()" id="btn-prev-batch"
+                                style="background: rgba(255,255,255,0.1); color: white;">Trước</button>
+                            <span id="batch-page-info" style="color: var(--text-secondary);">Trang 1 / 1</span>
+                            <button class="btn" onclick="nextBatchPage()" id="btn-next-batch"
+                                style="background: rgba(255,255,255,0.1); color: white;">Sau</button>
                         </div>
                     </div>
                 </div>
-            <!-- Users Tab (Admin Only) -->
-            <section id="tab-users" class="tab-content" style="display: none;">
-                <div class="data-section">
-                    <div class="section-header">
-                        <h3>Quản lý người dùng hệ thống</h3>
-                        <button class="btn btn-primary" onclick="openUserModal()">➕ Tạo User mới</button>
+                <!-- Users Tab (Admin Only) -->
+                <section id="tab-users" class="tab-content" style="display: none;">
+                    <div class="data-section">
+                        <div class="section-header">
+                            <h3>Quản lý người dùng hệ thống</h3>
+                            <button class="btn btn-primary" onclick="openUserModal()">➕ Tạo User mới</button>
+                        </div>
+                        <table id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên đăng nhập</th>
+                                    <th>Vai trò</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data injected by JS -->
+                            </tbody>
+                        </table>
                     </div>
-                    <table id="users-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Tên đăng nhập</th>
-                                <th>Vai trò</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data injected by JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                </section>
         </main>
     </div>
 
     <!-- User Modal -->
-    <div id="user-modal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div id="user-modal" class="modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
         <div class="data-section" style="width: 400px; padding: 30px;">
             <h3 style="margin-bottom: 20px;">Tạo tài khoản mới</h3>
             <div class="form-group">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Tên đăng nhập</label>
-                <input type="text" id="new-username" style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Tên
+                    đăng nhập</label>
+                <input type="text" id="new-username"
+                    style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
             </div>
             <div class="form-group" style="margin-top: 15px;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Mật khẩu</label>
-                <input type="password" id="new-password" style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Mật
+                    khẩu</label>
+                <input type="password" id="new-password"
+                    style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
             </div>
             <div class="form-group" style="margin-top: 15px;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Vai trò</label>
-                <select id="new-role" style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Vai
+                    trò</label>
+                <select id="new-role"
+                    style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
                     <option value="Admin">Admin</option>
                     <option value="LanhDao">Lãnh đạo</option>
                     <option value="VanThu">Văn thư</option>
@@ -233,12 +276,85 @@
                 </select>
             </div>
             <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
-                <button class="btn" style="background: rgba(255,255,255,0.1); color: white;" onclick="closeUserModal()">Hủy</button>
+                <button class="btn" style="background: rgba(255,255,255,0.1); color: white;"
+                    onclick="closeUserModal()">Hủy</button>
                 <button class="btn btn-primary" onclick="createUser()">Lưu tài khoản</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit OCR Modal -->
+    <div id="edit-ocr-modal" class="modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="data-section" style="width: 500px; padding: 30px;">
+            <h3 style="margin-bottom: 20px;">Kiểm tra kết quả bóc tách</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label
+                        style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Số
+                        hiệu</label>
+                    <input type="text" id="ocr-so"
+                        style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
+                </div>
+                <div>
+                    <label
+                        style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Hạn
+                        xử lý</label>
+                    <input type="date" id="ocr-han"
+                        style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
+                </div>
+                <div style="grid-column: span 2;">
+                    <label
+                        style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Cơ
+                        quan chủ quản/Tham mưu</label>
+                    <input type="text" id="ocr-coquan"
+                        style="width: 100%; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;">
+                </div>
+                <div style="grid-column: span 2;">
+                    <label
+                        style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Trích
+                        yếu</label>
+                    <textarea id="ocr-trichyeu"
+                        style="width: 100%; height: 100px; padding: 10px; background: #1a2234; border: 1px solid var(--border-color); color: white; border-radius: 6px;"></textarea>
+                </div>
+            </div>
+            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button class="btn" style="background: rgba(255,255,255,0.1); color: white;"
+                    onclick="closeEditModal()">Hủy bỏ</button>
+                <button class="btn btn-primary" onclick="saveEdit(this)">Cập nhật</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="custom-alert" class="modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="data-section"
+            style="width: 350px; padding: 30px; text-align: center; border: 1px solid var(--primary); background: #111827; border-top: 4px solid var(--primary);">
+            <div id="alert-icon" style="font-size: 32px; margin-bottom: 15px;">🔔</div>
+            <p id="alert-message" style="margin-bottom: 24px; line-height: 1.6; color: white; font-size: 0.95rem;"></p>
+            <button class="btn btn-primary" onclick="closeAlert()" style="width: 100%; padding: 12px;">Đồng ý</button>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="custom-confirm" class="modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="data-section"
+            style="width: 350px; padding: 30px; text-align: center; border: 1px solid var(--warning); background: #111827; border-top: 4px solid var(--warning);">
+            <div style="font-size: 32px; margin-bottom: 15px;">❓</div>
+            <p id="confirm-message" style="margin-bottom: 24px; line-height: 1.6; color: white; font-size: 0.95rem;">
+            </p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn" onclick="_confirmResolve(false)"
+                    style="flex: 1; background: rgba(255,255,255,0.1); color: white;">Hủy</button>
+                <button class="btn btn-primary" onclick="_confirmResolve(true)"
+                    style="flex: 1; background: var(--warning); border-color: var(--warning);">Đồng ý</button>
             </div>
         </div>
     </div>
 
     <script src="js/app.js"></script>
 </body>
+
 </html>

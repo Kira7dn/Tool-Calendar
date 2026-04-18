@@ -451,6 +451,33 @@ namespace ToolCalender.Data
             cmd.ExecuteNonQuery();
         }
 
+        public static void BulkUpdateStatus(List<int> ids, string status)
+        {
+            if (ids == null || ids.Count == 0) return;
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            
+            // Note: Since we are using SQLite and small batches, we can use IN clause with string join
+            // For production with massive IDs, we might use a temporary table or multiple commands
+            string idList = string.Join(",", ids);
+            string sql = $"UPDATE Documents SET Status=@s WHERE Id IN ({idList})";
+            
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@s", status);
+            cmd.ExecuteNonQuery();
+        }
+
+        public static void BulkDelete(List<int> ids)
+        {
+            if (ids == null || ids.Count == 0) return;
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string idList = string.Join(",", ids);
+            string sql = $"DELETE FROM Documents WHERE Id IN ({idList})";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.ExecuteNonQuery();
+        }
+
         // --- SETTINGS & LOGS ---
         public static string GetAppSetting(string key, string defaultVal = "")
         {
@@ -737,11 +764,27 @@ namespace ToolCalender.Data
             var deptDict = new Dictionary<string, int>();
             while (rDept.Read()) deptDict[rDept[0].ToString() ?? "N/A"] = Convert.ToInt32(rDept[1]);
 
+            // 6. Sắp hết hạn (7 ngày tới)
+            using var cmdUrgent = new SqliteCommand(@"
+                SELECT COUNT(*) FROM Documents 
+                WHERE ThoiHan >= date('now') AND ThoiHan <= date('now', '+7 days') 
+                AND Status != 'Đã hoàn thành'", connection);
+            int urgent = Convert.ToInt32(cmdUrgent.ExecuteScalar());
+
+            // 7. Đến hạn hôm nay
+            using var cmdToday = new SqliteCommand(@"
+                SELECT COUNT(*) FROM Documents 
+                WHERE date(ThoiHan) = date('now') 
+                AND Status != 'Đã hoàn thành'", connection);
+            int today = Convert.ToInt32(cmdToday.ExecuteScalar());
+
             return new {
                 Total = total,
                 ByStatus = statusDict,
                 ByPriority = prioDict,
                 Overdue = overdue,
+                Urgent = urgent,
+                Today = today,
                 ByDepartment = deptDict
             };
         }

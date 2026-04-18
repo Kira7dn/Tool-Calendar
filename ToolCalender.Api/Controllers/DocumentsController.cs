@@ -50,7 +50,7 @@ namespace ToolCalender.Api.Controllers
             var uploadsDir = Path.Combine(_env.ContentRootPath, "Uploads");
             Directory.CreateDirectory(uploadsDir);
             
-            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+            var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
             var filePath = Path.Combine(uploadsDir, fileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
@@ -83,6 +83,29 @@ namespace ToolCalender.Api.Controllers
             {
                 return StatusCode(500, $"Lỗi khởi tạo upload: {ex.Message}");
             }
+        }
+
+        [Authorize(Roles = "Admin,VanThu")]
+        [HttpPost("bulk-confirm")]
+        public IActionResult BulkConfirm([FromBody] List<int> ids)
+        {
+            if (ids == null || ids.Count == 0) return BadRequest("Danh sách ID trống.");
+            
+            // Cập nhật trạng thái thành "Đã rà soát"
+            DatabaseService.BulkUpdateStatus(ids, "Đã rà soát");
+            
+            return Ok(new { message = $"Đã xác nhận thành công {ids.Count} văn bản." });
+        }
+
+        [Authorize(Roles = "Admin,VanThu")]
+        [HttpDelete("bulk-delete")]
+        public IActionResult BulkDeleteBatch([FromBody] List<int> ids)
+        {
+            if (ids == null || ids.Count == 0) return BadRequest("Danh sách ID trống.");
+            
+            DatabaseService.BulkDelete(ids);
+            
+            return Ok(new { message = $"Đã xóa thành công {ids.Count} văn bản khỏi hệ thống." });
         }
 
         [Authorize(Roles = "Admin,VanThu")]
