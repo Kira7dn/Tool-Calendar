@@ -81,14 +81,26 @@ namespace ToolCalender.Services
             {
                 result.TotalPages = PdfPageRenderer.CountPdfPages(filePath);
 
-                using var mainEngine = new TesseractEngine(tessDataPath, lang, EngineMode.Default);
-                using var osdEngine = new TesseractEngine(tessDataPath, "osd", EngineMode.Default);
-                mainEngine.SetVariable("preserve_interword_spaces", "1");
+                // ── Idea 3: Đọc cấu hình số trang quét từ Database (mặc định 0 = scan hết)
+                string maxPagesConfig = Data.DatabaseService.GetAppSetting("OcrSettings_MaxPagesToScan", "0");
+                int maxPages = int.TryParse(maxPagesConfig, out int mp) ? mp : 0;
+                int pagesToProcess = maxPages > 0 ? Math.Min(result.TotalPages, maxPages) : result.TotalPages;
 
-                for (int i = 0; i < result.TotalPages; i++)
-                {
-                    result.Pages.Add(ProcessPage(filePath, i, mainEngine, osdEngine, resolvedOptions));
-                }
+                // ── Idea 1: Xử lý các trang song song — mỗi task dùng engine riêng (Tesseract KHÔNG thread-safe)
+                var pageTasks = Enumerable.Range(0, pagesToProcess).Select(pageIndex =>
+                    Task.Run(() =>
+                    {
+                        using var engine = new TesseractEngine(tessDataPath, lang, EngineMode.Default);
+                        using var osd    = new TesseractEngine(tessDataPath, "osd",  EngineMode.Default);
+                        engine.SetVariable("preserve_interword_spaces", "1");
+                        return ProcessPage(filePath, pageIndex, engine, osd, resolvedOptions);
+                    })
+                ).ToList();
+
+                var pageResults = await Task.WhenAll(pageTasks);
+
+                // Giữ đúng thứ tự trang sau khi xử lý song song
+                result.Pages = pageResults.OrderBy(p => p.PageNumber).ToList();
             }
             catch (Exception ex)
             {

@@ -27,11 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initUpload();
     initNotifications();
 
+    // Debounce search → call server
     const searchInput = document.getElementById('doc-search');
     if (searchInput) {
+        let _searchTimer;
         searchInput.addEventListener('input', () => {
-            _docPage = 1;
-            renderTables();
+            clearTimeout(_searchTimer);
+            _searchTimer = setTimeout(() => fetchDocPage(1), 350);
         });
     }
 });
@@ -106,10 +108,11 @@ function applyRoleRestrictions(role) {
         document.getElementById('nav-users').style.display = 'flex';
     }
 
-    // 2. Chỉ Admin và Văn thư mới thấy nút Thêm văn bản / Tab Upload
+    // 2. Chỉ Admin và Văn thư mới thấy nút Thêm văn bản / Tab Upload / Cài đặt
     if (role !== 'Admin' && role !== 'VanThu') {
         document.querySelector('.header-actions').style.display = 'none';
         document.querySelector('[data-tab="upload"]').style.display = 'none';
+        document.querySelector('[data-tab="settings"]').style.display = 'none';
     }
 }
 
@@ -141,6 +144,7 @@ function showTab(tabId) {
 
     currentTab = tabId;
     if (tabId === 'users') fetchUsers();
+    if (tabId === 'settings') fetchSettings();
 
     // Close sidebar on mobile after navigation
     closeSidebar();
@@ -156,30 +160,79 @@ function closeSidebar() {
     document.getElementById('sidebar-overlay').classList.remove('active');
 }
 
-// Data Fetching
+
+// ======================================================
+// DATA FETCHING - Server-side pagination
+// ======================================================
+
+// Holds only the CURRENT PAGE of documents (not all)
+let _docTotalPages = 1;
+
 async function fetchData() {
     const token = localStorage.getItem('auth_token');
     try {
-        const [docsRes, statsRes] = await Promise.all([
-            fetch('/api/documents', { headers: { 'Authorization': `Bearer ${token}` } }),
+        // Fetch stats and first page of docs in parallel
+        const [statsRes] = await Promise.all([
             fetch('/api/stats', { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
-        if (docsRes.status === 401 || statsRes.status === 401) {
-            logout();
-            return;
-        }
+        if (statsRes.status === 401) { logout(); return; }
 
-        documents = await docsRes.json();
         stats = await statsRes.json();
 
         updateStatsUI();
-        renderTables();
+        renderRecentDocs(); // Dashboard "recent 5" still uses a lightweight approach
         renderChart();
+
+        // Fetch first page for documents tab
+        await fetchDocPage(1);
+
+        // Prefetch settings for UI info
+        fetchSettings();
     } catch (error) {
         console.error('Lỗi tải dữ liệu:', error);
     }
 }
+
+// Fetches documents from the server for the given page/search
+async function fetchDocPage(page) {
+    const token = localStorage.getItem('auth_token');
+    const search = document.getElementById('doc-search')?.value?.trim() ?? '';
+    const url = `/api/documents?page=${page}&size=${_docPageSize}&search=${encodeURIComponent(search)}`;
+
+    try {
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.status === 401) { logout(); return; }
+
+        const result = await res.json();
+        documents = result.data;        // Only current page items
+        _docPage = result.page;
+        _docTotalPages = result.totalPages || 1;
+
+        renderDocsTable();
+    } catch (err) {
+        console.error('Lỗi tải danh sách văn bản:', err);
+    }
+}
+
+// Dashboard "recent 5" - lightweight separate call
+async function renderRecentDocs() {
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch('/api/documents?page=1&size=5', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) return;
+    const result = await res.json();
+    const recentBody = document.querySelector('#recent-docs tbody');
+    if (!recentBody) return;
+    recentBody.innerHTML = (result.data || []).map(doc => `
+        <tr>
+            <td style="font-weight: 600;">${doc.soVanBan}</td>
+            <td class="text-truncate" style="max-width: 300px;">${doc.trichYeu}</td>
+            <td>${formatDate(doc.thoiHan)}</td>
+            <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai}</span></td>
+        </tr>
+    `).join('');
+}
+
 
 function updateStatsUI() {
     document.getElementById('stat-total').innerText = stats.total || 0;
@@ -188,53 +241,28 @@ function updateStatsUI() {
     document.getElementById('stat-today').innerText = stats.today || 0;
 }
 
-function renderTables() {
-    // Recent Table (Limit to 5)
-    const recentBody = document.querySelector('#recent-docs tbody');
-    recentBody.innerHTML = documents.slice(0, 5).map(doc => `
-        <tr>
-            <td style="font-weight: 600;">${doc.soVanBan}</td>
-            <td class="text-truncate" style="max-width: 300px;">${doc.trichYeu}</td>
-            <td>${formatDate(doc.thoiHan)}</td>
-            <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai}</span></td>
-        </tr>
-    `).join('');
-
-    // Full Table
-    const searchVal = document.getElementById('doc-search').value.toLowerCase();
-    const filteredDocs = documents.filter(doc =>
-        (doc.soVanBan && doc.soVanBan.toLowerCase().includes(searchVal)) ||
-        (doc.trichYeu && doc.trichYeu.toLowerCase().includes(searchVal)) ||
-        (doc.coQuanChuQuan && doc.coQuanChuQuan.toLowerCase().includes(searchVal))
-    );
-
-    const totalDocPages = Math.ceil(filteredDocs.length / _docPageSize) || 1;
-    if (_docPage > totalDocPages) _docPage = totalDocPages;
-    if (_docPage < 1) _docPage = 1;
-
-    document.getElementById('docs-page-info').innerText = `Trang ${_docPage} / ${totalDocPages}`;
-    document.getElementById('btn-prev-docs').disabled = _docPage === 1;
-    document.getElementById('btn-next-docs').disabled = _docPage === totalDocPages;
-
-    const start = (_docPage - 1) * _docPageSize;
-    const end = start + _docPageSize;
-    const pageItems = filteredDocs.slice(start, end);
-
+function renderDocsTable() {
     const role = localStorage.getItem('user_role');
     const allBody = document.querySelector('#all-docs-table tbody');
-    allBody.innerHTML = pageItems.map(doc => `
+    if (!allBody) return;
+
+    allBody.innerHTML = documents.map(doc => `
         <tr>
-            <td style="font-weight: 600;">${doc.soVanBan}</td>
+            <td style="font-weight: 600;">${doc.soVanBan || '—'}</td>
             <td>${formatDate(doc.ngayBanHanh)}</td>
-            <td>${doc.trichYeu}</td>
+            <td>${doc.trichYeu || ''}</td>
             <td>${doc.coQuanChuQuan || ''}</td>
             <td>${formatDate(doc.thoiHan)}</td>
-            <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai}</span></td>
+            <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai || doc.status || ''}</span></td>
             ${role === 'Admin' ? `<td><button class="btn btn-sm" style="color: var(--danger); background: rgba(239, 68, 68, 0.1);" onclick="deleteDocument(${doc.id})">🗑️ Xóa</button></td>` : ''}
         </tr>
     `).join('');
 
-    // Update Header if Admin
+    document.getElementById('docs-page-info').innerText = `Trang ${_docPage} / ${_docTotalPages}`;
+    document.getElementById('btn-prev-docs').disabled = _docPage <= 1;
+    document.getElementById('btn-next-docs').disabled = _docPage >= _docTotalPages;
+
+    // Add action column header for Admin (only once)
     if (role === 'Admin' && !document.getElementById('header-action-col')) {
         const headerRow = document.querySelector('#all-docs-table thead tr');
         const th = document.createElement('th');
@@ -244,25 +272,12 @@ function renderTables() {
     }
 }
 
-function prevDocPage() {
-    if (_docPage > 1) {
-        _docPage--;
-        renderTables();
-    }
+async function prevDocPage() {
+    if (_docPage > 1) await fetchDocPage(_docPage - 1);
 }
 
-function nextDocPage() {
-    const searchVal = document.getElementById('doc-search').value.toLowerCase();
-    const filteredDocs = documents.filter(doc =>
-        (doc.soVanBan && doc.soVanBan.toLowerCase().includes(searchVal)) ||
-        (doc.trichYeu && doc.trichYeu.toLowerCase().includes(searchVal)) ||
-        (doc.coQuanChuQuan && doc.coQuanChuQuan.toLowerCase().includes(searchVal))
-    );
-    const totalPages = Math.ceil(filteredDocs.length / _docPageSize);
-    if (_docPage < totalPages) {
-        _docPage++;
-        renderTables();
-    }
+async function nextDocPage() {
+    if (_docPage < _docTotalPages) await fetchDocPage(_docPage + 1);
 }
 
 let myChart;
@@ -346,11 +361,19 @@ async function handleFiles(files) {
         return;
     }
 
-    const processingText = document.querySelector('#upload-processing p');
+    const processingInfo = document.getElementById('processing-file-count');
+    const progressBar = document.getElementById('upload-progress-bar');
+    const fileNameText = document.getElementById('processing-filename');
+
     let successCount = 0;
+    progressBar.style.width = '0%';
+    processingInfo.innerText = `Tìm thấy ${fileArray.length} file PDF. Bắt đầu xử lý...`;
 
     for (let i = 0; i < fileArray.length; i++) {
-        processingText.innerText = `Đang xử lý ${i + 1}/${fileArray.length}: ${fileArray[i].name}...`;
+        const progress = Math.round(((i) / fileArray.length) * 100);
+        progressBar.style.width = `${progress}%`;
+        processingInfo.innerText = `Đang xử lý file ${i + 1} / ${fileArray.length}`;
+        fileNameText.innerText = fileArray[i].name;
 
         const formData = new FormData();
         formData.append('file', fileArray[i]);
@@ -373,6 +396,9 @@ async function handleFiles(files) {
             console.error(`Lỗi xử lý ${fileArray[i].name}:`, error);
         }
     }
+
+    progressBar.style.width = '100%';
+    processingInfo.innerText = `Hoàn tất xử lý ${successCount}/${fileArray.length} file.`;
 
     document.getElementById('upload-processing').style.display = 'none';
     document.getElementById('upload-actions').style.display = 'flex';
@@ -716,4 +742,46 @@ function getBadgeClass(days) {
     if (days < 0) return 'badge-danger';
     if (days <= 7) return 'badge-warning';
     return 'badge-success';
+}
+
+// Settings Logic
+async function fetchSettings() {
+    const token = localStorage.getItem('auth_token');
+    try {
+        const res = await fetch('/api/stats/settings', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.ok) {
+            const settings = await res.json();
+            document.getElementById('setting-max-pages').value = settings.maxPagesToScan || 0;
+            document.getElementById('setting-deadline-keywords').value = settings.deadlineKeywords || '';
+        }
+    } catch (e) { console.error('Lỗi tải cài đặt:', e); }
+}
+
+async function saveSettings(btn) {
+    const maxPages = document.getElementById('setting-max-pages').value;
+    const keywords = document.getElementById('setting-deadline-keywords').value;
+    const token = localStorage.getItem('auth_token');
+
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Đang lưu...';
+
+    try {
+        const res = await fetch('/api/stats/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ maxPagesToScan: parseInt(maxPages), deadlineKeywords: keywords })
+        });
+
+        if (res.ok) {
+            showAlert('Đã lưu cấu hình hệ thống!', '✅');
+        } else {
+            showAlert('Lỗi khi lưu cấu hình', '❌');
+        }
+    } catch (e) {
+        showAlert('Lỗi kết nối', '❌');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
 }
