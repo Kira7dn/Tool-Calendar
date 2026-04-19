@@ -246,8 +246,10 @@ function renderDocsTable() {
     const allBody = document.querySelector('#all-docs-table tbody');
     if (!allBody) return;
 
-    allBody.innerHTML = documents.map(doc => `
+    const offset = (_docPage - 1) * _docPageSize;
+    allBody.innerHTML = documents.map((doc, idx) => `
         <tr style="cursor:pointer;" onclick="openDocDetailModal(${doc.id})">
+            <td style="text-align:center; color:var(--text-secondary); font-size:0.82rem; font-weight:600; width:48px;">${offset + idx + 1}</td>
             <td style="font-weight: 600;">${doc.soVanBan || '—'}</td>
             <td>${formatDate(doc.ngayBanHanh)}</td>
             <td>${doc.trichYeu || ''}</td>
