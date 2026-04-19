@@ -124,16 +124,36 @@ function initNav() {
 }
 
 function showTab(tabId) {
-    // UI Update
-    document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-    document.getElementById(`tab-${tabId}`).style.display = 'block';
+    // Remove active from all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active-tab');
+        tab.style.display = '';
+    });
 
+    // Activate the clicked tab
+    const target = document.getElementById(`tab-${tabId}`);
+    if (target) target.classList.add('active-tab');
+
+    // Update nav state
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.toggle('active', item.getAttribute('data-tab') === tabId);
     });
 
     currentTab = tabId;
     if (tabId === 'users') fetchUsers();
+
+    // Close sidebar on mobile after navigation
+    closeSidebar();
+}
+
+function openSidebar() {
+    document.querySelector('.sidebar').classList.add('open');
+    document.getElementById('sidebar-overlay').classList.add('active');
+}
+
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('active');
 }
 
 // Data Fetching

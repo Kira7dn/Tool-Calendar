@@ -18,6 +18,9 @@
         <div class="blob blob-2"></div>
     </div>
 
+    <!-- Mobile sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -57,6 +60,7 @@
         <!-- Main Content -->
         <main class="main-content">
             <header>
+                <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="openSidebar()" aria-label="Mở menu">☰</button>
                 <div class="header-title">
                     <h1 id="page-title">Hệ Thống Điều Phối Công Văn</h1>
                     <p id="page-subtitle">Giám sát và đôn đốc thực thi công việc thời gian thực</p>
@@ -69,7 +73,7 @@
             </header>
 
             <!-- Dashboard Tab -->
-            <section id="tab-dashboard" class="tab-content">
+            <section id="tab-dashboard" class="tab-content active-tab">
                 <div class="stats-grid">
                     <div class="stat-card">
                         <p class="stat-label">Tổng văn bản</p>
@@ -93,14 +97,52 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px;">
-                    <div class="data-section" style="padding: 24px;">
+                <div class="dashboard-grid">
+                    <div class="data-section" style="padding: 24px; overflow-y: auto;">
                         <h3 style="margin-bottom: 20px;">Xử lý gần đây</h3>
-                        <table id="recent-docs">
+                        <div class="table-scroll">
+                            <table id="recent-docs">
+                                <thead>
+                                    <tr>
+                                        <th>Số văn bản</th>
+                                        <th>Trích yếu</th>
+                                        <th>Thời hạn</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="data-section"
+                        style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <h3 style="margin-bottom: 20px; align-self: flex-start;">Tỷ lệ hoàn thành</h3>
+                        <canvas id="statChart" style="max-width: 220px; max-height: 220px;"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Documents Tab -->
+            <section id="tab-documents" class="tab-content">
+                <div class="data-section" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <div class="section-header">
+                        <h3>Danh sách văn bản toàn đơn vị</h3>
+                        <div class="search-box">
+                            <span>🔍</span>
+                            <input type="text" placeholder="Tìm số hiệu, nội dung..." id="doc-search">
+                        </div>
+                    </div>
+                    <div class="table-scroll" style="flex: 1; overflow-y: auto;">
+                        <table id="all-docs-table">
                             <thead>
                                 <tr>
                                     <th>Số văn bản</th>
+                                    <th>Ngày ban hành</th>
                                     <th>Trích yếu</th>
+                                    <th>Cơ quan tham mưu</th>
                                     <th>Thời hạn</th>
                                     <th>Trạng thái</th>
                                 </tr>
@@ -110,42 +152,7 @@
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="data-section"
-                        style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                        <h3 style="margin-bottom: 20px; align-self: flex-start;">Tỷ lệ hoàn thành</h3>
-                        <canvas id="statChart" style="max-width: 250px;"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Documents Tab (Hidden by default) -->
-            <section id="tab-documents" class="tab-content" style="display: none;">
-                <div class="data-section">
-                    <div class="section-header">
-                        <h3>Danh sách văn bản toàn đơn vị</h3>
-                        <div class="search-box">
-                            <span>🔍</span>
-                            <input type="text" placeholder="Tìm số hiệu, nội dung..." id="doc-search">
-                        </div>
-                    </div>
-                    <table id="all-docs-table">
-                        <thead>
-                            <tr>
-                                <th>Số văn bản</th>
-                                <th>Ngày ban hành</th>
-                                <th>Trích yếu</th>
-                                <th>Cơ quan tham mưu</th>
-                                <th>Thời hạn</th>
-                                <th>Trạng thái</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data injected by JS -->
-                        </tbody>
-                    </table>
-                    <div id="all-docs-pagination" class="pagination"
-                        style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; align-items: center; padding-bottom: 20px;">
+                    <div id="all-docs-pagination" class="pagination">
                         <button class="btn" onclick="prevDocPage()" id="btn-prev-docs"
                             style="background: rgba(255,255,255,0.1); color: white;">Trước</button>
                         <span id="docs-page-info" style="color: var(--text-secondary);">Trang 1 / 1</span>
@@ -156,16 +163,16 @@
             </section>
 
             <!-- Upload Tab -->
-            <section id="tab-upload" class="tab-content" style="display: none;">
-                <div class="data-section" style="padding: 40px; text-align: center;">
-                    <div style="border: 2px dashed var(--border-color); padding: 60px; border-radius: 20px; background: rgba(255,255,255,0.02);"
+            <section id="tab-upload" class="tab-content">
+                <div class="data-section" style="padding: 40px; text-align: center; overflow-y: auto;">
+                    <div style="border: 2px dashed var(--border-color); padding: 60px 30px; border-radius: 20px; background: rgba(255,255,255,0.02);"
                         id="drop-zone">
                         <h2 style="margin-bottom: 12px;">📂 Kéo thả file PDF vào đây</h2>
                         <p style="color: var(--text-secondary); margin-bottom: 24px;">Hệ thống sẽ tự động bóc tách (OCR)
                             thông tin văn bản</p>
                         <input type="file" id="file-input" multiple style="display: none;" accept=".pdf">
                         <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
-                        <div id="upload-actions" style="display: flex; gap: 12px; justify-content: center;">
+                        <div id="upload-actions" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                             <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
                                 Chọn file từ máy tính
                             </button>
@@ -183,10 +190,9 @@
 
                     <div id="batch-upload-result"
                         style="display: none; margin-top: 40px; text-align: left; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                             <h3>Kết quả bóc tách hàng loạt</h3>
-                            <div style="display: flex; gap: 10px;">
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <button class="btn btn-primary" onclick="confirmAllBatch()"
                                     style="padding: 8px 20px; font-weight: 600;">
                                     Xác nhận & Lưu toàn bộ
@@ -195,7 +201,7 @@
                                     onclick="clearBatch()">Xóa danh sách này</button>
                             </div>
                         </div>
-                        <div style="overflow-x: auto;">
+                        <div class="table-scroll">
                             <table id="batch-table">
                                 <thead>
                                     <tr>
@@ -212,8 +218,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="pagination"
-                            style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; align-items: center;">
+                        <div class="pagination">
                             <button class="btn" onclick="prevBatchPage()" id="btn-prev-batch"
                                 style="background: rgba(255,255,255,0.1); color: white;">Trước</button>
                             <span id="batch-page-info" style="color: var(--text-secondary);">Trang 1 / 1</span>
@@ -222,13 +227,16 @@
                         </div>
                     </div>
                 </div>
-                <!-- Users Tab (Admin Only) -->
-                <section id="tab-users" class="tab-content" style="display: none;">
-                    <div class="data-section">
-                        <div class="section-header">
-                            <h3>Quản lý người dùng hệ thống</h3>
-                            <button class="btn btn-primary" onclick="openUserModal()">➕ Tạo User mới</button>
-                        </div>
+            </section>
+
+            <!-- Users Tab (Admin Only) -->
+            <section id="tab-users" class="tab-content">
+                <div class="data-section" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <div class="section-header">
+                        <h3>Quản lý người dùng hệ thống</h3>
+                        <button class="btn btn-primary" onclick="openUserModal()">➕ Tạo User mới</button>
+                    </div>
+                    <div class="table-scroll" style="flex: 1; overflow-y: auto;">
                         <table id="users-table">
                             <thead>
                                 <tr>
@@ -243,7 +251,16 @@
                             </tbody>
                         </table>
                     </div>
-                </section>
+                </div>
+            </section>
+
+            <!-- Settings Tab -->
+            <section id="tab-settings" class="tab-content">
+                <div class="data-section" style="padding: 32px; overflow-y: auto;">
+                    <h3 style="margin-bottom: 20px;">Cấu hình hệ thống</h3>
+                    <p style="color: var(--text-secondary);">Đang cập nhật...</p>
+                </div>
+            </section>
         </main>
     </div>
 
