@@ -137,6 +137,7 @@
                     localStorage.setItem('auth_token', data.token);
                     localStorage.setItem('user_name', data.username);
                     localStorage.setItem('user_role', data.role);
+                    localStorage.setItem('user_id', data.userId);
                     window.location.href = 'index.html';
                 } else {
                     const err = await res.json();

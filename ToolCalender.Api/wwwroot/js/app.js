@@ -247,30 +247,26 @@ function renderDocsTable() {
     if (!allBody) return;
 
     allBody.innerHTML = documents.map(doc => `
-        <tr>
+        <tr style="cursor:pointer;" onclick="openDocDetailModal(${doc.id})">
             <td style="font-weight: 600;">${doc.soVanBan || '—'}</td>
             <td>${formatDate(doc.ngayBanHanh)}</td>
             <td>${doc.trichYeu || ''}</td>
             <td>${doc.coQuanChuQuan || ''}</td>
             <td>${formatDate(doc.thoiHan)}</td>
             <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai || doc.status || ''}</span></td>
-            ${role === 'Admin' ? `<td><button class="btn btn-sm" style="color: var(--danger); background: rgba(239, 68, 68, 0.1);" onclick="deleteDocument(${doc.id})">🗑️ Xóa</button></td>` : ''}
+            <td onclick="event.stopPropagation();" style="white-space:nowrap;">
+                <button class="btn btn-sm" style="background:rgba(55,114,255,0.12); color:var(--primary); padding:5px 12px; font-size:0.8rem;" onclick="openDocDetailModal(${doc.id})">👁️ Xem</button>
+                ${(role === 'Admin' || role === 'VanThu') ? `<button class="btn btn-sm" style="margin-left:6px; background:rgba(16,185,129,0.12); color:var(--success); padding:5px 12px; font-size:0.8rem;" onclick="openDocDetailModal(${doc.id}, 'edit')">✏️ Sửa</button>` : ''}
+                ${role === 'Admin' ? `<button class="btn btn-sm" style="margin-left:6px; color:var(--danger); background:rgba(239,68,68,0.1); padding:5px 12px; font-size:0.8rem;" onclick="deleteDocument(${doc.id})">🗑️ Xóa</button>` : ''}
+            </td>
         </tr>
     `).join('');
 
     document.getElementById('docs-page-info').innerText = `Trang ${_docPage} / ${_docTotalPages}`;
     document.getElementById('btn-prev-docs').disabled = _docPage <= 1;
     document.getElementById('btn-next-docs').disabled = _docPage >= _docTotalPages;
-
-    // Add action column header for Admin (only once)
-    if (role === 'Admin' && !document.getElementById('header-action-col')) {
-        const headerRow = document.querySelector('#all-docs-table thead tr');
-        const th = document.createElement('th');
-        th.id = 'header-action-col';
-        th.innerText = 'Thao tác';
-        headerRow.appendChild(th);
-    }
 }
+
 
 async function prevDocPage() {
     if (_docPage > 1) await fetchDocPage(_docPage - 1);
@@ -627,6 +623,333 @@ function logout() {
     localStorage.clear();
     window.location.href = 'login.html';
 }
+
+// ====================================================
+// DOCUMENT DETAIL MODAL
+// ====================================================
+
+let _currentDocId = null;
+let _currentDocData = null;
+
+async function openDocDetailModal(id, initialTab = 'view') {
+    const token = localStorage.getItem('auth_token');
+    const role = localStorage.getItem('user_role');
+    _currentDocId = id;
+
+    // Fetch full document
+    try {
+        const res = await fetch(`/api/documents/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) return;
+        _currentDocData = await res.json();
+    } catch (e) {
+        console.error('Lỗi tải văn bản:', e);
+        return;
+    }
+
+    const doc = _currentDocData;
+
+    // Populate header
+    document.getElementById('doc-modal-title').innerText = doc.soVanBan || 'Chi tiết văn bản';
+    document.getElementById('doc-modal-subtitle').innerText = doc.trichYeu ? doc.trichYeu.substring(0, 80) + (doc.trichYeu.length > 80 ? '...' : '') : '';
+
+    // View panel
+    document.getElementById('dv-so').innerText = doc.soVanBan || '—';
+    document.getElementById('dv-ngaybanhanh').innerText = formatDate(doc.ngayBanHanh);
+    document.getElementById('dv-trichyeu').innerText = doc.trichYeu || '—';
+    document.getElementById('dv-coquanbanhanh').innerText = doc.coQuanBanHanh || '—';
+    document.getElementById('dv-coquanchuquan').innerText = doc.coQuanChuQuan || '—';
+    document.getElementById('dv-thoihan').innerText = formatDate(doc.thoiHan);
+    document.getElementById('dv-status').innerText = doc.status || '—';
+    document.getElementById('dv-priority').innerText = doc.priority || '—';
+    document.getElementById('dv-ngaythem').innerText = formatDate(doc.ngayThem);
+
+    // Edit panel - pre-fill
+    document.getElementById('de-so').value = doc.soVanBan || '';
+    document.getElementById('de-ngaybanhanh').value = doc.ngayBanHanh ? doc.ngayBanHanh.split('T')[0] : '';
+    document.getElementById('de-trichyeu').value = doc.trichYeu || '';
+    document.getElementById('de-coquanbanhanh').value = doc.coQuanBanHanh || '';
+    document.getElementById('de-coquanchuquan').value = doc.coQuanChuQuan || '';
+    document.getElementById('de-thoihan').value = doc.thoiHan ? doc.thoiHan.split('T')[0] : '';
+    document.getElementById('de-status').value = doc.status || 'Chưa xử lý';
+    document.getElementById('de-priority').value = doc.priority || 'Thường';
+
+    // Show/hide Edit tab based on role
+    const editTab = document.getElementById('doc-tab-edit');
+    if (role === 'Admin' || role === 'VanThu') {
+        editTab.style.display = '';
+    } else {
+        editTab.style.display = 'none';
+    }
+
+    // Show modal
+    document.getElementById('doc-detail-modal').style.display = 'flex';
+
+    // Switch to requested tab and load comments
+    switchDocTab(initialTab);
+    await loadComments();
+}
+
+function closeDocDetailModal() {
+    document.getElementById('doc-detail-modal').style.display = 'none';
+    _currentDocId = null;
+    _currentDocData = null;
+}
+
+function switchDocTab(tab) {
+    const panels = ['view', 'edit', 'comments'];
+    panels.forEach(p => {
+        document.getElementById(`doc-panel-${p}`).style.display = p === tab ? 'block' : 'none';
+        const tabBtn = document.getElementById(`doc-tab-${p}`);
+        if (tabBtn) tabBtn.classList.toggle('doc-modal-tab-active', p === tab);
+    });
+}
+
+async function saveDocDetail(btn) {
+    if (!_currentDocId || !_currentDocData) return;
+
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Đang lưu...';
+
+    const updated = {
+        ..._currentDocData,
+        soVanBan: document.getElementById('de-so').value,
+        ngayBanHanh: document.getElementById('de-ngaybanhanh').value ? document.getElementById('de-ngaybanhanh').value + 'T00:00:00' : null,
+        trichYeu: document.getElementById('de-trichyeu').value,
+        coQuanBanHanh: document.getElementById('de-coquanbanhanh').value,
+        coQuanChuQuan: document.getElementById('de-coquanchuquan').value,
+        thoiHan: document.getElementById('de-thoihan').value ? document.getElementById('de-thoihan').value + 'T00:00:00' : null,
+        status: document.getElementById('de-status').value,
+        priority: document.getElementById('de-priority').value
+    };
+
+    const token = localStorage.getItem('auth_token');
+    try {
+        const res = await fetch(`/api/documents/${_currentDocId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(updated)
+        });
+        if (res.ok) {
+            _currentDocData = updated;
+            // Refresh view panel
+            document.getElementById('dv-so').innerText = updated.soVanBan || '—';
+            document.getElementById('dv-ngaybanhanh').innerText = formatDate(updated.ngayBanHanh);
+            document.getElementById('dv-trichyeu').innerText = updated.trichYeu || '—';
+            document.getElementById('dv-coquanbanhanh').innerText = updated.coQuanBanHanh || '—';
+            document.getElementById('dv-coquanchuquan').innerText = updated.coQuanChuQuan || '—';
+            document.getElementById('dv-thoihan').innerText = formatDate(updated.thoiHan);
+            document.getElementById('dv-status').innerText = updated.status || '—';
+            document.getElementById('dv-priority').innerText = updated.priority || '—';
+            document.getElementById('doc-modal-title').innerText = updated.soVanBan || 'Chi tiết văn bản';
+            switchDocTab('view');
+            showAlert('Đã cập nhật văn bản thành công!', '✅');
+            fetchData();
+        } else {
+            showAlert('Lỗi khi cập nhật văn bản.', '❌');
+        }
+    } catch (e) {
+        showAlert('Lỗi kết nối.', '❌');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+}
+
+// ====================================================
+// COMMENTS & REACTIONS
+// ====================================================
+
+let _commentsCache = [];
+
+async function loadComments() {
+    if (!_currentDocId) return;
+    const token = localStorage.getItem('auth_token');
+    try {
+        const res = await fetch(`/api/documents/${_currentDocId}/comments`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        _commentsCache = await res.json();
+        renderComments(_commentsCache);
+    } catch (e) {
+        console.error('Lỗi tải comments:', e);
+    }
+}
+
+function renderComments(comments) {
+    const list = document.getElementById('comment-list');
+    if (!list) return;
+
+    // Update badge
+    document.getElementById('comment-count-badge').innerText = comments.length;
+
+    const currentUserId = parseInt(localStorage.getItem('user_id') || '0');
+    const role = localStorage.getItem('user_role');
+
+    if (comments.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-secondary);">
+            <p style="font-size:2rem; margin-bottom:8px;">💭</p>
+            <p>Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+        </div>`;
+        return;
+    }
+
+    list.innerHTML = comments.map(c => {
+        const reactions = c.reactions || {};
+        const reactionTypes = [
+            { type: 'like',    emoji: '👍', label: 'Like'    },
+            { type: 'love',    emoji: '❤️',  label: 'Love'    },
+            { type: 'hate',    emoji: '😡', label: 'Hate'    },
+            { type: 'dislike', emoji: '👎', label: 'Dislike' }
+        ];
+
+        // Determine which reaction the current user gave
+        let userReaction = null;
+        for (const rt of reactionTypes) {
+            if (reactions[rt.type] && reactions[rt.type].users && reactions[rt.type].users.some(u => u === localStorage.getItem('user_name'))) {
+                userReaction = rt.type;
+                break;
+            }
+        }
+
+        const reactionBtns = reactionTypes.map(rt => {
+            const count = reactions[rt.type] ? reactions[rt.type].count : 0;
+            const isActive = userReaction === rt.type;
+            const users = reactions[rt.type] ? reactions[rt.type].users.join(', ') : '';
+            return `<button class="reaction-btn ${isActive ? 'active-' + rt.type : ''}" 
+                title="${users || rt.label}" 
+                onclick="toggleReaction(${c.id}, '${rt.type}')">
+                ${rt.emoji} <span class="reaction-count">${count > 0 ? count : ''}</span>
+            </button>`;
+        }).join('');
+
+        const canDelete = (c.userId === currentUserId) || role === 'Admin';
+        const deleteBtn = canDelete ? `<button class="comment-delete-btn" onclick="deleteComment(${c.id})" title="Xóa bình luận">🗑️</button>` : '';
+
+        const date = new Date(c.createdAt);
+        const timeStr = date.toLocaleString('vi-VN');
+
+        return `<div class="comment-card" id="comment-card-${c.id}">
+            <div class="comment-meta">
+                <span class="comment-username">${c.username}</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="comment-time">${timeStr}</span>
+                    ${deleteBtn}
+                </div>
+            </div>
+            <div class="comment-content">${escapeHtml(c.content)}</div>
+            <div class="reaction-bar" id="reaction-bar-${c.id}">${reactionBtns}</div>
+        </div>`;
+    }).join('');
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+async function submitComment(btn) {
+    const text = document.getElementById('new-comment-text').value.trim();
+    if (!text) { showAlert('Vui lòng nhập nội dung bình luận!', '⚠️'); return; }
+
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Đang gửi...';
+
+    const token = localStorage.getItem('auth_token');
+    try {
+        const res = await fetch(`/api/documents/${_currentDocId}/comments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ content: text })
+        });
+        if (res.ok) {
+            document.getElementById('new-comment-text').value = '';
+            await loadComments();
+            // Scroll to bottom of comment list
+            const list = document.getElementById('comment-list');
+            list.scrollTop = list.scrollHeight;
+        } else {
+            showAlert('Lỗi khi gửi bình luận.', '❌');
+        }
+    } catch (e) {
+        showAlert('Lỗi kết nối.', '❌');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+}
+
+async function deleteComment(commentId) {
+    const confirmed = await showConfirm('Xóa bình luận này?');
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('auth_token');
+    try {
+        const res = await fetch(`/api/documents/${_currentDocId}/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            await loadComments();
+        } else {
+            showAlert('Lỗi khi xóa bình luận.', '❌');
+        }
+    } catch (e) {
+        showAlert('Lỗi kết nối.', '❌');
+    }
+}
+
+async function toggleReaction(commentId, reactionType) {
+    const token = localStorage.getItem('auth_token');
+    try {
+        const res = await fetch(`/api/documents/${_currentDocId}/comments/${commentId}/react`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ reactionType })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            // Update only the reaction bar of this comment (no full reload)
+            updateReactionBar(commentId, data.reactions);
+        }
+    } catch (e) {
+        console.error('Lỗi reaction:', e);
+    }
+}
+
+function updateReactionBar(commentId, reactions) {
+    const bar = document.getElementById(`reaction-bar-${commentId}`);
+    if (!bar) return;
+
+    const reactionTypes = [
+        { type: 'like',    emoji: '👍', label: 'Like'    },
+        { type: 'love',    emoji: '❤️',  label: 'Love'    },
+        { type: 'hate',    emoji: '😡', label: 'Hate'    },
+        { type: 'dislike', emoji: '👎', label: 'Dislike' }
+    ];
+
+    const currentUsername = localStorage.getItem('user_name');
+    let userReaction = null;
+    for (const rt of reactionTypes) {
+        if (reactions[rt.type] && reactions[rt.type].users && reactions[rt.type].users.includes(currentUsername)) {
+            userReaction = rt.type;
+            break;
+        }
+    }
+
+    bar.innerHTML = reactionTypes.map(rt => {
+        const count = reactions[rt.type] ? reactions[rt.type].count : 0;
+        const isActive = userReaction === rt.type;
+        const users = reactions[rt.type] ? reactions[rt.type].users.join(', ') : '';
+        return `<button class="reaction-btn ${isActive ? 'active-' + rt.type : ''}" 
+            title="${users || rt.label}" 
+            onclick="toggleReaction(${commentId}, '${rt.type}')">
+            ${rt.emoji} <span class="reaction-count">${count > 0 ? count : ''}</span>
+        </button>`;
+    }).join('');
+}
+
 
 // Custom Alert Logic
 function showAlert(message, icon = '🔔') {
