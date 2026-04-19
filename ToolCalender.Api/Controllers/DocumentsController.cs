@@ -206,11 +206,111 @@ namespace ToolCalender.Api.Controllers
             DatabaseService.Delete(id);
             return NoContent();
         }
+
+        // =============================================
+        // COMMENTS API
+        // =============================================
+
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [HttpGet("{id}/comments")]
+        public IActionResult GetComments(int id)
+        {
+            var comments = DatabaseService.GetComments(id);
+            // Attach reactions for each comment
+            var result = comments.Select(c => new {
+                c.Id,
+                c.DocumentId,
+                c.UserId,
+                c.Username,
+                c.Content,
+                c.CreatedAt,
+                Reactions = DatabaseService.GetReactionsForComment(c.Id)
+                    .GroupBy(r => r.ReactionType)
+                    .ToDictionary(g => g.Key, g => new {
+                        Count = g.Count(),
+                        Users = g.Select(r => r.Username).ToList()
+                    })
+            });
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [HttpPost("{id}/comments")]
+        public IActionResult AddComment(int id, [FromBody] CommentRequest req)
+        {
+            if (req == null || string.IsNullOrWhiteSpace(req.Content))
+                return BadRequest("Nội dung comment không được trống.");
+
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Unknown";
+
+            var comment = new Comment
+            {
+                DocumentId = id,
+                UserId = userId,
+                Username = username,
+                Content = req.Content
+            };
+            DatabaseService.InsertComment(comment);
+            return Ok(new { message = "Đã thêm comment thành công." });
+        }
+
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [HttpDelete("{docId}/comments/{commentId}")]
+        public IActionResult DeleteComment(int docId, int commentId)
+        {
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+            bool isAdmin = role == "Admin";
+
+            DatabaseService.DeleteComment(commentId, userId, isAdmin);
+            return Ok(new { message = "Đã xóa comment." });
+        }
+
+        // =============================================
+        // REACTIONS API
+        // =============================================
+
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [HttpPost("{docId}/comments/{commentId}/react")]
+        public IActionResult ReactToComment(int docId, int commentId, [FromBody] ReactionRequest req)
+        {
+            if (req == null || string.IsNullOrWhiteSpace(req.ReactionType))
+                return BadRequest("Loại reaction không hợp lệ.");
+
+            var validTypes = new[] { "like", "love", "hate", "dislike" };
+            if (!validTypes.Contains(req.ReactionType.ToLower()))
+                return BadRequest("Reaction type phải là: like, love, hate, dislike.");
+
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Unknown";
+
+            var result = DatabaseService.ToggleReaction(commentId, userId, username, req.ReactionType.ToLower());
+
+            var updatedReactions = DatabaseService.GetReactionsForComment(commentId)
+                .GroupBy(r => r.ReactionType)
+                .ToDictionary(g => g.Key, g => new {
+                    Count = g.Count(),
+                    Users = g.Select(r => r.Username).ToList()
+                });
+
+            return Ok(new { status = result, reactions = updatedReactions });
+        }
     }
 
     public class AssignmentRequest
     {
         public int? DepartmentId { get; set; }
         public int? UserId { get; set; }
+    }
+
+    public class CommentRequest
+    {
+        public string Content { get; set; } = "";
+    }
+
+    public class ReactionRequest
+    {
+        public string ReactionType { get; set; } = "";
     }
 }

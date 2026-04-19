@@ -24,4 +24,14 @@ namespace ToolCalender.Models
         public string Content { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
+
+    public class CommentReaction
+    {
+        public int Id { get; set; }
+        public int CommentId { get; set; }
+        public int UserId { get; set; }
+        public string Username { get; set; } = "";
+        public string ReactionType { get; set; } = ""; // like, love, hate, dislike
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+    }
 }

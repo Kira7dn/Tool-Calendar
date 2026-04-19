@@ -31,7 +31,7 @@ namespace ToolCalender.Api.Controllers
                 {
                     new Claim(ClaimTypes.Name, user.Username),
                     new Claim(ClaimTypes.Role, user.Role),
-                    new Claim("UserId", user.Id.ToString())
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddHours(24),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -44,7 +44,8 @@ namespace ToolCalender.Api.Controllers
             {
                 token = tokenString,
                 username = user.Username,
-                role = user.Role
+                role = user.Role,
+                userId = user.Id
             });
         }
     }

@@ -121,6 +121,18 @@ namespace ToolCalender.Data
                     FOREIGN KEY(DocumentId) REFERENCES Documents(Id)
                 )";
 
+            string createCommentReactionsTable = @"
+                CREATE TABLE IF NOT EXISTS CommentReactions (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    CommentId INTEGER,
+                    UserId INTEGER,
+                    Username TEXT,
+                    ReactionType TEXT,
+                    CreatedAt TEXT,
+                    UNIQUE(CommentId, UserId),
+                    FOREIGN KEY(CommentId) REFERENCES Comments(Id) ON DELETE CASCADE
+                )";
+
             string createPushSubscriptionsTable = @"
                 CREATE TABLE IF NOT EXISTS PushSubscriptions (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -138,6 +150,9 @@ namespace ToolCalender.Data
             cmd.ExecuteNonQuery();
 
             cmd.CommandText = createCommentsTable;
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = createCommentReactionsTable;
             cmd.ExecuteNonQuery();
 
             cmd.CommandText = createDepartmentsTable;
@@ -358,6 +373,79 @@ namespace ToolCalender.Data
             cmd.Parameters.AddWithValue("@uName", c.Username);
             cmd.Parameters.AddWithValue("@c", c.Content);
             cmd.ExecuteNonQuery();
+        }
+
+        public static void DeleteComment(int commentId, int requestingUserId, bool isAdmin)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            // Only the comment owner or Admin can delete
+            string sql = isAdmin
+                ? "DELETE FROM Comments WHERE Id=@id"
+                : "DELETE FROM Comments WHERE Id=@id AND UserId=@uid";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@id", commentId);
+            if (!isAdmin) cmd.Parameters.AddWithValue("@uid", requestingUserId);
+            cmd.ExecuteNonQuery();
+        }
+
+        public static List<CommentReaction> GetReactionsForComment(int commentId)
+        {
+            var list = new List<CommentReaction>();
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var cmd = new SqliteCommand("SELECT * FROM CommentReactions WHERE CommentId=@id", connection);
+            cmd.Parameters.AddWithValue("@id", commentId);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list.Add(new CommentReaction {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    CommentId = Convert.ToInt32(reader["CommentId"]),
+                    UserId = Convert.ToInt32(reader["UserId"]),
+                    Username = reader["Username"].ToString() ?? "",
+                    ReactionType = reader["ReactionType"].ToString() ?? "",
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.Now.ToString())
+                });
+            }
+            return list;
+        }
+
+        /// <summary>Toggle a reaction: if same type exists remove it, else upsert to new type.</summary>
+        public static string ToggleReaction(int commentId, int userId, string username, string reactionType)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            // Check existing
+            using var checkCmd = new SqliteCommand("SELECT ReactionType FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid", connection);
+            checkCmd.Parameters.AddWithValue("@cid", commentId);
+            checkCmd.Parameters.AddWithValue("@uid", userId);
+            var existing = checkCmd.ExecuteScalar()?.ToString();
+
+            if (existing == reactionType)
+            {
+                // Remove reaction (toggle off)
+                using var delCmd = new SqliteCommand("DELETE FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid", connection);
+                delCmd.Parameters.AddWithValue("@cid", commentId);
+                delCmd.Parameters.AddWithValue("@uid", userId);
+                delCmd.ExecuteNonQuery();
+                return "removed";
+            }
+            else
+            {
+                // Upsert to new reaction type
+                using var upsertCmd = new SqliteCommand(@"
+                    INSERT INTO CommentReactions (CommentId, UserId, Username, ReactionType, CreatedAt)
+                    VALUES (@cid, @uid, @uname, @type, datetime('now'))
+                    ON CONFLICT(CommentId, UserId) DO UPDATE SET ReactionType=@type, CreatedAt=datetime('now')", connection);
+                upsertCmd.Parameters.AddWithValue("@cid", commentId);
+                upsertCmd.Parameters.AddWithValue("@uid", userId);
+                upsertCmd.Parameters.AddWithValue("@uname", username);
+                upsertCmd.Parameters.AddWithValue("@type", reactionType);
+                upsertCmd.ExecuteNonQuery();
+                return reactionType;
+            }
         }
 
         public static List<DocumentRecord> GetAll()
