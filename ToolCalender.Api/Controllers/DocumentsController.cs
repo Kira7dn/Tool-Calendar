@@ -25,10 +25,22 @@ namespace ToolCalender.Api.Controllers
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
-        public IActionResult GetAll()
+        public IActionResult GetAll(
+            [FromQuery] int page = 1,
+            [FromQuery] int size = 10,
+            [FromQuery] string search = "")
         {
-            var data = DatabaseService.GetAll();
-            return Ok(data);
+            var (items, totalCount) = DatabaseService.GetPaged(page, size, search);
+            var totalPages = (int)Math.Ceiling((double)totalCount / size);
+
+            return Ok(new
+            {
+                data = items,
+                page,
+                pageSize = size,
+                totalCount,
+                totalPages
+            });
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]

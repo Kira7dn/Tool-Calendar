@@ -18,12 +18,16 @@ namespace ToolCalender.Services
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<OcrQueueService> _logger;
 
+        // ── Idea 2: Số file được xử lý đồng thời (tránh quá tải CPU/RAM)
+        private const int MaxConcurrentFiles = 3;
+        private readonly SemaphoreSlim _concurrencyLimit = new(MaxConcurrentFiles, MaxConcurrentFiles);
+
         public OcrQueueService(IServiceProvider serviceProvider, ILogger<OcrQueueService> logger)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
-            // Giới hạn hàng đợi 100 văn bản để tránh tràn bộ nhớ nếu upload quá nhiều
-            var options = new BoundedChannelOptions(100) { FullMode = BoundedChannelFullMode.Wait };
+            // Giới hạn hàng đợi 200 văn bản để tránh tràn bộ nhớ nếu upload quá nhiều
+            var options = new BoundedChannelOptions(200) { FullMode = BoundedChannelFullMode.Wait };
             _queue = Channel.CreateBounded<int>(options);
         }
 
@@ -55,16 +59,29 @@ namespace ToolCalender.Services
                 _logger.LogError(ex, "[OcrQueue] Lỗi khi quét văn bản tồn đọng lúc khởi động.");
             }
 
+            // ── Idea 2: Đọc từ queue và kích hoạt task song song (tối đa MaxConcurrentFiles)
             await foreach (var docId in _queue.Reader.ReadAllAsync(stoppingToken))
             {
-                try
+                // Chờ nếu đã đủ MaxConcurrentFiles đang chạy
+                await _concurrencyLimit.WaitAsync(stoppingToken);
+
+                // Chạy mỗi file trong Task độc lập — không await ở đây!
+                _ = Task.Run(async () =>
                 {
-                    await ProcessDocumentAsync(docId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"[OcrQueue] Lỗi khi xử lý DocumentId {docId}");
-                }
+                    try
+                    {
+                        await ProcessDocumentAsync(docId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"[OcrQueue] Lỗi khi xử lý DocumentId {docId}");
+                    }
+                    finally
+                    {
+                        // Giải phóng slot cho file tiếp theo
+                        _concurrencyLimit.Release();
+                    }
+                }, stoppingToken);
             }
         }
 

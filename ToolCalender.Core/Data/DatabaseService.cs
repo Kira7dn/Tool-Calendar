@@ -376,6 +376,57 @@ namespace ToolCalender.Data
             return records;
         }
 
+        /// <summary>
+        /// Server-side pagination: returns one page of documents + total count for pagination UI.
+        /// <para>search is matched against SoVanBan, TrichYeu, CoQuanChuQuan (case-insensitive LIKE).</para>
+        /// </summary>
+        public static (List<DocumentRecord> Items, int TotalCount) GetPaged(int page, int pageSize, string search = "")
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            string searchFilter = "";
+            bool hasSearch = !string.IsNullOrWhiteSpace(search);
+
+            if (hasSearch)
+            {
+                searchFilter = @"WHERE (
+                    LOWER(SoVanBan)      LIKE @search OR
+                    LOWER(TrichYeu)      LIKE @search OR
+                    LOWER(CoQuanChuQuan) LIKE @search
+                )";
+            }
+
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            // 1. Total count with same filter
+            string countSql = $"SELECT COUNT(*) FROM Documents {searchFilter}";
+            using var countCmd = new SqliteCommand(countSql, connection);
+            if (hasSearch) countCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
+            int totalCount = Convert.ToInt32(countCmd.ExecuteScalar());
+
+            // 2. Paged data
+            int offset = (page - 1) * pageSize;
+            string dataSql = $@"
+                SELECT * FROM Documents
+                {searchFilter}
+                ORDER BY ThoiHan ASC NULLS LAST
+                LIMIT @pageSize OFFSET @offset";
+
+            using var dataCmd = new SqliteCommand(dataSql, connection);
+            if (hasSearch) dataCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
+            dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+            dataCmd.Parameters.AddWithValue("@offset", offset);
+
+            using var reader = dataCmd.ExecuteReader();
+            var items = new List<DocumentRecord>();
+            while (reader.Read())
+                items.Add(MapRecord(reader));
+
+            return (items, totalCount);
+        }
+
         public static int Insert(DocumentRecord record)
         {
             using var connection = new SqliteConnection(_connectionString);

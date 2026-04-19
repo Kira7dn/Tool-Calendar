@@ -22,5 +22,35 @@ namespace ToolCalender.Api.Controllers
                 return StatusCode(500, $"Lỗi thống kê dữ liệu: {ex.Message}");
             }
         }
+
+        [HttpGet("settings")]
+        [Authorize(Roles = "Admin,VanThu")]
+        public IActionResult GetSettings()
+        {
+            var maxPages = DatabaseService.GetAppSetting("OcrSettings_MaxPagesToScan", "0");
+            var keywords = DatabaseService.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
+            
+            return Ok(new {
+                maxPagesToScan = int.Parse(maxPages),
+                deadlineKeywords = keywords
+            });
+        }
+
+        [HttpPost("settings")]
+        [Authorize(Roles = "Admin,VanThu")]
+        public IActionResult SaveSettings([FromBody] dynamic data)
+        {
+            try {
+                string maxPages = data.GetProperty("maxPagesToScan").ToString();
+                string keywords = data.GetProperty("deadlineKeywords").ToString();
+                
+                DatabaseService.SaveAppSetting("OcrSettings_MaxPagesToScan", maxPages);
+                DatabaseService.SaveAppSetting("Document_DeadlineKeywords", keywords);
+                
+                return Ok();
+            } catch (Exception ex) {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
