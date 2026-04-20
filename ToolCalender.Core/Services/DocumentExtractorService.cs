@@ -197,8 +197,8 @@ namespace ToolCalender.Services
             else record.Priority = "Thường";
 
             var soPatterns = new[] {
-                @"(?:Số|Số hiệu|Về việc)[:\s]*(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪa-z0-9&\.\-/]+)",
-                @"(?:Field_[^:]+)[:\s]*(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪa-z0-9&\.\-/]+)"
+                @"(?:Số|Số hiệu|Về việc)[:\s]*(\d{0,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪa-z0-9&\.\-/]+)",
+                @"(?:Field_[^:]+)[:\s]*(\d{0,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪa-z0-9&\.\-/]+)"
             };
 
             string bestSo = "";
@@ -218,6 +218,25 @@ namespace ToolCalender.Services
             }
             record.SoVanBan = bestSo.Replace(" ", "").Trim();
             
+            // Nếu "Số" chỉ lấy được phần đuôi (chữ) do số bị nhảy loạn xạ trên File
+            if (record.SoVanBan.StartsWith("/") || record.SoVanBan.StartsWith("-"))
+            {
+                // Tìm một số cô đơn từ 2-5 chữ số đứng riêng một dòng (Ví dụ: 3551)
+                var isolatedNum = Regex.Match(t, @"(?m)^\s*(\d{2,5})\s*$");
+                if (isolatedNum.Success)
+                {
+                    record.SoVanBan = isolatedNum.Groups[1].Value + record.SoVanBan;
+                }
+                else
+                {
+                    string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
+                    var fparts = fileName.Split('_');
+                    string realFileName = fparts.Length > 1 ? fparts[^1] : fileName;
+                    var mFileNum = Regex.Match(realFileName, @"(\d{1,6})");
+                    if (mFileNum.Success) record.SoVanBan = mFileNum.Groups[1].Value + record.SoVanBan;
+                }
+            }
+            
             if (string.IsNullOrWhiteSpace(record.SoVanBan))
             {
                 var mLegacy = Regex.Match(searchArea, @"(\d{1,6}\s*[/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]{2,})", RegexOptions.IgnoreCase);
@@ -225,12 +244,21 @@ namespace ToolCalender.Services
             }
 
             var mNgayBH = Regex.Match(t,
-                @"(?:ngày|Ngày)\s*(\d{1,2})\s*(?:tháng|Tháng)\s*(\d{1,2})\s*(?:năm|Năm)\s*(\d{4})",
+                @"(?:ngày|Ngày)\s*(\d{0,2})\s*(?:tháng|Tháng)\s*(\d{1,2})\s*(?:năm|Năm)\s*(\d{4})",
                 RegexOptions.IgnoreCase);
             
             if (mNgayBH.Success)
             {
-                if (int.TryParse(mNgayBH.Groups[1].Value, out int d) &&
+                string dayStr = string.IsNullOrWhiteSpace(mNgayBH.Groups[1].Value) ? "" : mNgayBH.Groups[1].Value;
+                if (string.IsNullOrEmpty(dayStr))
+                {
+                    // Nếu ngày trống, dò tìm số trơ trọi đóng vai trò là ngày (1-31)
+                    var isolatedDayMatch = Regex.Match(t, @"(?m)^\s*([1-9]|[12]\d|3[01])\s*$");
+                    if (isolatedDayMatch.Success) dayStr = isolatedDayMatch.Groups[1].Value;
+                    else dayStr = "1";
+                }
+
+                if (int.TryParse(dayStr, out int d) &&
                     int.TryParse(mNgayBH.Groups[2].Value, out int mo) &&
                     int.TryParse(mNgayBH.Groups[3].Value, out int yr))
                 {
