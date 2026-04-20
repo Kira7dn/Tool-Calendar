@@ -947,4 +947,92 @@ tr:hover td {
     white-space: nowrap;
 }
 .user-pill-label { color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-bottom: 2px; }
+.user-pill-label { color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-bottom: 2px; }
 
+/* ====================================================
+   ADMIN SETUP PANEL — Sub-tab navigation
+   ==================================================== */
+.admin-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background: #fff;
+}
+.admin-subnav {
+    display: flex;
+    gap: 4px;
+    padding: 16px 24px 0;
+    border-bottom: 2px solid #e2e8f0;
+    background: #f8fafc;
+    flex-wrap: wrap;
+}
+.admin-subnav-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px 8px 0 0;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.admin-subnav-btn:hover { background: #e2e8f0; color: #1e293b; }
+.admin-subnav-btn.active { color: var(--sidebar-bg); border-bottom-color: var(--sidebar-bg); background: #fff; }
+.admin-panel {
+    flex: 1;
+    padding: 28px;
+    overflow-y: auto;
+}
+
+/* ====================================================
+   OCR REVIEW SCENE — Side-by-Side Layout
+   ==================================================== */
+.review-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--sidebar-bg);
+    color: #fff;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.review-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    flex: 1;
+    overflow: hidden;
+    height: calc(100vh - 120px);
+}
+.review-left {
+    display: flex;
+    flex-direction: column;
+    border-right: 2px solid #e2e8f0;
+    overflow: hidden;
+    background: #525659;
+}
+.review-right {
+    padding: 24px;
+    overflow-y: auto;
+    background: #fff;
+}
+
+/* ====================================================
+   STATUS BADGE UTILITIES (for my-tasks)
+   ==================================================== */
+.status.bg-danger  { background: #fee2e2; color: #c0392b; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.82rem; }
+.status.bg-warning { background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.82rem; }
+.status.bg-success { background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.82rem; }
+
+/* Responsive for review scene */
+@media (max-width: 900px) {
+    .review-layout { grid-template-columns: 1fr; height: auto; }
+    .review-left { height: 40vh; }
+    .admin-subnav { gap: 2px; padding: 10px 12px 0; }
+    .admin-subnav-btn { padding: 8px 12px; font-size: 0.8rem; }
+}
