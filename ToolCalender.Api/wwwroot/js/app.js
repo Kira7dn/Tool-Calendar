@@ -869,6 +869,41 @@ async function openDocDetailModal(id, initialTab = 'view') {
     document.getElementById('dv-priority').innerText = doc.priority || '—';
     document.getElementById('dv-ngaythem').innerText = formatDate(doc.ngayThem);
 
+    // Render Source PDF link
+    if (doc.filePath) {
+        const isPdf = doc.filePath.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+            document.getElementById('dv-view-pdf').innerHTML = `<button class="btn btn-sm btn-primary" onclick="openPdfPreview(${doc.id}, '${(doc.soVanBan || '').replace(/'/g, "\\'")}')">📄 Xem nội dung bản PDF</button>`;
+        } else {
+            document.getElementById('dv-view-pdf').innerHTML = `<a class="btn btn-sm" style="background:#10b981; color:white; display:inline-block; text-decoration:none; padding: 6px 12px; border-radius:6px; font-size:0.85rem;" href="/api/documents/${doc.id}/file" target="_blank">📝 Tải xuống văn bản (Word)</a>`;
+        }
+    } else {
+        document.getElementById('dv-view-pdf').innerHTML = '<i style="color:#94a3b8; font-size:0.85rem;">Không có tệp đính kèm</i>';
+    }
+
+    // Render Evidence
+    let evidenceHtml = '';
+    if (doc.evidencePaths && doc.evidencePaths !== '[]') {
+        try {
+            const paths = JSON.parse(doc.evidencePaths);
+            evidenceHtml += `<div style="margin-top:10px; padding:12px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">`;
+            evidenceHtml += `<p style="font-size:0.85rem; font-weight:700; color:#334155; margin-bottom:8px;">Bằng chứng xử lý (Nộp lúc ${doc.completionDate ? formatDate(doc.completionDate) : 'Chưa rõ'})</p>`;
+            if (doc.evidenceNotes) {
+                evidenceHtml += `<p style="font-size:0.85rem; margin-bottom:12px; color:#475569;">Ghi chú: ${doc.evidenceNotes}</p>`;
+            }
+            evidenceHtml += `<div style="display:flex; gap:10px; flex-wrap:wrap;">`;
+            paths.forEach((p, idx) => {
+                const ext = p.toLowerCase().split('.').pop();
+                let icon = '🖼️ Ảnh';
+                if (ext === 'pdf') icon = '📄 PDF';
+                if (ext === 'doc' || ext === 'docx') icon = '📝 Word';
+                evidenceHtml += `<a href="/api/documents/${doc.id}/evidence/${idx}" target="_blank" style="padding:6px 14px; background:#3b82f6; color:white; border-radius:6px; font-size:0.8rem; text-decoration:none; display:flex; align-items:center; gap:6px;">${icon} Bằng chứng ${idx + 1}</a>`;
+            });
+            evidenceHtml += `</div></div>`;
+        } catch(e) {}
+    }
+    document.getElementById('dv-evidence').innerHTML = evidenceHtml;
+
     // Edit panel - pre-fill
     document.getElementById('de-so').value = doc.soVanBan || '';
     document.getElementById('de-ngaybanhanh').value = doc.ngayBanHanh ? doc.ngayBanHanh.split('T')[0] : '';

@@ -115,9 +115,27 @@ namespace ToolCalender.Api.Controllers
         {
             if (ids == null || ids.Count == 0) return BadRequest("Danh sách ID trống.");
             
+            var allDocs = DatabaseService.GetAll();
+            foreach(var id in ids)
+            {
+                var doc = allDocs.FirstOrDefault(x => x.Id == id);
+                if (doc != null)
+                {
+                    if (!string.IsNullOrEmpty(doc.FilePath) && System.IO.File.Exists(doc.FilePath))
+                    {
+                        System.IO.File.Delete(doc.FilePath);
+                    }
+                    var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
+                    if (Directory.Exists(evidenceDir))
+                    {
+                        Directory.Delete(evidenceDir, true);
+                    }
+                }
+            }
+            
             DatabaseService.BulkDelete(ids);
             
-            return Ok(new { message = $"Đã xóa thành công {ids.Count} văn bản khỏi hệ thống." });
+            return Ok(new { message = $"Đã xóa thành công {ids.Count} văn bản cùng toàn bộ file đính kèm." });
         }
 
         [Authorize(Roles = "Admin,VanThu")]
@@ -217,13 +235,62 @@ namespace ToolCalender.Api.Controllers
             if (doc == null || string.IsNullOrEmpty(doc.FilePath)) return NotFound("File không tồn tại.");
             if (!System.IO.File.Exists(doc.FilePath)) return NotFound("File vật lý không tìm thấy.");
             var fileBytes = System.IO.File.ReadAllBytes(doc.FilePath);
-            return File(fileBytes, "application/pdf");
+            
+            var ext = Path.GetExtension(doc.FilePath).ToLower();
+            var mimeType = ext switch {
+                ".pdf" => "application/pdf",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                _ => "application/octet-stream"
+            };
+            return File(fileBytes, mimeType);
+        }
+
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [HttpGet("{id}/evidence/{index}")]
+        public IActionResult GetEvidenceFile(int id, int index)
+        {
+            var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+            if (doc == null || string.IsNullOrEmpty(doc.EvidencePaths)) return NotFound("Không tìm thấy bằng chứng.");
+            try 
+            {
+                var paths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(doc.EvidencePaths);
+                if (paths == null || index < 0 || index >= paths.Count) return NotFound("Index file không hợp lệ.");
+                
+                var filePath = paths[index];
+                if (!System.IO.File.Exists(filePath)) return NotFound("File vật lý không tìm thấy.");
+                
+                var ext = Path.GetExtension(filePath).ToLower();
+                var mimeType = ext switch {
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    ".pdf" => "application/pdf",
+                    ".doc" => "application/msword",
+                    ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    _ => "application/octet-stream"
+                };
+                return PhysicalFile(filePath, mimeType);
+            } 
+            catch { return BadRequest(); }
         }
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+            if (doc != null)
+            {
+                if (!string.IsNullOrEmpty(doc.FilePath) && System.IO.File.Exists(doc.FilePath))
+                {
+                    System.IO.File.Delete(doc.FilePath);
+                }
+                var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
+                if (Directory.Exists(evidenceDir))
+                {
+                    Directory.Delete(evidenceDir, true);
+                }
+            }
             DatabaseService.Delete(id);
             return NoContent();
         }
