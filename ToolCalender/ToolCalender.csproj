@@ -21,6 +21,9 @@
     <PackageReference Include="itext7.font-asian" Version="9.6.0" />
     <!-- Lưu trữ SQLite cục bộ -->
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="PDFtoImage" Version="2.6.0" />
+    <PackageReference Include="Tesseract" Version="5.2.0" />
   </ItemGroup>
 
 </Project>

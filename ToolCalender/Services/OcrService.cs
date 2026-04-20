@@ -34,14 +34,14 @@ namespace ToolCalender.Services
                 
                 // Render trang 0 với DPI 300 để OCR chính xác
                 using var imageStream = new MemoryStream();
-                Conversion.SavePng(imageStream, pdfStream, pageIndex: 0, dpi: 300);
+                Conversion.SavePng(imageStream, pdfStream, page: 0, dpi: 300);
                 imageStream.Position = 0;
 
                 // 2. Khởi tạo Tesseract Engine
                 // Lưu ý: Cần có thư mục 'tessdata' chứa file 'vie.traineddata'
-                if (!Directory.Exists(TessDataPath))
+                if (!Directory.Exists(tessDataPath))
                 {
-                    Directory.CreateDirectory(TessDataPath);
+                    Directory.CreateDirectory(tessDataPath);
                 }
 
                 using var engine = new TesseractEngine(tessDataPath, "vie", EngineMode.Default);
