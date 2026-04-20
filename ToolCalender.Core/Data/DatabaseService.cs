@@ -70,7 +70,8 @@ namespace ToolCalender.Data
                     PhoneNumber TEXT,
                     Role TEXT,
                     DepartmentId INTEGER,
-                    CreatedAt TEXT
+                    CreatedAt TEXT,
+                    SessionId TEXT
                 )";
 
             string createDepartmentsTable = @"
@@ -195,6 +196,12 @@ namespace ToolCalender.Data
                 cmd.ExecuteNonQuery();
             } catch { /* Column already exists */ }
 
+            // --- MIGRATION: Users.SessionId ---
+            try {
+                cmd.CommandText = "ALTER TABLE Users ADD COLUMN SessionId TEXT";
+                cmd.ExecuteNonQuery();
+            } catch { /* Column already exists */ }
+
             // Đảm bảo tài khoản admin luôn đúng mật khẩu admin@123456
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
@@ -262,7 +269,8 @@ namespace ToolCalender.Data
                     FullName = reader["FullName"]?.ToString() ?? "",
                     Email = reader["Email"]?.ToString() ?? "",
                     Role = reader["Role"].ToString() ?? "",
-                    DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"])
+                    DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"]),
+                    SessionId = reader["SessionId"]?.ToString()
                 });
             }
             return list;
@@ -288,13 +296,24 @@ namespace ToolCalender.Data
             using var reader = cmd.ExecuteReader();
             if (reader.Read())
             {
-                return new User {
+                var user = new User {
                     Id = Convert.ToInt32(reader["Id"]),
                     Username = reader["Username"].ToString() ?? "",
                     FullName = reader["FullName"]?.ToString() ?? "",
                     Role = reader["Role"].ToString() ?? "Guest",
                     DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"])
                 };
+                
+                reader.Close(); // Cần đóng reader trước khi thực thi lệnh update
+                
+                // Set new session ID
+                user.SessionId = Guid.NewGuid().ToString();
+                using var updateCmd = new SqliteCommand("UPDATE Users SET SessionId=@s WHERE Id=@id", connection);
+                updateCmd.Parameters.AddWithValue("@s", user.SessionId);
+                updateCmd.Parameters.AddWithValue("@id", user.Id);
+                updateCmd.ExecuteNonQuery();
+
+                return user;
             }
             return null;
         }
@@ -316,7 +335,8 @@ namespace ToolCalender.Data
                     FullName = reader["FullName"]?.ToString() ?? "",
                     Email = reader["Email"]?.ToString() ?? "",
                     Role = reader["Role"].ToString() ?? "Guest",
-                    DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"])
+                    DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"]),
+                    SessionId = reader["SessionId"]?.ToString()
                 };
             }
             return null;

@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData();
     initUpload();
     initNotifications();
+    startSessionWatcher(); // Theo dõi phiên đăng nhập
+
 
     // Debounce search → call server
     const searchInput = document.getElementById('doc-search');
@@ -621,9 +623,132 @@ async function saveEdit(btn) {
     }
 }
 
-function logout() {
+function logout(kicked = false) {
     localStorage.clear();
+    if (kicked) {
+        sessionStorage.setItem('kicked_out', '1');
+    }
     window.location.href = 'login.html';
+}
+
+// ====================================================
+// SESSION WATCHER - Phát hiện bị đăng xuất từ xa
+// ====================================================
+let _sessionWatcherInterval = null;
+let _kickCountdown = null;
+
+function startSessionWatcher() {
+    // Kiểm tra mỗi 30 giây
+    _sessionWatcherInterval = setInterval(async () => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) return;
+        try {
+            const res = await fetch('/api/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.status === 401) {
+                clearInterval(_sessionWatcherInterval);
+                showKickedModal();
+            }
+        } catch (e) {
+            // Bỏ qua lỗi mạng tạm thời
+        }
+    }, 30000);
+}
+
+function showKickedModal() {
+    // Tạo overlay thông báo
+    const overlay = document.createElement('div');
+    overlay.id = 'kicked-overlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 99999;
+        background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+        display: flex; align-items: center; justify-content: center;
+        animation: fadeIn 0.3s ease;
+    `;
+
+    let seconds = 10;
+    overlay.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid rgba(239,68,68,0.4);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(239,68,68,0.2);
+            animation: slideUp 0.4s ease;
+        ">
+            <div style="
+                width: 72px; height: 72px;
+                background: rgba(239,68,68,0.15);
+                border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                margin: 0 auto 20px;
+                font-size: 2rem;
+                border: 2px solid rgba(239,68,68,0.3);
+            ">⚠️</div>
+            <h2 style="color: #ef4444; font-size: 1.3rem; margin-bottom: 12px; font-weight: 700;">
+                Phên Đăng Nhập Bị Chấm Dứt
+            </h2>
+            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 8px;">
+                Tài khoản của bạn đã đăng nhập từ một thiết bị khác.<br>
+                Phîn làm việc hiện tại sẽ được đăng xuất tự động.
+            </p>
+            <div style="
+                background: rgba(239,68,68,0.1);
+                border-radius: 10px;
+                padding: 12px;
+                margin: 20px 0;
+                border: 1px solid rgba(239,68,68,0.2);
+            ">
+                <span style="color: #94a3b8; font-size: 0.85rem;">Tự động đăng xuất sau </span>
+                <span id="kick-countdown" style="color: #ef4444; font-size: 1.4rem; font-weight: 800; font-family: monospace;">${seconds}</span>
+                <span style="color: #94a3b8; font-size: 0.85rem;"> giây</span>
+            </div>
+            <button onclick="logout(true)" style="
+                background: #ef4444;
+                color: white;
+                border: none;
+                border-radius: 10px;
+                padding: 12px 32px;
+                font-size: 0.95rem;
+                font-weight: 600;
+                cursor: pointer;
+                width: 100%;
+                transition: background 0.2s;
+            " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                Đăng xuất ngay
+            </button>
+        </div>
+    `;
+
+    // Thêm animation CSS nếu chưa có
+    if (!document.getElementById('kick-style')) {
+        const style = document.createElement('style');
+        style.id = 'kick-style';
+        style.textContent = `
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateY(30px) scale(0.95); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.body.appendChild(overlay);
+
+    // Đếm ngược
+    _kickCountdown = setInterval(() => {
+        seconds--;
+        const el = document.getElementById('kick-countdown');
+        if (el) el.innerText = seconds;
+        if (seconds <= 0) {
+            clearInterval(_kickCountdown);
+            logout(true);
+        }
+    }, 1000);
 }
 
 // ====================================================
@@ -800,9 +925,9 @@ function renderComments(comments) {
     list.innerHTML = comments.map(c => {
         const reactions = c.reactions || {};
         const reactionTypes = [
-            { type: 'like',    emoji: '👍', label: 'Like'    },
-            { type: 'love',    emoji: '❤️',  label: 'Love'    },
-            { type: 'hate',    emoji: '😡', label: 'Hate'    },
+            { type: 'like', emoji: '👍', label: 'Like' },
+            { type: 'love', emoji: '❤️', label: 'Love' },
+            { type: 'hate', emoji: '😡', label: 'Hate' },
             { type: 'dislike', emoji: '👎', label: 'Dislike' }
         ];
 
@@ -847,7 +972,7 @@ function renderComments(comments) {
 }
 
 function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 async function submitComment(btn) {
@@ -925,9 +1050,9 @@ function updateReactionBar(commentId, reactions) {
     if (!bar) return;
 
     const reactionTypes = [
-        { type: 'like',    emoji: '👍', label: 'Like'    },
-        { type: 'love',    emoji: '❤️',  label: 'Love'    },
-        { type: 'hate',    emoji: '😡', label: 'Hate'    },
+        { type: 'like', emoji: '👍', label: 'Like' },
+        { type: 'love', emoji: '❤️', label: 'Love' },
+        { type: 'hate', emoji: '😡', label: 'Hate' },
         { type: 'dislike', emoji: '👎', label: 'Dislike' }
     ];
 

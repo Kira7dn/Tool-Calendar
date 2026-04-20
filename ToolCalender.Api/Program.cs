@@ -3,6 +3,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Security.Claims;
 using ToolCalender.Services;
 
 using Microsoft.AspNetCore.HttpOverrides;
@@ -46,6 +47,25 @@ builder.Services.AddAuthentication(x =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
         ValidateIssuer = false,
         ValidateAudience = false
+    };
+    x.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            var userIdStr = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var sessionId = context.Principal?.FindFirst("SessionId")?.Value;
+
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                var user = DatabaseService.GetUserById(userId);
+                // Nếu không tìm thấy user hoặc SessionId trong DB khác với SessionId trong Token
+                if (user == null || user.SessionId != sessionId)
+                {
+                    context.Fail("Phiên đăng nhập đã hết hạn hoặc tài khoản đã đăng nhập ở nơi khác.");
+                }
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
