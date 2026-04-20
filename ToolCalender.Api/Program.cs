@@ -1,4 +1,5 @@
 using ToolCalender.Data;
+using ToolCalender.Api.Services;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -14,6 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Đăng ký Session Hub (SSE real-time)
+builder.Services.AddSingleton<SessionHubService>();
 
 // Đăng ký OCR & Extraction Services
 builder.Services.AddSingleton<IOcrService, OcrService>();
@@ -50,15 +54,27 @@ builder.Services.AddAuthentication(x =>
     };
     x.Events = new JwtBearerEvents
     {
+        // Cho phép đọc token từ query string (cần thiết cho SSE/EventSource)
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        },
         OnTokenValidated = context =>
         {
-            var userIdStr = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var sessionId = context.Principal?.FindFirst("SessionId")?.Value;
+            var userIdStr = context.Principal?.FindFirst("uid")?.Value;
+            var sessionId = context.Principal?.FindFirst("sid")?.Value;
+
+            if (string.IsNullOrEmpty(userIdStr) || string.IsNullOrEmpty(sessionId))
+                return Task.CompletedTask;
 
             if (int.TryParse(userIdStr, out int userId))
             {
                 var user = DatabaseService.GetUserById(userId);
-                // Nếu không tìm thấy user hoặc SessionId trong DB khác với SessionId trong Token
                 if (user == null || user.SessionId != sessionId)
                 {
                     context.Fail("Phiên đăng nhập đã hết hạn hoặc tài khoản đã đăng nhập ở nơi khác.");
