@@ -249,27 +249,69 @@ function renderDocsTable() {
     if (!allBody) return;
 
     const offset = (_docPage - 1) * _docPageSize;
-    allBody.innerHTML = documents.map((doc, idx) => `
+    allBody.innerHTML = documents.map((doc, idx) => {
+        // Build dropdown items based on role
+        let menuItems = `
+            <button class="action-dropdown-item item-view" onclick="openDocDetailModal(${doc.id}); closeAllDropdowns();">
+                &#128064; Xem chi tiết
+            </button>`;
+        if (role === 'Admin' || role === 'VanThu') {
+            menuItems += `
+            <button class="action-dropdown-item item-edit" onclick="openDocDetailModal(${doc.id}, 'edit'); closeAllDropdowns();">
+                &#9999;&#65039; Chỉnh sửa
+            </button>`;
+        }
+        if (role === 'Admin') {
+            menuItems += `
+            <button class="action-dropdown-item item-delete" onclick="deleteDocument(${doc.id}); closeAllDropdowns();">
+                &#128465;&#65039; Xóa văn bản
+            </button>`;
+        }
+
+        return `
         <tr style="cursor:pointer;" onclick="openDocDetailModal(${doc.id})">
-            <td style="text-align:center; color:var(--text-secondary); font-size:0.82rem; font-weight:600; width:48px;">${offset + idx + 1}</td>
-            <td style="font-weight: 600;">${doc.soVanBan || '—'}</td>
+            <td style="text-align:center; color:var(--text-secondary); font-size:0.82rem; font-weight:700; width:48px;">${offset + idx + 1}</td>
+            <td style="font-weight:700; color:var(--sidebar-bg);">${doc.soVanBan || '—'}</td>
             <td>${formatDate(doc.ngayBanHanh)}</td>
             <td>${doc.trichYeu || ''}</td>
             <td>${doc.coQuanChuQuan || ''}</td>
             <td>${formatDate(doc.thoiHan)}</td>
             <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai || doc.status || ''}</span></td>
-            <td onclick="event.stopPropagation();" style="white-space:nowrap;">
-                <button class="btn btn-sm" style="background:rgba(55,114,255,0.12); color:var(--primary); padding:5px 12px; font-size:0.8rem;" onclick="openDocDetailModal(${doc.id})">👁️ Xem</button>
-                ${(role === 'Admin' || role === 'VanThu') ? `<button class="btn btn-sm" style="margin-left:6px; background:rgba(16,185,129,0.12); color:var(--success); padding:5px 12px; font-size:0.8rem;" onclick="openDocDetailModal(${doc.id}, 'edit')">✏️ Sửa</button>` : ''}
-                ${role === 'Admin' ? `<button class="btn btn-sm" style="margin-left:6px; color:var(--danger); background:rgba(239,68,68,0.1); padding:5px 12px; font-size:0.8rem;" onclick="deleteDocument(${doc.id})">🗑️ Xóa</button>` : ''}
+            <td onclick="event.stopPropagation();" style="white-space:nowrap; text-align:center;">
+                <div class="action-dropdown" id="dropdown-${doc.id}">
+                    <button class="action-trigger-btn" onclick="toggleActionDropdown(${doc.id})">
+                        ⚙️ Thao tác ▾
+                    </button>
+                    <div class="action-dropdown-menu" id="dropdown-menu-${doc.id}">
+                        ${menuItems}
+                    </div>
+                </div>
             </td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
 
     document.getElementById('docs-page-info').innerText = `Trang ${_docPage} / ${_docTotalPages}`;
     document.getElementById('btn-prev-docs').disabled = _docPage <= 1;
     document.getElementById('btn-next-docs').disabled = _docPage >= _docTotalPages;
 }
+
+function toggleActionDropdown(docId) {
+    const menu = document.getElementById(`dropdown-menu-${docId}`);
+    if (!menu) return;
+    const isOpen = menu.classList.contains('open');
+    closeAllDropdowns();
+    if (!isOpen) menu.classList.add('open');
+}
+
+function closeAllDropdowns() {
+    document.querySelectorAll('.action-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function (e) {
+    if (!e.target.closest('.action-dropdown')) closeAllDropdowns();
+});
+
 
 
 async function prevDocPage() {
@@ -447,7 +489,7 @@ function renderBatchTable() {
             <td>${thoiHan}</td>
             <td><span class="status bg-warning" style="font-size: 0.75rem;">${doc.status}</span></td>
             <td>
-                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: rgba(255,255,255,0.1); color: white;" onclick="openEditModal(${doc.id})">Sửa</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #e2e8f0; color: #1e293b;" onclick="openEditModal(${doc.id})">Sửa</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -753,6 +795,29 @@ function showKickedModal() {
         }
     }, 1000);
 }
+
+// ====================================================
+// SIDEBAR TOGGLE
+// ====================================================
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('main-sidebar');
+    const btn = document.getElementById('sidebar-toggle');
+    if (!sidebar) return;
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    btn.textContent = isCollapsed ? '\u25ba' : '\u25c4';
+    localStorage.setItem('sidebar_collapsed', isCollapsed ? '1' : '0');
+}
+
+// Restore sidebar state on load
+(function () {
+    if (localStorage.getItem('sidebar_collapsed') === '1') {
+        const sidebar = document.getElementById('main-sidebar');
+        const btn = document.getElementById('sidebar-toggle');
+        if (sidebar) sidebar.classList.add('collapsed');
+        if (btn) btn.textContent = '\u25ba';
+    }
+})();
 
 // ====================================================
 // DOCUMENT DETAIL MODAL

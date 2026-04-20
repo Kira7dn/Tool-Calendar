@@ -1,6 +1,6 @@
-self.addEventListener('push', function(event) {
+self.addEventListener('push', function (event) {
     let data = { title: 'Thông báo mới', body: 'Bạn có thông báo mới từ ToolCalendar' };
-    
+
     if (event.data) {
         try {
             data = event.data.json();
@@ -21,7 +21,7 @@ self.addEventListener('push', function(event) {
     );
 });
 
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', function (event) {
     event.notification.close();
 
     // Open the application or a specific page
