@@ -605,7 +605,11 @@ namespace ToolCalender.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("DELETE FROM Documents WHERE Id=@Id", connection);
+            using var cmd = new SqliteCommand(@"
+                DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId=@Id);
+                DELETE FROM Comments WHERE DocumentId=@Id;
+                DELETE FROM Documents WHERE Id=@Id;
+            ", connection);
             cmd.Parameters.AddWithValue("@Id", id);
             cmd.ExecuteNonQuery();
         }
@@ -632,7 +636,11 @@ namespace ToolCalender.Data
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             string idList = string.Join(",", ids);
-            string sql = $"DELETE FROM Documents WHERE Id IN ({idList})";
+            string sql = $@"
+                DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({idList}));
+                DELETE FROM Comments WHERE DocumentId IN ({idList});
+                DELETE FROM Documents WHERE Id IN ({idList});
+            ";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.ExecuteNonQuery();
         }
