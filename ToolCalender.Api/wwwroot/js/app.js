@@ -638,22 +638,25 @@ let _sessionWatcherInterval = null;
 let _kickCountdown = null;
 
 function startSessionWatcher() {
-    // Kiểm tra mỗi 30 giây
-    _sessionWatcherInterval = setInterval(async () => {
-        const token = localStorage.getItem('auth_token');
-        if (!token) return;
-        try {
-            const res = await fetch('/api/stats', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.status === 401) {
-                clearInterval(_sessionWatcherInterval);
-                showKickedModal();
-            }
-        } catch (e) {
-            // Bỏ qua lỗi mạng tạm thời
-        }
-    }, 30000);
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+
+    // Dùng EventSource (SSE) để nhận thông báo real-time từ server
+    const evtSource = new EventSource(`/api/auth/events?access_token=${encodeURIComponent(token)}`);
+
+    evtSource.addEventListener('connected', () => {
+        console.log('[SessionWatcher] Kết nối SSE thành công - Đang theo dõi phiên đăng nhập.');
+    });
+
+    evtSource.addEventListener('kicked', () => {
+        console.log('[SessionWatcher] Bị kick - Tài khoản đăng nhập ở nơi khác!');
+        evtSource.close();
+        showKickedModal();
+    });
+
+    evtSource.onerror = () => {
+        // SSE tự động reconnect khi mất kết nối, không cần xử lý thêm
+    };
 }
 
 function showKickedModal() {
