@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 
 <body>
@@ -52,6 +53,10 @@
                     <span class="nav-icon">&#128101;</span>
                     <span class="nav-label">Nhân sự</span>
                 </li>
+                <li class="nav-item" data-tab="my-tasks" id="nav-my-tasks" style="display: none;">
+                    <span class="nav-icon">&#128203;</span>
+                    <span class="nav-label">Công việc của tôi</span>
+                </li>
                 <li class="nav-item" data-tab="settings">
                     <span class="nav-icon">&#9881;&#65039;</span>
                     <span class="nav-label">Cấu hình</span>
@@ -78,6 +83,10 @@
                     <p id="page-subtitle">Giám sát và đôn đốc thực thi công việc thời gian thực</p>
                 </div>
                 <div class="header-actions">
+                    <!-- Notification permission banner -->
+                    <div id="notif-banner" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:8px 14px; font-size:0.85rem; color:#856404; cursor:pointer; align-items:center; gap:8px;" onclick="requestNotificationPermission()">
+                        🔔 Bật thông báo đẩy
+                    </div>
                     <button class="btn btn-primary" onclick="showTab('upload')">
                         <span>➕ Thêm văn bản</span>
                     </button>
@@ -257,6 +266,94 @@
                         </div>
                     </div>
                 </div>
+                <!-- OCR Side-by-Side Review Scene (shows after batch OCR) -->
+                <div id="ocr-review-scene" style="display:none; flex-direction:column; height:100%;">
+                    <div class="review-nav-bar">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <button class="btn" style="background:#e2e8f0; color:#1e293b;" onclick="exitReviewScene()">&#8592; Thoát</button>
+                            <span id="review-doc-counter" style="font-weight:700; font-size:1rem;">Tài liệu 1/1</span>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn" style="background:#e2e8f0; color:#1e293b;" id="review-prev-btn" onclick="reviewNavigate(-1)">◄ Trước</button>
+                            <button class="btn" style="background:#e2e8f0; color:#1e293b;" id="review-next-btn" onclick="reviewNavigate(1)">Sau &#9658;</button>
+                            <button class="btn btn-primary" onclick="saveCurrentReview()">&#10003; Lưu văn bản này</button>
+                            <button class="btn" style="background:#c0392b; color:#fff;" onclick="confirmAllBatch()">&#10003;&#10003; Xác nhận toàn bộ</button>
+                        </div>
+                    </div>
+                    <div class="review-layout">
+                        <div class="review-left">
+                            <div style="padding:10px; background:#f1f5f9; border-bottom:1px solid #e2e8f0; font-size:0.82rem; color:#64748b; display:flex; align-items:center; justify-content:space-between;">
+                                <span id="review-pdf-filename" style="font-weight:600;">PDF Gốc</span>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    <button class="btn" style="padding:4px 10px; background:#e2e8f0; color:#1e293b; font-size:0.8rem;" onclick="pdfPrevPage()">◄</button>
+                                    <span id="review-page-info" style="font-size:0.8rem;">1/1</span>
+                                    <button class="btn" style="padding:4px 10px; background:#e2e8f0; color:#1e293b; font-size:0.8rem;" onclick="pdfNextPage()">►</button>
+                                </div>
+                            </div>
+                            <div style="flex:1; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:10px; background:#525659;">
+                                <canvas id="review-pdf-canvas" style="max-width:100%; box-shadow:0 4px 20px rgba(0,0,0,0.4);"></canvas>
+                            </div>
+                        </div>
+                        <div class="review-right">
+                            <h4 style="margin-bottom:16px; color:var(--sidebar-bg); font-size:1rem;">&#11088; Dữ liệu bóc tách - Kiểm tra và chỉnh sửa</h4>
+                            <input type="hidden" id="review-doc-id">
+                            <div class="form-group" style="margin-bottom:14px;">
+                                <label style="font-size:0.82rem; color:#64748b; display:block; margin-bottom:4px;">Số hiệu văn bản</label>
+                                <input type="text" id="review-so-hieu" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.92rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:14px;">
+                                <label style="font-size:0.82rem; color:#64748b; display:block; margin-bottom:4px;">Cơ quan chủ quản</label>
+                                <input type="text" id="review-co-quan" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.92rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:14px;">
+                                <label style="font-size:0.82rem; color:#64748b; display:block; margin-bottom:4px;">Hạn xử lý</label>
+                                <input type="date" id="review-han-xu-ly" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.92rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:14px;">
+                                <label style="font-size:0.82rem; color:#64748b; display:block; margin-bottom:4px;">Trích yếu</label>
+                                <textarea id="review-trich-yeu" rows="5" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.92rem; resize:vertical;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Staff Workspace Tab -->
+            <section id="tab-my-tasks" class="tab-content">
+                <div class="data-section" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+                    <div class="section-header">
+                        <h3>&#128203; Công việc được giao cho tôi</h3>
+                    </div>
+                    <!-- Quick stats -->
+                    <div id="my-tasks-stats" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:16px 20px; border-bottom:1px solid #e8edf5;">
+                        <div class="stat-card" style="padding:16px;">
+                            <p class="stat-label">Việc mới</p>
+                            <p class="stat-value" id="mt-stat-new" style="font-size:1.8rem;">0</p>
+                        </div>
+                        <div class="stat-card" style="padding:16px;">
+                            <p class="stat-label">Đang xử lý</p>
+                            <p class="stat-value" id="mt-stat-doing" style="font-size:1.8rem; color:var(--warning);">0</p>
+                        </div>
+                        <div class="stat-card" style="padding:16px;">
+                            <p class="stat-label">Quá hạn</p>
+                            <p class="stat-value" id="mt-stat-overdue" style="font-size:1.8rem; color:var(--danger);">0</p>
+                        </div>
+                    </div>
+                    <div class="table-scroll" style="flex:1; overflow-y:auto;">
+                        <table id="my-tasks-table">
+                            <thead>
+                                <tr>
+                                    <th>Số hiệu</th>
+                                    <th>Trích yếu</th>
+                                    <th>Hạn xử lý</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="my-tasks-body"></tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
             <!-- Users Tab (Admin Only) -->
@@ -284,46 +381,87 @@
                 </div>
             </section>
 
-            <!-- Settings Tab -->
+            <!-- Settings / Admin Setup Tab -->
             <section id="tab-settings" class="tab-content">
-                <div class="data-section" style="padding: 30px; overflow-y: auto; max-width: 800px; margin: 0 auto;">
-                    <h3 style="margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
-                        ⚙️ Cấu hình hệ thống bóc tách
-                    </h3>
+                <div class="admin-layout">
+                    <!-- Admin Sub-nav -->
+                    <div class="admin-subnav">
+                        <button class="admin-subnav-btn active" onclick="showAdminTab('ocr')" id="atab-ocr">&#9881;&#65039; OCR &amp; Bóc tách</button>
+                        <button class="admin-subnav-btn" onclick="showAdminTab('departments')" id="atab-departments">&#127970; Phòng ban</button>
+                        <button class="admin-subnav-btn" onclick="showAdminTab('labels')" id="atab-labels">&#127991;&#65039; Nhãn &amp; Rules</button>
+                        <button class="admin-subnav-btn" onclick="showAdminTab('backup')" id="atab-backup">&#128190; Sao lưu dữ liệu</button>
+                    </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 24px;">
-                        <div class="form-group">
-                            <label
-                                style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.9rem;">
-                                Số trang quét OCR tối đa mỗi file (Nhanh hơn nếu giới hạn)
-                            </label>
-                            <input type="number" id="setting-max-pages" class="form-control" value="0"
-                                style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 12px; border-radius: 8px; width: 100%; outline: none;">
-                            <small style="color: grey;">Mặc định: 0 (Quét toàn bộ văn bản). Nếu để là 2, hệ thống chỉ
-                                quét 2 trang đầu.</small>
+                    <!-- Sub-tab: OCR Settings -->
+                    <div class="admin-panel" id="admin-panel-ocr">
+                        <h3 style="margin-bottom:24px;">&#9881;&#65039; Cấu hình bóc tách OCR</h3>
+                        <div style="display:flex; flex-direction:column; gap:20px; max-width:600px;">
+                            <div class="form-group">
+                                <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Số trang quét OCR tối đa mỗi file (0 = quét toàn bộ)</label>
+                                <input type="number" id="setting-max-pages" class="form-control" value="0" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; font-size:1rem;">
+                                <small style="color:grey;">Mặc định: 0 (Quét toàn bộ văn bản). Nếu để là 2, hệ thống chỉ quét 2 trang đầu.</small>
+                            </div>
+                            <div class="form-group">
+                                <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Từ khóa nhận diện "Thời hạn xử lý" (Cách nhau bởi dấu phẩy)</label>
+                                <textarea id="setting-deadline-keywords" class="form-control" rows="4" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; resize:vertical; font-size:0.95rem; line-height:1.6;"></textarea>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSettings(this)" style="padding:14px; font-size:1rem;">Lưu cấu hình OCR</button>
                         </div>
+                    </div>
 
-                        <div class="form-group">
-                            <label
-                                style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.9rem;">
-                                Từ khóa nhận diện "Thời hạn xử lý" (Cách nhau bởi dấu phẩy)
-                            </label>
-                            <textarea id="setting-deadline-keywords" class="form-control" rows="4"
-                                style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 12px; border-radius: 8px; width: 100%; outline: none; resize: vertical;"></textarea>
+                    <!-- Sub-tab: Departments -->
+                    <div class="admin-panel" id="admin-panel-departments" style="display:none;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                            <h3>&#127970; Quản lý Phòng ban</h3>
+                            <button class="btn btn-primary" onclick="openDeptModal()">&#43; Thêm phòng ban</button>
                         </div>
-
-                        <div
-                            style="padding: 16px; background: rgba(55, 114, 255, 0.05); border-radius: 12px; border: 1px solid var(--primary-glow);">
-                            <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-                                💡 <b>Mẹo:</b> Các luật tự động (Auto Rules) trong phần Nhân sự sẽ được ưu tiên chạy sau
-                                khi bóc tách xong để tự động giao việc và dán nhãn.
-                            </p>
+                        <div class="table-scroll">
+                            <table id="dept-table">
+                                <thead><tr><th>ID</th><th>Tên phòng ban</th><th>Mô tả</th><th>Thao tác</th></tr></thead>
+                                <tbody id="dept-body"></tbody>
+                            </table>
                         </div>
+                    </div>
 
-                        <button class="btn btn-primary" onclick="saveSettings(this)"
-                            style="padding: 14px; font-size: 1rem;">
-                            Lưu cấu hình
-                        </button>
+                    <!-- Sub-tab: Labels & Rules -->
+                    <div class="admin-panel" id="admin-panel-labels" style="display:none;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                                    <h3>&#127991;&#65039; Nhãn phân loại</h3>
+                                    <button class="btn btn-primary" style="padding:6px 14px;" onclick="openLabelModal()">&#43; Thêm nhãn</button>
+                                </div>
+                                <table id="labels-table">
+                                    <thead><tr><th>Tên nhãn</th><th>Màu</th><th>Thao tác</th></tr></thead>
+                                    <tbody id="labels-body"></tbody>
+                                </table>
+                            </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                                    <h3>&#129302; Auto Rules</h3>
+                                    <button class="btn btn-primary" style="padding:6px 14px;" onclick="openRuleModal()">&#43; Thêm rule</button>
+                                </div>
+                                <table id="rules-table">
+                                    <thead><tr><th>Từ khóa</th><th>Nhãn</th><th>Hạn (ngày)</th><th>Thao tác</th></tr></thead>
+                                    <tbody id="rules-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-tab: Backup -->
+                    <div class="admin-panel" id="admin-panel-backup" style="display:none;">
+                        <h3 style="margin-bottom:24px;">&#128190; Sao lưu &amp; Xuất dữ liệu</h3>
+                        <div style="display:flex; flex-direction:column; gap:20px; max-width:500px;">
+                            <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:24px;">
+                                <h4 style="margin-bottom:8px; color:var(--sidebar-bg);">&#128229; Xuất toàn bộ dữ liệu ra CSV</h4>
+                                <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:16px;">Tải xuống toàn bộ danh sách văn bản dưới dạng file CSV. Thuận tiện lưu trữ vào USB hoặc ổ cứng rời.</p>
+                                <button class="btn btn-primary" onclick="downloadBackup()" style="padding:12px 28px; font-size:1rem;">&#11015;&#65039; Tải xuống file CSV</button>
+                            </div>
+                            <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:12px; padding:16px; font-size:0.87rem; color:#856404;">
+                                &#9888;&#65039; <b>Lưu ý:</b> Chức năng sao lưu tự động định kỳ sẽ được triển khai trong phiên bản tiếp theo. Hiện tại định kỳ xuất thủ công.
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -599,6 +737,101 @@
                     style="flex: 1; background: #e2e8f0; color: #1e293b;">Hủy</button>
                 <button class="btn btn-primary" onclick="_confirmResolve(true)"
                     style="flex: 1; background: var(--primary); border-color: var(--primary);">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Preview Modal -->
+    <div id="pdf-preview-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1500; align-items:flex-start; justify-content:center; padding-top:20px;">
+        <div style="width:96vw; max-width:1100px; height:90vh; background:#fff; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.5);">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 20px; background:var(--sidebar-bg); color:#fff; border-radius:16px 16px 0 0;">
+                <span id="pdf-modal-title" style="font-weight:700; font-size:1rem;">Xem tài liệu PDF</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button class="btn" style="background:rgba(255,255,255,0.15); color:#fff; padding:5px 14px;" onclick="pdfModalPrevPage()">&#9664;</button>
+                    <span id="pdf-modal-page-info" style="font-size:0.9rem; font-weight:600;">1/1</span>
+                    <button class="btn" style="background:rgba(255,255,255,0.15); color:#fff; padding:5px 14px;" onclick="pdfModalNextPage()">&#9654;</button>
+                    <button class="btn" style="background:#c0392b; color:#fff; padding:5px 14px;" onclick="closePdfModal()">✕ Đóng</button>
+                </div>
+            </div>
+            <div style="flex:1; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:20px; background:#525659;">
+                <canvas id="pdf-modal-canvas" style="max-width:100%; box-shadow:0 4px 20px rgba(0,0,0,0.5);"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Modal -->
+    <div id="dept-modal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+        <div class="data-section" style="width:420px; padding:30px;">
+            <h3 style="margin-bottom:20px;">🏢 Thêm Phòng ban</h3>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px;">Tên phòng ban</label>
+                <input type="text" id="dept-name" placeholder="Vd: Phòng Tài chính" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.9rem;">
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px;">Mô tả</label>
+                <input type="text" id="dept-desc" placeholder="Mô tả ngắn (tùy chọn)" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.9rem;">
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn" style="background:#e2e8f0; color:#1e293b;" onclick="closeDeptModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="createDepartment()">Lưu phòng ban</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Label Modal -->
+    <div id="label-modal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+        <div class="data-section" style="width:380px; padding:30px;">
+            <h3 style="margin-bottom:20px;">🏷️ Thêm Nhãn phân loại</h3>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px;">Tên nhãn</label>
+                <input type="text" id="label-name" placeholder="Vd: Khẩn cần giải quyết" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.9rem;">
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px;">Màu hiển thị</label>
+                <input type="color" id="label-color" value="#c0392b" style="width:80px; height:40px; border:1.5px solid #cbd5e1; border-radius:8px; cursor:pointer;">
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn" style="background:#e2e8f0; color:#1e293b;" onclick="closeLabelModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="createLabel()">Lưu nhãn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rule Modal -->
+    <div id="rule-modal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+        <div class="data-section" style="width:420px; padding:30px;">
+            <h3 style="margin-bottom:20px;">🤖 Thêm Auto Rule</h3>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px;">Từ khóa nhận diện</label>
+                <input type="text" id="rule-keyword" placeholder="Vd: hỏa tốc, khẩn" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.9rem;">
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px;">Số ngày xử lý mặc định</label>
+                <input type="number" id="rule-days" value="15" min="1" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.9rem;">
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn" style="background:#e2e8f0; color:#1e293b;" onclick="closeRuleModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="createRule()">Lưu rule</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evidence Modal (Staff submit evidence) -->
+    <div id="evidence-modal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+        <div class="data-section" style="width:500px; padding:30px;">
+            <h3 style="margin-bottom:20px;">📎 Nộp bằng chứng hoàn thành</h3>
+            <input type="hidden" id="evidence-doc-id">
+            <div class="form-group" style="margin-bottom:16px;">
+                <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px;">Ghi chú kết quả xử lý</label>
+                <textarea id="evidence-notes" rows="3" placeholder="Mô tả ngắn về kết quả xử lý..." style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.9rem; resize:vertical;"></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px;">File bằng chứng (ảnh, PDF, tài liệu)</label>
+                <input type="file" id="evidence-files" multiple style="width:100%; padding:8px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b;">
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn" style="background:#e2e8f0; color:#1e293b;" onclick="closeEvidenceModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="submitEvidence()">✅ Xác nhận hoàn thành</button>
             </div>
         </div>
     </div>

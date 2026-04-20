@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData();
     initUpload();
     initNotifications();
+    checkNotificationBanner();
     startSessionWatcher(); // Theo dõi phiên đăng nhập
 
 
@@ -110,11 +111,17 @@ function applyRoleRestrictions(role) {
         document.getElementById('nav-users').style.display = 'flex';
     }
 
-    // 2. Chỉ Admin và Văn thư mới thấy nút Thêm văn bản / Tab Upload / Cài đặt
+    // 2. Tab Công việc của tôi cho CanBo và VanThu
+    if (role === 'CanBo' || role === 'VanThu') {
+        const navMyTasks = document.getElementById('nav-my-tasks');
+        if (navMyTasks) navMyTasks.style.display = 'flex';
+    }
+
+    // 3. Chỉ Admin và Văn thư mới thấy nút Thêm văn bản / Tab Upload / Cài đặt
     if (role !== 'Admin' && role !== 'VanThu') {
-        document.querySelector('.header-actions').style.display = 'none';
+        document.querySelector('.header-actions .btn-primary').style.display = 'none';
         document.querySelector('[data-tab="upload"]').style.display = 'none';
-        document.querySelector('[data-tab="settings"]').style.display = 'none';
+        if (role !== 'Admin') document.querySelector('[data-tab="settings"]').style.display = 'none';
     }
 }
 
@@ -147,6 +154,7 @@ function showTab(tabId) {
     currentTab = tabId;
     if (tabId === 'users') fetchUsers();
     if (tabId === 'settings') fetchSettings();
+    if (tabId === 'my-tasks') fetchMyTasks();
 
     // Close sidebar on mobile after navigation
     closeSidebar();
@@ -254,6 +262,9 @@ function renderDocsTable() {
         let menuItems = `
             <button class="action-dropdown-item item-view" onclick="openDocDetailModal(${doc.id}); closeAllDropdowns();">
                 &#128064; Xem chi tiết
+            </button>
+            <button class="action-dropdown-item item-view" onclick="openPdfPreview(${doc.id}, '${(doc.soVanBan || '').replace(/'/g, "\\'")}'); closeAllDropdowns();">
+                &#128196; Xem bản giả PDF
             </button>`;
         if (role === 'Admin' || role === 'VanThu') {
             menuItems += `
@@ -1302,4 +1313,235 @@ async function saveSettings(btn) {
         btn.disabled = false;
         btn.innerText = originalText;
     }
+}
+
+// ======================================================
+// FEATURE 1: NOTIFICATION PERMISSION BANNER
+// ======================================================
+async function requestNotificationPermission() {
+    const banner = document.getElementById('notif-banner');
+    if (!('Notification' in window)) return;
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+        if (banner) banner.style.display = 'none';
+        await initNotifications();
+        showAlert('Thông báo đẩy đã được bật thành công!', '🔔');
+    } else {
+        showAlert('Quyền thông báo bị từ chối.', '⚠️');
+    }
+}
+function checkNotificationBanner() {
+    const banner = document.getElementById('notif-banner');
+    if (!banner) return;
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+    if (Notification.permission === 'default') banner.style.display = 'inline-flex';
+}
+
+// ======================================================
+// FEATURE 2: PDF PREVIEWER (Standalone modal)
+// ======================================================
+let _pdfDoc = null, _pdfModalPage = 1;
+
+async function openPdfPreview(docId, title) {
+    const token = localStorage.getItem('auth_token');
+    document.getElementById('pdf-preview-modal').style.display = 'flex';
+    document.getElementById('pdf-modal-title').innerText = title || 'Xem tài liệu PDF';
+    document.getElementById('pdf-modal-page-info').innerText = 'Đang tải...';
+    try {
+        if (typeof pdfjsLib === 'undefined') { showAlert('Thư viện PDF chưa sẵn sàng, vui lòng thử lại.', '⚠️'); return; }
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        _pdfDoc = await pdfjsLib.getDocument({ url: `/api/documents/${docId}/file`, httpHeaders: { 'Authorization': `Bearer ${token}` } }).promise;
+        _pdfModalPage = 1;
+        await _renderPdfCanvas(_pdfModalPage, 'pdf-modal-canvas', 'pdf-modal-page-info');
+    } catch (e) { showAlert('Không thể tải file PDF: ' + e.message, '❌'); closePdfModal(); }
+}
+async function _renderPdfCanvas(pageNum, canvasId, infoId) {
+    if (!_pdfDoc) return;
+    const page = await _pdfDoc.getPage(pageNum);
+    const canvas = document.getElementById(canvasId);
+    const scale = Math.min((canvas.parentElement.clientWidth - 40) / page.getViewport({ scale: 1 }).width, 1.8);
+    const vp = page.getViewport({ scale });
+    canvas.width = vp.width; canvas.height = vp.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    document.getElementById(infoId).innerText = `${pageNum} / ${_pdfDoc.numPages}`;
+}
+async function pdfModalPrevPage() { if (_pdfDoc && _pdfModalPage > 1) { _pdfModalPage--; await _renderPdfCanvas(_pdfModalPage, 'pdf-modal-canvas', 'pdf-modal-page-info'); } }
+async function pdfModalNextPage() { if (_pdfDoc && _pdfModalPage < _pdfDoc.numPages) { _pdfModalPage++; await _renderPdfCanvas(_pdfModalPage, 'pdf-modal-canvas', 'pdf-modal-page-info'); } }
+function closePdfModal() { document.getElementById('pdf-preview-modal').style.display = 'none'; _pdfDoc = null; }
+
+// ======================================================
+// FEATURE 3: OCR REVIEW SCENE (Side-by-Side)
+// ======================================================
+let _reviewIndex = 0, _reviewPdfDoc = null, _reviewPdfPage = 1;
+
+async function enterReviewScene() {
+    if (!window._sessionUploads || !window._sessionUploads.length) return;
+    document.getElementById('batch-upload-result').style.display = 'none';
+    document.getElementById('ocr-review-scene').style.display = 'flex';
+    _reviewIndex = 0;
+    await _loadReviewDoc(_reviewIndex);
+}
+async function _loadReviewDoc(idx) {
+    const docs = window._sessionUploads;
+    if (!docs || idx < 0 || idx >= docs.length) return;
+    const doc = docs[idx]; _reviewIndex = idx;
+    document.getElementById('review-doc-counter').innerText = `Tài liệu ${idx + 1} / ${docs.length}`;
+    document.getElementById('review-prev-btn').disabled = idx === 0;
+    document.getElementById('review-next-btn').disabled = idx === docs.length - 1;
+    document.getElementById('review-doc-id').value = doc.id;
+    document.getElementById('review-so-hieu').value = doc.soVanBan || '';
+    document.getElementById('review-co-quan').value = doc.coQuanChuQuan || '';
+    document.getElementById('review-trich-yeu').value = doc.trichYeu || '';
+    if (doc.hanXuLy) document.getElementById('review-han-xu-ly').value = doc.hanXuLy.split('T')[0];
+    const fileName = (doc.filePath || '').replace(/\\/g, '/').split('/').pop();
+    document.getElementById('review-pdf-filename').innerText = fileName;
+    const token = localStorage.getItem('auth_token');
+    try {
+        if (typeof pdfjsLib === 'undefined') return;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        _reviewPdfDoc = await pdfjsLib.getDocument({ url: `/api/documents/${doc.id}/file`, httpHeaders: { 'Authorization': `Bearer ${token}` } }).promise;
+        _reviewPdfPage = 1;
+        await _renderPdfCanvas(_reviewPdfPage, 'review-pdf-canvas', 'review-page-info');
+    } catch (e) { console.warn('PDF review load failed:', e.message); }
+}
+async function reviewNavigate(d) { await _loadReviewDoc(_reviewIndex + d); }
+async function pdfPrevPage() { if (_reviewPdfDoc && _reviewPdfPage > 1) { _reviewPdfPage--; await _renderPdfCanvas(_reviewPdfPage, 'review-pdf-canvas', 'review-page-info'); } }
+async function pdfNextPage() { if (_reviewPdfDoc && _reviewPdfPage < _reviewPdfDoc.numPages) { _reviewPdfPage++; await _renderPdfCanvas(_reviewPdfPage, 'review-pdf-canvas', 'review-page-info'); } }
+async function saveCurrentReview() {
+    const docId = document.getElementById('review-doc-id').value;
+    const body = { soVanBan: document.getElementById('review-so-hieu').value, coQuanChuQuan: document.getElementById('review-co-quan').value, hanXuLy: document.getElementById('review-han-xu-ly').value || null, trichYeu: document.getElementById('review-trich-yeu').value, status: 'Chưa xử lý' };
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch(`/api/documents/${docId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(body) });
+    if (res.ok) showAlert('Đã lưu văn bản!', '✅'); else showAlert('Lỗi khi lưu văn bản.', '❌');
+}
+function exitReviewScene() { document.getElementById('ocr-review-scene').style.display = 'none'; document.getElementById('batch-upload-result').style.display = 'block'; }
+
+// ======================================================
+// FEATURE 4: STAFF WORKSPACE — Công việc của tôi
+// ======================================================
+async function fetchMyTasks() {
+    const token = localStorage.getItem('auth_token');
+    try {
+        const res = await fetch('/api/documents/my-tasks', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) return;
+        renderMyTasks(await res.json());
+    } catch (e) { console.error(e); }
+}
+function renderMyTasks(tasks) {
+    const tbody = document.getElementById('my-tasks-body');
+    if (!tbody) return;
+    const now = new Date();
+    let cNew = 0, cDoing = 0, cOver = 0;
+    tbody.innerHTML = tasks.length ? tasks.map(t => {
+        const dl = t.hanXuLy ? new Date(t.hanXuLy) : null;
+        const over = dl && dl < now;
+        if (over) cOver++; else if (t.status === 'Đang xử lý') cDoing++; else cNew++;
+        return `<tr>
+            <td style="font-weight:700; color:var(--sidebar-bg);">${t.soVanBan || '—'}</td>
+            <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${t.trichYeu || ''}">${t.trichYeu || '—'}</td>
+            <td>${formatDate(t.hanXuLy)}</td>
+            <td><span class="status ${over ? 'bg-danger' : t.status === 'Đang xử lý' ? 'bg-warning' : 'bg-success'}">${over ? 'Quá hạn' : t.status}</span></td>
+            <td><div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="btn" style="padding:4px 10px; font-size:0.8rem; background:#e2e8f0; color:#1e293b;" onclick="openPdfPreview(${t.id},'${(t.soVanBan||'').replace(/'/g,"\\'")}')">📄 Xem PDF</button>
+                <button class="btn btn-primary" style="padding:4px 10px; font-size:0.8rem;" onclick="openEvidenceModal(${t.id})">📎 Nộp bằng chứng</button>
+            </div></td>
+        </tr>`;
+    }).join('') : `<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-secondary);">📋 Chưa có việc nào được giao cho bạn.</td></tr>`;
+    document.getElementById('mt-stat-new').innerText = cNew;
+    document.getElementById('mt-stat-doing').innerText = cDoing;
+    document.getElementById('mt-stat-overdue').innerText = cOver;
+}
+function openEvidenceModal(docId) { document.getElementById('evidence-doc-id').value = docId; document.getElementById('evidence-notes').value = ''; document.getElementById('evidence-files').value = ''; document.getElementById('evidence-modal').style.display = 'flex'; }
+function closeEvidenceModal() { document.getElementById('evidence-modal').style.display = 'none'; }
+async function submitEvidence() {
+    const docId = document.getElementById('evidence-doc-id').value;
+    const notes = document.getElementById('evidence-notes').value;
+    const files = document.getElementById('evidence-files').files;
+    if (!notes.trim()) { showAlert('Vui lòng nhập ghi chú kết quả!', '⚠️'); return; }
+    if (!files.length) { showAlert('Vui lòng chọn ít nhất 1 file bằng chứng!', '⚠️'); return; }
+    const fd = new FormData();
+    fd.append('notes', notes);
+    for (let f of files) fd.append('files', f);
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch(`/api/documents/${docId}/submit-evidence`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd });
+    if (res.ok) { showAlert('Đã nộp bằng chứng! Văn bản đã hoàn thành.', '✅'); closeEvidenceModal(); fetchMyTasks(); }
+    else showAlert('Lỗi khi nộp bằng chứng.', '❌');
+}
+
+// ======================================================
+// FEATURE 5: ADMIN SETUP PANEL
+// ======================================================
+function showAdminTab(t) {
+    ['ocr','departments','labels','backup'].forEach(n => {
+        const p = document.getElementById(`admin-panel-${n}`); const b = document.getElementById(`atab-${n}`);
+        if (p) p.style.display = n === t ? 'block' : 'none';
+        if (b) b.classList.toggle('active', n === t);
+    });
+    if (t === 'departments') fetchDepartments();
+    if (t === 'labels') { fetchLabels(); fetchRules(); }
+}
+async function fetchDepartments() {
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch('/api/admin/departments', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) return;
+    const depts = await res.json();
+    document.getElementById('dept-body').innerHTML = depts.map(d => `<tr><td>${d.id}</td><td style="font-weight:600;">${d.name}</td><td style="color:var(--text-secondary);">${d.description||'—'}</td><td><button class="btn" style="padding:4px 10px; font-size:0.8rem; color:var(--danger); background:#fee2e2;" onclick="deleteDepartment(${d.id})">Xóa</button></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">Chưa có phòng ban nào</td></tr>';
+}
+function openDeptModal() { document.getElementById('dept-modal').style.display = 'flex'; }
+function closeDeptModal() { document.getElementById('dept-modal').style.display = 'none'; }
+async function createDepartment() {
+    const name = document.getElementById('dept-name').value.trim();
+    if (!name) { showAlert('Vui lòng nhập tên phòng ban!', '⚠️'); return; }
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch('/api/admin/departments', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name, description: document.getElementById('dept-desc').value }) });
+    if (res.ok) { showAlert('Đã thêm phòng ban!', '✅'); closeDeptModal(); fetchDepartments(); } else showAlert('Lỗi khi thêm.', '❌');
+}
+async function deleteDepartment(id) { if (await showConfirm('Xóa phòng ban này?')) { const token = localStorage.getItem('auth_token'); await fetch(`/api/admin/departments/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); fetchDepartments(); } }
+
+async function fetchLabels() {
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch('/api/admin/labels', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) return;
+    const labels = await res.json();
+    document.getElementById('labels-body').innerHTML = labels.map(l => `<tr><td style="font-weight:600;">${l.name}</td><td><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${l.color||'#c0392b'};vertical-align:middle;"></span> ${l.color||'—'}</td><td><button class="btn" style="padding:4px 10px;font-size:0.8rem;color:var(--danger);background:#fee2e2;" onclick="deleteLabel(${l.id})">Xóa</button></td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center; color:var(--text-secondary);">Chưa có nhãn</td></tr>';
+}
+function openLabelModal() { document.getElementById('label-modal').style.display = 'flex'; }
+function closeLabelModal() { document.getElementById('label-modal').style.display = 'none'; }
+async function createLabel() {
+    const name = document.getElementById('label-name').value.trim();
+    if (!name) { showAlert('Vui lòng nhập tên nhãn!', '⚠️'); return; }
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch('/api/admin/labels', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name, color: document.getElementById('label-color').value }) });
+    if (res.ok) { showAlert('Đã thêm nhãn!', '✅'); closeLabelModal(); fetchLabels(); } else showAlert('Lỗi.', '❌');
+}
+async function deleteLabel(id) { if (await showConfirm('Xóa nhãn này?')) { const token = localStorage.getItem('auth_token'); await fetch(`/api/admin/labels/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); fetchLabels(); } }
+
+async function fetchRules() {
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch('/api/admin/rules', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) return;
+    const rules = await res.json();
+    document.getElementById('rules-body').innerHTML = rules.map(r => `<tr><td style="font-weight:600;">${r.keyword}</td><td>${r.labelId||'—'}</td><td>${r.defaultDeadlineDays||'—'} ngày</td><td><button class="btn" style="padding:4px 10px;font-size:0.8rem;color:var(--danger);background:#fee2e2;" onclick="deleteRule(${r.id})">Xóa</button></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">Chưa có rule</td></tr>';
+}
+function openRuleModal() { document.getElementById('rule-modal').style.display = 'flex'; }
+function closeRuleModal() { document.getElementById('rule-modal').style.display = 'none'; }
+async function createRule() {
+    const keyword = document.getElementById('rule-keyword').value.trim();
+    if (!keyword) { showAlert('Vui lòng nhập từ khóa!', '⚠️'); return; }
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch('/api/admin/rules', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ keyword, defaultDeadlineDays: parseInt(document.getElementById('rule-days').value) }) });
+    if (res.ok) { showAlert('Đã thêm rule!', '✅'); closeRuleModal(); fetchRules(); } else showAlert('Lỗi.', '❌');
+}
+async function deleteRule(id) { if (await showConfirm('Xóa rule này?')) { const token = localStorage.getItem('auth_token'); await fetch(`/api/admin/rules/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); fetchRules(); } }
+
+async function downloadBackup() {
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch('/api/backup/export', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) { showAlert('Lỗi xuất dữ liệu.', '❌'); return; }
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `CongVan_Backup_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    showAlert('Đã tải xuống file backup CSV!', '✅');
 }

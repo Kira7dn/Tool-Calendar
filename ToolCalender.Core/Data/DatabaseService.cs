@@ -258,7 +258,7 @@ namespace ToolCalender.Data
             var list = new List<User>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "SELECT Id, Username, FullName, Email, Role, DepartmentId FROM Users";
+            string sql = "SELECT Id, Username, FullName, Email, Role, DepartmentId, SessionId FROM Users";
             using var cmd = new SqliteCommand(sql, connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())

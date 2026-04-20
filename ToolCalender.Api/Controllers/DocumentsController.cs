@@ -199,6 +199,27 @@ namespace ToolCalender.Api.Controllers
             return Ok(new { message = "Nộp bằng chứng hoàn thành thành công.", paths = savedPaths });
         }
 
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [HttpGet("my-tasks")]
+        public IActionResult GetMyTasks()
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+            var tasks = DatabaseService.GetAll().Where(d => d.AssignedTo == userId).OrderBy(d => d.ThoiHan).ToList();
+            return Ok(tasks);
+        }
+
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [HttpGet("{id}/file")]
+        public IActionResult GetFile(int id)
+        {
+            var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+            if (doc == null || string.IsNullOrEmpty(doc.FilePath)) return NotFound("File không tồn tại.");
+            if (!System.IO.File.Exists(doc.FilePath)) return NotFound("File vật lý không tìm thấy.");
+            var fileBytes = System.IO.File.ReadAllBytes(doc.FilePath);
+            return File(fileBytes, "application/pdf");
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
