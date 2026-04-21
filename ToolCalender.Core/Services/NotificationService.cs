@@ -77,7 +77,7 @@ namespace ToolCalender.Services
 
                 foreach (var doc in activeDocs)
                 {
-                    int daysRemaining = (doc.ThoiHan.Value.Date - today).Days;
+                    int daysRemaining = (doc.ThoiHan!.Value.Date - today).Days;
 
                     // Chỉ thông báo các mốc quan trọng 7, 3, 1 ngày
                     if (daysRemaining == 7 || daysRemaining == 3 || daysRemaining == 1)

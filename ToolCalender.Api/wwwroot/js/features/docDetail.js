@@ -1,5 +1,5 @@
 import { escapeAttribute } from '../core/dom.js';
-import { escapeHtml, formatDate } from '../core/formatters.js';
+import { escapeHtml, formatDate, formatDateForTextInput, normalizeDateInputToIso } from '../core/formatters.js';
 
 export function createDocDetailFeature(context) {
     let currentDocId = null;
@@ -103,7 +103,7 @@ export function createDocDetailFeature(context) {
         document.getElementById('de-trichyeu').value = doc.trichYeu || '';
         document.getElementById('de-coquanbanhanh').value = doc.coQuanBanHanh || '';
         document.getElementById('de-coquanchuquan').value = doc.coQuanChuQuan || '';
-        document.getElementById('de-thoihan').value = doc.thoiHan ? doc.thoiHan.split('T')[0] : '';
+        document.getElementById('de-thoihan').value = formatDateForTextInput(doc.thoiHan);
         document.getElementById('de-status').value = doc.status || 'Chua xu ly';
         document.getElementById('de-priority').value = doc.priority || 'Thuong';
     }
@@ -149,6 +149,8 @@ export function createDocDetailFeature(context) {
         button.disabled = true;
         button.innerText = 'Dang luu...';
 
+        const normalizedDeadline = normalizeDateInputToIso(document.getElementById('de-thoihan').value);
+
         const updated = {
             ...currentDocData,
             soVanBan: document.getElementById('de-so').value,
@@ -156,7 +158,7 @@ export function createDocDetailFeature(context) {
             trichYeu: document.getElementById('de-trichyeu').value,
             coQuanBanHanh: document.getElementById('de-coquanbanhanh').value,
             coQuanChuQuan: document.getElementById('de-coquanchuquan').value,
-            thoiHan: document.getElementById('de-thoihan').value ? `${document.getElementById('de-thoihan').value}T00:00:00` : null,
+            thoiHan: normalizedDeadline ? `${normalizedDeadline}T00:00:00` : null,
             status: document.getElementById('de-status').value,
             priority: document.getElementById('de-priority').value
         };

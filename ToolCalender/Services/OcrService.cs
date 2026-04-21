@@ -34,7 +34,21 @@ namespace ToolCalender.Services
                 
                 // Render trang 0 với DPI 300 để OCR chính xác
                 using var imageStream = new MemoryStream();
-                Conversion.SavePng(imageStream, pdfStream, options: new RenderOptions { Dpi = 300 }, page: 0);
+                Conversion.SavePng(
+                    imageStream,
+                    pdfStream,
+                    page: 0,
+                    password: null,
+                    options: new RenderOptions
+                    {
+                        Dpi = 300,
+                        WithAnnotations = true,
+                        WithFormFill = true,
+                        WithAspectRatio = false,
+                        Rotation = PdfRotation.Rotate0,
+                        AntiAliasing = PdfAntiAliasing.All,
+                        BackgroundColor = SkiaSharp.SKColors.White
+                    });
                 imageStream.Position = 0;
 
                 // 2. Khởi tạo Tesseract Engine

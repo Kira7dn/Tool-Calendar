@@ -1,3 +1,6 @@
+import { initMultiSelect } from '../ui/multiSelect.js';
+import { formatDateForTextInput, normalizeDateInputToIso } from '../core/formatters.js';
+
 export function createReviewFeature(context) {
     let reviewIndex = 0;
     let reviewPdfDoc = null;
@@ -56,39 +59,6 @@ export function createReviewFeature(context) {
             }
         });
 
-        document.getElementById('review-side-by-side-modal')?.addEventListener('change', (event) => {
-            const target = event.target;
-            if (!(target instanceof HTMLSelectElement)) return;
-
-            const currentItem = getCurrentItem();
-            if (!currentItem) return;
-
-            if (target.id === 'review-department') {
-                const id = target.value ? parseInt(target.value, 10) : null;
-                context.services.upload.updateSessionUpload(currentItem.id, {
-                    departmentIds: id ? [id] : [],
-                    assignedToIds: []
-                });
-                syncAssignmentSelectors(getCurrentItem());
-            }
-
-            if (target.id === 'review-assignee') {
-                const id = target.value ? parseInt(target.value, 10) : null;
-                const reference = context.services.upload.getReferenceData();
-                const selectedUser = reference.users.find((user) => user.id === id);
-                
-                let newDeptIds = [...(getCurrentItem()?.departmentIds || [])];
-                if (selectedUser?.departmentId && !newDeptIds.includes(selectedUser.departmentId)) {
-                    newDeptIds.push(selectedUser.departmentId);
-                }
-
-                context.services.upload.updateSessionUpload(currentItem.id, {
-                    assignedToIds: id ? [id] : [],
-                    departmentIds: newDeptIds
-                });
-                syncAssignmentSelectors(getCurrentItem());
-            }
-        });
     }
 
     async function enterReviewScene(preferredDocId = null) {
@@ -125,7 +95,7 @@ export function createReviewFeature(context) {
         document.getElementById('review-so-hieu').value = doc.soVanBan || '';
         document.getElementById('review-co-quan').value = doc.coQuanChuQuan || '';
         document.getElementById('review-trich-yeu').value = doc.trichYeu || '';
-        document.getElementById('review-han-xu-ly').value = doc.thoiHan ? doc.thoiHan.split('T')[0] : '';
+        document.getElementById('review-han-xu-ly').value = formatDateForTextInput(doc.thoiHan);
         document.getElementById('review-pdf-filename').innerText = doc.fileName || 'PDF G\u1ed1c';
         syncAssignmentSelectors(doc);
 
@@ -163,10 +133,12 @@ export function createReviewFeature(context) {
         const currentItem = getCurrentItem();
         if (!currentItem) return;
 
+        const normalizedDeadline = normalizeDateInputToIso(document.getElementById('review-han-xu-ly').value);
+
         context.services.upload.updateSessionUpload(currentItem.id, {
             soVanBan: document.getElementById('review-so-hieu').value,
             coQuanChuQuan: document.getElementById('review-co-quan').value,
-            thoiHan: document.getElementById('review-han-xu-ly').value ? `${document.getElementById('review-han-xu-ly').value}T00:00:00` : null,
+            thoiHan: normalizedDeadline ? `${normalizedDeadline}T00:00:00` : null,
             trichYeu: document.getElementById('review-trich-yeu').value,
             // Keep existing multi-selects unless we add multi-select to review modal too
             ocrPagesJson: currentItem.ocrPagesJson || '[]'
@@ -246,18 +218,48 @@ export function createReviewFeature(context) {
         const assigneeSelect = document.getElementById('review-assignee');
         if (!departmentSelect || !assigneeSelect) return;
 
-        // In side-by-side review, we use simple selects for quick assignment as a "primary" selection
-        const primaryDeptId = doc?.departmentIds?.[0] || null;
-        const primaryUserId = doc?.assignedToIds?.[0] || null;
+        initMultiSelect({
+            container: departmentSelect,
+            options: reference.departments.map((department) => ({
+                id: department.id,
+                label: department.name
+            })),
+            selectedIds: doc?.departmentIds || [],
+            suggestedIds: doc?.suggestedDeptIds || [],
+            placeholder: 'Chọn phòng ban',
+            onChange: (newIds) => {
+                const currentItem = getCurrentItem();
+                if (!currentItem) return;
 
-        departmentSelect.innerHTML = ['<option value="">Chọn phòng ban</option>']
-            .concat(reference.departments.map((department) => `<option value="${department.id}" ${String(primaryDeptId || '') === String(department.id) ? 'selected' : ''}>${escapeHtml(department.name)}</option>`))
-            .join('');
+                context.services.upload.updateSessionUpload(currentItem.id, {
+                    departmentIds: newIds
+                });
+            }
+        });
 
-        const filteredUsers = context.services.upload.getUsersForDepartment(primaryDeptId);
-        assigneeSelect.innerHTML = ['<option value="">Chọn cán bộ</option>']
-            .concat(filteredUsers.map((user) => `<option value="${user.id}" ${String(primaryUserId || '') === String(user.id) ? 'selected' : ''}>${escapeHtml(user.fullName || user.username)}</option>`))
-            .join('');
+        initMultiSelect({
+            container: assigneeSelect,
+            options: reference.users.map((user) => {
+                const department = reference.departments.find((item) => item.id === user.departmentId);
+                const name = user.fullName || user.username;
+                return {
+                    id: user.id,
+                    label: `${name} - ${department ? department.name.replace('Phòng ', '') : 'Vãng lai'}`,
+                    chipLabel: name
+                };
+            }),
+            selectedIds: doc?.assignedToIds || [],
+            suggestedIds: doc?.suggestedUserIds || [],
+            placeholder: 'Chọn cán bộ',
+            onChange: (newIds) => {
+                const currentItem = getCurrentItem();
+                if (!currentItem) return;
+
+                context.services.upload.updateSessionUpload(currentItem.id, {
+                    assignedToIds: newIds
+                });
+            }
+        });
     }
 
     function getCurrentItem() {

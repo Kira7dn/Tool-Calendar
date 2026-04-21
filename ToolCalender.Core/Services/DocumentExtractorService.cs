@@ -171,24 +171,116 @@ namespace ToolCalender.Services
             return sb.ToString();
         }
 
+        private static string PostProcessExtractedText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+            var normalized = text
+                .Normalize(NormalizationForm.FormC)
+                .Replace("\r\n", "\n")
+                .Replace('\r', '\n')
+                .Replace('\u00A0', ' ');
+
+            var rawLines = normalized.Split('\n');
+            var cleanedLines = new List<string>(rawLines.Length);
+            var current = new StringBuilder();
+
+            foreach (var rawLine in rawLines)
+            {
+                var line = Regex.Replace(rawLine, @"[^\S\n]+", " ").Trim();
+
+                if (line.Length == 0)
+                {
+                    FlushCurrent(cleanedLines, current);
+                    if (cleanedLines.Count > 0 && cleanedLines[^1].Length > 0)
+                    {
+                        cleanedLines.Add(string.Empty);
+                    }
+                    continue;
+                }
+
+                if (current.Length == 0)
+                {
+                    current.Append(line);
+                    continue;
+                }
+
+                if (ShouldJoinWrappedLine(current.ToString(), line))
+                {
+                    if (current[^1] == '-')
+                    {
+                        current.Length -= 1;
+                    }
+                    else
+                    {
+                        current.Append(' ');
+                    }
+
+                    current.Append(line);
+                    continue;
+                }
+
+                FlushCurrent(cleanedLines, current);
+                current.Append(line);
+            }
+
+            FlushCurrent(cleanedLines, current);
+
+            while (cleanedLines.Count > 0 && cleanedLines[^1].Length == 0)
+            {
+                cleanedLines.RemoveAt(cleanedLines.Count - 1);
+            }
+
+            return string.Join('\n', cleanedLines);
+        }
+
+        private static void FlushCurrent(List<string> cleanedLines, StringBuilder current)
+        {
+            if (current.Length == 0) return;
+            cleanedLines.Add(current.ToString().Trim());
+            current.Clear();
+        }
+
+        private static bool ShouldJoinWrappedLine(string currentLine, string nextLine)
+        {
+            if (string.IsNullOrWhiteSpace(currentLine) || string.IsNullOrWhiteSpace(nextLine)) return false;
+
+            var current = currentLine.Trim();
+            var next = nextLine.Trim();
+
+            if (current.EndsWith(":") || current.EndsWith(";")) return false;
+            if (Regex.IsMatch(next, @"^(Kính gửi|Nơi nhận|V/v|Về việc|Số|Ngày|Tháng|Năm|CỘNG HÒA|Độc lập|ỦY BAN|UBND)\b", RegexOptions.IgnoreCase)) return false;
+            if (Regex.IsMatch(next, @"^[-•*]\s+")) return false;
+            if (Regex.IsMatch(next, @"^\(?\d+[\.\)]\s+")) return false;
+            if (Regex.IsMatch(next, @"^[A-ZÀ-Ỹ0-9\s\-/]{8,}$")) return false;
+
+            if (current.EndsWith("-")) return true;
+            if (Regex.IsMatch(next, @"^[,.;:!?]")) return true;
+            if (char.IsLower(next[0])) return true;
+
+            return current.Length >= 40 && !Regex.IsMatch(current, @"[.!?]$");
+        }
+
         // ------- Phân tích văn bản -------
         private async Task<DocumentRecord> ParseTextAsync(string text, string filePath, string ocrPagesJson = "[]")
         {
+            string cleanedText = PostProcessExtractedText(text);
             var record = new DocumentRecord
             {
                 FilePath = filePath,
-                FullText = text,
+                FullText = cleanedText,
                 OcrPagesJson = string.IsNullOrWhiteSpace(ocrPagesJson) ? "[]" : ocrPagesJson,
                 NgayThem = DateTime.Now,
                 Status = "Chưa xử lý"
             };
 
-            string t = text.Normalize(NormalizationForm.FormC);
+            string t = cleanedText;
             t = t.Replace("ƣ", "ư").Replace("Ƣ", "Ư");
             t = Regex.Replace(t, @"\b[Ss][06óOô]\b", "Số");
             t = Regex.Replace(t, @"\b[Hh]ạn\s+[Xx]ử\s+[Ll]ỹ\b", "Hạn xử lý");
             t = Regex.Replace(t, @"\b[Tt]rƣớc\b", "trước");
-            t = Regex.Replace(t, @"\s+", " ");
+            t = Regex.Replace(t, @"[^\S\n]+", " ");
+            t = Regex.Replace(t, @"\n{3,}", "\n\n");
 
             int vVIndex = t.IndexOf("V/v", StringComparison.OrdinalIgnoreCase);
             if (vVIndex < 0) vVIndex = t.IndexOf("Về việc", StringComparison.OrdinalIgnoreCase);
@@ -483,8 +575,73 @@ namespace ToolCalender.Services
                 }
             }
 
+            // --- BÓC TÁCH PHÒNG BAN TỰ ĐỘNG (DEPARTMENT AUTO-DETECTION) ---
+            try
+            {
+                var allDepartments = Data.DatabaseService.GetDepartments();
+                var matchedDeptIds = new List<int>();
+                foreach (var dept in allDepartments)
+                {
+                    if (string.IsNullOrWhiteSpace(dept.Name)) continue;
+                    string deptNameCore = Regex.Replace(dept.Name, @"^(Phòng|Ban|Trung tâm|Văn phòng)\s+", "", RegexOptions.IgnoreCase).Trim();
+                    bool matched = t.Contains(dept.Name, StringComparison.OrdinalIgnoreCase);
+                    if (!matched && deptNameCore.Length >= 4)
+                        matched = t.Contains(deptNameCore, StringComparison.OrdinalIgnoreCase);
+                    if (matched && !matchedDeptIds.Contains(dept.Id))
+                        matchedDeptIds.Add(dept.Id);
+                }
+                if (matchedDeptIds.Count > 0)
+                {
+                    record.AssignedDepartmentIds = System.Text.Json.JsonSerializer.Serialize(matchedDeptIds);
+                    if (!record.DepartmentId.HasValue) record.DepartmentId = matchedDeptIds[0];
+                    var allUsers = Data.DatabaseService.GetUsers();
+                    var matchedUserIds = allUsers
+                        .Where(u => u.DepartmentId.HasValue && matchedDeptIds.Contains(u.DepartmentId.Value) && u.Role == "CanBo")
+                        .Select(u => u.Id).ToList();
+                    if (matchedUserIds.Count > 0)
+                    {
+                        record.AssignedUserIds = System.Text.Json.JsonSerializer.Serialize(matchedUserIds);
+                        if (!record.AssignedTo.HasValue) record.AssignedTo = matchedUserIds[0];
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Dept auto-detect error: {ex.Message}");
+            }
+
+            EvaluateConfidence(record);
             return await Task.FromResult(record);
         }
 
+        private void EvaluateConfidence(DocumentRecord record)
+        {
+            if (string.IsNullOrWhiteSpace(record.SoVanBan))
+                record.OcrWarnings.Add("Có vẻ chưa bóc tách được Số hiệu");
+            
+            if (record.ThoiHan == null)
+                record.OcrWarnings.Add("Chưa tìm thấy Hạn xử lý");
+            
+            if (record.DepartmentId == null)
+                record.OcrWarnings.Add("Chưa phân loại được Đơn vị xử lý");
+            
+            if (!string.IsNullOrWhiteSpace(record.TrichYeu))
+            {
+                if (Regex.IsMatch(record.TrichYeu, @"[a-zA-ZÀ-ỹ]\d[a-zA-ZÀ-ỹ]"))
+                    record.OcrWarnings.Add("Trích yếu có vẻ kẹt số do quét lỗi");
+                
+                if (Regex.IsMatch(record.TrichYeu, @"[a-zA-ZÀ-ỹ]['\`\~^]"))
+                    record.OcrWarnings.Add("Trích yếu bị rớt dấu nón hoặc nháy đơn");
+                
+                if (Regex.IsMatch(record.TrichYeu, @"[^a-zA-Z0-9\sÀ-ỹ\.\,\/\-]{3,}"))
+                    record.OcrWarnings.Add("Trích yếu chứa cụm ký tự rác vô nghĩa");
+            }
+
+            if (!string.IsNullOrWhiteSpace(record.SoVanBan))
+            {
+                if (Regex.IsMatch(record.SoVanBan, @"[^a-zA-Z0-9\sÀ-ỹ\.\,\/\-]{3,}"))
+                    record.OcrWarnings.Add("Số hiệu chứa ký tự nhiễu rác");
+            }
+        }
     }
 }

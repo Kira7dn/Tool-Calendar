@@ -17,7 +17,20 @@ namespace ToolCalender.Services
         {
             using var pdfStream = File.OpenRead(filePath);
             using var pageImageStream = new MemoryStream();
-            Conversion.SavePng(pageImageStream, pdfStream, page: pageIndex, dpi: dpi);
+            Conversion.SavePng(
+                pageImageStream,
+                pdfStream,
+                password: null,
+                page: pageIndex,
+                dpi: dpi,
+                width: null,
+                height: null,
+                withAnnotations: true,
+                withFormFill: true,
+                withAspectRatio: false,
+                rotation: PdfRotation.Rotate0,
+                antiAliasing: PdfAntiAliasing.All,
+                backgroundColor: SKColors.White);
             pageImageStream.Position = 0;
             return SKBitmap.Decode(pageImageStream);
         }

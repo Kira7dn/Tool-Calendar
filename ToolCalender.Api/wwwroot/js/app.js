@@ -132,6 +132,7 @@ export function initializeApp() {
     context.services.refreshCoreData();
     settings.prefetch();
     showTab('dashboard');
+    document.body.classList.remove('app-booting');
 
     initialized = true;
 }

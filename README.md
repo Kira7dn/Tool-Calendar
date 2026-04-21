@@ -15,10 +15,12 @@ Hệ thống quản lý, giám sát và điều phối công văn thời gian th
 ## 🛠️ Hướng dẫn Cài đặt Hệ thống (Dành cho Admin)
 
 ### Bước 1: Chuẩn bị môi trường
+
 - Cài đặt **Docker Desktop**.
 - Cài đặt **Node.js** (để chạy lệnh `npx` khởi tạo SSL thông qua mkcert).
 
 ### Bước 2: Khởi tạo Server
+
 1. Mở thư mục dự án.
 2. Chuột phải vào file **`init_server.ps1`** -> Chọn **Run with PowerShell**.
 3. Script sẽ tự động:
@@ -29,6 +31,7 @@ Hệ thống quản lý, giám sát và điều phối công văn thời gian th
    - Khởi chạy toàn bộ hệ thống bằng Docker.
 
 ### Bước 3: Cung cấp bộ cài cho máy khách
+
 - Gửi toàn bộ thư mục **`client_setup`** cho các máy tính khác trong mạng để họ thực hiện cài đặt nhanh.
 
 ---
@@ -49,7 +52,7 @@ Hệ thống quản lý, giám sát và điều phối công văn thời gian th
 
 Hệ thống đã được nạp sẵn dữ liệu mẫu (Seed Data) để thử nghiệm:
 
-- **Tài khoản Quản trị**: `admin` / `123456`
+- **Tài khoản Quản trị**: `admin` / `admin@123456`
 - **Tài khoản Lãnh đạo**: `chutich` / `123456`
 - **Tài khoản Văn thư**: `vanthu` / `123456`
 - **Địa chỉ truy cập**: [https://congvan.local](https://congvan.local)
