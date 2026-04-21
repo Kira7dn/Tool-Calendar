@@ -5,15 +5,17 @@ using ToolCalender.Models;
 
 namespace ToolCalender.Api.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class AdminController : ControllerBase
     {
         // --- DEPARTMENTS ---
+        [Authorize(Roles = "Admin,VanThu")]
         [HttpGet("departments")]
         public IActionResult GetDepartments() => Ok(DatabaseService.GetDepartments());
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("departments")]
         public IActionResult AddDepartment([FromBody] Department dept)
         {
@@ -23,6 +25,7 @@ namespace ToolCalender.Api.Controllers
             return Ok(dept);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("departments/{id}")]
         public IActionResult DeleteDepartment(int id)
         {
@@ -31,9 +34,11 @@ namespace ToolCalender.Api.Controllers
         }
 
         // --- LABELS ---
+        [Authorize(Roles = "Admin")]
         [HttpGet("labels")]
         public IActionResult GetLabels() => Ok(DatabaseService.GetLabels());
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("labels")]
         public IActionResult AddLabel([FromBody] DocumentLabel label)
         {
@@ -43,6 +48,7 @@ namespace ToolCalender.Api.Controllers
             return Ok(label);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("labels/{id}")]
         public IActionResult DeleteLabel(int id)
         {
@@ -51,9 +57,11 @@ namespace ToolCalender.Api.Controllers
         }
 
         // --- AUTO RULES ---
+        [Authorize(Roles = "Admin")]
         [HttpGet("rules")]
         public IActionResult GetRules() => Ok(DatabaseService.GetAutoRules());
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("rules")]
         public IActionResult AddRule([FromBody] AutoRule rule)
         {
@@ -63,6 +71,7 @@ namespace ToolCalender.Api.Controllers
             return Ok(rule);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("rules/{id}")]
         public IActionResult DeleteRule(int id)
         {
@@ -71,6 +80,7 @@ namespace ToolCalender.Api.Controllers
         }
 
         // --- SETTINGS ---
+        [Authorize(Roles = "Admin")]
         [HttpGet("settings/{key}")]
         public IActionResult GetSetting(string key) 
         {
@@ -78,6 +88,7 @@ namespace ToolCalender.Api.Controllers
             return Ok(new { key, value = val });
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("settings")]
         public IActionResult SaveSetting([FromBody] SettingUpdateRequest request)
         {

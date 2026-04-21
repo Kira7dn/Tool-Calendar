@@ -9,6 +9,7 @@ namespace ToolCalender.Models
         public string TenCongVan { get; set; } = "";
         public string TrichYeu { get; set; } = "";
         public string FullText { get; set; } = "";
+        public string OcrPagesJson { get; set; } = "[]";
         public DateTime? NgayBanHanh { get; set; }
         public string CoQuanBanHanh { get; set; } = "";
         public string CoQuanChuQuan { get; set; } = "";  // Cơ quan chủ quan tham mưu

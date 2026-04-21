@@ -1,0 +1,78 @@
+<section id="tab-settings" class="tab-content">
+    <div class="admin-layout">
+        <div class="admin-subnav">
+            <button class="admin-subnav-btn active" data-action="show-admin-tab" data-admin-tab="ocr" id="atab-ocr">&#9881;&#65039; OCR &amp; Bóc tách</button>
+            <button class="admin-subnav-btn" data-action="show-admin-tab" data-admin-tab="departments" id="atab-departments">&#127970; Phòng ban</button>
+            <button class="admin-subnav-btn" data-action="show-admin-tab" data-admin-tab="labels" id="atab-labels">&#127991;&#65039; Nhãn &amp; Rules</button>
+            <button class="admin-subnav-btn" data-action="show-admin-tab" data-admin-tab="backup" id="atab-backup">&#128190; Sao lưu dữ liệu</button>
+        </div>
+
+        <div class="admin-panel" id="admin-panel-ocr">
+            <h3 style="margin-bottom:24px;">&#9881;&#65039; Cấu hình bóc tách OCR</h3>
+            <div style="display:flex; flex-direction:column; gap:20px; max-width:600px;">
+                <div class="form-group">
+                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Số trang quét OCR tối đa mỗi file (0 = quét toàn bộ)</label>
+                    <input type="number" id="setting-max-pages" class="form-control" value="0" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; font-size:1rem;">
+                    <small style="color:grey;">Mặc định: 0 (Quét toàn bộ văn bản). Nếu để là 2, hệ thống chỉ quét 2 trang đầu.</small>
+                </div>
+                <div class="form-group">
+                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Từ khóa nhận diện "Thời hạn xử lý" (Cách nhau bởi dấu phẩy)</label>
+                    <textarea id="setting-deadline-keywords" class="form-control" rows="4" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; resize:vertical; font-size:0.95rem; line-height:1.6;"></textarea>
+                </div>
+                <button class="btn btn-primary" data-action="save-settings" style="padding:14px; font-size:1rem;">Lưu cấu hình OCR</button>
+            </div>
+        </div>
+
+        <div class="admin-panel" id="admin-panel-departments" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3>&#127970; Quản lý Phòng ban</h3>
+                <button class="btn btn-primary" data-action="open-dept-modal">&#43; Thêm phòng ban</button>
+            </div>
+            <div class="table-scroll">
+                <table id="dept-table">
+                    <thead><tr><th>ID</th><th>Tên phòng ban</th><th>Mô tả</th><th>Thao tác</th></tr></thead>
+                    <tbody id="dept-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-panel" id="admin-panel-labels" style="display:none;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h3>&#127991;&#65039; Nhãn phân loại</h3>
+                        <button class="btn btn-primary" style="padding:6px 14px;" data-action="open-label-modal">&#43; Thêm nhãn</button>
+                    </div>
+                    <table id="labels-table">
+                        <thead><tr><th>Tên nhãn</th><th>Màu</th><th>Thao tác</th></tr></thead>
+                        <tbody id="labels-body"></tbody>
+                    </table>
+                </div>
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h3>&#129302; Auto Rules</h3>
+                        <button class="btn btn-primary" style="padding:6px 14px;" data-action="open-rule-modal">&#43; Thêm rule</button>
+                    </div>
+                    <table id="rules-table">
+                        <thead><tr><th>Từ khóa</th><th>Nhãn</th><th>Hạn (ngày)</th><th>Thao tác</th></tr></thead>
+                        <tbody id="rules-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-panel" id="admin-panel-backup" style="display:none;">
+            <h3 style="margin-bottom:24px;">&#128190; Sao lưu &amp; Xuất dữ liệu</h3>
+            <div style="display:flex; flex-direction:column; gap:20px; max-width:500px;">
+                <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:24px;">
+                    <h4 style="margin-bottom:8px; color:var(--sidebar-bg);">&#128229; Xuất toàn bộ dữ liệu ra CSV</h4>
+                    <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:16px;">Tải xuống toàn bộ danh sách văn bản dưới dạng file CSV. Thuận tiện lưu trữ vào USB hoặc ổ cứng rời.</p>
+                    <button class="btn btn-primary" data-action="download-backup" style="padding:12px 28px; font-size:1rem;">&#11015;&#65039; Tải xuống file CSV</button>
+                </div>
+                <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:12px; padding:16px; font-size:0.87rem; color:#856404;">
+                    &#9888;&#65039; <b>Lưu ý:</b> Chức năng sao lưu tự động định kỳ sẽ được triển khai trong phiên bản tiếp theo. Hiện tại định kỳ xuất thủ công.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

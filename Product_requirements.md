@@ -40,19 +40,53 @@
 
 ## 1. Luồng của Văn thư (Nhập liệu & Điều phối)
 
-**Bắt đầu**: Tải lên file PDF/Quét văn bản (Hỗ trợ Tải lẻ hoặc Tải hàng loạt).
+Mục tiêu của luồng này là để Văn thư nhập liệu, rà soát, phân loại và điều phối ngay trong một workspace thống nhất, ưu tiên thao tác nhanh với nhiều file.
 
-**OCR [hệ thống]**: Bóc tách OCR (Xếp hàng xử lý Batch) và đưa vào **Danh sách chờ duyệt (Pending List)**.
-
-**Review**: Giao diện Review Side-by-Side rà soát từng trang PDF vs Dữ liệu bóc tách (đặc biệt là Tên công văn, Số hiệu, Trích yếu).
-
-**Chỉnh sửa**: Chỉnh sửa/Bổ sung thông tin sai lệch.
-
-**Phân loại**: Dán nhãn/Phân loại & Áp rule thủ công.
-
-**Điều phối**: Gán đích danh Cán bộ/Phòng ban xử lý.
-
-* **Hoàn tất [hệ thống]**: Lưu dữ liệu & Đẩy Web Notification cho Cán bộ.
+- **Bắt đầu**:
+  Văn thư tải lên file PDF hoặc thư mục cần upload.
+  Hệ thống hỗ trợ cả tải lẻ và tải hàng loạt.
+- **OCR hàng đợi [hệ thống]**:
+  Mỗi file sau khi tải lên được đưa vào hàng chờ OCR theo cơ chế batch queue.
+  Hệ thống phải hiển thị ngay danh sách chờ xử lý bên dưới, không đợi toàn bộ batch hoàn tất mới hiện.
+- **Danh sách chờ đọc / danh sách batch đang xử lý**:
+  UI hiển thị danh sách tất cả file vừa nạp với trạng thái theo từng file.
+  Các trạng thái tối thiểu gồm:
+  `Chờ đọc`, `Đang OCR`, `OCR xong`, `Lỗi OCR`, `Đã lưu`.
+  Mỗi dòng trong danh sách là một file độc lập, được cập nhật dần theo tiến trình xử lý.
+- **Cập nhật metadata theo từng dòng**:
+  Ngay sau khi OCR của từng file hoàn tất, hệ thống cập nhật trực tiếp vào đúng dòng của file đó các dữ liệu bóc tách chính:
+  `Tên công văn`, `Số hiệu`, `Hạn xử lý`.
+  Có thể hiển thị thêm `Cơ quan chủ quản`, `Trích yếu`, `Độ khẩn` nếu OCR đã nhận diện được.
+- **Action trên từng dòng**:
+  Mỗi file trong danh sách phải có đầy đủ action riêng:
+  `Preview`, `Save`, `Delete`.
+  Ngoài ra tại danh sách cần có luôn các thao tác nghiệp vụ:
+  `Dán nhãn / Phân loại`, `Áp rule thủ công`, `Gán phòng ban`, `Gán cán bộ xử lý`.
+- **Preview / Review từng file**:
+  Khi bấm `Preview`, hệ thống mở một **modal preview side-by-side**, không replace UI của màn upload.
+  Modal này dùng để rà soát một file tại một thời điểm.
+  Trong modal:
+  Văn thư xem PDF gốc theo kiểu page-by-page ở một bên, và form metadata / OCR text ở bên còn lại.
+  Có nút chuyển trang để xem từng trang PDF (lưu ý chỉ khi chuyển trang chỉ có phần fulltext thay đổi, còn toàn bộ metadata là áp dụng cho toàn file, không được đổi ).
+  Có thể chỉnh sửa hoặc bổ sung thông tin OCR sai lệch.
+  Có các nút `Save` và `Delete` cho riêng file đang mở.
+- **Phân loại và điều phối**:
+  Cả ở `danh sách` lẫn trong `preview modal`, Văn thư đều phải thao tác được:
+  `Dán nhãn / Phân loại`,
+  `Áp rule thủ công`,
+  `Gán phòng ban`,
+  `Gán đích danh cán bộ xử lý`.
+  Các thao tác này phải cập nhật ngay vào item hiện tại, không buộc người dùng chuyển sang màn hình khác.
+- **Hoàn tất lưu và điều phối [hệ thống]**:
+  Văn thư có thể:
+  `Lưu từng file` ngay tại từng dòng hoặc trong preview modal.
+  `Lưu toàn bộ` từ phần header của danh sách batch.
+  Sau khi lưu và đã có người được phân công, hệ thống phải gửi **Web Notification** cho đúng cán bộ được giao xử lý.
+- **Yêu cầu UX bắt buộc cho luồng Văn thư**:
+  Không tự động mở preview ngay sau khi upload xong.
+  Người dùng chủ động mở preview bằng nút `Preview` hoặc `Rà soát Side-by-Side`.
+  Preview side-by-side phải là modal riêng.
+  Danh sách batch phải luôn còn visible để Văn thư theo dõi tiến độ từng file.
 
 ## 2. Luồng của Cán bộ (Thực thi & Báo cáo)
 

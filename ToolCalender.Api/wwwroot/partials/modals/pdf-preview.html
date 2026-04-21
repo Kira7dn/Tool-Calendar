@@ -1,0 +1,16 @@
+<div id="pdf-preview-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1500; align-items:flex-start; justify-content:center; padding-top:20px;">
+    <div style="width:96vw; max-width:1100px; height:90vh; background:#fff; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.5);">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 20px; background:var(--sidebar-bg); color:#fff; border-radius:16px 16px 0 0;">
+            <span id="pdf-modal-title" style="font-weight:700; font-size:1rem;">Xem tài liệu PDF</span>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="btn" style="background:rgba(255,255,255,0.15); color:#fff; padding:5px 14px;" data-action="pdf-modal-prev">&#9664;</button>
+                <span id="pdf-modal-page-info" style="font-size:0.9rem; font-weight:600;">1/1</span>
+                <button class="btn" style="background:rgba(255,255,255,0.15); color:#fff; padding:5px 14px;" data-action="pdf-modal-next">&#9654;</button>
+                <button class="btn" style="background:#c0392b; color:#fff; padding:5px 14px;" data-action="close-pdf-modal">✕ Đóng</button>
+            </div>
+        </div>
+        <div style="flex:1; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:20px; background:#525659;">
+            <canvas id="pdf-modal-canvas" style="max-width:100%; box-shadow:0 4px 20px rgba(0,0,0,0.5);"></canvas>
+        </div>
+    </div>
+</div>

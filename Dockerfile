@@ -5,10 +5,13 @@ WORKDIR /app
 # Install native dependencies for Tesseract and SkiaSharp
 RUN apt-get update && apt-get install -y \
     libgdiplus \
+    libleptonica-dev \
     libtesseract-dev \
     tesseract-ocr \
     tesseract-ocr-vie \
     libc6-dev \
+    && ln -sf /usr/lib/x86_64-linux-gnu/liblept.so.5 /usr/lib/x86_64-linux-gnu/libleptonica-1.82.0.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libtesseract.so.5 /usr/lib/x86_64-linux-gnu/libtesseract50.so \
     && rm -rf /var/lib/apt/lists/*
 
 # Stage 2: Build
@@ -31,10 +34,13 @@ WORKDIR /app
 # Phải cài lại dependencies vì aspnet image khác với sdk image
 RUN apt-get update && apt-get install -y \
     libgdiplus \
+    libleptonica-dev \
     libtesseract-dev \
     tesseract-ocr \
     tesseract-ocr-vie \
     libc6-dev \
+    && ln -sf /usr/lib/x86_64-linux-gnu/liblept.so.5 /usr/lib/x86_64-linux-gnu/libleptonica-1.82.0.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libtesseract.so.5 /usr/lib/x86_64-linux-gnu/libtesseract50.so \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=publish /app/publish .
 

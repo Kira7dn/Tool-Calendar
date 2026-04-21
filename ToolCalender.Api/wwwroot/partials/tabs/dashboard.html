@@ -1,0 +1,49 @@
+<section id="tab-dashboard" class="tab-content active-tab">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <p class="stat-label">Tổng văn bản</p>
+            <p class="stat-value" id="stat-total">0</p>
+            <p class="stat-info" style="color: var(--primary)">Dữ liệu toàn hệ thống</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label">Sắp hết hạn</p>
+            <p class="stat-value" id="stat-urgent" style="color: var(--warning)">0</p>
+            <p class="stat-info" style="color: var(--warning)">Trong vòng 7 ngày</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label">Đã quá hạn</p>
+            <p class="stat-value" id="stat-overdue" style="color: var(--danger)">0</p>
+            <p class="stat-info" style="color: var(--danger)">Cần xử lý ngay lập tức</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label">Đến hạn hôm nay</p>
+            <p class="stat-value" id="stat-today" style="color: var(--success)">0</p>
+            <p class="stat-info" style="color: var(--success)">Kỳ hạn cuối cùng</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="data-section" style="padding: 24px; overflow-y: auto;">
+            <h3 style="margin-bottom: 20px;">Xử lý gần đây</h3>
+            <div class="table-scroll">
+                <table id="recent-docs">
+                    <thead>
+                        <tr>
+                            <th>Số văn bản</th>
+                            <th>Trích yếu</th>
+                            <th>Thời hạn</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="data-section"
+            style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <h3 style="margin-bottom: 20px; align-self: flex-start;">Tỷ lệ hoàn thành</h3>
+            <canvas id="statChart" style="max-width: 220px; max-height: 220px;"></canvas>
+        </div>
+    </div>
+</section>

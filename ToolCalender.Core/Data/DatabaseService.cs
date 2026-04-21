@@ -47,6 +47,7 @@ namespace ToolCalender.Data
                     TenCongVan TEXT,
                     TrichYeu TEXT,
                     FullText TEXT,
+                    OcrPagesJson TEXT DEFAULT '[]',
                     NgayBanHanh TEXT,
                     CoQuanBanHanh TEXT,
                     CoQuanChuQuan TEXT,
@@ -216,6 +217,7 @@ namespace ToolCalender.Data
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN TenCongVan TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN TrichYeu TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN FullText TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN OcrPagesJson TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN NgayBanHanh TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN CoQuanBanHanh TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN CoQuanChuQuan TEXT"; cmd.ExecuteNonQuery(); } catch { }
@@ -573,8 +575,8 @@ namespace ToolCalender.Data
             connection.Open();
 
             string sql = @"
-                INSERT INTO Documents (SoVanBan, TenCongVan, TrichYeu, FullText, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich)
-                VALUES (@SoVanBan, @TenCongVan, @TrichYeu, @FullText, @NgayBanHanh, @CoQuanBanHanh, @CoQuanChuQuan, @ThoiHan, @DonViChiDao, @FilePath, @Status, @Priority, @DepartmentId, @AssignedTo, @EvidencePaths, @EvidenceNotes, @CompletionDate, @LabelId, @NgayThem, @DaTaoLich);
+                INSERT INTO Documents (SoVanBan, TenCongVan, TrichYeu, FullText, OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich)
+                VALUES (@SoVanBan, @TenCongVan, @TrichYeu, @FullText, @OcrPagesJson, @NgayBanHanh, @CoQuanBanHanh, @CoQuanChuQuan, @ThoiHan, @DonViChiDao, @FilePath, @Status, @Priority, @DepartmentId, @AssignedTo, @EvidencePaths, @EvidenceNotes, @CompletionDate, @LabelId, @NgayThem, @DaTaoLich);
                 SELECT last_insert_rowid();";
 
             using var cmd = new SqliteCommand(sql, connection);
@@ -589,7 +591,7 @@ namespace ToolCalender.Data
 
             string sql = @"
                 UPDATE Documents SET
-                    SoVanBan=@SoVanBan, TenCongVan=@TenCongVan, TrichYeu=@TrichYeu, FullText=@FullText, 
+                    SoVanBan=@SoVanBan, TenCongVan=@TenCongVan, TrichYeu=@TrichYeu, FullText=@FullText, OcrPagesJson=@OcrPagesJson,
                     NgayBanHanh=@NgayBanHanh, CoQuanBanHanh=@CoQuanBanHanh, CoQuanChuQuan=@CoQuanChuQuan,
                     ThoiHan=@ThoiHan, DonViChiDao=@DonViChiDao, FilePath=@FilePath, 
                     Status=@Status, Priority=@Priority, DepartmentId=@DepartmentId, 
@@ -717,6 +719,7 @@ namespace ToolCalender.Data
             cmd.Parameters.AddWithValue("@TenCongVan", (object?)r.TenCongVan ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@TrichYeu", (object?)r.TrichYeu ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@FullText", (object?)r.FullText ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@OcrPagesJson", string.IsNullOrWhiteSpace(r.OcrPagesJson) ? "[]" : r.OcrPagesJson);
             cmd.Parameters.AddWithValue("@NgayBanHanh", r.NgayBanHanh.HasValue ? (object)r.NgayBanHanh.Value.ToString("yyyy-MM-dd") : DBNull.Value);
             cmd.Parameters.AddWithValue("@CoQuanBanHanh", (object?)r.CoQuanBanHanh ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@CoQuanChuQuan", (object?)r.CoQuanChuQuan ?? DBNull.Value);
@@ -744,6 +747,7 @@ namespace ToolCalender.Data
                 TenCongVan = r["TenCongVan"]?.ToString() ?? "",
                 TrichYeu = r["TrichYeu"]?.ToString() ?? "",
                 FullText = r["FullText"]?.ToString() ?? "",
+                OcrPagesJson = r["OcrPagesJson"]?.ToString() ?? "[]",
                 NgayBanHanh = TryParseDate(r["NgayBanHanh"]?.ToString()),
                 CoQuanBanHanh = r["CoQuanBanHanh"]?.ToString() ?? "",
                 CoQuanChuQuan = r["CoQuanChuQuan"]?.ToString() ?? "",

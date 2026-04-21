@@ -6,6 +6,8 @@ namespace ToolCalender.Models
         public List<OcrPageResult> Pages { get; set; } = new();
         public int TotalPages { get; set; }
         public long ElapsedMs { get; set; }
+        public bool HasCriticalError { get; set; }
+        public string ErrorMessage { get; set; } = "";
     }
 
     public class OcrPageResult
