@@ -1,0 +1,442 @@
+<style>
+    #review-side-by-side-modal .review-modal-shell {
+        width: min(97vw, 1480px);
+        height: min(94vh, 980px);
+        background: #fff;
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.38);
+    }
+
+    #review-side-by-side-modal .review-nav-bar,
+    #review-side-by-side-modal .review-nav-primary,
+    #review-side-by-side-modal .review-nav-actions,
+    #review-side-by-side-modal .review-page-nav,
+    #review-side-by-side-modal .review-panel-head {
+        display: flex;
+        align-items: center;
+    }
+
+    #review-side-by-side-modal .review-nav-bar {
+        justify-content: space-between;
+        padding: 10px 16px;
+        background: var(--sidebar-bg);
+        color: #fff;
+        flex-wrap: wrap;
+        gap: 12px;
+        flex-shrink: 0;
+    }
+
+    #review-side-by-side-modal .review-nav-primary,
+    #review-side-by-side-modal .review-nav-actions,
+    #review-side-by-side-modal .review-page-nav {
+        gap: 8px;
+    }
+
+    #review-side-by-side-modal .review-doc-counter {
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    #review-side-by-side-modal .review-icon-btn,
+    #review-side-by-side-modal .review-mini-btn {
+        border: none;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font: inherit;
+        transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+    }
+
+    #review-side-by-side-modal .review-icon {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+        pointer-events: none;
+    }
+
+    #review-side-by-side-modal .review-mini-btn .review-icon {
+        width: 15px;
+        height: 15px;
+    }
+
+    #review-side-by-side-modal .review-icon-btn {
+        width: 42px;
+        height: 38px;
+        font-size: 1rem;
+    }
+
+    #review-side-by-side-modal .review-mini-btn {
+        width: 32px;
+        height: 28px;
+        background: #e2e8f0;
+        color: #1e293b;
+        font-size: 0.82rem;
+    }
+
+    #review-side-by-side-modal .review-icon-btn-light {
+        background: rgba(255,255,255,0.18);
+        color: #ffffff;
+        border: 1px solid rgba(255,255,255,0.16);
+    }
+
+    #review-side-by-side-modal .review-icon-btn-primary {
+        background: #2563eb;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(37,99,235,0.28);
+    }
+
+    #review-side-by-side-modal .review-icon-btn-danger-soft {
+        background: #ffffff;
+        color: #c0392b;
+        border: 1px solid rgba(192,57,43,0.22);
+    }
+
+    #review-side-by-side-modal .review-icon-btn-danger {
+        background: #0f766e;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(15,118,110,0.26);
+    }
+
+    #review-side-by-side-modal .review-icon-btn:hover,
+    #review-side-by-side-modal .review-mini-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    #review-side-by-side-modal .review-icon-btn-light:hover {
+        background: rgba(255,255,255,0.24);
+    }
+
+    #review-side-by-side-modal .review-icon-btn-primary:hover {
+        background: #1d4ed8;
+    }
+
+    #review-side-by-side-modal .review-icon-btn-danger-soft:hover {
+        background: #fff5f5;
+        color: #9f2d22;
+    }
+
+    #review-side-by-side-modal .review-icon-btn-danger:hover {
+        background: #0f5f59;
+    }
+
+    #review-side-by-side-modal .review-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.18fr) minmax(380px, 0.82fr);
+        flex: 1;
+        overflow: hidden;
+        min-height: 0;
+    }
+
+    #review-side-by-side-modal .review-left {
+        display: flex;
+        flex-direction: column;
+        border-right: 2px solid #e2e8f0;
+        overflow: hidden;
+        background: #525659;
+        min-height: 0;
+    }
+
+    #review-side-by-side-modal .review-right {
+        padding: 14px;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(248,250,252,0.98), rgba(241,245,249,0.98));
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #review-side-by-side-modal .review-right .form-group {
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    #review-side-by-side-modal .review-panel-head {
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    #review-side-by-side-modal .review-panel-head-light {
+        background: linear-gradient(180deg, #f8fafc, #eef2f7);
+    }
+
+    #review-side-by-side-modal .review-head-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    #review-side-by-side-modal .review-panel-title {
+        font-weight: 700;
+        color: var(--sidebar-bg);
+        font-size: 0.92rem;
+    }
+
+    #review-side-by-side-modal .review-head-caption,
+    #review-side-by-side-modal .review-page-info,
+    #review-side-by-side-modal .review-page-tag,
+    #review-side-by-side-modal .review-field-label {
+        color: #64748b;
+    }
+
+    #review-side-by-side-modal .review-head-caption {
+        font-size: 0.74rem;
+        line-height: 1.3;
+    }
+
+    #review-side-by-side-modal .review-page-info,
+    #review-side-by-side-modal .review-page-tag {
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    #review-side-by-side-modal .review-page-tag {
+        padding: 4px 8px;
+        background: #e2e8f0;
+        border-radius: 999px;
+    }
+
+    #review-side-by-side-modal .review-meta-card,
+    #review-side-by-side-modal .review-fulltext-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.94);
+        overflow: hidden;
+    }
+
+    #review-side-by-side-modal .review-meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 10px;
+        padding: 10px;
+    }
+
+    #review-side-by-side-modal .review-field-span-2 {
+        grid-column: span 2;
+    }
+
+    #review-side-by-side-modal .review-field-label {
+        display: block;
+        font-size: 0.75rem;
+        margin-bottom: 3px;
+    }
+
+    #review-side-by-side-modal .review-field-input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 10px;
+        color: #1e293b;
+        font-size: 0.88rem;
+        background: #fff;
+        outline: none;
+    }
+
+    #review-side-by-side-modal .review-field-textarea {
+        min-height: 64px;
+        resize: none;
+    }
+
+    #review-side-by-side-modal .review-fulltext-group {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #review-side-by-side-modal .review-fulltext-textarea {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        width: 100%;
+        padding: 12px;
+        border: none;
+        outline: none;
+        color: #1e293b;
+        background: linear-gradient(180deg, rgba(248,250,252,0.95), rgba(241,245,249,0.98));
+        font-size: 0.9rem;
+        line-height: 1.55;
+        resize: none;
+        white-space: pre-wrap;
+        font-family: Consolas, "SFMono-Regular", "Liberation Mono", monospace;
+    }
+
+    #review-side-by-side-modal .review-pdf-stage {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 18px;
+        background: radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 32%), linear-gradient(180deg, #5c6166 0%, #4b4f54 100%);
+    }
+
+    #review-side-by-side-modal .review-pdf-canvas {
+        max-width: 100%;
+        box-shadow: 0 14px 36px rgba(0,0,0,0.42);
+        border-radius: 4px;
+    }
+
+    @media (max-width: 900px) {
+        #review-side-by-side-modal .review-layout {
+            grid-template-columns: 1fr;
+        }
+
+        #review-side-by-side-modal .review-left {
+            min-height: 40vh;
+        }
+
+        #review-side-by-side-modal .review-modal-shell {
+            width: 98vw;
+            height: 96vh;
+        }
+
+        #review-side-by-side-modal .review-meta-grid {
+            grid-template-columns: 1fr;
+        }
+
+        #review-side-by-side-modal .review-field-span-2 {
+            grid-column: span 1;
+        }
+
+        #review-side-by-side-modal .review-head-caption {
+            display: none;
+        }
+    }
+</style>
+<div id="review-side-by-side-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:1500; align-items:center; justify-content:center; padding:20px;">
+    <div class="review-modal-shell">
+        <div class="review-nav-bar">
+            <div class="review-nav-primary">
+                <button class="review-icon-btn review-icon-btn-light" data-action="close-review-modal" title="Tho&aacute;t">
+                    <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M15 18l-6 -6l6 -6"></path>
+                    </svg>
+                </button>
+                <span id="review-doc-counter" class="review-doc-counter">T&agrave;i li&#7879;u 1/1</span>
+            </div>
+            <div class="review-nav-actions">
+                <button class="review-icon-btn review-icon-btn-light" id="review-prev-btn" data-action="review-prev" title="T&agrave;i li&#7879;u tr&#432;&#7899;c">
+                    <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M15 18l-6 -6l6 -6"></path>
+                    </svg>
+                </button>
+                <button class="review-icon-btn review-icon-btn-light" id="review-next-btn" data-action="review-next" title="T&agrave;i li&#7879;u sau">
+                    <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M9 6l6 6l-6 6"></path>
+                    </svg>
+                </button>
+                <button class="review-icon-btn review-icon-btn-primary" data-action="save-current-review" title="L&#432;u file n&agrave;y">
+                    <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5 12l5 5l10 -10"></path>
+                    </svg>
+                </button>
+                <button class="review-icon-btn review-icon-btn-danger-soft" data-action="delete-current-review" title="X&oacute;a file n&agrave;y">
+                    <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 7h16"></path>
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+                    </svg>
+                </button>
+                <button class="review-icon-btn review-icon-btn-danger" data-action="confirm-all-batch" title="L&#432;u to&agrave;n b&#7897;">
+                    <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M7 12l3 3l4 -4"></path>
+                        <path d="M13 12l3 3l5 -5"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="review-layout">
+            <div class="review-left">
+                <div class="review-panel-head review-panel-head-light">
+                    <div class="review-head-stack">
+                        <span id="review-pdf-filename" class="review-panel-title">PDF G&#7889;c</span>
+                        <span class="review-head-caption">Xem theo t&#7915;ng trang g&#7889;c &#273;&#7875; &#273;&#7889;i chi&#7871;u OCR</span>
+                    </div>
+                    <div class="review-page-nav">
+                        <button class="review-mini-btn" data-action="review-pdf-prev" title="Trang tr&#432;&#7899;c">
+                            <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M15 18l-6 -6l6 -6"></path>
+                            </svg>
+                        </button>
+                        <span id="review-page-info" class="review-page-info">1/1</span>
+                        <button class="review-mini-btn" data-action="review-pdf-next" title="Trang sau">
+                            <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9 6l6 6l-6 6"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="review-pdf-stage">
+                    <canvas id="review-pdf-canvas" class="review-pdf-canvas"></canvas>
+                </div>
+            </div>
+            <div class="review-right">
+                <input type="hidden" id="review-doc-id">
+                <div class="review-meta-card">
+                    <div class="review-panel-head">
+                        <div class="review-head-stack">
+                            <span class="review-panel-title">Th&ocirc;ng tin v&#259;n b&#7843;n</span>
+                        </div>
+                    </div>
+                    <div class="review-meta-grid">
+                        <div class="form-group">
+                            <label class="review-field-label">S&#7889; hi&#7879;u v&#259;n b&#7843;n</label>
+                            <input type="text" id="review-so-hieu" class="review-field-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="review-field-label">H&#7841;n x&#7917; l&yacute;</label>
+                            <input type="date" id="review-han-xu-ly" class="review-field-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="review-field-label">C&#417; quan ch&#7911; qu&#7843;n</label>
+                            <input type="text" id="review-co-quan" class="review-field-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="review-field-label">Ph&ograve;ng ban x&#7917; l&yacute;</label>
+                            <select id="review-department" class="review-field-input">
+                                <option value="">Ch&#7885;n ph&ograve;ng ban</option>
+                            </select>
+                        </div>
+                        <div class="form-group review-field-span-2">
+                            <label class="review-field-label">C&aacute;n b&#7897; ph&#7909; tr&aacute;ch</label>
+                            <select id="review-assignee" class="review-field-input">
+                                <option value="">Ch&#7885;n c&aacute;n b&#7897;</option>
+                            </select>
+                        </div>
+                        <div class="form-group review-field-span-2">
+                            <label class="review-field-label">Tr&iacute;ch y&#7871;u</label>
+                            <textarea id="review-trich-yeu" rows="3" class="review-field-input review-field-textarea"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-fulltext-card review-fulltext-group">
+                    <div class="review-panel-head">
+                        <div class="review-head-stack">
+                            <span class="review-panel-title">Full OCR text trang hi&#7879;n t&#7841;i</span>
+                            <span class="review-head-caption">&#431u ti&ecirc;n hi&#7875;n th&#7883; n&#7897;i dung &#273;&#7883;i chi&#7871;u thay v&igrave; d&agrave;n tr&#7843;i metadata</span>
+                        </div>
+                        <span id="review-ocr-page-label" class="review-page-tag">Trang 1</span>
+                    </div>
+                    <textarea id="review-fulltext-page" readonly class="review-fulltext-textarea"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

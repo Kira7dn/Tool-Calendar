@@ -1,0 +1,24 @@
+<div id="custom-alert" class="modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+    <div class="data-section"
+        style="width: 350px; padding: 30px; text-align: center; border: 1px solid var(--primary); background: #111827; border-top: 4px solid var(--primary);">
+        <div id="alert-icon" style="font-size: 32px; margin-bottom: 15px;">&#128276;</div>
+        <p id="alert-message" style="margin-bottom: 24px; line-height: 1.6; color: white; font-size: 0.95rem;"></p>
+        <button class="btn btn-primary" data-action="close-alert" style="width: 100%; padding: 12px;">Đồng ý</button>
+    </div>
+</div>
+
+<div id="custom-confirm" class="modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+    <div class="data-section"
+        style="width: 350px; padding: 30px; text-align: center; border: 1px solid var(--warning); background: #111827; border-top: 4px solid var(--warning);">
+        <div style="font-size: 32px; margin-bottom: 15px;">&#10067;</div>
+        <p id="confirm-message" style="margin-bottom: 24px; line-height: 1.6; color: white; font-size: 0.95rem;"></p>
+        <div style="display: flex; gap: 12px;">
+            <button class="btn" data-action="confirm-resolve" data-confirm-value="false"
+                style="flex: 1; background: #e2e8f0; color: #1e293b;">Hủy</button>
+            <button class="btn btn-primary" data-action="confirm-resolve" data-confirm-value="true"
+                style="flex: 1; background: var(--primary); border-color: var(--primary);">Đồng ý</button>
+        </div>
+    </div>
+</div>

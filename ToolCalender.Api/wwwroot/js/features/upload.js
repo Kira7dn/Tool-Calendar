@@ -1,0 +1,756 @@
+import { formatDate } from '../core/formatters.js';
+
+function normalizeBatchItem(doc, overrides = {}) {
+    const fileName = overrides.fileName
+        || (doc.filePath || '').replace(/\\/g, '/').split('/').pop()
+        || doc.originalFileName
+        || 'Tài liệu PDF';
+    const hasError = doc.status === 'Lỗi OCR'
+        || Boolean(doc.fullText && doc.fullText.includes('[OCR Total Error]'));
+    const assignedTo = doc.assignedTo ?? null;
+    const departmentId = doc.departmentId ?? null;
+
+    return {
+        ...doc,
+        fileName,
+        hasError,
+        assignedTo,
+        departmentId,
+        batchState: overrides.batchState || (hasError ? 'Lỗi OCR' : (assignedTo || departmentId ? 'Sẵn sàng lưu' : 'Cần rà soát'))
+    };
+}
+
+function shortenFileName(fileName, maxLength = 28) {
+    const value = String(fileName || '').trim();
+    if (!value || value.length <= maxLength) return value;
+
+    const lastDotIndex = value.lastIndexOf('.');
+    if (lastDotIndex <= 0 || lastDotIndex === value.length - 1) {
+        return `${value.slice(0, maxLength - 1)}…`;
+    }
+
+    const ext = value.slice(lastDotIndex);
+    const base = value.slice(0, lastDotIndex);
+    const budget = Math.max(8, maxLength - ext.length - 1);
+    return `${base.slice(0, budget)}…${ext}`;
+}
+
+export function createUploadFeature(context) {
+    let sessionUploads = [];
+    let batchPage = 1;
+    const batchPageSize = 5;
+    let editingDocId = null;
+    let isSaving = false;
+    let departments = [];
+    let users = [];
+
+    function init() {
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const folderInput = document.getElementById('folder-input');
+
+        dropZone?.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropZone.style.background = 'rgba(55, 114, 255, 0.05)';
+        });
+
+        dropZone?.addEventListener('dragleave', () => {
+            dropZone.style.background = 'rgba(255, 255, 255, 0.02)';
+        });
+
+        dropZone?.addEventListener('drop', async (event) => {
+            event.preventDefault();
+            dropZone.style.background = 'rgba(255, 255, 255, 0.02)';
+            if (event.dataTransfer.files.length) {
+                await handleFiles(event.dataTransfer.files);
+            }
+        });
+
+        fileInput?.addEventListener('change', async () => {
+            if (fileInput.files.length) {
+                await handleFiles(fileInput.files);
+                fileInput.value = '';
+            }
+        });
+
+        folderInput?.addEventListener('change', async () => {
+            if (folderInput.files.length) {
+                await handleFiles(folderInput.files);
+                folderInput.value = '';
+            }
+        });
+
+        document.getElementById('tab-upload')?.addEventListener('click', async (event) => {
+            const action = event.target.closest('[data-action]');
+            if (!action) return;
+
+            if (action.dataset.action === 'open-file-input') {
+                document.getElementById('file-input')?.click();
+            }
+
+            if (action.dataset.action === 'open-folder-input') {
+                document.getElementById('folder-input')?.click();
+            }
+
+            if (action.dataset.action === 'confirm-all-batch') {
+                await confirmAllBatch();
+            }
+
+            if (action.dataset.action === 'clear-batch') {
+                await clearBatch();
+            }
+
+            if (action.dataset.action === 'prev-batch-page') {
+                prevBatchPage();
+            }
+
+            if (action.dataset.action === 'next-batch-page') {
+                nextBatchPage();
+            }
+
+            if (action.dataset.action === 'open-edit-modal') {
+                openEditModal(parseInt(action.dataset.docId, 10));
+            }
+
+            if (action.dataset.action === 'preview-batch-item') {
+                context.services.enterReviewScene(parseInt(action.dataset.docId, 10));
+            }
+
+            if (action.dataset.action === 'save-batch-item') {
+                await saveBatchItem(parseInt(action.dataset.docId, 10));
+            }
+
+            if (action.dataset.action === 'delete-batch-item') {
+                await deleteBatchItem(parseInt(action.dataset.docId, 10));
+            }
+        });
+
+        document.getElementById('tab-upload')?.addEventListener('change', async (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLSelectElement)) return;
+
+            if (target.dataset.action === 'select-department') {
+                updateDepartmentSelection(parseInt(target.dataset.docId, 10), target.value);
+            }
+
+            if (target.dataset.action === 'select-assignee') {
+                updateAssigneeSelection(parseInt(target.dataset.docId, 10), target.value);
+            }
+        });
+
+        document.getElementById('edit-ocr-modal')?.addEventListener('click', async (event) => {
+            const action = event.target.closest('[data-action]');
+            if (!action) return;
+
+            if (action.dataset.action === 'close-edit-modal') {
+                closeEditModal();
+            }
+
+            if (action.dataset.action === 'save-edit') {
+                await saveEdit(action);
+            }
+        });
+    }
+
+    async function activate() {
+        await ensureReferenceData();
+    }
+
+    async function ensureReferenceData() {
+        if (departments.length && users.length) return;
+
+        try {
+            const [departmentResponse, userResponse] = await Promise.all([
+                context.api.get('/api/admin/departments'),
+                context.api.get('/api/users')
+            ]);
+
+            if (departmentResponse.ok) {
+                departments = await departmentResponse.json();
+            }
+
+            if (userResponse.ok) {
+                const payload = await userResponse.json();
+                users = payload.filter((user) => user.role === 'CanBo');
+            }
+        } catch (error) {
+            console.error('Reference data load error:', error);
+        }
+    }
+
+    async function handleFiles(files) {
+        await ensureReferenceData();
+
+        document.getElementById('upload-processing').style.display = 'block';
+        document.getElementById('upload-actions').style.display = 'none';
+        document.getElementById('batch-upload-result').style.display = 'none';
+
+        const fileArray = Array.from(files).filter((file) => file.name.toLowerCase().endsWith('.pdf'));
+        if (!fileArray.length) {
+            context.ui.showAlert('Không tìm thấy file PDF hợp lệ để tải lên.');
+            document.getElementById('upload-processing').style.display = 'none';
+            document.getElementById('upload-actions').style.display = 'flex';
+            return;
+        }
+
+        const processingInfo = document.getElementById('processing-file-count');
+        const progressBar = document.getElementById('upload-progress-bar');
+        const fileNameText = document.getElementById('processing-filename');
+
+        let successCount = 0;
+        progressBar.style.width = '0%';
+        processingInfo.innerText = `Tìm thấy ${fileArray.length} file PDF. Bắt đầu xử lý...`;
+
+        for (let index = 0; index < fileArray.length; index += 1) {
+            const file = fileArray[index];
+            const progress = Math.round((index / fileArray.length) * 100);
+            progressBar.style.width = `${progress}%`;
+            processingInfo.innerText = `Đang xử lý file ${index + 1} / ${fileArray.length}`;
+            fileNameText.innerText = file.name;
+
+            const tempId = `temp-${Date.now()}-${index}`;
+            sessionUploads.push({
+                id: tempId,
+                fileName: file.name,
+                soVanBan: '',
+                tenCongVan: '',
+                trichYeu: '',
+                thoiHan: null,
+                coQuanChuQuan: '',
+                departmentId: null,
+                assignedTo: null,
+                ocrPagesJson: '[]',
+                fullText: '',
+                hasError: false,
+                batchState: 'Đang OCR'
+            });
+            document.getElementById('batch-upload-result').style.display = 'block';
+            renderBatchTable();
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await context.api.post('/api/documents/upload', {
+                    body: formData
+                });
+
+                const tempIndex = sessionUploads.findIndex((item) => item.id === tempId);
+                if (tempIndex === -1) continue;
+
+                if (!response.ok) {
+                    sessionUploads[tempIndex] = {
+                        ...sessionUploads[tempIndex],
+                        batchState: 'Lỗi OCR',
+                        hasError: true,
+                        fullText: '[OCR Total Error]'
+                    };
+                    renderBatchTable();
+                    continue;
+                }
+
+                const doc = await response.json();
+                sessionUploads[tempIndex] = normalizeBatchItem(doc, {
+                    fileName: file.name,
+                    batchState: doc.status === 'Lỗi OCR' || doc.fullText?.includes('[OCR Total Error]') ? 'Lỗi OCR' : 'Cần rà soát'
+                });
+                successCount += 1;
+            } catch (error) {
+                console.error(`Upload error for ${file.name}:`, error);
+                const tempIndex = sessionUploads.findIndex((item) => item.id === tempId);
+                if (tempIndex !== -1) {
+                    sessionUploads[tempIndex] = {
+                        ...sessionUploads[tempIndex],
+                        batchState: 'Lỗi OCR',
+                        hasError: true,
+                        fullText: '[OCR Total Error]'
+                    };
+                }
+            }
+
+            renderBatchTable();
+        }
+
+        progressBar.style.width = '100%';
+        processingInfo.innerText = `Hoàn tất xử lý ${successCount}/${fileArray.length} file.`;
+
+        document.getElementById('upload-processing').style.display = 'none';
+        document.getElementById('upload-actions').style.display = 'flex';
+
+        if (!successCount && !sessionUploads.length) {
+            context.ui.showAlert('Không thể tải lên bất kỳ file nào. Vui lòng kiểm tra lại kết nối hoặc định dạng file.', '❌');
+            return;
+        }
+
+        batchPage = 1;
+        document.getElementById('batch-upload-result').style.display = 'block';
+        renderBatchTable();
+        await context.services.refreshCoreData();
+    }
+
+    function renderBatchTable() {
+        const tbody = document.querySelector('#batch-table tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const totalPages = Math.ceil(sessionUploads.length / batchPageSize) || 1;
+        batchPage = Math.min(Math.max(batchPage, 1), totalPages);
+
+        document.getElementById('batch-page-info').innerText = `Trang ${batchPage} / ${totalPages}`;
+        document.getElementById('btn-prev-batch').disabled = batchPage === 1;
+        document.getElementById('btn-next-batch').disabled = batchPage === totalPages;
+        document.getElementById('batch-summary').innerHTML = buildBatchSummary();
+
+        const start = (batchPage - 1) * batchPageSize;
+        const pageItems = sessionUploads.slice(start, start + batchPageSize);
+
+        pageItems.forEach((doc) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <div class="batch-file-name" title="${escapeHtml(doc.fileName || 'Tài liệu PDF')}">${escapeHtml(shortenFileName(doc.fileName || 'Tài liệu PDF'))}</div>
+                    <div class="batch-subtext">${escapeHtml(doc.soVanBan || 'Chưa có số hiệu')}</div>
+                </td>
+                <td><span class="status ${statusClass(doc.batchState)}">${escapeHtml(doc.batchState)}</span></td>
+                <td><input class="batch-inline-input" type="text" data-field="soVanBan" data-doc-id="${doc.id}" value="${escapeAttribute(doc.soVanBan || '')}" placeholder="Số hiệu"></td>
+                <td><input class="batch-inline-input" type="date" data-field="thoiHan" data-doc-id="${doc.id}" value="${doc.thoiHan ? doc.thoiHan.split('T')[0] : ''}"></td>
+                <td>${renderDepartmentSelect(doc)}</td>
+                <td>${renderAssigneeSelect(doc)}</td>
+                <td>
+                    <div class="batch-actions">
+                        <button class="batch-action-btn batch-action-btn-preview" data-action="preview-batch-item" data-doc-id="${doc.id}" title="Xem trước">
+                            ${renderBatchActionIcon('preview')}
+                        </button>
+                        <button class="batch-action-btn batch-action-btn-save" data-action="save-batch-item" data-doc-id="${doc.id}" ${canSave(doc) ? '' : 'disabled'} title="Lưu file">
+                            ${renderBatchActionIcon('save')}
+                        </button>
+                        <button class="batch-action-btn batch-action-btn-delete" data-action="delete-batch-item" data-doc-id="${doc.id}" title="Xóa file">
+                            ${renderBatchActionIcon('delete')}
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        tbody.querySelectorAll('[data-field]').forEach((input) => {
+            input.addEventListener('change', (event) => {
+                updateField(parseDocId(event.target.dataset.docId), event.target.dataset.field, event.target.value);
+            });
+        });
+    }
+
+    function buildBatchSummary() {
+        const counts = {
+            processing: sessionUploads.filter((item) => item.batchState === 'Đang OCR').length,
+            review: sessionUploads.filter((item) => item.batchState === 'Cần rà soát').length,
+            ready: sessionUploads.filter((item) => item.batchState === 'Sẵn sàng lưu').length,
+            saved: sessionUploads.filter((item) => item.batchState === 'Đã lưu').length,
+            failed: sessionUploads.filter((item) => item.batchState === 'Lỗi OCR').length
+        };
+
+        return [
+            buildBatchSummaryChip('Đang OCR', counts.processing, 'processing'),
+            buildBatchSummaryChip('Cần rà soát', counts.review, 'review'),
+            buildBatchSummaryChip('Sẵn sàng lưu', counts.ready, 'ready'),
+            buildBatchSummaryChip('Đã lưu', counts.saved, 'saved'),
+            buildBatchSummaryChip('Lỗi OCR', counts.failed, 'failed')
+        ].join('');
+    }
+
+    function renderDepartmentSelect(doc) {
+        const options = ['<option value="">Chọn phòng ban</option>']
+            .concat(departments.map((department) => `<option value="${department.id}" ${String(doc.departmentId || '') === String(department.id) ? 'selected' : ''}>${escapeHtml(department.name)}</option>`))
+            .join('');
+
+        return `<select class="batch-inline-select" data-action="select-department" data-doc-id="${doc.id}">${options}</select>`;
+    }
+
+    function renderAssigneeSelect(doc) {
+        const filteredUsers = getUsersForDepartment(doc.departmentId);
+        const options = ['<option value="">Chọn cán bộ</option>']
+            .concat(filteredUsers.map((user) => `<option value="${user.id}" ${String(doc.assignedTo || '') === String(user.id) ? 'selected' : ''}>${escapeHtml(user.fullName || user.username)}</option>`))
+            .join('');
+
+        return `<select class="batch-inline-select" data-action="select-assignee" data-doc-id="${doc.id}">${options}</select>`;
+    }
+
+    function buildBatchSummaryChip(label, count, tone) {
+        return `
+            <span class="batch-summary-chip batch-summary-chip-${tone}">
+                <span class="batch-summary-chip-icon" aria-hidden="true">${renderBatchSummaryIcon(tone)}</span>
+                <span class="batch-summary-chip-label">${label}</span>
+                <strong>${count}</strong>
+            </span>
+        `;
+    }
+
+    function renderBatchSummaryIcon(tone) {
+        if (tone === 'processing') {
+            return '<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9"></path><path d="M12 7v5l3 3"></path></svg>';
+        }
+
+        if (tone === 'review') {
+            return '<svg viewBox="0 0 24 24"><path d="M3 12s3.5 -6 9 -6s9 6 9 6s-3.5 6 -9 6s-9 -6 -9 -6"></path><path d="M12 9a3 3 0 1 0 0 6a3 3 0 0 0 0 -6"></path></svg>';
+        }
+
+        if (tone === 'ready') {
+            return '<svg viewBox="0 0 24 24"><path d="M6 4h11l3 3v13h-14z"></path><path d="M9 4v6h6"></path><path d="M9 18h6"></path></svg>';
+        }
+
+        if (tone === 'saved') {
+            return '<svg viewBox="0 0 24 24"><path d="M7 12l3 3l7 -7"></path><path d="M5 21h14"></path></svg>';
+        }
+
+        return '<svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.29 3.86l-7.27 12.6a2 2 0 0 0 1.73 3h14.5a2 2 0 0 0 1.73 -3l-7.26 -12.6a2 2 0 0 0 -3.46 0z"></path></svg>';
+    }
+
+    function renderBatchActionIcon(type) {
+        if (type === 'preview') {
+            return '<svg class="batch-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.5 -6 9 -6s9 6 9 6s-3.5 6 -9 6s-9 -6 -9 -6"></path><path d="M12 9a3 3 0 1 0 0 6a3 3 0 0 0 0 -6"></path></svg>';
+        }
+
+        if (type === 'save') {
+            return '<svg class="batch-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h11l3 3v13h-14z"></path><path d="M9 4v6h6"></path><path d="M9 18h6"></path></svg>';
+        }
+
+        return '<svg class="batch-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg>';
+    }
+
+    function updateField(docId, field, value) {
+        const index = findItemIndex(docId);
+        if (index === -1) return;
+
+        const patch = {};
+        if (field === 'thoiHan') {
+            patch.thoiHan = value ? `${value}T00:00:00` : null;
+        } else if (field === 'trichYeu') {
+            patch.trichYeu = value;
+        } else if (field === 'soVanBan') {
+            patch.soVanBan = value;
+        }
+
+        sessionUploads[index] = applyPatch(sessionUploads[index], patch);
+        renderBatchTable();
+    }
+
+    function updateDepartmentSelection(docId, rawValue) {
+        const index = findItemIndex(docId);
+        if (index === -1) return;
+
+        const departmentId = rawValue ? parseInt(rawValue, 10) : null;
+        sessionUploads[index] = applyPatch(sessionUploads[index], {
+            departmentId,
+            assignedTo: departmentId === sessionUploads[index].departmentId ? sessionUploads[index].assignedTo : null
+        });
+        renderBatchTable();
+    }
+
+    function updateAssigneeSelection(docId, rawValue) {
+        const index = findItemIndex(docId);
+        if (index === -1) return;
+
+        const assignedTo = rawValue ? parseInt(rawValue, 10) : null;
+        const selectedUser = users.find((user) => user.id === assignedTo);
+        sessionUploads[index] = applyPatch(sessionUploads[index], {
+            assignedTo,
+            departmentId: selectedUser?.departmentId ?? sessionUploads[index].departmentId ?? null
+        });
+        renderBatchTable();
+    }
+
+    async function clearBatch() {
+        if (!sessionUploads.length) {
+            document.getElementById('batch-upload-result').style.display = 'none';
+            return;
+        }
+
+        const confirmed = await context.ui.showConfirm('Bạn có chắc chắn muốn hủy đợt bóc tách này? Thao tác này sẽ xóa vĩnh viễn các văn bản khỏi hệ thống.');
+        if (!confirmed) return;
+
+        try {
+            const response = await context.api.delete('/api/documents/bulk-delete', {
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sessionUploads.filter((doc) => Number.isInteger(doc.id)).map((doc) => doc.id))
+            });
+
+            if (!response.ok) {
+                context.ui.showAlert('Lỗi khi xóa.', '❌');
+                return;
+            }
+
+            context.ui.showAlert(`Đã hủy và xóa ${sessionUploads.length} văn bản khỏi hệ thống.`, '✅');
+            sessionUploads = [];
+            document.getElementById('batch-upload-result').style.display = 'none';
+            batchPage = 1;
+            await context.services.refreshCoreData();
+        } catch (error) {
+            context.ui.showAlert('Lỗi kết nối khi thực hiện xóa.', '❌');
+        }
+    }
+
+    async function confirmAllBatch() {
+        const saveTargets = sessionUploads.filter((doc) => doc.batchState !== 'Đã lưu' && doc.batchState !== 'Lỗi OCR');
+        if (!saveTargets.length) {
+            context.ui.showAlert('Không có file hợp lệ để lưu.', '⚠️');
+            return;
+        }
+
+        const confirmed = await context.ui.showConfirm(`Xác nhận lưu ${saveTargets.length} văn bản hợp lệ trong đợt này?`);
+        if (!confirmed) return;
+
+        let success = 0;
+        let failed = 0;
+        for (const doc of saveTargets) {
+            const result = await saveBatchItem(doc.id, { silent: true });
+            if (result) success += 1;
+            else failed += 1;
+        }
+
+        renderBatchTable();
+        await context.services.refreshCoreData();
+        context.ui.showAlert(`Đã lưu ${success} file. Thất bại ${failed} file.`, failed ? '⚠️' : '✅');
+    }
+
+    async function saveBatchItem(docId, { silent = false } = {}) {
+        const index = findItemIndex(docId);
+        if (index === -1) return false;
+        const item = sessionUploads[index];
+
+        if (!canSave(item)) {
+            if (!silent) {
+                context.ui.showAlert('Cần chọn phòng ban hoặc cán bộ trước khi lưu.', '⚠️');
+            }
+            return false;
+        }
+
+        const payload = {
+            ...item,
+            status: 'Chưa xử lý'
+        };
+
+        try {
+            const updateResponse = await context.api.put(`/api/documents/${item.id}`, {
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!updateResponse.ok) {
+                throw new Error('Không thể cập nhật thông tin văn bản');
+            }
+
+            if (item.departmentId || item.assignedTo) {
+                const assignResponse = await context.api.post(`/api/documents/${item.id}/assign`, {
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        departmentId: item.departmentId,
+                        userId: item.assignedTo
+                    })
+                });
+
+                if (!assignResponse.ok) {
+                    throw new Error('Không thể điều phối văn bản');
+                }
+            }
+
+            sessionUploads[index] = applyPatch(item, { batchState: 'Đã lưu' });
+            if (!silent) {
+                context.ui.showAlert('Đã lưu và điều phối văn bản thành công.', '✅');
+            }
+            return true;
+        } catch (error) {
+            if (!silent) {
+                context.ui.showAlert(`Lỗi khi lưu: ${error.message}`, '❌');
+            }
+            return false;
+        }
+    }
+
+    async function deleteBatchItem(docId) {
+        const index = findItemIndex(docId);
+        if (index === -1) return;
+
+        const confirmed = await context.ui.showConfirm('Xóa file này khỏi danh sách và hệ thống?');
+        if (!confirmed) return;
+
+        const item = sessionUploads[index];
+        if (Number.isInteger(item.id)) {
+            const response = await context.api.delete('/api/documents/bulk-delete', {
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify([item.id])
+            });
+
+            if (!response.ok) {
+                context.ui.showAlert('Lỗi khi xóa file.', '❌');
+                return;
+            }
+        }
+
+        sessionUploads.splice(index, 1);
+        if (!sessionUploads.length) {
+            document.getElementById('batch-upload-result').style.display = 'none';
+        }
+        renderBatchTable();
+        await context.services.refreshCoreData();
+    }
+
+    function prevBatchPage() {
+        if (batchPage > 1) {
+            batchPage -= 1;
+            renderBatchTable();
+        }
+    }
+
+    function nextBatchPage() {
+        const totalPages = Math.ceil(sessionUploads.length / batchPageSize);
+        if (batchPage < totalPages) {
+            batchPage += 1;
+            renderBatchTable();
+        }
+    }
+
+    function openEditModal(id) {
+        const doc = sessionUploads.find((item) => item.id === id);
+        if (!doc) return;
+
+        editingDocId = id;
+        document.getElementById('ocr-so').value = doc.soVanBan || '';
+        document.getElementById('ocr-trichyeu').value = doc.trichYeu || '';
+        document.getElementById('ocr-coquan').value = doc.coQuanChuQuan || '';
+        document.getElementById('ocr-han').value = doc.thoiHan ? doc.thoiHan.split('T')[0] : '';
+        document.getElementById('edit-ocr-modal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        document.getElementById('edit-ocr-modal').style.display = 'none';
+        editingDocId = null;
+    }
+
+    async function saveEdit(button) {
+        if (isSaving || !editingDocId) return;
+
+        const docIndex = findItemIndex(editingDocId);
+        if (docIndex === -1) return;
+
+        isSaving = true;
+        const originalText = button.innerText;
+        button.disabled = true;
+        button.innerText = 'Đang lưu...';
+
+        sessionUploads[docIndex] = applyPatch(sessionUploads[docIndex], {
+            soVanBan: document.getElementById('ocr-so').value,
+            trichYeu: document.getElementById('ocr-trichyeu').value,
+            coQuanChuQuan: document.getElementById('ocr-coquan').value,
+            thoiHan: document.getElementById('ocr-han').value ? `${document.getElementById('ocr-han').value}T00:00:00` : null
+        });
+
+        try {
+            renderBatchTable();
+            closeEditModal();
+        } finally {
+            isSaving = false;
+            button.disabled = false;
+            button.innerText = originalText;
+        }
+    }
+
+    function getSessionUploads() {
+        return sessionUploads;
+    }
+
+    function updateSessionUpload(docId, patch) {
+        const index = findItemIndex(docId);
+        if (index !== -1) {
+            sessionUploads[index] = applyPatch(sessionUploads[index], patch);
+            renderBatchTable();
+        }
+    }
+
+    function getItem(docId) {
+        return sessionUploads.find((item) => String(item.id) === String(docId)) || null;
+    }
+
+    function getFirstReviewableDocId() {
+        return sessionUploads.find((item) => item.batchState !== 'Lỗi OCR' && item.batchState !== 'Đã lưu')?.id
+            ?? sessionUploads.find((item) => item.batchState !== 'Lỗi OCR')?.id
+            ?? null;
+    }
+
+    function getReferenceData() {
+        return { departments, users };
+    }
+
+    function getUsersForDepartment(departmentId) {
+        if (!departmentId) return users;
+        return users.filter((user) => user.departmentId === departmentId);
+    }
+
+    function parseDocId(value) {
+        return /^\d+$/.test(String(value)) ? parseInt(value, 10) : value;
+    }
+
+    function findItemIndex(docId) {
+        return sessionUploads.findIndex((item) => String(item.id) === String(docId));
+    }
+
+    function canSave(item) {
+        return item.batchState !== 'Đang OCR' && item.batchState !== 'Lỗi OCR' && Boolean(item.departmentId || item.assignedTo);
+    }
+
+    function applyPatch(item, patch) {
+        const merged = {
+            ...item,
+            ...patch
+        };
+
+        if (merged.assignedTo) {
+            const selectedUser = users.find((user) => user.id === merged.assignedTo);
+            if (selectedUser?.departmentId) {
+                merged.departmentId = selectedUser.departmentId;
+            }
+        }
+
+        if (merged.batchState !== 'Đã lưu' && merged.batchState !== 'Đang OCR' && merged.batchState !== 'Lỗi OCR') {
+            merged.batchState = merged.departmentId || merged.assignedTo ? 'Sẵn sàng lưu' : 'Cần rà soát';
+        }
+
+        return merged;
+    }
+
+    function statusClass(batchState) {
+        if (batchState === 'Đã lưu') return 'bg-success';
+        if (batchState === 'Lỗi OCR') return 'bg-danger';
+        if (batchState === 'Sẵn sàng lưu') return 'bg-success';
+        return 'bg-warning';
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function escapeAttribute(value) {
+        return escapeHtml(value);
+    }
+
+    return {
+        init,
+        activate,
+        handleFiles,
+        renderBatchTable,
+        getSessionUploads,
+        updateSessionUpload,
+        clearBatch,
+        confirmAllBatch,
+        saveBatchItem,
+        deleteBatchItem,
+        getItem,
+        getFirstReviewableDocId,
+        getReferenceData,
+        getUsersForDepartment
+    };
+}

@@ -1,0 +1,35 @@
+<section id="tab-my-tasks" class="tab-content">
+    <div class="data-section" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <div class="section-header">
+            <h3>&#128203; Công việc được giao cho tôi</h3>
+        </div>
+        <div id="my-tasks-stats" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:16px 20px; border-bottom:1px solid #e8edf5;">
+            <div class="stat-card" style="padding:16px;">
+                <p class="stat-label">Việc mới</p>
+                <p class="stat-value" id="mt-stat-new" style="font-size:1.8rem;">0</p>
+            </div>
+            <div class="stat-card" style="padding:16px;">
+                <p class="stat-label">Đang xử lý</p>
+                <p class="stat-value" id="mt-stat-doing" style="font-size:1.8rem; color:var(--warning);">0</p>
+            </div>
+            <div class="stat-card" style="padding:16px;">
+                <p class="stat-label">Quá hạn</p>
+                <p class="stat-value" id="mt-stat-overdue" style="font-size:1.8rem; color:var(--danger);">0</p>
+            </div>
+        </div>
+        <div class="table-scroll" style="flex:1; overflow-y:auto;">
+            <table id="my-tasks-table">
+                <thead>
+                    <tr>
+                        <th>Số hiệu</th>
+                        <th>Trích yếu</th>
+                        <th>Hạn xử lý</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="my-tasks-body"></tbody>
+            </table>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,32 @@
+<div id="edit-ocr-modal" class="modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="data-section" style="width: 500px; padding: 30px;">
+        <h3 style="margin-bottom: 20px;">Kiểm tra kết quả bóc tách</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Số hiệu</label>
+                <input type="text" id="ocr-so"
+                    style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Hạn xử lý</label>
+                <input type="date" id="ocr-han"
+                    style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+            </div>
+            <div style="grid-column: span 2;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Cơ quan chủ quản/Tham mưu</label>
+                <input type="text" id="ocr-coquan"
+                    style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+            </div>
+            <div style="grid-column: span 2;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Trích yếu</label>
+                <textarea id="ocr-trichyeu"
+                    style="width: 100%; height: 100px; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;"></textarea>
+            </div>
+        </div>
+        <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn" style="background: #e2e8f0; color: #1e293b;" data-action="close-edit-modal">Hủy bỏ</button>
+            <button class="btn btn-primary" data-action="save-edit">Cập nhật</button>
+        </div>
+    </div>
+</div>

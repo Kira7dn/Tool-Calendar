@@ -82,7 +82,7 @@ namespace ToolCalender.Api.Controllers
                 }
 
                 record.FilePath = filePath;
-                record.Status = "Chưa xử lý";
+                record.Status = record.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
                 record.NgayThem = DateTime.Now;
                 
                 // Lưu vào DB

@@ -1,0 +1,30 @@
+<div id="user-modal" class="modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="data-section" style="width: 400px; padding: 30px;">
+        <h3 style="margin-bottom: 20px;">Tạo tài khoản mới</h3>
+        <div class="form-group">
+            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Tên đăng nhập</label>
+            <input type="text" id="new-username"
+                style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Mật khẩu</label>
+            <input type="password" id="new-password"
+                style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Vai trò</label>
+            <select id="new-role"
+                style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+                <option value="Admin">Admin</option>
+                <option value="LanhDao">Lãnh đạo</option>
+                <option value="VanThu">Văn thư</option>
+                <option value="CanBo">Cán bộ chuyên môn</option>
+            </select>
+        </div>
+        <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn" style="background: #e2e8f0; color: #1e293b;" data-action="close-user-modal">Hủy</button>
+            <button class="btn btn-primary" data-action="create-user">Lưu tài khoản</button>
+        </div>
+    </div>
+</div>

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -29,14 +30,31 @@ namespace ToolCalender.Services
         {
             string ext = Path.GetExtension(filePath).ToLower();
             string text = "";
+            string ocrPagesJson = "[]";
 
             if (ext == ".pdf")
             {
                 var resolvedOcrResult = ocrResult ?? await _ocrService.ExtractPdfOcrResultAsync(filePath);
                 text = resolvedOcrResult.FullText;
+                ocrPagesJson = JsonSerializer.Serialize(
+                    resolvedOcrResult.Pages
+                        .OrderBy(page => page.PageNumber)
+                        .Select(page => new
+                        {
+                            pageNumber = page.PageNumber,
+                            text = page.Text ?? string.Empty
+                        }));
                 
                 string rawText = ExtractFromPdf(filePath);
                 if (!string.IsNullOrWhiteSpace(rawText)) text += "\n" + rawText;
+
+                var parsedRecord = await ParseTextAsync(text, filePath, ocrPagesJson);
+                if (resolvedOcrResult.HasCriticalError)
+                {
+                    parsedRecord.Status = "Lỗi OCR";
+                }
+
+                return parsedRecord;
             }
             else if (ext == ".doc" || ext == ".docx")
             {
@@ -47,7 +65,7 @@ namespace ToolCalender.Services
                 throw new NotSupportedException($"Định dạng '{ext}' không hỗ trợ.");
             }
 
-            return await ParseTextAsync(text, filePath);
+            return await ParseTextAsync(text, filePath, ocrPagesJson);
         }
 
         // ------- Đọc PDF -------
@@ -154,12 +172,13 @@ namespace ToolCalender.Services
         }
 
         // ------- Phân tích văn bản -------
-        private async Task<DocumentRecord> ParseTextAsync(string text, string filePath)
+        private async Task<DocumentRecord> ParseTextAsync(string text, string filePath, string ocrPagesJson = "[]")
         {
             var record = new DocumentRecord
             {
                 FilePath = filePath,
                 FullText = text,
+                OcrPagesJson = string.IsNullOrWhiteSpace(ocrPagesJson) ? "[]" : ocrPagesJson,
                 NgayThem = DateTime.Now,
                 Status = "Chưa xử lý"
             };

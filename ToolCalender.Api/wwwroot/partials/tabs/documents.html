@@ -1,0 +1,35 @@
+<section id="tab-documents" class="tab-content">
+    <div class="data-section" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="section-header">
+            <h3>Danh sách văn bản toàn đơn vị</h3>
+            <div class="search-box">
+                <span>&#128269;</span>
+                <input type="text" placeholder="Tìm số hiệu, nội dung..." id="doc-search">
+            </div>
+        </div>
+        <div class="table-scroll" style="flex: 1; overflow-y: auto;">
+            <table id="all-docs-table">
+                <thead>
+                    <tr>
+                        <th style="width:48px; text-align:center;">STT</th>
+                        <th>Số văn bản</th>
+                        <th>Ngày ban hành</th>
+                        <th>Trích yếu</th>
+                        <th>Cơ quan tham mưu</th>
+                        <th>Thời hạn</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div id="all-docs-pagination" class="pagination">
+            <button class="btn" data-action="prev-doc-page" id="btn-prev-docs"
+                style="background: #e2e8f0; color: #1e293b;">Trước</button>
+            <span id="docs-page-info" style="color: var(--text-secondary);">Trang 1 / 1</span>
+            <button class="btn" data-action="next-doc-page" id="btn-next-docs"
+                style="background: #e2e8f0; color: #1e293b;">Sau</button>
+        </div>
+    </div>
+</section>

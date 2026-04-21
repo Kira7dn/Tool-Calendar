@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ToolCalender.Data;
-using ToolCalender.Models;
 
 namespace ToolCalender.Services
 {
@@ -18,7 +17,6 @@ namespace ToolCalender.Services
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<OcrQueueService> _logger;
 
-        // ── Idea 2: Số file được xử lý đồng thời (tránh quá tải CPU/RAM)
         private const int MaxConcurrentFiles = 3;
         private readonly SemaphoreSlim _concurrencyLimit = new(MaxConcurrentFiles, MaxConcurrentFiles);
 
@@ -26,46 +24,52 @@ namespace ToolCalender.Services
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
-            // Giới hạn hàng đợi 200 văn bản để tránh tràn bộ nhớ nếu upload quá nhiều
-            var options = new BoundedChannelOptions(200) { FullMode = BoundedChannelFullMode.Wait };
+
+            var options = new BoundedChannelOptions(200)
+            {
+                FullMode = BoundedChannelFullMode.Wait
+            };
+
             _queue = Channel.CreateBounded<int>(options);
         }
 
         public async ValueTask EnqueueAsync(int documentId)
         {
             await _queue.Writer.WriteAsync(documentId);
-            _logger.LogInformation($"[OcrQueue] Đã thêm DocumentId {documentId} vào hàng đợi.");
+            _logger.LogInformation("[OcrQueue] Da them DocumentId {DocumentId} vao hang doi.", documentId);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("[OcrQueue] Worker đang chạy...");
+            _logger.LogInformation("[OcrQueue] Worker dang chay.");
 
-            // Tự động quét và đẩy các văn bản đang chờ xử lý vào hàng đợi khi khởi động
             try
             {
-                var pendingDocs = DatabaseService.GetAll().Where(d => 
-                    d.Status == "Đang xử lý" || 
-                    d.Status == "Lỗi OCR" ||
-                    (d.Status == "Chưa xử lý" && (string.IsNullOrEmpty(d.FullText) || d.FullText.Contains("[OCR Total Error]"))));
-                
-                foreach (var doc in pendingDocs)
+                var interruptedDocs = DatabaseService.GetAll()
+                    .Where(d => d.Status == "Đang xử lý")
+                    .ToList();
+
+                if (interruptedDocs.Count > 0)
                 {
-                    await EnqueueAsync(doc.Id);
+                    _logger.LogInformation(
+                        "[OcrQueue] Resume {Count} job OCR dang do luc startup.",
+                        interruptedDocs.Count);
+
+                    foreach (var doc in interruptedDocs)
+                    {
+                        await EnqueueAsync(doc.Id);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[OcrQueue] Lỗi khi quét văn bản tồn đọng lúc khởi động.");
+                _logger.LogError(ex, "[OcrQueue] Loi khi resume job OCR dang do luc startup.");
             }
 
-            // ── Idea 2: Đọc từ queue và kích hoạt task song song (tối đa MaxConcurrentFiles)
             await foreach (var docId in _queue.Reader.ReadAllAsync(stoppingToken))
             {
-                // Chờ nếu đã đủ MaxConcurrentFiles đang chạy
                 await _concurrencyLimit.WaitAsync(stoppingToken);
 
-                // Chạy mỗi file trong Task độc lập — không await ở đây!
                 _ = Task.Run(async () =>
                 {
                     try
@@ -74,11 +78,10 @@ namespace ToolCalender.Services
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"[OcrQueue] Lỗi khi xử lý DocumentId {docId}");
+                        _logger.LogError(ex, "[OcrQueue] Loi khi xu ly DocumentId {DocumentId}", docId);
                     }
                     finally
                     {
-                        // Giải phóng slot cho file tiếp theo
                         _concurrencyLimit.Release();
                     }
                 }, stoppingToken);
@@ -89,40 +92,39 @@ namespace ToolCalender.Services
         {
             using var scope = _serviceProvider.CreateScope();
             var extractor = scope.ServiceProvider.GetRequiredService<IDocumentExtractorService>();
-            
-            // 1. Lấy thông tin văn bản từ DB
-            var allDocs = DatabaseService.GetAll();
-            var doc = allDocs.FirstOrDefault(d => d.Id == docId);
 
+            var doc = DatabaseService.GetAll().FirstOrDefault(d => d.Id == docId);
             if (doc == null || string.IsNullOrEmpty(doc.FilePath) || !File.Exists(doc.FilePath))
             {
-                _logger.LogWarning($"[OcrQueue] Không tìm thấy file cho DocumentId {docId}");
+                _logger.LogWarning("[OcrQueue] Khong tim thay file cho DocumentId {DocumentId}", docId);
                 return;
             }
 
-            _logger.LogInformation($"[OcrQueue] Đang xử lý OCR cho: {doc.SoVanBan} - {docId}");
+            _logger.LogInformation("[OcrQueue] Dang xu ly OCR cho DocumentId {DocumentId}", docId);
 
-            // 2. Cập nhật trạng thái đang xử lý
             doc.Status = "Đang xử lý";
             DatabaseService.Update(doc);
 
             try
             {
-                // 3. Thực hiện OCR và bóc tách
                 var updatedDoc = await extractor.ExtractFromFileAsync(doc.FilePath);
-                
-                // 4. Cập nhật kết quả vào bản ghi gốc
                 updatedDoc.Id = doc.Id;
-                updatedDoc.Status = "Chưa xử lý"; // Sau khi OCR xong thì chờ rà soát
+                updatedDoc.Status = updatedDoc.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
                 DatabaseService.Update(updatedDoc);
 
-                _logger.LogInformation($"[OcrQueue] Hoàn tất xử lý DocumentId {docId} thành công.");
+                if (updatedDoc.Status == "Lỗi OCR")
+                {
+                    _logger.LogWarning("[OcrQueue] OCR gap loi native/engine cho DocumentId {DocumentId}. Da luu trang thai Loi OCR.", docId);
+                    return;
+                }
+
+                _logger.LogInformation("[OcrQueue] Hoan tat xu ly DocumentId {DocumentId} thanh cong.", docId);
             }
             catch (Exception ex)
             {
                 doc.Status = "Lỗi OCR";
                 DatabaseService.Update(doc);
-                _logger.LogError(ex, $"[OcrQueue] Thất bại khi OCR DocumentId {docId}");
+                _logger.LogError(ex, "[OcrQueue] That bai khi OCR DocumentId {DocumentId}", docId);
             }
         }
     }

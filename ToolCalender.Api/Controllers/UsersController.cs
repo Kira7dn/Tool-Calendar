@@ -5,17 +5,25 @@ using ToolCalender.Models;
 
 namespace ToolCalender.Api.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
+        [Authorize(Roles = "Admin,VanThu")]
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult Get([FromQuery] int? departmentId = null)
         {
-            return Ok(DatabaseService.GetUsers());
+            var users = DatabaseService.GetUsers();
+            if (departmentId.HasValue)
+            {
+                users = users.Where(user => user.DepartmentId == departmentId.Value).ToList();
+            }
+
+            return Ok(users);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult Create([FromBody] RegisterRequest request)
         {
@@ -27,6 +35,7 @@ namespace ToolCalender.Api.Controllers
             return BadRequest("Tên đăng nhập đã tồn tại.");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

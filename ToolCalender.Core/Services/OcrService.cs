@@ -104,16 +104,9 @@ namespace ToolCalender.Services
             }
             catch (Exception ex)
             {
-                var sb = new StringBuilder();
-                sb.AppendLine($"[OCR Total Error]: {ex.Message}");
-                if (ex.InnerException != null)
-                {
-                    sb.AppendLine($"[Inner Error]: {ex.InnerException.Message}");
-                    if (ex.InnerException.InnerException != null)
-                        sb.AppendLine($"[Inner Inner Error]: {ex.InnerException.InnerException.Message}");
-                }
-                sb.AppendLine($"[Stack Trace]: {ex.StackTrace}");
-                result.FullText = sb.ToString();
+                result.HasCriticalError = true;
+                result.ErrorMessage = ex.InnerException?.Message ?? ex.Message;
+                result.FullText = string.Empty;
             }
 
             if (string.IsNullOrWhiteSpace(result.FullText))
