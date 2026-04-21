@@ -7,7 +7,7 @@ namespace ToolCalender.Services
     {
         private const int DefaultRenderDpi = 300;
         private const float DefaultDeskewMinAbsAngle = 0.3f;
-        private const float DefaultOsdMinConfidence = 10.0f;
+        private const float DefaultOsdMinConfidence = 5.0f;
 
         public static ResolvedOcrOptions Resolve(IConfiguration configuration, OcrRunOptions? options)
         {

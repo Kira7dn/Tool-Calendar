@@ -7,16 +7,31 @@ function normalizeBatchItem(doc, overrides = {}) {
         || 'Tài liệu PDF';
     const hasError = doc.status === 'Lỗi OCR'
         || Boolean(doc.fullText && doc.fullText.includes('[OCR Total Error]'));
-    const assignedTo = doc.assignedTo ?? null;
-    const departmentId = doc.departmentId ?? null;
+    
+    // Multi-select support
+    let assignedToIds = [];
+    try {
+        assignedToIds = JSON.parse(doc.assignedUserIds || doc.assignedToIds || '[]');
+        if (doc.assignedTo && !assignedToIds.includes(doc.assignedTo)) {
+            assignedToIds.push(doc.assignedTo);
+        }
+    } catch (e) { assignedToIds = []; }
+
+    let departmentIds = [];
+    try {
+        departmentIds = JSON.parse(doc.assignedDepartmentIds || doc.departmentIds || '[]');
+        if (doc.departmentId && !departmentIds.includes(doc.departmentId)) {
+            departmentIds.push(doc.departmentId);
+        }
+    } catch (e) { departmentIds = []; }
 
     return {
         ...doc,
         fileName,
         hasError,
-        assignedTo,
-        departmentId,
-        batchState: overrides.batchState || (hasError ? 'Lỗi OCR' : (assignedTo || departmentId ? 'Sẵn sàng lưu' : 'Cần rà soát'))
+        assignedToIds,
+        departmentIds,
+        batchState: overrides.batchState || (hasError ? 'Lỗi OCR' : (assignedToIds.length || departmentIds.length ? 'Sẵn sàng lưu' : 'Cần rà soát'))
     };
 }
 
@@ -127,14 +142,23 @@ export function createUploadFeature(context) {
 
         document.getElementById('tab-upload')?.addEventListener('change', async (event) => {
             const target = event.target;
-            if (!(target instanceof HTMLSelectElement)) return;
+            if (!(target instanceof HTMLSelectElement) && !(target instanceof HTMLInputElement && target.dataset.action === 'multi-select-option')) return;
 
-            if (target.dataset.action === 'select-department') {
-                updateDepartmentSelection(parseInt(target.dataset.docId, 10), target.value);
+            // Handle standard selects if any remain
+            if (target instanceof HTMLSelectElement) {
+                if (target.dataset.action === 'select-department') {
+                    updateDepartmentSelection(parseDocId(target.dataset.docId), target.value);
+                }
+                if (target.dataset.action === 'select-assignee') {
+                    updateAssigneeSelection(parseDocId(target.dataset.docId), target.value);
+                }
             }
+        });
 
-            if (target.dataset.action === 'select-assignee') {
-                updateAssigneeSelection(parseInt(target.dataset.docId, 10), target.value);
+        // Click outside to close multi-select-dropdowns
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.multi-select-container')) {
+                document.querySelectorAll('.multi-select-dropdown.active').forEach(d => d.classList.remove('active'));
             }
         });
 
@@ -217,8 +241,9 @@ export function createUploadFeature(context) {
                 trichYeu: '',
                 thoiHan: null,
                 coQuanChuQuan: '',
-                departmentId: null,
-                assignedTo: null,
+                coQuanChuQuan: '',
+                departmentIds: [],
+                assignedToIds: [],
                 ocrPagesJson: '[]',
                 fullText: '',
                 hasError: false,
@@ -301,24 +326,38 @@ export function createUploadFeature(context) {
         document.getElementById('btn-next-batch').disabled = batchPage === totalPages;
         document.getElementById('batch-summary').innerHTML = buildBatchSummary();
 
+        // Control Save All button visibility
+        const saveAllBtn = document.querySelector('[data-action="confirm-all-batch"]');
+        if (saveAllBtn) {
+            const hasEnoughItems = sessionUploads.length >= 2;
+            const hasSavableItems = sessionUploads.some(doc => doc.batchState !== 'Đã lưu' && doc.batchState !== 'Lỗi OCR');
+            saveAllBtn.style.display = hasEnoughItems ? 'inline-flex' : 'none';
+            saveAllBtn.disabled = !hasSavableItems;
+        }
+
         const start = (batchPage - 1) * batchPageSize;
         const pageItems = sessionUploads.slice(start, start + batchPageSize);
 
         pageItems.forEach((doc) => {
+            const isProcessing = doc.batchState === 'Đang OCR';
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>
                     <div class="batch-file-name" title="${escapeHtml(doc.fileName || 'Tài liệu PDF')}">${escapeHtml(shortenFileName(doc.fileName || 'Tài liệu PDF'))}</div>
-                    <div class="batch-subtext">${escapeHtml(doc.soVanBan || 'Chưa có số hiệu')}</div>
+                    <div class="batch-subtext">${escapeHtml(doc.soVanBan || (isProcessing ? 'Đang bóc tách...' : 'Chưa có số hiệu'))}</div>
                 </td>
                 <td><span class="status ${statusClass(doc.batchState)}">${escapeHtml(doc.batchState)}</span></td>
-                <td><input class="batch-inline-input" type="text" data-field="soVanBan" data-doc-id="${doc.id}" value="${escapeAttribute(doc.soVanBan || '')}" placeholder="Số hiệu"></td>
-                <td><input class="batch-inline-input" type="date" data-field="thoiHan" data-doc-id="${doc.id}" value="${doc.thoiHan ? doc.thoiHan.split('T')[0] : ''}"></td>
-                <td>${renderDepartmentSelect(doc)}</td>
-                <td>${renderAssigneeSelect(doc)}</td>
+                <td>
+                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input" type="text" data-field="soVanBan" data-doc-id="${doc.id}" value="${escapeAttribute(doc.soVanBan || '')}" placeholder="Số hiệu">`}
+                </td>
+                <td>
+                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input" type="date" data-field="thoiHan" data-doc-id="${doc.id}" value="${doc.thoiHan ? doc.thoiHan.split('T')[0] : ''}">`}
+                </td>
+                <td>${isProcessing ? '<div class="skeleton-text"></div>' : renderDepartmentMultiSelect(doc)}</td>
+                <td>${isProcessing ? '<div class="skeleton-text"></div>' : renderAssigneeMultiSelect(doc)}</td>
                 <td>
                     <div class="batch-actions">
-                        <button class="batch-action-btn batch-action-btn-preview" data-action="preview-batch-item" data-doc-id="${doc.id}" title="Xem trước">
+                        <button class="batch-action-btn batch-action-btn-preview" data-action="preview-batch-item" data-doc-id="${doc.id}" title="Xem trước" ${isProcessing ? 'disabled' : ''}>
                             ${renderBatchActionIcon('preview')}
                         </button>
                         <button class="batch-action-btn batch-action-btn-save" data-action="save-batch-item" data-doc-id="${doc.id}" ${canSave(doc) ? '' : 'disabled'} title="Lưu file">
@@ -336,6 +375,29 @@ export function createUploadFeature(context) {
         tbody.querySelectorAll('[data-field]').forEach((input) => {
             input.addEventListener('change', (event) => {
                 updateField(parseDocId(event.target.dataset.docId), event.target.dataset.field, event.target.value);
+            });
+        });
+
+        // Bind multi-select trigger clicks
+        tbody.querySelectorAll('.multi-select-trigger').forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                const targetId = trigger.dataset.target;
+                const dropdown = trigger.parentElement.querySelector('.multi-select-dropdown');
+                // Close others
+                document.querySelectorAll('.multi-select-dropdown.active').forEach(d => {
+                    if (d !== dropdown) d.classList.remove('active');
+                });
+                dropdown.classList.toggle('active');
+            });
+        });
+
+        // Bind checkbox clicks
+        tbody.querySelectorAll('.multi-select-option input').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const docId = parseDocId(checkbox.dataset.docId);
+                const type = checkbox.dataset.type; // 'dept' or 'user'
+                const id = parseInt(checkbox.value, 10);
+                toggleSelection(docId, type, id, checkbox.checked);
             });
         });
     }
@@ -358,21 +420,102 @@ export function createUploadFeature(context) {
         ].join('');
     }
 
-    function renderDepartmentSelect(doc) {
-        const options = ['<option value="">Chọn phòng ban</option>']
-            .concat(departments.map((department) => `<option value="${department.id}" ${String(doc.departmentId || '') === String(department.id) ? 'selected' : ''}>${escapeHtml(department.name)}</option>`))
-            .join('');
+    function renderDepartmentMultiSelect(doc) {
+        const selectedIds = doc.departmentIds || [];
+        const selectedNames = departments
+            .filter(d => selectedIds.includes(d.id))
+            .map(d => d.name);
 
-        return `<select class="batch-inline-select" data-action="select-department" data-doc-id="${doc.id}">${options}</select>`;
+        let triggerContent = '';
+        if (selectedNames.length === 0) {
+            triggerContent = '<span class="multi-select-placeholder">Chọn đơn vị</span>';
+        } else if (selectedNames.length <= 2) {
+            triggerContent = selectedNames.map(name => `<span class="selection-chip">${escapeHtml(name)}</span>`).join('');
+        } else {
+            triggerContent = `<span class="selection-chip">${escapeHtml(selectedNames[0])}</span> <span class="selection-summary-badge">+${selectedNames.length - 1}</span>`;
+        }
+
+        const optionsHtml = departments.map(d => `
+            <div class="multi-select-option">
+                <input type="checkbox" id="dept-${doc.id}-${d.id}" value="${d.id}" data-doc-id="${doc.id}" data-type="dept" ${selectedIds.includes(d.id) ? 'checked' : ''}>
+                <label for="dept-${doc.id}-${d.id}">${escapeHtml(d.name)}</label>
+            </div>
+        `).join('');
+
+        return `
+            <div class="multi-select-container">
+                <div class="multi-select-trigger" data-target="dept-dropdown-${doc.id}">
+                    ${triggerContent}
+                </div>
+                <div class="multi-select-dropdown" id="dept-dropdown-${doc.id}">
+                    ${optionsHtml}
+                </div>
+            </div>
+        `;
     }
 
-    function renderAssigneeSelect(doc) {
-        const filteredUsers = getUsersForDepartment(doc.departmentId);
-        const options = ['<option value="">Chọn cán bộ</option>']
-            .concat(filteredUsers.map((user) => `<option value="${user.id}" ${String(doc.assignedTo || '') === String(user.id) ? 'selected' : ''}>${escapeHtml(user.fullName || user.username)}</option>`))
-            .join('');
+    function renderAssigneeMultiSelect(doc) {
+        const selectedIds = doc.assignedToIds || [];
+        // Support fallback for display
+        const displayUsers = users.map(u => {
+            const dept = departments.find(d => d.id === u.departmentId);
+            return { ...u, displayName: `${u.fullName || u.username} - ${dept ? dept.name : 'Vãng lai'}` };
+        });
 
-        return `<select class="batch-inline-select" data-action="select-assignee" data-doc-id="${doc.id}">${options}</select>`;
+        const selectedUsers = displayUsers.filter(u => selectedIds.includes(u.id));
+
+        let triggerContent = '';
+        if (selectedUsers.length === 0) {
+            triggerContent = '<span class="multi-select-placeholder">Chọn cán bộ</span>';
+        } else if (selectedUsers.length <= 1) {
+            triggerContent = `<span class="selection-chip">${escapeHtml(selectedUsers[0].fullName || selectedUsers[0].username)}</span>`;
+        } else {
+            triggerContent = `<span class="selection-chip">${escapeHtml(selectedUsers[0].fullName || selectedUsers[0].username)}</span> <span class="selection-summary-badge">+${selectedUsers.length - 1}</span>`;
+        }
+
+        // Limit user options based on selected departments if needed, or show all with grouping
+        const optionsHtml = displayUsers.map(u => `
+            <div class="multi-select-option" title="${escapeHtml(u.displayName)}">
+                <input type="checkbox" id="user-${doc.id}-${u.id}" value="${u.id}" data-doc-id="${doc.id}" data-type="user" ${selectedIds.includes(u.id) ? 'checked' : ''}>
+                <label for="user-${doc.id}-${u.id}">${escapeHtml(u.displayName)}</label>
+            </div>
+        `).join('');
+
+        return `
+            <div class="multi-select-container">
+                <div class="multi-select-trigger" data-target="user-dropdown-${doc.id}">
+                    ${triggerContent}
+                </div>
+                <div class="multi-select-dropdown" id="user-dropdown-${doc.id}">
+                    ${optionsHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    function toggleSelection(docId, type, id, checked) {
+        const index = findItemIndex(docId);
+        if (index === -1) return;
+
+        const item = sessionUploads[index];
+        if (type === 'dept') {
+            let deptIds = [...(item.departmentIds || [])];
+            if (checked) {
+                if (!deptIds.includes(id)) deptIds.push(id);
+            } else {
+                deptIds = deptIds.filter(v => v !== id);
+            }
+            sessionUploads[index] = applyPatch(item, { departmentIds: deptIds });
+        } else if (type === 'user') {
+            let userIds = [...(item.assignedToIds || [])];
+            if (checked) {
+                if (!userIds.includes(id)) userIds.push(id);
+            } else {
+                userIds = userIds.filter(v => v !== id);
+            }
+            sessionUploads[index] = applyPatch(item, { assignedToIds: userIds });
+        }
+        renderBatchTable();
     }
 
     function buildBatchSummaryChip(label, count, tone) {
@@ -435,28 +578,21 @@ export function createUploadFeature(context) {
     }
 
     function updateDepartmentSelection(docId, rawValue) {
+        // Fallback for any legacy calls
         const index = findItemIndex(docId);
         if (index === -1) return;
-
-        const departmentId = rawValue ? parseInt(rawValue, 10) : null;
-        sessionUploads[index] = applyPatch(sessionUploads[index], {
-            departmentId,
-            assignedTo: departmentId === sessionUploads[index].departmentId ? sessionUploads[index].assignedTo : null
-        });
-        renderBatchTable();
+        const id = parseInt(rawValue, 10);
+        if (isNaN(id)) return;
+        toggleSelection(docId, 'dept', id, true);
     }
 
     function updateAssigneeSelection(docId, rawValue) {
+        // Fallback for any legacy calls
         const index = findItemIndex(docId);
         if (index === -1) return;
-
-        const assignedTo = rawValue ? parseInt(rawValue, 10) : null;
-        const selectedUser = users.find((user) => user.id === assignedTo);
-        sessionUploads[index] = applyPatch(sessionUploads[index], {
-            assignedTo,
-            departmentId: selectedUser?.departmentId ?? sessionUploads[index].departmentId ?? null
-        });
-        renderBatchTable();
+        const id = parseInt(rawValue, 10);
+        if (isNaN(id)) return;
+        toggleSelection(docId, 'user', id, true);
     }
 
     async function clearBatch() {
@@ -539,12 +675,12 @@ export function createUploadFeature(context) {
                 throw new Error('Không thể cập nhật thông tin văn bản');
             }
 
-            if (item.departmentId || item.assignedTo) {
+            if (item.departmentIds?.length || item.assignedToIds?.length) {
                 const assignResponse = await context.api.post(`/api/documents/${item.id}/assign`, {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        departmentId: item.departmentId,
-                        userId: item.assignedTo
+                        departmentIds: item.departmentIds || [],
+                        userIds: item.assignedToIds || []
                     })
                 });
 
@@ -694,7 +830,7 @@ export function createUploadFeature(context) {
     }
 
     function canSave(item) {
-        return item.batchState !== 'Đang OCR' && item.batchState !== 'Lỗi OCR' && Boolean(item.departmentId || item.assignedTo);
+        return item.batchState !== 'Đang OCR' && item.batchState !== 'Lỗi OCR';
     }
 
     function applyPatch(item, patch) {
@@ -703,15 +839,20 @@ export function createUploadFeature(context) {
             ...patch
         };
 
-        if (merged.assignedTo) {
-            const selectedUser = users.find((user) => user.id === merged.assignedTo);
-            if (selectedUser?.departmentId) {
-                merged.departmentId = selectedUser.departmentId;
-            }
+        // If a user is selected, ensure their department is also in the selected departments (optional logic)
+        /*
+        if (patch.assignedToIds) {
+            patch.assignedToIds.forEach(uid => {
+                const u = users.find(x => x.id === uid);
+                if (u && u.departmentId && !merged.departmentIds.includes(u.departmentId)) {
+                    merged.departmentIds.push(u.departmentId);
+                }
+            });
         }
+        */
 
         if (merged.batchState !== 'Đã lưu' && merged.batchState !== 'Đang OCR' && merged.batchState !== 'Lỗi OCR') {
-            merged.batchState = merged.departmentId || merged.assignedTo ? 'Sẵn sàng lưu' : 'Cần rà soát';
+            merged.batchState = (merged.departmentIds?.length || merged.assignedToIds?.length) ? 'Sẵn sàng lưu' : 'Cần rà soát';
         }
 
         return merged;

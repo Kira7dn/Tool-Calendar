@@ -23,16 +23,42 @@ namespace ToolCalender.Api.Controllers
             return Ok(users);
         }
 
+        [Authorize(Roles = "Admin,VanThu")]
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            var user = DatabaseService.GetUserById(id);
+            if (user == null) return NotFound();
+            return Ok(user);
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public IActionResult Create([FromBody] RegisterRequest request)
+        public IActionResult Create([FromBody] User user)
         {
-            if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
-                return BadRequest("Thiếu thông tin đăng ký.");
+            if (string.IsNullOrEmpty(user.Username) || string.IsNullOrEmpty(user.PasswordHash))
+                return BadRequest("Thiếu thông tin đăng nhập.");
 
-            bool success = DatabaseService.Register(request.Username, request.Password, request.Role);
+            bool success = DatabaseService.CreateUser(user);
             if (success) return Ok(new { message = "Tạo người dùng thành công." });
-            return BadRequest("Tên đăng nhập đã tồn tại.");
+            return BadRequest("Tên đăng nhập đã tồn tại hoặc dữ liệu không hợp lệ.");
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] UserUpdateRequest request)
+        {
+            var user = DatabaseService.GetUserById(id);
+            if (user == null) return NotFound();
+
+            user.FullName = request.FullName;
+            user.Email = request.Email;
+            user.PhoneNumber = request.PhoneNumber;
+            user.Role = request.Role;
+            user.DepartmentId = request.DepartmentId;
+
+            DatabaseService.UpdateUser(user);
+            return Ok(new { message = "Cập nhật người dùng thành công." });
         }
 
         [Authorize(Roles = "Admin")]
@@ -49,5 +75,14 @@ namespace ToolCalender.Api.Controllers
         public string Username { get; set; } = "";
         public string Password { get; set; } = "";
         public string Role { get; set; } = "CanBo";
+    }
+
+    public class UserUpdateRequest
+    {
+        public string FullName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string PhoneNumber { get; set; } = "";
+        public string Role { get; set; } = "CanBo";
+        public int? DepartmentId { get; set; }
     }
 }

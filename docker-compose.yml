@@ -17,6 +17,7 @@ services:
       - .:/app
       - ./data:/app/data
       - ./ToolCalender.Api/Uploads:/app/Uploads
+      - ~/.nuget/packages:/root/.nuget/packages:ro
     command: dotnet watch run --project ToolCalender.Api/ToolCalender.Api.csproj --urls http://0.0.0.0:5000
     restart: always
 

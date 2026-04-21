@@ -11,10 +11,10 @@ namespace ToolCalender.Tests.Helpers
 {
     public static class AutomationDocHelper
     {
-        private static string ArialPath = @"C:\Windows\Fonts\arial.ttf";
-        private static string ArialBoldPath = @"C:\Windows\Fonts\arialbd.ttf";
-        private static string TimesPath = @"C:\Windows\Fonts\times.ttf";
-        private static string TimesBoldPath = @"C:\Windows\Fonts\timesbd.ttf";
+        private static string ArialPath = TestPathHelper.GetFontPath("arial");
+        private static string ArialBoldPath = TestPathHelper.GetFontPath("arial", bold: true);
+        private static string TimesPath = TestPathHelper.GetFontPath("times");
+        private static string TimesBoldPath = TestPathHelper.GetFontPath("times", bold: true);
 
         private const string FullContentTemplate = 
             "Căn cứ Quyết định số 749/QĐ-TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyệt 'Chương trình Chuyển đổi số quốc gia đến năm 2025, định hướng đến năm 2030';\n" +
@@ -74,7 +74,7 @@ namespace ToolCalender.Tests.Helpers
             }
 
             // Stamp
-            string stampPath = @"d:\Business Analyze\ToolCalendar\tests\assets\stamp.png";
+            string stampPath = Path.Combine(TestPathHelper.GetAssetsRoot(), "stamp.png");
             if (File.Exists(stampPath)) {
                 using var stampBmp = SKBitmap.Decode(stampPath);
                 canvas.DrawBitmap(stampBmp, new SKRect(width - 900, y + 50, width - 400, y + 550));

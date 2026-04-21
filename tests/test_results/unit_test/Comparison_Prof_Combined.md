@@ -1,11 +1,13 @@
-# Combined Test
-Accuracy: 86.09%
+# Báo cáo đối chiếu OCR - Combined (Noise + Skew)
 
-Ground Truth:
+**Tỷ lệ trùng khớp: 81.6%**
+
+## Văn bản gốc:
+```
 SO THONG TIN VA TRUYEN THONG
 CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
 Độc lập - Tự do - Hạnh phúc
-Số hiệu: 333/COMBINED
+Số hiệu: 888/STTTT-BCĐ
 Căn cứ Quyết định số 749/QĐ-TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyệt 'Chương trình Chuyển đổi số quốc gia đến năm 2025, định hướng đến năm 2030';
 Căn cứ Nghị quyết số 01-NQ/TU ngày 16/11/2020 của Ban Chấp hành Đảng bộ tỉnh về chuyển đổi số tỉnh Quảng Ninh đến năm 2025, định hướng đến năm 2030;
 Sở Thông tin và Truyền thông xác định việc triển khai Hệ thống Điều phối Công văn tích hợp trí tuệ nhân tạo (AI) là nhiệm vụ trọng tâm nhằm nâng cao hiệu quả quản lý hành chính nhà nước.
@@ -16,38 +18,44 @@ Sở Thông tin và Truyền thông xác định việc triển khai Hệ thốn
 3. Các đơn vị thụ hưởng có trách nhiệm cung cấp dữ liệu kiểm thử và phản hồi kịp thời các lỗi phát sinh trong quá trình vận hành thử nghiệm. Yêu cầu hoàn thành báo cáo tổng kết giai đoạn 1 trước ngày 25/12/2026 để trình UBND tỉnh xem xét.
 
 Trong quá trình triển khai, nếu có khó khăn, vướng mắc phát sinh vượt quá thẩm quyền, các đơn vị cần kịp thời báo cáo về Ban Chỉ đạo (qua Văn phòng Sở) để tổng hợp, trình Lãnh đạo Sở xem xét, quyết định. Yêu cầu các đơn vị nghiêm túc, khẩn trương thực hiện nhiệm vụ này.
+```
 
-Extracted:
---- Trang 1 [Deskewed] ---
-mm                                                                   CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAN
-SO THONG TIN VA TRUYEN THONG '                                                          Độc lập - Tự do - Hạnh phúc
+## Văn bản AI đọc được:
+```
+--- Trang 1 [Deskewed: 5.00deg] ---
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆ
+SO THONG TIN VA TRUYEN THONG                                           Độc lập - Tự do - Hạnh phúc
 
-Số hiệu: 333/COMBINED
+Số hiệu: 888/STTTT-BCĐ
 
-Căn cử Quyết định số 749/QĐ- -TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyệt 'C hư
-ơng trình Chuyền đổi số quốc gia đến năm 2025,  định hướng đến năm 2030';
+Căn cứ Quyết định số 749/QĐ-TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyệt 'Chư
 
-Căn cứ Nghị quyết số 01-  NQ/TU ngày 16/11/2020 của Ban Chấp hành Đảng bộ tỉnh về chuyé
-n đôi số tỉnh Quảng Ninh đến năm 2025, định hướng „ đến năm 2030;
+ong trình Chuyển đổi số quốc gia đến năm 2025, định hướng đến năm 2030';
+
+Căn cứ Nghị quyết số 01-NQ/TU ngày 16/11/2020 của Ban Chấp hành Đảng bộ tỉnh về chuyể
+
+n đổi số tỉnh Quảng Ninh đến năm 2025, định hướng đến năm 2030;
 
 Sở Thông tin và Truyền thông xác định việc triển khai Hệ thống Điều phối Công văn tíc
-h hợp trí tuệ nhân tạo (AI) là nhiệm vụ trong tâm nhằm ning cao hiệu quả quản lý hanh chính nhà nước:
 
-Để đảm bảo đúng tiền độ đề ra, Giám đốc Sở yêu cầu các phòng, đơn vị trực thuộc tập t
+h hợp trí tuệ nhân tạo (AI) là nhiệm vụ trong tâm nhằm nâng cao hiệu quả quản lý hành chính nhà 1
 
-rung thực hiện các nội dung sau:                 i
+Để đảm bảo đúng tiến độ dé ra, Giám đốc Sở yêu cầu các phòng, đơn vi trực thuộc tập t
 
-1. Ban Chi đạo Chuyên đôi số của Sở chịu trách nhiệm rà soát toàn bộ quy trình tiếp n
+rung thực hiện các nội dung sau:
 
-hận văn bản, đảm bảo tính đồng bộ giữa các hệ thống cũ và mới. Đặc biệt lưu ý viêc chuần hóa mã định danh văn bản theo quy |
-2. Văn phòng Sở chủ trì phối hợp với các chuyên gia CNTT hoan thiện bộ máy bóc tách d
+1. Ban Chỉ đạo Chuyển đổi số của Sở chịu trách nhiệm rà soát toàn bộ quy trình tiếp n
 
-ur liệu OCR. Hệ thống phải đảm bảo nhận dién chính xác các văn bản có độ nhiễu cao, văn bản đã qua lưu trữ lâu năm hoặc văn |
-3. Các đơn vị thụ hưởng cở trách nhiệm cung cấp dữ liệu kiểm thử và phản hồi kip thời
+hận văn bản, đảm bảo tính đồng bộ giữa các hệ thống cũ và mới. Đặc biệt lưu ý việc chuẩn hóa mã di
 
-các lỗi phát sinh trong quá trình vận hành thử nghiệm. Yêu cầu hoàn thành báo cáo tong kết giai đoạn 1 trước ngày 25/12/2026 d
+2. Văn phòng Sở chủ trì phối hợp với các chuyên gia CNTT hoàn thiện bộ máy bóc tách d
 
-Trong quá trình triển khai, nếu có khó khăn, vướng mắc phát sinh vượt qua thẩm quyền,
-các đơn vị cần kịp thời báo cáo về Ban Chi đạo (qua Văn phòng Sở) dé tong hợp, trình Lãnh đạo Sở xem xét, quyết định. Yêu cầu
+ữ liệu OCR. Hệ thống phải đảm bảo nhận diện chính xác các văn bản có độ nhiễu cao, văn bản đã qua
+3. Các đơn vị thụ hưởng có trách nhiệm cung cấp dữ liệu kiểm thử và phản hồi kịp thời
 
+các lỗi phát sinh trong quá trình vận hành thử nghiệm. Yêu cầu hoàn thành báo cáo tổng kết giai đoạ
 
+Trong quá trình triển khai, nếu có khó khăn, vướng mắc phát sinh vượt quá thẩm quyền,
+các đơn vị cần kịp thời báo cáo về Ban Chỉ đạo (qua Văn phòng Sở) để tổng hợp, trình Lãnh đạo Sở xei
+
+```

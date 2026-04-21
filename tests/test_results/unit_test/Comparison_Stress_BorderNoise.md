@@ -1,6 +1,6 @@
 # Báo cáo Stress Test - Nhiễu viền
 
-**Tỷ lệ trùng khớp: 90.37%**
+**Tỷ lệ trùng khớp: 88.01%**
 
 ## Văn bản gốc:
 ```
@@ -17,47 +17,45 @@ Mọi sự chậm trễ không có lý do chính đáng sẽ được đưa vào
 
 ## AI trích xuất:
 ```
---- Trang 1 [Deskewed] ---
-VĂN BẢN CO NHIEU VIÊN ĐEN
+--- Trang 1 ---
+VĂN BỊIN CÓ NHI[JU VIN ĐEN
 
-Căn cứ Quyết định số 749/QĐ-TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyêt
-'Chương trình Chuyển đổi số quốc gia đến năm 2025, định hương đến năm 2030;
+Can cứ Quy[lt định s[] 749/0Đ-TTg ngày 03/6/2020 c[la ThỊ] tướng Chính ph[] phê duyệt
+'Chương trình Chuy[In đ[]i s[] qu[lc gia dn năm 2025, định hướng dn năm 2030';
 
-Sở Thông tin và Truyên thông xác định viêc triển khai Hé thống Điêu phối Công va
-n tích hap trí tuê nhân tao (Al) là nhiệm vu trong tâm nhăm nâng cao hiêu quả qu
-an ly hanh chinh nha nươc, hiên thuc hoa mục tiêu chuyển đổi số toan diên của ti
+SO Thông tin và Truy[Jn thông xác định việc tri[Jn khai Hệ th{ng Đi[lu phi Công vã
+n tích hợp trí tuệ nhân tạo (AI) Là nhiệm vụ trọng tâm nhằm nâng cao hiệu qu[] qu
+n ly hành chính nhà nước, hiện thực hóa mục tiêu chuy[In di s[J toàn diện c[la t
+nh.
 
-nh
+PO đ[Jm bJo đúng tin độ dO ra, Giám dc S[] yêu c[lu các phòng, đơn vi trực thuộc
+tập trung thực hiện các nội dung sau:
 
-Để đam bao đúng tiến đô đề ra, Glam đốc Sơ yêu cầu cac phong, đơn vi trực thuôc
-tập trung thực hiên các nôi dung sau
+1. Ban ChỊ] đạo Chuy[In đ[]i sO c[la SO chiu trách nhiệm rà soát toàn bộ quy trình t
+i[lb nhận văn b[In, đ[Im b[lo tính dng bộ giữa các hệ th{ng cũ và mới. Đặc biệt Lưu
+ý việc chun hóa mã định danh văn b[n theo quy định hiện hành đ[Ji với các tài 1
+iệu lưu trữ từ năm 2010 địin nay.
 
-1. Ban Chỉ đao Chuyển đổi số của Sở chịu trách nhiêm ra soat toàn bô quy trình t
-lếp nhân văn bản, đảm bảo tính đông bô giữa các hê thống cũ va mơi Pac biêt lưu
-ý viêc chuân hóa mã định danh văn bản theo quy định hiên hành đôi với các tài |
-lêu lưu trữ từ năm 2010 đến nay
+2. Văn phòng S[ ch[] trì ph[li hợp với các chuyên gia CNTT hoàn thiện bộ máy bóc t
+ach dữ Liệu OCR. Hệ thỊjng ph[]i dOm b[]o nhận diện chính xác các văn bn có độ nhi
+u cao, văn b[ln đã qua luu trữ Lâu năm hoặc văn bn có con dJu đè Lên thông tin
+quan trọng. Mục tiêu t[] Lệ nhận diện ph[]i đạt trên 95% di với các trường thông
+tin cơ b(n.
 
-2 Văn phòng Sở chủ trì phối hợp với các chuyên gia CNTT hoàn thiên bô máy bóc t
-ach dữ liêu OCR Hệ thống phải đảm bảo nhân diên chính xac các văn bản có đô nhi
-ễu cao, văn bản đã qua lưu trữ lâu năm hoặc văn bản có con dấu đè lên thông tin
-quan trong Muc tiêu tị lê nhân diễn phải dat trên 95% đôi vơi cac trương thông
+3. Các đơn vị thu hư[]ng có trách nhiệm cung cp dữ Liệu ki[lm thị] và ph[In h[]i kip
+thời các 1ỊJi phát sinh trong quá trình vận hành th nghiệm. Yêu c[Ju hoàn thành
+báo cáo t{ng k[Jt giai đoạn 1 trước ngày 01/01/2027 đị] trình UBND t[jnh xem xét, đ
 
-tin cơ bản
+ánh giá hiệu qu thực tỊJ] và phê duyệt kinh phí cho giai đoạn ti[lp theo.
 
-3. Cac đơn vi thu hưởng co trach nhiêm cung cấp dữ liêu kiểm thư va phản hồi kip
-thời các lỗi phát sinh trong quá trình vân hành thử nghiêm Yêu cầu hoàn thành
-báo cáo tổng kết giai đoan 1 trước ngày 01/01/2027 để trình UBND tỉnh xem xét, đ
-ánh giá hiêu quả thực tế và phê duyêt kinh phí cho giai đoan tiếp theo
+Trong quá trình tri[ln khai, n[]u có khó khăn, vướng mc phát sinh vượt quá thm q
+uy[n, các đơn vi c[ln kip thời báo cáo v[] Ban ChỊ] đạo (qua Văn phòng S[) đ[] t[Ing
+hợp, trình Lãnh đạo S[ xem xét, quy[Tt định. Yêu cu các đơn vị nghiêm túc, khi[In
+trương thực hiện nhiệm vụ này    đ[Jm bo ch s[] đánh giá DDCI c[la S[] năm 2026 da
+t kt qu tHt nh{t.
 
-Trong quá trình triển khai, nêu có khó khăn, vương mặc phát sinh vươt quá thẩm q
-uyền, các đơn vi cân kip thời báo cáo về Ban Chỉ đao (qua Văn phòng Sở) để tổng
-hop, trinh Lãnh đao Sơ xem xet, quyết định Yêu cầu các đơn vi nghiêm túc, khẩn
-trương thuc hiên nhiêm vu này để đảm bảo chỉ số đánh giá DDCI của Sở năm 2026 đa
-t kết quả tốt nhất
-
-Mol sư châm trễ không co lý do chinh dang sẽ đươc đưa vao tiêu chí đanh gia thi
-đua khen thưởng cuôi năm của tap thể và cá nhân liên quan Văn phòng Sở theo dõi
-và định kỳ bao cáo tiến đô vào ngày 25 hàng tháng
-
+Moi sự cham trị] không có Lý do chính đáng sẽ được đưa vào tiêu chí đánh giá thi
+đua khen thu[lng cu[li năm c[la tập thị] và cá nhân liên quan. Văn phòng S[J theo dõi
+và định kỳ báo cáo ti[ln độ vào ngày 25 hàng tháng.
 
 ```

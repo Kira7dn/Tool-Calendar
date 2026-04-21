@@ -1,16 +1,40 @@
 <div id="user-modal" class="modal"
     style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
     <div class="data-section" style="width: 400px; padding: 30px;">
-        <h3 style="margin-bottom: 20px;">Tạo tài khoản mới</h3>
-        <div class="form-group">
+        <h3 id="user-modal-title" style="margin-bottom: 20px;">Quản lý tài khoản</h3>
+        <input type="hidden" id="edit-user-id">
+        <div class="form-group" id="username-group">
             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Tên đăng nhập</label>
             <input type="text" id="new-username"
                 style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
         </div>
-        <div class="form-group" style="margin-top: 15px;">
+        <div class="form-group" style="margin-top: 15px;" id="password-group">
             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Mật khẩu</label>
             <input type="password" id="new-password"
                 style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Họ tên</label>
+            <input type="text" id="new-fullname"
+                style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Email</label>
+            <input type="email" id="new-email"
+                style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Số điện thoại</label>
+            <input type="text" id="new-phone"
+                style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+            <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Phòng ban</label>
+            <select id="new-department"
+                style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+                <option value="">-- Chọn phòng ban --</option>
+                <!-- Sẽ được fill bằng JS -->
+            </select>
         </div>
         <div class="form-group" style="margin-top: 15px;">
             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Vai trò</label>
@@ -24,7 +48,7 @@
         </div>
         <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
             <button class="btn" style="background: #e2e8f0; color: #1e293b;" data-action="close-user-modal">Hủy</button>
-            <button class="btn btn-primary" data-action="create-user">Lưu tài khoản</button>
+            <button class="btn btn-primary" data-action="save-user">Lưu tài khoản</button>
         </div>
     </div>
 </div>
