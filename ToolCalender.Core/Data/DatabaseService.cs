@@ -235,6 +235,8 @@ namespace ToolCalender.Data
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN NgayThem TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN DaTaoLich INTEGER DEFAULT 0"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN UploadedByUserId INTEGER DEFAULT 1"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedUserIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedDepartmentIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
 
             // Đảm bảo tài khoản admin luôn đúng mật khẩu admin@123456
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
@@ -292,7 +294,7 @@ namespace ToolCalender.Data
             var list = new List<User>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "SELECT Id, Username, FullName, Email, Role, DepartmentId, SessionId FROM Users";
+            string sql = "SELECT u.Id, u.Username, u.FullName, u.Email, u.PhoneNumber, u.Role, u.DepartmentId, d.Name as DepartmentName, u.SessionId FROM Users u LEFT JOIN Departments d ON u.DepartmentId = d.Id";
             using var cmd = new SqliteCommand(sql, connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
@@ -302,8 +304,10 @@ namespace ToolCalender.Data
                     Username = reader["Username"].ToString() ?? "",
                     FullName = reader["FullName"]?.ToString() ?? "",
                     Email = reader["Email"]?.ToString() ?? "",
+                    PhoneNumber = reader["PhoneNumber"]?.ToString() ?? "",
                     Role = reader["Role"].ToString() ?? "",
                     DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"]),
+                    DepartmentName = reader["DepartmentName"]?.ToString(),
                     SessionId = reader["SessionId"]?.ToString()
                 });
             }
@@ -356,7 +360,11 @@ namespace ToolCalender.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "SELECT * FROM Users WHERE Id=@id";
+            string sql = @"
+                SELECT u.*, d.Name as DepartmentName 
+                FROM Users u 
+                LEFT JOIN Departments d ON u.DepartmentId = d.Id 
+                WHERE u.Id=@id";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
             using var reader = cmd.ExecuteReader();
@@ -368,28 +376,64 @@ namespace ToolCalender.Data
                     Username = reader["Username"].ToString() ?? "",
                     FullName = reader["FullName"]?.ToString() ?? "",
                     Email = reader["Email"]?.ToString() ?? "",
+                    PhoneNumber = reader["PhoneNumber"]?.ToString() ?? "",
                     Role = reader["Role"].ToString() ?? "Guest",
                     DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"]),
+                    DepartmentName = reader["DepartmentName"]?.ToString(),
                     SessionId = reader["SessionId"]?.ToString()
                 };
             }
             return null;
         }
 
-        public static bool Register(string username, string password, string role = "Guest")
+        public static bool CreateUser(User user)
         {
             try {
                 using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
-                string sql = "INSERT INTO Users (Username, PasswordHash, FullName, Role, CreatedAt) VALUES (@u, @p, @f, @r, datetime('now'))";
+                string sql = @"
+                    INSERT INTO Users (Username, PasswordHash, FullName, Email, PhoneNumber, Role, DepartmentId, CreatedAt) 
+                    VALUES (@u, @p, @f, @e, @pn, @r, @d, datetime('now'))";
                 using var cmd = new SqliteCommand(sql, connection);
-                cmd.Parameters.AddWithValue("@u", username);
-                cmd.Parameters.AddWithValue("@p", password);
-                cmd.Parameters.AddWithValue("@f", username); // Tạm thời dùng username cho FullName
-                cmd.Parameters.AddWithValue("@r", role);
+                cmd.Parameters.AddWithValue("@u", user.Username);
+                cmd.Parameters.AddWithValue("@p", user.PasswordHash);
+                cmd.Parameters.AddWithValue("@f", (object?)user.FullName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@e", (object?)user.Email ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@pn", (object?)user.PhoneNumber ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@r", (object?)user.Role ?? "Guest");
+                cmd.Parameters.AddWithValue("@d", (object?)user.DepartmentId ?? DBNull.Value);
                 cmd.ExecuteNonQuery();
                 return true;
             } catch { return false; }
+        }
+
+        public static void UpdateUser(User user)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = @"
+                UPDATE Users SET 
+                    FullName = @f, 
+                    Email = @e, 
+                    PhoneNumber = @pn, 
+                    Role = @r, 
+                    DepartmentId = @d 
+                WHERE Id = @id";
+            
+            // Note: Not updating Username/Password here for simplicity, can add separate methods or logic
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@f", (object?)user.FullName ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@e", (object?)user.Email ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@pn", (object?)user.PhoneNumber ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@r", (object?)user.Role ?? "Guest");
+            cmd.Parameters.AddWithValue("@d", (object?)user.DepartmentId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@id", user.Id);
+            cmd.ExecuteNonQuery();
+        }
+
+        public static bool Register(string username, string password, string role = "Guest")
+        {
+            return CreateUser(new User { Username = username, PasswordHash = password, Role = role });
         }
 
         // --- COMMENT MANAGEMENT ---
@@ -575,8 +619,8 @@ namespace ToolCalender.Data
             connection.Open();
 
             string sql = @"
-                INSERT INTO Documents (SoVanBan, TenCongVan, TrichYeu, FullText, OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich)
-                VALUES (@SoVanBan, @TenCongVan, @TrichYeu, @FullText, @OcrPagesJson, @NgayBanHanh, @CoQuanBanHanh, @CoQuanChuQuan, @ThoiHan, @DonViChiDao, @FilePath, @Status, @Priority, @DepartmentId, @AssignedTo, @EvidencePaths, @EvidenceNotes, @CompletionDate, @LabelId, @NgayThem, @DaTaoLich);
+                INSERT INTO Documents (SoVanBan, TenCongVan, TrichYeu, FullText, OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich)
+                VALUES (@SoVanBan, @TenCongVan, @TrichYeu, @FullText, @OcrPagesJson, @NgayBanHanh, @CoQuanBanHanh, @CoQuanChuQuan, @ThoiHan, @DonViChiDao, @FilePath, @Status, @Priority, @DepartmentId, @AssignedTo, @AssignedUserIds, @AssignedDepartmentIds, @EvidencePaths, @EvidenceNotes, @CompletionDate, @LabelId, @NgayThem, @DaTaoLich);
                 SELECT last_insert_rowid();";
 
             using var cmd = new SqliteCommand(sql, connection);
@@ -595,7 +639,8 @@ namespace ToolCalender.Data
                     NgayBanHanh=@NgayBanHanh, CoQuanBanHanh=@CoQuanBanHanh, CoQuanChuQuan=@CoQuanChuQuan,
                     ThoiHan=@ThoiHan, DonViChiDao=@DonViChiDao, FilePath=@FilePath, 
                     Status=@Status, Priority=@Priority, DepartmentId=@DepartmentId, 
-                    AssignedTo=@AssignedTo, EvidencePaths=@EvidencePaths, EvidenceNotes=@EvidenceNotes, 
+                    AssignedTo=@AssignedTo, AssignedUserIds=@AssignedUserIds, AssignedDepartmentIds=@AssignedDepartmentIds,
+                    EvidencePaths=@EvidencePaths, EvidenceNotes=@EvidenceNotes, 
                     CompletionDate=@CompletionDate, LabelId=@LabelId, DaTaoLich=@DaTaoLich
                 WHERE Id=@Id";
 
@@ -605,14 +650,29 @@ namespace ToolCalender.Data
             cmd.ExecuteNonQuery();
         }
 
-        public static void AssignDocument(int docId, int? departmentId, int? userId)
+        public static void AssignDocument(int docId, string departmentIds, string userIds)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "UPDATE Documents SET DepartmentId=@deptId, AssignedTo=@uId, Status='Chưa xử lý' WHERE Id=@docId";
+            
+            int? firstDeptId = null;
+            try {
+                var depts = System.Text.Json.JsonSerializer.Deserialize<List<int>>(departmentIds);
+                if (depts != null && depts.Count > 0) firstDeptId = depts[0];
+            } catch { }
+
+            int? firstUserId = null;
+            try {
+                var users = System.Text.Json.JsonSerializer.Deserialize<List<int>>(userIds);
+                if (users != null && users.Count > 0) firstUserId = users[0];
+            } catch { }
+
+            string sql = "UPDATE Documents SET AssignedDepartmentIds=@deptIds, AssignedUserIds=@uIds, DepartmentId=@dId, AssignedTo=@uId, Status='Chưa xử lý' WHERE Id=@docId";
             using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@deptId", (object?)departmentId ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@uId", (object?)userId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@deptIds", (object?)departmentIds ?? "[]");
+            cmd.Parameters.AddWithValue("@uIds", (object?)userIds ?? "[]");
+            cmd.Parameters.AddWithValue("@dId", (object?)firstDeptId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@uId", (object?)firstUserId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@docId", docId);
             cmd.ExecuteNonQuery();
         }
@@ -730,6 +790,8 @@ namespace ToolCalender.Data
             cmd.Parameters.AddWithValue("@Priority", (object?)r.Priority ?? "Thường");
             cmd.Parameters.AddWithValue("@DepartmentId", (object?)r.DepartmentId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@AssignedTo", (object?)r.AssignedTo ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@AssignedUserIds", (object?)r.AssignedUserIds ?? "[]");
+            cmd.Parameters.AddWithValue("@AssignedDepartmentIds", (object?)r.AssignedDepartmentIds ?? "[]");
             cmd.Parameters.AddWithValue("@EvidencePaths", (object?)r.EvidencePaths ?? "[]");
             cmd.Parameters.AddWithValue("@EvidenceNotes", (object?)r.EvidenceNotes ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@CompletionDate", r.CompletionDate.HasValue ? (object)r.CompletionDate.Value.ToString("yyyy-MM-dd") : DBNull.Value);
@@ -758,6 +820,8 @@ namespace ToolCalender.Data
                 Priority = r["Priority"]?.ToString() ?? "Thường",
                 DepartmentId = r["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(r["DepartmentId"]),
                 AssignedTo = r["AssignedTo"] == DBNull.Value ? null : Convert.ToInt32(r["AssignedTo"]),
+                AssignedUserIds = r["AssignedUserIds"]?.ToString() ?? "[]",
+                AssignedDepartmentIds = r["AssignedDepartmentIds"]?.ToString() ?? "[]",
                 EvidencePaths = r["EvidencePaths"]?.ToString() ?? "[]",
                 EvidenceNotes = r["EvidenceNotes"]?.ToString() ?? "",
                 CompletionDate = TryParseDate(r["CompletionDate"]?.ToString()),

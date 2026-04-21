@@ -64,19 +64,27 @@ export function createReviewFeature(context) {
             if (!currentItem) return;
 
             if (target.id === 'review-department') {
+                const id = target.value ? parseInt(target.value, 10) : null;
                 context.services.upload.updateSessionUpload(currentItem.id, {
-                    departmentId: target.value ? parseInt(target.value, 10) : null,
-                    assignedTo: null
+                    departmentIds: id ? [id] : [],
+                    assignedToIds: []
                 });
                 syncAssignmentSelectors(getCurrentItem());
             }
 
             if (target.id === 'review-assignee') {
+                const id = target.value ? parseInt(target.value, 10) : null;
                 const reference = context.services.upload.getReferenceData();
-                const selectedUser = reference.users.find((user) => user.id === (target.value ? parseInt(target.value, 10) : null));
+                const selectedUser = reference.users.find((user) => user.id === id);
+                
+                let newDeptIds = [...(getCurrentItem()?.departmentIds || [])];
+                if (selectedUser?.departmentId && !newDeptIds.includes(selectedUser.departmentId)) {
+                    newDeptIds.push(selectedUser.departmentId);
+                }
+
                 context.services.upload.updateSessionUpload(currentItem.id, {
-                    assignedTo: target.value ? parseInt(target.value, 10) : null,
-                    departmentId: selectedUser?.departmentId ?? getCurrentItem()?.departmentId ?? null
+                    assignedToIds: id ? [id] : [],
+                    departmentIds: newDeptIds
                 });
                 syncAssignmentSelectors(getCurrentItem());
             }
@@ -160,8 +168,7 @@ export function createReviewFeature(context) {
             coQuanChuQuan: document.getElementById('review-co-quan').value,
             thoiHan: document.getElementById('review-han-xu-ly').value ? `${document.getElementById('review-han-xu-ly').value}T00:00:00` : null,
             trichYeu: document.getElementById('review-trich-yeu').value,
-            departmentId: document.getElementById('review-department').value ? parseInt(document.getElementById('review-department').value, 10) : null,
-            assignedTo: document.getElementById('review-assignee').value ? parseInt(document.getElementById('review-assignee').value, 10) : null,
+            // Keep existing multi-selects unless we add multi-select to review modal too
             ocrPagesJson: currentItem.ocrPagesJson || '[]'
         });
 
@@ -239,13 +246,17 @@ export function createReviewFeature(context) {
         const assigneeSelect = document.getElementById('review-assignee');
         if (!departmentSelect || !assigneeSelect) return;
 
+        // In side-by-side review, we use simple selects for quick assignment as a "primary" selection
+        const primaryDeptId = doc?.departmentIds?.[0] || null;
+        const primaryUserId = doc?.assignedToIds?.[0] || null;
+
         departmentSelect.innerHTML = ['<option value="">Chọn phòng ban</option>']
-            .concat(reference.departments.map((department) => `<option value="${department.id}" ${String(doc?.departmentId || '') === String(department.id) ? 'selected' : ''}>${escapeHtml(department.name)}</option>`))
+            .concat(reference.departments.map((department) => `<option value="${department.id}" ${String(primaryDeptId || '') === String(department.id) ? 'selected' : ''}>${escapeHtml(department.name)}</option>`))
             .join('');
 
-        const filteredUsers = context.services.upload.getUsersForDepartment(doc?.departmentId ?? null);
+        const filteredUsers = context.services.upload.getUsersForDepartment(primaryDeptId);
         assigneeSelect.innerHTML = ['<option value="">Chọn cán bộ</option>']
-            .concat(filteredUsers.map((user) => `<option value="${user.id}" ${String(doc?.assignedTo || '') === String(user.id) ? 'selected' : ''}>${escapeHtml(user.fullName || user.username)}</option>`))
+            .concat(filteredUsers.map((user) => `<option value="${user.id}" ${String(primaryUserId || '') === String(user.id) ? 'selected' : ''}>${escapeHtml(user.fullName || user.username)}</option>`))
             .join('');
     }
 

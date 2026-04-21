@@ -7,6 +7,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using ToolCalender.Tests.Helpers;
 
 namespace ToolCalender.Tests
 {
@@ -33,7 +34,7 @@ namespace ToolCalender.Tests
                     {
                         // Ghi đè đường dẫn Tesseract để test chạy đúng
                         var configData = new Dictionary<string, string?> {
-                            {"OcrSettings:TessDataPath", @"d:\Business Analyze\ToolCalendar\ToolCalender.Core\tessdata"},
+                            {"OcrSettings:TessDataPath", TestPathHelper.GetCoreTessdataPath()},
                             {"OcrSettings:Language", "vie+eng"}
                         };
                         config.AddInMemoryCollection(configData);

@@ -22,6 +22,7 @@ builder.Services.AddSingleton<SessionHubService>();
 // Đăng ký OCR & Extraction Services
 builder.Services.AddSingleton<IOcrService, OcrService>();
 builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();
+builder.Services.AddHostedService<OcrRuntimeValidationService>();
 
 // Cấu hình Hàng đợi OCR xử lý nền
 builder.Services.AddSingleton<OcrQueueService>();

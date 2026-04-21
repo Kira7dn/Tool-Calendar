@@ -164,21 +164,27 @@ namespace ToolCalender.Api.Controllers
         {
             if (request == null) return BadRequest();
             
-            // 1. Thực hiện gán trong DB
-            DatabaseService.AssignDocument(id, request.DepartmentId, request.UserId);
+            var departmentIdsJson = System.Text.Json.JsonSerializer.Serialize(request.DepartmentIds ?? new List<int>());
+            var userIdsJson = System.Text.Json.JsonSerializer.Serialize(request.UserIds ?? new List<int>());
 
-            // 2. Gửi thông báo tức thời cho Cán bộ (nếu có user được gán)
-            if (request.UserId.HasValue)
+            // 1. Thực hiện gán trong DB
+            DatabaseService.AssignDocument(id, departmentIdsJson, userIdsJson);
+
+            // 2. Gửi thông báo tức thời cho tất cả Cán bộ được gán
+            if (request.UserIds != null && request.UserIds.Count > 0)
             {
                 var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
                 if (doc != null)
                 {
-                    await _notificationManager.SendToUserAsync(
-                        request.UserId.Value,
-                        "Giao việc mới",
-                        $"Bạn được giao xử lý văn bản số {doc.SoVanBan}: {doc.TenCongVan}",
-                        new { docId = id, type = "assignment" }
-                    );
+                    foreach (var userId in request.UserIds)
+                    {
+                        await _notificationManager.SendToUserAsync(
+                            userId,
+                            "Giao việc mới",
+                            $"Bạn được giao xử lý văn bản số {doc.SoVanBan}: {doc.TenCongVan}",
+                            new { docId = id, type = "assignment" }
+                        );
+                    }
                 }
             }
 
@@ -388,8 +394,8 @@ namespace ToolCalender.Api.Controllers
 
     public class AssignmentRequest
     {
-        public int? DepartmentId { get; set; }
-        public int? UserId { get; set; }
+        public List<int>? DepartmentIds { get; set; }
+        public List<int>? UserIds { get; set; }
     }
 
     public class CommentRequest

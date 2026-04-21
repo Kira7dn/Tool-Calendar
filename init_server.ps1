@@ -116,8 +116,25 @@ catch {
     }
 
     # 6. Docker
+    Write-Host "Starting services..." -ForegroundColor Gray
     docker-compose down
     docker-compose up -d --build
+
+    # 7. Seed Database
+    Write-Host "Seeding database with sample data..." -ForegroundColor Gray
+    $dbFile = "$PSScriptRoot\data\documents.db"
+    $seedFile = "$PSScriptRoot\seed_db.sql"
+    
+    if (Test-Path $seedFile) {
+        # Using a temporary sqlite3 container to execute the script against the mounted volume
+        docker run --rm `
+            -v "$($PSScriptRoot)\data:/db_data" `
+            -v "$($seedFile):/seed.sql" `
+            keinos/sqlite3 /db_data/documents.db ".read /seed.sql"
+        Write-Host "Success: Database seeded." -ForegroundColor Green
+    } else {
+        Write-Host "Warning: seed_db.sql not found, skipping seeding." -ForegroundColor Yellow
+    }
 
     Write-Host "`n--- SERVER READY ---" -ForegroundColor Green
     Write-Host "Access: https://$domain ($ipAddress)" -ForegroundColor Cyan

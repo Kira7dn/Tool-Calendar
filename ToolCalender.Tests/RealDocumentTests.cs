@@ -2,8 +2,10 @@ using Xunit;
 using ToolCalender.Models;
 using ToolCalender.Services;
 using ToolCalender.Tests.Helpers;
+using ToolCalender.Data;
 using System.IO;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ToolCalender.Tests
 {
@@ -13,15 +15,17 @@ namespace ToolCalender.Tests
         private static readonly object DebugResetLock = new();
         private readonly IConfiguration _configuration;
         private readonly IOcrService _ocrService;
+        private readonly bool _isLocalOcrRuntimeAvailable;
 
         public RealDocumentTests()
         {
-            var resultsPath = Path.Combine(@"d:\Business Analyze\ToolCalendar\tests\test_results", "actual_test");
+            var resultsPath = Path.Combine(TestPathHelper.GetTestResultsRoot(), "actual_test");
             var debugPath = Path.Combine(resultsPath, "debug_images");
             ResetDirectoryOnce(debugPath);
+            ConfigureTestDatabase($"real-document-tests-{Guid.NewGuid():N}.db");
 
             var configData = new Dictionary<string, string?> {
-                {"OcrSettings:TessDataPath", @"d:\Business Analyze\ToolCalendar\ToolCalender.Core\tessdata"},
+                {"OcrSettings:TessDataPath", TestPathHelper.GetCoreTessdataPath()},
                 {"OcrSettings:Language", "vie+eng"},
                 {"OcrSettings:EnableDebug", "true"},
                 {"OcrSettings:DebugPath", debugPath}
@@ -31,7 +35,21 @@ namespace ToolCalender.Tests
                 .AddInMemoryCollection(configData)
                 .Build();
 
-            _ocrService = new OcrService(_configuration);
+            _isLocalOcrRuntimeAvailable = OcrTestRuntimeHelper.IsTesseractCliAvailable();
+            _ocrService = new OcrService(_configuration, NullLogger<OcrService>.Instance);
+        }
+
+        private static void ConfigureTestDatabase(string fileName)
+        {
+            string dbDirectory = TestPathHelper.GetTestDbRoot();
+            Directory.CreateDirectory(dbDirectory);
+            string dbPath = Path.Combine(dbDirectory, fileName);
+            if (File.Exists(dbPath))
+            {
+                File.Delete(dbPath);
+            }
+            Environment.SetEnvironmentVariable("DB_PATH", dbPath);
+            DatabaseService.Initialize();
         }
 
         private static void ResetDirectoryOnce(string path)
@@ -52,7 +70,7 @@ namespace ToolCalender.Tests
 
         private string GetResultsFolder()
         {
-            string path = Path.Combine(@"d:\Business Analyze\ToolCalendar\tests\test_results", "actual_test");
+            string path = Path.Combine(TestPathHelper.GetTestResultsRoot(), "actual_test");
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
             return path;
         }
@@ -60,6 +78,8 @@ namespace ToolCalender.Tests
         [Fact]
         public async Task Manual_Ocr_QuyetDinh189()
         {
+            if (!_isLocalOcrRuntimeAvailable) return;
+
             // --- ARRANGE ---
             string resultsFolder = GetResultsFolder();
             string pdfPath = Path.Combine(resultsFolder, "Quyết định 189.pdf");

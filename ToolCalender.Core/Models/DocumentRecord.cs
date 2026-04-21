@@ -20,6 +20,8 @@ namespace ToolCalender.Models
         public string Priority { get; set; } = "Thường"; // Thường, Khẩn, Hỏa tốc
         public int? DepartmentId { get; set; }
         public int? AssignedTo { get; set; }
+        public string AssignedUserIds { get; set; } = "[]";
+        public string AssignedDepartmentIds { get; set; } = "[]";
         public string EvidencePaths { get; set; } = "[]"; // JSON array
         public string EvidenceNotes { get; set; } = "";
         public DateTime? CompletionDate { get; set; }
