@@ -25,6 +25,7 @@ namespace ToolCalender.Models
         public int? LabelId { get; set; }
         public DateTime NgayThem { get; set; } = DateTime.Now;
         public bool DaTaoLich { get; set; } = false;
+        public int UploadedByUserId { get; set; } = 1;
 
         [JsonInclude]
         public int SoNgayConLai

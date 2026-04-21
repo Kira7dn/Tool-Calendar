@@ -40,13 +40,19 @@
 
 ## 1. Luồng của Văn thư (Nhập liệu & Điều phối)
 
-- **Bắt đầu**: Tải lên file PDF/Quét văn bản (Hỗ trợ Tải lẻ hoặc Tải hàng loạt).
-- **OCR [hệ thống]**: Bóc tách OCR (Xếp hàng xử lý Batch) và đưa vào **Danh sách chờ duyệt (Pending List)**.
-- **Review**: Giao diện Review Side-by-Side rà soát từng trang PDF vs Dữ liệu bóc tách (đặc biệt là Tên công văn, Số hiệu, Trích yếu).
-- **Chỉnh sửa**: Chỉnh sửa/Bổ sung thông tin sai lệch.
-- **Phân loại**: Dán nhãn/Phân loại & Áp rule thủ công.
-- **Điều phối**: Gán đích danh Cán bộ/Phòng ban xử lý.
-- **Hoàn tất [hệ thống]**: Lưu dữ liệu & Đẩy Web Notification cho Cán bộ.
+**Bắt đầu**: Tải lên file PDF/Quét văn bản (Hỗ trợ Tải lẻ hoặc Tải hàng loạt).
+
+**OCR [hệ thống]**: Bóc tách OCR (Xếp hàng xử lý Batch) và đưa vào **Danh sách chờ duyệt (Pending List)**.
+
+**Review**: Giao diện Review Side-by-Side rà soát từng trang PDF vs Dữ liệu bóc tách (đặc biệt là Tên công văn, Số hiệu, Trích yếu).
+
+**Chỉnh sửa**: Chỉnh sửa/Bổ sung thông tin sai lệch.
+
+**Phân loại**: Dán nhãn/Phân loại & Áp rule thủ công.
+
+**Điều phối**: Gán đích danh Cán bộ/Phòng ban xử lý.
+
+* **Hoàn tất [hệ thống]**: Lưu dữ liệu & Đẩy Web Notification cho Cán bộ.
 
 ## 2. Luồng của Cán bộ (Thực thi & Báo cáo)
 
@@ -81,6 +87,7 @@ Tập trung vào số liệu tổng quan và xử lý các điểm nghẽn.
 # THIẾT KẾ DATA ENTITY MODEL (MÔ HÌNH DỮ LIỆU)
 
 ### 1. User (Người dùng)
+
 - `Id`, `Username`, `PasswordHash`.
 - `FullName`: Họ và tên cán bộ.
 - `Email`, `PhoneNumber`: Để phục vụ gửi thông báo (Email/Zalo) trong tương lai.
@@ -88,10 +95,12 @@ Tập trung vào số liệu tổng quan và xử lý các điểm nghẽn.
 - `DepartmentId`: Định danh phòng ban.
 
 ### 2. Department (Phòng ban)
+
 - `Id`, `Name`: Tên phòng ban/bộ phận.
 - `Description`: Mô tả chức năng.
 
 ### 3. Document (Công văn/Văn bản)
+
 - `Id`, `SoHieu`, `TenCongVan`, `TrichYeu`.
 - `FullText`: Toàn bộ nội dung văn bản dưới dạng chữ (OCR bóc tách) phục vụ tìm kiếm.
 - `NgayBanHanh`, `HanXuLy` (Deadline).
@@ -106,21 +115,26 @@ Tập trung vào số liệu tổng quan và xử lý các điểm nghẽn.
 - `LabelId`: Định danh nhãn đã dán (Mapping với bảng DocumentLabel).
 
 ### 4. DocumentLabel (Nhãn/Phân loại)
+
 - `Id`, `Name`: Tên nhãn (Ví dụ: Dự án, Khiếu nại, ...).
 - `Color`: Mã màu hiển thị.
 
 ### 5. AutoRule (Quy tắc tự động)
+
 - `Id`, `Keyword`: Từ khóa nhận diện để gợi ý dán nhãn/thời hạn.
 - `LabelId`: Nhãn dự kiến sẽ gợi ý (Mapping với bảng DocumentLabel).
 - `DefaultDeadlineDays`: Số ngày gợi ý mặc định.
 
 ### 6. AppSetting (Cấu hình hệ thống)
+
 - `Key`, `Value`: Lưu các thiết lập mốc 7-3-1 ngày, đường dẫn Backup, v.v.
 
 ### 7. AuditLog (Nhật ký hệ thống)
+
 - `Id`, `UserId`, `Action`, `Timestamp`: Lưu vết 100% các thao tác Xem/Sửa/Xóa của mọi người dùng.
 
 ### 8. PushSubscription (Đăng ký nhận tin)
+
 - `Id`, `UserId`: Liên kết với người dùng.
 - `Endpoint`: URL dịch vụ push của trình duyệt.
 - `P256dh`, `Auth`: Khóa mã hóa bảo mật thông báo (VAPID).
@@ -131,30 +145,34 @@ Tập trung vào số liệu tổng quan và xử lý các điểm nghẽn.
 # 📋 TODO LIST (LỘ TRÌNH TRIỂN KHAI GĐ 1)
 
 ### 1. Data Domain (Persistence Layer)
-- [x] Khởi tạo các Entity trong `ToolCalender.Core` (User, Document, Department, Label, Rule, Setting, AuditLog). 🔹 *Next: Đã hoàn thành. Sẵn sàng cho việc phân quyền và điều phối.*
-- [x] Thiết lập kết nối Database (MongoDB hoặc SQL). 🔹 *Next: Duy trì cấu hình kết nối hiện tại.*
-- [x] Cài đặt Repository Pattern/Data Access Layer. 🔹 *Next: Đã có DatabaseService, cần tối ưu cho các Entity mới.*
-- [x] Tạo dữ liệu mẫu (Seed Data): Tài khoản Admin mặc định, các Phòng ban cơ bản của cơ quan. 🔹 *Next: Bổ sung dữ liệu mẫu cho Phòng ban và Nhãn.*
+
+- [X] Khởi tạo các Entity trong `ToolCalender.Core` (User, Document, Department, Label, Rule, Setting, AuditLog). 🔹 *Next: Đã hoàn thành. Sẵn sàng cho việc phân quyền và điều phối.*
+- [X] Thiết lập kết nối Database (MongoDB hoặc SQL). 🔹 *Next: Duy trì cấu hình kết nối hiện tại.*
+- [X] Cài đặt Repository Pattern/Data Access Layer. 🔹 *Next: Đã có DatabaseService, cần tối ưu cho các Entity mới.*
+- [X] Tạo dữ liệu mẫu (Seed Data): Tài khoản Admin mặc định, các Phòng ban cơ bản của cơ quan. 🔹 *Next: Bổ sung dữ liệu mẫu cho Phòng ban và Nhãn.*
 
 ### 2. Service (Backend Logic)
-- [x] **Auth Service**: Xử lý Đăng nhập, cấp Token JWT và kiểm tra quyền RBAC. 🔹 *Next: Cập nhật Token để chứa thêm thông tin FullName/Department.*
-- [x] **OCR Service**: Tích hợp Tesseract, xử lý **Hàng đợi Batch (Queue)** và bóc tách thông tin (gồm cả Tên công văn). 🔹 *Next: Đã hoàn thành xử lý nền và bóc tách nâng cao.*
-- [x] **Document Service**: Xử lý Upload PDF, CRUD văn bản, Gán việc và cập nhật trạng thái kèm **nhiều file bằng chứng**. 🔹 *Next: Đã hoàn thành luồng điều phối và báo cáo kết quả.*
-- [x] **Notification Service**: Quét mốc 7-3-1 ngày, gửi Web Notification và lưu vết thông báo vào **AuditLog**. 🔹 *Next: Đã hoàn thành triển khai Web Push (VAPID) và tự động tạo khóa.*
-- [x] **Admin & Backup Service**: Quản lý Rule dán nhãn, **Quản lý Phòng ban**, Cấu hình SMTP và cơ chế Auto-backup CSV. 🔹 *Next: Đã hoàn thành CRUD danh mục và xuất CSV.*
-- [x] **Stats Service**: Tính toán dữ liệu tổng hợp theo Phòng ban/Cán bộ cho Dashboard. 🔹 *Next: Đã hoàn thành API thống kê tổng hợp.*
+
+- [X] **Auth Service**: Xử lý Đăng nhập, cấp Token JWT và kiểm tra quyền RBAC. 🔹 *Next: Cập nhật Token để chứa thêm thông tin FullName/Department.*
+- [X] **OCR Service**: Tích hợp Tesseract, xử lý **Hàng đợi Batch (Queue)** và bóc tách thông tin (gồm cả Tên công văn). 🔹 *Next: Đã hoàn thành xử lý nền và bóc tách nâng cao.*
+- [X] **Document Service**: Xử lý Upload PDF, CRUD văn bản, Gán việc và cập nhật trạng thái kèm **nhiều file bằng chứng**. 🔹 *Next: Đã hoàn thành luồng điều phối và báo cáo kết quả.*
+- [X] **Notification Service**: Quét mốc 7-3-1 ngày, gửi Web Notification và lưu vết thông báo vào **AuditLog**. 🔹 *Next: Đã hoàn thành triển khai Web Push (VAPID) và tự động tạo khóa.*
+- [X] **Admin & Backup Service**: Quản lý Rule dán nhãn, **Quản lý Phòng ban**, Cấu hình SMTP và cơ chế Auto-backup CSV. 🔹 *Next: Đã hoàn thành CRUD danh mục và xuất CSV.*
+- [X] **Stats Service**: Tính toán dữ liệu tổng hợp theo Phòng ban/Cán bộ cho Dashboard. 🔹 *Next: Đã hoàn thành API thống kê tổng hợp.*
 
 ### 3. UI Component (Atomic Elements)
-- [x] **Layout**: Sidebar điều hướng, Header Premium tích hợp danh sách thông báo đẩy. 🔹 *Next: Hoàn thiện danh sách thông báo thả xuống (Dropdown).*
-- [x] **Data Table**: Danh sách văn bản hỗ trợ lọc, tìm kiếm và phân trang chuyên sâu. 🔹 *Next: Thêm bộ lọc nhanh theo Phòng ban.*
-- [x] **Status Badge**: Các nhãn màu sắc thể hiện Trạng thái và Mức độ khẩn. 🔹 *Next: Duy trì.*
-- [ ] **PDF Previewer**: Component nhúng PDF hỗ trợ **điều hướng từng trang** để rà soát. 🔹 *Next: Tích hợp thư viện hiển thị PDF (như PDF.js).*
-- [x] **Notification UI**: Toast thông báo tức thời và danh sách thông báo chưa đọc. 🔹 *Next: Đã triển khai Service Worker cho Web Push.*
-- [ ] **FE Approval Logic**: Xây dựng UI/Logic để xin quyền người dùng (Notification Permission), lấy Subscription và gửi về API `/api/Notification/subscribe`.
+
+- [X] **Layout**: Sidebar điều hướng, Header Premium tích hợp danh sách thông báo đẩy. 🔹 *Next: Hoàn thiện danh sách thông báo thả xuống (Dropdown).*
+- [X] **Data Table**: Danh sách văn bản hỗ trợ lọc, tìm kiếm và phân trang chuyên sâu. 🔹 *Next: Thêm bộ lọc nhanh theo Phòng ban.*
+- [X] **Status Badge**: Các nhãn màu sắc thể hiện Trạng thái và Mức độ khẩn. 🔹 *Next: Duy trì.*
+- [X] **PDF Previewer**: Component nhúng PDF hỗ trợ **điều hướng từng trang** để rà soát. 🔹 *Next: Đã hoàn thành tích hợp PDF.js.*
+- [X] **Notification UI**: Toast thông báo tức thời và danh sách thông báo chưa đọc. 🔹 *Next: Đã triển khai Service Worker cho Web Push.*
+- [X] **FE Approval Logic**: Xây dựng UI/Logic để xin quyền người dùng (Notification Permission), lấy Subscription và gửi về API `/api/Notification/subscribe`.
 
 ### 4. UI Scene (Main Views)
-- [x] **Login Scene**: Trang đăng nhập bảo mật. 🔹 *Next: Hoàn thành.*
-- [x] **Dashboard Scene**: Trang chủ với biểu đồ thống kê và top văn bản sắp quá hạn. 🔹 *Next: Bổ sung biểu đồ phân tích điểm nghẽn theo phòng ban.*
-- [ ] **Upload & OCR Review Scene**: Giao diện chia đôi màn hình; tích hợp **Danh sách chờ duyệt (Pending List)** cho luồng Batch. 🔹 *Next: Thiết kế lại CSS màn hình rà soát Side-by-Side.*
-- [ ] **Staff Workspace Scene**: Danh sách việc được giao; giao diện cập nhật kết quả và upload nhiều file bằng chứng. 🔹 *Next: Tạo màn hình "Công việc của tôi".*
-- [ ] **Admin Setup Scene**: Trang cài đặt người dùng, phòng ban, rule bóc tách, SMTP và Backup dữ liệu. 🔹 *Next: Triển khai giao diện quản lý cấu hình hệ thống.*
+
+- [X] **Login Scene**: Trang đăng nhập bảo mật. 🔹 *Next: Hoàn thành.*
+- [X] **Dashboard Scene**: Trang chủ với biểu đồ thống kê và top văn bản sắp quá hạn. 🔹 *Next: Bổ sung biểu đồ phân tích điểm nghẽn theo phòng ban.*
+- [X] **Upload & OCR Review Scene**: Giao diện chia đôi màn hình; tích hợp **Danh sách chờ duyệt (Pending List)** cho luồng Batch. 🔹 *Next: Đã hoàn thành giao diện Side-by-Side Review.*
+- [X] **Staff Workspace Scene**: Danh sách việc được giao; giao diện cập nhật kết quả và upload nhiều file bằng chứng. 🔹 *Next: Đã hoàn thành màn hình "Công việc của tôi".*
+- [X] **Admin Setup Scene**: Trang cài đặt người dùng, phòng ban, rule bóc tách, SMTP và Backup dữ liệu. 🔹 *Next: Đã hoàn thành giao diện quản lý cấu hình hệ thống.*

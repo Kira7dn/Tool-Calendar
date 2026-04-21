@@ -3,17 +3,21 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: base
     container_name: doc-coordination-system
     expose:
       - "5000"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - DB_PATH=/app/data/documents.db
       - OcrSettings__TessDataPath=/usr/share/tesseract-ocr/5/tessdata
       - TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
+      - DOTNET_USE_POLLING_FILE_WATCHER=1
     volumes:
+      - .:/app
       - ./data:/app/data
       - ./ToolCalender.Api/Uploads:/app/Uploads
+    command: dotnet watch run --project ToolCalender.Api/ToolCalender.Api.csproj --urls http://0.0.0.0:5000
     restart: always
 
   nginx:
