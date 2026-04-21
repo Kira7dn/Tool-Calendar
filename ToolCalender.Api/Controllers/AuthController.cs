@@ -45,6 +45,7 @@ namespace ToolCalender.Api.Controllers
                     new Claim(ClaimTypes.Role, user.Role),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim("uid", user.Id.ToString()),
+                    new Claim("UserId", user.Id.ToString()), // Claim "UserId" (cho tương thích ngược/client cũ)
                     new Claim("sid", user.SessionId ?? "")
                 }),
                 Expires = DateTime.UtcNow.AddHours(24),

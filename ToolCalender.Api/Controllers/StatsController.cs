@@ -19,7 +19,8 @@ namespace ToolCalender.Api.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi thống kê dữ liệu: {ex.Message}");
+                Console.WriteLine($"[StatsError] {ex.Message}\n{ex.StackTrace}");
+                return StatusCode(500, new { message = $"Lỗi thống kê dữ liệu: {ex.Message}" });
             }
         }
 

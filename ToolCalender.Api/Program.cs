@@ -66,19 +66,42 @@ builder.Services.AddAuthentication(x =>
         },
         OnTokenValidated = context =>
         {
-            var userIdStr = context.Principal?.FindFirst("uid")?.Value;
-            var sessionId = context.Principal?.FindFirst("sid")?.Value;
-
-            if (string.IsNullOrEmpty(userIdStr) || string.IsNullOrEmpty(sessionId))
-                return Task.CompletedTask;
-
-            if (int.TryParse(userIdStr, out int userId))
+            try 
             {
-                var user = DatabaseService.GetUserById(userId);
-                if (user == null || user.SessionId != sessionId)
+                // Log all claims for debugging (only in development)
+                var claims = context.Principal?.Claims.Select(c => $"{c.Type}:{c.Value}");
+                Console.WriteLine($"[AuthDebug] Kiểm tra token cho User: {context.Principal?.Identity?.Name}. Claims: {string.Join(", ", claims ?? Array.Empty<string>())}");
+
+                var userIdStr = context.Principal?.FindFirst("uid")?.Value 
+                              ?? context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                              ?? context.Principal?.FindFirst("UserId")?.Value;
+                
+                var sessionId = context.Principal?.FindFirst("sid")?.Value;
+
+                if (string.IsNullOrEmpty(userIdStr))
                 {
-                    context.Fail("Phiên đăng nhập đã hết hạn hoặc tài khoản đã đăng nhập ở nơi khác.");
+                    Console.WriteLine("[AuthWarning] Thiếu UserId/uid claim trong token.");
+                    return Task.CompletedTask;
                 }
+
+                if (int.TryParse(userIdStr, out int userId))
+                {
+                    var user = DatabaseService.GetUserById(userId);
+                    if (user == null)
+                    {
+                        Console.WriteLine($"[AuthError] Không tìm thấy User ID {userId} trong cơ sở dữ liệu.");
+                        context.Fail("Tài khoản không tồn tại.");
+                    }
+                    else if (!string.IsNullOrEmpty(sessionId) && user.SessionId != sessionId)
+                    {
+                        Console.WriteLine($"[AuthError] SessionId không khớp. DB: {user.SessionId}, Token: {sessionId}");
+                        context.Fail("Phiên đăng nhập đã hết hạn hoặc tài khoản đã đăng nhập ở nơi khác.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AuthFatalError] {ex.Message}\n{ex.StackTrace}");
             }
             return Task.CompletedTask;
         }

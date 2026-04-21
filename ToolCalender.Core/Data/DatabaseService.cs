@@ -29,10 +29,16 @@ namespace ToolCalender.Data
                 dbPath = Path.Combine(appData, "documents.db");
             }
 
-            _connectionString = $"Data Source={dbPath}";
+            _connectionString = $"Data Source={dbPath};Cache=Shared";
 
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
+
+            // Bật chế độ WAL (Write-Ahead Logging) để hỗ trợ đọc/ghi đồng thời tốt hơn, tránh lỗi "Database is locked"
+            using (var walCmd = new SqliteCommand("PRAGMA journal_mode=WAL;", connection))
+            {
+                walCmd.ExecuteNonQuery();
+            }
 
             string createDocumentsTable = @"
                 CREATE TABLE IF NOT EXISTS Documents (
@@ -196,11 +202,37 @@ namespace ToolCalender.Data
                 cmd.ExecuteNonQuery();
             } catch { /* Column already exists */ }
 
-            // --- MIGRATION: Users.SessionId ---
-            try {
-                cmd.CommandText = "ALTER TABLE Users ADD COLUMN SessionId TEXT";
-                cmd.ExecuteNonQuery();
-            } catch { /* Column already exists */ }
+            // --- MIGRATION: Users Schema Update ---
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN FullName TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN Email TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN PhoneNumber TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN Role TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN DepartmentId INTEGER"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN CreatedAt TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN SessionId TEXT"; cmd.ExecuteNonQuery(); } catch { }
+
+            // --- MIGRATION: Documents Schema Update (All Columns) ---
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN SoVanBan TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN TenCongVan TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN TrichYeu TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN FullText TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN NgayBanHanh TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN CoQuanBanHanh TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN CoQuanChuQuan TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN ThoiHan TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN DonViChiDao TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN FilePath TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN Status TEXT DEFAULT 'Chưa xử lý'"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN Priority TEXT DEFAULT 'Thường'"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN DepartmentId INTEGER"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedTo INTEGER"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN EvidencePaths TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN EvidenceNotes TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN CompletionDate TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN LabelId INTEGER"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN NgayThem TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN DaTaoLich INTEGER DEFAULT 0"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN UploadedByUserId INTEGER DEFAULT 1"; cmd.ExecuteNonQuery(); } catch { }
 
             // Đảm bảo tài khoản admin luôn đúng mật khẩu admin@123456
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
@@ -906,30 +938,34 @@ namespace ToolCalender.Data
             int total = Convert.ToInt32(cmdTotal.ExecuteScalar());
 
             // 2. Theo Trạng thái
-            using var cmdStatus = new SqliteCommand("SELECT Status, COUNT(*) FROM Documents GROUP BY Status", connection);
+            using var cmdStatus = new SqliteCommand("SELECT COALESCE(Status, 'Chưa xử lý'), COUNT(*) FROM Documents GROUP BY Status", connection);
             using var rStatus = cmdStatus.ExecuteReader();
             var statusDict = new Dictionary<string, int>();
-            while (rStatus.Read()) statusDict[rStatus[0].ToString() ?? "N/A"] = Convert.ToInt32(rStatus[1]);
+            while (rStatus.Read()) statusDict[rStatus[0]?.ToString() ?? "Chưa xử lý"] = Convert.ToInt32(rStatus[1]);
 
             // 3. Theo Độ khẩn
-            using var cmdPrio = new SqliteCommand("SELECT Priority, COUNT(*) FROM Documents GROUP BY Priority", connection);
+            using var cmdPrio = new SqliteCommand("SELECT COALESCE(Priority, 'Thường'), COUNT(*) FROM Documents GROUP BY Priority", connection);
             using var rPrio = cmdPrio.ExecuteReader();
             var prioDict = new Dictionary<string, int>();
-            while (rPrio.Read()) prioDict[rPrio[0].ToString() ?? "N/A"] = Convert.ToInt32(rPrio[1]);
+            while (rPrio.Read()) prioDict[rPrio[0]?.ToString() ?? "Thường"] = Convert.ToInt32(rPrio[1]);
 
             // 4. Quá hạn
             using var cmdOverdue = new SqliteCommand("SELECT COUNT(*) FROM Documents WHERE ThoiHan < date('now') AND Status != 'Đã hoàn thành' AND ThoiHan IS NOT NULL", connection);
             int overdue = Convert.ToInt32(cmdOverdue.ExecuteScalar());
 
-            // 5. Theo Phòng ban
+            // 5. Theo Phòng ban (Đếm tất cả văn bản, bao gồm cả chưa phân loại)
             using var cmdDept = new SqliteCommand(@"
-                SELECT d.Name, COUNT(doc.Id) 
-                FROM Departments d 
-                LEFT JOIN Documents doc ON d.Id = doc.DepartmentId 
+                SELECT IFNULL(d.Name, 'Chưa phân loại'), COUNT(doc.Id) 
+                FROM Documents doc 
+                LEFT JOIN Departments d ON doc.DepartmentId = d.Id 
                 GROUP BY d.Name", connection);
             using var rDept = cmdDept.ExecuteReader();
             var deptDict = new Dictionary<string, int>();
-            while (rDept.Read()) deptDict[rDept[0].ToString() ?? "N/A"] = Convert.ToInt32(rDept[1]);
+            while (rDept.Read()) 
+            {
+                var name = rDept[0]?.ToString() ?? "Chưa phân loại";
+                deptDict[name] = Convert.ToInt32(rDept[1]);
+            }
 
             // 6. Sắp hết hạn (7 ngày tới)
             using var cmdUrgent = new SqliteCommand(@"

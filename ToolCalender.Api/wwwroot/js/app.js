@@ -29,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
     checkNotificationBanner();
     startSessionWatcher(); // Theo dõi phiên đăng nhập
 
+    // Khởi tạo tab mặc định là dashboard để tránh bị loạn giao diện
+    showTab('dashboard');
 
     // Debounce search → call server
     const searchInput = document.getElementById('doc-search');
@@ -139,12 +141,15 @@ function showTab(tabId) {
     // Remove active from all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active-tab');
-        tab.style.display = '';
+        tab.style.display = 'none';
     });
 
     // Activate the clicked tab
     const target = document.getElementById(`tab-${tabId}`);
-    if (target) target.classList.add('active-tab');
+    if (target) {
+        target.classList.add('active-tab');
+        target.style.display = ''; // Gỡ bỏ 'display: none' để class CSS có hiệu lực
+    }
 
     // Update nav state
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -466,7 +471,11 @@ async function handleFiles(files) {
         renderBatchTable();
         // Also refresh global docs table in background
         fetchData();
-        showAlert(`Bóc tách hoàn tất ${successCount}/${fileArray.length} file.`, '✅');
+        
+        // Tự động chuyển sang chế độ Side-by-Side để rà soát luôn
+        enterReviewScene();
+        
+        showAlert(`Bóc tách hoàn tất ${successCount}/${fileArray.length} file. Đang chuyển sang chế độ rà soát PDF nội dung song song.`, '✅');
     }
 }
 
@@ -1387,21 +1396,33 @@ async function openPdfPreview(docId, title) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         _pdfDoc = await pdfjsLib.getDocument({ url: `/api/documents/${docId}/file`, httpHeaders: { 'Authorization': `Bearer ${token}` } }).promise;
         _pdfModalPage = 1;
-        await _renderPdfCanvas(_pdfModalPage, 'pdf-modal-canvas', 'pdf-modal-page-info');
+        await _renderPdfCanvas(_pdfDoc, _pdfModalPage, 'pdf-modal-canvas', 'pdf-modal-page-info');
     } catch (e) { showAlert('Không thể tải file PDF: ' + e.message, '❌'); closePdfModal(); }
 }
-async function _renderPdfCanvas(pageNum, canvasId, infoId) {
-    if (!_pdfDoc) return;
-    const page = await _pdfDoc.getPage(pageNum);
-    const canvas = document.getElementById(canvasId);
-    const scale = Math.min((canvas.parentElement.clientWidth - 40) / page.getViewport({ scale: 1 }).width, 1.8);
-    const vp = page.getViewport({ scale });
-    canvas.width = vp.width; canvas.height = vp.height;
-    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-    document.getElementById(infoId).innerText = `${pageNum} / ${_pdfDoc.numPages}`;
+async function _renderPdfCanvas(doc, pageNum, canvasId, infoId) {
+    if (!doc) return;
+    try {
+        const page = await doc.getPage(pageNum);
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        
+        // Tính toán tỷ lệ hiển thị để PDF không bị quá to hoặc quá nhỏ
+        const viewportOrig = page.getViewport({ scale: 1 });
+        const containerWidth = canvas.parentElement.clientWidth - 40;
+        const scale = containerWidth / viewportOrig.width;
+        
+        const vp = page.getViewport({ scale: Math.min(scale, 1.5) });
+        canvas.width = vp.width; 
+        canvas.height = vp.height;
+        
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+        document.getElementById(infoId).innerText = `${pageNum} / ${doc.numPages}`;
+    } catch (e) {
+        console.error('Render PDF Error:', e);
+    }
 }
-async function pdfModalPrevPage() { if (_pdfDoc && _pdfModalPage > 1) { _pdfModalPage--; await _renderPdfCanvas(_pdfModalPage, 'pdf-modal-canvas', 'pdf-modal-page-info'); } }
-async function pdfModalNextPage() { if (_pdfDoc && _pdfModalPage < _pdfDoc.numPages) { _pdfModalPage++; await _renderPdfCanvas(_pdfModalPage, 'pdf-modal-canvas', 'pdf-modal-page-info'); } }
+async function pdfModalPrevPage() { if (_pdfDoc && _pdfModalPage > 1) { _pdfModalPage--; await _renderPdfCanvas(_pdfDoc, _pdfModalPage, 'pdf-modal-canvas', 'pdf-modal-page-info'); } }
+async function pdfModalNextPage() { if (_pdfDoc && _pdfModalPage < _pdfDoc.numPages) { _pdfModalPage++; await _renderPdfCanvas(_pdfDoc, _pdfModalPage, 'pdf-modal-canvas', 'pdf-modal-page-info'); } }
 function closePdfModal() { document.getElementById('pdf-preview-modal').style.display = 'none'; _pdfDoc = null; }
 
 // ======================================================
@@ -1427,27 +1448,64 @@ async function _loadReviewDoc(idx) {
     document.getElementById('review-so-hieu').value = doc.soVanBan || '';
     document.getElementById('review-co-quan').value = doc.coQuanChuQuan || '';
     document.getElementById('review-trich-yeu').value = doc.trichYeu || '';
-    if (doc.hanXuLy) document.getElementById('review-han-xu-ly').value = doc.hanXuLy.split('T')[0];
+
+    // Sửa đúng tên biến: thoiHan thay vì hanXuLy
+    if (doc.thoiHan) {
+        document.getElementById('review-han-xu-ly').value = doc.thoiHan.split('T')[0];
+    } else {
+        document.getElementById('review-han-xu-ly').value = '';
+    }
+
     const fileName = (doc.filePath || '').replace(/\\/g, '/').split('/').pop();
     document.getElementById('review-pdf-filename').innerText = fileName;
     const token = localStorage.getItem('auth_token');
     try {
-        if (typeof pdfjsLib === 'undefined') return;
+        if (typeof pdfjsLib === 'undefined') {
+            showAlert('Thư viện PDF.js chưa được tải. Vui lòng kiểm tra kết nối internet hoặc liên hệ quản trị viên.', '⚠️');
+            return;
+        }
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         _reviewPdfDoc = await pdfjsLib.getDocument({ url: `/api/documents/${doc.id}/file`, httpHeaders: { 'Authorization': `Bearer ${token}` } }).promise;
         _reviewPdfPage = 1;
-        await _renderPdfCanvas(_reviewPdfPage, 'review-pdf-canvas', 'review-page-info');
-    } catch (e) { console.warn('PDF review load failed:', e.message); }
+        await _renderPdfCanvas(_reviewPdfDoc, _reviewPdfPage, 'review-pdf-canvas', 'review-page-info');
+    } catch (e) { 
+        console.warn('PDF review load failed:', e.message); 
+        showAlert('Không thể hiển thị bản xem trước PDF: ' + e.message, '❌');
+    }
 }
 async function reviewNavigate(d) { await _loadReviewDoc(_reviewIndex + d); }
-async function pdfPrevPage() { if (_reviewPdfDoc && _reviewPdfPage > 1) { _reviewPdfPage--; await _renderPdfCanvas(_reviewPdfPage, 'review-pdf-canvas', 'review-page-info'); } }
-async function pdfNextPage() { if (_reviewPdfDoc && _reviewPdfPage < _reviewPdfDoc.numPages) { _reviewPdfPage++; await _renderPdfCanvas(_reviewPdfPage, 'review-pdf-canvas', 'review-page-info'); } }
+async function pdfPrevPage() { if (_reviewPdfDoc && _reviewPdfPage > 1) { _reviewPdfPage--; await _renderPdfCanvas(_reviewPdfDoc, _reviewPdfPage, 'review-pdf-canvas', 'review-page-info'); } }
+async function pdfNextPage() { if (_reviewPdfDoc && _reviewPdfPage < _reviewPdfDoc.numPages) { _reviewPdfPage++; await _renderPdfCanvas(_reviewPdfDoc, _reviewPdfPage, 'review-pdf-canvas', 'review-page-info'); } }
 async function saveCurrentReview() {
-    const docId = document.getElementById('review-doc-id').value;
-    const body = { soVanBan: document.getElementById('review-so-hieu').value, coQuanChuQuan: document.getElementById('review-co-quan').value, hanXuLy: document.getElementById('review-han-xu-ly').value || null, trichYeu: document.getElementById('review-trich-yeu').value, status: 'Chưa xử lý' };
+    const docId = parseInt(document.getElementById('review-doc-id').value);
+    const body = { 
+        id: docId,
+        soVanBan: document.getElementById('review-so-hieu').value, 
+        coQuanChuQuan: document.getElementById('review-co-quan').value, 
+        thoiHan: document.getElementById('review-han-xu-ly').value ? document.getElementById('review-han-xu-ly').value + "T00:00:00" : null, 
+        trichYeu: document.getElementById('review-trich-yeu').value, 
+        status: 'Chưa xử lý' 
+    };
+    
     const token = localStorage.getItem('auth_token');
-    const res = await fetch(`/api/documents/${docId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(body) });
-    if (res.ok) showAlert('Đã lưu văn bản!', '✅'); else showAlert('Lỗi khi lưu văn bản.', '❌');
+    const res = await fetch(`/api/documents/${docId}`, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify(body) 
+    });
+
+    if (res.ok) {
+        // Cập nhật lại cache trong window._sessionUploads để bảng batchTable phía sau cũng cập nhật theo
+        const idx = window._sessionUploads.findIndex(d => d.id === docId);
+        if (idx !== -1) {
+            window._sessionUploads[idx] = { ...window._sessionUploads[idx], ...body };
+        }
+        showAlert('Đã lưu văn bản thành công!', '✅');
+        renderBatchTable();
+        fetchData();
+    } else {
+        showAlert('Lỗi khi lưu văn bản.', '❌');
+    }
 }
 function exitReviewScene() { document.getElementById('ocr-review-scene').style.display = 'none'; document.getElementById('batch-upload-result').style.display = 'block'; }
 

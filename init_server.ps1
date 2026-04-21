@@ -1,55 +1,130 @@
-# =======================================================
-# SCRIPT KHỞI TẠO HỆ THỐNG (DÀNH CHO ADMIN)
-# =======================================================
+$ErrorActionPreference = "Stop"
 
-$Domain = "congvan.local"
+try {
+    Write-Host "--- DOCUMENT COORDINATION SYSTEM: SERVER INITIALIZATION ---" -ForegroundColor Cyan
 
-# 1. Kiểm tra quyền Admin
-if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Host "VUI LÒNG CHẠY SCRIPT NÀY BẰNG QUYỀN ADMINISTRATOR!" -ForegroundColor Red
-    pause
-    exit
+    # 1. Strict IP Detection
+    Write-Host "Detecting physical IP address..." -ForegroundColor Gray
+    $ipAddress = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { 
+        $_.InterfaceAlias -notlike "*Loopback*" -and 
+        $_.InterfaceAlias -notlike "*vEthernet*" -and 
+        $_.InterfaceAlias -notlike "*WSL*" -and
+        $_.IPAddress -notlike "169.254.*" -and
+        $_.IPAddress -notlike "127.*"
+    } | Select-Object -First 1).IPAddress
+    
+    if (!$ipAddress) { 
+        # Fallback to any non-loopback if strict fails
+        $ipAddress = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "127.*" } | Select-Object -First 1).IPAddress
+    }
+    Write-Host "Server IP: $ipAddress" -ForegroundColor Green
+
+    # 2. Check Prerequisites
+    if (!(Get-Command docker -ErrorAction SilentlyContinue)) { throw "Docker not found!" }
+    if (!(Get-Command npx -ErrorAction SilentlyContinue)) { throw "NodeJS not found!" }
+
+    # 3. Secure client_setup folder
+    $clientDir = "$PSScriptRoot\client_setup"
+    if (!(Test-Path $clientDir)) { New-Item -ItemType Directory -Path $clientDir | Out-Null }
+
+    # 4. GENERATE setup_client.ps1
+    Write-Host "Generating self-debugging client_setup\setup_client.ps1..." -ForegroundColor Gray
+    $domain = "congvan.local"
+    $template = @'
+$ErrorActionPreference = "Stop"
+$Domain = "DOMAIN_PLACEHOLDER"
+$ServerIP = "IP_PLACEHOLDER"
+
+try {
+    Write-Host "--- DOCUMENT COORDINATION SYSTEM: CLIENT SETUP ---" -ForegroundColor Cyan
+
+    # 1. Admin Elevation
+    $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    if (!$isAdmin) {
+        Write-Host "Requesting Administrator privileges..." -ForegroundColor Yellow
+        Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+        exit
+    }
+
+    # 2. SSL Trust
+    $rootCa = "$PSScriptRoot\rootCA.pem"
+    if (Test-Path $rootCa) {
+        Write-Host "Installing Root CA..." -ForegroundColor Yellow
+        certutil -addstore -f "Root" "$rootCa" > $null
+        Write-Host "Success: Root CA installed." -ForegroundColor Green
+    } else {
+        throw "Missing rootCA.pem! Please ensure it is in the same folder as this script."
+    }
+
+    # 3. Domain Mapping (Hosts)
+    $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
+    $hostsLine = "$ServerIP  $Domain"
+    
+    Write-Host "Updating hosts file..." -ForegroundColor Yellow
+    if (!(Select-String -Path $hostsPath -Pattern "\b$Domain\b" -Quiet)) {
+        try {
+            Add-Content -Path $hostsPath -Value "`n$hostsLine" -Encoding ASCII
+        } catch {
+            throw "Access denied to hosts file. Please disable Anti-virus and try again."
+        }
+    } else {
+        $content = Get-Content $hostsPath
+        $content -replace ".*$Domain.*", $hostsLine | Set-Content $hostsPath
+    }
+    Write-Host "Success: Domain mapped to $ServerIP." -ForegroundColor Green
+
+    Write-Host "`n--- SETUP COMPLETED SUCCESSFULLY ---" -ForegroundColor Green
+    Write-Host "URL: https://$Domain" -ForegroundColor Cyan
+    Write-Host "Press Enter to finish..."
+    Read-Host
 }
-
-Write-Host "--- BẮT ĐẦU KHỞI TẠO HỆ THỐNG ---" -ForegroundColor Cyan
-
-# 2. Cấu hình SSL
-Write-Host "1. Đang cấu hình chứng chỉ SSL..." -ForegroundColor Yellow
-if (!(Get-Command mkcert -ErrorAction SilentlyContinue)) {
-    Write-Host "LỖI: Chưa cài đặt mkcert. Vui lòng cài mkcert trước!" -ForegroundColor Red
-    pause
-    exit
+catch {
+    Write-Host "`n--- SETUP FAILED ---" -ForegroundColor Red
+    Write-Host "Error: $($_.Exception.Message)" -ForegroundColor White
+    Write-Host "--------------------" -ForegroundColor Red
+    Write-Host "Press Enter to exit..."
+    Read-Host
+    exit 1
 }
+'@
+    $scriptContent = $template.Replace("DOMAIN_PLACEHOLDER", $domain).Replace("IP_PLACEHOLDER", $ipAddress)
+    $scriptContent | Set-Content "$clientDir\setup_client.ps1" -Encoding UTF8
 
-mkcert -install
-New-Item -ItemType Directory -Force -Path "nginx/certs"
-cd nginx/certs
-mkcert $Domain
-# Đổi tên file cho khớp config Nginx
-if (Test-Path "$Domain.pem") { Move-Item "$Domain.pem" "cert.pem" -Force }
-if (Test-Path "$Domain-key.pem") { Move-Item "$Domain-key.pem" "key.pem" -Force }
-cd ../..
+    # 5. SSL & Nginx
+    $nginxConfFile = "$PSScriptRoot\nginx\conf.d\default.conf"
+    if (Test-Path $nginxConfFile) {
+        (Get-Content $nginxConfFile) -replace 'server_name congvan.local .*', "server_name $domain $ipAddress;" | Set-Content $nginxConfFile
+    }
 
-# 3. Chuẩn bị bộ cài cho Client (Thư mục DIST)
-Write-Host "2. Đang chuẩn bị bộ cài cho đồng nghiệp (Thư mục 'dist')..." -ForegroundColor Yellow
-New-Item -ItemType Directory -Force -Path "dist"
-$CaRoot = (mkcert -CAROOT)
-Copy-Item "$CaRoot/rootCA.pem" "dist/rootCA.pem" -Force
-Copy-Item "setup_client.ps1" "dist/setup_client.ps1" -Force
+    $certDir = "$PSScriptRoot\nginx\certs"
+    $tempDir = "$PSScriptRoot\.tmp_certs"
+    if (Test-Path $tempDir) { Remove-Item -Recurse -Force $tempDir }
+    New-Item -ItemType Directory -Path $tempDir | Out-Null
+    Push-Location $tempDir
+    try {
+        cmd /c "npx -y -p mkcert mkcert create-ca"
+        cmd /c "npx -y -p mkcert mkcert create-cert --ca-cert ca.crt --ca-key ca.key --domains $domain localhost 127.0.0.1 $ipAddress --validity 3650"
+        if (Test-Path "cert.crt") {
+            Copy-Item "cert.crt" "$certDir\cert.pem" -Force
+            Copy-Item "cert.key" "$certDir\key.pem" -Force
+            Copy-Item "ca.crt" "$clientDir\rootCA.pem" -Force
+        }
+    }
+    finally {
+        Pop-Location
+        if (Test-Path $tempDir) { Remove-Item -Recurse -Force $tempDir }
+    }
 
-# 4. Cấu hình IP máy chủ
-$ServerIP = Read-Host "Nhập địa chỉ IP nội bộ của máy chủ này (ví dụ: 192.168.1.10)"
-if ($ServerIP) {
-    (Get-Content "dist/setup_client.ps1") -replace '192.168.1.100', $ServerIP | Set-Content "dist/setup_client.ps1"
-    Write-Host "Đã cập nhật IP $ServerIP vào bộ cài client." -ForegroundColor Green
+    # 6. Docker
+    docker-compose down
+    docker-compose up -d --build
+
+    Write-Host "`n--- SERVER READY ---" -ForegroundColor Green
+    Write-Host "Access: https://$domain ($ipAddress)" -ForegroundColor Cyan
+    Write-Host "Go to 'client_setup' and run 'setup_client.ps1' as Admin." -ForegroundColor Yellow
+    Read-Host "`nPress Enter to exit"
 }
-
-# 5. Khởi động Docker
-Write-Host "3. Đang khởi động hệ thống Docker..." -ForegroundColor Yellow
-docker-compose up -d --build
-
-Write-Host "`n=======================================================" -ForegroundColor Green
-Write-Host "HOÀN TẤT! Hệ thống đã chạy tại: https://$Domain" -ForegroundColor Green
-Write-Host "Bộ cài cho đồng nghiệp đã sẵn sàng trong thư mục: dist" -ForegroundColor Cyan
-Write-Host "=======================================================" -ForegroundColor Green
-pause
+catch {
+    Write-Host "`nFATAL ERROR: $_" -ForegroundColor Red
+    Read-Host "Press Enter to exit"
+}
