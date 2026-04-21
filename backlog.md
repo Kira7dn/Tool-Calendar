@@ -21,21 +21,21 @@
     - *Files:* `DocumentRecord.cs`, `DatabaseService.cs`, `review.js`, `upload.js`
 - [x] **UI Danh sách Cán bộ**: Hiển thị tên Cán bộ kèm tên Phòng ban trong danh sách chọn (ví dụ: "Nguyễn Văn A - Phòng Kinh tế") để dễ phân biệt.
     - *Files:* `review.js`, `upload.js`
-- [ ] **Logic bóc tách phòng ban**: Tự động trích xuất tên phòng ban và đề xuất toàn bộ cán bộ thuộc phòng đó làm trạng thái khởi tạo (Init state).
+- [x] **Logic bóc tách phòng ban**: Tự động trích xuất tên phòng ban và đề xuất toàn bộ cán bộ thuộc phòng đó làm trạng thái khởi tạo (Init state).
     - *Files:* `DocumentExtractorService.cs`, `upload.js`
-- [ ] **Xếp hạng điều phối (Ranking)**: Sắp xếp danh sách gợi ý từ trên xuống dựa trên dữ liệu thực tế bóc tách được từ văn bản.
+- [x] **Xếp hạng điều phối (Ranking)**: Sắp xếp danh sách gợi ý từ trên xuống dựa trên dữ liệu thực tế bóc tách được từ văn bản.
     - *Files:* `DocumentExtractorService.cs`, `upload.js`
-- [ ] **Quyền điều chỉnh của Văn thư**: Cho phép văn thư linh hoạt chỉnh sửa, thêm/bớt người nhận trước khi lưu chính thức.
+- [x] **Quyền điều chỉnh của Văn thư**: Cho phép văn thư linh hoạt chỉnh sửa, thêm/bớt người nhận trước khi lưu chính thức.
     - *Files:* `review.js`, `upload.js`
-- [ ] **Gỡ bỏ ràng buộc lưu**: Cho phép lưu văn bản ngay cả khi chưa chọn phòng ban/cán bộ.
+- [x] **Gỡ bỏ ràng buộc lưu**: Cho phép lưu văn bản ngay cả khi chưa chọn phòng ban/cán bộ.
     - *Files:* `upload.js`
 - [x] **Giao diện bảng rà soát**: Cập nhật UI bảng hàng loạt để hỗ trợ chọn nhiều người và hiển thị chỉ báo gợi ý thông minh.
     - *Files:* `upload.html`, `upload.js`
-- [ ] **Logic nút Lưu toàn bộ**: Chỉ hiển thị nút "Lưu toàn bộ" khi có từ 2 file văn bản trở lên trong danh sách hàng đợi.
+- [x] **Logic nút Lưu toàn bộ**: Chỉ hiển thị nút "Lưu toàn bộ" khi có từ 2 file văn bản trở lên trong danh sách hàng đợi.
     - *Files:* `upload.js`
-- [ ] **Cập nhật Icon Modal**: Thay đổi icon Lucide phù hợp cho nút `Lưu` (như `check` hoặc `save`) trong các modal rà soát để tăng tính thẩm mỹ.
+- [x] **Cập nhật Icon Modal**: Thay đổi icon Lucide phù hợp cho nút `Lưu` (như `check` hoặc `save`) trong các modal rà soát để tăng tính thẩm mỹ.
     - *Files:* `review-side-by-side.html`
-- [ ] **Format ngày hiển thị**: Thay đổi định dạng ngày hiển thị trong các modal, page thành dd/MM/yyyy như 24/12/2026.
+- [x] **Format ngày hiển thị**: Thay đổi định dạng ngày hiển thị trong các modal, page thành dd/MM/yyyy như 24/12/2026.
     - *Files:* `review-side-by-side.html`
 ---
 

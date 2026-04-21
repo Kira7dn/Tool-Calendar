@@ -1,4 +1,5 @@
-import { formatDate } from '../core/formatters.js';
+import { formatDate, formatDateForTextInput, normalizeDateInputToIso } from '../core/formatters.js';
+import { initMultiSelect } from '../ui/multiSelect.js';
 
 function normalizeBatchItem(doc, overrides = {}) {
     const fileName = overrides.fileName
@@ -31,6 +32,9 @@ function normalizeBatchItem(doc, overrides = {}) {
         hasError,
         assignedToIds,
         departmentIds,
+        ocrWarnings: doc.ocrWarnings || [],
+        suggestedDeptIds: overrides.batchState === 'Lỗi OCR' ? [] : [...departmentIds],
+        suggestedUserIds: overrides.batchState === 'Lỗi OCR' ? [] : [...assignedToIds],
         batchState: overrides.batchState || (hasError ? 'Lỗi OCR' : (assignedToIds.length || departmentIds.length ? 'Sẵn sàng lưu' : 'Cần rà soát'))
     };
 }
@@ -58,6 +62,62 @@ export function createUploadFeature(context) {
     let isSaving = false;
     let departments = [];
     let users = [];
+
+    function buildDepartmentOptions() {
+        return departments.map((department) => ({
+            id: department.id,
+            label: department.name
+        }));
+    }
+
+    function buildUserOptions() {
+        return users.map((user) => {
+            const department = departments.find((item) => item.id === user.departmentId);
+            const name = user.fullName || user.username;
+
+            return {
+                id: user.id,
+                label: `${name} - ${department ? department.name.replace('Phòng ', '') : 'Vãng lai'}`,
+                chipLabel: name
+            };
+        });
+    }
+
+    function initDepartmentMultiSelect(container, doc, onChange) {
+        if (!container || !departments.length) return;
+
+        initMultiSelect({
+            container,
+            options: buildDepartmentOptions(),
+            selectedIds: doc.departmentIds || [],
+            suggestedIds: doc.suggestedDeptIds || [],
+            placeholder: 'Chọn đơn vị',
+            onChange
+        });
+    }
+
+    function initUserMultiSelect(container, doc, onChange) {
+        if (!container || !users.length) return;
+
+        initMultiSelect({
+            container,
+            options: buildUserOptions(),
+            selectedIds: doc.assignedToIds || [],
+            suggestedIds: doc.suggestedUserIds || [],
+            placeholder: 'Chọn cán bộ',
+            onChange
+        });
+    }
+
+    function syncConfirmAllButtons() {
+        const hasEnoughItems = sessionUploads.length >= 2;
+        const hasSavableItems = sessionUploads.some((doc) => doc.batchState !== 'Đã lưu' && doc.batchState !== 'Lỗi OCR');
+
+        document.querySelectorAll('[data-action="confirm-all-batch"]').forEach((button) => {
+            button.style.display = hasEnoughItems ? 'inline-flex' : 'none';
+            button.disabled = !hasSavableItems;
+        });
+    }
 
     function init() {
         const dropZone = document.getElementById('drop-zone');
@@ -157,7 +217,7 @@ export function createUploadFeature(context) {
 
         // Click outside to close multi-select-dropdowns
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.multi-select-container')) {
+            if (!e.target.closest('.multi-select-container') && !e.target.closest('.multi-select-dropdown')) {
                 document.querySelectorAll('.multi-select-dropdown.active').forEach(d => d.classList.remove('active'));
             }
         });
@@ -205,15 +265,15 @@ export function createUploadFeature(context) {
     async function handleFiles(files) {
         await ensureReferenceData();
 
-        document.getElementById('upload-processing').style.display = 'block';
-        document.getElementById('upload-actions').style.display = 'none';
+        document.getElementById('upload-processing').style.display = 'flex';
+        document.getElementById('drop-zone').style.display = 'none';
         document.getElementById('batch-upload-result').style.display = 'none';
 
         const fileArray = Array.from(files).filter((file) => file.name.toLowerCase().endsWith('.pdf'));
         if (!fileArray.length) {
             context.ui.showAlert('Không tìm thấy file PDF hợp lệ để tải lên.');
             document.getElementById('upload-processing').style.display = 'none';
-            document.getElementById('upload-actions').style.display = 'flex';
+            document.getElementById('drop-zone').style.display = 'flex';
             return;
         }
 
@@ -300,7 +360,7 @@ export function createUploadFeature(context) {
         processingInfo.innerText = `Hoàn tất xử lý ${successCount}/${fileArray.length} file.`;
 
         document.getElementById('upload-processing').style.display = 'none';
-        document.getElementById('upload-actions').style.display = 'flex';
+        document.getElementById('drop-zone').style.display = 'flex';
 
         if (!successCount && !sessionUploads.length) {
             context.ui.showAlert('Không thể tải lên bất kỳ file nào. Vui lòng kiểm tra lại kết nối hoặc định dạng file.', '❌');
@@ -324,16 +384,14 @@ export function createUploadFeature(context) {
         document.getElementById('batch-page-info').innerText = `Trang ${batchPage} / ${totalPages}`;
         document.getElementById('btn-prev-batch').disabled = batchPage === 1;
         document.getElementById('btn-next-batch').disabled = batchPage === totalPages;
-        document.getElementById('batch-summary').innerHTML = buildBatchSummary();
 
-        // Control Save All button visibility
-        const saveAllBtn = document.querySelector('[data-action="confirm-all-batch"]');
-        if (saveAllBtn) {
-            const hasEnoughItems = sessionUploads.length >= 2;
-            const hasSavableItems = sessionUploads.some(doc => doc.batchState !== 'Đã lưu' && doc.batchState !== 'Lỗi OCR');
-            saveAllBtn.style.display = hasEnoughItems ? 'inline-flex' : 'none';
-            saveAllBtn.disabled = !hasSavableItems;
+        // Ẩn pagination nếu chỉ có 1 trang
+        const paginationEl = document.querySelector('#batch-upload-result .pagination');
+        if (paginationEl) {
+            paginationEl.style.display = totalPages > 1 ? 'flex' : 'none';
         }
+
+        syncConfirmAllButtons();
 
         const start = (batchPage - 1) * batchPageSize;
         const pageItems = sessionUploads.slice(start, start + batchPageSize);
@@ -341,22 +399,26 @@ export function createUploadFeature(context) {
         pageItems.forEach((doc) => {
             const isProcessing = doc.batchState === 'Đang OCR';
             const row = document.createElement('tr');
+            row.setAttribute('data-row-id', doc.id);
             row.innerHTML = `
                 <td>
                     <div class="batch-file-name" title="${escapeHtml(doc.fileName || 'Tài liệu PDF')}">${escapeHtml(shortenFileName(doc.fileName || 'Tài liệu PDF'))}</div>
-                    <div class="batch-subtext">${escapeHtml(doc.soVanBan || (isProcessing ? 'Đang bóc tách...' : 'Chưa có số hiệu'))}</div>
-                </td>
-                <td><span class="status ${statusClass(doc.batchState)}">${escapeHtml(doc.batchState)}</span></td>
-                <td>
-                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input" type="text" data-field="soVanBan" data-doc-id="${doc.id}" value="${escapeAttribute(doc.soVanBan || '')}" placeholder="Số hiệu">`}
                 </td>
                 <td>
-                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input" type="date" data-field="thoiHan" data-doc-id="${doc.id}" value="${doc.thoiHan ? doc.thoiHan.split('T')[0] : ''}">`}
+                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input ${doc.ocrWarnings?.some(w=>w.includes('Số hiệu')) ? 'warning-border' : ''}" type="text" data-field="soVanBan" data-doc-id="${doc.id}" value="${escapeAttribute(doc.soVanBan || '')}" placeholder="Số hiệu">`}
                 </td>
-                <td>${isProcessing ? '<div class="skeleton-text"></div>' : renderDepartmentMultiSelect(doc)}</td>
-                <td>${isProcessing ? '<div class="skeleton-text"></div>' : renderAssigneeMultiSelect(doc)}</td>
+                <td>
+                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input ${doc.ocrWarnings?.some(w=>w.includes('Hạn')) ? 'warning-border' : ''}" type="date" data-field="thoiHan" data-doc-id="${doc.id}" value="${doc.thoiHan ? doc.thoiHan.split('T')[0] : ''}">`}
+                </td>
+                <td>${isProcessing ? '<div class="skeleton-text"></div>' : `<div class="dept-select-container" id="dept-container-${doc.id}"></div>`}</td>
+                <td>${isProcessing ? '<div class="skeleton-text"></div>' : `<div class="user-select-container" id="user-container-${doc.id}"></div>`}</td>
                 <td>
                     <div class="batch-actions">
+                        ${!isProcessing && doc.ocrWarnings && doc.ocrWarnings.length > 0 ? `
+                        <button class="batch-action-btn batch-action-btn-warning" title="${escapeHtml(doc.ocrWarnings.join('\n'))}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </button>
+                        ` : ''}
                         <button class="batch-action-btn batch-action-btn-preview" data-action="preview-batch-item" data-doc-id="${doc.id}" title="Xem trước" ${isProcessing ? 'disabled' : ''}>
                             ${renderBatchActionIcon('preview')}
                         </button>
@@ -370,34 +432,26 @@ export function createUploadFeature(context) {
                 </td>
             `;
             tbody.appendChild(row);
+
+            if (!isProcessing) {
+                const deptContainer = row.querySelector('.dept-select-container');
+                const userContainer = row.querySelector('.user-select-container');
+                if (deptContainer) {
+                    initDepartmentMultiSelect(deptContainer, doc, (newIds) => processRowChange(doc.id, 'departmentIds', newIds));
+                }
+                if (userContainer) {
+                    initUserMultiSelect(userContainer, doc, (newIds) => processRowChange(doc.id, 'assignedToIds', newIds));
+                }
+            }
         });
 
         tbody.querySelectorAll('[data-field]').forEach((input) => {
             input.addEventListener('change', (event) => {
-                updateField(parseDocId(event.target.dataset.docId), event.target.dataset.field, event.target.value);
-            });
-        });
-
-        // Bind multi-select trigger clicks
-        tbody.querySelectorAll('.multi-select-trigger').forEach(trigger => {
-            trigger.addEventListener('click', (e) => {
-                const targetId = trigger.dataset.target;
-                const dropdown = trigger.parentElement.querySelector('.multi-select-dropdown');
-                // Close others
-                document.querySelectorAll('.multi-select-dropdown.active').forEach(d => {
-                    if (d !== dropdown) d.classList.remove('active');
-                });
-                dropdown.classList.toggle('active');
-            });
-        });
-
-        // Bind checkbox clicks
-        tbody.querySelectorAll('.multi-select-option input').forEach(checkbox => {
-            checkbox.addEventListener('change', (e) => {
-                const docId = parseDocId(checkbox.dataset.docId);
-                const type = checkbox.dataset.type; // 'dept' or 'user'
-                const id = parseInt(checkbox.value, 10);
-                toggleSelection(docId, type, id, checkbox.checked);
+                const docId = parseDocId(event.target.dataset.docId);
+                const field = event.target.dataset.field;
+                let value = event.target.value;
+                if (field === 'thoiHan') value = value ? `${value}T00:00:00` : null;
+                processRowChange(docId, field, value);
             });
         });
     }
@@ -420,102 +474,41 @@ export function createUploadFeature(context) {
         ].join('');
     }
 
-    function renderDepartmentMultiSelect(doc) {
-        const selectedIds = doc.departmentIds || [];
-        const selectedNames = departments
-            .filter(d => selectedIds.includes(d.id))
-            .map(d => d.name);
-
-        let triggerContent = '';
-        if (selectedNames.length === 0) {
-            triggerContent = '<span class="multi-select-placeholder">Chọn đơn vị</span>';
-        } else if (selectedNames.length <= 2) {
-            triggerContent = selectedNames.map(name => `<span class="selection-chip">${escapeHtml(name)}</span>`).join('');
-        } else {
-            triggerContent = `<span class="selection-chip">${escapeHtml(selectedNames[0])}</span> <span class="selection-summary-badge">+${selectedNames.length - 1}</span>`;
-        }
-
-        const optionsHtml = departments.map(d => `
-            <div class="multi-select-option">
-                <input type="checkbox" id="dept-${doc.id}-${d.id}" value="${d.id}" data-doc-id="${doc.id}" data-type="dept" ${selectedIds.includes(d.id) ? 'checked' : ''}>
-                <label for="dept-${doc.id}-${d.id}">${escapeHtml(d.name)}</label>
-            </div>
-        `).join('');
-
-        return `
-            <div class="multi-select-container">
-                <div class="multi-select-trigger" data-target="dept-dropdown-${doc.id}">
-                    ${triggerContent}
-                </div>
-                <div class="multi-select-dropdown" id="dept-dropdown-${doc.id}">
-                    ${optionsHtml}
-                </div>
-            </div>
-        `;
-    }
-
-    function renderAssigneeMultiSelect(doc) {
-        const selectedIds = doc.assignedToIds || [];
-        // Support fallback for display
-        const displayUsers = users.map(u => {
-            const dept = departments.find(d => d.id === u.departmentId);
-            return { ...u, displayName: `${u.fullName || u.username} - ${dept ? dept.name : 'Vãng lai'}` };
-        });
-
-        const selectedUsers = displayUsers.filter(u => selectedIds.includes(u.id));
-
-        let triggerContent = '';
-        if (selectedUsers.length === 0) {
-            triggerContent = '<span class="multi-select-placeholder">Chọn cán bộ</span>';
-        } else if (selectedUsers.length <= 1) {
-            triggerContent = `<span class="selection-chip">${escapeHtml(selectedUsers[0].fullName || selectedUsers[0].username)}</span>`;
-        } else {
-            triggerContent = `<span class="selection-chip">${escapeHtml(selectedUsers[0].fullName || selectedUsers[0].username)}</span> <span class="selection-summary-badge">+${selectedUsers.length - 1}</span>`;
-        }
-
-        // Limit user options based on selected departments if needed, or show all with grouping
-        const optionsHtml = displayUsers.map(u => `
-            <div class="multi-select-option" title="${escapeHtml(u.displayName)}">
-                <input type="checkbox" id="user-${doc.id}-${u.id}" value="${u.id}" data-doc-id="${doc.id}" data-type="user" ${selectedIds.includes(u.id) ? 'checked' : ''}>
-                <label for="user-${doc.id}-${u.id}">${escapeHtml(u.displayName)}</label>
-            </div>
-        `).join('');
-
-        return `
-            <div class="multi-select-container">
-                <div class="multi-select-trigger" data-target="user-dropdown-${doc.id}">
-                    ${triggerContent}
-                </div>
-                <div class="multi-select-dropdown" id="user-dropdown-${doc.id}">
-                    ${optionsHtml}
-                </div>
-            </div>
-        `;
-    }
-
-    function toggleSelection(docId, type, id, checked) {
+    function processRowChange(docId, key, value) {
         const index = findItemIndex(docId);
         if (index === -1) return;
 
-        const item = sessionUploads[index];
-        if (type === 'dept') {
-            let deptIds = [...(item.departmentIds || [])];
-            if (checked) {
-                if (!deptIds.includes(id)) deptIds.push(id);
-            } else {
-                deptIds = deptIds.filter(v => v !== id);
-            }
-            sessionUploads[index] = applyPatch(item, { departmentIds: deptIds });
-        } else if (type === 'user') {
-            let userIds = [...(item.assignedToIds || [])];
-            if (checked) {
-                if (!userIds.includes(id)) userIds.push(id);
-            } else {
-                userIds = userIds.filter(v => v !== id);
-            }
-            sessionUploads[index] = applyPatch(item, { assignedToIds: userIds });
+        let item = sessionUploads[index];
+        const patch = {};
+        patch[key] = value;
+        item = applyPatch(item, patch);
+        
+        if (item.batchState !== 'Lỗi OCR' && item.batchState !== 'Đã lưu') {
+            const hasAssign = (item.departmentIds && item.departmentIds.length > 0) || (item.assignedToIds && item.assignedToIds.length > 0);
+            item = applyPatch(item, { batchState: hasAssign ? 'Sẵn sàng lưu' : 'Cần rà soát' });
         }
-        renderBatchTable();
+        
+        sessionUploads[index] = item;
+        updateRowUI(item);
+    }
+
+    function updateRowUI(item) {
+        const row = document.querySelector(`tr[data-row-id="${item.id}"]`);
+        if (!row) return;
+
+        const statusSpan = row.querySelector('.status');
+        if (statusSpan) {
+            statusSpan.className = `status ${statusClass(item.batchState)}`;
+            statusSpan.innerText = item.batchState;
+        }
+
+        const saveBtn = row.querySelector('.batch-action-btn-save');
+        if (saveBtn) {
+            saveBtn.disabled = !canSave(item);
+        }
+
+        document.getElementById('batch-summary').innerHTML = buildBatchSummary();
+        syncConfirmAllButtons();
     }
 
     function buildBatchSummaryChip(label, count, tone) {
@@ -560,22 +553,7 @@ export function createUploadFeature(context) {
         return '<svg class="batch-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg>';
     }
 
-    function updateField(docId, field, value) {
-        const index = findItemIndex(docId);
-        if (index === -1) return;
 
-        const patch = {};
-        if (field === 'thoiHan') {
-            patch.thoiHan = value ? `${value}T00:00:00` : null;
-        } else if (field === 'trichYeu') {
-            patch.trichYeu = value;
-        } else if (field === 'soVanBan') {
-            patch.soVanBan = value;
-        }
-
-        sessionUploads[index] = applyPatch(sessionUploads[index], patch);
-        renderBatchTable();
-    }
 
     function updateDepartmentSelection(docId, rawValue) {
         // Fallback for any legacy calls
@@ -751,9 +729,45 @@ export function createUploadFeature(context) {
 
         editingDocId = id;
         document.getElementById('ocr-so').value = doc.soVanBan || '';
+        document.getElementById('ocr-so').className = `modal-input ${doc.ocrWarnings?.some(w => w.includes('Số hiệu')) ? 'warning-border' : ''}`;
+        
         document.getElementById('ocr-trichyeu').value = doc.trichYeu || '';
+        document.getElementById('ocr-trichyeu').className = `modal-textarea ${doc.ocrWarnings?.some(w => w.includes('Trích yếu')) ? 'warning-border' : ''}`;
+        
         document.getElementById('ocr-coquan').value = doc.coQuanChuQuan || '';
-        document.getElementById('ocr-han').value = doc.thoiHan ? doc.thoiHan.split('T')[0] : '';
+        
+        document.getElementById('ocr-han').value = formatDateForTextInput(doc.thoiHan);
+        document.getElementById('ocr-han').className = `modal-input ${doc.ocrWarnings?.some(w => w.includes('Hạn')) ? 'warning-border' : ''}`;
+
+        const deptContainer = document.getElementById('modal-dept-container');
+        initDepartmentMultiSelect(deptContainer, doc, (newIds) => {
+            processRowChange(id, 'departmentIds', newIds);
+        });
+
+        const userContainer = document.getElementById('modal-user-container');
+        initUserMultiSelect(userContainer, doc, (newIds) => {
+            processRowChange(id, 'assignedToIds', newIds);
+        });
+
+        const modalBody = document.querySelector('#edit-ocr-modal .modal-body');
+        if (modalBody) {
+            let warnDiv = document.getElementById('edit-modal-warnings');
+            if (!warnDiv) {
+                warnDiv = document.createElement('div');
+                warnDiv.id = 'edit-modal-warnings';
+                modalBody.insertBefore(warnDiv, modalBody.firstChild);
+            }
+            if (doc.ocrWarnings && doc.ocrWarnings.length > 0) {
+                warnDiv.innerHTML = `<div class="modal-warning-box" style="background:#fef2f2; border-left:4px solid #ef4444; padding:8px 12px; margin-bottom:15px; border-radius:4px;">
+                    <strong style="color:#b91c1c;">⚠️ Cảnh báo OCR:</strong><br/>
+                    <div style="color:#991b1b; font-size:0.9rem; margin-top:4px;">${doc.ocrWarnings.map(w => `- ${escapeHtml(w)}`).join('<br/>')}</div>
+                </div>`;
+                warnDiv.style.display = 'block';
+            } else {
+                warnDiv.style.display = 'none';
+            }
+        }
+
         document.getElementById('edit-ocr-modal').style.display = 'flex';
     }
 
@@ -773,11 +787,13 @@ export function createUploadFeature(context) {
         button.disabled = true;
         button.innerText = 'Đang lưu...';
 
+        const normalizedDeadline = normalizeDateInputToIso(document.getElementById('ocr-han').value);
+
         sessionUploads[docIndex] = applyPatch(sessionUploads[docIndex], {
             soVanBan: document.getElementById('ocr-so').value,
             trichYeu: document.getElementById('ocr-trichyeu').value,
             coQuanChuQuan: document.getElementById('ocr-coquan').value,
-            thoiHan: document.getElementById('ocr-han').value ? `${document.getElementById('ocr-han').value}T00:00:00` : null
+            thoiHan: normalizedDeadline ? `${normalizedDeadline}T00:00:00` : null
         });
 
         try {

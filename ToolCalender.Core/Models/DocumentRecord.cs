@@ -5,6 +5,9 @@ namespace ToolCalender.Models
     public class DocumentRecord
     {
         public int Id { get; set; }
+        
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public List<string> OcrWarnings { get; set; } = new List<string>();
         public string SoVanBan { get; set; } = "";
         public string TenCongVan { get; set; } = "";
         public string TrichYeu { get; set; } = "";

@@ -21,7 +21,7 @@
 
     #review-side-by-side-modal .review-nav-bar {
         justify-content: space-between;
-        padding: 10px 16px;
+        padding: 12px 16px;
         background: var(--sidebar-bg);
         color: #fff;
         flex-wrap: nowrap;
@@ -35,26 +35,43 @@
         gap: 8px;
     }
 
+    #review-side-by-side-modal .review-nav-primary {
+        flex: 0 0 auto;
+    }
+
+    #review-side-by-side-modal .review-nav-title {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+    }
+
+    #review-side-by-side-modal .review-nav-actions {
+        flex: 0 0 auto;
+    }
+
     #review-side-by-side-modal .review-doc-counter {
         font-weight: 700;
-        font-size: 1rem;
+        font-size: 0.96rem;
         background: rgba(255,255,255,0.15);
-        padding: 4px 10px;
-        border-radius: 6px;
+        padding: 6px 12px;
+        border-radius: 10px;
         white-space: nowrap;
+        border: 1px solid rgba(255,255,255,0.14);
     }
 
     #review-side-by-side-modal .review-panel-title-main {
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 0.96rem;
         color: rgba(255,255,255,0.9);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        max-width: 600px;
-        margin-left: 10px;
+        width: 100%;
+        max-width: none;
+        margin-left: 0;
         border-left: 1px solid rgba(255,255,255,0.2);
-        padding-left: 15px;
+        padding-left: 16px;
     }
 
     #review-side-by-side-modal .review-icon-btn,
@@ -90,6 +107,13 @@
         width: 42px;
         height: 38px;
         font-size: 1rem;
+    }
+
+    #review-side-by-side-modal .review-icon-btn-close {
+        background: rgba(255,255,255,0.96);
+        color: #1e293b;
+        border: 1px solid rgba(255,255,255,0.55);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
     }
 
     #review-side-by-side-modal .review-mini-btn {
@@ -144,6 +168,11 @@
 
     #review-side-by-side-modal .review-icon-btn-danger:hover {
         background: #0f5f59;
+    }
+
+    #review-side-by-side-modal .review-icon-btn-close:hover {
+        background: #ffffff;
+        color: #0f172a;
     }
 
     #review-side-by-side-modal .review-layout {
@@ -374,6 +403,22 @@
     }
 
     @media (max-width: 900px) {
+        #review-side-by-side-modal .review-nav-bar {
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        #review-side-by-side-modal .review-nav-title {
+            order: 3;
+            flex-basis: 100%;
+        }
+
+        #review-side-by-side-modal .review-panel-title-main {
+            border-left: none;
+            padding-left: 0;
+            padding-top: 4px;
+        }
+
         #review-side-by-side-modal .review-layout {
             grid-template-columns: 1fr;
         }
@@ -398,35 +443,28 @@
         #review-side-by-side-modal .review-head-caption {
             display: none;
         }
-        
-        #review-side-by-side-modal .review-panel-title-main {
-            max-width: 150px;
-        }
     }
 </style>
 <div id="review-side-by-side-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:1500; align-items:center; justify-content:center; padding:20px;">
     <div class="review-modal-shell">
         <div class="review-nav-bar">
             <div class="review-nav-primary">
-                <button class="review-icon-btn review-icon-btn-light" data-action="close-review-modal" title="Thoát">
-                    <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M15 18l-6 -6l6 -6"></path>
-                    </svg>
-                </button>
-                <span id="review-doc-counter" class="review-doc-counter">Tài liệu 1/1</span>
-                <span id="review-pdf-filename" class="review-panel-title-main">Đang tải...</span>
-            </div>
-            <div class="review-nav-actions">
                 <button class="review-icon-btn review-icon-btn-light" id="review-prev-btn" data-action="review-prev" title="Tài liệu trước">
                     <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M15 18l-6 -6l6 -6"></path>
                     </svg>
                 </button>
+                <span id="review-doc-counter" class="review-doc-counter">Tài liệu 1/1</span>
                 <button class="review-icon-btn review-icon-btn-light" id="review-next-btn" data-action="review-next" title="Tài liệu sau">
                     <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M9 6l6 6l-6 6"></path>
                     </svg>
                 </button>
+            </div>
+            <div class="review-nav-title">
+                <span id="review-pdf-filename" class="review-panel-title-main">Đang tải...</span>
+            </div>
+            <div class="review-nav-actions">
                 <button class="review-icon-btn review-icon-btn-primary" data-action="save-current-review" title="Lưu file này">
                     <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -445,8 +483,15 @@
                 </button>
                 <button class="review-icon-btn review-icon-btn-danger" data-action="confirm-all-batch" title="Lưu toàn bộ">
                     <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M7 12l3 3l4 -4"></path>
-                        <path d="M13 12l3 3l5 -5"></path>
+                        <path d="M8 5h9l3 3v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"></path>
+                        <path d="M8 8H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10"></path>
+                        <path d="m10 13 2 2 4-4"></path>
+                    </svg>
+                </button>
+                <button class="review-icon-btn review-icon-btn-close" data-action="close-review-modal" title="Đóng">
+                    <svg class="review-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
                     </svg>
                 </button>
             </div>
@@ -491,7 +536,7 @@
                         </div>
                         <div class="form-group">
                             <label class="review-field-label">Hạn xử lý</label>
-                            <input type="date" id="review-han-xu-ly" class="review-field-input">
+                            <input type="text" id="review-han-xu-ly" class="review-field-input" placeholder="dd/MM/yyyy" inputmode="numeric">
                         </div>
                         <div class="form-group">
                             <label class="review-field-label">Cơ quan chủ quản</label>
@@ -499,15 +544,11 @@
                         </div>
                         <div class="form-group">
                             <label class="review-field-label">Phòng ban xử lý</label>
-                            <select id="review-department" class="review-field-input">
-                                <option value="">Chọn phòng ban</option>
-                            </select>
+                            <div id="review-department"></div>
                         </div>
                         <div class="form-group review-field-span-2">
                             <label class="review-field-label">Cán bộ phụ trách</label>
-                            <select id="review-assignee" class="review-field-input">
-                                <option value="">Chọn cán bộ</option>
-                            </select>
+                            <div id="review-assignee"></div>
                         </div>
                         <div class="form-group review-field-span-2">
                             <label class="review-field-label">Trích yếu</label>
