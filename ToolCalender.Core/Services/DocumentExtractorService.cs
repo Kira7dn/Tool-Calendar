@@ -282,6 +282,9 @@ namespace ToolCalender.Services
             t = Regex.Replace(t, @"[^\S\n]+", " ");
             t = Regex.Replace(t, @"\n{3,}", "\n\n");
 
+            // Sửa lỗi OCR phổ biến cho chữ số (đặc biệt với file scan có chữ nghiêng)
+            t = FixOcrDigitErrors(t);
+
             int vVIndex = t.IndexOf("V/v", StringComparison.OrdinalIgnoreCase);
             if (vVIndex < 0) vVIndex = t.IndexOf("Về việc", StringComparison.OrdinalIgnoreCase);
             string searchArea = vVIndex > 0 ? t.Substring(0, vVIndex) : (t.Length > 1500 ? t.Substring(0, 1500) : t);
@@ -307,66 +310,114 @@ namespace ToolCalender.Services
             else if (t.Contains("KHẨN", StringComparison.OrdinalIgnoreCase)) record.Priority = "Khẩn";
             else record.Priority = "Thường";
 
-            var soPatterns = new[] {
-                @"(?:Số|Số hiệu|Về việc)[:\s]*(\d{0,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪa-z0-9&\.\-/]+)",
-                @"(?:Field_[^:]+)[:\s]*(\d{0,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪa-z0-9&\.\-/]+)"
-            };
+            // ---- Bóc tách Số hiệu văn bản (V3 - Pattern-First, không phụ thuộc từ khóa "Số:") ----
+            // Thuật toán: Tìm trực tiếp định dạng [số]/[MÃ-CQUAN] trong vùng header,
+            // không yêu cầu OCR đọc được chữ "Số:" vốn hay bị mất/sai với file scan có ký số.
+
+            // Xác định vùng Header (từ đầu đến "V/v"/"Về việc" hoặc tối đa 800 ký tự)
+            int hdrEnd = vVIndex > 0 ? vVIndex : Math.Min(t.Length, 800);
+            string headerZone = t.Substring(0, hdrEnd);
+
+            // Pattern cốt lõi: [1-6 chữ số][/hoặc-][Chữ hoa đầu + các ký tự hợp lệ]
+            // Ví dụ khớp: 148/BC.UBND-VHXH | 2348-QĐ/TU | 1234/UBND-VX
+            // Ví dụ KHÔNG khớp: 10/4/2026 (sau / là số, không phải chữ hoa)
+            var candidatePattern = new Regex(
+                @"(?<!\d)(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪA-z\.0-9\-/]{1,30})",
+                RegexOptions.IgnoreCase);
+            
+            // Danh sách các từ khóa chỉ văn bản căn cứ/trích dẫn (bỏ qua số của chúng)
+            var referenceKeywords = new Regex(
+                @"(Quy\s*định|Nghị\s*quyết|Nghị\s*định|Thông\s*tư|Luật|Pháp\s*lệnh|Công\s*điện)\s*(?:số|s[ôo6])?\s*$",
+                RegexOptions.IgnoreCase);
 
             string bestSo = "";
             int bestSoPrio = -1;
 
-            foreach (var pattern in soPatterns) {
-                var matches = Regex.Matches(t, pattern, RegexOptions.IgnoreCase);
-                foreach (Match match in matches) {
-                    int prio = 1;
-                    if (match.Value.ToLower().Contains("số") || match.Value.ToLower().Contains("số hiệu")) prio = 10;
-                    
-                    if (prio > bestSoPrio) {
-                        bestSoPrio = prio;
-                        bestSo = $"{match.Groups[1].Value}{match.Groups[2].Value}";
-                    }
-                }
-            }
-            record.SoVanBan = bestSo.Replace(" ", "").Trim();
-            
-            // Nếu "Số" chỉ lấy được phần đuôi (chữ) do số bị nhảy loạn xạ trên File
-            if (record.SoVanBan.StartsWith("/") || record.SoVanBan.StartsWith("-"))
+            var candidates = candidatePattern.Matches(headerZone);
+            foreach (Match m in candidates)
             {
-                // Tìm một số cô đơn từ 2-5 chữ số đứng riêng một dòng (Ví dụ: 3551)
-                var isolatedNum = Regex.Match(t, @"(?m)^\s*(\d{2,5})\s*$");
-                if (isolatedNum.Success)
+                string num = m.Groups[1].Value;
+                string agency = m.Groups[2].Value;
+
+                // Lọc: bỏ qua ngày tháng kiểu 10/4 hoặc 31/7 (sau / là 1-2 chữ số không có chữ cái)
+                if (Regex.IsMatch(agency, @"^[/\-]\s*\d{1,2}$")) continue;
+                
+                // Lọc: loại trừ số năm như 2025, 2026 (4 chữ số bắt đầu bằng 20)
+                if (Regex.IsMatch(num, @"^20\d{2}$")) continue;
+
+                // Kiểm tra 60 ký tự trước để phát hiện văn bản căn cứ
+                int lb = Math.Max(0, m.Index - 60);
+                string ctx = headerZone.Substring(lb, m.Index - lb);
+                if (referenceKeywords.IsMatch(ctx)) continue;
+
+                // Tính điểm ưu tiên
+                int prio = 1;
+                // Điểm cao nếu trước đó có từ khóa "Số:" (kể cả bị OCR đọc thành "S6:", "S0:")
+                if (Regex.IsMatch(ctx, @"[Ss][ôóo60]\s*[:.]?\s*(?:\d{1,3}[:\s]+)?\s*$")) prio = 100;
+                // Điểm vừa nếu nằm ở cuối dòng ngắn (đặc trưng của dòng số hiệu)
+                else if (Regex.IsMatch(ctx, @"\n\s*$") || lb == 0) prio = 60;
+
+                if (prio > bestSoPrio)
                 {
-                    record.SoVanBan = isolatedNum.Groups[1].Value + record.SoVanBan;
+                    bestSoPrio = prio;
+                    bestSo = $"{num}{agency}";
                 }
-                else
-                {
-                    string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
-                    var fparts = fileName.Split('_');
-                    string realFileName = fparts.Length > 1 ? fparts[^1] : fileName;
-                    var mFileNum = Regex.Match(realFileName, @"(\d{1,6})");
-                    if (mFileNum.Success) record.SoVanBan = mFileNum.Groups[1].Value + record.SoVanBan;
-                }
-            }
-            
-            if (string.IsNullOrWhiteSpace(record.SoVanBan))
-            {
-                var mLegacy = Regex.Match(searchArea, @"(\d{1,6}\s*[/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]{2,})", RegexOptions.IgnoreCase);
-                if (mLegacy.Success) record.SoVanBan = mLegacy.Value.Replace(" ", "").Trim();
+                if (bestSoPrio >= 100) break;
             }
 
+            // Bước 2 fallback: Nếu header không có, tìm trong toàn văn với từ khóa "Số:"
+            // nhưng loại trừ nghiêm ngặt các số của văn bản căn cứ
+            if (string.IsNullOrWhiteSpace(bestSo))
+            {
+                var fullMatches = Regex.Matches(t,
+                    @"[Ss][ôóo60]\s*[:.]?\s*(?:\d{1,3}[:\s]+)?(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪA-z\.0-9\-/]{1,30})",
+                    RegexOptions.IgnoreCase);
+                foreach (Match m in fullMatches)
+                {
+                    int lb = Math.Max(0, m.Index - 60);
+                    string ctx = t.Substring(lb, m.Index - lb);
+                    if (Regex.IsMatch(ctx, @"(Quy\s*định|Nghị\s*quyết|Nghị\s*định|Thông\s*tư|Luật)\s*$", RegexOptions.IgnoreCase))
+                        continue;
+                    bestSo = $"{m.Groups[1].Value}{m.Groups[2].Value}";
+                    break;
+                }
+            }
+
+            record.SoVanBan = bestSo.Replace(" ", "").Trim();
+
+            // Fallback cuối cùng: Lấy từ tên file (ví dụ: "148.signed.pdf" → "148")
+            if (string.IsNullOrWhiteSpace(record.SoVanBan))
+            {
+                string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
+                var fparts = fileName.Split('_');
+                string realFileName = fparts.Length > 1 ? fparts[^1] : fileName;
+                var mFn = Regex.Match(realFileName, @"(\d{1,6}\s*[/\-]\s*[A-Z0-9\.]{2,})", RegexOptions.IgnoreCase);
+                if (mFn.Success) record.SoVanBan = mFn.Value.Replace(" ", "");
+                else
+                {
+                    // Chỉ lấy phần trước dấu chấm đầu tiên (bỏ ".signed", ".draft" ...)
+                    var cleanFn = Regex.Match(realFileName, @"^(\d{1,6})");
+                    record.SoVanBan = cleanFn.Success ? cleanFn.Groups[1].Value : realFileName;
+                }
+            }
+
+            // Tìm ngày ban hành - hỗ trợ lỗi OCR "f0"->"10", "lO"->"10", "l"->"1"
+            // Regex chấp nhận chữ cái thay cho số (do OCR nhận sai font nghiêng)
             var mNgayBH = Regex.Match(t,
-                @"(?:ngày|Ngày)\s*(\d{0,2})\s*(?:tháng|Tháng)\s*(\d{1,2})\s*(?:năm|Năm)\s*(\d{4})",
+                @"(?:ngày|Ngày)\s*([0-9fl]{1,2})\s*(?:tháng|Tháng|thang)\s*(\d{1,2})\s*(?:năm|Năm|nam)\s*(\d{4})",
                 RegexOptions.IgnoreCase);
-            
+
             if (mNgayBH.Success)
             {
-                string dayStr = string.IsNullOrWhiteSpace(mNgayBH.Groups[1].Value) ? "" : mNgayBH.Groups[1].Value;
-                if (string.IsNullOrEmpty(dayStr))
+                // Chuẩn hóa giá trị ngày bị OCR đọc sai (f->1, l->1, O->0)
+                string rawDay = mNgayBH.Groups[1].Value;
+                string dayStr = Regex.Replace(rawDay, @"[flIi]", "1");
+                dayStr = Regex.Replace(dayStr, @"[OoQqD]", "0");
+
+                if (string.IsNullOrWhiteSpace(dayStr) || !dayStr.All(char.IsDigit))
                 {
-                    // Nếu ngày trống, dò tìm số trơ trọi đóng vai trò là ngày (1-31)
                     var isolatedDayMatch = Regex.Match(t, @"(?m)^\s*([1-9]|[12]\d|3[01])\s*$");
-                    if (isolatedDayMatch.Success) dayStr = isolatedDayMatch.Groups[1].Value;
-                    else dayStr = "1";
+                    dayStr = isolatedDayMatch.Success ? isolatedDayMatch.Groups[1].Value : "1";
                 }
 
                 if (int.TryParse(dayStr, out int d) &&
@@ -377,10 +428,20 @@ namespace ToolCalender.Services
                 }
             }
 
-            // Lấy từ khóa từ cấu hình
+            // Lấy cấu hình từ khóa từ DB
             string kwSource = Data.DatabaseService.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành, đến hạn, thực hiện trước, báo cáo trước, kết thúc, thời hạn, hạn cuối");
             var kwList = kwSource.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
             string kwPattern = string.Join("|", kwList.Select(x => Regex.Escape(x)));
+
+            // Từ khóa LOẠI TRỪ: ngày gần các từ này không phải hạn xử lý
+            string excSource = Data.DatabaseService.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
+            var excList = excSource.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
+            string excPattern = excList.Count > 0 ? string.Join("|", excList.Select(x => Regex.Escape(x))) : null;
+
+            // Số ngày tối thiểu từ ngày ban hành (để loại ngày trước hoặc bằng ngày ban hành)
+            int minDeadlineDays = 0;
+            if (int.TryParse(Data.DatabaseService.GetAppSetting("Document_MinDeadlineDays", "0"), out int minDaysCfg))
+                minDeadlineDays = minDaysCfg;
 
             var deadlinePatterns = new List<string> {
                 // 1. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [Ngày/Tháng/Năm]
@@ -407,9 +468,24 @@ namespace ToolCalender.Services
                     {
                         try {
                             var detectedDate = new DateTime(year, month, day);
-                            int currentPriority = 10; // Mặc định có Keyword là priority 10
 
-                            // Cộng thêm điểm nếu khoảng cách cực gần (dưới 5 ký tự)
+                            // Kiểm tra từ khóa loại trừ trong 50 ký tự xung quanh
+                            if (excPattern != null)
+                            {
+                                int ctxStart = Math.Max(0, m.Index - 50);
+                                int ctxLen = Math.Min(t.Length - ctxStart, m.Length + 100);
+                                string ctx = t.Substring(ctxStart, ctxLen);
+                                if (Regex.IsMatch(ctx, excPattern, RegexOptions.IgnoreCase)) continue;
+                            }
+
+                            // Kiểm tra ngày hạn phải >= ngày ban hành + minDeadlineDays
+                            if (record.NgayBanHanh.HasValue && minDeadlineDays >= 0)
+                            {
+                                var earliestAllowed = record.NgayBanHanh.Value.AddDays(minDeadlineDays);
+                                if (detectedDate < earliestAllowed) continue;
+                            }
+
+                            int currentPriority = 10;
                             if (m.Length < 25) currentPriority += 5;
 
                             if (currentPriority > bestPriority)
@@ -423,7 +499,6 @@ namespace ToolCalender.Services
             }
 
             // Fallback: Tìm Ngày/Tháng/Năm đơn lẻ lớn nhất (nếu chưa tìm thấy qua Keyword)
-            // Lưu ý: Ta bỏ qua ngày trùng với NgayBanHanh vì đó thường là meta-data, không phải hạn
             if (bestMatchDate == null)
             {
                 var allDates = Regex.Matches(t, @"(\d{1,2})\s*[\/\-\.\s]\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{4})");
@@ -435,7 +510,23 @@ namespace ToolCalender.Services
                     if (DateTime.TryParseExact(dateStr, formats, null, System.Globalization.DateTimeStyles.None, out DateTime dt)
                         && dt > DateTime.Today.AddYears(-5))
                     {
+                        // Bỏ qua ngày trùng ngày ban hành
                         if (record.NgayBanHanh.HasValue && dt.Date == record.NgayBanHanh.Value.Date) continue;
+
+                        // Áp dụng từ khóa loại trừ
+                        if (excPattern != null)
+                        {
+                            int ctxStart = Math.Max(0, m.Index - 50);
+                            int ctxLen = Math.Min(t.Length - ctxStart, m.Length + 100);
+                            string ctx = t.Substring(ctxStart, ctxLen);
+                            if (Regex.IsMatch(ctx, excPattern, RegexOptions.IgnoreCase)) continue;
+                        }
+
+                        // Áp dụng minDeadlineDays
+                        if (record.NgayBanHanh.HasValue && minDeadlineDays > 0)
+                        {
+                            if (dt < record.NgayBanHanh.Value.AddDays(minDeadlineDays)) continue;
+                        }
 
                         if (bestMatchDate == null || dt > bestMatchDate) bestMatchDate = dt;
                     }
@@ -612,6 +703,29 @@ namespace ToolCalender.Services
 
             EvaluateConfidence(record);
             return await Task.FromResult(record);
+        }
+
+        /// <summary>
+        /// Sửa các lỗi OCR phổ biến liên quan đến chữ số - đặc biệt với file scan/ký số
+        /// có font chữ nghiêng khiến Tesseract nhận nhầm: f->1, l->1, O->0
+        /// </summary>
+        private static string FixOcrDigitErrors(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return text;
+
+            // 1. Sửa lỗi OCR dính chữ cái vào số (vd: "f0", "f1", "fO") - đặc biệt font nghiêng
+            text = Regex.Replace(text, @"(?<=\s|^)[fF]([0-9])", "1$1");
+            text = Regex.Replace(text, @"([0-9])[fF](?=\s|$)", "${1}1");
+            
+            // 2. Sửa "f" đứng độc lập giữa "ngày" và "tháng"
+            text = Regex.Replace(text, @"(?<=(?:ngày|ngay)\s+)[fF](?=\s+(?:tháng|thang))", "1", RegexOptions.IgnoreCase);
+
+            // 3. Xóa các cụm artifact nhiễu do layer ký số tạo ra (vd: "86: ", "1: ")
+            // Chỉ xóa nếu nó đứng trước một số hiệu văn bản có format \d+ / ...
+            // Ví dụ: "86: 148 /BC" -> "148 /BC"
+            text = Regex.Replace(text, @"(?<=\s|^)\d{1,3}[:]\s*(?=\d{1,6}\s*[/\-])", "");
+
+            return text;
         }
 
         private void EvaluateConfidence(DocumentRecord record)

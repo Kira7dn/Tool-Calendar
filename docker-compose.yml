@@ -3,22 +3,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: base
     container_name: doc-coordination-system
     expose:
       - "5000"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - DB_PATH=/app/data/documents.db
       - OcrSettings__TessDataPath=/usr/share/tesseract-ocr/5/tessdata
       - TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
-      - DOTNET_USE_POLLING_FILE_WATCHER=1
     volumes:
-      - .:/app
       - ./data:/app/data
       - ./ToolCalender.Api/Uploads:/app/Uploads
-      - ~/.nuget/packages:/root/.nuget/packages:ro
-    command: dotnet watch run --project ToolCalender.Api/ToolCalender.Api.csproj --urls http://0.0.0.0:5000
     restart: always
 
   nginx:
@@ -33,3 +28,15 @@ services:
     depends_on:
       - official-doc-backend
     restart: always
+
+  ngrok:
+    image: ngrok/ngrok:alpine
+    container_name: doc-coordination-ngrok
+    restart: always
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command:
+      - http
+      - nginx-proxy:80
+    depends_on:
+      - nginx
