@@ -4,46 +4,41 @@ import { escapeHtml, formatDate, formatDateForTextInput, normalizeDateInputToIso
 export function createDocDetailFeature(context) {
     let currentDocId = null;
     let currentDocData = null;
+    // Danh sách trạng thái load từ API settings (cache)
+    let statusOptions = ['Chưa xử lý', 'Đang xử lý', 'Đã rà soát', 'Đã hoàn thành'];
 
     function init() {
-        document.getElementById('doc-detail-modal')?.addEventListener('click', async (event) => {
+        const modal = document.getElementById('doc-detail-modal');
+        if (!modal) return;
+
+        modal.addEventListener('click', async (event) => {
             const action = event.target.closest('[data-action]');
             if (!action) return;
 
             const actionName = action.dataset.action;
 
-            if (actionName === 'close-doc-detail-modal') {
-                close();
-            }
+            if (actionName === 'close-doc-detail-modal') close();
+            if (actionName === 'switch-doc-tab') switchTab(action.dataset.docTab);
+            if (actionName === 'save-doc-detail') await saveDetail(action);
+            if (actionName === 'submit-comment') await submitComment(action);
+            if (actionName === 'delete-comment') await deleteComment(parseInt(action.dataset.commentId, 10));
+            if (actionName === 'toggle-reaction') await toggleReaction(parseInt(action.dataset.commentId, 10), action.dataset.reactionType);
+            if (actionName === 'open-pdf') await context.services.openPdfPreview(parseInt(action.dataset.docId, 10), action.dataset.title || '');
+        });
 
-            if (actionName === 'switch-doc-tab') {
-                switchTab(action.dataset.docTab);
-            }
-
-            if (actionName === 'save-doc-detail') {
-                await saveDetail(action);
-            }
-
-            if (actionName === 'submit-comment') {
-                await submitComment(action);
-            }
-
-            if (actionName === 'delete-comment') {
-                await deleteComment(parseInt(action.dataset.commentId, 10));
-            }
-
-            if (actionName === 'toggle-reaction') {
-                await toggleReaction(parseInt(action.dataset.commentId, 10), action.dataset.reactionType);
-            }
-
-            if (actionName === 'open-pdf') {
-                await context.services.openPdfPreview(parseInt(action.dataset.docId, 10), action.dataset.title || '');
+        // Event delegation cho change event - bắt sự kiện dù select được rebuild bao nhiêu lần
+        modal.addEventListener('change', (event) => {
+            if (event.target.id === 'de-status') {
+                onStatusSelectChange();
             }
         });
     }
 
     async function open(id, initialTab = 'view') {
         currentDocId = id;
+
+        // Load danh sách trạng thái từ API nếu chưa có
+        await loadStatusOptions();
 
         try {
             const response = await context.api.get(`/api/documents/${id}`);
@@ -104,8 +99,10 @@ export function createDocDetailFeature(context) {
         document.getElementById('de-coquanbanhanh').value = doc.coQuanBanHanh || '';
         document.getElementById('de-coquanchuquan').value = doc.coQuanChuQuan || '';
         document.getElementById('de-thoihan').value = formatDateForTextInput(doc.thoiHan);
-        document.getElementById('de-status').value = doc.status || 'Chua xu ly';
-        document.getElementById('de-priority').value = doc.priority || 'Thuong';
+        document.getElementById('de-priority').value = doc.priority || 'Thường';
+
+        // Đặt giá trị trạng thái: nếu không nằm trong danh sách → dùng custom input
+        setStatusValue(doc.status || 'Chưa xử lý');
     }
 
     function renderEvidence(doc) {
@@ -135,6 +132,66 @@ export function createDocDetailFeature(context) {
         document.getElementById('dv-evidence').innerHTML = html;
     }
 
+    // ─── Status helpers ───────────────────────────────────────────────────
+
+    /** Tải danh sách trạng thái từ API và cập nhật select */
+    async function loadStatusOptions() {
+        try {
+            const res = await context.api.get('/api/stats/settings');
+            if (!res.ok) return;
+            const settings = await res.json();
+            if (Array.isArray(settings.statusList) && settings.statusList.length > 0) {
+                statusOptions = settings.statusList;
+            }
+        } catch { /* giữ nguyên mặc định nếu lỗi */ }
+
+        const sel = document.getElementById('de-status');
+        if (!sel) return;
+        sel.innerHTML = statusOptions.map(s =>
+            `<option value="${s}">${s}</option>`
+        ).join('') + `<option value="__custom__">✏️ Tùy chỉnh...</option>`;
+
+        // Gán trực tiếp onchange đảm bảo 100% hoạt động
+        sel.onchange = onStatusSelectChange;
+    }
+
+    /** Gán giá trị: nếu value không có trong danh sách → hiện custom input */
+    function setStatusValue(val) {
+        const sel = document.getElementById('de-status');
+        const customInput = document.getElementById('de-status-custom');
+        if (!sel || !customInput) return;
+
+        if (statusOptions.includes(val)) {
+            sel.value = val;
+            customInput.style.display = 'none';
+            customInput.value = '';
+        } else {
+            sel.value = '__custom__';
+            customInput.style.display = 'block';
+            customInput.value = val;
+        }
+    }
+
+    /** Đọc giá trị thực từ select hoặc custom input */
+    function getStatusValue() {
+        const sel = document.getElementById('de-status');
+        if (sel?.value === '__custom__') {
+            return document.getElementById('de-status-custom')?.value?.trim() || 'Chưa xử lý';
+        }
+        return sel?.value || 'Chưa xử lý';
+    }
+
+    /** Hiện/ẩn custom input khi thay đổi select */
+    function onStatusSelectChange() {
+        const customInput = document.getElementById('de-status-custom');
+        if (!customInput) return;
+        const isCustom = document.getElementById('de-status')?.value === '__custom__';
+        customInput.style.display = isCustom ? 'block' : 'none';
+        if (isCustom) customInput.focus();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+
     function switchTab(tab) {
         ['view', 'edit', 'comments'].forEach((panel) => {
             document.getElementById(`doc-panel-${panel}`).style.display = panel === tab ? 'block' : 'none';
@@ -159,7 +216,7 @@ export function createDocDetailFeature(context) {
             coQuanBanHanh: document.getElementById('de-coquanbanhanh').value,
             coQuanChuQuan: document.getElementById('de-coquanchuquan').value,
             thoiHan: normalizedDeadline ? `${normalizedDeadline}T00:00:00` : null,
-            status: document.getElementById('de-status').value,
+            status: getStatusValue(),   // lấy từ select hoặc custom input
             priority: document.getElementById('de-priority').value
         };
 

@@ -21,7 +21,6 @@ try {
 
     # 2. Check Prerequisites
     if (!(Get-Command docker -ErrorAction SilentlyContinue)) { throw "Docker not found!" }
-    if (!(Get-Command npx -ErrorAction SilentlyContinue)) { throw "NodeJS not found!" }
 
     # 3. Secure client_setup folder
     $clientDir = "$PSScriptRoot\client_setup"
@@ -102,12 +101,13 @@ catch {
     New-Item -ItemType Directory -Path $tempDir | Out-Null
     Push-Location $tempDir
     try {
-        cmd /c "npx -y -p mkcert mkcert create-ca"
-        cmd /c "npx -y -p mkcert mkcert create-cert --ca-cert ca.crt --ca-key ca.key --domains $domain localhost 127.0.0.1 $ipAddress --validity 3650"
+        $san = "subjectAltName=DNS:$domain,DNS:localhost,IP:127.0.0.1,IP:$ipAddress"
+        $script = "apk add --no-cache openssl && openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout /certs/cert.key -out /certs/cert.crt -subj '/CN=$domain' -addext `"$san`""
+        docker run --rm -v "$tempDir`:/certs" alpine sh -c $script
         if (Test-Path "cert.crt") {
             Copy-Item "cert.crt" "$certDir\cert.pem" -Force
             Copy-Item "cert.key" "$certDir\key.pem" -Force
-            Copy-Item "ca.crt" "$clientDir\rootCA.pem" -Force
+            Copy-Item "cert.crt" "$clientDir\rootCA.pem" -Force
         }
     }
     finally {
@@ -117,8 +117,8 @@ catch {
 
     # 6. Docker
     Write-Host "Starting services..." -ForegroundColor Gray
-    docker-compose down
-    docker-compose up -d --build
+    docker compose down
+    docker compose up -d --build
 
     # 7. Seed Database
     Write-Host "Seeding database with sample data..." -ForegroundColor Gray
@@ -126,11 +126,8 @@ catch {
     $seedFile = "$PSScriptRoot\seed_db.sql"
     
     if (Test-Path $seedFile) {
-        # Using a temporary sqlite3 container to execute the script against the mounted volume
-        docker run --rm `
-            -v "$($PSScriptRoot)\data:/db_data" `
-            -v "$($seedFile):/seed.sql" `
-            keinos/sqlite3 /db_data/documents.db ".read /seed.sql"
+        # Sử dụng alpine container để chạy sqlite3
+        docker run --rm -v "$($PSScriptRoot)\data:/db_data" -v "$($seedFile):/seed.sql" alpine sh -c "apk add --no-cache sqlite && sqlite3 /db_data/documents.db '.read /seed.sql'"
         Write-Host "Success: Database seeded." -ForegroundColor Green
     } else {
         Write-Host "Warning: seed_db.sql not found, skipping seeding." -ForegroundColor Yellow

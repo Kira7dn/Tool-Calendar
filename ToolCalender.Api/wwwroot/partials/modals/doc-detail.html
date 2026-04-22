@@ -96,12 +96,15 @@
                     </div>
                     <div>
                         <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Trạng thái</label>
-                        <select id="de-status" class="modal-input">
-                            <option>Chưa xử lý</option>
-                            <option>Đang xử lý</option>
-                            <option>Đã rà soát</option>
-                            <option>Đã hoàn thành</option>
+                        <select id="de-status" class="modal-input" style="margin-bottom:6px;">
+                            <option value="Chưa xử lý">Chưa xử lý</option>
+                            <option value="Đang xử lý">Đang xử lý</option>
+                            <option value="Đã rà soát">Đã rà soát</option>
+                            <option value="Đã hoàn thành">Đã hoàn thành</option>
+                            <option value="__custom__">✏️ Tùy chỉnh...</option>
                         </select>
+                        <input type="text" id="de-status-custom" class="modal-input" placeholder="Nhập trạng thái tùy chỉnh..."
+                            style="display:none; margin-top:6px;">
                     </div>
                     <div>
                         <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Độ khẩn</label>

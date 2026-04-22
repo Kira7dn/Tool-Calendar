@@ -19,6 +19,27 @@
                     <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Từ khóa nhận diện "Thời hạn xử lý" (Cách nhau bởi dấu phẩy)</label>
                     <textarea id="setting-deadline-keywords" class="form-control" rows="4" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; resize:vertical; font-size:0.95rem; line-height:1.6;"></textarea>
                 </div>
+                <div class="form-group">
+                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Từ khóa LOẠI TRỪ hạn xử lý (Cách nhau bởi dấu phẩy)</label>
+                    <textarea id="setting-deadline-exclude-keywords" class="form-control" rows="3" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; resize:vertical; font-size:0.95rem; line-height:1.6;"></textarea>
+                    <small style="color:grey;">Ngày xuất hiện gần các từ này sẽ bị bỏ qua (vd: vào khoảng, phát hiện, sinh năm, tại bãi, xảy ra).</small>
+                </div>
+                <div class="form-group">
+                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Hạn xử lý tối thiểu (ngày kể từ ngày ban hành, 0 = không giới hạn)</label>
+                    <input type="number" id="setting-min-deadline-days" class="form-control" value="0" min="0" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; font-size:1rem;">
+                    <small style="color:grey;">Ví dụ: đặt là 1 để loại bỏ các ngày trước ngày ban hành văn bản.</small>
+                </div>
+
+                <div class="form-group">
+                    <label style="display:block; margin-bottom:10px; color:var(--text-secondary); font-size:0.9rem;">📋 Danh sách trạng thái văn bản</label>
+                    <div id="status-chips-container" style="display:flex; flex-wrap:wrap; gap:8px; min-height:44px; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; background:#fff; margin-bottom:10px;"></div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="setting-new-status" class="form-control" placeholder="Nhập trạng thái mới..." style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:10px 12px; border-radius:8px; flex:1; outline:none; font-size:0.95rem;">
+                        <button class="btn btn-primary" id="btn-add-status" style="padding:10px 18px; white-space:nowrap;">+ Thêm</button>
+                    </div>
+                    <small style="color:grey;">Nhấn ✕ trên chip để xoá. Trạng thái này sẽ xuất hiện trong dropdown khi chỉnh sửa văn bản.</small>
+                </div>
+
                 <button class="btn btn-primary" data-action="save-settings" style="padding:14px; font-size:1rem;">Lưu cấu hình OCR</button>
             </div>
         </div>
