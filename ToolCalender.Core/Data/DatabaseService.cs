@@ -238,17 +238,17 @@ namespace ToolCalender.Data
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedUserIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedDepartmentIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
 
-            // Đảm bảo tài khoản admin luôn đúng mật khẩu admin@123456
+            // Đảm bảo tài khoản admin luôn đúng mật khẩu 123456
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', 'admin@123456', 'Admin', datetime('now'))";
+                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', '123456', 'Admin', datetime('now'))";
                 cmd.ExecuteNonQuery();
             }
             else
             {
                 // Nếu đã có admin, ép cập nhật mật khẩu mới cho chắc chắn
-                cmd.CommandText = "UPDATE Users SET PasswordHash='admin@123456' WHERE Username='admin'";
+                cmd.CommandText = "UPDATE Users SET PasswordHash='123456' WHERE Username='admin'";
                 cmd.ExecuteNonQuery();
             }
 
@@ -256,7 +256,7 @@ namespace ToolCalender.Data
             cmd.CommandText = "SELECT COUNT(*) FROM Departments";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                var deps = new[] { "Văn phòng", "Kinh tế - Hạ tầng", "Văn hóa - Xã hội", "Tư pháp - Hộ tịch", "Địa chính - Xây dựng" };
+                var deps = new[] { "Văn phòng HĐND và UBND", "Phòng Kinh tế hạ tầng và đô thị", "Phòng văn hóa xã hội" };
                 foreach (var name in deps)
                 {
                     cmd.CommandText = "INSERT INTO Departments (Name, Description) VALUES (@name, @desc)";

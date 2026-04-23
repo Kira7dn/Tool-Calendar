@@ -1,23 +1,25 @@
+-- Xóa toàn bộ dữ liệu hiện tại
+DELETE FROM CommentReactions;
+DELETE FROM Comments;
+DELETE FROM Documents;
+DELETE FROM Labels;
+DELETE FROM AutoRules;
+DELETE FROM Users;
+DELETE FROM Departments;
+DELETE FROM AuditLogs;
+
+-- Reset lại bảng sequence (để ID tự tăng bắt đầu lại từ 1)
+DELETE FROM sqlite_sequence;
+
 -- SEED DEPARTMENTS --
-INSERT OR REPLACE INTO Departments (Id, Name) VALUES 
-(1, 'Phòng Kinh tế'),
-(2, 'Phòng Văn hóa - Xã hội'),
-(3, 'Phòng Tư pháp'),
-(4, 'Phòng Địa chính - Xây dựng'),
-(5, 'Phòng Văn thư - Tổng hợp');
+INSERT INTO Departments (Id, Name) VALUES 
+(1, 'Văn Phòng HĐND và UBND'),
+(2, 'Phòng Kinh tế hạ tầng và đô thị'),
+(3, 'Phòng Văn hóa xã hội');
 
 -- SEED USERS --
--- Role: LanhDao, VanThu, CanBo
--- Admin user (Id 1) usually already exists, but we update it
-INSERT OR REPLACE INTO Users (Id, Username, PasswordHash, FullName, Email, PhoneNumber, Role, DepartmentId, CreatedAt) VALUES 
-(1, 'admin', '123456', 'Quản trị viên', 'admin@campha.gov.vn', '0912345678', 'Admin', 5, datetime('now')),
-(2, 'chutich', '123456', 'Nguyễn Văn A', 'nva@campha.gov.vn', '0901234455', 'LanhDao', 1, datetime('now')),
-(3, 'vanthu', '123456', 'Trần Thị B', 'ttb@campha.gov.vn', '0902345566', 'VanThu', 5, datetime('now')),
-(4, 'tp_kinhte', '123456', 'Lê Văn C', 'lvc@campha.gov.vn', '0903456677', 'CanBo', 1, datetime('now')),
-(5, 'cb_kinhte', '123456', 'Phạm Văn D', 'pvd@campha.gov.vn', '0904567788', 'CanBo', 1, datetime('now')),
-(6, 'tp_vanhoa', '123456', 'Hoàng Thị E', 'hte@campha.gov.vn', '0905678899', 'CanBo', 2, datetime('now')),
-(7, 'cb_vanhoa', '123456', 'Vũ Văn F', 'vvf@campha.gov.vn', '0906789900', 'CanBo', 2, datetime('now')),
-(8, 'tp_tuphap', '123456', 'Lý Thị G', 'ltg@campha.gov.vn', '0907890011', 'CanBo', 3, datetime('now')),
-(9, 'cb_tuphap', '123456', 'Đỗ Văn H', 'dvh@campha.gov.vn', '0908901122', 'CanBo', 3, datetime('now')),
-(10, 'tp_diachinh', '123456', 'Ngô Thị I', 'nti@campha.gov.vn', '0909012233', 'CanBo', 4, datetime('now')),
-(11, 'cb_diachinh', '123456', 'Bùi Văn K', 'bvk@campha.gov.vn', '0910123344', 'CanBo', 4, datetime('now'));
+-- Role: Admin, LanhDao, VanThu, CanBo
+INSERT INTO Users (Id, Username, PasswordHash, FullName, Email, PhoneNumber, Role, DepartmentId, CreatedAt) VALUES 
+(1, 'admin', '123456', 'Quản trị viên', 'admin@campha.gov.vn', '0912345678', 'Admin', 1, datetime('now')),
+(2, 'chanhvanphong', '123456', 'Nguyễn Thị Nơ', 'nguyenthino@campha.gov.vn', '0901234455', 'LanhDao', 1, datetime('now')),
+(3, 'vanthu', '123456', 'Trương Thị Thu Hằng', 'ttb@campha.gov.vn', '0902345566', 'VanThu', 1, datetime('now'));

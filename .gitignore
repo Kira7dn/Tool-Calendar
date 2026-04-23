@@ -11,10 +11,24 @@
 packages/
 *.nupkg
 
+# Environment & Secrets
+.env
+.htpasswd
+nginx/certs/*.pem
+nginx/certs/*.key
+nginx/conf.d/.htpasswd
+
 # SQLite
 *.db
 *.db-shm
 *.db-wal
+sqlite.zip
+sqlite_tools/
+
+# User Data & Uploads
+*Uploads/
+*.signed.pdf
+data/
 
 # Generated test artifacts
 tests/test_results/**/debug_images/
@@ -22,7 +36,7 @@ tests/test_results/**/*.pdf
 tests/test_results/**/Comparison_*.md
 tests/test_results/actual_test/*_result.md
 
-# Generated client setup files
+# Build Artifacts
+publish/
+test_ssl/
 client_setup/
-nginx/
-*Uploads/

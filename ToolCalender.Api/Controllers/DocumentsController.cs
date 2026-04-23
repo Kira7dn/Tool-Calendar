@@ -70,31 +70,38 @@ namespace ToolCalender.Api.Controllers
                 await file.CopyToAsync(stream);
             }
 
+            DocumentRecord record;
             try 
             {
                 // 2. Gọi OCR trực tiếp để Client nhận được kết quả ngay lập tức
-                var record = await _extractor.ExtractFromFileAsync(filePath);
-                
-                // Nếu SoVanBan trống thì mặc định lấy theo tên file
-                if (string.IsNullOrWhiteSpace(record.SoVanBan))
-                {
-                    record.SoVanBan = Path.GetFileNameWithoutExtension(file.FileName);
-                }
-
-                record.FilePath = filePath;
-                record.Status = record.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
-                record.NgayThem = DateTime.Now;
-                
-                // Lưu vào DB
-                int id = DatabaseService.Insert(record);
-                record.Id = id;
-                
-                return Ok(record);
+                record = await _extractor.ExtractFromFileAsync(filePath);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi khởi tạo upload: {ex.Message}");
+                Console.WriteLine($"[OCR_CRITICAL_ERROR] {ex}");
+                record = new DocumentRecord
+                {
+                    Status = "Lỗi OCR",
+                    FullText = $"[Lõi hệ thống OCR] Không thể trích xuất tự động. Vui lòng nhập tay. Chi tiết lỗi: {ex.Message}"
+                };
             }
+
+            // Nếu SoVanBan trống thì mặc định lấy theo tên file
+            if (string.IsNullOrWhiteSpace(record.SoVanBan))
+            {
+                record.SoVanBan = Path.GetFileNameWithoutExtension(file.FileName);
+            }
+
+            record.FilePath = filePath;
+            // Đảm bảo mapping status chuẩn cho frontend
+            record.Status = record.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
+            record.NgayThem = DateTime.Now;
+            
+            // Lưu vào DB kể cả khi OCR lỗi, để UI có ID thật và mở được ảnh con mắt (Preview)
+            int id = DatabaseService.Insert(record);
+            record.Id = id;
+            
+            return Ok(record);
         }
 
         [Authorize(Roles = "Admin,VanThu")]

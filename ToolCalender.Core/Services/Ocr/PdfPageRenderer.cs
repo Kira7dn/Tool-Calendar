@@ -7,10 +7,18 @@ namespace ToolCalender.Services
     {
         public static int CountPdfPages(string filePath)
         {
-            using var fsCount = File.OpenRead(filePath);
-            using var reader = new iText.Kernel.Pdf.PdfReader(fsCount);
-            using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(reader);
-            return pdfDoc.GetNumberOfPages();
+            try 
+            {
+                using var fsCount = File.OpenRead(filePath);
+                using var reader = new iText.Kernel.Pdf.PdfReader(fsCount);
+                using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(reader);
+                return pdfDoc.GetNumberOfPages();
+            }
+            catch
+            {
+                // Fallback if iText fails (e.g. digital signature or permissions)
+                return 10; // Giả định tối đa 10 trang để tiếp tục quét OCR nếu không biết chính xác
+            }
         }
 
         public static SKBitmap? RenderPageBitmap(string filePath, int pageIndex, int dpi)
