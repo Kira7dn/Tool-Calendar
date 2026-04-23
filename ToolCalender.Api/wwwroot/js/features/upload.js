@@ -8,7 +8,7 @@ function normalizeBatchItem(doc, overrides = {}) {
         || 'Tài liệu PDF';
     const hasError = doc.status === 'Lỗi OCR'
         || Boolean(doc.fullText && doc.fullText.includes('[OCR Total Error]'));
-    
+
     // Multi-select support
     let assignedToIds = [];
     try {
@@ -188,7 +188,8 @@ export function createUploadFeature(context) {
             }
 
             if (action.dataset.action === 'preview-batch-item') {
-                context.services.enterReviewScene(parseInt(action.dataset.docId, 10));
+                // Truyền doc.id dạng string để hỗ trợ cả ID thực (số) lẫn temp ID
+                context.services.enterReviewScene(action.dataset.docId);
             }
 
             if (action.dataset.action === 'save-batch-item') {
@@ -405,10 +406,10 @@ export function createUploadFeature(context) {
                     <div class="batch-file-name" title="${escapeHtml(doc.fileName || 'Tài liệu PDF')}">${escapeHtml(shortenFileName(doc.fileName || 'Tài liệu PDF'))}</div>
                 </td>
                 <td>
-                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input ${doc.ocrWarnings?.some(w=>w.includes('Số hiệu')) ? 'warning-border' : ''}" type="text" data-field="soVanBan" data-doc-id="${doc.id}" value="${escapeAttribute(doc.soVanBan || '')}" placeholder="Số hiệu">`}
+                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input ${doc.ocrWarnings?.some(w => w.includes('Số hiệu')) ? 'warning-border' : ''}" type="text" data-field="soVanBan" data-doc-id="${doc.id}" value="${escapeAttribute(doc.soVanBan || '')}" placeholder="Số hiệu">`}
                 </td>
                 <td>
-                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input ${doc.ocrWarnings?.some(w=>w.includes('Hạn')) ? 'warning-border' : ''}" type="date" data-field="thoiHan" data-doc-id="${doc.id}" value="${doc.thoiHan ? doc.thoiHan.split('T')[0] : ''}">`}
+                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input ${doc.ocrWarnings?.some(w => w.includes('Hạn')) ? 'warning-border' : ''}" type="date" data-field="thoiHan" data-doc-id="${doc.id}" value="${doc.thoiHan ? doc.thoiHan.split('T')[0] : ''}">`}
                 </td>
                 <td>${isProcessing ? '<div class="skeleton-text"></div>' : `<div class="dept-select-container" id="dept-container-${doc.id}"></div>`}</td>
                 <td>${isProcessing ? '<div class="skeleton-text"></div>' : `<div class="user-select-container" id="user-container-${doc.id}"></div>`}</td>
@@ -482,12 +483,12 @@ export function createUploadFeature(context) {
         const patch = {};
         patch[key] = value;
         item = applyPatch(item, patch);
-        
+
         if (item.batchState !== 'Lỗi OCR' && item.batchState !== 'Đã lưu') {
             const hasAssign = (item.departmentIds && item.departmentIds.length > 0) || (item.assignedToIds && item.assignedToIds.length > 0);
             item = applyPatch(item, { batchState: hasAssign ? 'Sẵn sàng lưu' : 'Cần rà soát' });
         }
-        
+
         sessionUploads[index] = item;
         updateRowUI(item);
     }
@@ -730,12 +731,12 @@ export function createUploadFeature(context) {
         editingDocId = id;
         document.getElementById('ocr-so').value = doc.soVanBan || '';
         document.getElementById('ocr-so').className = `modal-input ${doc.ocrWarnings?.some(w => w.includes('Số hiệu')) ? 'warning-border' : ''}`;
-        
+
         document.getElementById('ocr-trichyeu').value = doc.trichYeu || '';
         document.getElementById('ocr-trichyeu').className = `modal-textarea ${doc.ocrWarnings?.some(w => w.includes('Trích yếu')) ? 'warning-border' : ''}`;
-        
+
         document.getElementById('ocr-coquan').value = doc.coQuanChuQuan || '';
-        
+
         document.getElementById('ocr-han').value = formatDateForTextInput(doc.thoiHan);
         document.getElementById('ocr-han').className = `modal-input ${doc.ocrWarnings?.some(w => w.includes('Hạn')) ? 'warning-border' : ''}`;
 

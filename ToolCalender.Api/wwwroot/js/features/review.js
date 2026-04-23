@@ -100,6 +100,11 @@ export function createReviewFeature(context) {
         syncAssignmentSelectors(doc);
 
         try {
+            // Kiểm tra xem doc.id có phải temp ID không (upload chưa hoàn thành hoặc lỗi)
+            if (!doc.id || String(doc.id).startsWith('temp-')) {
+                context.ui.showAlert('Ảnh PDF không sẵn sàng: file này đang được xử lý hoặc đã gặp lỗi OCR. Vui lòng đợi hoặc tải lại.', '⚠️');
+                return;
+            }
             reviewPdfDoc = await context.services.pdf.getDocument(`/api/documents/${doc.id}/file`);
             reviewPdfPage = 1;
             await context.services.pdf.renderPage(reviewPdfDoc, reviewPdfPage, 'review-pdf-canvas', 'review-page-info');

@@ -72,10 +72,11 @@ namespace ToolCalender.Services
         private string ExtractFromPdf(string filePath)
         {
             var sb = new StringBuilder();
-            using var reader = new PdfReader(filePath);
-            using var pdf = new PdfDocument(reader);
+            try {
+                using var reader = new PdfReader(filePath);
+                using var pdf = new PdfDocument(reader);
 
-            for (int i = 1; i <= pdf.GetNumberOfPages(); i++)
+                for (int i = 1; i <= pdf.GetNumberOfPages(); i++)
             {
                 var page = pdf.GetPage(i);
                 var strategy = new LocationTextExtractionStrategy();
@@ -122,6 +123,11 @@ namespace ToolCalender.Services
                 }
             }
 
+            } catch {
+                // Ignore errors reading digital signatures or permissions.
+                // The OCR rasterizer will handle the actual image extraction.
+            }
+            
             return sb.ToString();
         }
 
@@ -558,24 +564,38 @@ namespace ToolCalender.Services
 
             if (bestMatchDate.HasValue) record.ThoiHan = bestMatchDate.Value;
 
+            // Lấy Cơ quan ban hành / Cơ quan chủ quản từ 5 dòng đầu tiên
             var lines = t.Split('\n');
-            var coQuanLine = lines.Take(30).FirstOrDefault(l =>
-                Regex.IsMatch(l, @"(Sở|UBND|Ủy ban|Phòng|Ban|Cục|Chi cục|Tổng cục)",
+            var coQuanLine = lines.Take(5).FirstOrDefault(l =>
+                Regex.IsMatch(l, @"(Sở|UBND|Ủy ban|Phòng|Ban|Cục|Chi cục|Tổng cục|Công an)",
                 RegexOptions.IgnoreCase));
+            
             if (!string.IsNullOrWhiteSpace(coQuanLine))
-                record.CoQuanBanHanh = coQuanLine.Trim();
-
-            var mChuQuan = Regex.Match(t,
-                @"\(qua\s+([^\)]{5,100})\)",
-                RegexOptions.IgnoreCase);
-            if (mChuQuan.Success)
-                record.CoQuanChuQuan = mChuQuan.Groups[1].Value.Trim();
-            else
             {
-                var mCQ = Regex.Match(t,
-                    @"(Chi cục[^\n,;\.]{3,60}|Phòng [^\n,;\.]{3,50})",
-                    RegexOptions.IgnoreCase);
-                if (mCQ.Success) record.CoQuanChuQuan = mCQ.Groups[1].Value.Trim();
+                // Bỏ phần "CỘNG HÒA" dính liền nếu có
+                int chIndex = coQuanLine.IndexOf("CỘNG", StringComparison.OrdinalIgnoreCase);
+                if (chIndex > 0) coQuanLine = coQuanLine.Substring(0, chIndex);
+                
+                record.CoQuanBanHanh = coQuanLine.Trim();
+                record.CoQuanChuQuan = coQuanLine.Trim();
+            }
+
+            // Nếu dòng trên là "ỦY BAN NHÂN DÂN", dòng dưới thường là tên tỉnh hoặc huyện, ta ghép lại
+            for (int i = 0; i < Math.Min(5, lines.Length - 1); i++)
+            {
+                if (lines[i].Contains("ỦY BAN") || lines[i].Contains("SỞ") || lines[i].Contains("CÔNG AN"))
+                {
+                    string l1 = lines[i];
+                    string l2 = lines[i+1];
+                    int chIndex1 = l1.IndexOf("CỘNG", StringComparison.OrdinalIgnoreCase);
+                    int chIndex2 = l2.IndexOf("Độc", StringComparison.OrdinalIgnoreCase);
+                    if (chIndex1 > 0) l1 = l1.Substring(0, chIndex1);
+                    if (chIndex2 > 0) l2 = l2.Substring(0, chIndex2);
+                    
+                    record.CoQuanChuQuan = (l1.Trim() + " " + l2.Trim()).Trim();
+                    record.CoQuanBanHanh = record.CoQuanChuQuan;
+                    break;
+                }
             }
 
             var donViPatterns = new[]
