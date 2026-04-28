@@ -6,10 +6,31 @@ export function createSettingsFeature(context) {
         const panel = document.getElementById('tab-settings');
         if (!panel) return;
 
+        // Bắt sự kiện click chung trên panel
         panel.addEventListener('click', async (event) => {
-            const action = event.target.closest('[data-action]');
-            if (action?.dataset.action === 'save-settings') await saveSettings(action);
-            if (action?.dataset.action === 'show-admin-tab') showAdminTab(action.dataset.adminTab);
+            const actionBtn = event.target.closest('[data-action]');
+            if (!actionBtn) return;
+
+            const action = actionBtn.dataset.action;
+            console.log("Settings click action:", action);
+
+            if (action === 'save-settings') await saveSettings(actionBtn);
+            if (action === 'show-admin-tab') showAdminTab(actionBtn.dataset.adminTab);
+            if (action === 'refresh-audit-logs') await loadAuditLogs();
+            if (action === 'trigger-scan') await triggerScan(actionBtn);
+            if (action === 'test-notification') await testNotification(actionBtn);
+            if (action === 'clear-audit-logs') await clearAuditLogs(actionBtn);
+        });
+
+        // Gán sự kiện trực tiếp cho các nút subnav để chắc chắn
+        ['ocr', 'audit', 'departments', 'labels', 'backup'].forEach(tabName => {
+            const btn = document.getElementById(`atab-${tabName}`);
+            if (btn) {
+                btn.onclick = (e) => {
+                    console.log(`Direct click on tab: ${tabName}`);
+                    showAdminTab(tabName);
+                };
+            }
         });
 
         // Nút thêm trạng thái mới
@@ -24,14 +45,6 @@ export function createSettingsFeature(context) {
             currentStatusList.push(val);
             renderStatusChips();
             input.value = '';
-        });
-
-        // Enter để thêm nhanh
-        document.getElementById('setting-new-status')?.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                document.getElementById('btn-add-status')?.click();
-            }
         });
     }
 
@@ -49,6 +62,7 @@ export function createSettingsFeature(context) {
             document.getElementById('setting-deadline-keywords').value = settings.deadlineKeywords || '';
             document.getElementById('setting-deadline-exclude-keywords').value = settings.deadlineExcludeKeywords || '';
             document.getElementById('setting-min-deadline-days').value = settings.minDeadlineDays || 0;
+            document.getElementById('setting-scan-time').value = settings.notificationScanTime || '08:30';
 
             // Load danh sách trạng thái
             currentStatusList = Array.isArray(settings.statusList) ? [...settings.statusList] : [];
@@ -87,7 +101,7 @@ export function createSettingsFeature(context) {
     }
 
     function escapeHtml(str) {
-        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     async function saveSettings(button) {
@@ -103,6 +117,7 @@ export function createSettingsFeature(context) {
                     deadlineKeywords: document.getElementById('setting-deadline-keywords').value,
                     deadlineExcludeKeywords: document.getElementById('setting-deadline-exclude-keywords').value,
                     minDeadlineDays: parseInt(document.getElementById('setting-min-deadline-days').value, 10) || 0,
+                    notificationScanTime: document.getElementById('setting-scan-time').value,
                     statusList: currentStatusList.join(',')
                 })
             });
@@ -122,14 +137,124 @@ export function createSettingsFeature(context) {
     }
 
     function showAdminTab(tab) {
-        ['ocr', 'departments', 'labels', 'backup'].forEach((name) => {
+        console.log("Switching to admin tab:", tab);
+        ['ocr', 'departments', 'labels', 'backup', 'audit'].forEach((name) => {
             const panel = document.getElementById(`admin-panel-${name}`);
             const button = document.getElementById(`atab-${name}`);
-            if (panel) panel.style.display = name === tab ? 'block' : 'none';
+            
+            if (panel) {
+                const isTarget = name === tab;
+                panel.style.setProperty('display', isTarget ? 'block' : 'none', 'important');
+                console.log(`Panel ${name}: display=${panel.style.display}`);
+            } else {
+                console.warn(`Panel not found: admin-panel-${name}`);
+            }
+            
             if (button) button.classList.toggle('active', name === tab);
         });
 
+        if (tab === 'audit') {
+            console.log("Calling loadAuditLogs...");
+            loadAuditLogs();
+        }
+
         context.services.adminMeta.activateSection(tab);
+    }
+
+    async function loadAuditLogs() {
+        console.log("Loading audit logs...");
+        const tbody = document.getElementById('audit-body');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:grey;">Đang tải nhật ký...</td></tr>';
+
+        try {
+            const response = await context.api.get('/api/admin/audit-logs?limit=100');
+            if (!response.ok) return;
+            const logs = await response.json();
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:grey;">Chưa có nhật ký nào.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => {
+                const date = new Date(log.timestamp).toLocaleString('vi-VN');
+                return `
+                    <tr>
+                        <td style="white-space:nowrap; color:#64748b;">${date}</td>
+                        <td style="font-weight:600; color:#0f172a;">${log.userFullName}</td>
+                        <td style="color:#334155;">${escapeHtml(log.action)}</td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (error) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:red;">Lỗi khi tải nhật ký.</td></tr>';
+        }
+    }
+
+    async function triggerScan(button) {
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span>⏳ Đang quét...</span>';
+
+        try {
+            const response = await context.api.post('/api/notification/trigger-scan');
+            if (response.ok) {
+                context.ui.showAlert('Đã hoàn thành quét thời hạn!', '✅');
+                await loadAuditLogs();
+            } else {
+                context.ui.showAlert('Lỗi khi kích hoạt quét', '❌');
+            }
+        } catch (e) {
+            context.ui.showAlert('Lỗi kết nối', '❌');
+        } finally {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
+    }
+
+    async function testNotification(button) {
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span>⏳ Đang gửi...</span>';
+
+        try {
+            const response = await context.api.post('/api/notification/test');
+            if (response.ok) {
+                context.ui.showAlert('Đã gửi thông báo thử nghiệm! Hãy kiểm tra góc màn hình.', '🔔');
+            } else {
+                const err = await response.text();
+                context.ui.showAlert('Lỗi: ' + err, '❌');
+            }
+        } catch (e) {
+            context.ui.showAlert('Lỗi kết nối', '❌');
+        } finally {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
+    }
+
+    async function clearAuditLogs(button) {
+        if (!confirm('Bạn có chắc chắn muốn xóa toàn bộ nhật ký hệ thống? Hành động này không thể hoàn tác.')) return;
+
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span>⏳ Đang dọn...</span>';
+
+        try {
+            const response = await context.api.post('/api/admin/clear-audit-logs');
+            if (response.ok) {
+                context.ui.showAlert('Đã dọn sạch nhật ký hệ thống!', '🗑️');
+                await loadAuditLogs();
+            } else {
+                context.ui.showAlert('Lỗi khi xóa nhật ký', '❌');
+            }
+        } catch (e) {
+            context.ui.showAlert('Lỗi kết nối', '❌');
+        } finally {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
     }
 
     return {

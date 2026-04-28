@@ -1,46 +1,77 @@
 <section id="tab-settings" class="tab-content">
     <div class="admin-layout">
         <div class="admin-subnav">
-            <button class="admin-subnav-btn active" data-action="show-admin-tab" data-admin-tab="ocr" id="atab-ocr">&#9881;&#65039; OCR &amp; Bóc tách</button>
-            <button class="admin-subnav-btn" data-action="show-admin-tab" data-admin-tab="departments" id="atab-departments">&#127970; Phòng ban</button>
-            <button class="admin-subnav-btn" data-action="show-admin-tab" data-admin-tab="labels" id="atab-labels">&#127991;&#65039; Nhãn &amp; Rules</button>
-            <button class="admin-subnav-btn" data-action="show-admin-tab" data-admin-tab="backup" id="atab-backup">&#128190; Sao lưu dữ liệu</button>
+            <button class="admin-subnav-btn active" data-action="show-admin-tab" data-admin-tab="ocr"
+                id="atab-ocr">&#9881;&#65039; OCR &amp; Bóc tách</button>
+            <button class="admin-subnav-btn" data-action="show-admin-tab" data-admin-tab="audit"
+                id="atab-audit">&#128221; Nhật ký hệ thống</button>
+            <button class="admin-subnav-btn" data-action="show-admin-tab" data-admin-tab="departments"
+                id="atab-departments">&#127970; Phòng ban</button>
+            <button class="admin-subnav-btn" data-action="show-admin-tab" data-admin-tab="labels"
+                id="atab-labels">&#127991;&#65039; Nhãn &amp; Rules</button>
+            <button class="admin-subnav-btn" data-action="show-admin-tab" data-admin-tab="backup"
+                id="atab-backup">&#128190; Sao lưu dữ liệu</button>
         </div>
 
         <div class="admin-panel" id="admin-panel-ocr">
-            <h3 style="margin-bottom:24px;">&#9881;&#65039; Cấu hình bóc tách OCR</h3>
+            <h3 style="margin-bottom:24px;">&#9881;&#65039; Cấu hình hệ thống &amp; OCR</h3>
             <div style="display:flex; flex-direction:column; gap:20px; max-width:600px;">
                 <div class="form-group">
-                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Số trang quét OCR tối đa mỗi file (0 = quét toàn bộ)</label>
-                    <input type="number" id="setting-max-pages" class="form-control" value="0" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; font-size:1rem;">
-                    <small style="color:grey;">Mặc định: 0 (Quét toàn bộ văn bản). Nếu để là 2, hệ thống chỉ quét 2 trang đầu.</small>
+                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">🔔
+                        Giờ quét thông báo tự động (Deadline)</label>
+                    <input type="time" id="setting-scan-time" class="form-control" value="08:30"
+                        style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; font-size:1rem;">
+                    <small style="color:grey;">Hệ thống sẽ quét văn bản sắp hết hạn vào giờ này hàng ngày.</small>
                 </div>
                 <div class="form-group">
-                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Từ khóa nhận diện "Thời hạn xử lý" (Cách nhau bởi dấu phẩy)</label>
-                    <textarea id="setting-deadline-keywords" class="form-control" rows="4" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; resize:vertical; font-size:0.95rem; line-height:1.6;"></textarea>
+                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Số
+                        trang quét OCR tối đa mỗi file (0 = quét toàn bộ)</label>
+                    <input type="number" id="setting-max-pages" class="form-control" value="0"
+                        style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; font-size:1rem;">
+                    <small style="color:grey;">Mặc định: 0 (Quét toàn bộ văn bản). Nếu để là 2, hệ thống chỉ quét 2
+                        trang đầu.</small>
                 </div>
                 <div class="form-group">
-                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Từ khóa LOẠI TRỪ hạn xử lý (Cách nhau bởi dấu phẩy)</label>
-                    <textarea id="setting-deadline-exclude-keywords" class="form-control" rows="3" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; resize:vertical; font-size:0.95rem; line-height:1.6;"></textarea>
-                    <small style="color:grey;">Ngày xuất hiện gần các từ này sẽ bị bỏ qua (vd: vào khoảng, phát hiện, sinh năm, tại bãi, xảy ra).</small>
+                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Từ
+                        khóa nhận diện "Thời hạn xử lý" (Cách nhau bởi dấu phẩy)</label>
+                    <textarea id="setting-deadline-keywords" class="form-control" rows="4"
+                        style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; resize:vertical; font-size:0.95rem; line-height:1.6;"></textarea>
                 </div>
                 <div class="form-group">
-                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Hạn xử lý tối thiểu (ngày kể từ ngày ban hành, 0 = không giới hạn)</label>
-                    <input type="number" id="setting-min-deadline-days" class="form-control" value="0" min="0" style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; font-size:1rem;">
+                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Từ
+                        khóa LOẠI TRỪ hạn xử lý (Cách nhau bởi dấu phẩy)</label>
+                    <textarea id="setting-deadline-exclude-keywords" class="form-control" rows="3"
+                        style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; resize:vertical; font-size:0.95rem; line-height:1.6;"></textarea>
+                    <small style="color:grey;">Ngày xuất hiện gần các từ này sẽ bị bỏ qua (vd: vào khoảng, phát hiện,
+                        sinh năm, tại bãi, xảy ra).</small>
+                </div>
+                <div class="form-group">
+                    <label style="display:block; margin-bottom:8px; color:var(--text-secondary); font-size:0.9rem;">Hạn
+                        xử lý tối thiểu (ngày kể từ ngày ban hành, 0 = không giới hạn)</label>
+                    <input type="number" id="setting-min-deadline-days" class="form-control" value="0" min="0"
+                        style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; border-radius:8px; width:100%; outline:none; font-size:1rem;">
                     <small style="color:grey;">Ví dụ: đặt là 1 để loại bỏ các ngày trước ngày ban hành văn bản.</small>
                 </div>
 
                 <div class="form-group">
-                    <label style="display:block; margin-bottom:10px; color:var(--text-secondary); font-size:0.9rem;">📋 Danh sách trạng thái văn bản</label>
-                    <div id="status-chips-container" style="display:flex; flex-wrap:wrap; gap:8px; min-height:44px; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; background:#fff; margin-bottom:10px;"></div>
-                    <div style="display:flex; gap:8px;">
-                        <input type="text" id="setting-new-status" class="form-control" placeholder="Nhập trạng thái mới..." style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:10px 12px; border-radius:8px; flex:1; outline:none; font-size:0.95rem;">
-                        <button class="btn btn-primary" id="btn-add-status" style="padding:10px 18px; white-space:nowrap;">+ Thêm</button>
+                    <label style="display:block; margin-bottom:10px; color:var(--text-secondary); font-size:0.9rem;">📋
+                        Danh sách trạng thái văn bản</label>
+                    <div id="status-chips-container"
+                        style="display:flex; flex-wrap:wrap; gap:8px; min-height:44px; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; background:#fff; margin-bottom:10px;">
                     </div>
-                    <small style="color:grey;">Nhấn ✕ trên chip để xoá. Trạng thái này sẽ xuất hiện trong dropdown khi chỉnh sửa văn bản.</small>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="setting-new-status" class="form-control"
+                            placeholder="Nhập trạng thái mới..."
+                            style="background:#fff; border:1.5px solid #cbd5e1; color:#1e293b; padding:10px 12px; border-radius:8px; flex:1; outline:none; font-size:0.95rem;">
+                        <button class="btn btn-primary" id="btn-add-status"
+                            style="padding:10px 18px; white-space:nowrap;">+ Thêm</button>
+                    </div>
+                    <small style="color:grey;">Nhấn ✕ trên chip để xoá. Trạng thái này sẽ xuất hiện trong dropdown khi
+                        chỉnh sửa văn bản.</small>
                 </div>
 
-                <button class="btn btn-primary" data-action="save-settings" style="padding:14px; font-size:1rem;">Lưu cấu hình OCR</button>
+                <button class="btn btn-primary" data-action="save-settings" style="padding:14px; font-size:1rem;">Lưu
+                    cấu hình hệ thống</button>
             </div>
         </div>
 
@@ -51,7 +82,14 @@
             </div>
             <div class="table-scroll">
                 <table id="dept-table">
-                    <thead><tr><th>ID</th><th>Tên phòng ban</th><th>Mô tả</th><th>Thao tác</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên phòng ban</th>
+                            <th>Mô tả</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
                     <tbody id="dept-body"></tbody>
                 </table>
             </div>
@@ -62,20 +100,35 @@
                 <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                         <h3>&#127991;&#65039; Nhãn phân loại</h3>
-                        <button class="btn btn-primary" style="padding:6px 14px;" data-action="open-label-modal">&#43; Thêm nhãn</button>
+                        <button class="btn btn-primary" style="padding:6px 14px;" data-action="open-label-modal">&#43;
+                            Thêm nhãn</button>
                     </div>
                     <table id="labels-table">
-                        <thead><tr><th>Tên nhãn</th><th>Màu</th><th>Thao tác</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Tên nhãn</th>
+                                <th>Màu</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
                         <tbody id="labels-body"></tbody>
                     </table>
                 </div>
                 <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                         <h3>&#129302; Auto Rules</h3>
-                        <button class="btn btn-primary" style="padding:6px 14px;" data-action="open-rule-modal">&#43; Thêm rule</button>
+                        <button class="btn btn-primary" style="padding:6px 14px;" data-action="open-rule-modal">&#43;
+                            Thêm rule</button>
                     </div>
                     <table id="rules-table">
-                        <thead><tr><th>Từ khóa</th><th>Nhãn</th><th>Hạn (ngày)</th><th>Thao tác</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Từ khóa</th>
+                                <th>Nhãn</th>
+                                <th>Hạn (ngày)</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
                         <tbody id="rules-body"></tbody>
                     </table>
                 </div>
@@ -87,12 +140,52 @@
             <div style="display:flex; flex-direction:column; gap:20px; max-width:500px;">
                 <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:24px;">
                     <h4 style="margin-bottom:8px; color:var(--sidebar-bg);">&#128229; Xuất toàn bộ dữ liệu ra CSV</h4>
-                    <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:16px;">Tải xuống toàn bộ danh sách văn bản dưới dạng file CSV. Thuận tiện lưu trữ vào USB hoặc ổ cứng rời.</p>
-                    <button class="btn btn-primary" data-action="download-backup" style="padding:12px 28px; font-size:1rem;">&#11015;&#65039; Tải xuống file CSV</button>
+                    <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:16px;">Tải xuống toàn bộ danh
+                        sách văn bản dưới dạng file CSV. Thuận tiện lưu trữ vào USB hoặc ổ cứng rời.</p>
+                    <button class="btn btn-primary" data-action="download-backup"
+                        style="padding:12px 28px; font-size:1rem;">&#11015;&#65039; Tải xuống file CSV</button>
                 </div>
-                <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:12px; padding:16px; font-size:0.87rem; color:#856404;">
-                    &#9888;&#65039; <b>Lưu ý:</b> Chức năng sao lưu tự động định kỳ sẽ được triển khai trong phiên bản tiếp theo. Hiện tại định kỳ xuất thủ công.
+                <div
+                    style="background:#fff3cd; border:1px solid #ffc107; border-radius:12px; padding:16px; font-size:0.87rem; color:#856404;">
+                    &#9888;&#65039; <b>Lưu ý:</b> Chức năng sao lưu tự động định kỳ sẽ được triển khai trong phiên bản
+                    tiếp theo. Hiện tại định kỳ xuất thủ công.
                 </div>
+            </div>
+        </div>
+
+        <div class="admin-panel" id="admin-panel-audit"
+            style="display:none !important; min-height:400px; border:2px dashed #e2e8f0;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #eee;">
+                <h3 style="margin:0; color:var(--sidebar-bg);">&#128221; Nhật ký hệ thống (Audit Logs)</h3>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn" style="background:#10b981; color:white;" data-action="test-notification">🔔 Thử
+                        thông báo</button>
+                    <button class="btn" style="background:#ed8936; color:white;" data-action="trigger-scan">🚀 Quét
+                        ngay</button>
+                    <button class="btn" style="background:#f1f5f9; color:#475569;" data-action="refresh-audit-logs">🔄
+                        Tải lại</button>
+                    <button class="btn" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca;" data-action="clear-audit-logs">🗑️ Dọn sạch</button>
+                </div>
+            </div>
+            <div style="background:#f7fafc; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#edf2f7; text-align:left;">
+                            <th style="padding:12px 16px; font-weight:600; color:#4a5568; width:200px;">Thời gian</th>
+                            <th style="padding:12px 16px; font-weight:600; color:#4a5568; width:180px;">Người dùng</th>
+                            <th style="padding:12px 16px; font-weight:600; color:#4a5568;">Hoạt động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-body">
+                        <tr>
+                            <td colspan="3" style="text-align:center; padding:48px; color:#a0aec0;">
+                                <div style="font-size:24px; margin-bottom:8px;">⏳</div>
+                                Đang tải dữ liệu nhật ký...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

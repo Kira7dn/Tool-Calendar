@@ -13,7 +13,11 @@ self.addEventListener('push', function (event) {
         body: data.body,
         icon: data.icon || '/assets/logo.png',
         badge: '/assets/logo.png',
-        data: data.data || {}
+        vibrate: [100, 50, 100],
+        data: {
+            url: data.url || '/',
+            ...data.data
+        }
     };
 
     event.waitUntil(
@@ -23,9 +27,19 @@ self.addEventListener('push', function (event) {
 
 self.addEventListener('notificationclick', function (event) {
     event.notification.close();
+    const urlToOpen = event.notification.data.url;
 
-    // Open the application or a specific page
     event.waitUntil(
-        clients.openWindow('/')
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.url.indexOf(urlToOpen) !== -1 && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(urlToOpen);
+            }
+        })
     );
 });

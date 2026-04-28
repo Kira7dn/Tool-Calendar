@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using ToolCalendar.Data;
 
@@ -39,6 +39,7 @@ namespace ToolCalendar.Api.Controllers
                 deadlineKeywords = keywords,
                 deadlineExcludeKeywords = excludeKeywords,
                 minDeadlineDays = int.Parse(minDays),
+                notificationScanTime = DatabaseService.GetAppSetting("Notification_ScanTime", "08:30"),
                 statusList = statusList.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList()
             });
         }
@@ -53,11 +54,13 @@ namespace ToolCalendar.Api.Controllers
                 string excludeKeywords = data.TryGetProperty("deadlineExcludeKeywords", out var exc) ? exc.ToString() : "";
                 string minDays = data.TryGetProperty("minDeadlineDays", out var mnd) ? mnd.ToString() : "0";
                 string statusList = data.TryGetProperty("statusList", out var sl) ? sl.ToString() : "";
+                string scanTime = data.TryGetProperty("notificationScanTime", out var st) ? st.ToString() : "08:30";
 
                 DatabaseService.SaveAppSetting("OcrSettings_MaxPagesToScan", maxPages);
                 DatabaseService.SaveAppSetting("Document_DeadlineKeywords", keywords);
                 DatabaseService.SaveAppSetting("Document_DeadlineExcludeKeywords", excludeKeywords);
                 DatabaseService.SaveAppSetting("Document_MinDeadlineDays", minDays);
+                DatabaseService.SaveAppSetting("Notification_ScanTime", scanTime);
                 if (!string.IsNullOrWhiteSpace(statusList))
                     DatabaseService.SaveAppSetting("Document_StatusList", statusList);
 

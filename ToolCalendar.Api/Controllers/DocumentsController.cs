@@ -31,9 +31,10 @@ namespace ToolCalendar.Api.Controllers
         public IActionResult GetAll(
             [FromQuery] int page = 1,
             [FromQuery] int size = 10,
-            [FromQuery] string search = "")
+            [FromQuery] string search = "",
+            [FromQuery] string status = "")
         {
-            var (items, totalCount) = DatabaseService.GetPaged(page, size, search);
+            var (items, totalCount) = DatabaseService.GetPaged(page, size, search, status);
             var totalPages = (int)Math.Ceiling((double)totalCount / size);
 
             return Ok(new
@@ -44,6 +45,14 @@ namespace ToolCalendar.Api.Controllers
                 totalCount,
                 totalPages
             });
+        }
+
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [HttpGet("statuses")]
+        public IActionResult GetStatuses()
+        {
+            var statuses = DatabaseService.GetUniqueStatuses();
+            return Ok(statuses);
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]

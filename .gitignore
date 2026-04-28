@@ -28,7 +28,7 @@ sqlite_tools/
 # User Data & Uploads
 *Uploads/
 *.signed.pdf
-data/
+/data/
 
 # Generated test artifacts
 tests/test_results/**/debug_images/

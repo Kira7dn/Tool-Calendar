@@ -6,6 +6,18 @@
                 <span>&#128269;</span>
                 <input type="text" placeholder="Tìm số hiệu, nội dung..." id="doc-search">
             </div>
+            <div class="filter-box" style="margin-left: 10px;">
+                <select id="doc-status-filter"
+                    style="padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none; font-size: 0.9rem; color: #1e293b; background: #fff; cursor: pointer;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Chưa xử lý">⏳ Chưa xử lý</option>
+                    <option value="Đang xử lý">⚙️ Đang xử lý</option>
+                    <option value="Đã rà soát">🔍 Đã rà soát</option>
+                    <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
+                    <option value="Lỗi OCR">⚠️ Lỗi OCR</option>
+                    <option value="overdue">🛑 Quá hạn</option>
+                </select>
+            </div>
         </div>
         <div class="table-scroll" style="flex: 1; overflow-y: auto;">
             <table id="all-docs-table">

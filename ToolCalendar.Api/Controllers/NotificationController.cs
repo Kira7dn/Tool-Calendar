@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
@@ -14,10 +14,20 @@ namespace ToolCalendar.Api.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly IVapidService _vapidService;
+        private readonly DeadlineWorker _deadlineWorker;
 
-        public NotificationController(IVapidService vapidService)
+        public NotificationController(IVapidService vapidService, DeadlineWorker deadlineWorker)
         {
             _vapidService = vapidService;
+            _deadlineWorker = deadlineWorker;
+        }
+
+        [Authorize(Roles = "Admin,VanThu")]
+        [HttpPost("trigger-scan")]
+        public async Task<IActionResult> TriggerScan()
+        {
+            await _deadlineWorker.ScanDeadlinesAsync(true);
+            return Ok(new { message = "Đã kích hoạt quét thời hạn thành công." });
         }
 
         [HttpGet("vapid-public-key")]

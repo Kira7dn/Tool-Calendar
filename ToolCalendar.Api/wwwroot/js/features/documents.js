@@ -9,9 +9,15 @@ export function createDocumentsFeature(context) {
     let searchTimer = null;
 
     function init() {
+        loadStatusFilters();
+
         document.getElementById('doc-search')?.addEventListener('input', () => {
             clearTimeout(searchTimer);
             searchTimer = setTimeout(() => refresh(1), 350);
+        });
+
+        document.getElementById('doc-status-filter')?.addEventListener('change', () => {
+            refresh(1);
         });
 
         document.getElementById('btn-prev-docs')?.addEventListener('click', async () => {
@@ -74,7 +80,8 @@ export function createDocumentsFeature(context) {
 
     async function refresh(targetPage = page) {
         const search = document.getElementById('doc-search')?.value?.trim() ?? '';
-        const url = `/api/documents?page=${targetPage}&size=${pageSize}&search=${encodeURIComponent(search)}`;
+        const status = document.getElementById('doc-status-filter')?.value ?? '';
+        const url = `/api/documents?page=${targetPage}&size=${pageSize}&search=${encodeURIComponent(search)}&status=${status}`;
 
         try {
             const response = await context.api.get(url);
@@ -125,7 +132,7 @@ export function createDocumentsFeature(context) {
                     <td style="text-align:center; color:var(--text-secondary); font-size:0.82rem; font-weight:700; width:48px;">${offset + index + 1}</td>
                     <td style="font-weight:700; color:var(--sidebar-bg);">${doc.soVanBan || '-'}</td>
                     <td>${formatDate(doc.ngayBanHanh)}</td>
-                    <td ${doc.trichYeu ? `class="text-truncate-2" title="${escapeAttribute(doc.trichYeu)}"` : ''}>${doc.trichYeu || '-'}</td>
+                    <td><div ${doc.trichYeu ? `class="text-truncate-2" title="${escapeAttribute(doc.trichYeu)}"` : ''}>${doc.trichYeu || '-'}</div></td>
                     <td>${doc.coQuanChuQuan || ''}</td>
                     <td>${formatDate(doc.thoiHan)}</td>
                     <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai || doc.status || ''}</span></td>
@@ -182,9 +189,43 @@ export function createDocumentsFeature(context) {
         }
     }
 
+    async function loadStatusFilters() {
+        const sel = document.getElementById('doc-status-filter');
+        if (!sel) return;
+
+        try {
+            const res = await context.api.get('/api/documents/statuses');
+            if (!res.ok) return;
+            const dbStatuses = await res.json();
+
+            // Các trạng thái mặc định quan trọng
+            const defaults = ['Chưa xử lý', 'Đang xử lý', 'Đã rà soát', 'Đã hoàn thành', 'Lỗi OCR'];
+
+            // Kết hợp và loại bỏ trùng lặp
+            const allStatuses = [...new Set([...defaults, ...dbStatuses])];
+
+            let html = '<option value="">Tất cả trạng thái</option>';
+            allStatuses.forEach(s => {
+                let icon = '🔹';
+                if (s === 'Chưa xử lý') icon = '⏳';
+                if (s === 'Đang xử lý') icon = '⚙️';
+                if (s === 'Đã rà soát') icon = '🔍';
+                if (s === 'Đã hoàn thành') icon = '✅';
+                if (s === 'Lỗi OCR') icon = '⚠️';
+
+                html += `<option value="${s}">${icon} ${s}</option>`;
+            });
+
+            // Luôn thêm tùy chọn Quá hạn cuối cùng vì đây là logic đặc biệt
+            html += `<option value="overdue">🛑 Quá hạn</option>`;
+
+            sel.innerHTML = html;
+        } catch (e) { console.error('Load status filters error:', e); }
+    }
+
     return {
         init,
-        activate() {},
+        activate() { },
         refresh,
         closeAllDropdowns
     };

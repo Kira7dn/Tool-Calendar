@@ -33,7 +33,8 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<OcrQueueService>()
 builder.Services.AddSingleton<IEmailService, EmailService>();
 builder.Services.AddSingleton<IVapidService, VapidService>();
 builder.Services.AddScoped<INotificationManager, NotificationManager>();
-builder.Services.AddHostedService<DeadlineWorker>();
+builder.Services.AddSingleton<DeadlineWorker>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<DeadlineWorker>());
 
 // Cấu hình JWT
 var key = "LinkStrategy_SecretKey_2026_Secure_GiamSatCongVan"; // Key bí mật cho GĐ 1

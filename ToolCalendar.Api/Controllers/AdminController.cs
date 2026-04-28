@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
@@ -95,6 +95,23 @@ namespace ToolCalendar.Api.Controllers
             if (request == null) return BadRequest();
             DatabaseService.SaveAppSetting(request.Key, request.Value);
             return Ok(new { message = "Lưu cấu hình thành công." });
+        }
+
+        // --- AUDIT LOGS ---
+        [Authorize(Roles = "Admin")]
+        [HttpGet("audit-logs")]
+        public IActionResult GetAuditLogs([FromQuery] int limit = 100)
+        {
+            return Ok(DatabaseService.GetAuditLogs(limit));
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("clear-audit-logs")]
+        public IActionResult ClearAuditLogs()
+        {
+            DatabaseService.ClearAuditLogs();
+            DatabaseService.InsertAuditLog(null, "Quản trị viên đã dọn sạch toàn bộ nhật ký hệ thống.");
+            return Ok(new { message = "Đã dọn sạch nhật ký hệ thống." });
         }
     }
 

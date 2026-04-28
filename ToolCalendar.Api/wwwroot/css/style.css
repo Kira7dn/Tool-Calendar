@@ -2189,6 +2189,7 @@ tr:hover td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    background: transparent !important;
 }
 
 .text-truncate-2 {
@@ -2198,8 +2199,11 @@ tr:hover td {
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.5;
-    max-width: 350px;
     white-space: normal;
+    word-break: break-word;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 @media screen and (max-width: 1200px) {
