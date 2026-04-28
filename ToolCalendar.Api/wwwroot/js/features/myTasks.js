@@ -62,7 +62,7 @@ export function createMyTasksFeature(context) {
 
             return `<tr>
                 <td style="font-weight:700; color:var(--sidebar-bg);">${task.soVanBan || '-'}</td>
-                <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeAttribute(task.trichYeu || '')}">${task.trichYeu || '-'}</td>
+                <td class="text-truncate-2" title="${escapeAttribute(task.trichYeu || '')}">${task.trichYeu || '-'}</td>
                 <td>${formatDate(task.hanXuLy)}</td>
                 <td><span class="status ${overdue ? 'bg-danger' : task.status === 'Dang xu ly' ? 'bg-warning' : 'bg-success'}">${overdue ? 'Qua han' : task.status}</span></td>
                 <td>

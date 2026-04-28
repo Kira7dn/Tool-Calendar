@@ -80,9 +80,41 @@ export function createReviewFeature(context) {
         reviewPdfDoc = null;
     }
 
+    function resetReviewUI() {
+        // Xóa sạch thông tin văn bản
+        document.getElementById('review-so-hieu').value = '';
+        document.getElementById('review-co-quan').value = '';
+        document.getElementById('review-trich-yeu').value = '';
+        document.getElementById('review-han-xu-ly').value = '';
+        document.getElementById('review-pdf-filename').innerText = 'Đang tải...';
+        document.getElementById('review-fulltext-page').value = 'Đang tải dữ liệu OCR...';
+        
+        // Xóa sạch các ô chọn đa mục (Multi-select)
+        const deptContainer = document.getElementById('review-department');
+        const userContainer = document.getElementById('review-assignee');
+        if (deptContainer) deptContainer.innerHTML = '<div class="skeleton-text"></div>';
+        if (userContainer) userContainer.innerHTML = '<div class="skeleton-text"></div>';
+        
+        // Xóa sạch canvas PDF để không hiển thị file cũ
+        const canvas = document.getElementById('review-pdf-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Thêm hiệu ứng loading nếu muốn
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        // Reset paging
+        document.getElementById('review-page-info').innerText = '...';
+    }
+
     async function loadReviewDoc(index) {
         const docs = context.services.upload.getSessionUploads();
         if (index < 0 || index >= docs.length) return;
+
+        // Xóa sạch UI cũ trước khi nạp cái mới
+        resetReviewUI();
 
         const doc = docs[index];
         reviewIndex = index;

@@ -125,7 +125,7 @@ export function createDocumentsFeature(context) {
                     <td style="text-align:center; color:var(--text-secondary); font-size:0.82rem; font-weight:700; width:48px;">${offset + index + 1}</td>
                     <td style="font-weight:700; color:var(--sidebar-bg);">${doc.soVanBan || '-'}</td>
                     <td>${formatDate(doc.ngayBanHanh)}</td>
-                    <td>${doc.trichYeu || ''}</td>
+                    <td class="text-truncate-2" title="${escapeAttribute(doc.trichYeu || '')}">${doc.trichYeu || ''}</td>
                     <td>${doc.coQuanChuQuan || ''}</td>
                     <td>${formatDate(doc.thoiHan)}</td>
                     <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai || doc.status || ''}</span></td>

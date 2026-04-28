@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
@@ -47,7 +47,7 @@ namespace ToolCalendar.Api.Controllers
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var data = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+            var data = DatabaseService.GetDocumentById(id);
             if (data == null) return NotFound();
             return Ok(data);
         }
@@ -180,7 +180,7 @@ namespace ToolCalendar.Api.Controllers
             // 2. Gửi thông báo tức thời cho tất cả Cán bộ được gán
             if (request.UserIds != null && request.UserIds.Count > 0)
             {
-                var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+                var doc = DatabaseService.GetDocumentById(id);
                 if (doc != null)
                 {
                     foreach (var userId in request.UserIds)
@@ -204,7 +204,7 @@ namespace ToolCalendar.Api.Controllers
         {
             if (files == null || files.Count == 0) return BadRequest("Cần ít nhất một file bằng chứng.");
 
-            var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+            var doc = DatabaseService.GetDocumentById(id);
             if (doc == null) return NotFound();
 
             // 1. Tạo thư mục lưu bằng chứng cho văn bản này
@@ -244,7 +244,7 @@ namespace ToolCalendar.Api.Controllers
         [HttpGet("{id}/file")]
         public IActionResult GetFile(int id)
         {
-            var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+            var doc = DatabaseService.GetDocumentById(id);
             if (doc == null || string.IsNullOrEmpty(doc.FilePath)) return NotFound("File không tồn tại.");
             if (!System.IO.File.Exists(doc.FilePath)) return NotFound("File vật lý không tìm thấy.");
             var fileBytes = System.IO.File.ReadAllBytes(doc.FilePath);
@@ -263,7 +263,7 @@ namespace ToolCalendar.Api.Controllers
         [HttpGet("{id}/evidence/{index}")]
         public IActionResult GetEvidenceFile(int id, int index)
         {
-            var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+            var doc = DatabaseService.GetDocumentById(id);
             if (doc == null || string.IsNullOrEmpty(doc.EvidencePaths)) return NotFound("Không tìm thấy bằng chứng.");
             try 
             {
@@ -291,7 +291,7 @@ namespace ToolCalendar.Api.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var doc = DatabaseService.GetAll().FirstOrDefault(x => x.Id == id);
+            var doc = DatabaseService.GetDocumentById(id);
             if (doc != null)
             {
                 if (!string.IsNullOrEmpty(doc.FilePath) && System.IO.File.Exists(doc.FilePath))

@@ -1,4 +1,4 @@
-﻿services:
+services:
   official-doc-backend:
     build:
       context: .
@@ -12,7 +12,7 @@
       - OcrSettings__TessDataPath=/usr/share/tesseract-ocr/5/tessdata
       - TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
     volumes:
-      - ./data:/app/data
+      - tool-calendar-data:/app/data
       - ./ToolCalendar.Api/Uploads:/app/Uploads
     restart: always
 
@@ -40,3 +40,7 @@
       - nginx-proxy:80
     depends_on:
       - nginx
+
+volumes:
+  tool-calendar-data:
+

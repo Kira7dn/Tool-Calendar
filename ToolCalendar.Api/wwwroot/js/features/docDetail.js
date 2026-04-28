@@ -4,8 +4,8 @@ import { escapeHtml, formatDate, formatDateForTextInput, normalizeDateInputToIso
 export function createDocDetailFeature(context) {
     let currentDocId = null;
     let currentDocData = null;
-    // Danh sách trạng thái load từ API settings (cache)
-    let statusOptions = ['Chưa xử lý', 'Đang xử lý', 'Đã rà soát', 'Đã hoàn thành'];
+    let isStatusOptionsLoaded = false;
+    let statusOptions = ['Chưa xử lý', 'Đang xử lý', 'Hoàn thành', 'Quá hạn'];
 
     function init() {
         const modal = document.getElementById('doc-detail-modal');
@@ -37,25 +37,53 @@ export function createDocDetailFeature(context) {
     async function open(id, initialTab = 'view') {
         currentDocId = id;
 
-        // Load danh sách trạng thái từ API nếu chưa có
-        await loadStatusOptions();
+        // 1. Reset UI về trạng thái loading để tránh hiện dữ liệu cũ của văn bản trước
+        resetUI();
+        document.getElementById('doc-detail-modal').style.display = 'flex';
+        switchTab(initialTab);
 
         try {
-            const response = await context.api.get(`/api/documents/${id}`);
-            if (!response.ok) return;
-            currentDocData = await response.json();
+            // 2. Chạy song song các tác vụ: Tải option (nếu chưa có), tải data văn bản, tải bình luận
+            const tasks = [
+                context.api.get(`/api/documents/${id}`),
+                loadComments()
+            ];
+
+            if (!isStatusOptionsLoaded) {
+                tasks.push(loadStatusOptions());
+            }
+
+            const results = await Promise.all(tasks);
+            const docResponse = results[0];
+
+            if (!docResponse.ok) throw new Error('Failed to fetch doc');
+
+            currentDocData = await docResponse.json();
+
+            // 3. Render dữ liệu
+            renderDetail(currentDocData);
+
+            const role = localStorage.getItem('user_role');
+            document.getElementById('doc-tab-edit').style.display = (role === 'Admin' || role === 'VanThu') ? '' : 'none';
+
         } catch (error) {
             console.error('Document detail load error:', error);
-            return;
+            context.ui.showAlert('Không thể tải chi tiết văn bản', '❌');
+            close();
         }
+    }
 
-        renderDetail(currentDocData);
-        const role = localStorage.getItem('user_role');
-        document.getElementById('doc-tab-edit').style.display = role === 'Admin' || role === 'VanThu' ? '' : 'none';
-        document.getElementById('doc-detail-modal').style.display = 'flex';
-
-        switchTab(initialTab);
-        await loadComments();
+    function resetUI() {
+        document.getElementById('doc-modal-title').innerText = 'Đang tải...';
+        document.getElementById('doc-modal-subtitle').innerText = '';
+        const fields = ['dv-so', 'dv-ngaybanhanh', 'dv-trichyeu', 'dv-coquanbanhanh', 'dv-coquanchuquan', 'dv-thoihan', 'dv-status', 'dv-priority', 'dv-ngaythem'];
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<span class="skeleton-text"></span>';
+        });
+        document.getElementById('comment-list').innerHTML = '<div class="loader-inner"></div>';
+        document.getElementById('dv-view-pdf').innerHTML = '';
+        document.getElementById('dv-evidence').innerHTML = '';
     }
 
     function close() {
@@ -136,6 +164,7 @@ export function createDocDetailFeature(context) {
 
     /** Tải danh sách trạng thái từ API và cập nhật select */
     async function loadStatusOptions() {
+        if (isStatusOptionsLoaded) return;
         try {
             const res = await context.api.get('/api/stats/settings');
             if (!res.ok) return;
@@ -143,6 +172,7 @@ export function createDocDetailFeature(context) {
             if (Array.isArray(settings.statusList) && settings.statusList.length > 0) {
                 statusOptions = settings.statusList;
             }
+            isStatusOptionsLoaded = true;
         } catch { /* giữ nguyên mặc định nếu lỗi */ }
 
         const sel = document.getElementById('de-status');
