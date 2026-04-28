@@ -1,4 +1,4 @@
-# 🚀 Tài liệu Kỹ thuật & Cách chạy OCR Tests (Current Code Baseline)
+﻿# 🚀 Tài liệu Kỹ thuật & Cách chạy OCR Tests (Current Code Baseline)
 
 Tài liệu này mô tả **flow OCR hiện tại trong code** và **cách chạy test đúng theo kiến trúc mới**.
 
@@ -26,13 +26,13 @@ Pipeline hiện đã được harden lại để tránh lỗi native binding tro
 
 ## 📂 2. Cấu trúc Mã nguồn
 
-- `ToolCalender.Core\Services\OcrService.cs`: Pipeline OCR thực tế đang chạy qua `tesseract` CLI.
-- `ToolCalender.Core\Services\DocumentExtractorService.cs`: Ghép OCR text với text số từ PDF và parse dữ liệu nghiệp vụ.
-- `ToolCalender.Tests\Helpers\AutomationDocHelper.cs`: Sinh dữ liệu PDF test giả lập.
-- `ToolCalender.Tests\Helpers\TestPathHelper.cs`: Resolve đường dẫn repo/tests/fonts theo môi trường Windows hoặc Docker/Linux.
-- `ToolCalender.Tests\OcrAutomationTests.cs`: Test OCR + parse trên tài liệu chuẩn và noisy document.
-- `ToolCalender.Tests\OcrStressTests.cs`: Test stress cho multi-page, rotated page, border noise.
-- `ToolCalender.Tests\RealDocumentTests.cs`: Test trên tài liệu thực tế.
+- `ToolCalendar.Core\Services\OcrService.cs`: Pipeline OCR thực tế đang chạy qua `tesseract` CLI.
+- `ToolCalendar.Core\Services\DocumentExtractorService.cs`: Ghép OCR text với text số từ PDF và parse dữ liệu nghiệp vụ.
+- `ToolCalendar.Tests\Helpers\AutomationDocHelper.cs`: Sinh dữ liệu PDF test giả lập.
+- `ToolCalendar.Tests\Helpers\TestPathHelper.cs`: Resolve đường dẫn repo/tests/fonts theo môi trường Windows hoặc Docker/Linux.
+- `ToolCalendar.Tests\OcrAutomationTests.cs`: Test OCR + parse trên tài liệu chuẩn và noisy document.
+- `ToolCalendar.Tests\OcrStressTests.cs`: Test stress cho multi-page, rotated page, border noise.
+- `ToolCalendar.Tests\RealDocumentTests.cs`: Test trên tài liệu thực tế.
 
 ---
 
@@ -63,7 +63,7 @@ Với mỗi file PDF, `OcrService` hiện chạy như sau:
 1. **Xác định tessdata path**
    - Ưu tiên `OcrSettings:TessDataPath`.
    - Nếu chạy Linux thì thử `/usr/share/tesseract-ocr/5/tessdata`.
-   - Nếu không có thì dò lên cây thư mục để tìm `ToolCalender.Core/tessdata`.
+   - Nếu không có thì dò lên cây thư mục để tìm `ToolCalendar.Core/tessdata`.
 
 2. **Xác định thư mục debug**
    - Tự dò root solution qua `.sln` hoặc `.slnx`.
@@ -158,19 +158,19 @@ Chạy OCR tests **bên trong container backend** vì đó là runtime chuẩn c
 Chạy đúng 2 suite OCR automation + real document:
 
 ```bash
-docker exec doc-coordination-system dotnet test /app/ToolCalender.Tests/ToolCalender.Tests.csproj --filter "FullyQualifiedName~ToolCalender.Tests.OcrAutomationTests|FullyQualifiedName~ToolCalender.Tests.RealDocumentTests" -v minimal
+docker exec doc-coordination-system dotnet test /app/ToolCalendar.Tests/ToolCalendar.Tests.csproj --filter "FullyQualifiedName~ToolCalendar.Tests.OcrAutomationTests|FullyQualifiedName~ToolCalendar.Tests.RealDocumentTests" -v minimal
 ```
 
 Chạy stress tests:
 
 ```bash
-docker exec doc-coordination-system dotnet test /app/ToolCalender.Tests/ToolCalender.Tests.csproj --filter "FullyQualifiedName~ToolCalender.Tests.OcrStressTests" -v minimal
+docker exec doc-coordination-system dotnet test /app/ToolCalendar.Tests/ToolCalendar.Tests.csproj --filter "FullyQualifiedName~ToolCalendar.Tests.OcrStressTests" -v minimal
 ```
 
 Chạy toàn bộ OCR tests:
 
 ```bash
-docker exec doc-coordination-system dotnet test /app/ToolCalender.Tests/ToolCalender.Tests.csproj --filter "FullyQualifiedName~ToolCalender.Tests.Ocr" -v minimal
+docker exec doc-coordination-system dotnet test /app/ToolCalendar.Tests/ToolCalendar.Tests.csproj --filter "FullyQualifiedName~ToolCalendar.Tests.Ocr" -v minimal
 ```
 
 ### Chạy trên host
@@ -292,6 +292,6 @@ Các hạng mục dưới đây **chưa phản ánh đầy đủ code hiện t�
 ## 📝 8. Ghi chú vận hành
 
 - Khi cần hiểu tình trạng thực tế của pipeline, ưu tiên đọc:
-  - `ToolCalender.Core\Services\OcrService.cs`
-  - `ToolCalender.Core\Services\DocumentExtractorService.cs`
+  - `ToolCalendar.Core\Services\OcrService.cs`
+  - `ToolCalendar.Core\Services\DocumentExtractorService.cs`
 - Khi tài liệu README và code khác nhau, **code hiện tại là nguồn sự thật**.

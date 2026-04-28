@@ -1,0 +1,62 @@
+﻿using System.Text.Json.Serialization;
+
+namespace ToolCalendar.Models
+{
+    public class DocumentRecord
+    {
+        public int Id { get; set; }
+        
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public List<string> OcrWarnings { get; set; } = new List<string>();
+        public string SoVanBan { get; set; } = "";
+        public string TenCongVan { get; set; } = "";
+        public string TrichYeu { get; set; } = "";
+        public string FullText { get; set; } = "";
+        public string OcrPagesJson { get; set; } = "[]";
+        public DateTime? NgayBanHanh { get; set; }
+        public string CoQuanBanHanh { get; set; } = "";
+        public string CoQuanChuQuan { get; set; } = "";  // Cơ quan chủ quan tham mưu
+        public DateTime? ThoiHan { get; set; }
+        public string DonViChiDao { get; set; } = "";    // Đơn vị/phòng bị chỉ đạo
+        public string FilePath { get; set; } = "";
+        public string Status { get; set; } = "Chưa xử lý"; // Chưa xử lý, Đang xử lý, Đã hoàn thành, Quá hạn
+        public string Priority { get; set; } = "Thường"; // Thường, Khẩn, Hỏa tốc
+        public int? DepartmentId { get; set; }
+        public int? AssignedTo { get; set; }
+        public string AssignedUserIds { get; set; } = "[]";
+        public string AssignedDepartmentIds { get; set; } = "[]";
+        public string EvidencePaths { get; set; } = "[]"; // JSON array
+        public string EvidenceNotes { get; set; } = "";
+        public DateTime? CompletionDate { get; set; }
+        public int? LabelId { get; set; }
+        public DateTime NgayThem { get; set; } = DateTime.Now;
+        public bool DaTaoLich { get; set; } = false;
+        public int UploadedByUserId { get; set; } = 1;
+
+        [JsonInclude]
+        public int SoNgayConLai
+        {
+            get
+            {
+                if (ThoiHan == null) return int.MaxValue;
+                return (int)(ThoiHan.Value.Date - DateTime.Today).TotalDays;
+            }
+        }
+
+        [JsonInclude]
+        public string TrangThai
+        {
+            get
+            {
+                if (ThoiHan == null) return "Chưa xác định";
+                int days = SoNgayConLai;
+                if (days < 0) return $"Quá hạn {Math.Abs(days)} ngày";
+                if (days == 0) return "Hết hạn hôm nay!";
+                if (days == 1) return "Còn 1 ngày";
+                if (days <= 3) return $"Còn {days} ngày";
+                if (days <= 7) return $"Còn {days} ngày";
+                return $"Còn {days} ngày";
+            }
+        }
+    }
+}

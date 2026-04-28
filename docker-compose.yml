@@ -1,4 +1,4 @@
-services:
+﻿services:
   official-doc-backend:
     build:
       context: .
@@ -13,7 +13,7 @@ services:
       - TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
     volumes:
       - ./data:/app/data
-      - ./ToolCalender.Api/Uploads:/app/Uploads
+      - ./ToolCalendar.Api/Uploads:/app/Uploads
     restart: always
 
   nginx:

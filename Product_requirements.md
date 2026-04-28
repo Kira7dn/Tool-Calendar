@@ -1,4 +1,4 @@
-# DANH SÁCH YÊU CẦU NGHIỆP VỤ (GĐ 1)
+﻿# DANH SÁCH YÊU CẦU NGHIỆP VỤ (GĐ 1)
 
 * **Môi trường vận hành**:
 
@@ -180,7 +180,7 @@ Tập trung vào số liệu tổng quan và xử lý các điểm nghẽn.
 
 ### 1. Data Domain (Persistence Layer)
 
-- [X] Khởi tạo các Entity trong `ToolCalender.Core` (User, Document, Department, Label, Rule, Setting, AuditLog). 🔹 *Next: Đã hoàn thành. Sẵn sàng cho việc phân quyền và điều phối.*
+- [X] Khởi tạo các Entity trong `ToolCalendar.Core` (User, Document, Department, Label, Rule, Setting, AuditLog). 🔹 *Next: Đã hoàn thành. Sẵn sàng cho việc phân quyền và điều phối.*
 - [X] Thiết lập kết nối Database (MongoDB hoặc SQL). 🔹 *Next: Duy trì cấu hình kết nối hiện tại.*
 - [X] Cài đặt Repository Pattern/Data Access Layer. 🔹 *Next: Đã có DatabaseService, cần tối ưu cho các Entity mới.*
 - [X] Tạo dữ liệu mẫu (Seed Data): Tài khoản Admin mặc định, các Phòng ban cơ bản của cơ quan. 🔹 *Next: Bổ sung dữ liệu mẫu cho Phòng ban và Nhãn.*

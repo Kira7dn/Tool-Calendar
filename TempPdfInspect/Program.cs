@@ -1,9 +1,9 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
-using ToolCalender.Data;
-using ToolCalender.Models;
-using ToolCalender.Services;
+using ToolCalendar.Data;
+using ToolCalendar.Models;
+using ToolCalendar.Services;
 
 var pdfPath = args.Length > 0
     ? args[0]
