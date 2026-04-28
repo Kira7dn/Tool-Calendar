@@ -627,8 +627,13 @@ tr:hover td {
 }
 
 @keyframes skeleton-loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 .loader-inner {
@@ -644,7 +649,7 @@ tr:hover td {
 .modal-loading-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(255,255,255,0.7);
+    background: rgba(255, 255, 255, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1849,6 +1854,7 @@ tr:hover td {
 .batch-action-btn-warning {
     color: #f59e0b;
 }
+
 .batch-action-btn-warning:hover {
     background: #fffbeb;
     border-color: #fef3c7;
@@ -1864,6 +1870,7 @@ tr:hover td {
 .batch-action-btn-save {
     color: #10b981;
 }
+
 .batch-action-btn-save:hover {
     background: #ecfdf5;
     border-color: #d1fae5;
@@ -1873,6 +1880,7 @@ tr:hover td {
 .batch-action-btn-delete {
     color: #ef4444;
 }
+
 .batch-action-btn-delete:hover {
     background: #fef2f2;
     border-color: #fee2e2;
@@ -2041,7 +2049,9 @@ tr:hover td {
 }
 
 @keyframes skeleton-shimmer {
-    to { background-position: -200% 0; }
+    to {
+        background-position: -200% 0;
+    }
 }
 
 /* ====================================================
@@ -2161,7 +2171,7 @@ tr:hover td {
    ==================================================== */
 .warning-border {
     border-color: #f59e0b !important;
-    background: rgba(245,158,11,0.05);
+    background: rgba(245, 158, 11, 0.05);
 }
 
 .batch-warning-badge {
@@ -2202,7 +2212,7 @@ tr:hover td {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
@@ -2259,8 +2269,8 @@ tr:hover td {
     }
 
     /* Modal Mobile Tweak */
-    .modal > div,
-    #doc-detail-modal > div {
+    .modal>div,
+    #doc-detail-modal>div {
         width: 95% !important;
         max-width: 100% !important;
         margin: 10px;

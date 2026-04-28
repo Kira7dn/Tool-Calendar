@@ -39,7 +39,7 @@ export function createDashboardFeature(context) {
         recentBody.innerHTML = (result.data || []).map((doc) => `
             <tr>
                 <td style="font-weight: 600;">${doc.soVanBan}</td>
-                <td class="text-truncate-2" title="${escapeAttribute(doc.trichYeu || '')}">${doc.trichYeu}</td>
+                <td ${doc.trichYeu ? `class="text-truncate-2" title="${escapeAttribute(doc.trichYeu)}"` : ''}>${doc.trichYeu || '-'}</td>
                 <td>${formatDate(doc.thoiHan)}</td>
                 <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai}</span></td>
             </tr>
