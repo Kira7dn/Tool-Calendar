@@ -14,6 +14,17 @@ export function createSessionFeature() {
             eventSource.close();
             showKickedModal();
         });
+
+        // Bổ sung các sự kiện realtime cho bình luận/văn bản
+        const dispatchRealtime = (name, data) => {
+            try {
+                document.dispatchEvent(new CustomEvent(`realtime:${name}`, { detail: JSON.parse(data) }));
+            } catch (e) { console.error('Realtime parse error', e); }
+        };
+
+        eventSource.addEventListener('new_comment', (e) => dispatchRealtime('new_comment', e.data));
+        eventSource.addEventListener('delete_comment', (e) => dispatchRealtime('delete_comment', e.data));
+        eventSource.addEventListener('comment_reaction', (e) => dispatchRealtime('comment_reaction', e.data));
     }
 
     function logout(kicked = false) {

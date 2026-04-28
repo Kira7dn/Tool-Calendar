@@ -776,41 +776,35 @@ tr:hover td {
 
 /* Comment card */
 .comment-card {
-    background: #fff9c4;
-    /* Light yellow background to stand out completely */
-    border: 1px solid #fbc02d;
-    /* Darker yellow border */
-    border-radius: 10px;
-    padding: 14px 16px;
-    transition: background 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    /* Slight shadow */
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .comment-card:hover {
-    background: #fff59d;
+    background: #f8fafc;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
-
-/* Slightly darker on hover */
 
 .comment-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     gap: 8px;
     flex-wrap: wrap;
-    border-bottom: 1px dashed #fbc02d;
-    padding-bottom: 6px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 8px;
 }
 
 .comment-username {
-    font-weight: 800;
-    /* Bolder */
+    font-weight: 700;
     font-size: 0.95rem;
-    /* Larger */
-    color: #c0392b;
-    /* Red government primary color */
+    color: #1e293b;
 }
 
 .comment-time {
@@ -2280,4 +2274,102 @@ tr:hover td {
     .doc-field {
         grid-column: span 2 !important;
     }
+}
+
+/* Comment Attachments */
+.comment-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 8px 0;
+}
+
+.attachment-item {
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+}
+
+.attachment-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.attachment-item.image-preview {
+    width: 80px;
+    height: 80px;
+}
+
+.attachment-item.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.attachment-item.file-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 10px;
+    min-width: 150px;
+    max-width: 250px;
+}
+
+.file-icon {
+    font-size: 1.4rem;
+}
+
+.file-name {
+    font-size: 0.85rem;
+    color: #334155;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Modern Reaction Colors (Facebook Style) */
+.reaction-btn {
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.reaction-btn:hover {
+    transform: scale(1.15);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.reaction-btn.active-like {
+    background: #3b82f6 !important;
+    color: white !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.reaction-btn.active-love {
+    background: #f43f5e !important;
+    color: white !important;
+    border-color: #e11d48 !important;
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+}
+
+.reaction-btn.active-hate {
+    background: #ef4444 !important;
+    color: white !important;
+    border-color: #dc2626 !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.reaction-btn.active-dislike {
+    background: #64748b !important;
+    color: white !important;
+    border-color: #475569 !important;
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+}
+
+.reaction-count {
+    font-weight: 700;
 }

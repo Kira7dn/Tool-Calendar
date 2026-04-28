@@ -2,7 +2,8 @@
     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1500; align-items:center; justify-content:center; padding:16px;">
     <div
         style="background:#111827; border-radius:20px; width:100%; max-width:760px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 25px 80px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.08);">
-        <div style="padding:24px 28px 0; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+        <div
+            style="padding:24px 28px 0; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <div>
                 <h3 id="doc-modal-title" style="margin:0; font-size:1.2rem;">Chi tiết văn bản</h3>
                 <p id="doc-modal-subtitle" style="margin:4px 0 0; font-size:0.8rem; color:var(--text-secondary);"></p>
@@ -11,10 +12,14 @@
                 style="background:#f1f5f9; border:1px solid #cbd5e1; color:#1e293b; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; transition:background 0.2s;">✕</button>
         </div>
 
-        <div style="display:flex; gap:0; padding:16px 28px 0; border-bottom:1px solid rgba(255,255,255,0.07); flex-shrink:0;">
-            <button id="doc-tab-view" class="doc-modal-tab doc-modal-tab-active" data-action="switch-doc-tab" data-doc-tab="view">📋 Chi tiết</button>
-            <button id="doc-tab-edit" class="doc-modal-tab" data-action="switch-doc-tab" data-doc-tab="edit" style="display:none;">✏️ Chỉnh sửa</button>
-            <button id="doc-tab-comments" class="doc-modal-tab" data-action="switch-doc-tab" data-doc-tab="comments">💬 Bình luận
+        <div
+            style="display:flex; gap:0; padding:16px 28px 0; border-bottom:1px solid rgba(255,255,255,0.07); flex-shrink:0;">
+            <button id="doc-tab-view" class="doc-modal-tab doc-modal-tab-active" data-action="switch-doc-tab"
+                data-doc-tab="view">📋 Chi tiết</button>
+            <button id="doc-tab-edit" class="doc-modal-tab" data-action="switch-doc-tab" data-doc-tab="edit"
+                style="display:none;">✏️ Chỉnh sửa</button>
+            <button id="doc-tab-comments" class="doc-modal-tab" data-action="switch-doc-tab" data-doc-tab="comments">💬
+                Bình luận
                 <span id="comment-count-badge"
                     style="background:var(--primary); border-radius:99px; padding:1px 7px; font-size:0.7rem; margin-left:4px;">0</span></button>
         </div>
@@ -71,31 +76,46 @@
             <div id="doc-panel-edit" style="display:none;">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div>
-                        <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Số hiệu văn bản</label>
+                        <label
+                            style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Số
+                            hiệu văn bản</label>
                         <input type="text" id="de-so" class="modal-input">
                     </div>
                     <div>
-                        <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Ngày ban hành</label>
+                        <label
+                            style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Ngày
+                            ban hành</label>
                         <input type="date" id="de-ngaybanhanh" class="modal-input">
                     </div>
                     <div style="grid-column:span 2;">
-                        <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Trích yếu</label>
+                        <label
+                            style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Trích
+                            yếu</label>
                         <textarea id="de-trichyeu" class="modal-input" rows="4" style="resize:vertical;"></textarea>
                     </div>
                     <div>
-                        <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Cơ quan ban hành</label>
+                        <label
+                            style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Cơ
+                            quan ban hành</label>
                         <input type="text" id="de-coquanbanhanh" class="modal-input">
                     </div>
                     <div>
-                        <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Cơ quan tham mưu</label>
+                        <label
+                            style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Cơ
+                            quan tham mưu</label>
                         <input type="text" id="de-coquanchuquan" class="modal-input">
                     </div>
                     <div>
-                        <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Thời hạn xử lý</label>
-                        <input type="text" id="de-thoihan" class="modal-input" placeholder="dd/MM/yyyy" inputmode="numeric">
+                        <label
+                            style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Thời
+                            hạn xử lý</label>
+                        <input type="text" id="de-thoihan" class="modal-input" placeholder="dd/MM/yyyy"
+                            inputmode="numeric">
                     </div>
                     <div>
-                        <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Trạng thái</label>
+                        <label
+                            style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Trạng
+                            thái</label>
                         <select id="de-status" class="modal-input" style="margin-bottom:6px;">
                             <option value="Chưa xử lý">Chưa xử lý</option>
                             <option value="Đang xử lý">Đang xử lý</option>
@@ -103,11 +123,13 @@
                             <option value="Đã hoàn thành">Đã hoàn thành</option>
                             <option value="__custom__">✏️ Tùy chỉnh...</option>
                         </select>
-                        <input type="text" id="de-status-custom" class="modal-input" placeholder="Nhập trạng thái tùy chỉnh..."
-                            style="display:none; margin-top:6px;">
+                        <input type="text" id="de-status-custom" class="modal-input"
+                            placeholder="Nhập trạng thái tùy chỉnh..." style="display:none; margin-top:6px;">
                     </div>
                     <div>
-                        <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Độ khẩn</label>
+                        <label
+                            style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Độ
+                            khẩn</label>
                         <select id="de-priority" class="modal-input">
                             <option>Thường</option>
                             <option>Khẩn</option>
@@ -116,7 +138,8 @@
                     </div>
                 </div>
                 <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
-                    <button class="btn" style="background:#e2e8f0; color:#1e293b;" data-action="switch-doc-tab" data-doc-tab="view">Hủy</button>
+                    <button class="btn" style="background:#e2e8f0; color:#1e293b;" data-action="switch-doc-tab"
+                        data-doc-tab="view">Hủy</button>
                     <button class="btn btn-primary" data-action="save-doc-detail">💾 Lưu thay đổi</button>
                 </div>
             </div>
@@ -124,11 +147,24 @@
             <div id="doc-panel-comments" style="display:none;">
                 <div id="comment-list" style="display:flex; flex-direction:column; gap:14px; margin-bottom:20px;"></div>
                 <div style="background:#f8fafc; border-radius:14px; padding:16px; border:1px solid #e2e8f0;">
-                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px; font-weight: 600;">✍️ Thêm bình luận của bạn</p>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px; font-weight: 600;">✍️
+                        Thêm bình luận của bạn</p>
                     <textarea id="new-comment-text" rows="3" placeholder="Nhập nội dung bình luận..."
                         style="width:100%; border-radius:10px; background:#ffffff; border:1.5px solid #cbd5e1; color:#1e293b; padding:12px; resize:vertical; outline:none; font-family:inherit; font-size:0.95rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); transition: border-color 0.2s;"></textarea>
-                    <div style="display:flex; justify-content:flex-end; margin-top:10px;">
-                        <button class="btn btn-primary" data-action="submit-comment" style="padding:10px 24px;">Gửi bình luận</button>
+
+                    <div id="comment-attachments-preview"
+                        style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                        <div>
+                            <input type="file" id="comment-file-input" multiple style="display:none;">
+                            <button type="button" class="btn btn-sm" id="btn-comment-attach"
+                                style="background:#e2e8f0; color:#475569; display:flex; align-items:center; gap:6px; font-weight:600; border:1px solid #cbd5e1;">
+                                📎 Đính kèm tệp
+                            </button>
+                        </div>
+                        <button class="btn btn-primary" data-action="submit-comment" style="padding:10px 24px;">Gửi bình
+                            luận</button>
                     </div>
                 </div>
             </div>

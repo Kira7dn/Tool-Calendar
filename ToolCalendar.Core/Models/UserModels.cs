@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ToolCalendar.Models
 {
@@ -24,6 +24,7 @@ namespace ToolCalendar.Models
         public int UserId { get; set; }
         public string Username { get; set; } = ""; // Để hiển thị tên người chat
         public string Content { get; set; } = "";
+        public string? AttachmentPaths { get; set; } // JSON list of file paths
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 

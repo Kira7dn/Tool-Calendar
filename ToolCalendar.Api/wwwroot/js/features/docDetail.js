@@ -6,6 +6,7 @@ export function createDocDetailFeature(context) {
     let currentDocData = null;
     let isStatusOptionsLoaded = false;
     let statusOptions = ['Chưa xử lý', 'Đang xử lý', 'Hoàn thành', 'Quá hạn'];
+    let selectedFiles = [];
 
     function init() {
         const modal = document.getElementById('doc-detail-modal');
@@ -30,6 +31,35 @@ export function createDocDetailFeature(context) {
         modal.addEventListener('change', (event) => {
             if (event.target.id === 'de-status') {
                 onStatusSelectChange();
+            }
+        });
+
+        // Đính kèm tệp cho bình luận
+        const attachBtn = document.getElementById('btn-comment-attach');
+        const fileInput = document.getElementById('comment-file-input');
+        if (attachBtn && fileInput) {
+            attachBtn.onclick = () => fileInput.click();
+            fileInput.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                selectedFiles = [...selectedFiles, ...files];
+                renderFilePreview();
+                fileInput.value = ''; // Reset để chọn lại cùng file nếu muốn
+            };
+        }
+
+        // Real-time listeners
+        document.addEventListener('realtime:new_comment', (e) => {
+            console.log('[Realtime] New comment event received:', e.detail);
+            if (currentDocId === e.detail.documentId) loadComments();
+        });
+        document.addEventListener('realtime:delete_comment', (e) => {
+            console.log('[Realtime] Delete comment event received:', e.detail);
+            if (currentDocId === e.detail.documentId) loadComments();
+        });
+        document.addEventListener('realtime:comment_reaction', (e) => {
+            console.log('[Realtime] Reaction event received:', e.detail);
+            if (currentDocId === e.detail.documentId) {
+                updateReactionBar(e.detail.commentId, e.detail.reactions);
             }
         });
     }
@@ -307,10 +337,10 @@ export function createDocDetailFeature(context) {
         list.innerHTML = comments.map((comment) => {
             const reactions = comment.reactions || {};
             const reactionTypes = [
-                { type: 'like', emoji: '👍', label: 'Like' },
-                { type: 'love', emoji: '❤️', label: 'Love' },
-                { type: 'hate', emoji: '😡', label: 'Hate' },
-                { type: 'dislike', emoji: '👎', label: 'Dislike' }
+                { type: 'like', emoji: '👍', label: 'Thích' },
+                { type: 'love', emoji: '❤️', label: 'Yêu thích' },
+                { type: 'hate', emoji: '😡', label: 'Phẫn nộ' },
+                { type: 'dislike', emoji: '👎', label: 'Không thích' }
             ];
 
             let userReaction = null;
@@ -331,6 +361,39 @@ export function createDocDetailFeature(context) {
                 ? `<button class="comment-delete-btn" data-action="delete-comment" data-comment-id="${comment.id}" title="Xoa binh luan">🗑️</button>`
                 : '';
 
+            // Render attachments
+            let attachmentsHtml = '';
+            if (comment.attachmentPaths && comment.attachmentPaths !== '[]') {
+                try {
+                    const paths = JSON.parse(comment.attachmentPaths);
+                    attachmentsHtml = '<div class="comment-attachments">';
+                    paths.forEach(path => {
+                        const fileName = path.split('/').pop().substring(15); // Bỏ prefix timestamp
+                        const ext = path.toLowerCase().split('.').pop();
+                        const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+
+                        if (isImage) {
+                            attachmentsHtml += `
+                                <a href="${path}" target="_blank" class="attachment-item image-preview">
+                                    <img src="${path}" alt="${fileName}">
+                                </a>`;
+                        } else {
+                            let icon = '📄';
+                            if (ext === 'pdf') icon = '📕';
+                            if (['doc', 'docx'].includes(ext)) icon = '📘';
+                            if (['xls', 'xlsx'].includes(ext)) icon = '📗';
+
+                            attachmentsHtml += `
+                                <a href="${path}" target="_blank" class="attachment-item file-link">
+                                    <span class="file-icon">${icon}</span>
+                                    <span class="file-name" title="${fileName}">${fileName}</span>
+                                </a>`;
+                        }
+                    });
+                    attachmentsHtml += '</div>';
+                } catch (e) { console.error('Parse attachments error', e); }
+            }
+
             return `<div class="comment-card" id="comment-card-${comment.id}">
                 <div class="comment-meta">
                     <span class="comment-username">${comment.username}</span>
@@ -340,6 +403,7 @@ export function createDocDetailFeature(context) {
                     </div>
                 </div>
                 <div class="comment-content">${escapeHtml(comment.content)}</div>
+                ${attachmentsHtml}
                 <div class="reaction-bar" id="reaction-bar-${comment.id}">${reactionButtons}</div>
             </div>`;
         }).join('');
@@ -357,17 +421,25 @@ export function createDocDetailFeature(context) {
         button.innerText = 'Dang gui...';
 
         try {
+            const formData = new FormData();
+            formData.append('content', text);
+            selectedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+
             const response = await context.api.post(`/api/documents/${currentDocId}/comments`, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: text })
+                body: formData
             });
 
             if (!response.ok) {
-                context.ui.showAlert('Loi khi gui binh luan.', '❌');
+                const err = await response.text();
+                context.ui.showAlert('Loi khi gui binh luan: ' + err, '❌');
                 return;
             }
 
             document.getElementById('new-comment-text').value = '';
+            selectedFiles = [];
+            renderFilePreview();
             await loadComments();
         } catch (error) {
             context.ui.showAlert('Loi ket noi.', '❌');
@@ -415,10 +487,10 @@ export function createDocDetailFeature(context) {
         if (!bar) return;
 
         const reactionTypes = [
-            { type: 'like', emoji: '👍', label: 'Like' },
-            { type: 'love', emoji: '❤️', label: 'Love' },
-            { type: 'hate', emoji: '😡', label: 'Hate' },
-            { type: 'dislike', emoji: '👎', label: 'Dislike' }
+            { type: 'like', emoji: '👍', label: 'Thích' },
+            { type: 'love', emoji: '❤️', label: 'Yêu thích' },
+            { type: 'hate', emoji: '😡', label: 'Phẫn nộ' },
+            { type: 'dislike', emoji: '👎', label: 'Không thích' }
         ];
 
         const currentUsername = localStorage.getItem('user_name');
@@ -434,6 +506,40 @@ export function createDocDetailFeature(context) {
             const users = reactions[type.type]?.users?.join(', ') || type.label;
             return `<button class="reaction-btn ${userReaction === type.type ? `active-${type.type}` : ''}" title="${users}" data-action="toggle-reaction" data-comment-id="${commentId}" data-reaction-type="${type.type}">${type.emoji} <span class="reaction-count">${count > 0 ? count : ''}</span></button>`;
         }).join('');
+    }
+
+    function renderFilePreview() {
+        const container = document.getElementById('comment-attachments-preview');
+        if (!container) return;
+
+        if (selectedFiles.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = selectedFiles.map((file, index) => {
+            const ext = file.name.split('.').pop().toLowerCase();
+            let icon = '📄';
+            if (['jpg', 'jpeg', 'png'].includes(ext)) icon = '🖼️';
+            if (ext === 'pdf') icon = '📕';
+
+            return `
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px; font-size:0.85rem; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                    <span>${icon}</span>
+                    <span style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${file.name}</span>
+                    <button type="button" class="remove-file-btn" data-index="${index}" style="background:none; border:none; cursor:pointer; color:#ef4444; font-weight:700;">✕</button>
+                </div>
+            `;
+        }).join('');
+
+        // Gán sự kiện xóa file
+        container.querySelectorAll('.remove-file-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                const idx = parseInt(e.target.dataset.index);
+                selectedFiles.splice(idx, 1);
+                renderFilePreview();
+            };
+        });
     }
 
     return {

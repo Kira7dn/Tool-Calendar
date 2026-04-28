@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Threading.Channels;
 
 namespace ToolCalendar.Api.Services
@@ -53,6 +53,28 @@ namespace ToolCalendar.Api.Services
                 _logger.LogInformation($"[SSE] Đang kick user {userId} sessionId: {channel.SessionId.Substring(0, 8)}...");
                 await channel.SendAsync("kicked", "Tài khoản đã đăng nhập từ thiết bị khác.");
                 channel.Complete();
+            }
+        }
+
+        /// <summary>
+        /// Phát tín hiệu tới TẤT CẢ các kết nối SSE đang mở.
+        /// Dùng cho realtime bình luận, reaction...
+        /// </summary>
+        public async Task BroadcastAsync(string eventName, object data)
+        {
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            };
+            var json = System.Text.Json.JsonSerializer.Serialize(data, options);
+            foreach (var channels in _connections.Values)
+            {
+                List<SseChannel> snapshots;
+                lock (channels) { snapshots = channels.ToList(); }
+                foreach (var channel in snapshots)
+                {
+                    try { await channel.SendAsync(eventName, json); } catch { }
+                }
             }
         }
 

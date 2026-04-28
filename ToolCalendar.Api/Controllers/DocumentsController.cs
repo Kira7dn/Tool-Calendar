@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
+using ToolCalendar.Api.Services;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -15,13 +16,15 @@ namespace ToolCalendar.Api.Controllers
         private readonly IOcrQueueService _ocrQueue;
         private readonly INotificationManager _notificationManager;
         private readonly IWebHostEnvironment _env;
+        private readonly SessionHubService _hub;
 
-        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, INotificationManager notificationManager, IWebHostEnvironment env)
+        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, INotificationManager notificationManager, IWebHostEnvironment env, SessionHubService hub)
         {
             _extractor = extractor;
             _ocrQueue = ocrQueue;
             _notificationManager = notificationManager;
             _env = env;
+            _hub = hub;
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
@@ -324,6 +327,7 @@ namespace ToolCalendar.Api.Controllers
                 c.UserId,
                 c.Username,
                 c.Content,
+                c.AttachmentPaths,
                 c.CreatedAt,
                 Reactions = DatabaseService.GetReactionsForComment(c.Id)
                     .GroupBy(r => r.ReactionType)
@@ -337,23 +341,50 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpPost("{id}/comments")]
-        public IActionResult AddComment(int id, [FromBody] CommentRequest req)
+        public async Task<IActionResult> AddComment(int id, [FromForm] string content, [FromForm] List<IFormFile> files)
         {
-            if (req == null || string.IsNullOrWhiteSpace(req.Content))
-                return BadRequest("Nội dung comment không được trống.");
+            if (string.IsNullOrWhiteSpace(content) && (files == null || files.Count == 0))
+                return BadRequest("Bình luận phải có nội dung hoặc tệp đính kèm.");
 
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
             var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Unknown";
+
+            var savedPaths = new List<string>();
+            if (files != null && files.Count > 0)
+            {
+                var commentUploadDir = Path.Combine(_env.ContentRootPath, "Uploads", "Comments", $"Doc_{id}");
+                Directory.CreateDirectory(commentUploadDir);
+
+                foreach (var file in files)
+                {
+                    var fileName = $"{DateTime.Now:yyyyMMddHHmmss}_{file.FileName}";
+                    var filePath = Path.Combine(commentUploadDir, fileName);
+                    
+                    // Chỉ lưu tên file tương đối để frontend dễ xử lý
+                    var relativePath = $"/Uploads/Comments/Doc_{id}/{fileName}";
+                    
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    savedPaths.Add(relativePath);
+                }
+            }
 
             var comment = new Comment
             {
                 DocumentId = id,
                 UserId = userId,
                 Username = username,
-                Content = req.Content
+                Content = content ?? "",
+                AttachmentPaths = System.Text.Json.JsonSerializer.Serialize(savedPaths)
             };
             DatabaseService.InsertComment(comment);
-            return Ok(new { message = "Đã thêm comment thành công." });
+            
+            // Realtime broadcast
+            _ = _hub.BroadcastAsync("new_comment", new { documentId = id });
+
+            return Ok(new { message = "Đã thêm comment thành công.", attachments = savedPaths });
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -365,6 +396,10 @@ namespace ToolCalendar.Api.Controllers
             bool isAdmin = role == "Admin";
 
             DatabaseService.DeleteComment(commentId, userId, isAdmin);
+
+            // Realtime broadcast
+            _ = _hub.BroadcastAsync("delete_comment", new { documentId = docId, commentId = commentId });
+
             return Ok(new { message = "Đã xóa comment." });
         }
 
@@ -394,6 +429,13 @@ namespace ToolCalendar.Api.Controllers
                     Count = g.Count(),
                     Users = g.Select(r => r.Username).ToList()
                 });
+
+            // Realtime broadcast
+            _ = _hub.BroadcastAsync("comment_reaction", new { 
+                documentId = docId, 
+                commentId = commentId, 
+                reactions = updatedReactions 
+            });
 
             return Ok(new { status = result, reactions = updatedReactions });
         }

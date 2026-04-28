@@ -1,4 +1,4 @@
-﻿using ToolCalendar.Data;
+using ToolCalendar.Data;
 using ToolCalendar.Api.Services;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -139,6 +139,15 @@ app.UseCors("AllowAll");
 // Serve static files
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// Serve files from Uploads directory
+var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "Uploads");
+if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/Uploads"
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
