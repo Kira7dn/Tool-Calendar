@@ -25,6 +25,7 @@ export function createSessionFeature() {
         eventSource.addEventListener('new_comment', (e) => dispatchRealtime('new_comment', e.data));
         eventSource.addEventListener('delete_comment', (e) => dispatchRealtime('delete_comment', e.data));
         eventSource.addEventListener('comment_reaction', (e) => dispatchRealtime('comment_reaction', e.data));
+        eventSource.addEventListener('notification', (e) => dispatchRealtime('notification', e.data));
     }
 
     function logout(kicked = false) {

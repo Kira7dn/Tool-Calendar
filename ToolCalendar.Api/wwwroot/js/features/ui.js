@@ -1,9 +1,15 @@
 export function createUiFeature() {
     let confirmResolver = null;
+    let alertCallback = null;
 
     function init() {
         document.getElementById('custom-alert')?.addEventListener('click', (event) => {
             if (event.target.closest('[data-action="close-alert"]')) {
+                closeAlert();
+                return;
+            }
+            if (alertCallback) {
+                alertCallback();
                 closeAlert();
             }
         });
@@ -15,19 +21,26 @@ export function createUiFeature() {
         });
     }
 
-    function showAlert(message, icon = '🔔') {
+    function showAlert(message, icon = '🔔', onClick = null) {
         const modal = document.getElementById('custom-alert');
         if (!modal) return;
 
+        alertCallback = onClick;
         document.getElementById('alert-message').innerText = message;
         document.getElementById('alert-icon').innerText = icon;
         modal.style.display = 'flex';
+
+        // Auto hide after 10s
+        setTimeout(() => {
+            if (modal.style.display === 'flex' && alertCallback === onClick) closeAlert();
+        }, 10000);
     }
 
     function closeAlert() {
         const modal = document.getElementById('custom-alert');
         if (modal) {
             modal.style.display = 'none';
+            alertCallback = null;
         }
     }
 

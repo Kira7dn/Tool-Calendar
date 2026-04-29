@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using ToolCalendar.Models;
+using ToolCalendar.Core.Models;
 using System.Text;
 
 namespace ToolCalendar.Data
@@ -118,6 +119,18 @@ namespace ToolCalendar.Data
                     Timestamp TEXT
                 )";
 
+            string createNotificationsTable = @"
+                CREATE TABLE IF NOT EXISTS Notifications (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    UserId INTEGER,
+                    Title TEXT,
+                    Body TEXT,
+                    Type TEXT,
+                    DocId INTEGER,
+                    IsRead INTEGER DEFAULT 0,
+                    CreatedAt TEXT
+                )";
+
             string createCommentsTable = @"
                 CREATE TABLE IF NOT EXISTS Comments (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -180,6 +193,9 @@ namespace ToolCalendar.Data
             cmd.ExecuteNonQuery();
 
             cmd.CommandText = createPushSubscriptionsTable;
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = createNotificationsTable;
             cmd.ExecuteNonQuery();
 
             // Migration cho Comments
@@ -322,9 +338,29 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("DELETE FROM Users WHERE Id=@Id AND Username != 'admin'", connection);
-            cmd.Parameters.AddWithValue("@Id", id);
-            cmd.ExecuteNonQuery();
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.Transaction = transaction;
+
+                // 1. Gỡ người dùng khỏi các văn bản đang được gán (chuyển AssignedTo về NULL)
+                // Lưu ý: Chúng ta lọc theo ID người dùng trong danh sách AssignedUserIds hoặc AssignedTo
+                cmd.CommandText = "UPDATE Documents SET AssignedTo = NULL WHERE AssignedTo = (SELECT Username FROM Users WHERE Id = @id)";
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+
+                // 2. Xóa người dùng (không cho phép xóa admin để bảo mật hệ thống)
+                cmd.CommandText = "DELETE FROM Users WHERE Id = @id AND Username != 'admin'";
+                cmd.ExecuteNonQuery();
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         public static User? Login(string username, string password)
@@ -483,14 +519,33 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            // Only the comment owner or Admin can delete
-            string sql = isAdmin
-                ? "DELETE FROM Comments WHERE Id=@id"
-                : "DELETE FROM Comments WHERE Id=@id AND UserId=@uid";
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@id", commentId);
-            if (!isAdmin) cmd.Parameters.AddWithValue("@uid", requestingUserId);
-            cmd.ExecuteNonQuery();
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.Transaction = transaction;
+
+                // 1. Kiểm tra quyền xóa và xóa các Reaction liên quan trước
+                cmd.CommandText = isAdmin 
+                    ? "DELETE FROM CommentReactions WHERE CommentId = @id"
+                    : "DELETE FROM CommentReactions WHERE CommentId = @id AND CommentId IN (SELECT Id FROM Comments WHERE UserId = @uid)";
+                cmd.Parameters.AddWithValue("@id", commentId);
+                if (!isAdmin) cmd.Parameters.AddWithValue("@uid", requestingUserId);
+                cmd.ExecuteNonQuery();
+
+                // 2. Xóa bình luận
+                cmd.CommandText = isAdmin
+                    ? "DELETE FROM Comments WHERE Id = @id"
+                    : "DELETE FROM Comments WHERE Id = @id AND UserId = @uid";
+                cmd.ExecuteNonQuery();
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         public static List<CommentReaction> GetReactionsForComment(int commentId)
@@ -1041,17 +1096,47 @@ namespace ToolCalendar.Data
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
+        public static void UpdateDepartment(Department d)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var cmd = new SqliteCommand("UPDATE Departments SET Name = @n, Description = @d WHERE Id = @id", connection);
+            cmd.Parameters.AddWithValue("@n", d.Name);
+            cmd.Parameters.AddWithValue("@d", d.Description);
+            cmd.Parameters.AddWithValue("@id", d.Id);
+            cmd.ExecuteNonQuery();
+        }
+
         public static void DeleteDepartment(int id)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            // Gỡ phòng ban khỏi các văn bản liên quan
-            using var cmd = new SqliteCommand("UPDATE Documents SET DepartmentId = NULL WHERE DepartmentId = @id", connection);
-            cmd.Parameters.AddWithValue("@id", id);
-            cmd.ExecuteNonQuery();
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.Transaction = transaction;
 
-            cmd.CommandText = "DELETE FROM Departments WHERE Id = @id";
-            cmd.ExecuteNonQuery();
+                // 1. Gỡ phòng ban khỏi các văn bản liên quan
+                cmd.CommandText = "UPDATE Documents SET DepartmentId = NULL WHERE DepartmentId = @id";
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+
+                // 2. Gỡ phòng ban khỏi các nhân sự liên quan
+                cmd.CommandText = "UPDATE Users SET DepartmentId = NULL WHERE DepartmentId = @id";
+                cmd.ExecuteNonQuery();
+
+                // 3. Xóa phòng ban
+                cmd.CommandText = "DELETE FROM Departments WHERE Id = @id";
+                cmd.ExecuteNonQuery();
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         // --- LABEL MANAGEMENT ---
@@ -1087,13 +1172,32 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            // Xóa nhãn khỏi các văn bản liên quan (Theo yêu cầu người dùng)
-            using var cmd = new SqliteCommand("UPDATE Documents SET LabelId = NULL WHERE LabelId = @id", connection);
-            cmd.Parameters.AddWithValue("@id", id);
-            cmd.ExecuteNonQuery();
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.Transaction = transaction;
 
-            cmd.CommandText = "DELETE FROM Labels WHERE Id = @id";
-            cmd.ExecuteNonQuery();
+                // 1. Gỡ nhãn khỏi các văn bản
+                cmd.CommandText = "UPDATE Documents SET LabelId = NULL WHERE LabelId = @id";
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+
+                // 2. Gỡ nhãn khỏi AutoRules
+                cmd.CommandText = "UPDATE AutoRules SET LabelId = NULL WHERE LabelId = @id";
+                cmd.ExecuteNonQuery();
+
+                // 3. Xóa nhãn
+                cmd.CommandText = "DELETE FROM Labels WHERE Id = @id";
+                cmd.ExecuteNonQuery();
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         // --- AUTO RULE MANAGEMENT ---
@@ -1301,6 +1405,65 @@ namespace ToolCalendar.Data
             if (string.IsNullOrEmpty(value)) return null;
             if (DateTime.TryParse(value, out DateTime dt)) return dt;
             return null;
+        }
+        // --- NOTIFICATION MANAGEMENT ---
+        public static List<Core.Models.NotificationRecord> GetNotifications(int userId, int limit = 50)
+        {
+            var list = new List<Core.Models.NotificationRecord>();
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = "SELECT * FROM Notifications WHERE UserId=@uId ORDER BY CreatedAt DESC LIMIT @limit";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@uId", userId);
+            cmd.Parameters.AddWithValue("@limit", limit);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list.Add(new Core.Models.NotificationRecord
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    UserId = Convert.ToInt32(reader["UserId"]),
+                    Title = reader["Title"]?.ToString() ?? "",
+                    Body = reader["Body"]?.ToString() ?? "",
+                    Type = reader["Type"]?.ToString() ?? "",
+                    DocId = reader["DocId"] != DBNull.Value ? Convert.ToInt32(reader["DocId"]) : (int?)null,
+                    IsRead = Convert.ToInt32(reader["IsRead"]) == 1,
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"]?.ToString() ?? DateTime.Now.ToString())
+                });
+            }
+            return list;
+        }
+
+        public static void InsertNotification(Core.Models.NotificationRecord n)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = "INSERT INTO Notifications (UserId, Title, Body, Type, DocId, IsRead, CreatedAt) VALUES (@uId, @t, @b, @type, @docId, 0, datetime('now'))";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@uId", n.UserId);
+            cmd.Parameters.AddWithValue("@t", n.Title);
+            cmd.Parameters.AddWithValue("@b", n.Body);
+            cmd.Parameters.AddWithValue("@type", n.Type);
+            cmd.Parameters.AddWithValue("@docId", (object?)n.DocId ?? DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
+
+        public static void MarkNotificationAsRead(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var cmd = new SqliteCommand("UPDATE Notifications SET IsRead=1 WHERE Id=@id", connection);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.ExecuteNonQuery();
+        }
+
+        public static void MarkAllNotificationsAsRead(int userId)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var cmd = new SqliteCommand("UPDATE Notifications SET IsRead=1 WHERE UserId=@uId", connection);
+            cmd.Parameters.AddWithValue("@uId", userId);
+            cmd.ExecuteNonQuery();
         }
     }
 }

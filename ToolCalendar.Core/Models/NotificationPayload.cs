@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace ToolCalendar.Models
 {
@@ -12,6 +12,9 @@ namespace ToolCalendar.Models
 
         [JsonPropertyName("icon")]
         public string Icon { get; set; } = "/assets/logo.png";
+
+        [JsonPropertyName("url")]
+        public string? Url { get; set; }
 
         [JsonPropertyName("data")]
         public object? Data { get; set; }

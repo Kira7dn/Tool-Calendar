@@ -1,7 +1,8 @@
 using System.Collections.Concurrent;
 using System.Threading.Channels;
+using Microsoft.Extensions.Logging;
 
-namespace ToolCalendar.Api.Services
+namespace ToolCalendar.Services
 {
     /// <summary>
     /// Singleton service quản lý các kết nối SSE (Server-Sent Events).

@@ -61,6 +61,10 @@ namespace ToolCalendar.Api.Controllers
                 DatabaseService.SaveAppSetting("Document_DeadlineExcludeKeywords", excludeKeywords);
                 DatabaseService.SaveAppSetting("Document_MinDeadlineDays", minDays);
                 DatabaseService.SaveAppSetting("Notification_ScanTime", scanTime);
+                
+                // Reset chặn quét để cho phép quét lại vào giờ mới ngay trong ngày hôm nay
+                DatabaseService.SaveAppSetting("Notification_LastScanDate", "");
+
                 if (!string.IsNullOrWhiteSpace(statusList))
                     DatabaseService.SaveAppSetting("Document_StatusList", statusList);
 

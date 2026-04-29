@@ -73,18 +73,72 @@
 
         <main class="main-content">
             <header>
-                <button class="mobile-menu-btn" id="mobile-menu-btn" data-action="open-sidebar" aria-label="Mở menu">☰</button>
+                <button class="mobile-menu-btn" id="mobile-menu-btn" data-action="open-sidebar"
+                    aria-label="Mở menu">☰</button>
                 <div class="header-title">
                     <h1 id="page-title">Hệ Thống Điều Phối Công Văn</h1>
                     <p id="page-subtitle">Giám sát và đôn đốc thực thi công việc thời gian thực</p>
                 </div>
                 <div class="header-actions">
-                    <div id="notif-banner" class="notif-banner" data-action="request-notification-permission">
-                        &#128276; Bật thông báo đẩy
+                    <!-- Right Controls Group (Icons first) -->
+                    <div class="header-controls-group">
+                        <!-- Notification Bell -->
+                        <div class="header-notif-container">
+                            <div class="notif-icon-circle" id="notif-bell" data-action="toggle-notif-dropdown">
+                                <span class="bell-icon">&#128276;</span>
+                                <span class="notif-badge" id="notif-badge">0</span>
+                            </div>
+
+                            <div class="notif-dropdown-box" id="notif-dropdown">
+                                <div class="notif-dropdown-header">
+                                    <h3>Thông báo</h3>
+                                    <button class="btn-text" data-action="mark-all-read" style="color: #1877f2; font-weight: normal; font-size: 0.9rem;">Đánh dấu tất cả đã đọc</button>
+                                </div>
+                                <div class="notif-tabs">
+                                    <div class="notif-tab active" data-filter="all">Tất cả</div>
+                                    <div class="notif-tab" data-filter="unread">Chưa đọc</div>
+                                </div>
+                                <div class="notif-dropdown-list" id="notif-list">
+                                    <div class="notif-empty-state">
+                                        <div class="empty-icon">🔔</div>
+                                        <p>Bạn không có thông báo nào mới</p>
+                                    </div>
+                                </div>
+                                <div class="notif-dropdown-footer">
+                                    <a href="#" data-tab="documents">Xem tất cả văn bản</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Profile Dropdown Style -->
+                        <div class="user-profile-container">
+                            <div class="user-avatar-circle" id="user-profile-toggle" data-action="toggle-user-dropdown">
+                                <img src="/assets/logo.png" alt="User Avatar" id="header-user-avatar">
+                                <div class="avatar-chevron">▾</div>
+                            </div>
+
+                            <div class="user-dropdown-box" id="user-dropdown">
+                                <div class="user-dropdown-info">
+                                    <div class="large-avatar">
+                                        <img src="/assets/logo.png" alt="User Avatar">
+                                    </div>
+                                    <div class="user-details">
+                                        <div class="user-full-name" id="dropdown-user-name">Admin</div>
+                                        <div class="user-role">Quản trị viên hệ thống</div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="user-dropdown-menu">
+                                    <div class="user-menu-item" data-tab="settings">
+                                        <span class="menu-icon">⚙️</span> Cài đặt tài khoản
+                                    </div>
+                                    <div class="user-menu-item" data-action="logout" style="color: #e41e3f;">
+                                        <span class="menu-icon">🚪</span> Đăng xuất
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <button class="btn btn-primary" data-tab="upload">
-                        <span>&#10133; Thêm văn bản</span>
-                    </button>
                 </div>
             </header>
 
@@ -93,6 +147,29 @@
     </div>
 
     <div id="modal-host"></div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+        <div class="bottom-nav-item active" data-tab="dashboard">
+            <span class="bottom-nav-icon">🏠</span>
+            <span class="bottom-nav-label">Home</span>
+        </div>
+        <div class="bottom-nav-item" data-tab="documents">
+            <span class="bottom-nav-icon">📄</span>
+            <span class="bottom-nav-label">Tài liệu</span>
+        </div>
+        <div class="bottom-nav-item" data-action="toggle-notif-dropdown">
+            <div style="position: relative;">
+                <span class="bottom-nav-icon">🔔</span>
+                <span class="notification-badge" id="notif-badge-mobile">0</span>
+            </div>
+            <span class="bottom-nav-label">Thông báo</span>
+        </div>
+        <div class="bottom-nav-item" data-tab="my-tasks">
+            <span class="bottom-nav-icon">👤</span>
+            <span class="bottom-nav-label">Cá nhân</span>
+        </div>
+    </nav>
 
     <script type="module">
         window.__APP_VERSION__ = '20260423-v2';

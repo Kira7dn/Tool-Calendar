@@ -10,7 +10,13 @@ export function bindShellNavigation(actions) {
         const tabTarget = event.target.closest('[data-tab]');
         if (tabTarget) {
             event.preventDefault();
-            actions.showTab(tabTarget.dataset.tab);
+            const tabId = tabTarget.dataset.tab;
+            actions.showTab(tabId);
+
+            // Đồng bộ class active cho Bottom Nav
+            document.querySelectorAll('.bottom-nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.tab === tabId);
+            });
             return;
         }
 
@@ -45,6 +51,32 @@ export function bindShellNavigation(actions) {
         if (shellAction === 'request-notification-permission') {
             event.preventDefault();
             await actions.requestNotificationPermission();
+            return;
+        }
+
+        if (shellAction === 'toggle-user-dropdown') {
+            event.preventDefault();
+            const dropdown = document.getElementById('user-dropdown');
+            if (dropdown) {
+                const isOpen = dropdown.style.display === 'block';
+                dropdown.style.display = isOpen ? 'none' : 'block';
+                
+                // Cập nhật tên trong dropdown
+                if (!isOpen) {
+                    const name = localStorage.getItem('user_name') || 'Admin';
+                    const nameEl = document.getElementById('dropdown-user-name');
+                    if (nameEl) nameEl.innerText = name;
+                }
+            }
+            return;
+        }
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.user-profile-container')) {
+            const dropdown = document.getElementById('user-dropdown');
+            if (dropdown) dropdown.style.display = 'none';
         }
     });
 }

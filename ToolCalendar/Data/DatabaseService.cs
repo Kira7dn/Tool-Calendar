@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using ToolCalendar.Models;
 
 namespace ToolCalendar.Data
@@ -68,6 +68,7 @@ namespace ToolCalendar.Data
                     CreatedAt TEXT,
                     FOREIGN KEY(DocumentId) REFERENCES Documents(Id)
                 )";
+
 
             using var cmd = new SqliteCommand(createDocumentsTable, connection);
             cmd.ExecuteNonQuery();
@@ -165,6 +166,7 @@ namespace ToolCalendar.Data
             cmd.Parameters.AddWithValue("@c", c.Content);
             cmd.ExecuteNonQuery();
         }
+
 
         public static List<DocumentRecord> GetAll()
         {

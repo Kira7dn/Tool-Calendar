@@ -26,6 +26,15 @@ namespace ToolCalendar.Api.Controllers
         }
 
         [Authorize(Roles = "Admin")]
+        [HttpPut("departments")]
+        public IActionResult UpdateDepartment([FromBody] Department dept)
+        {
+            if (dept == null) return BadRequest();
+            DatabaseService.UpdateDepartment(dept);
+            return Ok(dept);
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpDelete("departments/{id}")]
         public IActionResult DeleteDepartment(int id)
         {

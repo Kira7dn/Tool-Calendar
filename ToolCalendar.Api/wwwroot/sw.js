@@ -1,3 +1,12 @@
+// Version: 1.0.2 (2026-04-29)
+self.addEventListener('install', event => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(clients.claim());
+});
+
 self.addEventListener('push', function (event) {
     let data = { title: 'Thông báo mới', body: 'Bạn có thông báo mới từ ToolCalendar' };
 
@@ -27,7 +36,11 @@ self.addEventListener('push', function (event) {
 
 self.addEventListener('notificationclick', function (event) {
     event.notification.close();
-    const urlToOpen = event.notification.data.url;
+    let urlToOpen = event.notification.data.url || '/';
+    // Nếu là đường dẫn tương đối (chỉ có query string), trỏ về index.html
+    if (urlToOpen.startsWith('?')) {
+        urlToOpen = '/index.html' + urlToOpen;
+    }
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {

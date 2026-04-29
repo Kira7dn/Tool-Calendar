@@ -78,6 +78,33 @@ namespace ToolCalendar.Api.Controllers
 
             return Ok(new { message = $"Sent to {subscriptions.Count} endpoints" });
         }
+
+        [HttpGet]
+        public IActionResult GetMyNotifications()
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var list = DatabaseService.GetNotifications(userId);
+            return Ok(list);
+        }
+
+        [HttpPost("mark-read/{id}")]
+        public IActionResult MarkRead(int id)
+        {
+            DatabaseService.MarkNotificationAsRead(id);
+            return Ok();
+        }
+
+        [HttpPost("mark-all-read")]
+        public IActionResult MarkAllRead()
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            DatabaseService.MarkAllNotificationsAsRead(userId);
+            return Ok();
+        }
     }
 
     public class PushSubscriptionRequest

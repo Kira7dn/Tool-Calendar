@@ -10,6 +10,7 @@ namespace ToolCalendar.Services
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DeadlineWorker> _logger;
+        private DateTime? _lastScanDate;
 
         public DeadlineWorker(IServiceProvider serviceProvider, ILogger<DeadlineWorker> logger)
         {
@@ -33,6 +34,9 @@ namespace ToolCalendar.Services
                     }
 
                     DateTime now = DateTime.Now;
+                    
+                    // Log mỗi phút để người dùng thấy giờ server
+                    _logger.LogInformation("[DeadlineWorker] Kiểm tra lúc {time} (Giờ cài đặt: {target})", now.ToString("HH:mm"), scanTimeStr);
                     
                     // Kiểm tra xem đã đến giờ quét chưa (trong phạm vi phút hiện tại)
                     if (now.Hour == targetTime.Hours && now.Minute == targetTime.Minutes)
@@ -91,7 +95,12 @@ namespace ToolCalendar.Services
                                 doc.AssignedTo.Value,
                                 title,
                                 body,
-                                new { docId = doc.Id, type = "deadline", days = daysRemaining }
+                                new { 
+                                    docId = doc.Id, 
+                                    type = "deadline", 
+                                    days = daysRemaining,
+                                    url = $"/index.html?docId={doc.Id}"
+                                }
                             );
                             count++;
                         }
@@ -103,7 +112,12 @@ namespace ToolCalendar.Services
                                 1, // Mặc định gửi cho Admin ID 1
                                 title,
                                 body,
-                                new { docId = doc.Id, type = "deadline", days = daysRemaining }
+                                new { 
+                                    docId = doc.Id, 
+                                    type = "deadline", 
+                                    days = daysRemaining,
+                                    url = $"?docId={doc.Id}" 
+                                }
                             );
                             count++;
                         }

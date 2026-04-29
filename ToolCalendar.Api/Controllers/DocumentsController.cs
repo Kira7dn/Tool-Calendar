@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
-using ToolCalendar.Api.Services;
 
 namespace ToolCalendar.Api.Controllers
 {

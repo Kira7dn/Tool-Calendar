@@ -1,22 +1,32 @@
 <section id="tab-documents" class="tab-content">
     <div class="data-section" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-        <div class="section-header">
-            <h3>Danh sách văn bản toàn đơn vị</h3>
-            <div class="search-box">
-                <span>&#128269;</span>
-                <input type="text" placeholder="Tìm số hiệu, nội dung..." id="doc-search">
+        <div class="section-header" style="flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <h3 style="margin: 0;">Danh sách văn bản toàn đơn vị</h3>
+                <button class="btn btn-primary-pill" data-tab="upload"
+                    style="padding: 6px 16px; font-size: 0.85rem; height: 36px; white-space: nowrap;">
+                    <span>&#10133; Thêm văn bản</span>
+                </button>
             </div>
-            <div class="filter-box" style="margin-left: 10px;">
-                <select id="doc-status-filter"
-                    style="padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none; font-size: 0.9rem; color: #1e293b; background: #fff; cursor: pointer;">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="Chưa xử lý">⏳ Chưa xử lý</option>
-                    <option value="Đang xử lý">⚙️ Đang xử lý</option>
-                    <option value="Đã rà soát">🔍 Đã rà soát</option>
-                    <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
-                    <option value="Lỗi OCR">⚠️ Lỗi OCR</option>
-                    <option value="overdue">🛑 Quá hạn</option>
-                </select>
+
+            <div
+                style="display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; min-width: 300px;">
+                <div class="search-box" style="margin: 0; flex: 1; max-width: 300px;">
+                    <span>&#128269;</span>
+                    <input type="text" placeholder="Tìm số hiệu, nội dung..." id="doc-search">
+                </div>
+                <div class="filter-box" style="margin: 0;">
+                    <select id="doc-status-filter"
+                        style="padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none; font-size: 0.9rem; color: #1e293b; background: #fff; cursor: pointer;">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Chưa xử lý">⏳ Chưa xử lý</option>
+                        <option value="Đang xử lý">⚙️ Đang xử lý</option>
+                        <option value="Đã rà soát">🔍 Đã rà soát</option>
+                        <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
+                        <option value="Lỗi OCR">⚠️ Lỗi OCR</option>
+                        <option value="overdue">🛑 Quá hạn</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div class="table-scroll" style="flex: 1; overflow-y: auto;">
