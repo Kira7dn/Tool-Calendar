@@ -8,7 +8,29 @@ export function createNotificationsFeature(context) {
         document.addEventListener('click', (event) => {
             const action = event.target.closest('[data-action]');
             const filterTab = event.target.closest('.notif-tab');
+            const mobileFilterTab = event.target.closest('.mobile-notif-tab');
 
+            // === MOBILE NOTIF PANEL ===
+            // Mở panel mobile khi click nút thông báo dưới bottom nav
+            if (event.target.closest('#mobile-notif-btn')) {
+                openMobilePanel();
+                return;
+            }
+
+            // Đóng panel mobile khi click nút Back
+            if (event.target.closest('#mobile-notif-back')) {
+                closeMobilePanel();
+                return;
+            }
+
+            // Tab lọc trên mobile panel
+            if (mobileFilterTab) {
+                const filter = mobileFilterTab.dataset.filter;
+                setMobileFilter(filter);
+                return;
+            }
+
+            // === DESKTOP DROPDOWN ===
             // Đóng dropdown nếu click ra ngoài
             if (isDropdownOpen && !event.target.closest('#notif-bell') && !event.target.closest('#notif-dropdown')) {
                 toggleDropdown(false);
@@ -38,11 +60,20 @@ export function createNotificationsFeature(context) {
                 const docId = action.dataset.docId;
                 const notifId = action.dataset.notifId;
 
-                // Đánh dấu cái này là đã đọc
+                // Đánh dấu đã đọc
                 markAsRead(notifId);
 
-                if (docId) openDocDetail(docId);
+                // Đóng desktop dropdown ngay lập tức
                 toggleDropdown(false);
+
+                // Đóng mobile panel (có animation 360ms)
+                closeMobilePanel();
+
+                // Mở trang chi tiết sau khi panel đã bắt đầu đóng
+                // 50ms đủ để browser process sự kiện, animation panel chạy nền
+                if (docId) {
+                    setTimeout(() => openDocDetail(docId), 50);
+                }
             }
         });
 
@@ -75,6 +106,7 @@ export function createNotificationsFeature(context) {
 
             notifications.unshift(newNotif);
             renderNotifications();
+            renderMobileNotifications();
         });
 
         // Đăng ký Service Worker
@@ -113,6 +145,74 @@ export function createNotificationsFeature(context) {
                 clearBadge();
             }
         }
+    }
+
+    let isMobilePanelOpen = false;
+    let mobilePanelFilter = 'all';
+
+    function openMobilePanel() {
+        const panel = document.getElementById('mobile-notif-panel');
+        const overlay = document.getElementById('mobile-notif-overlay');
+        if (!panel) return;
+        panel.style.display = 'flex';
+        // Trigger animation
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => panel.classList.add('open'));
+        });
+        if (overlay) overlay.classList.add('active');
+        isMobilePanelOpen = true;
+        clearBadge();
+        renderMobileNotifications();
+        // Khởi tạo Lucide icons mới
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    function closeMobilePanel() {
+        const panel = document.getElementById('mobile-notif-panel');
+        const overlay = document.getElementById('mobile-notif-overlay');
+        if (!panel) return;
+        panel.classList.remove('open');
+        if (overlay) overlay.classList.remove('active');
+        setTimeout(() => { panel.style.display = 'none'; }, 360);
+        isMobilePanelOpen = false;
+    }
+
+    function setMobileFilter(filter) {
+        mobilePanelFilter = filter;
+        document.querySelectorAll('.mobile-notif-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.filter === filter);
+        });
+        renderMobileNotifications();
+    }
+
+    function renderMobileNotifications() {
+        const list = document.getElementById('mobile-notif-list');
+        if (!list) return;
+
+        const filtered = mobilePanelFilter === 'unread'
+            ? notifications.filter(n => n.unread)
+            : notifications;
+
+        if (filtered.length === 0) {
+            list.innerHTML = `
+                <div style="padding:60px 20px; text-align:center; color:#65676b;">
+                    <div style="font-size:3rem; margin-bottom:12px;">🔔</div>
+                    <p style="font-weight:600;">${mobilePanelFilter === 'unread' ? 'Không có thông báo chưa đọc' : 'Chưa có thông báo nào'}</p>
+                </div>`;
+            return;
+        }
+
+        list.innerHTML = filtered.map((n, i) => `
+            <div class="mobile-notif-item ${n.unread ? 'unread' : ''}" 
+                 data-action="view-notif-doc" data-doc-id="${n.docId}" data-notif-id="${n.id}">
+                <div class="mobile-notif-avatar">${n.unread ? '🔔' : '📄'}</div>
+                <div class="mobile-notif-content">
+                    <div class="mobile-notif-text">${n.title}</div>
+                    <div class="mobile-notif-time">${n.time}</div>
+                </div>
+                ${n.unread ? '<div class="mobile-notif-dot"></div>' : ''}
+            </div>
+        `).join('');
     }
 
     function clearBadge() {

@@ -26,6 +26,7 @@ const MODAL_PARTIALS = [
     '/partials/modals/ocr-edit.html',
     '/partials/modals/alerts.html',
     '/partials/modals/doc-detail.html',
+    '/partials/modals/doc-detail-page.html',
     '/partials/modals/pdf-preview.html',
     '/partials/modals/review-side-by-side.html',
     '/partials/modals/department.html',

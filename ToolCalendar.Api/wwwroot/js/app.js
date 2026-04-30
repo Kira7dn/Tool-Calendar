@@ -20,20 +20,22 @@ let notificationsFeature;
 let features = {};
 
 function applyRoleRestrictions(role) {
-    if (role === 'Admin') {
-        document.getElementById('nav-users').style.display = 'flex';
-    }
+    const navUsers = document.getElementById('nav-users');
+    if (navUsers) navUsers.style.display = (role === 'Admin') ? 'flex' : 'none';
 
-    if (role === 'CanBo' || role === 'VanThu') {
-        const navMyTasks = document.getElementById('nav-my-tasks');
-        if (navMyTasks) navMyTasks.style.display = 'flex';
-    }
+    const navMyTasks = document.getElementById('nav-my-tasks');
+    if (navMyTasks) navMyTasks.style.display = (role === 'CanBo' || role === 'VanThu') ? 'flex' : 'none';
 
     if (role !== 'Admin' && role !== 'VanThu') {
-        document.querySelector('.header-actions .btn-primary').style.display = 'none';
-        document.querySelector('[data-tab="upload"]').style.display = 'none';
+        const uploadBtn = document.querySelector('.header-actions .btn-primary');
+        if (uploadBtn) uploadBtn.style.display = 'none';
+
+        const uploadTab = document.querySelector('[data-tab="upload"]');
+        if (uploadTab) uploadTab.style.display = 'none';
+
         if (role !== 'Admin') {
-            document.querySelector('[data-tab="settings"]').style.display = 'none';
+            const settingsTab = document.querySelector('[data-tab="settings"]');
+            if (settingsTab) settingsTab.style.display = 'none';
         }
     }
 }
@@ -133,6 +135,59 @@ export function initializeApp() {
     settings.prefetch();
     showTab('dashboard');
     document.body.classList.remove('app-booting');
+    
+    // Initialize Lucide icons
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+
+    // Xử lý đổi mật khẩu cho user hiện tại
+    document.addEventListener('click', async (event) => {
+        const action = event.target.closest('[data-action]');
+        if (!action) return;
+
+        if (action.dataset.action === 'open-change-password-modal') {
+            document.getElementById('change-password-modal').style.display = 'flex';
+        }
+
+        if (action.dataset.action === 'close-change-password-modal') {
+            document.getElementById('change-password-modal').style.display = 'none';
+        }
+
+        if (action.dataset.action === 'confirm-change-password') {
+            const newPass = document.getElementById('current-user-new-password').value;
+            const confirmPass = document.getElementById('current-user-confirm-password').value;
+
+            if (!newPass || newPass.length < 4) {
+                ui.showAlert('Mật khẩu mới phải có ít nhất 4 ký tự!', '⚠️');
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                ui.showAlert('Mật khẩu xác nhận không khớp!', '❌');
+                return;
+            }
+
+            try {
+                const response = await api.post('/api/auth/change-password', {
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newPassword: newPass })
+                });
+
+                if (response.ok) {
+                    ui.showAlert('Đổi mật khẩu thành công!', '✅');
+                    document.getElementById('change-password-modal').style.display = 'none';
+                    document.getElementById('current-user-new-password').value = '';
+                    document.getElementById('current-user-confirm-password').value = '';
+                } else {
+                    const err = await response.json();
+                    ui.showAlert(err.message || 'Lỗi khi đổi mật khẩu', '❌');
+                }
+            } catch (error) {
+                ui.showAlert('Lỗi kết nối', '📡');
+            }
+        }
+    });
 
     initialized = true;
 }
@@ -149,9 +204,13 @@ export async function showTab(tabId) {
         target.style.display = '';
     }
 
-    document.querySelectorAll('.nav-item').forEach((item) => {
+    document.querySelectorAll('.nav-item, .bottom-nav-item').forEach((item) => {
         item.classList.toggle('active', item.getAttribute('data-tab') === tabId);
     });
+
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
 
     currentTab = tabId;
     await activateTab(tabId);

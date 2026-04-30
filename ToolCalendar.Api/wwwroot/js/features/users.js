@@ -140,7 +140,8 @@ export function createUsersFeature(context) {
         if (userId) {
             title.innerText = 'Chỉnh sửa tài khoản';
             userGroup.style.display = 'none';
-            passGroup.style.display = 'none';
+            passGroup.style.display = 'block';
+            document.getElementById('password-label').innerText = 'Mật khẩu (để trống nếu không đổi)';
 
             if (button) {
                 // Populate from button attributes immediately
@@ -169,6 +170,7 @@ export function createUsersFeature(context) {
             title.innerText = 'Tạo tài khoản mới';
             userGroup.style.display = 'block';
             passGroup.style.display = 'block';
+            document.getElementById('password-label').innerText = 'Mật khẩu';
         }
 
         modal.style.display = 'flex';
@@ -226,17 +228,24 @@ export function createUsersFeature(context) {
         const phoneNumber = document.getElementById('new-phone').value;
         const role = document.getElementById('new-role').value;
         const departmentId = document.getElementById('new-department').value;
+        const passwordHash = document.getElementById('new-password').value;
+        
+        const payload = { 
+            fullName, 
+            email, 
+            phoneNumber, 
+            role, 
+            departmentId: departmentId ? parseInt(departmentId, 10) : null 
+        };
+
+        if (passwordHash) {
+            payload.passwordHash = passwordHash;
+        }
 
         try {
             const response = await context.api.put(`/api/users/${id}`, {
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    fullName, 
-                    email, 
-                    phoneNumber, 
-                    role, 
-                    departmentId: departmentId ? parseInt(departmentId, 10) : null 
-                })
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) {

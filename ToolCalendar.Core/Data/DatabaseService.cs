@@ -1394,6 +1394,20 @@ namespace ToolCalendar.Data
             cmd.ExecuteNonQuery();
         }
 
+        public static bool UpdateUserPassword(int userId, string newPassword)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                using var cmd = new SqliteCommand("UPDATE Users SET PasswordHash=@p WHERE Id=@id", connection);
+                cmd.Parameters.AddWithValue("@p", newPassword);
+                cmd.Parameters.AddWithValue("@id", userId);
+                return cmd.ExecuteNonQuery() > 0;
+            }
+            catch { return false; }
+        }
+
         private static string EscapeCsv(string? val)
         {
             if (string.IsNullOrEmpty(val)) return "";

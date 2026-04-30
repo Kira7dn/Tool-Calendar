@@ -15,6 +15,7 @@ services:
     volumes:
       - tool-calendar-data:/app/data
       - ./ToolCalendar.Api/Uploads:/app/Uploads
+      - ./ToolCalendar.Api/wwwroot:/app/wwwroot
     restart: always
 
   nginx:

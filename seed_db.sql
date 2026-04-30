@@ -22,4 +22,4 @@ INSERT INTO Departments (Id, Name) VALUES
 INSERT INTO Users (Id, Username, PasswordHash, FullName, Email, PhoneNumber, Role, DepartmentId, CreatedAt) VALUES 
 (1, 'admin', '123456', 'Quản trị viên', 'admin@campha.gov.vn', '0912345678', 'Admin', 1, datetime('now')),
 (2, 'chanhvanphong', '123456', 'Nguyễn Thị Nơ', 'nguyenthino@campha.gov.vn', '0901234455', 'LanhDao', 1, datetime('now')),
-(3, 'vanthu', '123456', 'Trương Thị Thu Hằng', 'ttb@campha.gov.vn', '0902345566', 'VanThu', 1, datetime('now'));
+(3, 'vanthu', '123456', 'Hoàng Thị Nhu', 'hoangthinhu@campha.gov.vn', '0902345566', 'VanThu', 1, datetime('now'));

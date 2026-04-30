@@ -9,32 +9,47 @@ export function createDocDetailFeature(context) {
     let selectedFiles = [];
 
     function init() {
+        // === DESKTOP MODAL ===
         const modal = document.getElementById('doc-detail-modal');
-        if (!modal) return;
+        if (modal) {
+            modal.addEventListener('click', async (event) => {
+                const action = event.target.closest('[data-action]');
+                if (!action) return;
+                const actionName = action.dataset.action;
+                if (actionName === 'close-doc-detail-modal') close();
+                if (actionName === 'switch-doc-tab') switchTab(action.dataset.docTab);
+                if (actionName === 'save-doc-detail') await saveDetail(action);
+                if (actionName === 'submit-comment') await submitComment(action);
+                if (actionName === 'delete-comment') await deleteComment(parseInt(action.dataset.commentId, 10));
+                if (actionName === 'toggle-reaction') await toggleReaction(parseInt(action.dataset.commentId, 10), action.dataset.reactionType);
+                if (actionName === 'open-pdf') await context.services.openPdfPreview(parseInt(action.dataset.docId, 10), action.dataset.title || '');
+            });
+            modal.addEventListener('change', (event) => {
+                if (event.target.id === 'de-status') onStatusSelectChange();
+            });
+        }
 
-        modal.addEventListener('click', async (event) => {
-            const action = event.target.closest('[data-action]');
-            if (!action) return;
+        // === MOBILE PAGE ===
+        const page = document.getElementById('doc-detail-page');
+        if (page) {
+            page.addEventListener('click', async (event) => {
+                const action = event.target.closest('[data-action]');
+                if (!action) return;
+                const actionName = action.dataset.action;
+                if (actionName === 'close-doc-detail-page') closePage();
+                if (actionName === 'switch-doc-page-tab') switchPageTab(action.dataset.pageTab);
+                if (actionName === 'save-doc-page-detail') await saveDetail(action, true);
+                if (actionName === 'submit-comment') await submitComment(action);
+                if (actionName === 'delete-comment') await deleteComment(parseInt(action.dataset.commentId, 10));
+                if (actionName === 'toggle-reaction') await toggleReaction(parseInt(action.dataset.commentId, 10), action.dataset.reactionType);
+                if (actionName === 'open-pdf') await context.services.openPdfPreview(parseInt(action.dataset.docId, 10), action.dataset.title || '');
+            });
+            page.addEventListener('change', (event) => {
+                if (event.target.id === 'de-status') onStatusSelectChange();
+            });
+        }
 
-            const actionName = action.dataset.action;
-
-            if (actionName === 'close-doc-detail-modal') close();
-            if (actionName === 'switch-doc-tab') switchTab(action.dataset.docTab);
-            if (actionName === 'save-doc-detail') await saveDetail(action);
-            if (actionName === 'submit-comment') await submitComment(action);
-            if (actionName === 'delete-comment') await deleteComment(parseInt(action.dataset.commentId, 10));
-            if (actionName === 'toggle-reaction') await toggleReaction(parseInt(action.dataset.commentId, 10), action.dataset.reactionType);
-            if (actionName === 'open-pdf') await context.services.openPdfPreview(parseInt(action.dataset.docId, 10), action.dataset.title || '');
-        });
-
-        // Event delegation cho change event - bắt sự kiện dù select được rebuild bao nhiêu lần
-        modal.addEventListener('change', (event) => {
-            if (event.target.id === 'de-status') {
-                onStatusSelectChange();
-            }
-        });
-
-        // Đính kèm tệp cho bình luận
+        // File attach - Desktop Modal
         const attachBtn = document.getElementById('btn-comment-attach');
         const fileInput = document.getElementById('comment-file-input');
         if (attachBtn && fileInput) {
@@ -43,63 +58,194 @@ export function createDocDetailFeature(context) {
                 const files = Array.from(e.target.files);
                 selectedFiles = [...selectedFiles, ...files];
                 renderFilePreview();
-                fileInput.value = ''; // Reset để chọn lại cùng file nếu muốn
+                fileInput.value = '';
+            };
+        }
+
+        // File attach - Mobile Page (IDs trên mobile có prefix "page-")
+        const pageAttachBtn = document.getElementById('page-btn-comment-attach');
+        const pageFileInput = document.getElementById('page-comment-file-input');
+        if (pageAttachBtn && pageFileInput) {
+            pageAttachBtn.onclick = () => pageFileInput.click();
+            pageFileInput.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                selectedFiles = [...selectedFiles, ...files];
+                renderFilePreview();
+                pageFileInput.value = '';
             };
         }
 
         // Real-time listeners
         document.addEventListener('realtime:new_comment', (e) => {
-            console.log('[Realtime] New comment event received:', e.detail);
             if (currentDocId === e.detail.documentId) loadComments();
         });
         document.addEventListener('realtime:delete_comment', (e) => {
-            console.log('[Realtime] Delete comment event received:', e.detail);
             if (currentDocId === e.detail.documentId) loadComments();
         });
         document.addEventListener('realtime:comment_reaction', (e) => {
-            console.log('[Realtime] Reaction event received:', e.detail);
             if (currentDocId === e.detail.documentId) {
                 updateReactionBar(e.detail.commentId, e.detail.reactions);
             }
         });
     }
 
+    /** Detect mobile: dùng page trượt; desktop: dùng modal */
+    function isMobileView() {
+        return window.innerWidth <= 768;
+    }
+
     async function open(id, initialTab = 'view') {
         currentDocId = id;
+        if (isMobileView()) {
+            await openPage(id, initialTab);
+        } else {
+            await openModal(id, initialTab);
+        }
+    }
 
-        // 1. Reset UI về trạng thái loading để tránh hiện dữ liệu cũ của văn bản trước
+    async function openModal(id, initialTab = 'view') {
+        currentDocId = id;
         resetUI();
         document.getElementById('doc-detail-modal').style.display = 'flex';
         switchTab(initialTab);
-
         try {
-            // 2. Chạy song song các tác vụ: Tải option (nếu chưa có), tải data văn bản, tải bình luận
             const tasks = [
                 context.api.get(`/api/documents/${id}`),
                 loadComments()
             ];
-
-            if (!isStatusOptionsLoaded) {
-                tasks.push(loadStatusOptions());
-            }
-
+            if (!isStatusOptionsLoaded) tasks.push(loadStatusOptions());
             const results = await Promise.all(tasks);
             const docResponse = results[0];
-
             if (!docResponse.ok) throw new Error('Failed to fetch doc');
-
             currentDocData = await docResponse.json();
-
-            // 3. Render dữ liệu
             renderDetail(currentDocData);
-
             const role = localStorage.getItem('user_role');
             document.getElementById('doc-tab-edit').style.display = (role === 'Admin' || role === 'VanThu') ? '' : 'none';
-
         } catch (error) {
             console.error('Document detail load error:', error);
             context.ui.showAlert('Không thể tải chi tiết văn bản', '❌');
             close();
+        }
+    }
+
+    async function openPage(id, initialTab = 'view') {
+        currentDocId = id;
+        const page = document.getElementById('doc-detail-page');
+        if (!page) return openModal(id, initialTab); // fallback
+
+        // Reset page UI
+        const titleEl = document.getElementById('doc-page-title');
+        const subEl = document.getElementById('doc-page-subtitle');
+        if (titleEl) titleEl.textContent = 'Đang tải...';
+        if (subEl) subEl.textContent = '';
+
+        // Show page with slide animation
+        page.style.display = 'flex';
+        requestAnimationFrame(() => requestAnimationFrame(() => page.classList.add('open')));
+        switchPageTab(initialTab);
+
+        // Re-init Lucide icons for back button
+        if (window.lucide) window.lucide.createIcons();
+
+        try {
+            const tasks = [
+                context.api.get(`/api/documents/${id}`),
+                loadComments()
+            ];
+            if (!isStatusOptionsLoaded) tasks.push(loadStatusOptions());
+            const results = await Promise.all(tasks);
+            const docResponse = results[0];
+            if (!docResponse.ok) throw new Error('Failed');
+            currentDocData = await docResponse.json();
+            renderDetailPage(currentDocData);
+            renderDetail(currentDocData); // keep modal IDs in sync for save logic
+
+            const role = localStorage.getItem('user_role');
+            const editBtn = document.getElementById('doc-page-edit-btn');
+            const editTab = document.getElementById('doc-page-tab-edit');
+            const canEdit = (role === 'Admin' || role === 'VanThu');
+            if (editBtn) editBtn.style.display = canEdit ? 'block' : 'none';
+            if (editTab) editTab.style.display = canEdit ? '' : 'none';
+        } catch (error) {
+            console.error('Page load error:', error);
+            context.ui.showAlert('Không thể tải chi tiết văn bản', '❌');
+            closePage();
+        }
+    }
+
+    function closePage() {
+        const page = document.getElementById('doc-detail-page');
+        if (!page) return;
+        page.classList.remove('open');
+        setTimeout(() => { page.style.display = 'none'; }, 340);
+        currentDocId = null;
+        currentDocData = null;
+    }
+
+    function switchPageTab(tab) {
+        ['view', 'edit', 'comments'].forEach(t => {
+            const panel = document.getElementById(`doc-page-panel-${t}`);
+            const tabBtn = document.getElementById(`doc-page-tab-${t}`);
+            if (panel) panel.style.display = t === tab ? 'flex' : 'none';
+            if (tabBtn) tabBtn.classList.toggle('active', t === tab);
+        });
+        // Sync comment list when switching to comments tab
+        if (tab === 'comments') {
+            const desktopList = document.getElementById('comment-list');
+            const mobileList = document.getElementById('doc-page-comment-list');
+            if (desktopList && mobileList) {
+                mobileList.innerHTML = desktopList.innerHTML;
+            }
+        }
+    }
+
+    function renderDetailPage(doc) {
+        // Title bar
+        const titleEl = document.getElementById('doc-page-title');
+        const subEl = document.getElementById('doc-page-subtitle');
+        if (titleEl) titleEl.textContent = doc.soVanBan || 'Chi tiết văn bản';
+        if (subEl) subEl.textContent = doc.trichYeu ? doc.trichYeu.substring(0, 60) + (doc.trichYeu.length > 60 ? '...' : '') : '';
+
+        // Overview chips
+        const chipsEl = document.getElementById('doc-page-chips');
+        if (chipsEl) {
+            const statusColor = doc.status === 'Đã hoàn thành' ? '#1e8449' : doc.status === 'Quá hạn' ? '#c0392b' : '#d68910';
+            const priorityColor = doc.priority === 'Thượng khẩn' ? '#c0392b' : doc.priority === 'Khẩn' ? '#d68910' : '#1a3a6e';
+            chipsEl.innerHTML = `
+                <span class="doc-page-chip" style="background:${statusColor}22; color:${statusColor};">${doc.status || 'Chưa xử lý'}</span>
+                <span class="doc-page-chip" style="background:${priorityColor}22; color:${priorityColor};">⚡ ${doc.priority || 'Thường'}</span>
+            `;
+        }
+
+        // Field rows
+        function setField(id, value) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = `<span class="doc-page-field-value">${value || '-'}</span>`;
+        }
+        setField('dpf-so', doc.soVanBan);
+        setField('dpf-ngaybanhanh', formatDate(doc.ngayBanHanh));
+        setField('dpf-trichyeu', doc.trichYeu);
+        setField('dpf-coquanbanhanh', doc.coQuanBanHanh);
+        setField('dpf-coquanchuquan', doc.coQuanChuQuan);
+        setField('dpf-thoihan', formatDate(doc.thoiHan));
+        setField('dpf-status', doc.status);
+        setField('dpf-priority', doc.priority);
+        setField('dpf-ngaythem', formatDate(doc.ngayThem));
+
+        // File
+        const fileEl = document.getElementById('doc-page-file-content');
+        if (fileEl) {
+            if (doc.filePath) {
+                const isPdf = doc.filePath.toLowerCase().endsWith('.pdf');
+                if (isPdf) {
+                    fileEl.innerHTML = `<button class="btn btn-primary" style="border-radius:12px; width:100%;" data-action="open-pdf" data-doc-id="${doc.id}" data-title="${doc.soVanBan || ''}">📄 Xem nội dung bản PDF</button>`;
+                } else {
+                    fileEl.innerHTML = `<a class="btn" style="background:#10b981; color:white; border-radius:12px; width:100%; text-decoration:none; display:block; text-align:center;" href="/api/documents/${doc.id}/file" target="_blank">📝 Tải xuống văn bản (Word)</a>`;
+                }
+            } else {
+                fileEl.innerHTML = '<i style="color:#94a3b8; font-size:0.85rem;">Không có tệp đính kèm</i>';
+            }
         }
     }
 
@@ -319,9 +465,13 @@ export function createDocDetailFeature(context) {
 
     function renderComments(comments) {
         const list = document.getElementById('comment-list');
-        if (!list) return;
+        const pageList = document.getElementById('doc-page-comment-list');
+        const badge = document.getElementById('comment-count-badge');
+        const pageBadge = document.getElementById('doc-page-comment-badge');
 
-        document.getElementById('comment-count-badge').innerText = comments.length;
+        const countText = comments.length.toString();
+        if (badge) badge.innerText = countText;
+        if (pageBadge) pageBadge.innerText = countText;
 
         const currentUserId = parseInt(localStorage.getItem('user_id') || '0', 10);
         const role = localStorage.getItem('user_role');
@@ -334,7 +484,7 @@ export function createDocDetailFeature(context) {
             return;
         }
 
-        list.innerHTML = comments.map((comment) => {
+        const html = comments.map((comment) => {
             const reactions = comment.reactions || {};
             const reactionTypes = [
                 { type: 'like', emoji: '👍', label: 'Thích' },
@@ -407,18 +557,28 @@ export function createDocDetailFeature(context) {
                 <div class="reaction-bar" id="reaction-bar-${comment.id}">${reactionButtons}</div>
             </div>`;
         }).join('');
+
+        // Render vào cả hai danh sách (modal và mobile page)
+        if (list) list.innerHTML = html;
+        if (pageList) pageList.innerHTML = html;
     }
 
     async function submitComment(button) {
-        const text = document.getElementById('new-comment-text').value.trim();
+        // Phát hiện context: mobile page hay desktop modal
+        const isPage = !!button.closest('#doc-detail-page');
+        const textareaId = isPage ? 'page-new-comment-text' : 'new-comment-text';
+        const previewId = isPage ? 'page-comment-attachments-preview' : 'comment-attachments-preview';
+
+        const textarea = document.getElementById(textareaId);
+        const text = textarea?.value.trim();
         if (!text) {
-            context.ui.showAlert('Vui long nhap noi dung binh luan!', '⚠️');
+            context.ui.showAlert('Vui lòng nhập nội dung bình luận!', '⚠️');
             return;
         }
 
         const originalText = button.innerText;
         button.disabled = true;
-        button.innerText = 'Dang gui...';
+        button.innerText = 'Đang gửi...';
 
         try {
             const formData = new FormData();
@@ -433,16 +593,16 @@ export function createDocDetailFeature(context) {
 
             if (!response.ok) {
                 const err = await response.text();
-                context.ui.showAlert('Loi khi gui binh luan: ' + err, '❌');
+                context.ui.showAlert('Lỗi khi gửi bình luận: ' + err, '❌');
                 return;
             }
 
-            document.getElementById('new-comment-text').value = '';
+            if (textarea) textarea.value = '';
             selectedFiles = [];
             renderFilePreview();
             await loadComments();
         } catch (error) {
-            context.ui.showAlert('Loi ket noi.', '❌');
+            context.ui.showAlert('Lỗi kết nối.', '❌');
         } finally {
             button.disabled = false;
             button.innerText = originalText;
@@ -509,20 +669,17 @@ export function createDocDetailFeature(context) {
     }
 
     function renderFilePreview() {
-        const container = document.getElementById('comment-attachments-preview');
-        if (!container) return;
+        // Render vào cả hai container (modal và mobile page)
+        const containers = [
+            document.getElementById('comment-attachments-preview'),
+            document.getElementById('page-comment-attachments-preview')
+        ].filter(Boolean);
 
-        if (selectedFiles.length === 0) {
-            container.innerHTML = '';
-            return;
-        }
-
-        container.innerHTML = selectedFiles.map((file, index) => {
+        const html = selectedFiles.length === 0 ? '' : selectedFiles.map((file, index) => {
             const ext = file.name.split('.').pop().toLowerCase();
             let icon = '📄';
             if (['jpg', 'jpeg', 'png'].includes(ext)) icon = '🖼️';
             if (ext === 'pdf') icon = '📕';
-
             return `
                 <div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:8px; font-size:0.85rem; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
                     <span>${icon}</span>
@@ -532,13 +689,15 @@ export function createDocDetailFeature(context) {
             `;
         }).join('');
 
-        // Gán sự kiện xóa file
-        container.querySelectorAll('.remove-file-btn').forEach(btn => {
-            btn.onclick = (e) => {
-                const idx = parseInt(e.target.dataset.index);
-                selectedFiles.splice(idx, 1);
-                renderFilePreview();
-            };
+        containers.forEach(container => {
+            container.innerHTML = html;
+            container.querySelectorAll('.remove-file-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    const idx = parseInt(e.target.dataset.index);
+                    selectedFiles.splice(idx, 1);
+                    renderFilePreview();
+                };
+            });
         });
     }
 

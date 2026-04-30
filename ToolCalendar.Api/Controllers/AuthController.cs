@@ -108,11 +108,32 @@ namespace ToolCalendar.Api.Controllers
                 _sessionHub.Unregister(channel);
             }
         }
+        [HttpPost("change-password")]
+        [Authorize]
+        public IActionResult ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 4)
+            {
+                return BadRequest(new { message = "Mật khẩu mới phải có ít nhất 4 ký tự." });
+            }
+
+            var success = DatabaseService.UpdateUserPassword(userId, request.NewPassword);
+            if (success) return Ok(new { message = "Đổi mật khẩu thành công." });
+            return BadRequest(new { message = "Không thể đổi mật khẩu." });
+        }
     }
 
     public class LoginRequest
     {
         public string Username { get; set; } = "";
         public string Password { get; set; } = "";
+    }
+
+    public class ChangePasswordRequest
+    {
+        public string NewPassword { get; set; } = "";
     }
 }
