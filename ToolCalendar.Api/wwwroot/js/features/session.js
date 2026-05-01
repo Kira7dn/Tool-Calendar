@@ -5,27 +5,36 @@ export function createSessionFeature() {
         const token = localStorage.getItem('auth_token');
         if (!token) return;
 
-        const eventSource = new EventSource(`/api/auth/events?access_token=${encodeURIComponent(token)}`);
-        eventSource.addEventListener('connected', () => {
-            console.log('[SessionWatcher] Connected');
+        // Khởi tạo SignalR thay vì SSE
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/notificationHub", {
+                accessTokenFactory: () => token
+            })
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceiveNotification", (data) => {
+            document.dispatchEvent(new CustomEvent('realtime:notification', { detail: data }));
         });
 
-        eventSource.addEventListener('kicked', () => {
-            eventSource.close();
+        connection.on("ReceiveComment", (data) => {
+            document.dispatchEvent(new CustomEvent('realtime:new_comment', { detail: data }));
+        });
+
+        connection.on("DeleteComment", (data) => {
+            document.dispatchEvent(new CustomEvent('realtime:delete_comment', { detail: data }));
+        });
+
+        connection.on("ReceiveReaction", (data) => {
+            document.dispatchEvent(new CustomEvent('realtime:comment_reaction', { detail: data }));
+        });
+
+        connection.on("Kicked", (message) => {
+            connection.stop();
             showKickedModal();
         });
 
-        // Bổ sung các sự kiện realtime cho bình luận/văn bản
-        const dispatchRealtime = (name, data) => {
-            try {
-                document.dispatchEvent(new CustomEvent(`realtime:${name}`, { detail: JSON.parse(data) }));
-            } catch (e) { console.error('Realtime parse error', e); }
-        };
-
-        eventSource.addEventListener('new_comment', (e) => dispatchRealtime('new_comment', e.data));
-        eventSource.addEventListener('delete_comment', (e) => dispatchRealtime('delete_comment', e.data));
-        eventSource.addEventListener('comment_reaction', (e) => dispatchRealtime('comment_reaction', e.data));
-        eventSource.addEventListener('notification', (e) => dispatchRealtime('notification', e.data));
+        connection.start().catch(err => console.error('[SignalR] Connection Error: ', err));
     }
 
     function logout(kicked = false) {

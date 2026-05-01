@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
 using ToolCalendar.Services;
+using ToolCalendar.Hubs;
 
 using Microsoft.AspNetCore.HttpOverrides;
 
@@ -15,8 +16,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Đăng ký Session Hub (SSE real-time)
-builder.Services.AddSingleton<SessionHubService>();
+
+
+// Đăng ký SignalR
+builder.Services.AddSignalR();
 
 // Đăng ký OCR & Extraction Services
 builder.Services.AddSingleton<IOcrService, OcrService>();
@@ -55,11 +58,12 @@ builder.Services.AddAuthentication(x =>
     };
     x.Events = new JwtBearerEvents
     {
-        // Cho phép đọc token từ query string (cần thiết cho SSE/EventSource)
+        // SignalR client gửi token trong query string "access_token"
         OnMessageReceived = context =>
         {
             var accessToken = context.Request.Query["access_token"];
-            if (!string.IsNullOrEmpty(accessToken))
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notificationHub"))
             {
                 context.Token = accessToken;
             }
@@ -152,6 +156,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
 
 // Chạy ứng dụng
 app.Run();

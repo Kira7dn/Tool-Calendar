@@ -33,7 +33,7 @@ namespace ToolCalendar.Services
                         targetTime = new TimeSpan(8, 30, 0);
                     }
 
-                    DateTime now = DateTime.Now;
+                    DateTime now = DateTime.UtcNow.AddHours(7);
                     
                     // Log mỗi phút để người dùng thấy giờ server
                     _logger.LogInformation("[DeadlineWorker] Kiểm tra lúc {time} (Giờ cài đặt: {target})", now.ToString("HH:mm"), scanTimeStr);
@@ -83,8 +83,8 @@ namespace ToolCalendar.Services
                 {
                     int daysRemaining = (doc.ThoiHan!.Value.Date - today).Days;
 
-                    // Thông báo tất cả văn bản trong vòng 7 ngày tới (để test và không bỏ sót)
-                    if (daysRemaining <= 7 && daysRemaining >= 0)
+                    // Logic 7-3-1: Chỉ thông báo vào đúng các mốc 7 ngày, 3 ngày và 1 ngày trước hạn
+                    if (daysRemaining == 7 || daysRemaining == 3 || daysRemaining == 1 || daysRemaining == 0)
                     {
                         string title = $"🔔 HẠN XỬ LÝ: {doc.SoVanBan}";
                         string body = $"Văn bản sắp hết hạn (còn {daysRemaining} ngày). \nTrích yếu: {doc.TrichYeu}";

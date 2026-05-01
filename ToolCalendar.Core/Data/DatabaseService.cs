@@ -262,7 +262,7 @@ namespace ToolCalendar.Data
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', '123456', 'Admin', datetime('now'))";
+                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', '123456', 'Admin', datetime('now', 'localtime'))";
                 cmd.ExecuteNonQuery();
             }
             else
@@ -433,8 +433,9 @@ namespace ToolCalendar.Data
                 connection.Open();
                 string sql = @"
                     INSERT INTO Users (Username, PasswordHash, FullName, Email, PhoneNumber, Role, DepartmentId, CreatedAt) 
-                    VALUES (@u, @p, @f, @e, @pn, @r, @d, datetime('now'))";
+                    VALUES (@u, @p, @f, @e, @pn, @r, @d, @now)" ;
                 using var cmd = new SqliteCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
                 cmd.Parameters.AddWithValue("@u", user.Username);
                 cmd.Parameters.AddWithValue("@p", user.PasswordHash);
                 cmd.Parameters.AddWithValue("@f", (object?)user.FullName ?? DBNull.Value);
@@ -495,7 +496,7 @@ namespace ToolCalendar.Data
                     Username = reader["Username"].ToString() ?? "",
                     Content = reader["Content"].ToString() ?? "",
                     AttachmentPaths = reader["AttachmentPaths"]?.ToString() ?? "[]",
-                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.Now.ToString())
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
                 });
             }
             return list;
@@ -505,8 +506,9 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "INSERT INTO Comments (DocumentId, UserId, Username, Content, AttachmentPaths, CreatedAt) VALUES (@docId, @uId, @uName, @c, @ap, datetime('now'))";
+            string sql = "INSERT INTO Comments (DocumentId, UserId, Username, Content, AttachmentPaths, CreatedAt) VALUES (@docId, @uId, @uName, @c, @ap, @now)";
             using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.Parameters.AddWithValue("@docId", c.DocumentId);
             cmd.Parameters.AddWithValue("@uId", c.UserId);
             cmd.Parameters.AddWithValue("@uName", c.Username);
@@ -564,7 +566,7 @@ namespace ToolCalendar.Data
                     UserId = Convert.ToInt32(reader["UserId"]),
                     Username = reader["Username"].ToString() ?? "",
                     ReactionType = reader["ReactionType"].ToString() ?? "",
-                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.Now.ToString())
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
                 });
             }
             return list;
@@ -596,8 +598,9 @@ namespace ToolCalendar.Data
                 // Upsert to new reaction type
                 using var upsertCmd = new SqliteCommand(@"
                     INSERT INTO CommentReactions (CommentId, UserId, Username, ReactionType, CreatedAt)
-                    VALUES (@cid, @uid, @uname, @type, datetime('now'))
-                    ON CONFLICT(CommentId, UserId) DO UPDATE SET ReactionType=@type, CreatedAt=datetime('now')", connection);
+                    VALUES (@cid, @uid, @uname, @type, @now)
+                    ON CONFLICT(CommentId, UserId) DO UPDATE SET ReactionType=@type, CreatedAt=@now", connection);
+                upsertCmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
                 upsertCmd.Parameters.AddWithValue("@cid", commentId);
                 upsertCmd.Parameters.AddWithValue("@uid", userId);
                 upsertCmd.Parameters.AddWithValue("@uname", username);
@@ -828,7 +831,7 @@ namespace ToolCalendar.Data
                     EvidencePaths=@paths, 
                     EvidenceNotes=@notes, 
                     Status='Đã hoàn thành', 
-                    CompletionDate=datetime('now') 
+                    CompletionDate=datetime('now', 'localtime') 
                 WHERE Id=@docId";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@paths", evidenceJson);
@@ -949,7 +952,7 @@ namespace ToolCalendar.Data
                         UserId = reader["UserId"] == DBNull.Value ? null : Convert.ToInt32(reader["UserId"]),
                         UserFullName = reader["UserFullName"]?.ToString() ?? "Hệ thống",
                         Action = reader["Action"].ToString() ?? "",
-                        Timestamp = DateTime.Parse(reader["Timestamp"].ToString() ?? DateTime.Now.ToString())
+                        Timestamp = DateTime.Parse(reader["Timestamp"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
                     });
                 }
             }
@@ -961,7 +964,8 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("INSERT INTO AuditLogs (UserId, Action, Timestamp) VALUES (@u, @a, datetime('now'))", connection);
+            using var cmd = new SqliteCommand("INSERT INTO AuditLogs (UserId, Action, Timestamp) VALUES (@u, @a, @now)", connection);
+            cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.Parameters.AddWithValue("@u", (object?)userId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@a", action);
             cmd.ExecuteNonQuery();
@@ -1062,7 +1066,7 @@ namespace ToolCalendar.Data
                 EvidenceNotes = r["EvidenceNotes"]?.ToString() ?? "",
                 CompletionDate = TryParseDate(r["CompletionDate"]?.ToString()),
                 LabelId = r["LabelId"] == DBNull.Value ? null : Convert.ToInt32(r["LabelId"]),
-                NgayThem = TryParseDate(r["NgayThem"]?.ToString()) ?? DateTime.Now,
+                NgayThem = TryParseDate(r["NgayThem"]?.ToString()) ?? DateTime.UtcNow.AddHours(7),
                 DaTaoLich = Convert.ToInt32(r["DaTaoLich"]) == 1
             };
         }
@@ -1363,7 +1367,7 @@ namespace ToolCalendar.Data
                     Endpoint = reader["Endpoint"].ToString() ?? "",
                     P256dh = reader["P256dh"].ToString() ?? "",
                     Auth = reader["Auth"].ToString() ?? "",
-                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.Now.ToString())
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
                 });
             }
             return list;
@@ -1375,8 +1379,8 @@ namespace ToolCalendar.Data
             connection.Open();
             string sql = @"
                 INSERT INTO PushSubscriptions (UserId, Endpoint, P256dh, Auth, CreatedAt) 
-                VALUES (@uId, @e, @p, @a, datetime('now'))
-                ON CONFLICT(Endpoint) DO UPDATE SET UserId=@uId, P256dh=@p, Auth=@a, CreatedAt=datetime('now')";
+                VALUES (@uId, @e, @p, @a, datetime('now', 'localtime'))
+                ON CONFLICT(Endpoint) DO UPDATE SET UserId=@uId, P256dh=@p, Auth=@a, CreatedAt=datetime('now', 'localtime')";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@uId", sub.UserId);
             cmd.Parameters.AddWithValue("@e", sub.Endpoint);
@@ -1442,7 +1446,7 @@ namespace ToolCalendar.Data
                     Type = reader["Type"]?.ToString() ?? "",
                     DocId = reader["DocId"] != DBNull.Value ? Convert.ToInt32(reader["DocId"]) : (int?)null,
                     IsRead = Convert.ToInt32(reader["IsRead"]) == 1,
-                    CreatedAt = DateTime.Parse(reader["CreatedAt"]?.ToString() ?? DateTime.Now.ToString())
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"]?.ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
                 });
             }
             return list;
@@ -1452,8 +1456,9 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "INSERT INTO Notifications (UserId, Title, Body, Type, DocId, IsRead, CreatedAt) VALUES (@uId, @t, @b, @type, @docId, 0, datetime('now'))";
+            string sql = "INSERT INTO Notifications (UserId, Title, Body, Type, DocId, IsRead, CreatedAt) VALUES (@uId, @t, @b, @type, @docId, 0, @now)";
             using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.Parameters.AddWithValue("@uId", n.UserId);
             cmd.Parameters.AddWithValue("@t", n.Title);
             cmd.Parameters.AddWithValue("@b", n.Body);

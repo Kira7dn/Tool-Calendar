@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
+using Microsoft.AspNetCore.SignalR;
+using ToolCalendar.Hubs;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -15,15 +17,15 @@ namespace ToolCalendar.Api.Controllers
         private readonly IOcrQueueService _ocrQueue;
         private readonly INotificationManager _notificationManager;
         private readonly IWebHostEnvironment _env;
-        private readonly SessionHubService _hub;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, INotificationManager notificationManager, IWebHostEnvironment env, SessionHubService hub)
+        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, INotificationManager notificationManager, IWebHostEnvironment env, IHubContext<NotificationHub> hubContext)
         {
             _extractor = extractor;
             _ocrQueue = ocrQueue;
             _notificationManager = notificationManager;
             _env = env;
-            _hub = hub;
+            _hubContext = hubContext;
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
@@ -389,8 +391,8 @@ namespace ToolCalendar.Api.Controllers
             };
             DatabaseService.InsertComment(comment);
             
-            // Realtime broadcast
-            _ = _hub.BroadcastAsync("new_comment", new { documentId = id });
+            // Realtime broadcast SignalR
+            _ = _hubContext.Clients.All.SendAsync("ReceiveComment", new { documentId = id });
 
             return Ok(new { message = "Đã thêm comment thành công.", attachments = savedPaths });
         }
@@ -405,8 +407,8 @@ namespace ToolCalendar.Api.Controllers
 
             DatabaseService.DeleteComment(commentId, userId, isAdmin);
 
-            // Realtime broadcast
-            _ = _hub.BroadcastAsync("delete_comment", new { documentId = docId, commentId = commentId });
+            // Realtime broadcast SignalR
+            _ = _hubContext.Clients.All.SendAsync("DeleteComment", new { documentId = docId, commentId = commentId });
 
             return Ok(new { message = "Đã xóa comment." });
         }
@@ -438,8 +440,8 @@ namespace ToolCalendar.Api.Controllers
                     Users = g.Select(r => r.Username).ToList()
                 });
 
-            // Realtime broadcast
-            _ = _hub.BroadcastAsync("comment_reaction", new { 
+            // Realtime broadcast SignalR
+            _ = _hubContext.Clients.All.SendAsync("ReceiveReaction", new { 
                 documentId = docId, 
                 commentId = commentId, 
                 reactions = updatedReactions 

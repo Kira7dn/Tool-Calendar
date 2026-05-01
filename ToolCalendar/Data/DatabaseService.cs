@@ -83,7 +83,7 @@ namespace ToolCalendar.Data
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', 'admin@123456', 'Admin', datetime('now'))";
+                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', 'admin@123456', 'Admin', datetime('now', 'localtime'))";
                 cmd.ExecuteNonQuery();
             }
             else
@@ -120,7 +120,7 @@ namespace ToolCalendar.Data
             try {
                 using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
-                string sql = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES (@u, @p, @r, datetime('now'))";
+                string sql = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES (@u, @p, @r, datetime('now', 'localtime'))";
                 using var cmd = new SqliteCommand(sql, connection);
                 cmd.Parameters.AddWithValue("@u", username);
                 cmd.Parameters.AddWithValue("@p", password);
@@ -158,7 +158,7 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "INSERT INTO Comments (DocumentId, UserId, Username, Content, CreatedAt) VALUES (@docId, @uId, @uName, @c, datetime('now'))";
+            string sql = "INSERT INTO Comments (DocumentId, UserId, Username, Content, CreatedAt) VALUES (@docId, @uId, @uName, @c, datetime('now', 'localtime'))";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@docId", c.DocumentId);
             cmd.Parameters.AddWithValue("@uId", c.UserId);

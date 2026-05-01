@@ -2,6 +2,8 @@ using Microsoft.Extensions.Logging;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
 using System.Text.Json;
+using Microsoft.AspNetCore.SignalR;
+using ToolCalendar.Hubs;
 
 namespace ToolCalendar.Services
 {
@@ -14,18 +16,18 @@ namespace ToolCalendar.Services
     {
         private readonly IEmailService _emailService;
         private readonly IVapidService _vapidService;
-        private readonly SessionHubService _sessionHub;
+        private readonly IHubContext<NotificationHub> _hubContext;
         private readonly ILogger<NotificationManager> _logger;
 
         public NotificationManager(
             IEmailService emailService, 
             IVapidService vapidService, 
-            SessionHubService sessionHub,
+            IHubContext<NotificationHub> hubContext,
             ILogger<NotificationManager> logger)
         {
             _emailService = emailService;
             _vapidService = vapidService;
-            _sessionHub = sessionHub;
+            _hubContext = hubContext;
             _logger = logger;
         }
 
@@ -87,8 +89,8 @@ namespace ToolCalendar.Services
                 }
             }
 
-            // 3. Gửi Real-time SSE (nếu user đang mở web)
-            await _sessionHub.BroadcastAsync("notification", new {
+            // 3. Gửi Real-time SignalR (nếu user đang mở web)
+            await _hubContext.Clients.Group($"User_{userId}").SendAsync("ReceiveNotification", new {
                 title,
                 body,
                 data
