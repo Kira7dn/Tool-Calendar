@@ -43,10 +43,23 @@ export function normalizeDateInputToIso(value) {
     return `${year}-${month}-${day}`;
 }
 
-export function getBadgeClass(days) {
-    if (days < 0) return 'badge-danger';
-    if (days <= 7) return 'badge-warning';
-    return 'badge-success';
+import { getStatusConfig } from './constants.js';
+
+export function getBadgeClass(statusValue, days) {
+    if (statusValue === 'Đã hoàn thành') return 'badge-success';
+
+    // Đảm bảo days là số để so sánh chính xác
+    const d = Number(days);
+
+    if (!Number.isNaN(d) && d !== 9999) {
+        if (d < 0) return 'badge-danger';   // Quá hạn -> Đỏ
+        if (d <= 7) return 'badge-warning'; // Sắp hết hạn -> Vàng
+        return 'badge-success';             // Còn nhiều thời gian -> Xanh
+    }
+
+    // Nếu không có số ngày, lấy theo cấu hình trạng thái trong constants.js
+    const config = getStatusConfig(statusValue);
+    return config.badgeClass;
 }
 
 export function escapeHtml(value = '') {

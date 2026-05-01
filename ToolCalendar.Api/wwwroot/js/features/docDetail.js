@@ -1,5 +1,6 @@
 import { escapeAttribute } from '../core/dom.js';
 import { escapeHtml, formatDate, formatDateForTextInput, normalizeDateInputToIso } from '../core/formatters.js';
+import { DOC_STATUS } from '../core/constants.js';
 
 export function createDocDetailFeature(context) {
     let currentDocId = null;
@@ -338,25 +339,23 @@ export function createDocDetailFeature(context) {
 
     // ─── Status helpers ───────────────────────────────────────────────────
 
-    /** Tải danh sách trạng thái từ API và cập nhật select */
+    /** Tải danh sách trạng thái từ hằng số hệ thống và cập nhật select */
     async function loadStatusOptions() {
         if (isStatusOptionsLoaded) return;
-        try {
-            const res = await context.api.get('/api/stats/settings');
-            if (!res.ok) return;
-            const settings = await res.json();
-            if (Array.isArray(settings.statusList) && settings.statusList.length > 0) {
-                statusOptions = settings.statusList;
-            }
-            isStatusOptionsLoaded = true;
-        } catch { /* giữ nguyên mặc định nếu lỗi */ }
-
+        
+        // Chuyển đối tượng DOC_STATUS thành mảng các giá trị
+        const statusList = Object.values(DOC_STATUS);
+        statusOptions = statusList.map(s => s.value);
+        
         const sel = document.getElementById('de-status');
         if (!sel) return;
-        sel.innerHTML = statusOptions.map(s =>
-            `<option value="${s}">${s}</option>`
+        
+        sel.innerHTML = statusList.map(s =>
+            `<option value="${s.value}">${s.icon} ${s.label}</option>`
         ).join('') + `<option value="__custom__">✏️ Tùy chỉnh...</option>`;
 
+        isStatusOptionsLoaded = true;
+        
         // Gán trực tiếp onchange đảm bảo 100% hoạt động
         sel.onchange = onStatusSelectChange;
     }

@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace ToolCalendar.Models
 {
@@ -38,6 +38,7 @@ namespace ToolCalendar.Models
         {
             get
             {
+                if (Status == "Đã hoàn thành") return 9999; // Mã đặc biệt cho việc đã hoàn thành
                 if (ThoiHan == null) return int.MaxValue;
                 return (int)(ThoiHan.Value.Date - DateTime.Today).TotalDays;
             }
@@ -48,13 +49,13 @@ namespace ToolCalendar.Models
         {
             get
             {
+                if (Status == "Đã hoàn thành") return "✅ Đã hoàn thành";
                 if (ThoiHan == null) return "Chưa xác định";
+                
                 int days = SoNgayConLai;
                 if (days < 0) return $"Quá hạn {Math.Abs(days)} ngày";
                 if (days == 0) return "Hết hạn hôm nay!";
                 if (days == 1) return "Còn 1 ngày";
-                if (days <= 3) return $"Còn {days} ngày";
-                if (days <= 7) return $"Còn {days} ngày";
                 return $"Còn {days} ngày";
             }
         }

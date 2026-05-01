@@ -5,7 +5,26 @@ export function createDashboardFeature(context) {
     let stats = {};
     let chart = null;
 
-    function init() {}
+    function init() {
+        // Init cơ bản nếu cần
+    }
+
+    let isEventAttached = false;
+    function attachEvents() {
+        if (isEventAttached) return;
+
+        document.addEventListener('click', async (event) => {
+            const row = event.target.closest('#recent-docs tr[data-doc-id]');
+            if (!row) return;
+
+            const docId = parseInt(row.dataset.docId, 10);
+            if (docId) {
+                await context.services.openDocDetail(docId);
+            }
+        });
+
+        isEventAttached = true;
+    }
 
     async function refresh() {
         try {
@@ -37,11 +56,11 @@ export function createDashboardFeature(context) {
         if (!recentBody) return;
 
         recentBody.innerHTML = (result.data || []).map((doc) => `
-            <tr>
-                <td style="font-weight: 600;">${doc.soVanBan}</td>
+            <tr style="cursor:pointer;" data-doc-id="${doc.id}">
+                <td style="font-weight: 700; color: var(--sidebar-bg);">${doc.soVanBan}</td>
                 <td ${doc.trichYeu ? `class="text-truncate-2" title="${escapeAttribute(doc.trichYeu)}"` : ''}>${doc.trichYeu || '-'}</td>
                 <td>${formatDate(doc.thoiHan)}</td>
-                <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai}</span></td>
+                <td><span class="badge ${getBadgeClass(doc.status, doc.soNgayConLai)}">${doc.trangThai || doc.status || ''}</span></td>
             </tr>
         `).join('');
     }
@@ -82,6 +101,8 @@ export function createDashboardFeature(context) {
     return {
         init,
         refresh,
-        activate() {}
+        activate() {
+            attachEvents();
+        }
     };
 }

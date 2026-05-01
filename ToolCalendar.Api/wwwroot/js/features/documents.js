@@ -1,5 +1,6 @@
 import { escapeAttribute } from '../core/dom.js';
 import { formatDate, getBadgeClass } from '../core/formatters.js';
+import { DOC_STATUS } from '../core/constants.js';
 
 export function createDocumentsFeature(context) {
     let documents = [];
@@ -135,7 +136,7 @@ export function createDocumentsFeature(context) {
                     <td><div ${doc.trichYeu ? `class="text-truncate-2" title="${escapeAttribute(doc.trichYeu)}"` : ''}>${doc.trichYeu || '-'}</div></td>
                     <td>${doc.coQuanChuQuan || ''}</td>
                     <td>${formatDate(doc.thoiHan)}</td>
-                    <td><span class="badge ${getBadgeClass(doc.soNgayConLai)}">${doc.trangThai || doc.status || ''}</span></td>
+                    <td><span class="badge ${getBadgeClass(doc.status, doc.soNgayConLai)}">${doc.trangThai || doc.status || ''}</span></td>
                     <td data-stop-propagation="true" style="white-space:nowrap; text-align:center;">
                         <div class="action-dropdown" id="dropdown-${doc.id}">
                             <button class="action-trigger-btn" data-action="toggle-action-dropdown" data-doc-id="${doc.id}" data-stop-propagation="true">
@@ -198,27 +199,12 @@ export function createDocumentsFeature(context) {
             if (!res.ok) return;
             const dbStatuses = await res.json();
 
-            // Các trạng thái mặc định quan trọng
-            const defaults = ['Chưa xử lý', 'Đang xử lý', 'Đã rà soát', 'Đã hoàn thành', 'Lỗi OCR'];
-
-            // Kết hợp và loại bỏ trùng lặp
-            const allStatuses = [...new Set([...defaults, ...dbStatuses])];
-
+            const allStatuses = Object.values(DOC_STATUS);
             let html = '<option value="">Tất cả trạng thái</option>';
             allStatuses.forEach(s => {
-                let icon = '🔹';
-                if (s === 'Chưa xử lý') icon = '⏳';
-                if (s === 'Đang xử lý') icon = '⚙️';
-                if (s === 'Đã rà soát') icon = '🔍';
-                if (s === 'Đã hoàn thành') icon = '✅';
-                if (s === 'Lỗi OCR') icon = '⚠️';
-
-                html += `<option value="${s}">${icon} ${s}</option>`;
+                html += `<option value="${s.value}">${s.icon} ${s.label}</option>`;
             });
-
-            // Luôn thêm tùy chọn Quá hạn cuối cùng vì đây là logic đặc biệt
             html += `<option value="overdue">🛑 Quá hạn</option>`;
-
             sel.innerHTML = html;
         } catch (e) { console.error('Load status filters error:', e); }
     }
