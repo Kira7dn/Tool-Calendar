@@ -1,22 +1,24 @@
-import { createApi } from './core/api.js?v=20260423-v2';
-import { createUiFeature } from './features/ui.js?v=20260423-v2';
-import { createSessionFeature } from './features/session.js?v=20260423-v2';
-import { createNotificationsFeature } from './features/notifications.js?v=20260423-v2';
-import { createPdfFeature } from './features/pdf.js?v=20260423-v2';
-import { createDashboardFeature } from './features/dashboard.js?v=20260423-v2';
-import { createDocumentsFeature } from './features/documents.js?v=20260423-v2';
-import { createDocDetailFeature } from './features/docDetail.js?v=20260423-v2';
-import { createUploadFeature } from './features/upload.js?v=20260423-v2';
-import { createReviewFeature } from './features/review.js?v=20260423-v2';
-import { createUsersFeature } from './features/users.js?v=20260423-v2';
-import { createMyTasksFeature } from './features/myTasks.js?v=20260423-v2';
-import { createSettingsFeature } from './features/settings.js?v=20260423-v2';
-import { createAdminMetaFeature } from './features/adminMeta.js?v=20260423-v2';
+import { createApi } from './core/api.js';
+import { createI18nService } from './core/i18n.js';
+import { createUiFeature } from './features/ui.js';
+import { createSessionFeature } from './features/session.js';
+import { createNotificationsFeature } from './features/notifications.js';
+import { createPdfFeature } from './features/pdf.js';
+import { createDashboardFeature } from './features/dashboard.js';
+import { createDocumentsFeature } from './features/documents.js';
+import { createDocDetailFeature } from './features/docDetail.js';
+import { createUploadFeature } from './features/upload.js';
+import { createReviewFeature } from './features/review.js';
+import { createUsersFeature } from './features/users.js';
+import { createMyTasksFeature } from './features/myTasks.js';
+import { createSettingsFeature } from './features/settings.js';
+import { createAdminMetaFeature } from './features/adminMeta.js';
 
 let currentTab = 'dashboard';
 let initialized = false;
 let sessionFeature;
 let notificationsFeature;
+let i18nService;
 let features = {};
 
 function applyRoleRestrictions(role) {
@@ -62,6 +64,7 @@ function activateTab(tabId) {
 export function initializeApp() {
     if (initialized) return;
 
+    i18nService = createI18nService();
     const ui = createUiFeature();
     sessionFeature = createSessionFeature();
     const api = createApi({ onUnauthorized: () => sessionFeature.logout() });
@@ -69,6 +72,7 @@ export function initializeApp() {
     const context = {
         api,
         ui,
+        i18n: i18nService,
         shell: {
             showTab,
             openSidebar,
@@ -135,11 +139,27 @@ export function initializeApp() {
     settings.prefetch();
     showTab('dashboard');
     document.body.classList.remove('app-booting');
-    
+
+    // Dịch các thành phần tĩnh và cập nhật UI bộ chọn ngôn ngữ
+    translatePage();
+    updateLangSwitcherUI();
+
     // Initialize Lucide icons
     if (window.lucide) {
         window.lucide.createIcons();
     }
+
+    // Xử lý chuyển đổi ngôn ngữ (Minimalist Style)
+    console.log('Initializing language link listeners...');
+    const langLinks = document.querySelectorAll('.lang-link');
+    langLinks.forEach(link => {
+        link.onclick = (e) => {
+            e.preventDefault();
+            const lang = link.dataset.lang;
+            console.log('Language link clicked:', lang);
+            changeLanguage(lang);
+        };
+    });
 
     // Xử lý đổi mật khẩu cho user hiện tại
     document.addEventListener('click', async (event) => {
@@ -148,7 +168,7 @@ export function initializeApp() {
 
         if (action.dataset.action === 'open-change-password-modal') {
             document.getElementById('change-password-modal').style.display = 'flex';
-            
+
             // Reset types and icons
             ['current-user-new-password', 'current-user-confirm-password'].forEach(id => {
                 const input = document.getElementById(id);
@@ -227,7 +247,7 @@ export async function showTab(tabId) {
 
     // Tự động đóng các trang/modal toàn màn hình khi chuyển tab
     if (features.review) features.review.exitReviewScene();
-    
+
     const docDetailPage = document.getElementById('doc-detail-page');
     if (docDetailPage) {
         docDetailPage.style.transform = 'translateX(100%)';
@@ -237,6 +257,11 @@ export async function showTab(tabId) {
     currentTab = tabId;
     await activateTab(tabId);
     closeSidebar();
+    
+    // Cập nhật tiêu đề trình duyệt (Browser Tab Title)
+    const appName = i18nService.t('app_name');
+    const tabName = i18nService.t(tabId);
+    document.title = `${appName} | ${tabName}`;
 }
 
 export function openSidebar() {
@@ -276,4 +301,46 @@ export function logout(kicked = false) {
 
 export async function requestNotificationPermission() {
     await notificationsFeature?.requestPermission();
+}
+
+function translatePage() {
+    console.log('Translating page...');
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        el.innerText = i18nService.t(key);
+    });
+
+    // Translate Placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        el.placeholder = i18nService.t(key);
+    });
+
+    const pageTitle = document.getElementById('page-title');
+    const pageSubtitle = document.getElementById('page-subtitle');
+    const appName = i18nService.t('app_name');
+    if (pageTitle) pageTitle.innerText = appName;
+    if (pageSubtitle) pageSubtitle.innerText = i18nService.t('page_subtitle');
+
+    // Cập nhật tiêu đề trình duyệt khi đổi ngôn ngữ
+    const tabName = i18nService.t(currentTab);
+    document.title = `${appName} | ${tabName}`;
+}
+
+function updateLangSwitcherUI() {
+    const lang = i18nService.getLanguage();
+    console.log('Updating Lang Switcher UI for:', lang);
+
+    document.querySelectorAll('.lang-link').forEach(link => {
+        const isActive = link.getAttribute('data-lang') === lang;
+        link.classList.toggle('active', isActive);
+        if (isActive) {
+            console.log(`Highlighted active language: ${lang}`);
+        }
+    });
+}
+
+export function changeLanguage(lang) {
+    console.log('Changing language to:', lang);
+    i18nService.setLanguage(lang);
 }

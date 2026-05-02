@@ -1,7 +1,7 @@
-import { requireAuth } from './core/api.js?v=20260423-v2';
-import { appendPartials } from './core/dom.js?v=20260423-v2';
-import { shellState } from './core/state.js?v=20260423-v2';
-import { bindShellNavigation } from './features/navigation.js?v=20260423-v2';
+import { requireAuth } from './core/api.js';
+import { appendPartials } from './core/dom.js';
+import { shellState } from './core/state.js';
+import { bindShellNavigation } from './features/navigation.js';
 import {
     initializeApp,
     showTab,
@@ -10,7 +10,7 @@ import {
     toggleSidebar,
     logout,
     requestNotificationPermission
-} from './app.js?v=20260423-v2';
+} from './app.js';
 
 const TAB_PARTIALS = [
     '/partials/tabs/dashboard.html',

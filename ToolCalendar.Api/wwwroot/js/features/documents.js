@@ -9,6 +9,14 @@ export function createDocumentsFeature(context) {
     const pageSize = 10;
     let searchTimer = null;
 
+    const statusMap = {
+        'Chưa xử lý': 'status_pending',
+        'Đang xử lý': 'status_processing',
+        'Đã rà soát': 'status_reviewed',
+        'Đã hoàn thành': 'status_completed',
+        'Lỗi OCR': 'status_error_ocr'
+    };
+
     function init() {
         loadStatusFilters();
 
@@ -113,23 +121,23 @@ export function createDocumentsFeature(context) {
             const safeTitle = escapeAttribute(doc.soVanBan || '');
             let menuItems = `
                 <button class="action-dropdown-item item-view" data-action="open-doc-detail" data-doc-id="${doc.id}" data-stop-propagation="true">
-                    &#128064; Xem chi tiet
+                    &#128064; ${context.i18n.t('view_detail')}
                 </button>
                 <button class="action-dropdown-item item-view" data-action="open-pdf" data-doc-id="${doc.id}" data-title="${safeTitle}" data-stop-propagation="true">
-                    &#128196; Xem ban giay PDF
+                    &#128196; ${context.i18n.t('view_pdf')}
                 </button>`;
 
             if (role === 'Admin' || role === 'VanThu') {
                 menuItems += `
                     <button class="action-dropdown-item item-edit" data-action="open-doc-detail-edit" data-doc-id="${doc.id}" data-stop-propagation="true">
-                        &#9999;&#65039; Chinh sua
+                        &#9999;&#65039; ${context.i18n.t('edit')}
                     </button>`;
             }
 
             if (role === 'Admin') {
                 menuItems += `
                     <button class="action-dropdown-item item-delete" data-action="delete-document" data-doc-id="${doc.id}" data-stop-propagation="true">
-                        &#128465;&#65039; Xoa van ban
+                        &#128465;&#65039; ${context.i18n.t('delete')}
                     </button>`;
             }
 
@@ -141,11 +149,11 @@ export function createDocumentsFeature(context) {
                     <td><div ${doc.trichYeu ? `class="text-truncate-2" title="${escapeAttribute(doc.trichYeu)}"` : ''}>${doc.trichYeu || '-'}</div></td>
                     <td>${doc.coQuanChuQuan || ''}</td>
                     <td>${formatDate(doc.thoiHan)}</td>
-                    <td><span class="badge ${getBadgeClass(doc.status, doc.soNgayConLai)}">${doc.trangThai || doc.status || ''}</span></td>
+                    <td><span class="badge ${getBadgeClass(doc.status, doc.soNgayConLai)}">${context.i18n.t(statusMap[doc.trangThai || doc.status] || (doc.trangThai || doc.status || ''))}</span></td>
                     <td data-stop-propagation="true" style="white-space:nowrap; text-align:center;">
                         <div class="action-dropdown" id="dropdown-${doc.id}">
                             <button class="action-trigger-btn" data-action="toggle-action-dropdown" data-doc-id="${doc.id}" data-stop-propagation="true">
-                                ⚙️ Thao tac ▾
+                                ⚙️ ${context.i18n.t('actions')} ▾
                             </button>
                             <div class="action-dropdown-menu" id="dropdown-menu-${doc.id}">
                                 ${menuItems}
@@ -156,7 +164,8 @@ export function createDocumentsFeature(context) {
             `;
         }).join('');
 
-        document.getElementById('docs-page-info').innerText = `Trang ${page} / ${totalPages}`;
+        const pageInfo = context.i18n.t('page_info', { current: page, total: totalPages });
+        document.getElementById('docs-page-info').innerText = pageInfo;
         document.getElementById('btn-prev-docs').disabled = page <= 1;
         document.getElementById('btn-next-docs').disabled = page >= totalPages;
     }
@@ -179,39 +188,39 @@ export function createDocumentsFeature(context) {
     }
 
     async function deleteDocument(id) {
-        const confirmed = await context.ui.showConfirm('Xoa van ban nay?');
+        const confirmed = await context.ui.showConfirm(context.i18n.t('confirm_delete'));
         if (!confirmed) return;
 
         try {
             const response = await context.api.delete(`/api/documents/${id}`);
             if (!response.ok) {
-                context.ui.showAlert('Loi khi xoa', '❌');
+                context.ui.showAlert(context.i18n.t('error_saving'), '❌');
                 return;
             }
 
             await context.services.refreshCoreData();
         } catch (error) {
-            context.ui.showAlert('Loi khi xoa', '❌');
+            context.ui.showAlert(context.i18n.t('error_saving'), '❌');
         }
     }
 
     async function loadStatusFilters() {
         const sel = document.getElementById('doc-status-filter');
         if (!sel) return;
-
         try {
-            const res = await context.api.get('/api/documents/statuses');
-            if (!res.ok) return;
-            const dbStatuses = await res.json();
-
             const allStatuses = Object.values(DOC_STATUS);
-            let html = '<option value="">Tất cả trạng thái</option>';
+            let html = `<option value="">${context.i18n.t('all_status')}</option>`;
+
             allStatuses.forEach(s => {
-                html += `<option value="${s.value}">${s.icon} ${s.label}</option>`;
+                const i18nKey = statusMap[s.value] || `status_${s.value.toLowerCase().replace(/\s/g, '_')}`;
+                const label = context.i18n.t(i18nKey);
+                html += `<option value="${s.value}">${s.icon} ${label}</option>`;
             });
-            html += `<option value="overdue">🛑 Quá hạn</option>`;
-            html += `<option value="urgent">🕒 Sắp hết hạn</option>`;
-            html += `<option value="today">📅 Đến hạn hôm nay</option>`;
+
+            html += `<option value="overdue">🛑 ${context.i18n.t('status_overdue')}</option>`;
+            html += `<option value="urgent">🕒 ${context.i18n.t('status_urgent')}</option>`;
+            html += `<option value="today">📅 ${context.i18n.t('status_today')}</option>`;
+
             sel.innerHTML = html;
         } catch (e) { console.error('Load status filters error:', e); }
     }

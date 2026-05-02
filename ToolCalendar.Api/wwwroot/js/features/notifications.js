@@ -110,6 +110,11 @@ export function createNotificationsFeature(context) {
             notifications.unshift(newNotif);
             renderNotifications();
             renderMobileNotifications();
+
+            // Hiển thị Toast thông báo nổi ngay lập tức
+            if (context.ui && context.ui.showToast) {
+                context.ui.showToast(data.title, 'info');
+            }
         });
 
         // Lắng nghe Service Worker gửi tin nhắn

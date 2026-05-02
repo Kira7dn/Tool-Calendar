@@ -3,18 +3,16 @@ export function createAdminMetaFeature(context) {
     let editingDeptId = null;
 
     function init() {
-        // Global listener for other interactions
         document.addEventListener('click', async (event) => {
             const action = event.target.closest('[data-action]');
             if (!action) return;
 
-            // Close dropdown after choosing an action
             const dropdown = action.closest('.action-menu-dropdown');
             if (dropdown) dropdown.classList.remove('active');
 
             if (action.dataset.action === 'open-dept-modal') {
                 editingDeptId = null;
-                document.getElementById('dept-modal-title').innerText = '🏢 Thêm Phòng ban';
+                document.getElementById('dept-modal-title').innerText = `🏢 ${context.i18n.t('add_department') || 'Thêm Phòng ban'}`;
                 document.getElementById('dept-name').value = '';
                 document.getElementById('dept-desc').value = '';
                 openModal('dept-modal');
@@ -23,7 +21,7 @@ export function createAdminMetaFeature(context) {
                 editingDeptId = parseInt(action.dataset.departmentId, 10);
                 const dept = currentDepts.find(d => d.id === editingDeptId);
                 if (dept) {
-                    document.getElementById('dept-modal-title').innerText = '📝 Sửa Phòng ban';
+                    document.getElementById('dept-modal-title').innerText = `📝 ${context.i18n.t('edit_department') || 'Sửa Phòng ban'}`;
                     document.getElementById('dept-name').value = dept.name;
                     document.getElementById('dept-desc').value = dept.description || '';
                     openModal('dept-modal');
@@ -80,20 +78,20 @@ export function createAdminMetaFeature(context) {
                     <td style="color:var(--text-secondary);">${department.description || '-'}</td>
                     <td>
                         <div class="action-menu-container">
-                            <button class="action-menu-btn" title="Thao tác">
+                            <button class="action-menu-btn" title="${context.i18n.t('actions')}">
                                 <i data-lucide="more-horizontal"></i>
                             </button>
                             <div class="action-menu-dropdown">
                                 <button class="action-menu-item" data-action="edit-department" data-department-id="${department.id}">
-                                    <i data-lucide="pencil"></i> Sửa
+                                    <i data-lucide="pencil"></i> ${context.i18n.t('edit')}
                                 </button>
                                 <button class="action-menu-item delete" data-action="delete-department" data-department-id="${department.id}">
-                                    <i data-lucide="trash-2"></i> Xóa
+                                    <i data-lucide="trash-2"></i> ${context.i18n.t('delete')}
                                 </button>
                             </div>
                         </div>
                     </td>
-                </tr>`).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">Chưa có phòng ban nào</td></tr>';
+                </tr>`).join('') || `<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">${context.i18n.t('no_data') || 'Chưa có phòng ban nào'}</td></tr>`;
 
             if (window.lucide) window.lucide.createIcons();
         } catch (err) { console.error(err); }
@@ -103,7 +101,7 @@ export function createAdminMetaFeature(context) {
         const name = document.getElementById('dept-name').value.trim();
         const description = document.getElementById('dept-desc').value.trim();
         if (!name) {
-            context.ui.showAlert('Vui lòng nhập tên phòng ban!', '⚠️');
+            context.ui.showAlert(context.i18n.t('error_missing_name') || 'Vui lòng nhập tên!', '⚠️');
             return;
         }
 
@@ -118,17 +116,17 @@ export function createAdminMetaFeature(context) {
         });
 
         if (!response.ok) {
-            context.ui.showAlert('Lỗi khi lưu.', '❌');
+            context.ui.showAlert(context.i18n.t('error_saving') || 'Lỗi khi lưu.', '❌');
             return;
         }
 
-        context.ui.showAlert(editingDeptId ? 'Đã cập nhật phòng ban!' : 'Đã thêm phòng ban!', '✅');
+        context.ui.showAlert(context.i18n.t('success_saved') || 'Thành công!', '✅');
         closeModal('dept-modal');
         await fetchDepartments();
     }
 
     async function deleteDepartment(id) {
-        if (!await context.ui.showConfirm('Xóa phòng ban này?')) return;
+        if (!await context.ui.showConfirm(context.i18n.t('confirm_delete') || 'Xác nhận xóa?')) return;
         await context.api.delete(`/api/admin/departments/${id}`);
         await fetchDepartments();
     }
@@ -150,17 +148,17 @@ export function createAdminMetaFeature(context) {
                     </td>
                     <td>
                         <div class="action-menu-container">
-                            <button class="action-menu-btn" title="Thao tác">
+                            <button class="action-menu-btn" title="${context.i18n.t('actions')}">
                                 <i data-lucide="more-horizontal"></i>
                             </button>
                             <div class="action-menu-dropdown">
                                 <button class="action-menu-item delete" data-action="delete-label" data-label-id="${label.id}">
-                                    <i data-lucide="trash-2"></i> Xóa
+                                    <i data-lucide="trash-2"></i> ${context.i18n.t('delete')}
                                 </button>
                             </div>
                         </div>
                     </td>
-                </tr>`).join('') || '<tr><td colspan="3" style="text-align:center; color:var(--text-secondary);">Chưa có nhãn</td></tr>';
+                </tr>`).join('') || `<tr><td colspan="3" style="text-align:center; color:var(--text-secondary);">${context.i18n.t('no_data') || 'Chưa có nhãn'}</td></tr>`;
 
             if (window.lucide) window.lucide.createIcons();
         } catch (err) { console.error(err); }
@@ -169,7 +167,7 @@ export function createAdminMetaFeature(context) {
     async function createLabel() {
         const name = document.getElementById('label-name').value.trim();
         if (!name) {
-            context.ui.showAlert('Vui lòng nhập tên nhãn!', '⚠️');
+            context.ui.showAlert(context.i18n.t('error_missing_name') || 'Vui lòng nhập tên!', '⚠️');
             return;
         }
 
@@ -182,17 +180,17 @@ export function createAdminMetaFeature(context) {
         });
 
         if (!response.ok) {
-            context.ui.showAlert('Lỗi.', '❌');
+            context.ui.showAlert(context.i18n.t('error_saving') || 'Lỗi khi lưu.', '❌');
             return;
         }
 
-        context.ui.showAlert('Đã thêm nhãn!', '✅');
+        context.ui.showAlert(context.i18n.t('success_saved') || 'Thành công!', '✅');
         closeModal('label-modal');
         await fetchLabels();
     }
 
     async function deleteLabel(id) {
-        if (!await context.ui.showConfirm('Xóa nhãn này?')) return;
+        if (!await context.ui.showConfirm(context.i18n.t('confirm_delete') || 'Xác nhận xóa?')) return;
         await context.api.delete(`/api/admin/labels/${id}`);
         await fetchLabels();
     }
@@ -209,20 +207,20 @@ export function createAdminMetaFeature(context) {
                 <tr>
                     <td style="font-weight:600;">${rule.keyword}</td>
                     <td>${rule.labelId || '-'}</td>
-                    <td>${rule.defaultDeadlineDays || '-'} ngày</td>
+                    <td>${rule.defaultDeadlineDays || '-'} ${context.i18n.t('days') || 'ngày'}</td>
                     <td>
                         <div class="action-menu-container">
-                            <button class="action-menu-btn" title="Thao tác">
+                            <button class="action-menu-btn" title="${context.i18n.t('actions')}">
                                 <i data-lucide="more-horizontal"></i>
                             </button>
                             <div class="action-menu-dropdown">
                                 <button class="action-menu-item delete" data-action="delete-rule" data-rule-id="${rule.id}">
-                                    <i data-lucide="trash-2"></i> Xóa
+                                    <i data-lucide="trash-2"></i> ${context.i18n.t('delete')}
                                 </button>
                             </div>
                         </div>
                     </td>
-                </tr>`).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">Chưa có quy tắc</td></tr>';
+                </tr>`).join('') || `<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">${context.i18n.t('no_data') || 'Chưa có quy tắc'}</td></tr>`;
 
             if (window.lucide) window.lucide.createIcons();
         } catch (err) { console.error(err); }
@@ -231,7 +229,7 @@ export function createAdminMetaFeature(context) {
     async function createRule() {
         const keyword = document.getElementById('rule-keyword').value.trim();
         if (!keyword) {
-            context.ui.showAlert('Vui lòng nhập từ khóa!', '⚠️');
+            context.ui.showAlert(context.i18n.t('error_missing_name') || 'Vui lòng nhập tên!', '⚠️');
             return;
         }
 
@@ -244,17 +242,17 @@ export function createAdminMetaFeature(context) {
         });
 
         if (!response.ok) {
-            context.ui.showAlert('Lỗi.', '❌');
+            context.ui.showAlert(context.i18n.t('error_saving') || 'Lỗi khi lưu.', '❌');
             return;
         }
 
-        context.ui.showAlert('Đã thêm rule!', '✅');
+        context.ui.showAlert(context.i18n.t('success_saved') || 'Thành công!', '✅');
         closeModal('rule-modal');
         await fetchRules();
     }
 
     async function deleteRule(id) {
-        if (!await context.ui.showConfirm('Xóa rule này?')) return;
+        if (!await context.ui.showConfirm(context.i18n.t('confirm_delete') || 'Xác nhận xóa?')) return;
         await context.api.delete(`/api/admin/rules/${id}`);
         await fetchRules();
     }
@@ -266,9 +264,9 @@ export function createAdminMetaFeature(context) {
             link.href = URL.createObjectURL(blob);
             link.download = `CongVan_Backup_${new Date().toISOString().slice(0, 10)}.csv`;
             link.click();
-            context.ui.showAlert('Đã tải xuống file backup CSV!', '✅');
+            context.ui.showAlert(context.i18n.t('success_saved') || 'Đã tải xuống file backup CSV!', '✅');
         } catch (error) {
-            context.ui.showAlert('Lỗi xuất dữ liệu.', '❌');
+            context.ui.showAlert(context.i18n.t('error_saving') || 'Lỗi xuất dữ liệu.', '❌');
         }
     }
 

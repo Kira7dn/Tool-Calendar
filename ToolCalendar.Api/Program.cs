@@ -128,11 +128,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Cấu hình để nhận diện HTTPS từ Nginx Proxy
-app.UseForwardedHeaders(new ForwardedHeadersOptions
+// Cấu hình để nhận diện HTTPS từ Nginx/Ngrok Proxy (Quan trọng khi dùng ngrok)
+var forwardedOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
+};
+forwardedOptions.KnownNetworks.Clear(); // Tin tưởng mọi mạng (cần thiết cho ngrok/proxy bên ngoài)
+forwardedOptions.KnownProxies.Clear();   // Tin tưởng mọi proxy
+app.UseForwardedHeaders(forwardedOptions);
 
 // 2. Khởi tạo Database
 DatabaseService.Initialize();
@@ -145,6 +148,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+app.UseWebSockets();
 
 // Serve static files
 app.UseDefaultFiles();

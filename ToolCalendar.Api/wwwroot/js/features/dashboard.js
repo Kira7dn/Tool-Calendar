@@ -89,12 +89,20 @@ export function createDashboardFeature(context) {
         const recentBody = document.querySelector('#recent-docs tbody');
         if (!recentBody) return;
 
+        const statusMap = {
+            'Chưa xử lý': 'status_pending',
+            'Đang xử lý': 'status_processing',
+            'Đã rà soát': 'status_reviewed',
+            'Đã hoàn thành': 'status_completed',
+            'Lỗi OCR': 'status_error_ocr'
+        };
+
         recentBody.innerHTML = (result.data || []).map((doc) => `
             <tr style="cursor:pointer;" data-doc-id="${doc.id}">
                 <td style="font-weight: 700; color: var(--sidebar-bg);">${doc.soVanBan}</td>
                 <td ${doc.trichYeu ? `class="text-truncate-2" title="${escapeAttribute(doc.trichYeu)}"` : ''}>${doc.trichYeu || '-'}</td>
                 <td>${formatDate(doc.thoiHan)}</td>
-                <td><span class="badge ${getBadgeClass(doc.status, doc.soNgayConLai)}">${doc.trangThai || doc.status || ''}</span></td>
+                <td><span class="badge ${getBadgeClass(doc.status, doc.soNgayConLai)}">${context.i18n.t(statusMap[doc.trangThai || doc.status] || (doc.trangThai || doc.status || ''))}</span></td>
             </tr>
         `).join('');
     }
@@ -107,10 +115,16 @@ export function createDashboardFeature(context) {
             chart.destroy();
         }
 
+        const labels = [
+            context.i18n.t('overdue'),
+            context.i18n.t('nearly_due'),
+            context.i18n.t('processing')
+        ];
+
         chart = new Chart(canvas.getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: ['Qua han', 'Sap het han', 'Dung han'],
+                labels: labels,
                 datasets: [{
                     data: [
                         stats.overdue || 0,
@@ -124,7 +138,13 @@ export function createDashboardFeature(context) {
             },
             options: {
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { 
+                            color: '#94a3b8',
+                            font: { family: 'Inter, sans-serif', size: 12 }
+                        } 
+                    }
                 },
                 cutout: '70%',
                 responsive: true

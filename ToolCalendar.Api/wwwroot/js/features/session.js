@@ -5,12 +5,14 @@ export function createSessionFeature() {
         const token = localStorage.getItem('auth_token');
         if (!token) return;
 
-        // Khởi tạo SignalR thay vì SSE
+        // Khởi tạo SignalR với cấu hình tối ưu cho Proxy/Ngrok
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/notificationHub", {
-                accessTokenFactory: () => token
+                accessTokenFactory: () => token,
+                skipNegotiation: false,
+                transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
             })
-            .withAutomaticReconnect()
+            .withAutomaticReconnect([0, 2000, 5000, 10000, 20000]) // Thử lại sau 0s, 2s, 5s...
             .build();
 
         connection.on("ReceiveNotification", (data) => {

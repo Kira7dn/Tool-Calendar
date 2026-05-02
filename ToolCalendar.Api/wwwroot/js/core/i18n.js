@@ -1,0 +1,333 @@
+/**
+ * I18n Service - Quản lý đa ngôn ngữ cho hệ thống
+ */
+const translations = {
+    vi: {
+        // Common
+        app_name: "Hệ Thống Điều Phối Công Văn",
+        page_subtitle: "Giám sát và đôn đốc thực thi công việc thời gian thực",
+        dashboard: "Bảng điều khiển",
+        documents: "Văn bản",
+        upload: "Tải hồ sơ mới",
+        users: "Nhân sự",
+        my_tasks: "Công việc của tôi",
+        settings: "Cấu hình",
+        change_password: "Đổi mật khẩu",
+        logout: "Đăng xuất",
+        home: "Trang chủ",
+        notifications: "Thông báo",
+        tasks: "Công việc",
+        actions: "Thao tác",
+        page: "Trang",
+        admin: "Quản trị viên",
+        admin_system: "Quản trị viên hệ thống",
+        Admin: "Quản trị viên",
+        LanhDao: "Lãnh đạo",
+        VanThu: "Văn thư",
+        CanBo: "Cán bộ",
+        org_name: "UBND phường Cẩm Phả",
+        confirm: "Xác nhận",
+        cancel: "Hủy bỏ",
+        save: "Lưu thay đổi",
+        add: "Thêm mới",
+        edit: "Chỉnh sửa",
+        delete: "Xóa",
+        no_data: "Chưa có dữ liệu",
+        loading: "Đang tải...",
+        all: "Tất cả",
+        unread: "Chưa đọc",
+        mark_all_read: "Đánh dấu đã đọc",
+        logged_in_as: "Đang truy cập:",
+        
+        // Documents Tab
+        doc_list_title: "Danh sách văn bản toàn đơn vị",
+        add_doc: "Thêm văn bản",
+        search_placeholder: "Tìm số hiệu, nội dung...",
+        all_status: "Tất cả trạng thái",
+        sort_newest: "Mới nhất",
+        sort_oldest: "Cũ nhất",
+        sort_deadline_near: "Hạn gần nhất",
+        sort_deadline_far: "Hạn xa nhất",
+        
+        // Table Headers
+        stt: "STT",
+        doc_no: "Số văn bản",
+        publish_date: "Ngày ban hành",
+        summary: "Trích yếu",
+        dept_advise: "Cơ quan tham mưu",
+        deadline: "Thời hạn",
+        status: "Trạng thái",
+        full_name: "Họ tên",
+        username: "Tên đăng nhập",
+        email: "Email",
+        phone: "SĐT",
+        department: "Phòng ban",
+        role: "Vai trò",
+        file: "Tệp",
+        assigned_to: "Cán bộ",
+        
+        // Upload Tab
+        drag_drop_pdf: "Kéo thả file PDF vào đây",
+        ocr_notice: "Hệ thống sẽ tự động bóc tách (OCR) thông tin văn bản",
+        choose_file: "Chọn file từ máy tính",
+        choose_folder: "Chọn thư mục",
+        processing_data: "Đang bóc tách dữ liệu",
+        preparing: "Chuẩn bị xử lý...",
+        ocr_queue: "Hàng chờ OCR & điều phối",
+        review: "Rà soát",
+        save_all: "Lưu toàn bộ",
+        clear_list: "Xóa danh sách",
+        
+        // Users Tab
+        user_management: "Quản lý người dùng hệ thống",
+        create_user: "Tạo User mới",
+        edit_account: "Chỉnh sửa tài khoản",
+        pwd_leave_blank: "Mật khẩu (để trống nếu không đổi)",
+        enter_new_pwd: "Nhập mật khẩu mới...",
+        confirm_pwd: "Xác nhận mật khẩu mới",
+        save_account: "Lưu tài khoản",
+        
+        // Status Values
+        status_pending: "Chưa xử lý",
+        status_processing: "Đang xử lý",
+        status_reviewed: "Đã rà soát",
+        status_completed: "Đã hoàn thành",
+        status_error_ocr: "Lỗi OCR",
+        status_overdue: "Quá hạn",
+        status_urgent: "Sắp hết hạn",
+        status_today: "Đến hạn hôm nay",
+        
+        // Pagination
+        prev: "Trước",
+        next: "Sau",
+        page_info: "Trang {current} / {total}",
+
+        // Dashboard
+        total_docs: "TỔNG VĂN BẢN",
+        nearly_due: "SẮP HẾT HẠN",
+        overdue: "ĐÃ QUÁ HẠN",
+        due_today: "ĐẾN HẠN HÔM NAY",
+        system_data: "Dữ liệu toàn hệ thống",
+        within_7_days: "Trong vòng 7 ngày",
+        action_required: "Cần xử lý ngay lập tức",
+        recent_activity: "Xử lý gần đây",
+        completion_rate: "Tỷ lệ hoàn thành",
+
+        // Settings
+        system_config: "Cấu hình hệ thống & OCR",
+        scan_time: "Giờ quét thông báo tự động (Deadline)",
+        scan_time_info: "Hệ thống sẽ quét văn bản sắp hết hạn vào giờ này hàng ngày.",
+        max_pages: "Số trang quét OCR tối đa mỗi file",
+        max_pages_info: "Mặc định: 0 (Quét toàn bộ). Nếu là 2, hệ thống chỉ quét 2 trang đầu.",
+        deadline_keywords: "Từ khóa nhận diện \"Thời hạn xử lý\"",
+        exclude_keywords: "Từ khóa LOẠI TRỪ hạn xử lý",
+        exclude_keywords_info: "Ngày xuất hiện gần các từ này sẽ bị bỏ qua (vd: sinh năm, tại bãi...)",
+        min_deadline: "Hạn xử lý tối thiểu (ngày)",
+        min_deadline_info: "Ví dụ: đặt là 1 để loại bỏ các ngày trước ngày ban hành.",
+        status_list: "Danh sách trạng thái văn bản",
+        add_status: "Thêm trạng thái",
+        audit_logs: "Nhật ký hệ thống",
+        departments: "Phòng ban",
+        labels_rules: "Nhãn & Rules",
+        backup: "Sao lưu dữ liệu",
+        save_settings: "Lưu cấu hình hệ thống",
+        test_notification: "Thử thông báo",
+        trigger_scan: "Quét ngay",
+        export_csv: "Xuất toàn bộ dữ liệu ra CSV",
+        export_csv_info: "Tải xuống toàn bộ danh sách văn bản dưới dạng file CSV.",
+        download_backup: "Tải xuống file CSV",
+        audit_time: "Thời gian",
+        audit_user: "Người dùng",
+        audit_action: "Hoạt động",
+        add_department: "Thêm Phòng ban",
+        edit_department: "Sửa Phòng ban",
+        days: "ngày",
+        confirm_delete: "Bạn có chắc chắn muốn xóa không?",
+        error_missing_name: "Vui lòng nhập đầy đủ thông tin tên!",
+        error_saving: "Có lỗi xảy ra khi lưu dữ liệu.",
+        success_saved: "Dữ liệu đã được cập nhật thành công!",
+        final_deadline: "Kỳ hạn cuối cùng",
+        processing: "Đang xử lý"
+    },
+    en: {
+        // Common
+        app_name: "Document Coordination System",
+        page_subtitle: "Real-time monitoring and enforcement of workflow",
+        dashboard: "Dashboard",
+        documents: "Documents",
+        upload: "Upload New Files",
+        users: "Personnel",
+        my_tasks: "My Tasks",
+        settings: "Settings",
+        change_password: "Change Password",
+        logout: "Logout",
+        home: "Home",
+        notifications: "Notifications",
+        tasks: "Tasks",
+        actions: "Actions",
+        page: "Page",
+        admin: "Administrator",
+        admin_system: "System Administrator",
+        Admin: "Administrator",
+        LanhDao: "Leader",
+        VanThu: "Clerk",
+        CanBo: "Officer",
+        org_name: "Cam Pha Ward People's Committee",
+        confirm: "Confirm",
+        cancel: "Cancel",
+        save: "Save Changes",
+        add: "Add New",
+        edit: "Edit",
+        delete: "Delete",
+        no_data: "No data available",
+        loading: "Loading...",
+        all: "All",
+        unread: "Unread",
+        mark_all_read: "Mark all as read",
+        logged_in_as: "Logged in as:",
+
+        // Documents Tab
+        doc_list_title: "Unit-wide Document List",
+        add_doc: "Add Document",
+        search_placeholder: "Search number, summary...",
+        all_status: "All Statuses",
+        sort_newest: "Newest",
+        sort_oldest: "Oldest",
+        sort_deadline_near: "Deadline (Soonest)",
+        sort_deadline_far: "Deadline (Latest)",
+        
+        // Table Headers
+        stt: "No.",
+        doc_no: "Doc Number",
+        publish_date: "Publish Date",
+        summary: "Summary",
+        dept_advise: "Advised By",
+        deadline: "Deadline",
+        status: "Status",
+        full_name: "Full Name",
+        username: "Username",
+        email: "Email",
+        phone: "Phone",
+        department: "Department",
+        role: "Role",
+        file: "File",
+        assigned_to: "Officer",
+        
+        // Upload Tab
+        drag_drop_pdf: "Drag & drop PDF files here",
+        ocr_notice: "The system will automatically extract (OCR) document info",
+        choose_file: "Choose file from computer",
+        choose_folder: "Choose folder",
+        processing_data: "Processing data (OCR)",
+        preparing: "Preparing...",
+        ocr_queue: "OCR Queue & Coordination",
+        review: "Review",
+        save_all: "Save All",
+        clear_list: "Clear List",
+        
+        // Users Tab
+        user_management: "System User Management",
+        create_user: "Create New User",
+        edit_account: "Edit Account",
+        pwd_leave_blank: "Password (leave blank if no change)",
+        enter_new_pwd: "Enter new password...",
+        confirm_pwd: "Confirm new password",
+        save_account: "Save Account",
+
+        // Status Values
+        status_pending: "Pending",
+        status_processing: "Processing",
+        status_reviewed: "Reviewed",
+        status_completed: "Completed",
+        status_error_ocr: "OCR Error",
+        status_overdue: "Overdue",
+        status_urgent: "Urgent",
+        status_today: "Due Today",
+        
+        // Pagination
+        prev: "Prev",
+        next: "Next",
+        page_info: "Page {current} / {total}",
+
+        // Dashboard
+        total_docs: "TOTAL DOCUMENTS",
+        nearly_due: "NEARLY DUE",
+        overdue: "OVERDUE",
+        due_today: "DUE TODAY",
+        system_data: "Full system data",
+        within_7_days: "Within 7 days",
+        action_required: "Immediate action required",
+        recent_activity: "Recent Activity",
+        completion_rate: "Completion Rate",
+
+        // Settings
+        system_config: "System Config & OCR",
+        scan_time: "Auto Notification Scan Time (Deadline)",
+        scan_time_info: "The system will scan for nearly due documents at this time daily.",
+        max_pages: "Max OCR Pages per file",
+        max_pages_info: "Default: 0 (Scan all). If set to 2, only first 2 pages are scanned.",
+        deadline_keywords: "Deadline Recognition Keywords",
+        exclude_keywords: "Deadline EXCLUSION Keywords",
+        exclude_keywords_info: "Dates near these words will be ignored (e.g., date of birth, etc.)",
+        min_deadline: "Minimum Processing Days",
+        min_deadline_info: "Example: set to 1 to ignore dates before the issuance date.",
+        status_list: "Document Status List",
+        add_status: "Add Status",
+        audit_logs: "Audit Logs",
+        departments: "Departments",
+        labels_rules: "Labels & Rules",
+        backup: "Data Backup",
+        save_settings: "Save System Settings",
+        test_notification: "Test Notification",
+        trigger_scan: "Scan Now",
+        export_csv: "Export all data to CSV",
+        export_csv_info: "Download the full document list as a CSV file.",
+        download_backup: "Download CSV File",
+        audit_time: "Time",
+        audit_user: "User",
+        audit_action: "Activity",
+        add_department: "Add Department",
+        edit_department: "Edit Department",
+        days: "days",
+        confirm_delete: "Are you sure you want to delete?",
+        error_missing_name: "Please enter the required name!",
+        error_saving: "Error occurred while saving data.",
+        success_saved: "Data updated successfully!",
+        final_deadline: "Final Deadline",
+        processing: "Processing"
+    }
+};
+
+export function createI18nService() {
+    let currentLang = localStorage.getItem('app_language') || 'vi';
+
+    function t(key, params = {}) {
+        const langData = translations[currentLang] || translations.vi;
+        let text = langData[key] || key;
+        
+        // Replace params like {current}
+        Object.keys(params).forEach(p => {
+            text = text.replace(`{${p}}`, params[p]);
+        });
+        
+        return text;
+    }
+
+    function setLanguage(lang) {
+        if (translations[lang]) {
+            currentLang = lang;
+            localStorage.setItem('app_language', lang);
+            window.location.reload(); 
+        }
+    }
+
+    function getLanguage() {
+        return currentLang;
+    }
+
+    return {
+        t,
+        setLanguage,
+        getLanguage
+    };
+}

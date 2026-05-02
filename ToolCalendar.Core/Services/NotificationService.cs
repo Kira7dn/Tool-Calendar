@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ToolCalendar.Data;
@@ -9,7 +9,6 @@ namespace ToolCalendar.Services
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DeadlineWorker> _logger;
-        private DateTime? _lastScanDate;
 
         public DeadlineWorker(IServiceProvider serviceProvider, ILogger<DeadlineWorker> logger)
         {
@@ -25,7 +24,6 @@ namespace ToolCalendar.Services
             {
                 try
                 {
-                    // Kiểm tra mỗi phút thay vì ngủ dài để phản ứng nhanh với thay đổi cài đặt
                     string scanTimeStr = DatabaseService.GetAppSetting("Notification_ScanTime", "08:30");
                     if (!TimeSpan.TryParse(scanTimeStr, out TimeSpan targetTime))
                     {
@@ -33,10 +31,7 @@ namespace ToolCalendar.Services
                     }
 
                     DateTime now = DateTime.UtcNow.AddHours(7);
-
-                    // Log mỗi phút để người dùng thấy giờ server
-                    _logger.LogInformation("[DeadlineWorker] Kiểm tra lúc {time} (Giờ cài đặt: {target})", now.ToString("HH:mm"), scanTimeStr);
-
+                    
                     // Kiểm tra xem đã đến giờ quét chưa (trong phạm vi phút hiện tại)
                     if (now.Hour == targetTime.Hours && now.Minute == targetTime.Minutes)
                     {
@@ -45,14 +40,16 @@ namespace ToolCalendar.Services
 
                         if (lastScanDate != todayStr)
                         {
-                            _logger.LogInformation($"[DeadlineWorker] Đến giờ quét ({scanTimeStr}). Bắt đầu xử lý...");
+                            _logger.LogInformation($"[DeadlineWorker] Bắt đầu quét tự động lúc {now:HH:mm:ss} (Giờ cài đặt: {scanTimeStr})");
+                            
+                            // Đánh dấu đã quét NGAY LẬP TỨC để tránh quét lặp lại
+                            DatabaseService.SaveAppSetting("Notification_LastScanDate", todayStr);
+                            
                             await ScanDeadlinesAsync(false);
 
                             // Tự động dọn dẹp nhật ký cũ hơn 30 ngày
                             int cleaned = DatabaseService.DeleteOldAuditLogs(30);
-                            if (cleaned > 0) _logger.LogInformation($"[DeadlineWorker] Đã dọn dẹp {cleaned} nhật ký cũ hơn 30 ngày.");
-
-                            DatabaseService.SaveAppSetting("Notification_LastScanDate", todayStr);
+                            if (cleaned > 0) _logger.LogInformation($"[DeadlineWorker] Đã dọn dẹp {cleaned} nhật ký cũ.");
                         }
                     }
                 }
@@ -61,7 +58,8 @@ namespace ToolCalendar.Services
                     _logger.LogError(ex, "[DeadlineWorker] Lỗi trong vòng lặp chính.");
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                // Nghỉ 30 giây để đảm bảo không bỏ lỡ phút mục tiêu
+                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
             }
         }
 
@@ -107,10 +105,8 @@ namespace ToolCalendar.Services
                         }
                         else
                         {
-                            // Nếu chưa gán cho ai, gửi cho tất cả Admin (UserId = 1 thường là admin đầu tiên)
-                            // Hoặc đơn giản là gửi cho người đang quét nếu là yêu cầu thủ công
                             await notificationManager.SendToUserAsync(
-                                1, // Mặc định gửi cho Admin ID 1
+                                1, // Admin mặc định
                                 title,
                                 body,
                                 new
@@ -126,8 +122,8 @@ namespace ToolCalendar.Services
                     }
                 }
 
-                DatabaseService.InsertAuditLog(null, $"[Hệ thống] Hoàn tất quét thời hạn. Tìm thấy {activeDocs.Count} văn bản đang xử lý, đã gửi {count} thông báo nhắc việc.");
-                _logger.LogInformation($"[DeadlineWorker] Đã quét xong. Gửi {count} thông báo.");
+                DatabaseService.InsertAuditLog(null, $"[Hệ thống] Hoàn tất quét thời hạn. Tổng số văn bản đang xử lý: {activeDocs.Count}. Đã gửi: {count} thông báo nhắc việc.");
+                _logger.LogInformation($"[DeadlineWorker] Đã quét xong {activeDocs.Count} văn bản. Gửi {count} thông báo.");
             }
             catch (Exception ex)
             {
@@ -137,4 +133,3 @@ namespace ToolCalendar.Services
         }
     }
 }
-

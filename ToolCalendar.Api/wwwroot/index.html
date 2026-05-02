@@ -32,60 +32,67 @@
 
             <div class="logo">
                 <img id="app-logo" src="/assets/logo.png" alt="Logo">
-                <h2 class="logo-text">UBND phường Cẩm Phả</h2>
+                <h2 class="logo-text" data-i18n="org_name">UBND phường Cẩm Phả</h2>
             </div>
 
             <ul class="nav-menu">
                 <li class="nav-item active" data-tab="dashboard">
                     <span class="nav-icon">&#128202;</span>
-                    <span class="nav-label">Dashboard</span>
+                    <span class="nav-label" data-i18n="dashboard">Dashboard</span>
                 </li>
                 <li class="nav-item" data-tab="documents">
                     <span class="nav-icon">&#128196;</span>
-                    <span class="nav-label">Văn bản</span>
+                    <span class="nav-label" data-i18n="documents">Văn bản</span>
                 </li>
                 <li class="nav-item" data-tab="upload">
                     <span class="nav-icon">&#128228;</span>
-                    <span class="nav-label">Tải hồ sơ mới</span>
+                    <span class="nav-label" data-i18n="upload">Tải hồ sơ mới</span>
                 </li>
                 <li class="nav-item" data-tab="users" id="nav-users" style="display: none;">
                     <span class="nav-icon">&#128101;</span>
-                    <span class="nav-label">Nhân sự</span>
+                    <span class="nav-label" data-i18n="users">Nhân sự</span>
                 </li>
                 <li class="nav-item" data-tab="my-tasks" id="nav-my-tasks" style="display: none;">
                     <span class="nav-icon">&#128203;</span>
-                    <span class="nav-label">Công việc của tôi</span>
+                    <span class="nav-label" data-i18n="my_tasks">Công việc của tôi</span>
                 </li>
                 <li class="nav-item" data-tab="settings">
                     <span class="nav-icon">&#9881;&#65039;</span>
-                    <span class="nav-label">Cấu hình</span>
+                    <span class="nav-label" data-i18n="settings">Cấu hình</span>
                 </li>
                 <li class="nav-item" data-action="open-change-password-modal">
                     <span class="nav-icon">&#128273;</span>
-                    <span class="nav-label">Đổi mật khẩu</span>
+                    <span class="nav-label" data-i18n="change_password">Đổi mật khẩu</span>
                 </li>
                 <li class="nav-item nav-item-logout" data-action="logout">
                     <span class="nav-icon">&#128682;</span>
-                    <span class="nav-label">Đăng xuất</span>
+                    <span class="nav-label" data-i18n="logout">Đăng xuất</span>
                 </li>
             </ul>
 
             <div class="user-pill" id="user-pill">
-                <p class="user-pill-label">Đang truy cập:</p>
+                <p class="user-pill-label" data-i18n="logged_in_as">Đang truy cập:</p>
                 <p class="user-pill-name" style="font-weight: 700;">Admin User</p>
             </div>
         </aside>
 
         <main class="main-content">
             <header>
-                <button class="mobile-menu-btn" id="mobile-menu-btn" data-action="toggle-sidebar" aria-label="Mở/Đóng menu"><i
-                        data-lucide="menu"></i></button>
+                <button class="mobile-menu-btn" id="mobile-menu-btn" data-action="toggle-sidebar"
+                    aria-label="Mở/Đóng menu"><i data-lucide="menu"></i></button>
                 <div class="header-title">
                     <h1 id="page-title">Hệ Thống Điều Phối Công Văn</h1>
                     <p id="page-subtitle">Giám sát và đôn đốc thực thi công việc thời gian thực</p>
                 </div>
                 <div class="header-actions">
                     <div class="header-controls-group">
+                        <!-- Minimalist Language Switcher -->
+                        <div class="lang-switcher-minimal">
+                            <span class="lang-link" data-lang="en">English</span>
+                            <span class="lang-separator">|</span>
+                            <span class="lang-link" data-lang="vi">Tiếng Việt</span>
+                        </div>
+
                         <!-- Notification Bell (ẩn trên mobile, chỉ hiện desktop) -->
                         <div class="header-notif-container desktop-only">
                             <div class="notif-icon-circle" id="notif-bell" data-action="toggle-notif-dropdown">
@@ -130,19 +137,21 @@
                                     </div>
                                     <div class="user-details">
                                         <div class="user-full-name" id="dropdown-user-name">Admin</div>
-                                        <div class="user-role">Quản trị viên hệ thống</div>
+                                        <div class="user-role" data-i18n="admin_system">Quản trị viên hệ thống</div>
                                     </div>
                                 </div>
                                 <hr>
                                 <div class="user-dropdown-menu">
                                     <div class="user-menu-item" data-tab="settings">
-                                        <span class="menu-icon">⚙️</span> Cài đặt tài khoản
+                                        <span class="menu-icon">⚙️</span> <span data-i18n="settings">Cài đặt tài
+                                            khoản</span>
                                     </div>
                                     <div class="user-menu-item" data-action="open-change-password-modal">
-                                        <span class="menu-icon">🔑</span> Đổi mật khẩu
+                                        <span class="menu-icon">🔑</span> <span data-i18n="change_password">Đổi mật
+                                            khẩu</span>
                                     </div>
                                     <div class="user-menu-item" data-action="logout" style="color: #e41e3f;">
-                                        <span class="menu-icon">🚪</span> Đăng xuất
+                                        <span class="menu-icon">🚪</span> <span data-i18n="logout">Đăng xuất</span>
                                     </div>
                                 </div>
                             </div>
@@ -163,12 +172,13 @@
             <button class="mobile-notif-back" id="mobile-notif-back">
                 <i data-lucide="arrow-left"></i>
             </button>
-            <h2>Thông báo</h2>
-            <button class="btn-text mobile-notif-markall" data-action="mark-all-read">Đánh dấu đã đọc</button>
+            <h2 data-i18n="notifications">Thông báo</h2>
+            <button class="btn-text mobile-notif-markall" data-action="mark-all-read" data-i18n="mark_all_read">Đánh dấu
+                đã đọc</button>
         </div>
         <div class="mobile-notif-tabs">
-            <div class="mobile-notif-tab active" data-filter="all">Tất cả</div>
-            <div class="mobile-notif-tab" data-filter="unread">Chưa đọc</div>
+            <div class="mobile-notif-tab active" data-filter="all" data-i18n="all">Tất cả</div>
+            <div class="mobile-notif-tab" data-filter="unread" data-i18n="unread">Chưa đọc</div>
         </div>
         <div class="mobile-notif-list" id="mobile-notif-list"></div>
     </div>
@@ -178,22 +188,22 @@
     <nav class="mobile-bottom-nav">
         <div class="bottom-nav-item active" data-tab="dashboard">
             <i data-lucide="layout-dashboard" class="bottom-nav-icon"></i>
-            <span class="bottom-nav-label">Trang chủ</span>
+            <span class="bottom-nav-label" data-i18n="home">Trang chủ</span>
         </div>
         <div class="bottom-nav-item" data-tab="documents">
             <i data-lucide="file-text" class="bottom-nav-icon"></i>
-            <span class="bottom-nav-label">Văn bản</span>
+            <span class="bottom-nav-label" data-i18n="documents">Văn bản</span>
         </div>
         <div class="bottom-nav-item" id="mobile-notif-btn" data-action="open-mobile-notif">
             <div style="position: relative; display:flex; align-items:center; justify-content:center;">
                 <i data-lucide="bell" class="bottom-nav-icon"></i>
                 <span class="mobile-badge" id="notif-badge-mobile" style="display:none">0</span>
             </div>
-            <span class="bottom-nav-label">Thông báo</span>
+            <span class="bottom-nav-label" data-i18n="notifications">Thông báo</span>
         </div>
         <div class="bottom-nav-item" data-tab="my-tasks">
             <i data-lucide="check-square" class="bottom-nav-icon"></i>
-            <span class="bottom-nav-label">Công việc</span>
+            <span class="bottom-nav-label" data-i18n="tasks">Công việc</span>
         </div>
     </nav>
 
@@ -201,10 +211,10 @@
     <div id="change-password-modal" class="modal"
         style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
         <div class="data-section" style="width: 400px; padding: 30px;">
-            <h3 style="margin-bottom: 20px;">Đổi mật khẩu</h3>
+            <h3 style="margin-bottom: 20px;" data-i18n="change_password">Đổi mật khẩu</h3>
             <div class="form-group">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Mật
-                    khẩu mới</label>
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;"
+                    data-i18n="new_password">Mật khẩu mới</label>
                 <div style="position: relative;">
                     <input type="password" id="current-user-new-password" placeholder="Nhập mật khẩu mới..."
                         style="width: 100%; box-sizing: border-box; padding: 10px; padding-right: 40px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
@@ -228,15 +238,15 @@
             </div>
             <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
                 <button class="btn" style="background: #e2e8f0; color: #1e293b;"
-                    data-action="close-change-password-modal">Hủy</button>
-                <button class="btn btn-primary" data-action="confirm-change-password">Cập nhật</button>
+                    data-action="close-change-password-modal" data-i18n="cancel">Hủy</button>
+                <button class="btn btn-primary" data-action="confirm-change-password" data-i18n="confirm">Xác
+                    nhận</button>
             </div>
         </div>
     </div>
 
     <script type="module">
-        window.__APP_VERSION__ = '20260423-v2';
-        import '/js/main.js?t=202604302303';
+        import '/js/main.js';
     </script>
 </body>
 

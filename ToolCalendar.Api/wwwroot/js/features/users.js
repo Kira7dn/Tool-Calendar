@@ -50,7 +50,7 @@ export function createUsersFeature(context) {
                 departments = await response.json();
                 const select = document.getElementById('new-department');
                 if (select) {
-                    select.innerHTML = '<option value="">-- Chọn phòng ban --</option>' +
+                    select.innerHTML = `<option value="">-- ${context.i18n.t('department')} --</option>` +
                         departments.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
                 }
             }
@@ -90,8 +90,8 @@ export function createUsersFeature(context) {
                 <td class="col-username">${user.username || user.Username}</td>
                 <td class="col-email">${user.email || user.Email || '-'}</td>
                 <td class="col-phone">${user.phoneNumber || user.PhoneNumber || '-'}</td>
-                <td class="col-dept"><span class="badge badge-dept">${user.departmentName || user.DepartmentName || 'Chưa gán'}</span></td>
-                <td class="col-role"><span class="badge ${getRoleBadgeClass(user.role || user.Role)}">${user.role || user.Role}</span></td>
+                <td class="col-dept"><span class="badge badge-dept">${user.departmentName || user.DepartmentName || context.i18n.t('no_data')}</span></td>
+                <td class="col-role"><span class="badge ${getRoleBadgeClass(user.role || user.Role)}">${context.i18n.t(user.role || user.Role)}</span></td>
                 <td style="white-space: nowrap;" class="col-actions">
                     <div class="action-menu-container">
                         <button class="action-menu-btn" title="Thao tác">
@@ -106,11 +106,11 @@ export function createUsersFeature(context) {
                                 data-phone="${user.phoneNumber || user.PhoneNumber || ''}"
                                 data-role="${user.role || user.Role}"
                                 data-dept-id="${user.departmentId || user.DepartmentId || ''}">
-                                <i data-lucide="pencil"></i> Sửa
+                                <i data-lucide="pencil"></i> ${context.i18n.t('edit')}
                             </button>
                             ${user.username !== 'admin' ? `
                             <button class="action-menu-item delete" data-action="delete-user" data-user-id="${user.id}">
-                                <i data-lucide="trash-2"></i> Xóa
+                                <i data-lucide="trash-2"></i> ${context.i18n.t('delete')}
                             </button>` : ''}
                         </div>
                     </div>
@@ -148,10 +148,10 @@ export function createUsersFeature(context) {
         document.getElementById('new-department').value = '';
 
         if (userId) {
-            title.innerText = 'Chỉnh sửa tài khoản';
+            title.innerText = context.i18n.t('edit_account');
             userGroup.style.display = 'none';
             passGroup.style.display = 'block';
-            document.getElementById('password-label').innerText = 'Mật khẩu (để trống nếu không đổi)';
+            document.getElementById('password-label').innerText = context.i18n.t('pwd_leave_blank');
 
             if (button) {
                 // Populate from button attributes immediately
@@ -177,10 +177,10 @@ export function createUsersFeature(context) {
                 }
             }
         } else {
-            title.innerText = 'Tạo tài khoản mới';
+            title.innerText = context.i18n.t('create_user');
             userGroup.style.display = 'block';
             passGroup.style.display = 'block';
-            document.getElementById('password-label').innerText = 'Mật khẩu';
+            document.getElementById('password-label').innerText = context.i18n.t('new_password') || 'Mật khẩu';
         }
 
         modal.style.display = 'flex';
@@ -200,7 +200,7 @@ export function createUsersFeature(context) {
         const departmentId = document.getElementById('new-department').value;
 
         if (!username || !passwordHash) {
-            context.ui.showAlert('Vui lòng nhập Username và Mật khẩu!', '⚠️');
+            context.ui.showAlert(context.i18n.t('error_missing_name'), '⚠️');
             return;
         }
 
@@ -224,7 +224,7 @@ export function createUsersFeature(context) {
                 return;
             }
 
-            context.ui.showAlert('Tạo người dùng thành công!', '✅');
+            context.ui.showAlert(context.i18n.t('success_saved'), '✅');
             closeModal();
             await refresh();
         } catch (error) {
@@ -263,7 +263,7 @@ export function createUsersFeature(context) {
                 return;
             }
 
-            context.ui.showAlert('Cập nhật thành công!', '✅');
+            context.ui.showAlert(context.i18n.t('success_saved'), '✅');
             closeModal();
             await refresh();
         } catch (error) {
@@ -272,7 +272,7 @@ export function createUsersFeature(context) {
     }
 
     async function deleteUser(id) {
-        const confirmed = await context.ui.showConfirm('Bạn có chắc chắn muốn xóa người dùng này?');
+        const confirmed = await context.ui.showConfirm(context.i18n.t('confirm_delete'));
         if (!confirmed) return;
 
         try {
