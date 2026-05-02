@@ -3,9 +3,14 @@ export function createAdminMetaFeature(context) {
     let editingDeptId = null;
 
     function init() {
+        // Global listener for other interactions
         document.addEventListener('click', async (event) => {
             const action = event.target.closest('[data-action]');
             if (!action) return;
+
+            // Close dropdown after choosing an action
+            const dropdown = action.closest('.action-menu-dropdown');
+            if (dropdown) dropdown.classList.remove('active');
 
             if (action.dataset.action === 'open-dept-modal') {
                 editingDeptId = null;
@@ -51,27 +56,47 @@ export function createAdminMetaFeature(context) {
     }
 
     function openModal(id) {
-        document.getElementById(id).style.display = 'flex';
+        const modal = document.getElementById(id);
+        if (modal) modal.style.display = 'flex';
     }
 
     function closeModal(id) {
-        document.getElementById(id).style.display = 'none';
+        const modal = document.getElementById(id);
+        if (modal) modal.style.display = 'none';
     }
 
     async function fetchDepartments() {
-        const response = await context.api.get('/api/admin/departments');
-        if (!response.ok) return;
-        currentDepts = await response.json();
-        document.getElementById('dept-body').innerHTML = currentDepts.map((department) => `
-            <tr>
-                <td>${department.id}</td>
-                <td style="font-weight:600;">${department.name}</td>
-                <td style="color:var(--text-secondary);">${department.description || '-'}</td>
-                <td>
-                    <button class="btn" style="padding:4px 10px; font-size:0.8rem; color:var(--primary); background:#e0f2fe; margin-right:6px;" data-action="edit-department" data-department-id="${department.id}">Sửa</button>
-                    <button class="btn" style="padding:4px 10px; font-size:0.8rem; color:var(--danger); background:#fee2e2;" data-action="delete-department" data-department-id="${department.id}">Xóa</button>
-                </td>
-            </tr>`).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">Chưa có phòng ban nào</td></tr>';
+        try {
+            const response = await context.api.get('/api/admin/departments');
+            if (!response.ok) return;
+            currentDepts = await response.json();
+            const body = document.getElementById('dept-body');
+            if (!body) return;
+
+            body.innerHTML = currentDepts.map((department) => `
+                <tr>
+                    <td>${department.id}</td>
+                    <td style="font-weight:600;">${department.name}</td>
+                    <td style="color:var(--text-secondary);">${department.description || '-'}</td>
+                    <td>
+                        <div class="action-menu-container">
+                            <button class="action-menu-btn" title="Thao tác">
+                                <i data-lucide="more-horizontal"></i>
+                            </button>
+                            <div class="action-menu-dropdown">
+                                <button class="action-menu-item" data-action="edit-department" data-department-id="${department.id}">
+                                    <i data-lucide="pencil"></i> Sửa
+                                </button>
+                                <button class="action-menu-item delete" data-action="delete-department" data-department-id="${department.id}">
+                                    <i data-lucide="trash-2"></i> Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>`).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">Chưa có phòng ban nào</td></tr>';
+
+            if (window.lucide) window.lucide.createIcons();
+        } catch (err) { console.error(err); }
     }
 
     async function saveDepartment() {
@@ -103,22 +128,48 @@ export function createAdminMetaFeature(context) {
     }
 
     async function deleteDepartment(id) {
-        if (!await context.ui.showConfirm('Xoa phong ban nay?')) return;
+        if (!await context.ui.showConfirm('Xóa phòng ban này?')) return;
         await context.api.delete(`/api/admin/departments/${id}`);
         await fetchDepartments();
     }
 
     async function fetchLabels() {
-        const response = await context.api.get('/api/admin/labels');
-        if (!response.ok) return;
-        const labels = await response.json();
-        document.getElementById('labels-body').innerHTML = labels.map((label) => `<tr><td style="font-weight:600;">${label.name}</td><td><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${label.color || '#c0392b'};vertical-align:middle;"></span> ${label.color || '-'}</td><td><button class="btn" style="padding:4px 10px;font-size:0.8rem;color:var(--danger);background:#fee2e2;" data-action="delete-label" data-label-id="${label.id}">Xoa</button></td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center; color:var(--text-secondary);">Chua co nhan</td></tr>';
+        try {
+            const response = await context.api.get('/api/admin/labels');
+            if (!response.ok) return;
+            const labels = await response.json();
+            const body = document.getElementById('labels-body');
+            if (!body) return;
+
+            body.innerHTML = labels.map((label) => `
+                <tr>
+                    <td style="font-weight:600;">${label.name}</td>
+                    <td>
+                        <span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${label.color || '#c0392b'};vertical-align:middle;margin-right:6px;border:1px solid rgba(0,0,0,0.1);"></span> 
+                        ${label.color || '-'}
+                    </td>
+                    <td>
+                        <div class="action-menu-container">
+                            <button class="action-menu-btn" title="Thao tác">
+                                <i data-lucide="more-horizontal"></i>
+                            </button>
+                            <div class="action-menu-dropdown">
+                                <button class="action-menu-item delete" data-action="delete-label" data-label-id="${label.id}">
+                                    <i data-lucide="trash-2"></i> Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>`).join('') || '<tr><td colspan="3" style="text-align:center; color:var(--text-secondary);">Chưa có nhãn</td></tr>';
+
+            if (window.lucide) window.lucide.createIcons();
+        } catch (err) { console.error(err); }
     }
 
     async function createLabel() {
         const name = document.getElementById('label-name').value.trim();
         if (!name) {
-            context.ui.showAlert('Vui long nhap ten nhan!', '⚠️');
+            context.ui.showAlert('Vui lòng nhập tên nhãn!', '⚠️');
             return;
         }
 
@@ -131,32 +182,56 @@ export function createAdminMetaFeature(context) {
         });
 
         if (!response.ok) {
-            context.ui.showAlert('Loi.', '❌');
+            context.ui.showAlert('Lỗi.', '❌');
             return;
         }
 
-        context.ui.showAlert('Da them nhan!', '✅');
+        context.ui.showAlert('Đã thêm nhãn!', '✅');
         closeModal('label-modal');
         await fetchLabels();
     }
 
     async function deleteLabel(id) {
-        if (!await context.ui.showConfirm('Xoa nhan nay?')) return;
+        if (!await context.ui.showConfirm('Xóa nhãn này?')) return;
         await context.api.delete(`/api/admin/labels/${id}`);
         await fetchLabels();
     }
 
     async function fetchRules() {
-        const response = await context.api.get('/api/admin/rules');
-        if (!response.ok) return;
-        const rules = await response.json();
-        document.getElementById('rules-body').innerHTML = rules.map((rule) => `<tr><td style="font-weight:600;">${rule.keyword}</td><td>${rule.labelId || '-'}</td><td>${rule.defaultDeadlineDays || '-'} ngay</td><td><button class="btn" style="padding:4px 10px;font-size:0.8rem;color:var(--danger);background:#fee2e2;" data-action="delete-rule" data-rule-id="${rule.id}">Xoa</button></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">Chua co rule</td></tr>';
+        try {
+            const response = await context.api.get('/api/admin/rules');
+            if (!response.ok) return;
+            const rules = await response.json();
+            const body = document.getElementById('rules-body');
+            if (!body) return;
+
+            body.innerHTML = rules.map((rule) => `
+                <tr>
+                    <td style="font-weight:600;">${rule.keyword}</td>
+                    <td>${rule.labelId || '-'}</td>
+                    <td>${rule.defaultDeadlineDays || '-'} ngày</td>
+                    <td>
+                        <div class="action-menu-container">
+                            <button class="action-menu-btn" title="Thao tác">
+                                <i data-lucide="more-horizontal"></i>
+                            </button>
+                            <div class="action-menu-dropdown">
+                                <button class="action-menu-item delete" data-action="delete-rule" data-rule-id="${rule.id}">
+                                    <i data-lucide="trash-2"></i> Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>`).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-secondary);">Chưa có quy tắc</td></tr>';
+
+            if (window.lucide) window.lucide.createIcons();
+        } catch (err) { console.error(err); }
     }
 
     async function createRule() {
         const keyword = document.getElementById('rule-keyword').value.trim();
         if (!keyword) {
-            context.ui.showAlert('Vui long nhap tu khoa!', '⚠️');
+            context.ui.showAlert('Vui lòng nhập từ khóa!', '⚠️');
             return;
         }
 
@@ -169,17 +244,17 @@ export function createAdminMetaFeature(context) {
         });
 
         if (!response.ok) {
-            context.ui.showAlert('Loi.', '❌');
+            context.ui.showAlert('Lỗi.', '❌');
             return;
         }
 
-        context.ui.showAlert('Da them rule!', '✅');
+        context.ui.showAlert('Đã thêm rule!', '✅');
         closeModal('rule-modal');
         await fetchRules();
     }
 
     async function deleteRule(id) {
-        if (!await context.ui.showConfirm('Xoa rule nay?')) return;
+        if (!await context.ui.showConfirm('Xóa rule này?')) return;
         await context.api.delete(`/api/admin/rules/${id}`);
         await fetchRules();
     }
@@ -191,9 +266,9 @@ export function createAdminMetaFeature(context) {
             link.href = URL.createObjectURL(blob);
             link.download = `CongVan_Backup_${new Date().toISOString().slice(0, 10)}.csv`;
             link.click();
-            context.ui.showAlert('Da tai xuong file backup CSV!', '✅');
+            context.ui.showAlert('Đã tải xuống file backup CSV!', '✅');
         } catch (error) {
-            context.ui.showAlert('Loi xuat du lieu.', '❌');
+            context.ui.showAlert('Lỗi xuất dữ liệu.', '❌');
         }
     }
 

@@ -1,0 +1,10 @@
+/* Placeholder for other miscellaneous styles */
+.desktop-only {
+    display: flex;
+}
+
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+}

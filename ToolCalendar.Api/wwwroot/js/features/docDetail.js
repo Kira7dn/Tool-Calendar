@@ -39,11 +39,15 @@ export function createDocDetailFeature(context) {
                 const actionName = action.dataset.action;
                 if (actionName === 'close-doc-detail-page') closePage();
                 if (actionName === 'switch-doc-page-tab') switchPageTab(action.dataset.pageTab);
+                if (actionName === 'doc-page-pdf-prev') await prevPdfPage();
+                if (actionName === 'doc-page-pdf-next') await nextPdfPage();
                 if (actionName === 'save-doc-page-detail') await saveDetail(action, true);
                 if (actionName === 'submit-comment') await submitComment(action);
                 if (actionName === 'delete-comment') await deleteComment(parseInt(action.dataset.commentId, 10));
                 if (actionName === 'toggle-reaction') await toggleReaction(parseInt(action.dataset.commentId, 10), action.dataset.reactionType);
-                if (actionName === 'open-pdf') await context.services.openPdfPreview(parseInt(action.dataset.docId, 10), action.dataset.title || '');
+                if (actionName === 'open-pdf') {
+                    switchPageTab('content');
+                }
             });
             page.addEventListener('change', (event) => {
                 if (event.target.id === 'de-status') onStatusSelectChange();
@@ -179,17 +183,32 @@ export function createDocDetailFeature(context) {
         if (!page) return;
         page.classList.remove('open');
         setTimeout(() => { page.style.display = 'none'; }, 340);
+        
+        // Clean up PDF resources
+        if (pdfDoc) {
+            void context.services.pdf.cancelRender('doc-page-pdf-canvas');
+            pdfDoc = null;
+        }
+        
         currentDocId = null;
         currentDocData = null;
     }
 
-    function switchPageTab(tab) {
-        ['view', 'edit', 'comments'].forEach(t => {
+    let pdfDoc = null;
+    let pdfPageNum = 1;
+
+    async function switchPageTab(tab) {
+        ['view', 'content', 'edit', 'comments'].forEach(t => {
             const panel = document.getElementById(`doc-page-panel-${t}`);
             const tabBtn = document.getElementById(`doc-page-tab-${t}`);
             if (panel) panel.style.display = t === tab ? 'flex' : 'none';
             if (tabBtn) tabBtn.classList.toggle('active', t === tab);
         });
+
+        if (tab === 'content') {
+            await loadPdfContent();
+        }
+
         // Sync comment list when switching to comments tab
         if (tab === 'comments') {
             const desktopList = document.getElementById('comment-list');
@@ -197,6 +216,58 @@ export function createDocDetailFeature(context) {
             if (desktopList && mobileList) {
                 mobileList.innerHTML = desktopList.innerHTML;
             }
+        }
+    }
+
+    async function loadPdfContent() {
+        if (!currentDocData || !currentDocData.filePath) {
+            document.getElementById('doc-page-pdf-tools').style.display = 'none';
+            document.getElementById('doc-page-content-empty').style.display = 'block';
+            return;
+        }
+
+        const isPdf = currentDocData.filePath.toLowerCase().endsWith('.pdf');
+        if (!isPdf) {
+            document.getElementById('doc-page-pdf-tools').style.display = 'none';
+            document.getElementById('doc-page-content-empty').style.display = 'block';
+            return;
+        }
+
+        if (pdfDoc) return; // Already loaded
+
+        const loader = document.getElementById('doc-page-pdf-loader');
+        if (loader) loader.style.display = 'flex';
+        document.getElementById('doc-page-content-empty').style.display = 'none';
+
+        try {
+            pdfDoc = await context.services.pdf.getDocument(`/api/documents/${currentDocId}/file`);
+            pdfPageNum = 1;
+            document.getElementById('doc-page-pdf-tools').style.display = 'flex';
+            await renderPdfPage();
+        } catch (error) {
+            console.error('PDF load error:', error);
+            document.getElementById('doc-page-content-empty').style.display = 'block';
+        } finally {
+            if (loader) loader.style.display = 'none';
+        }
+    }
+
+    async function renderPdfPage() {
+        if (!pdfDoc) return;
+        await context.services.pdf.renderPage(pdfDoc, pdfPageNum, 'doc-page-pdf-canvas', 'doc-page-pdf-info');
+    }
+
+    async function prevPdfPage() {
+        if (pdfDoc && pdfPageNum > 1) {
+            pdfPageNum--;
+            await renderPdfPage();
+        }
+    }
+
+    async function nextPdfPage() {
+        if (pdfDoc && pdfPageNum < pdfDoc.numPages) {
+            pdfPageNum++;
+            await renderPdfPage();
         }
     }
 
@@ -240,6 +311,41 @@ export function createDocDetailFeature(context) {
         setField('dpf-status', doc.status);
         setField('dpf-priority', doc.priority);
         setField('dpf-ngaythem', formatDate(doc.ngayThem));
+
+        // Sync inputs for mobile edit tab
+        const mFields = {
+            'mde-so': doc.soVanBan || '',
+            'mde-ngaybanhanh': doc.ngayBanHanh ? doc.ngayBanHanh.split('T')[0] : '',
+            'mde-trichyeu': doc.trichYeu || '',
+            'mde-coquanbanhanh': doc.coQuanBanHanh || '',
+            'mde-coquanchuquan': doc.coQuanChuQuan || '',
+            'mde-thoihan': formatDateForTextInput(doc.thoiHan),
+            'mde-priority': doc.priority || 'Thường'
+        };
+        Object.keys(mFields).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = mFields[id];
+        });
+        
+        // Handle mobile status
+        const mStatus = document.getElementById('mde-status');
+        const mCustom = document.getElementById('mde-status-custom');
+        if (mStatus && mCustom) {
+            const val = doc.status || 'Chưa xử lý';
+            if (statusOptions.includes(val)) {
+                mStatus.value = val;
+                mCustom.style.display = 'none';
+                mCustom.value = '';
+            } else {
+                mStatus.value = '__custom__';
+                mCustom.style.display = 'block';
+                mCustom.value = val;
+            }
+            mStatus.onchange = () => {
+                mCustom.style.display = mStatus.value === '__custom__' ? 'block' : 'none';
+                if (mStatus.value === '__custom__') mCustom.focus();
+            };
+        }
 
         // File
         const fileEl = document.getElementById('doc-page-file-content');
@@ -418,18 +524,29 @@ export function createDocDetailFeature(context) {
         button.disabled = true;
         button.innerText = 'Đang lưu...';
 
-        const normalizedDeadline = normalizeDateInputToIso(document.getElementById('de-thoihan').value);
+        const isMobile = !!button.closest('#doc-detail-page');
+        const p = isMobile ? 'mde-' : 'de-';
+
+        const normalizedDeadline = normalizeDateInputToIso(document.getElementById(`${p}thoihan`).value);
+
+        const getStatus = () => {
+            const sel = document.getElementById(`${p}status`);
+            if (sel?.value === '__custom__') {
+                return document.getElementById(`${p}status-custom`)?.value?.trim() || 'Chưa xử lý';
+            }
+            return sel?.value || 'Chưa xử lý';
+        };
 
         const updated = {
             ...currentDocData,
-            soVanBan: document.getElementById('de-so').value,
-            ngayBanHanh: document.getElementById('de-ngaybanhanh').value ? `${document.getElementById('de-ngaybanhanh').value}T00:00:00` : null,
-            trichYeu: document.getElementById('de-trichyeu').value,
-            coQuanBanHanh: document.getElementById('de-coquanbanhanh').value,
-            coQuanChuQuan: document.getElementById('de-coquanchuquan').value,
+            soVanBan: document.getElementById(`${p}so`).value,
+            ngayBanHanh: document.getElementById(`${p}ngaybanhanh`).value ? `${document.getElementById(`${p}ngaybanhanh`).value}T00:00:00` : null,
+            trichYeu: document.getElementById(`${p}trichyeu`).value,
+            coQuanBanHanh: document.getElementById(`${p}coquanbanhanh`).value,
+            coQuanChuQuan: document.getElementById(`${p}coquanchuquan`).value,
             thoiHan: normalizedDeadline ? `${normalizedDeadline}T00:00:00` : null,
-            status: getStatusValue(),   // lấy từ select hoặc custom input
-            priority: document.getElementById('de-priority').value
+            status: getStatus(),
+            priority: document.getElementById(`${p}priority`).value
         };
 
         try {
@@ -444,8 +561,15 @@ export function createDocDetailFeature(context) {
             }
 
             currentDocData = updated;
-            renderDetail(updated);
-            switchTab('view');
+            
+            if (button.closest('#doc-detail-page')) {
+                renderDetailPage(updated);
+                switchPageTab('view');
+            } else {
+                renderDetail(updated);
+                switchTab('view');
+            }
+            
             context.ui.showAlert('Đã cập nhật văn bản thành công!', '✅');
             await context.services.refreshCoreData();
         } catch (error) {

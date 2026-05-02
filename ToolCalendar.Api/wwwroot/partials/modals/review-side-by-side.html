@@ -403,49 +403,98 @@
     }
 
     @media (max-width: 900px) {
+        #review-side-by-side-modal {
+            padding: 0 !important;
+        }
+
+        #review-side-by-side-modal .review-modal-shell {
+            width: 100vw !important;
+            height: 100dvh !important; /* Sử dụng dvh để tránh lỗi thanh địa chỉ trình duyệt */
+            max-height: none !important;
+            max-width: none !important;
+            border-radius: 0 !important;
+        }
+
         #review-side-by-side-modal .review-nav-bar {
-            flex-wrap: wrap;
-            align-items: flex-start;
+            padding: 8px 12px;
+            padding-top: env(safe-area-inset-top, 8px);
+        }
+
+        #review-side-by-side-modal .review-nav-primary {
+            gap: 4px;
+        }
+
+        #review-side-by-side-modal .review-doc-counter {
+            font-size: 0.85rem;
+            padding: 4px 8px;
         }
 
         #review-side-by-side-modal .review-nav-title {
             order: 3;
             flex-basis: 100%;
+            margin-top: 4px;
         }
 
         #review-side-by-side-modal .review-panel-title-main {
             border-left: none;
             padding-left: 0;
-            padding-top: 4px;
+            padding-top: 0;
+            font-size: 0.85rem;
         }
 
         #review-side-by-side-modal .review-layout {
-            grid-template-columns: 1fr;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
         }
 
         #review-side-by-side-modal .review-left {
-            min-height: 40vh;
+            height: 280px !important; /* Giảm nhẹ chiều cao PDF trên mobile để chừa chỗ cho form */
+            flex: none !important;
+            border-right: none !important;
+            border-bottom: 2px solid #e2e8f0 !important;
         }
 
-        #review-side-by-side-modal .review-modal-shell {
-            width: 98vw;
-            height: 96vh;
+        #review-side-by-side-modal .review-right {
+            flex: 1 !important;
+            padding: 12px !important;
+            gap: 12px !important;
+            background: #f8fafc !important;
+            overflow-y: auto !important; /* Đảm bảo form có thể cuộn */
+            -webkit-overflow-scrolling: touch;
         }
 
         #review-side-by-side-modal .review-meta-grid {
-            grid-template-columns: 1fr;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 12px !important;
         }
 
-        #review-side-by-side-modal .review-field-span-2 {
-            grid-column: span 1;
+        #review-side-by-side-modal .review-fulltext-group {
+            min-height: 200px;
         }
 
-        #review-side-by-side-modal .review-head-caption {
-            display: none;
+        #review-side-by-side-modal .review-icon-btn {
+            width: 36px;
+            height: 34px;
+        }
+
+        #review-side-by-side-modal .review-float-btn {
+            width: 44px;
+            height: 44px;
+        }
+
+        #review-side-by-side-modal .review-floating-nav-prev { left: 10px; }
+        #review-side-by-side-modal .review-floating-nav-next { right: 10px; }
+        
+        #review-side-by-side-modal .review-floating-page-info {
+            bottom: 10px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
         }
     }
 </style>
-<div id="review-side-by-side-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:1500; align-items:center; justify-content:center; padding:20px;">
+<div id="review-side-by-side-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:3000; align-items:center; justify-content:center; padding:20px;">
     <div class="review-modal-shell">
         <div class="review-nav-bar">
             <div class="review-nav-primary">

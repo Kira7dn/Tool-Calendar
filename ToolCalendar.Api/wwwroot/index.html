@@ -78,7 +78,7 @@
 
         <main class="main-content">
             <header>
-                <button class="mobile-menu-btn" id="mobile-menu-btn" data-action="open-sidebar" aria-label="Mở menu"><i
+                <button class="mobile-menu-btn" id="mobile-menu-btn" data-action="toggle-sidebar" aria-label="Mở/Đóng menu"><i
                         data-lucide="menu"></i></button>
                 <div class="header-title">
                     <h1 id="page-title">Hệ Thống Điều Phối Công Văn</h1>
@@ -184,7 +184,7 @@
             <i data-lucide="file-text" class="bottom-nav-icon"></i>
             <span class="bottom-nav-label">Văn bản</span>
         </div>
-        <div class="bottom-nav-item" id="mobile-notif-btn">
+        <div class="bottom-nav-item" id="mobile-notif-btn" data-action="open-mobile-notif">
             <div style="position: relative; display:flex; align-items:center; justify-content:center;">
                 <i data-lucide="bell" class="bottom-nav-icon"></i>
                 <span class="mobile-badge" id="notif-badge-mobile" style="display:none">0</span>

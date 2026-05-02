@@ -1,9 +1,11 @@
-﻿@import 'abstracts/_variables.css';
+@import 'abstracts/_variables.css';
 @import 'base/_reset.css';
 
 @import 'layout/_sidebar.css';
 @import 'layout/_header.css';
 @import 'layout/_main-content.css';
+@import 'components/_action-menu.css';
+@import 'components/_toasts.css';
 @import 'layout/_dashboard.css';
 @import 'layout/_bottom-nav.css';
 

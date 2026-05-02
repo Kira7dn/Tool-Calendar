@@ -32,6 +32,8 @@
         style="display:flex; background:white; border-bottom:2px solid #e4e6eb; flex-shrink:0; overflow-x:auto; padding:0 8px;">
         <button id="doc-page-tab-view" class="doc-page-tab active" data-action="switch-doc-page-tab"
             data-page-tab="view">📋 Chi tiết</button>
+        <button id="doc-page-tab-content" class="doc-page-tab" data-action="switch-doc-page-tab"
+            data-page-tab="content">📄 Văn bản</button>
         <button id="doc-page-tab-edit" class="doc-page-tab" data-action="switch-doc-page-tab" data-page-tab="edit"
             style="display:none;">✏️ Chỉnh sửa</button>
         <button id="doc-page-tab-comments" class="doc-page-tab" data-action="switch-doc-page-tab"
@@ -85,47 +87,66 @@
             </div>
         </div>
 
+        <!-- === CONTENT PANEL === -->
+        <div id="doc-page-panel-content" style="padding:16px; display:none; flex-direction:column; gap:12px; height: 100%;">
+            <div id="doc-page-pdf-tools" style="display:none; align-items:center; justify-content:center; gap:15px; padding:10px; background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); margin-bottom:10px;">
+                <button data-action="doc-page-pdf-prev" style="background:#f0f2f5; border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#1c1e21;"><i data-lucide="chevron-left"></i></button>
+                <span id="doc-page-pdf-info" style="font-size:0.85rem; font-weight:700; color:#1c1e21;">Trang 1 / ?</span>
+                <button data-action="doc-page-pdf-next" style="background:#f0f2f5; border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#1c1e21;"><i data-lucide="chevron-right"></i></button>
+            </div>
+            <div style="flex:1; background:white; border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.08); position:relative; min-height:400px; display:flex; align-items:center; justify-content:center;">
+                <canvas id="doc-page-pdf-canvas" style="max-width:100%; height:auto; display:block; margin:auto;"></canvas>
+                <div id="doc-page-content-empty" style="padding:40px; text-align:center; color:#65676b; display:none;">
+                    <div style="font-size:3rem; margin-bottom:10px;">📄</div>
+                    <p>Văn bản này không có tệp PDF để xem trực tiếp.</p>
+                </div>
+                <div id="doc-page-pdf-loader" style="position:absolute; inset:0; background:rgba(255,255,255,0.8); display:none; align-items:center; justify-content:center; z-index:5;">
+                    <div class="loader-inner"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- === EDIT PANEL === -->
         <div id="doc-page-panel-edit" style="padding:16px; display:none; flex-direction:column; gap:12px;">
             <div style="background:white; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; flex-direction:column; gap:14px;">
                 <div>
                     <label class="doc-page-input-label">Số hiệu văn bản</label>
-                    <input type="text" id="de-so" class="modal-input doc-page-input">
+                    <input type="text" id="mde-so" class="modal-input doc-page-input">
                 </div>
                 <div>
                     <label class="doc-page-input-label">Ngày ban hành</label>
-                    <input type="date" id="de-ngaybanhanh" class="modal-input doc-page-input">
+                    <input type="date" id="mde-ngaybanhanh" class="modal-input doc-page-input">
                 </div>
                 <div>
                     <label class="doc-page-input-label">Trích yếu</label>
-                    <textarea id="de-trichyeu" class="modal-input doc-page-input" rows="4" style="resize:vertical;"></textarea>
+                    <textarea id="mde-trichyeu" class="modal-input doc-page-input" rows="4" style="resize:vertical;"></textarea>
                 </div>
                 <div>
                     <label class="doc-page-input-label">Cơ quan ban hành</label>
-                    <input type="text" id="de-coquanbanhanh" class="modal-input doc-page-input">
+                    <input type="text" id="mde-coquanbanhanh" class="modal-input doc-page-input">
                 </div>
                 <div>
                     <label class="doc-page-input-label">Cơ quan tham mưu</label>
-                    <input type="text" id="de-coquanchuquan" class="modal-input doc-page-input">
+                    <input type="text" id="mde-coquanchuquan" class="modal-input doc-page-input">
                 </div>
                 <div>
                     <label class="doc-page-input-label">Thời hạn xử lý</label>
-                    <input type="text" id="de-thoihan" class="modal-input doc-page-input" placeholder="dd/MM/yyyy" inputmode="numeric">
+                    <input type="text" id="mde-thoihan" class="modal-input doc-page-input" placeholder="dd/MM/yyyy" inputmode="numeric">
                 </div>
                 <div>
                     <label class="doc-page-input-label">Trạng thái</label>
-                    <select id="de-status" class="modal-input doc-page-input" style="margin-bottom:6px;">
+                    <select id="mde-status" class="modal-input doc-page-input" style="margin-bottom:6px;">
                         <option value="Chưa xử lý">Chưa xử lý</option>
                         <option value="Đang xử lý">Đang xử lý</option>
                         <option value="Đã rà soát">Đã rà soát</option>
                         <option value="Đã hoàn thành">Đã hoàn thành</option>
                         <option value="__custom__">✏️ Tùy chỉnh...</option>
                     </select>
-                    <input type="text" id="de-status-custom" class="modal-input doc-page-input" placeholder="Nhập trạng thái tùy chỉnh..." style="display:none; margin-top:6px;">
+                    <input type="text" id="mde-status-custom" class="modal-input doc-page-input" placeholder="Nhập trạng thái tùy chỉnh..." style="display:none; margin-top:6px;">
                 </div>
                 <div>
                     <label class="doc-page-input-label">Độ khẩn</label>
-                    <select id="de-priority" class="modal-input doc-page-input">
+                    <select id="mde-priority" class="modal-input doc-page-input">
                         <option>Thường</option>
                         <option>Khẩn</option>
                         <option>Thượng khẩn</option>

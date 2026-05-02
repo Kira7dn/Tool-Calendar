@@ -93,24 +93,27 @@ export function createUsersFeature(context) {
                 <td class="col-dept"><span class="badge badge-dept">${user.departmentName || user.DepartmentName || 'Chưa gán'}</span></td>
                 <td class="col-role"><span class="badge ${getRoleBadgeClass(user.role || user.Role)}">${user.role || user.Role}</span></td>
                 <td style="white-space: nowrap;" class="col-actions">
-                    <button class="btn btn-sm" style="color: var(--primary); padding: 6px;" 
-                        title="Sửa"
-                        data-action="edit-user" 
-                        data-user-id="${user.id}"
-                        data-fullname="${user.fullName || user.FullName || ''}"
-                        data-email="${user.email || user.Email || ''}"
-                        data-phone="${user.phoneNumber || user.PhoneNumber || ''}"
-                        data-role="${user.role || user.Role}"
-                        data-dept-id="${user.departmentId || user.DepartmentId || ''}">
-                        <i data-lucide="pencil" style="width: 16px; height: 16px;"></i>
-                    </button>
-                    ${user.username !== 'admin' ? `
-                    <button class="btn btn-sm" style="color: var(--danger); padding: 6px;" 
-                        title="Xóa"
-                        data-action="delete-user" 
-                        data-user-id="${user.id}">
-                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
-                    </button>` : ''}
+                    <div class="action-menu-container">
+                        <button class="action-menu-btn" title="Thao tác">
+                            <i data-lucide="more-horizontal"></i>
+                        </button>
+                        <div class="action-menu-dropdown">
+                            <button class="action-menu-item" 
+                                data-action="edit-user" 
+                                data-user-id="${user.id}"
+                                data-fullname="${user.fullName || user.FullName || ''}"
+                                data-email="${user.email || user.Email || ''}"
+                                data-phone="${user.phoneNumber || user.PhoneNumber || ''}"
+                                data-role="${user.role || user.Role}"
+                                data-dept-id="${user.departmentId || user.DepartmentId || ''}">
+                                <i data-lucide="pencil"></i> Sửa
+                            </button>
+                            ${user.username !== 'admin' ? `
+                            <button class="action-menu-item delete" data-action="delete-user" data-user-id="${user.id}">
+                                <i data-lucide="trash-2"></i> Xóa
+                            </button>` : ''}
+                        </div>
+                    </div>
                 </td>
             </tr>
         `).join('');

@@ -55,9 +55,10 @@ export function createPdfFeature(context) {
             if (!canvasContext) return;
 
             const originalViewport = page.getViewport({ scale: 1 });
-            const containerWidth = canvas.parentElement.clientWidth - 100;
+            const isMobile = window.innerWidth <= 768;
+            const containerWidth = canvas.parentElement.clientWidth - (isMobile ? 0 : 40);
             const scale = containerWidth / originalViewport.width;
-            const viewport = page.getViewport({ scale: Math.min(scale, 1.2) });
+            const viewport = page.getViewport({ scale: Math.min(scale, isMobile ? 2.0 : 1.2) });
 
             canvas.width = viewport.width;
             canvas.height = viewport.height;

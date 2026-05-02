@@ -30,7 +30,18 @@ self.addEventListener('push', function (event) {
     };
 
     event.waitUntil(
-        self.registration.showNotification(data.title, options)
+        Promise.all([
+            self.registration.showNotification(data.title, options),
+            // Broadcast to all clients
+            self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+                clients.forEach(client => {
+                    client.postMessage({
+                        type: 'PUSH_RECEIVED',
+                        data: data
+                    });
+                });
+            })
+        ])
     );
 });
 

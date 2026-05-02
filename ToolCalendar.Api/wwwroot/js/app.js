@@ -225,6 +225,15 @@ export async function showTab(tabId) {
         window.lucide.createIcons();
     }
 
+    // Tự động đóng các trang/modal toàn màn hình khi chuyển tab
+    if (features.review) features.review.exitReviewScene();
+    
+    const docDetailPage = document.getElementById('doc-detail-page');
+    if (docDetailPage) {
+        docDetailPage.style.transform = 'translateX(100%)';
+        setTimeout(() => { docDetailPage.style.display = 'none'; }, 320);
+    }
+
     currentTab = tabId;
     await activateTab(tabId);
     closeSidebar();
@@ -242,14 +251,23 @@ export function closeSidebar() {
 
 export function toggleSidebar() {
     const sidebar = document.getElementById('main-sidebar');
-    const button = document.getElementById('sidebar-toggle');
     if (!sidebar) return;
 
-    const isCollapsed = sidebar.classList.toggle('collapsed');
-    if (button) {
-        button.textContent = isCollapsed ? '\u25ba' : '\u25c4';
+    if (window.innerWidth <= 768) {
+        const isOpen = sidebar.classList.contains('open');
+        if (isOpen) {
+            closeSidebar();
+        } else {
+            openSidebar();
+        }
+    } else {
+        const button = document.getElementById('sidebar-toggle');
+        const isCollapsed = sidebar.classList.toggle('collapsed');
+        if (button) {
+            button.textContent = isCollapsed ? '\u25ba' : '\u25c4';
+        }
+        localStorage.setItem('sidebar_collapsed', isCollapsed ? '1' : '0');
     }
-    localStorage.setItem('sidebar_collapsed', isCollapsed ? '1' : '0');
 }
 
 export function logout(kicked = false) {

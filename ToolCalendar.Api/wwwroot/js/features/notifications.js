@@ -12,7 +12,8 @@ export function createNotificationsFeature(context) {
 
             // === MOBILE NOTIF PANEL ===
             // Mở panel mobile khi click nút thông báo dưới bottom nav
-            if (event.target.closest('#mobile-notif-btn')) {
+            const btn = event.target.closest('#mobile-notif-btn') || event.target.closest('[data-action="open-mobile-notif"]');
+            if (btn) {
                 openMobilePanel();
                 return;
             }
@@ -72,7 +73,9 @@ export function createNotificationsFeature(context) {
                 // Mở trang chi tiết sau khi panel đã bắt đầu đóng
                 // 50ms đủ để browser process sự kiện, animation panel chạy nền
                 if (docId) {
-                    setTimeout(() => openDocDetail(docId), 50);
+                    // Trên mobile mặc định mở tab 'content' để xem các trang văn bản
+                    const initialTab = window.innerWidth <= 768 ? 'content' : 'view';
+                    setTimeout(() => openDocDetail(docId, initialTab), 50);
                 }
             }
         });
@@ -109,8 +112,16 @@ export function createNotificationsFeature(context) {
             renderMobileNotifications();
         });
 
-        // Đăng ký Service Worker
+        // Lắng nghe Service Worker gửi tin nhắn
         if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'PUSH_RECEIVED') {
+                    console.log('[Notifications] Push received from SW, fetching new data...');
+                    fetchNotifications();
+                    ringBell();
+                }
+            });
+
             navigator.serviceWorker.register('/sw.js').then(reg => {
                 console.log('[ServiceWorker] Registered');
             }).catch(err => console.error('[ServiceWorker] Error', err));
@@ -154,16 +165,17 @@ export function createNotificationsFeature(context) {
         const panel = document.getElementById('mobile-notif-panel');
         const overlay = document.getElementById('mobile-notif-overlay');
         if (!panel) return;
+
         panel.style.display = 'flex';
-        // Trigger animation
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => panel.classList.add('open'));
-        });
-        if (overlay) overlay.classList.add('active');
+        // Trigger animation after setting display
+        setTimeout(() => {
+            panel.classList.add('active');
+            if (overlay) overlay.classList.add('active');
+        }, 10);
+
         isMobilePanelOpen = true;
         clearBadge();
         renderMobileNotifications();
-        // Khởi tạo Lucide icons mới
         if (window.lucide) window.lucide.createIcons();
     }
 
@@ -171,9 +183,16 @@ export function createNotificationsFeature(context) {
         const panel = document.getElementById('mobile-notif-panel');
         const overlay = document.getElementById('mobile-notif-overlay');
         if (!panel) return;
-        panel.classList.remove('open');
+
+        panel.classList.remove('active');
         if (overlay) overlay.classList.remove('active');
-        setTimeout(() => { panel.style.display = 'none'; }, 360);
+
+        // Hide after animation
+        setTimeout(() => {
+            if (!panel.classList.contains('active')) {
+                panel.style.display = 'none';
+            }
+        }, 300);
         isMobilePanelOpen = false;
     }
 
@@ -238,6 +257,7 @@ export function createNotificationsFeature(context) {
             }));
 
             renderNotifications();
+            renderMobileNotifications();
         } catch (error) {
             console.error('Fetch notifs error', error);
         }
@@ -252,7 +272,7 @@ export function createNotificationsFeature(context) {
             // SQLite datetime('now') trả về yyyy-MM-dd HH:mm:ss (UTC)
             date = new Date(dateStr.replace(' ', 'T') + 'Z');
         }
-        
+
         const now = new Date();
         const diffInSeconds = Math.floor((now - date) / 1000);
 

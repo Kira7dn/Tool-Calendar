@@ -76,15 +76,15 @@ export function createSessionFeature() {
                     font-size: 2rem;
                     border: 2px solid rgba(239,68,68,0.3);
                 ">⚠️</div>
-                <h2 style="color: #ef4444; font-size: 1.3rem; margin-bottom: 12px; font-weight: 700;">Phien dang nhap bi cham dut</h2>
+                <h2 style="color: #ef4444; font-size: 1.3rem; margin-bottom: 12px; font-weight: 700;">Phiên đăng nhập bị chấm dứt</h2>
                 <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 8px;">
-                    Tai khoan cua ban da dang nhap tu mot thiet bi khac.<br>
-                    Phien lam viec hien tai se duoc dang xuat tu dong.
+                    Tài khoản của bạn đã đăng nhập từ một thiết bị khác.<br>
+                    Phiên làm việc hiện tại sẽ được đăng xuất tự động.
                 </p>
                 <div style="background: rgba(239,68,68,0.1); border-radius: 10px; padding: 12px; margin: 20px 0; border: 1px solid rgba(239,68,68,0.2);">
-                    <span style="color: #94a3b8; font-size: 0.85rem;">Tu dong dang xuat sau </span>
+                    <span style="color: #94a3b8; font-size: 0.85rem;">Tự động đăng xuất sau </span>
                     <span id="kick-countdown" style="color: #ef4444; font-size: 1.4rem; font-weight: 800; font-family: monospace;">${seconds}</span>
-                    <span style="color: #94a3b8; font-size: 0.85rem;"> giay</span>
+                    <span style="color: #94a3b8; font-size: 0.85rem;"> giây</span>
                 </div>
                 <button id="kick-logout-now" style="
                     background: #ef4444;
@@ -96,7 +96,7 @@ export function createSessionFeature() {
                     font-weight: 600;
                     cursor: pointer;
                     width: 100%;
-                ">Dang xuat ngay</button>
+                ">Đăng xuất ngay</button>
             </div>
         `;
 
