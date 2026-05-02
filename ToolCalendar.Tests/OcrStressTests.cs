@@ -1,12 +1,11 @@
-﻿using Xunit;
-using FluentAssertions;
+﻿using FluentAssertions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
+using ToolCalendar.Data;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
 using ToolCalendar.Tests.Helpers;
-using ToolCalendar.Data;
-using System.IO;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging.Abstractions;
+using Xunit;
 
 namespace ToolCalendar.Tests
 {

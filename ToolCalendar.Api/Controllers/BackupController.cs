@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using ToolCalendar.Data;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ToolCalendar.Core.Data.Interfaces;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -9,14 +9,21 @@ namespace ToolCalendar.Api.Controllers
     [Route("api/[controller]")]
     public class BackupController : ControllerBase
     {
+        private readonly IDocumentRepository _documentRepository;
+
+        public BackupController(IDocumentRepository documentRepository)
+        {
+            _documentRepository = documentRepository;
+        }
+
         [HttpGet("export")]
-        public IActionResult Export()
+        public async Task<IActionResult> Export()
         {
             try
             {
-                byte[] csvData = DatabaseService.ExportDocumentsToCsv();
+                byte[] csvData = await _documentRepository.ExportDocumentsToCsvAsync();
                 string fileName = $"ToolCalendar_Backup_{DateTime.Now:yyyyMMdd_HHmm}.csv";
-                
+
                 return File(csvData, "text/csv", fileName);
             }
             catch (Exception ex)

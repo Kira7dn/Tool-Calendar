@@ -1,5 +1,3 @@
-using System;
-
 namespace ToolCalendar.Core.Models
 {
     public class NotificationRecord

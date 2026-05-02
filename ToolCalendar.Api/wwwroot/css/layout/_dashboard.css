@@ -1,0 +1,11 @@
+﻿/* ====================================================
+   DASHBOARD GRID
+   ==================================================== */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 22px;
+    flex: 1;
+    min-height: 0;
+}
+

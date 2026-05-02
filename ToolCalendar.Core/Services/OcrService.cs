@@ -1,9 +1,9 @@
-using System.Diagnostics;
-using System.Globalization;
-using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
+using System.Diagnostics;
+using System.Globalization;
+using System.Text;
 using ToolCalendar.Models;
 
 namespace ToolCalendar.Services
@@ -31,7 +31,7 @@ namespace ToolCalendar.Services
             // 2. Tự động nhận diện trên Linux (Docker System Path)
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
             {
-                if (Directory.Exists("/usr/share/tesseract-ocr/5/tessdata")) 
+                if (Directory.Exists("/usr/share/tesseract-ocr/5/tessdata"))
                 {
                     Environment.SetEnvironmentVariable("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/5/tessdata");
                     return "/usr/share/tesseract-ocr/5/tessdata";
@@ -49,7 +49,7 @@ namespace ToolCalendar.Services
             {
                 var potentialPath = Path.Combine(currentDir.FullName, "ToolCalendar.Core", "tessdata");
                 if (Directory.Exists(potentialPath)) return potentialPath;
-                
+
                 // Trường hợp chạy ngay tại thư mục Core
                 var subPath = Path.Combine(currentDir.FullName, "tessdata");
                 if (currentDir.Name == "ToolCalendar.Core" && Directory.Exists(subPath)) return subPath;

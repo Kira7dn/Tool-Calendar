@@ -1,8 +1,8 @@
-﻿using System.Threading.Channels;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ToolCalendar.Data;
+using System.Threading.Channels;
+using ToolCalendar.Core.Data.Interfaces;
 
 namespace ToolCalendar.Services
 {
@@ -45,7 +45,10 @@ namespace ToolCalendar.Services
 
             try
             {
-                var interruptedDocs = DatabaseService.GetAll()
+                using var scope = _serviceProvider.CreateScope();
+                var docRepo = scope.ServiceProvider.GetRequiredService<IDocumentRepository>();
+                var allDocs = await docRepo.GetAllAsync();
+                var interruptedDocs = allDocs
                     .Where(d => d.Status == "Đang xử lý")
                     .ToList();
 
@@ -92,8 +95,11 @@ namespace ToolCalendar.Services
         {
             using var scope = _serviceProvider.CreateScope();
             var extractor = scope.ServiceProvider.GetRequiredService<IDocumentExtractorService>();
+            var docRepo = scope.ServiceProvider.GetRequiredService<IDocumentRepository>();
 
-            var doc = DatabaseService.GetAll().FirstOrDefault(d => d.Id == docId);
+            var allDocs = await docRepo.GetAllAsync();
+            var doc = allDocs.FirstOrDefault(d => d.Id == docId);
+
             if (doc == null || string.IsNullOrEmpty(doc.FilePath) || !File.Exists(doc.FilePath))
             {
                 _logger.LogWarning("[OcrQueue] Khong tim thay file cho DocumentId {DocumentId}", docId);
@@ -103,14 +109,14 @@ namespace ToolCalendar.Services
             _logger.LogInformation("[OcrQueue] Dang xu ly OCR cho DocumentId {DocumentId}", docId);
 
             doc.Status = "Đang xử lý";
-            DatabaseService.Update(doc);
+            await docRepo.UpdateAsync(doc);
 
             try
             {
                 var updatedDoc = await extractor.ExtractFromFileAsync(doc.FilePath);
                 updatedDoc.Id = doc.Id;
                 updatedDoc.Status = updatedDoc.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
-                DatabaseService.Update(updatedDoc);
+                await docRepo.UpdateAsync(updatedDoc);
 
                 if (updatedDoc.Status == "Lỗi OCR")
                 {
@@ -123,7 +129,7 @@ namespace ToolCalendar.Services
             catch (Exception ex)
             {
                 doc.Status = "Lỗi OCR";
-                DatabaseService.Update(doc);
+                await docRepo.UpdateAsync(doc);
                 _logger.LogError(ex, "[OcrQueue] That bai khi OCR DocumentId {DocumentId}", docId);
             }
         }

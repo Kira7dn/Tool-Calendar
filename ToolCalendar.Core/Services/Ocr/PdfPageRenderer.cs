@@ -7,7 +7,7 @@ namespace ToolCalendar.Services
     {
         public static int CountPdfPages(string filePath)
         {
-            try 
+            try
             {
                 using var fsCount = File.OpenRead(filePath);
                 using var reader = new iText.Kernel.Pdf.PdfReader(fsCount);

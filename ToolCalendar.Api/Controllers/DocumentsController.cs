@@ -1,10 +1,10 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using ToolCalendar.Data;
+using Microsoft.AspNetCore.SignalR;
+using ToolCalendar.Core.Data.Interfaces;
+using ToolCalendar.Hubs;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
-using Microsoft.AspNetCore.SignalR;
-using ToolCalendar.Hubs;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -18,25 +18,27 @@ namespace ToolCalendar.Api.Controllers
         private readonly INotificationManager _notificationManager;
         private readonly IWebHostEnvironment _env;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IDocumentRepository _documentRepository;
 
-        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, INotificationManager notificationManager, IWebHostEnvironment env, IHubContext<NotificationHub> hubContext)
+        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, INotificationManager notificationManager, IWebHostEnvironment env, IHubContext<NotificationHub> hubContext, IDocumentRepository documentRepository)
         {
             _extractor = extractor;
             _ocrQueue = ocrQueue;
             _notificationManager = notificationManager;
             _env = env;
             _hubContext = hubContext;
+            _documentRepository = documentRepository;
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
-        public IActionResult GetAll(
+        public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1,
             [FromQuery] int size = 10,
             [FromQuery] string search = "",
             [FromQuery] string status = "",
             [FromQuery] string sort = "deadline_asc")
         {
-            var (items, totalCount) = DatabaseService.GetPaged(page, size, search, status, sort);
+            var (items, totalCount) = await _documentRepository.GetPagedAsync(page, size, search, status, sort);
             var totalPages = (int)Math.Ceiling((double)totalCount / size);
 
             return Ok(new
@@ -51,17 +53,17 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("statuses")]
-        public IActionResult GetStatuses()
+        public async Task<IActionResult> GetStatuses()
         {
-            var statuses = DatabaseService.GetUniqueStatuses();
+            var statuses = await _documentRepository.GetUniqueStatusesAsync();
             return Ok(statuses);
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var data = DatabaseService.GetDocumentById(id);
+            var data = await _documentRepository.GetDocumentByIdAsync(id);
             if (data == null) return NotFound();
             return Ok(data);
         }
@@ -75,7 +77,7 @@ namespace ToolCalendar.Api.Controllers
             // 1. Lưu file vào thư mục Uploads
             var uploadsDir = Path.Combine(_env.ContentRootPath, "Uploads");
             Directory.CreateDirectory(uploadsDir);
-            
+
             var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
             var filePath = Path.Combine(uploadsDir, fileName);
 
@@ -85,7 +87,7 @@ namespace ToolCalendar.Api.Controllers
             }
 
             DocumentRecord record;
-            try 
+            try
             {
                 // 2. Gọi OCR trực tiếp để Client nhận được kết quả ngay lập tức
                 record = await _extractor.ExtractFromFileAsync(filePath);
@@ -110,34 +112,34 @@ namespace ToolCalendar.Api.Controllers
             // Đảm bảo mapping status chuẩn cho frontend
             record.Status = record.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
             record.NgayThem = DateTime.Now;
-            
+
             // Lưu vào DB kể cả khi OCR lỗi, để UI có ID thật và mở được ảnh con mắt (Preview)
-            int id = DatabaseService.Insert(record);
+            int id = await _documentRepository.InsertAsync(record);
             record.Id = id;
-            
+
             return Ok(record);
         }
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpPost("bulk-confirm")]
-        public IActionResult BulkConfirm([FromBody] List<int> ids)
+        public async Task<IActionResult> BulkConfirm([FromBody] List<int> ids)
         {
             if (ids == null || ids.Count == 0) return BadRequest("Danh sách ID trống.");
-            
+
             // Cập nhật trạng thái thành "Đã rà soát"
-            DatabaseService.BulkUpdateStatus(ids, "Đã rà soát");
-            
+            await _documentRepository.BulkUpdateStatusAsync(ids, "Đã rà soát");
+
             return Ok(new { message = $"Đã xác nhận thành công {ids.Count} văn bản." });
         }
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpDelete("bulk-delete")]
-        public IActionResult BulkDeleteBatch([FromBody] List<int> ids)
+        public async Task<IActionResult> BulkDeleteBatch([FromBody] List<int> ids)
         {
             if (ids == null || ids.Count == 0) return BadRequest("Danh sách ID trống.");
-            
-            var allDocs = DatabaseService.GetAll();
-            foreach(var id in ids)
+
+            var allDocs = await _documentRepository.GetAllAsync();
+            foreach (var id in ids)
             {
                 var doc = allDocs.FirstOrDefault(x => x.Id == id);
                 if (doc != null)
@@ -153,29 +155,29 @@ namespace ToolCalendar.Api.Controllers
                     }
                 }
             }
-            
-            DatabaseService.BulkDelete(ids);
-            
+
+            await _documentRepository.BulkDeleteAsync(ids);
+
             return Ok(new { message = $"Đã xóa thành công {ids.Count} văn bản cùng toàn bộ file đính kèm." });
         }
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpPost]
-        public IActionResult Create([FromBody] DocumentRecord record)
+        public async Task<IActionResult> Create([FromBody] DocumentRecord record)
         {
             if (record == null) return BadRequest();
-            int id = DatabaseService.Insert(record);
+            int id = await _documentRepository.InsertAsync(record);
             record.Id = id;
             return CreatedAtAction(nameof(GetById), new { id = record.Id }, record);
         }
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] DocumentRecord record)
+        public async Task<IActionResult> Update(int id, [FromBody] DocumentRecord record)
         {
             if (record == null) return BadRequest();
             record.Id = id;
-            DatabaseService.Update(record);
+            await _documentRepository.UpdateAsync(record);
             return NoContent();
         }
 
@@ -184,17 +186,17 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> Assign(int id, [FromBody] AssignmentRequest request)
         {
             if (request == null) return BadRequest();
-            
+
             var departmentIdsJson = System.Text.Json.JsonSerializer.Serialize(request.DepartmentIds ?? new List<int>());
             var userIdsJson = System.Text.Json.JsonSerializer.Serialize(request.UserIds ?? new List<int>());
 
             // 1. Thực hiện gán trong DB
-            DatabaseService.AssignDocument(id, departmentIdsJson, userIdsJson);
+            await _documentRepository.AssignDocumentAsync(id, departmentIdsJson, userIdsJson);
 
             // 2. Gửi thông báo tức thời cho tất cả Cán bộ được gán
             if (request.UserIds != null && request.UserIds.Count > 0)
             {
-                var doc = DatabaseService.GetDocumentById(id);
+                var doc = await _documentRepository.GetDocumentByIdAsync(id);
                 if (doc != null)
                 {
                     foreach (var userId in request.UserIds)
@@ -218,7 +220,7 @@ namespace ToolCalendar.Api.Controllers
         {
             if (files == null || files.Count == 0) return BadRequest("Cần ít nhất một file bằng chứng.");
 
-            var doc = DatabaseService.GetDocumentById(id);
+            var doc = await _documentRepository.GetDocumentByIdAsync(id);
             if (doc == null) return NotFound();
 
             // 1. Tạo thư mục lưu bằng chứng cho văn bản này
@@ -239,32 +241,34 @@ namespace ToolCalendar.Api.Controllers
 
             // 2. Cập nhật vào DB (Lưu danh sách path dưới dạng JSON)
             var evidenceJson = System.Text.Json.JsonSerializer.Serialize(savedPaths);
-            DatabaseService.SubmitEvidence(id, evidenceJson, notes);
+            await _documentRepository.SubmitEvidenceAsync(id, evidenceJson, notes);
 
             return Ok(new { message = "Nộp bằng chứng hoàn thành thành công.", paths = savedPaths });
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("my-tasks")]
-        public IActionResult GetMyTasks()
+        public async Task<IActionResult> GetMyTasks()
         {
             var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-            var tasks = DatabaseService.GetAll().Where(d => d.AssignedTo == userId).OrderBy(d => d.ThoiHan).ToList();
+            var allDocs = await _documentRepository.GetAllAsync();
+            var tasks = allDocs.Where(d => d.AssignedTo == userId).OrderBy(d => d.ThoiHan).ToList();
             return Ok(tasks);
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("{id}/file")]
-        public IActionResult GetFile(int id)
+        public async Task<IActionResult> GetFile(int id)
         {
-            var doc = DatabaseService.GetDocumentById(id);
+            var doc = await _documentRepository.GetDocumentByIdAsync(id);
             if (doc == null || string.IsNullOrEmpty(doc.FilePath)) return NotFound("File không tồn tại.");
             if (!System.IO.File.Exists(doc.FilePath)) return NotFound("File vật lý không tìm thấy.");
             var fileBytes = System.IO.File.ReadAllBytes(doc.FilePath);
-            
+
             var ext = Path.GetExtension(doc.FilePath).ToLower();
-            var mimeType = ext switch {
+            var mimeType = ext switch
+            {
                 ".pdf" => "application/pdf",
                 ".doc" => "application/msword",
                 ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -275,20 +279,21 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("{id}/evidence/{index}")]
-        public IActionResult GetEvidenceFile(int id, int index)
+        public async Task<IActionResult> GetEvidenceFile(int id, int index)
         {
-            var doc = DatabaseService.GetDocumentById(id);
+            var doc = await _documentRepository.GetDocumentByIdAsync(id);
             if (doc == null || string.IsNullOrEmpty(doc.EvidencePaths)) return NotFound("Không tìm thấy bằng chứng.");
-            try 
+            try
             {
                 var paths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(doc.EvidencePaths);
                 if (paths == null || index < 0 || index >= paths.Count) return NotFound("Index file không hợp lệ.");
-                
+
                 var filePath = paths[index];
                 if (!System.IO.File.Exists(filePath)) return NotFound("File vật lý không tìm thấy.");
-                
+
                 var ext = Path.GetExtension(filePath).ToLower();
-                var mimeType = ext switch {
+                var mimeType = ext switch
+                {
                     ".jpg" or ".jpeg" => "image/jpeg",
                     ".png" => "image/png",
                     ".pdf" => "application/pdf",
@@ -297,15 +302,15 @@ namespace ToolCalendar.Api.Controllers
                     _ => "application/octet-stream"
                 };
                 return PhysicalFile(filePath, mimeType);
-            } 
+            }
             catch { return BadRequest(); }
         }
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var doc = DatabaseService.GetDocumentById(id);
+            var doc = await _documentRepository.GetDocumentByIdAsync(id);
             if (doc != null)
             {
                 if (!string.IsNullOrEmpty(doc.FilePath) && System.IO.File.Exists(doc.FilePath))
@@ -318,7 +323,7 @@ namespace ToolCalendar.Api.Controllers
                     Directory.Delete(evidenceDir, true);
                 }
             }
-            DatabaseService.Delete(id);
+            await _documentRepository.DeleteAsync(id);
             return NoContent();
         }
 
@@ -328,25 +333,30 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("{id}/comments")]
-        public IActionResult GetComments(int id)
+        public async Task<IActionResult> GetComments(int id)
         {
-            var comments = DatabaseService.GetComments(id);
+            var comments = await _documentRepository.GetCommentsAsync(id);
             // Attach reactions for each comment
-            var result = comments.Select(c => new {
-                c.Id,
-                c.DocumentId,
-                c.UserId,
-                c.Username,
-                c.Content,
-                c.AttachmentPaths,
-                c.CreatedAt,
-                Reactions = DatabaseService.GetReactionsForComment(c.Id)
-                    .GroupBy(r => r.ReactionType)
-                    .ToDictionary(g => g.Key, g => new {
+            var result = new List<object>();
+            foreach (var c in comments)
+            {
+                var rx = await _documentRepository.GetReactionsForCommentAsync(c.Id);
+                result.Add(new
+                {
+                    c.Id,
+                    c.DocumentId,
+                    c.UserId,
+                    c.Username,
+                    c.Content,
+                    c.AttachmentPaths,
+                    c.CreatedAt,
+                    Reactions = rx.GroupBy(r => r.ReactionType).ToDictionary(g => g.Key, g => new
+                    {
                         Count = g.Count(),
                         Users = g.Select(r => r.Username).ToList()
                     })
-            });
+                });
+            }
             return Ok(result);
         }
 
@@ -370,10 +380,10 @@ namespace ToolCalendar.Api.Controllers
                 {
                     var fileName = $"{DateTime.Now:yyyyMMddHHmmss}_{file.FileName}";
                     var filePath = Path.Combine(commentUploadDir, fileName);
-                    
+
                     // Chỉ lưu tên file tương đối để frontend dễ xử lý
                     var relativePath = $"/Uploads/Comments/Doc_{id}/{fileName}";
-                    
+
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
@@ -390,8 +400,8 @@ namespace ToolCalendar.Api.Controllers
                 Content = content ?? "",
                 AttachmentPaths = System.Text.Json.JsonSerializer.Serialize(savedPaths)
             };
-            DatabaseService.InsertComment(comment);
-            
+            await _documentRepository.InsertCommentAsync(comment);
+
             // Realtime broadcast SignalR
             _ = _hubContext.Clients.All.SendAsync("ReceiveComment", new { documentId = id });
 
@@ -400,13 +410,13 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpDelete("{docId}/comments/{commentId}")]
-        public IActionResult DeleteComment(int docId, int commentId)
+        public async Task<IActionResult> DeleteComment(int docId, int commentId)
         {
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
             var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
             bool isAdmin = role == "Admin";
 
-            DatabaseService.DeleteComment(commentId, userId, isAdmin);
+            await _documentRepository.DeleteCommentAsync(commentId, userId, isAdmin);
 
             // Realtime broadcast SignalR
             _ = _hubContext.Clients.All.SendAsync("DeleteComment", new { documentId = docId, commentId = commentId });
@@ -420,7 +430,7 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpPost("{docId}/comments/{commentId}/react")]
-        public IActionResult ReactToComment(int docId, int commentId, [FromBody] ReactionRequest req)
+        public async Task<IActionResult> ReactToComment(int docId, int commentId, [FromBody] ReactionRequest req)
         {
             if (req == null || string.IsNullOrWhiteSpace(req.ReactionType))
                 return BadRequest("Loại reaction không hợp lệ.");
@@ -432,20 +442,21 @@ namespace ToolCalendar.Api.Controllers
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
             var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Unknown";
 
-            var result = DatabaseService.ToggleReaction(commentId, userId, username, req.ReactionType.ToLower());
+            var result = await _documentRepository.ToggleReactionAsync(commentId, userId, username, req.ReactionType.ToLower());
 
-            var updatedReactions = DatabaseService.GetReactionsForComment(commentId)
-                .GroupBy(r => r.ReactionType)
-                .ToDictionary(g => g.Key, g => new {
+            var rxList = await _documentRepository.GetReactionsForCommentAsync(commentId); var updatedReactions = rxList.GroupBy(r => r.ReactionType)
+                .ToDictionary(g => g.Key, g => new
+                {
                     Count = g.Count(),
                     Users = g.Select(r => r.Username).ToList()
                 });
 
             // Realtime broadcast SignalR
-            _ = _hubContext.Clients.All.SendAsync("ReceiveReaction", new { 
-                documentId = docId, 
-                commentId = commentId, 
-                reactions = updatedReactions 
+            _ = _hubContext.Clients.All.SendAsync("ReceiveReaction", new
+            {
+                documentId = docId,
+                commentId = commentId,
+                reactions = updatedReactions
             });
 
             return Ok(new { status = result, reactions = updatedReactions });
@@ -468,3 +479,5 @@ namespace ToolCalendar.Api.Controllers
         public string ReactionType { get; set; } = "";
     }
 }
+
+

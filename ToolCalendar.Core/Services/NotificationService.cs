@@ -1,8 +1,7 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ToolCalendar.Data;
-using ToolCalendar.Models;
 
 namespace ToolCalendar.Services
 {
@@ -34,10 +33,10 @@ namespace ToolCalendar.Services
                     }
 
                     DateTime now = DateTime.UtcNow.AddHours(7);
-                    
+
                     // Log mỗi phút để người dùng thấy giờ server
                     _logger.LogInformation("[DeadlineWorker] Kiểm tra lúc {time} (Giờ cài đặt: {target})", now.ToString("HH:mm"), scanTimeStr);
-                    
+
                     // Kiểm tra xem đã đến giờ quét chưa (trong phạm vi phút hiện tại)
                     if (now.Hour == targetTime.Hours && now.Minute == targetTime.Minutes)
                     {
@@ -48,7 +47,7 @@ namespace ToolCalendar.Services
                         {
                             _logger.LogInformation($"[DeadlineWorker] Đến giờ quét ({scanTimeStr}). Bắt đầu xử lý...");
                             await ScanDeadlinesAsync(false);
-                            
+
                             // Tự động dọn dẹp nhật ký cũ hơn 30 ngày
                             int cleaned = DatabaseService.DeleteOldAuditLogs(30);
                             if (cleaned > 0) _logger.LogInformation($"[DeadlineWorker] Đã dọn dẹp {cleaned} nhật ký cũ hơn 30 ngày.");
@@ -73,7 +72,8 @@ namespace ToolCalendar.Services
 
             try
             {
-                var docs = DatabaseService.GetAll();
+                var docRepo = scope.ServiceProvider.GetRequiredService<ToolCalendar.Core.Data.Interfaces.IDocumentRepository>();
+                var docs = await docRepo.GetAllAsync();
                 var activeDocs = docs.Where(d => d.Status != "Đã hoàn thành" && d.ThoiHan.HasValue).ToList();
 
                 DateTime today = DateTime.Today;
@@ -95,9 +95,10 @@ namespace ToolCalendar.Services
                                 doc.AssignedTo.Value,
                                 title,
                                 body,
-                                new { 
-                                    docId = doc.Id, 
-                                    type = "deadline", 
+                                new
+                                {
+                                    docId = doc.Id,
+                                    type = "deadline",
                                     days = daysRemaining,
                                     url = $"/index.html?docId={doc.Id}"
                                 }
@@ -112,11 +113,12 @@ namespace ToolCalendar.Services
                                 1, // Mặc định gửi cho Admin ID 1
                                 title,
                                 body,
-                                new { 
-                                    docId = doc.Id, 
-                                    type = "deadline", 
+                                new
+                                {
+                                    docId = doc.Id,
+                                    type = "deadline",
                                     days = daysRemaining,
-                                    url = $"?docId={doc.Id}" 
+                                    url = $"?docId={doc.Id}"
                                 }
                             );
                             count++;
@@ -135,3 +137,4 @@ namespace ToolCalendar.Services
         }
     }
 }
+

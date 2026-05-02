@@ -7,7 +7,7 @@ namespace ToolCalendar.Hubs
     {
         public override async Task OnConnectedAsync()
         {
-            var userId = Context.User?.FindFirst("uid")?.Value 
+            var userId = Context.User?.FindFirst("uid")?.Value
                       ?? Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (!string.IsNullOrEmpty(userId))
@@ -20,7 +20,7 @@ namespace ToolCalendar.Hubs
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            var userId = Context.User?.FindFirst("uid")?.Value 
+            var userId = Context.User?.FindFirst("uid")?.Value
                       ?? Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (!string.IsNullOrEmpty(userId))

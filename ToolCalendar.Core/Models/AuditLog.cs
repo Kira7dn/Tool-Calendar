@@ -1,5 +1,3 @@
-using System;
-
 namespace ToolCalendar.Models
 {
     public class AuditLog

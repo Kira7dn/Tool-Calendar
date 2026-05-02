@@ -1,10 +1,7 @@
 ﻿using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Element;
-using iText.Layout.Properties;
 using SkiaSharp;
-using System.IO;
-using System;
 using System.Text;
 
 namespace ToolCalendar.Tests.Helpers
@@ -16,7 +13,7 @@ namespace ToolCalendar.Tests.Helpers
         private static string TimesPath = TestPathHelper.GetFontPath("times");
         private static string TimesBoldPath = TestPathHelper.GetFontPath("times", bold: true);
 
-        private const string FullContentTemplate = 
+        private const string FullContentTemplate =
             "Căn cứ Quyết định số 749/QĐ-TTg ngày 03/6/2020 của Thủ tướng Chính phủ phê duyệt 'Chương trình Chuyển đổi số quốc gia đến năm 2025, định hướng đến năm 2030';\n" +
             "Căn cứ Nghị quyết số 01-NQ/TU ngày 16/11/2020 của Ban Chấp hành Đảng bộ tỉnh về chuyển đổi số tỉnh Quảng Ninh đến năm 2025, định hướng đến năm 2030;\n" +
             "Sở Thông tin và Truyền thông xác định việc triển khai Hệ thống Điều phối Công văn tích hợp trí tuệ nhân tạo (AI) là nhiệm vụ trọng tâm nhằm nâng cao hiệu quả quản lý hành chính nhà nước.\n\n" +
@@ -39,12 +36,12 @@ namespace ToolCalendar.Tests.Helpers
             string groundTruth = header + fullText;
 
             // --- GIẢ LẬP ĐỘ NGHIÊNG (5 độ) ---
-            canvas.RotateDegrees(5.0f, width/2, height/2);
+            canvas.RotateDegrees(5.0f, width / 2, height / 2);
 
             using var arialBold = SKTypeface.FromFile(ArialBoldPath);
             using var times = SKTypeface.FromFile(TimesPath);
             using var timesBold = SKTypeface.FromFile(TimesBoldPath);
-            
+
             using var blurFilter = SKImageFilter.CreateBlur(1.2f, 1.2f);
             using var paint = new SKPaint { IsAntialias = true, Color = SKColors.Black, ImageFilter = blurFilter };
 
@@ -62,12 +59,16 @@ namespace ToolCalendar.Tests.Helpers
             paint.Typeface = times; paint.TextSize = 44;
             fullText = string.Format(FullContentTemplate, thoiHan);
             float y = 700;
-            foreach (var line in fullText.Split('\n')) {
+            foreach (var line in fullText.Split('\n'))
+            {
                 // Xử lý xuống dòng đơn giản cho bài test
-                if (line.Length > 85) {
+                if (line.Length > 85)
+                {
                     canvas.DrawText(line.Substring(0, 85), 200, y, paint); y += 60;
                     canvas.DrawText(line.Substring(85), 200, y, paint);
-                } else {
+                }
+                else
+                {
                     canvas.DrawText(line, 200, y, paint);
                 }
                 y += 75;
@@ -75,7 +76,8 @@ namespace ToolCalendar.Tests.Helpers
 
             // Stamp
             string stampPath = Path.Combine(TestPathHelper.GetAssetsRoot(), "stamp.png");
-            if (File.Exists(stampPath)) {
+            if (File.Exists(stampPath))
+            {
                 using var stampBmp = SKBitmap.Decode(stampPath);
                 canvas.DrawBitmap(stampBmp, new SKRect(width - 900, y + 50, width - 400, y + 550));
             }
@@ -107,12 +109,14 @@ namespace ToolCalendar.Tests.Helpers
             using var writer = new PdfWriter(outputPath);
             using var pdf = new PdfDocument(writer);
             var doc = new Document(pdf);
-            
+
             // Nhúng font tiếng Việt để tránh lỗi font hệ thống của iText7
-            try {
+            try
+            {
                 var font = iText.Kernel.Font.PdfFontFactory.CreateFont(TimesPath, iText.IO.Font.PdfEncodings.IDENTITY_H);
                 doc.SetFont(font);
-            } catch { }
+            }
+            catch { }
 
             doc.Add(new Paragraph("SO THONG TIN VA TRUYEN THONG").SetBold());
             doc.Add(new Paragraph("Số hiệu: " + soVb).SetBold());
@@ -142,7 +146,7 @@ namespace ToolCalendar.Tests.Helpers
             {
                 string pageHeader = $"--- BÁO CÁO CÔNG TÁC TRANG {i} ---\n";
                 string pageContent = LongAdministrativeTemplate + $"\nNội dung bổ sung cho trang {i}: Đảm bảo tính bảo mật và an toàn thông tin trong suốt quá trình xử lý văn bản quy phạm pháp luật.";
-                
+
                 sbGroundTruth.AppendLine(pageHeader);
                 sbGroundTruth.AppendLine(pageContent);
 
@@ -158,12 +162,14 @@ namespace ToolCalendar.Tests.Helpers
 
                 canvas.DrawText(pageHeader.Trim(), 200, 200, paint);
                 paint.Typeface = SKTypeface.FromFile(TimesPath);
-                
+
                 float y = 350;
-                foreach (var line in pageContent.Split('\n')) {
+                foreach (var line in pageContent.Split('\n'))
+                {
                     // Primitive text wrap
                     string text = line;
-                    while (text.Length > 80) {
+                    while (text.Length > 80)
+                    {
                         canvas.DrawText(text.Substring(0, 80), 200, y, paint);
                         text = text.Substring(80);
                         y += 60;
@@ -202,13 +208,15 @@ namespace ToolCalendar.Tests.Helpers
             using var paint = new SKPaint { Color = SKColors.Black, TextSize = 45, IsAntialias = true };
             using var typeface = SKTypeface.FromFile(ArialBoldPath);
             paint.Typeface = typeface;
-            
+
             canvas.DrawText("VĂN BẢN QUÉT GÓC 90 ĐỘ (XOAY NGANG)", 100, 100, paint);
             paint.Typeface = SKTypeface.FromFile(TimesPath);
             float y = 250;
-            foreach (var line in LongAdministrativeTemplate.Split('\n')) {
+            foreach (var line in LongAdministrativeTemplate.Split('\n'))
+            {
                 string text = line;
-                while (text.Length > 80) {
+                while (text.Length > 80)
+                {
                     canvas.DrawText(text.Substring(0, 80), 100, y, paint);
                     text = text.Substring(80);
                     y += 60;
@@ -219,7 +227,7 @@ namespace ToolCalendar.Tests.Helpers
 
             using var snap = surface.Snapshot();
             using var encoded = snap.Encode(SKEncodedImageFormat.Png, 90);
-            
+
             using var writer = new PdfWriter(outputPath);
             using var pdf = new PdfDocument(writer);
             var doc = new Document(pdf);
@@ -239,11 +247,13 @@ namespace ToolCalendar.Tests.Helpers
 
             using var paint = new SKPaint { Color = SKColors.Black, TextSize = 42, IsAntialias = true };
             canvas.DrawText("VĂN BẢN CÓ NHIỄU VIỀN ĐEN", 400, 400, paint);
-            
+
             float y = 550;
-            foreach (var line in LongAdministrativeTemplate.Split('\n')) {
+            foreach (var line in LongAdministrativeTemplate.Split('\n'))
+            {
                 string text = line;
-                while (text.Length > 80) {
+                while (text.Length > 80)
+                {
                     canvas.DrawText(text.Substring(0, 80), 200, y, paint);
                     text = text.Substring(80);
                     y += 60;
@@ -254,13 +264,13 @@ namespace ToolCalendar.Tests.Helpers
 
             // Giả lập viền đen máy scan (Xấu)
             paint.Color = SKColors.Black;
-            canvas.DrawRect(0, 0, 80, height, paint); 
+            canvas.DrawRect(0, 0, 80, height, paint);
             canvas.DrawRect(width - 80, 0, 80, height, paint);
             canvas.DrawRect(0, 0, width, 60, paint);
 
             using var snap = surface.Snapshot();
             using var encoded = snap.Encode(SKEncodedImageFormat.Png, 85);
-            
+
             using var writer = new PdfWriter(outputPath);
             using var pdf = new PdfDocument(writer);
             var doc = new Document(pdf);

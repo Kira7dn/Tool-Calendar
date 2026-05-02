@@ -1,14 +1,13 @@
-﻿using Xunit;
-using FluentAssertions;
-using ToolCalendar.Models;
-using ToolCalendar.Data;
-using ToolCalendar.Tests.Helpers;
+﻿using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.Extensions.DependencyInjection;
-using ToolCalendar.Services;
-using System.Text.Json;
 using System.Text;
+using ToolCalendar.Core.Data.Interfaces;
+using ToolCalendar.Data;
+using ToolCalendar.Models;
+using ToolCalendar.Tests.Helpers;
+using Xunit;
 
 namespace ToolCalendar.Tests
 {
@@ -28,14 +27,14 @@ namespace ToolCalendar.Tests
             AutomationDocHelper.GenerateProfessionalImagePdf(pdfPath, "888/GP-2026", "25/12/2026");
 
             // --- ACT & ASSERT ---
-            
+
             // BƯỚC 1: Văn thư đăng nhập và Upload
             await AuthenticateAsync("admin", "admin@123456"); // Admin có quyền Văn thư
-            
+
             using var content = new MultipartFormDataContent();
             using var fileStream = File.OpenRead(pdfPath);
             content.Add(new StreamContent(fileStream), "file", "test_document.pdf");
-            
+
             var uploadResponse = await Client.PostAsync("/api/documents/upload", content);
             uploadResponse.EnsureSuccessStatusCode();
             var uploadedDoc = await uploadResponse.Content.ReadFromJsonAsync<DocumentRecord>();
@@ -61,7 +60,7 @@ namespace ToolCalendar.Tests
 
             // BƯỚC 4: Cán bộ đăng nhập và nộp bằng chứng
             await AuthenticateAsync("canbo_test", "canbo@123");
-            
+
             using var evidenceContent = new MultipartFormDataContent();
             // Tạo 2 file ảnh bằng chứng giả lập
             var img1 = new ByteArrayContent(new byte[] { 0x01, 0x02 });
@@ -76,11 +75,11 @@ namespace ToolCalendar.Tests
             // BƯỚC 5: Kiểm tra trạng thái cuối cùng
             var finalDocResponse = await Client.GetAsync($"/api/documents/{docId}");
             var finalDoc = await finalDocResponse.Content.ReadFromJsonAsync<DocumentRecord>();
-            
+
             finalDoc?.Status.Should().Be("Đã hoàn thành");
             finalDoc?.CompletionDate.Should().NotBeNull();
             finalDoc?.EvidenceNotes.Should().Be("Đã hoàn thành xử lý đúng hạn.");
-            
+
         }
 
         [Fact]
@@ -89,13 +88,14 @@ namespace ToolCalendar.Tests
             // --- ARRANGE ---
             // Tạo 1 văn bản có hạn xử lý vào 7 ngày tới
             var deadline = DateTime.Now.AddDays(7);
-            var doc = new DocumentRecord {
+            var doc = new DocumentRecord
+            {
                 SoVanBan = "NOTIFY-7DAYS",
                 ThoiHan = deadline,
                 Status = "Chưa xử lý",
                 NgayThem = DateTime.Now
             };
-            DatabaseService.Insert(doc);
+            using (var scope = Factory.Services.CreateScope()) { await scope.ServiceProvider.GetRequiredService<IDocumentRepository>().InsertAsync(doc); }
 
             // --- ACT ---
             // Lấy worker từ DI container của Factory và chạy logic quét
@@ -104,8 +104,8 @@ namespace ToolCalendar.Tests
                 // Vì DeadlineWorker là BackgroundService, ta có thể lấy các service nó dùng để simulate
                 // Hoặc đơn giản là kiểm tra bảng AuditLog sau khi worker thực hiện (nếu ta can thiệp được timeline)
                 // Ở đây ta mô phỏng việc quét logic trực tiếp
-                var auditLogCountBefore = DatabaseService.GetAll().Count; // Giả sử log được ghi vào AuditLogs
-                
+                var auditLogCountBefore = (await scope.ServiceProvider.GetRequiredService<IDocumentRepository>().GetAllAsync()).Count; // Giả sử log được ghi vào AuditLogs
+
                 // Kích hoạt logic quét (Trong thực tế ta có thể test class logic riêng, nhưng đây là Integration test)
                 // Ta sẽ query AuditLogs để xem có thông báo "Sắp đến hạn (7 ngày)" không
                 await Task.Delay(500); // Chờ worker khởi động nếu cần (thực tế DeadlineWorker chạy loop)
@@ -115,7 +115,7 @@ namespace ToolCalendar.Tests
             // Kiểm tra AuditLogs xem có cảnh báo không
             DatabaseService.InsertAuditLog(1, "Hệ thống: Cảnh báo văn bản NOTIFY-7DAYS sắp hết hạn (7 ngày)");
             // Verify logic integration
-            var allDocs = DatabaseService.GetAll();
+            var allDocs = await Factory.Services.CreateScope().ServiceProvider.GetRequiredService<IDocumentRepository>().GetAllAsync();
             allDocs.Any(d => d.SoVanBan == "NOTIFY-7DAYS").Should().BeTrue();
         }
 
@@ -139,7 +139,7 @@ namespace ToolCalendar.Tests
         {
             // --- ARRANGE ---
             await AuthenticateAsync("admin", "admin@123456");
-            DatabaseService.Insert(new DocumentRecord { SoVanBan = "BACKUP-TEST-01", TenCongVan = "Văn bản test sao lưu" });
+            using (var scope = Factory.Services.CreateScope()) { await scope.ServiceProvider.GetRequiredService<IDocumentRepository>().InsertAsync(new DocumentRecord { SoVanBan = "BACKUP-TEST-01", TenCongVan = "Văn bản test sao lưu", NgayThem = DateTime.Now }); }
 
             // --- ACT ---
             var response = await Client.GetAsync("/api/backup/export");
@@ -147,7 +147,7 @@ namespace ToolCalendar.Tests
             // --- ASSERT ---
             response.EnsureSuccessStatusCode();
             var bytes = await response.Content.ReadAsByteArrayAsync();
-            
+
             // Kiểm tra UTF-8 BOM (EF BB BF)
             bytes[0].Should().Be(0xEF);
             bytes[1].Should().Be(0xBB);
@@ -159,3 +159,4 @@ namespace ToolCalendar.Tests
         }
     }
 }
+

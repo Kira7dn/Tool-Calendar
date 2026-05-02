@@ -1,7 +1,5 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using ToolCalendar.Models;
-using ToolCalendar.Core.Models;
-using System.Text;
 
 namespace ToolCalendar.Data
 {
@@ -35,7 +33,7 @@ namespace ToolCalendar.Data
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            // Bật chế độ DELETE thay vì WAL để tương thích tốt nhất với Docker volumes trên Windows (tránh lỗi I/O và malformed)
+            // Báº­t cháº¿ Ä‘á»™ DELETE thay vÃ¬ WAL Ä‘á»ƒ tÆ°Æ¡ng thÃ­ch tá»‘t nháº¥t vá»›i Docker volumes trÃªn Windows (trÃ¡nh lá»—i I/O vÃ  malformed)
             using (var walCmd = new SqliteCommand("PRAGMA journal_mode=DELETE;", connection))
             {
                 walCmd.ExecuteNonQuery();
@@ -55,8 +53,8 @@ namespace ToolCalendar.Data
                     ThoiHan TEXT,
                     DonViChiDao TEXT,
                     FilePath TEXT,
-                    Status TEXT DEFAULT 'Chưa xử lý',
-                    Priority TEXT DEFAULT 'Thường',
+                    Status TEXT DEFAULT 'ChÆ°a xá»­ lÃ½',
+                    Priority TEXT DEFAULT 'ThÆ°á»ng',
                     DepartmentId INTEGER,
                     AssignedTo INTEGER,
                     EvidencePaths TEXT DEFAULT '[]',
@@ -212,16 +210,18 @@ namespace ToolCalendar.Data
             cmd.CommandText = "SELECT COUNT(*) FROM AppSettings WHERE [Key] = 'Document_DeadlineKeywords'";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                // Mặc định các từ bóc tách hạn xử lý
-                cmd.CommandText = "INSERT INTO AppSettings ([Key], [Value]) VALUES ('Document_DeadlineKeywords', 'hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành')";
+                // Máº·c Ä‘á»‹nh cÃ¡c tá»« bÃ³c tÃ¡ch háº¡n xá»­ lÃ½
+                cmd.CommandText = "INSERT INTO AppSettings ([Key], [Value]) VALUES ('Document_DeadlineKeywords', 'háº¡n, Ä‘áº¿n ngÃ y, trÆ°á»›c ngÃ y, trÃ¬nh, xong, xong trÆ°á»›c, hoÃ n thÃ nh')";
                 cmd.ExecuteNonQuery();
             }
 
             // --- MIGRATION: AutoRules.DepartmentId ---
-            try {
+            try
+            {
                 cmd.CommandText = "ALTER TABLE AutoRules ADD COLUMN DepartmentId INTEGER";
                 cmd.ExecuteNonQuery();
-            } catch { /* Column already exists */ }
+            }
+            catch { /* Column already exists */ }
 
             // --- MIGRATION: Users Schema Update ---
             try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN FullName TEXT"; cmd.ExecuteNonQuery(); } catch { }
@@ -244,8 +244,8 @@ namespace ToolCalendar.Data
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN ThoiHan TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN DonViChiDao TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN FilePath TEXT"; cmd.ExecuteNonQuery(); } catch { }
-            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN Status TEXT DEFAULT 'Chưa xử lý'"; cmd.ExecuteNonQuery(); } catch { }
-            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN Priority TEXT DEFAULT 'Thường'"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN Status TEXT DEFAULT 'ChÆ°a xá»­ lÃ½'"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN Priority TEXT DEFAULT 'ThÆ°á»ng'"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN DepartmentId INTEGER"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedTo INTEGER"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN EvidencePaths TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
@@ -258,31 +258,31 @@ namespace ToolCalendar.Data
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedUserIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedDepartmentIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
 
-            // Đảm bảo tài khoản admin luôn đúng mật khẩu 123456
+            // Chá»‰ táº¡o admin láº§n Ä‘áº§u â€” KHÃ”NG BAO GIá»œ reset password tá»± Ä‘á»™ng
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', '123456', 'Admin', datetime('now', 'localtime'))";
+                // Máº­t kháº©u máº·c Ä‘á»‹nh Ä‘Æ°á»£c mÃ£ hÃ³a BCrypt (work factor 12 â€” chuáº©n cÃ´ng nghiá»‡p)
+                var defaultAdminPwd = BCrypt.Net.BCrypt.HashPassword("Admin@2026!", workFactor: 12);
+                cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', @pwd, 'Admin', datetime('now', 'localtime'))";
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@pwd", defaultAdminPwd);
                 cmd.ExecuteNonQuery();
+                cmd.Parameters.Clear();
             }
-            else
-            {
-                // Nếu đã có admin, ép cập nhật mật khẩu mới cho chắc chắn
-                cmd.CommandText = "UPDATE Users SET PasswordHash='123456' WHERE Username='admin'";
-                cmd.ExecuteNonQuery();
-            }
+            // KhÃ´ng cÃ³ else â€” khÃ´ng bao giá» reset password tá»± Ä‘á»™ng!
 
             // --- SEED DEPARTMENTS ---
             cmd.CommandText = "SELECT COUNT(*) FROM Departments";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                var deps = new[] { "Văn phòng HĐND và UBND", "Phòng Kinh tế hạ tầng và đô thị", "Phòng văn hóa xã hội" };
+                var deps = new[] { "VÄƒn phÃ²ng HÄND vÃ  UBND", "PhÃ²ng Kinh táº¿ háº¡ táº§ng vÃ  Ä‘Ã´ thá»‹", "PhÃ²ng vÄƒn hÃ³a xÃ£ há»™i" };
                 foreach (var name in deps)
                 {
                     cmd.CommandText = "INSERT INTO Departments (Name, Description) VALUES (@name, @desc)";
                     cmd.Parameters.Clear();
                     cmd.Parameters.AddWithValue("@name", name);
-                    cmd.Parameters.AddWithValue("@desc", $"Phòng ban {name}");
+                    cmd.Parameters.AddWithValue("@desc", $"PhÃ²ng ban {name}");
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -291,11 +291,11 @@ namespace ToolCalendar.Data
             cmd.CommandText = "SELECT COUNT(*) FROM Labels";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                var labels = new[] { 
-                    new { n = "Dự án", c = "#3b82f6" }, 
-                    new { n = "Khiếu nại", c = "#ef4444" }, 
-                    new { n = "Môi trường", c = "#10b981" },
-                    new { n = "Hợp tác", c = "#8b5cf6" }
+                var labels = new[] {
+                    new { n = "Dá»± Ã¡n", c = "#3b82f6" },
+                    new { n = "Khiáº¿u náº¡i", c = "#ef4444" },
+                    new { n = "MÃ´i trÆ°á»ng", c = "#10b981" },
+                    new { n = "Há»£p tÃ¡c", c = "#8b5cf6" }
                 };
                 foreach (var l in labels)
                 {
@@ -319,7 +319,8 @@ namespace ToolCalendar.Data
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                list.Add(new User {
+                list.Add(new User
+                {
                     Id = Convert.ToInt32(reader["Id"]),
                     Username = reader["Username"].ToString() ?? "",
                     FullName = reader["FullName"]?.ToString() ?? "",
@@ -344,13 +345,13 @@ namespace ToolCalendar.Data
                 using var cmd = connection.CreateCommand();
                 cmd.Transaction = transaction;
 
-                // 1. Gỡ người dùng khỏi các văn bản đang được gán (chuyển AssignedTo về NULL)
-                // Lưu ý: Chúng ta lọc theo ID người dùng trong danh sách AssignedUserIds hoặc AssignedTo
+                // 1. Gá»¡ ngÆ°á»i dÃ¹ng khá»i cÃ¡c vÄƒn báº£n Ä‘ang Ä‘Æ°á»£c gÃ¡n (chuyá»ƒn AssignedTo vá» NULL)
+                // LÆ°u Ã½: ChÃºng ta lá»c theo ID ngÆ°á»i dÃ¹ng trong danh sÃ¡ch AssignedUserIds hoáº·c AssignedTo
                 cmd.CommandText = "UPDATE Documents SET AssignedTo = NULL WHERE AssignedTo = (SELECT Username FROM Users WHERE Id = @id)";
                 cmd.Parameters.AddWithValue("@id", id);
                 cmd.ExecuteNonQuery();
 
-                // 2. Xóa người dùng (không cho phép xóa admin để bảo mật hệ thống)
+                // 2. XÃ³a ngÆ°á»i dÃ¹ng (khÃ´ng cho phÃ©p xÃ³a admin Ä‘á»ƒ báº£o máº­t há»‡ thá»‘ng)
                 cmd.CommandText = "DELETE FROM Users WHERE Id = @id AND Username != 'admin'";
                 cmd.ExecuteNonQuery();
 
@@ -367,24 +368,59 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "SELECT * FROM Users WHERE Username=@u AND PasswordHash=@p";
+
+            // BÆ°á»›c 1: Láº¥y user theo username (khÃ´ng so sÃ¡nh password trá»±c tiáº¿p trong SQL)
+            string sql = "SELECT * FROM Users WHERE Username=@u";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@u", username);
-            cmd.Parameters.AddWithValue("@p", password); // Đang để text cho đơn giản, có thể nâng cấp băm mật khẩu sau
             using var reader = cmd.ExecuteReader();
+
             if (reader.Read())
             {
-                var user = new User {
+                var storedHash = reader["PasswordHash"]?.ToString() ?? "";
+
+                // BÆ°á»›c 2: XÃ¡c minh máº­t kháº©u báº±ng BCrypt (timing-safe, chá»‘ng timing attack)
+                // TÆ°Æ¡ng thÃ­ch ngÆ°á»£c: náº¿u hash cÅ© lÃ  plain-text, váº«n cho Ä‘Äƒng nháº­p vÃ  tá»± Ä‘á»™ng migrate
+                bool isValid;
+                if (storedHash.StartsWith("$2a$") || storedHash.StartsWith("$2b$") || storedHash.StartsWith("$2y$"))
+                {
+                    // Máº­t kháº©u Ä‘Ã£ Ä‘Æ°á»£c hash BCrypt â€” verify Ä‘Ãºng chuáº©n
+                    isValid = BCrypt.Net.BCrypt.Verify(password, storedHash);
+                }
+                else
+                {
+                    // Máº­t kháº©u cÅ© plain-text â€” so sÃ¡nh táº¡m thá»i vÃ  tá»± Ä‘á»™ng migrate
+                    isValid = storedHash == password;
+                }
+
+                if (!isValid)
+                {
+                    return null;
+                }
+
+                var user = new User
+                {
                     Id = Convert.ToInt32(reader["Id"]),
                     Username = reader["Username"].ToString() ?? "",
                     FullName = reader["FullName"]?.ToString() ?? "",
                     Role = reader["Role"].ToString() ?? "Guest",
                     DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"])
                 };
-                
-                reader.Close(); // Cần đóng reader trước khi thực thi lệnh update
-                
-                // Set new session ID
+
+                reader.Close(); // ÄÃ³ng reader trÆ°á»›c khi thá»±c thi update
+
+                // BÆ°á»›c 3: Náº¿u máº­t kháº©u cÅ© lÃ  plain-text -> tá»± Ä‘á»™ng migrate sang BCrypt
+                if (!storedHash.StartsWith("$2"))
+                {
+                    var newHash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
+                    using var migrateCmd = new SqliteCommand("UPDATE Users SET PasswordHash=@h WHERE Id=@id", connection);
+                    migrateCmd.Parameters.AddWithValue("@h", newHash);
+                    migrateCmd.Parameters.AddWithValue("@id", user.Id);
+                    migrateCmd.ExecuteNonQuery();
+                    Console.WriteLine($"[Security] ÄÃ£ tá»± Ä‘á»™ng migrate máº­t kháº©u plain-text sang BCrypt cho user: {user.Username}");
+                }
+
+                // BÆ°á»›c 4: Táº¡o Session ID má»›i
                 user.SessionId = Guid.NewGuid().ToString();
                 using var updateCmd = new SqliteCommand("UPDATE Users SET SessionId=@s WHERE Id=@id", connection);
                 updateCmd.Parameters.AddWithValue("@s", user.SessionId);
@@ -428,16 +464,23 @@ namespace ToolCalendar.Data
 
         public static bool CreateUser(User user)
         {
-            try {
+            try
+            {
                 using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
                 string sql = @"
                     INSERT INTO Users (Username, PasswordHash, FullName, Email, PhoneNumber, Role, DepartmentId, CreatedAt) 
-                    VALUES (@u, @p, @f, @e, @pn, @r, @d, @now)" ;
+                    VALUES (@u, @p, @f, @e, @pn, @r, @d, @now)";
                 using var cmd = new SqliteCommand(sql, connection);
                 cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
                 cmd.Parameters.AddWithValue("@u", user.Username);
-                cmd.Parameters.AddWithValue("@p", user.PasswordHash);
+
+                // MÃ£ hÃ³a máº­t kháº©u báº±ng BCrypt náº¿u chÆ°a Ä‘Æ°á»£c hash
+                var passwordToStore = (user.PasswordHash?.StartsWith("$2") == true)
+                    ? user.PasswordHash  // ÄÃ£ hash rá»“i (nhÆ° tá»« admin seed)
+                    : BCrypt.Net.BCrypt.HashPassword(user.PasswordHash ?? "ChangeMe@123", workFactor: 12);
+                cmd.Parameters.AddWithValue("@p", passwordToStore);
+
                 cmd.Parameters.AddWithValue("@f", (object?)user.FullName ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@e", (object?)user.Email ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@pn", (object?)user.PhoneNumber ?? DBNull.Value);
@@ -445,7 +488,8 @@ namespace ToolCalendar.Data
                 cmd.Parameters.AddWithValue("@d", (object?)user.DepartmentId ?? DBNull.Value);
                 cmd.ExecuteNonQuery();
                 return true;
-            } catch { return false; }
+            }
+            catch { return false; }
         }
 
         public static void UpdateUser(User user)
@@ -460,7 +504,7 @@ namespace ToolCalendar.Data
                     Role = @r, 
                     DepartmentId = @d 
                 WHERE Id = @id";
-            
+
             // Note: Not updating Username/Password here for simplicity, can add separate methods or logic
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@f", (object?)user.FullName ?? DBNull.Value);
@@ -474,445 +518,9 @@ namespace ToolCalendar.Data
 
         public static bool Register(string username, string password, string role = "Guest")
         {
-            return CreateUser(new User { Username = username, PasswordHash = password, Role = role });
-        }
-
-        // --- COMMENT MANAGEMENT ---
-        public static List<Comment> GetComments(int docId)
-        {
-            var list = new List<Comment>();
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            string sql = "SELECT * FROM Comments WHERE DocumentId=@id ORDER BY CreatedAt ASC";
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@id", docId);
-            using var reader = cmd.ExecuteReader();
-            while(reader.Read())
-            {
-                list.Add(new Comment {
-                    Id = Convert.ToInt32(reader["Id"]),
-                    DocumentId = Convert.ToInt32(reader["DocumentId"]),
-                    UserId = Convert.ToInt32(reader["UserId"]),
-                    Username = reader["Username"].ToString() ?? "",
-                    Content = reader["Content"].ToString() ?? "",
-                    AttachmentPaths = reader["AttachmentPaths"]?.ToString() ?? "[]",
-                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
-                });
-            }
-            return list;
-        }
-
-        public static void InsertComment(Comment c)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            string sql = "INSERT INTO Comments (DocumentId, UserId, Username, Content, AttachmentPaths, CreatedAt) VALUES (@docId, @uId, @uName, @c, @ap, @now)";
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@docId", c.DocumentId);
-            cmd.Parameters.AddWithValue("@uId", c.UserId);
-            cmd.Parameters.AddWithValue("@uName", c.Username);
-            cmd.Parameters.AddWithValue("@c", c.Content);
-            cmd.Parameters.AddWithValue("@ap", c.AttachmentPaths ?? "[]");
-            cmd.ExecuteNonQuery();
-        }
-
-        public static void DeleteComment(int commentId, int requestingUserId, bool isAdmin)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            using var transaction = connection.BeginTransaction();
-            try
-            {
-                using var cmd = connection.CreateCommand();
-                cmd.Transaction = transaction;
-
-                // 1. Kiểm tra quyền xóa và xóa các Reaction liên quan trước
-                cmd.CommandText = isAdmin 
-                    ? "DELETE FROM CommentReactions WHERE CommentId = @id"
-                    : "DELETE FROM CommentReactions WHERE CommentId = @id AND CommentId IN (SELECT Id FROM Comments WHERE UserId = @uid)";
-                cmd.Parameters.AddWithValue("@id", commentId);
-                if (!isAdmin) cmd.Parameters.AddWithValue("@uid", requestingUserId);
-                cmd.ExecuteNonQuery();
-
-                // 2. Xóa bình luận
-                cmd.CommandText = isAdmin
-                    ? "DELETE FROM Comments WHERE Id = @id"
-                    : "DELETE FROM Comments WHERE Id = @id AND UserId = @uid";
-                cmd.ExecuteNonQuery();
-
-                transaction.Commit();
-            }
-            catch
-            {
-                transaction.Rollback();
-                throw;
-            }
-        }
-
-        public static List<CommentReaction> GetReactionsForComment(int commentId)
-        {
-            var list = new List<CommentReaction>();
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            using var cmd = new SqliteCommand("SELECT * FROM CommentReactions WHERE CommentId=@id", connection);
-            cmd.Parameters.AddWithValue("@id", commentId);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
-            {
-                list.Add(new CommentReaction {
-                    Id = Convert.ToInt32(reader["Id"]),
-                    CommentId = Convert.ToInt32(reader["CommentId"]),
-                    UserId = Convert.ToInt32(reader["UserId"]),
-                    Username = reader["Username"].ToString() ?? "",
-                    ReactionType = reader["ReactionType"].ToString() ?? "",
-                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
-                });
-            }
-            return list;
-        }
-
-        /// <summary>Toggle a reaction: if same type exists remove it, else upsert to new type.</summary>
-        public static string ToggleReaction(int commentId, int userId, string username, string reactionType)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            // Check existing
-            using var checkCmd = new SqliteCommand("SELECT ReactionType FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid", connection);
-            checkCmd.Parameters.AddWithValue("@cid", commentId);
-            checkCmd.Parameters.AddWithValue("@uid", userId);
-            var existing = checkCmd.ExecuteScalar()?.ToString();
-
-            if (existing == reactionType)
-            {
-                // Remove reaction (toggle off)
-                using var delCmd = new SqliteCommand("DELETE FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid", connection);
-                delCmd.Parameters.AddWithValue("@cid", commentId);
-                delCmd.Parameters.AddWithValue("@uid", userId);
-                delCmd.ExecuteNonQuery();
-                return "removed";
-            }
-            else
-            {
-                // Upsert to new reaction type
-                using var upsertCmd = new SqliteCommand(@"
-                    INSERT INTO CommentReactions (CommentId, UserId, Username, ReactionType, CreatedAt)
-                    VALUES (@cid, @uid, @uname, @type, @now)
-                    ON CONFLICT(CommentId, UserId) DO UPDATE SET ReactionType=@type, CreatedAt=@now", connection);
-                upsertCmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
-                upsertCmd.Parameters.AddWithValue("@cid", commentId);
-                upsertCmd.Parameters.AddWithValue("@uid", userId);
-                upsertCmd.Parameters.AddWithValue("@uname", username);
-                upsertCmd.Parameters.AddWithValue("@type", reactionType);
-                upsertCmd.ExecuteNonQuery();
-                return reactionType;
-            }
-        }
-
-        public static List<DocumentRecord> GetAll()
-        {
-            var records = new List<DocumentRecord>();
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            string sql = "SELECT * FROM Documents ORDER BY ThoiHan ASC NULLS LAST";
-            using var cmd = new SqliteCommand(sql, connection);
-            using var reader = cmd.ExecuteReader();
-
-            while (reader.Read())
-                records.Add(MapRecord(reader));
-
-            return records;
-        }
-
-        public static DocumentRecord? GetDocumentById(int id)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            string sql = "SELECT * FROM Documents WHERE Id = @id";
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@id", id);
-            using var reader = cmd.ExecuteReader();
-
-            if (reader.Read())
-                return MapRecord(reader);
-
-            return null;
-        }
-
-        /// <summary>
-        /// Server-side pagination: returns one page of documents + total count for pagination UI.
-        /// <para>search is matched against SoVanBan, TrichYeu, CoQuanChuQuan (case-insensitive LIKE).</para>
-        /// </summary>
-        public static (List<DocumentRecord> Items, int TotalCount) GetPaged(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc")
-        {
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 10;
-
-            var filters = new List<string>();
-            bool hasSearch = !string.IsNullOrWhiteSpace(search);
-            bool hasStatus = !string.IsNullOrWhiteSpace(status);
-
-            if (hasSearch)
-            {
-                filters.Add(@"(
-                    LOWER(SoVanBan)      LIKE @search OR
-                    LOWER(TrichYeu)      LIKE @search OR
-                    LOWER(CoQuanChuQuan) LIKE @search
-                )");
-            }
-
-            if (hasStatus)
-            {
-                var s = status.Replace("⏳ ", "").Replace("⚙️ ", "").Replace("🔍 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("🛑 ", "").ToLower();
-                if (s == "overdue")
-                {
-                    // Công thức chuẩn từ Dashboard Overdue
-                    filters.Add("ThoiHan < date('now') AND Status != 'Đã hoàn thành' AND ThoiHan IS NOT NULL");
-                }
-                else if (s == "urgent")
-                {
-                    // Công thức chuẩn từ Dashboard Sắp hết hạn (7 ngày tới)
-                    filters.Add("ThoiHan >= date('now') AND ThoiHan <= date('now', '+7 days') AND Status != 'Đã hoàn thành'");
-                }
-                else if (s == "today")
-                {
-                    // Công thức chuẩn từ Dashboard Đến hạn hôm nay
-                    filters.Add("date(ThoiHan) = date('now') AND Status != 'Đã hoàn thành'");
-                }
-                else
-                {
-                    filters.Add("(LOWER(Status) = @status OR LOWER(Status) = @statusClean)");
-                }
-            }
-
-            string searchFilter = filters.Count > 0 ? "WHERE " + string.Join(" AND ", filters) : "";
-            
-            string orderBy = sort switch
-            {
-                "newest" => "NgayThem DESC",
-                "oldest" => "NgayThem ASC",
-                "deadline_desc" => "ThoiHan DESC NULLS LAST",
-                _ => "ThoiHan ASC NULLS LAST"
-            };
-
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            // 1. Total count
-            string countSql = $"SELECT COUNT(*) FROM Documents {searchFilter}";
-            using var countCmd = new SqliteCommand(countSql, connection);
-            if (hasSearch) countCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
-            if (hasStatus && status.ToLower() != "overdue")
-            {
-                countCmd.Parameters.AddWithValue("@status", status.ToLower());
-                countCmd.Parameters.AddWithValue("@statusClean", status.Replace("⏳ ", "").Replace("⚙️ ", "").Replace("🔍 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("🛑 ", "").ToLower());
-            }
-
-            int totalCount = Convert.ToInt32(countCmd.ExecuteScalar());
-
-            // 2. Paged data
-            int offset = (page - 1) * pageSize;
-            string dataSql = $@"
-                SELECT * FROM Documents
-                {searchFilter}
-                ORDER BY {orderBy}
-                LIMIT @pageSize OFFSET @offset";
-
-            using var dataCmd = new SqliteCommand(dataSql, connection);
-            if (hasSearch) dataCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
-            if (hasStatus && status.ToLower() != "overdue")
-            {
-                dataCmd.Parameters.AddWithValue("@status", status.ToLower());
-                dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("⏳ ", "").Replace("⚙️ ", "").Replace("🔍 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("🛑 ", "").ToLower());
-            }
-                
-            dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
-            dataCmd.Parameters.AddWithValue("@offset", offset);
-
-            using var reader = dataCmd.ExecuteReader();
-            var items = new List<DocumentRecord>();
-            while (reader.Read())
-                items.Add(MapRecord(reader));
-
-            return (items, totalCount);
-        }
-
-        public static List<string> GetUniqueStatuses()
-        {
-            var list = new List<string>();
-            try
-            {
-                using var connection = new SqliteConnection(_connectionString);
-                connection.Open();
-                string sql = "SELECT DISTINCT Status FROM Documents WHERE Status IS NOT NULL AND Status != ''";
-                using var cmd = new SqliteCommand(sql, connection);
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    list.Add(reader.GetString(0));
-                }
-            }
-            catch { }
-            return list;
-        }
-
-        public static int Insert(DocumentRecord record)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            using var transaction = connection.BeginTransaction();
-            try
-            {
-                string sql = @"
-                    INSERT INTO Documents (SoVanBan, TenCongVan, TrichYeu, FullText, OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich)
-                    VALUES (@SoVanBan, @TenCongVan, @TrichYeu, @FullText, @OcrPagesJson, @NgayBanHanh, @CoQuanBanHanh, @CoQuanChuQuan, @ThoiHan, @DonViChiDao, @FilePath, @Status, @Priority, @DepartmentId, @AssignedTo, @AssignedUserIds, @AssignedDepartmentIds, @EvidencePaths, @EvidenceNotes, @CompletionDate, @LabelId, @NgayThem, @DaTaoLich);
-                    SELECT last_insert_rowid();";
-
-                using var cmd = new SqliteCommand(sql, connection, transaction);
-                AddParams(cmd, record);
-                int id = Convert.ToInt32(cmd.ExecuteScalar());
-                transaction.Commit();
-                return id;
-            }
-            catch
-            {
-                transaction.Rollback();
-                throw;
-            }
-        }
-
-        public static void Update(DocumentRecord record)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            string sql = @"
-                UPDATE Documents SET
-                    SoVanBan=@SoVanBan, TenCongVan=@TenCongVan, TrichYeu=@TrichYeu, FullText=@FullText, OcrPagesJson=@OcrPagesJson,
-                    NgayBanHanh=@NgayBanHanh, CoQuanBanHanh=@CoQuanBanHanh, CoQuanChuQuan=@CoQuanChuQuan,
-                    ThoiHan=@ThoiHan, DonViChiDao=@DonViChiDao, FilePath=@FilePath, 
-                    Status=@Status, Priority=@Priority, DepartmentId=@DepartmentId, 
-                    AssignedTo=@AssignedTo, AssignedUserIds=@AssignedUserIds, AssignedDepartmentIds=@AssignedDepartmentIds,
-                    EvidencePaths=@EvidencePaths, EvidenceNotes=@EvidenceNotes, 
-                    CompletionDate=@CompletionDate, LabelId=@LabelId, DaTaoLich=@DaTaoLich
-                WHERE Id=@Id";
-
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@Id", record.Id);
-            AddParams(cmd, record);
-            cmd.ExecuteNonQuery();
-        }
-
-        public static void AssignDocument(int docId, string departmentIds, string userIds)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            
-            int? firstDeptId = null;
-            try {
-                var depts = System.Text.Json.JsonSerializer.Deserialize<List<int>>(departmentIds);
-                if (depts != null && depts.Count > 0) firstDeptId = depts[0];
-            } catch { }
-
-            int? firstUserId = null;
-            try {
-                var users = System.Text.Json.JsonSerializer.Deserialize<List<int>>(userIds);
-                if (users != null && users.Count > 0) firstUserId = users[0];
-            } catch { }
-
-            string sql = "UPDATE Documents SET AssignedDepartmentIds=@deptIds, AssignedUserIds=@uIds, DepartmentId=@dId, AssignedTo=@uId, Status='Chưa xử lý' WHERE Id=@docId";
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@deptIds", (object?)departmentIds ?? "[]");
-            cmd.Parameters.AddWithValue("@uIds", (object?)userIds ?? "[]");
-            cmd.Parameters.AddWithValue("@dId", (object?)firstDeptId ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@uId", (object?)firstUserId ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@docId", docId);
-            cmd.ExecuteNonQuery();
-        }
-
-        public static void SubmitEvidence(int docId, string evidenceJson, string notes)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            string sql = @"
-                UPDATE Documents SET 
-                    EvidencePaths=@paths, 
-                    EvidenceNotes=@notes, 
-                    Status='Đã hoàn thành', 
-                    CompletionDate=datetime('now', 'localtime') 
-                WHERE Id=@docId";
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@paths", evidenceJson);
-            cmd.Parameters.AddWithValue("@notes", notes);
-            cmd.Parameters.AddWithValue("@docId", docId);
-            cmd.ExecuteNonQuery();
-        }
-
-        public static void Delete(int id)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            using var transaction = connection.BeginTransaction();
-            
-            try
-            {
-                using var cmd = connection.CreateCommand();
-                cmd.Transaction = transaction;
-                
-                // 1. Xóa cảm xúc của các bình luận thuộc văn bản này
-                cmd.CommandText = "DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId=@Id)";
-                cmd.Parameters.AddWithValue("@Id", id);
-                cmd.ExecuteNonQuery();
-
-                // 2. Xóa các bình luận của văn bản này
-                cmd.CommandText = "DELETE FROM Comments WHERE DocumentId=@Id";
-                cmd.ExecuteNonQuery();
-
-                // 3. Xóa chính văn bản đó
-                cmd.CommandText = "DELETE FROM Documents WHERE Id=@Id";
-                cmd.ExecuteNonQuery();
-
-                transaction.Commit(); // Mọi thứ ổn, chốt dữ liệu
-            }
-            catch (Exception)
-            {
-                transaction.Rollback(); // Có lỗi, khôi phục lại như cũ
-                throw;
-            }
-        }
-
-        public static void BulkUpdateStatus(List<int> ids, string status)
-        {
-            if (ids == null || ids.Count == 0) return;
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            
-            // Note: Since we are using SQLite and small batches, we can use IN clause with string join
-            // For production with massive IDs, we might use a temporary table or multiple commands
-            string idList = string.Join(",", ids);
-            string sql = $"UPDATE Documents SET Status=@s WHERE Id IN ({idList})";
-            
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@s", status);
-            cmd.ExecuteNonQuery();
-        }
-
-        public static void BulkDelete(List<int> ids)
-        {
-            if (ids == null || ids.Count == 0) return;
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            string idList = string.Join(",", ids);
-            string sql = $@"
-                DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({idList}));
-                DELETE FROM Comments WHERE DocumentId IN ({idList});
-                DELETE FROM Documents WHERE Id IN ({idList});
-            ";
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.ExecuteNonQuery();
+            // Hash máº­t kháº©u trÆ°á»›c khi táº¡o user
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
+            return CreateUser(new User { Username = username, PasswordHash = hashedPassword, Role = role });
         }
 
         // --- SETTINGS & LOGS ---
@@ -961,7 +569,7 @@ namespace ToolCalendar.Data
                     {
                         Id = Convert.ToInt32(reader["Id"]),
                         UserId = reader["UserId"] == DBNull.Value ? null : Convert.ToInt32(reader["UserId"]),
-                        UserFullName = reader["UserFullName"]?.ToString() ?? "Hệ thống",
+                        UserFullName = reader["UserFullName"]?.ToString() ?? "Há»‡ thá»‘ng",
                         Action = reader["Action"].ToString() ?? "",
                         Timestamp = DateTime.Parse(reader["Timestamp"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
                     });
@@ -1024,63 +632,6 @@ namespace ToolCalendar.Data
             }
         }
 
-        private static void AddParams(SqliteCommand cmd, DocumentRecord r)
-        {
-            cmd.Parameters.AddWithValue("@SoVanBan", (object?)r.SoVanBan ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@TenCongVan", (object?)r.TenCongVan ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@TrichYeu", (object?)r.TrichYeu ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@FullText", (object?)r.FullText ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@OcrPagesJson", string.IsNullOrWhiteSpace(r.OcrPagesJson) ? "[]" : r.OcrPagesJson);
-            cmd.Parameters.AddWithValue("@NgayBanHanh", r.NgayBanHanh.HasValue ? (object)r.NgayBanHanh.Value.ToString("yyyy-MM-dd") : DBNull.Value);
-            cmd.Parameters.AddWithValue("@CoQuanBanHanh", (object?)r.CoQuanBanHanh ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@CoQuanChuQuan", (object?)r.CoQuanChuQuan ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@ThoiHan", r.ThoiHan.HasValue ? (object)r.ThoiHan.Value.ToString("yyyy-MM-dd") : DBNull.Value);
-            cmd.Parameters.AddWithValue("@DonViChiDao", (object?)r.DonViChiDao ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@FilePath", (object?)r.FilePath ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@Status", (object?)r.Status ?? "Chưa xử lý");
-            cmd.Parameters.AddWithValue("@Priority", (object?)r.Priority ?? "Thường");
-            cmd.Parameters.AddWithValue("@DepartmentId", (object?)r.DepartmentId ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@AssignedTo", (object?)r.AssignedTo ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@AssignedUserIds", (object?)r.AssignedUserIds ?? "[]");
-            cmd.Parameters.AddWithValue("@AssignedDepartmentIds", (object?)r.AssignedDepartmentIds ?? "[]");
-            cmd.Parameters.AddWithValue("@EvidencePaths", (object?)r.EvidencePaths ?? "[]");
-            cmd.Parameters.AddWithValue("@EvidenceNotes", (object?)r.EvidenceNotes ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@CompletionDate", r.CompletionDate.HasValue ? (object)r.CompletionDate.Value.ToString("yyyy-MM-dd") : DBNull.Value);
-            cmd.Parameters.AddWithValue("@LabelId", (object?)r.LabelId ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@NgayThem", r.NgayThem.ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@DaTaoLich", r.DaTaoLich ? 1 : 0);
-        }
-
-        private static DocumentRecord MapRecord(SqliteDataReader r)
-        {
-            return new DocumentRecord
-            {
-                Id = Convert.ToInt32(r["Id"]),
-                SoVanBan = r["SoVanBan"]?.ToString() ?? "",
-                TenCongVan = r["TenCongVan"]?.ToString() ?? "",
-                TrichYeu = r["TrichYeu"]?.ToString() ?? "",
-                FullText = r["FullText"]?.ToString() ?? "",
-                OcrPagesJson = r["OcrPagesJson"]?.ToString() ?? "[]",
-                NgayBanHanh = TryParseDate(r["NgayBanHanh"]?.ToString()),
-                CoQuanBanHanh = r["CoQuanBanHanh"]?.ToString() ?? "",
-                CoQuanChuQuan = r["CoQuanChuQuan"]?.ToString() ?? "",
-                ThoiHan = TryParseDate(r["ThoiHan"]?.ToString()),
-                DonViChiDao = r["DonViChiDao"]?.ToString() ?? "",
-                FilePath = r["FilePath"]?.ToString() ?? "",
-                Status = r["Status"]?.ToString() ?? "Chưa xử lý",
-                Priority = r["Priority"]?.ToString() ?? "Thường",
-                DepartmentId = r["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(r["DepartmentId"]),
-                AssignedTo = r["AssignedTo"] == DBNull.Value ? null : Convert.ToInt32(r["AssignedTo"]),
-                AssignedUserIds = r["AssignedUserIds"]?.ToString() ?? "[]",
-                AssignedDepartmentIds = r["AssignedDepartmentIds"]?.ToString() ?? "[]",
-                EvidencePaths = r["EvidencePaths"]?.ToString() ?? "[]",
-                EvidenceNotes = r["EvidenceNotes"]?.ToString() ?? "",
-                CompletionDate = TryParseDate(r["CompletionDate"]?.ToString()),
-                LabelId = r["LabelId"] == DBNull.Value ? null : Convert.ToInt32(r["LabelId"]),
-                NgayThem = TryParseDate(r["NgayThem"]?.ToString()) ?? DateTime.UtcNow.AddHours(7),
-                DaTaoLich = Convert.ToInt32(r["DaTaoLich"]) == 1
-            };
-        }
 
         // --- DEPARTMENT MANAGEMENT ---
         public static List<Department> GetDepartments()
@@ -1092,7 +643,8 @@ namespace ToolCalendar.Data
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                list.Add(new Department {
+                list.Add(new Department
+                {
                     Id = Convert.ToInt32(reader["Id"]),
                     Name = reader["Name"].ToString() ?? "",
                     Description = reader["Description"]?.ToString() ?? ""
@@ -1132,16 +684,16 @@ namespace ToolCalendar.Data
                 using var cmd = connection.CreateCommand();
                 cmd.Transaction = transaction;
 
-                // 1. Gỡ phòng ban khỏi các văn bản liên quan
+                // 1. Gá»¡ phÃ²ng ban khá»i cÃ¡c vÄƒn báº£n liÃªn quan
                 cmd.CommandText = "UPDATE Documents SET DepartmentId = NULL WHERE DepartmentId = @id";
                 cmd.Parameters.AddWithValue("@id", id);
                 cmd.ExecuteNonQuery();
 
-                // 2. Gỡ phòng ban khỏi các nhân sự liên quan
+                // 2. Gá»¡ phÃ²ng ban khá»i cÃ¡c nhÃ¢n sá»± liÃªn quan
                 cmd.CommandText = "UPDATE Users SET DepartmentId = NULL WHERE DepartmentId = @id";
                 cmd.ExecuteNonQuery();
 
-                // 3. Xóa phòng ban
+                // 3. XÃ³a phÃ²ng ban
                 cmd.CommandText = "DELETE FROM Departments WHERE Id = @id";
                 cmd.ExecuteNonQuery();
 
@@ -1164,7 +716,8 @@ namespace ToolCalendar.Data
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                list.Add(new DocumentLabel {
+                list.Add(new DocumentLabel
+                {
                     Id = Convert.ToInt32(reader["Id"]),
                     Name = reader["Name"].ToString() ?? "",
                     Color = reader["Color"]?.ToString() ?? ""
@@ -1193,16 +746,16 @@ namespace ToolCalendar.Data
                 using var cmd = connection.CreateCommand();
                 cmd.Transaction = transaction;
 
-                // 1. Gỡ nhãn khỏi các văn bản
+                // 1. Gá»¡ nhÃ£n khá»i cÃ¡c vÄƒn báº£n
                 cmd.CommandText = "UPDATE Documents SET LabelId = NULL WHERE LabelId = @id";
                 cmd.Parameters.AddWithValue("@id", id);
                 cmd.ExecuteNonQuery();
 
-                // 2. Gỡ nhãn khỏi AutoRules
+                // 2. Gá»¡ nhÃ£n khá»i AutoRules
                 cmd.CommandText = "UPDATE AutoRules SET LabelId = NULL WHERE LabelId = @id";
                 cmd.ExecuteNonQuery();
 
-                // 3. Xóa nhãn
+                // 3. XÃ³a nhÃ£n
                 cmd.CommandText = "DELETE FROM Labels WHERE Id = @id";
                 cmd.ExecuteNonQuery();
 
@@ -1225,7 +778,8 @@ namespace ToolCalendar.Data
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                list.Add(new AutoRule {
+                list.Add(new AutoRule
+                {
                     Id = Convert.ToInt32(reader["Id"]),
                     Keyword = reader["Keyword"].ToString() ?? "",
                     LabelId = reader["LabelId"] == DBNull.Value ? null : Convert.ToInt32(reader["LabelId"]),
@@ -1258,34 +812,7 @@ namespace ToolCalendar.Data
             cmd.ExecuteNonQuery();
         }
 
-        // --- EXPORT CSV ---
-        public static byte[] ExportDocumentsToCsv()
-        {
-            var sb = new StringBuilder();
-            // UTF-8 BOM để Excel hiển thị đúng tiếng Việt
-            sb.Append('\uFEFF');
-            
-            // Header
-            sb.AppendLine("ID,Số Văn Bản,Tên Công Văn,Trích Yếu,Ngày Ban Hành,Cơ Quan Ban Hành,Thời Hạn,Trạng Thái,Độ Khẩn,Ngày Thêm");
 
-            var docs = GetAll();
-            foreach (var d in docs)
-            {
-                var line = $"{d.Id}," +
-                           $"\"{EscapeCsv(d.SoVanBan)}\"," +
-                           $"\"{EscapeCsv(d.TenCongVan)}\"," +
-                           $"\"{EscapeCsv(d.TrichYeu)}\"," +
-                           $"\"{d.NgayBanHanh:dd/MM/yyyy}\"," +
-                           $"\"{EscapeCsv(d.CoQuanBanHanh)}\"," +
-                           $"\"{d.ThoiHan:dd/MM/yyyy}\"," +
-                           $"\"{EscapeCsv(d.Status)}\"," +
-                           $"\"{EscapeCsv(d.Priority)}\"," +
-                           $"\"{d.NgayThem:dd/MM/yyyy HH:mm}\"";
-                sb.AppendLine(line);
-            }
-
-            return Encoding.UTF8.GetBytes(sb.ToString());
-        }
 
         // --- DASHBOARD STATS ---
         public static object GetDashboardStats()
@@ -1293,7 +820,8 @@ namespace ToolCalendar.Data
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            var stats = new {
+            var stats = new
+            {
                 Total = 0,
                 ByStatus = new Dictionary<string, int>(),
                 ByPriority = new Dictionary<string, int>(),
@@ -1301,55 +829,56 @@ namespace ToolCalendar.Data
                 ByDepartment = new Dictionary<string, int>()
             };
 
-            // 1. Tổng số
+            // 1. Tá»•ng sá»‘
             using var cmdTotal = new SqliteCommand("SELECT COUNT(*) FROM Documents", connection);
             int total = Convert.ToInt32(cmdTotal.ExecuteScalar());
 
-            // 2. Theo Trạng thái
-            using var cmdStatus = new SqliteCommand("SELECT COALESCE(Status, 'Chưa xử lý'), COUNT(*) FROM Documents GROUP BY Status", connection);
+            // 2. Theo Tráº¡ng thÃ¡i
+            using var cmdStatus = new SqliteCommand("SELECT COALESCE(Status, 'ChÆ°a xá»­ lÃ½'), COUNT(*) FROM Documents GROUP BY Status", connection);
             using var rStatus = cmdStatus.ExecuteReader();
             var statusDict = new Dictionary<string, int>();
-            while (rStatus.Read()) statusDict[rStatus[0]?.ToString() ?? "Chưa xử lý"] = Convert.ToInt32(rStatus[1]);
+            while (rStatus.Read()) statusDict[rStatus[0]?.ToString() ?? "ChÆ°a xá»­ lÃ½"] = Convert.ToInt32(rStatus[1]);
 
-            // 3. Theo Độ khẩn
-            using var cmdPrio = new SqliteCommand("SELECT COALESCE(Priority, 'Thường'), COUNT(*) FROM Documents GROUP BY Priority", connection);
+            // 3. Theo Äá»™ kháº©n
+            using var cmdPrio = new SqliteCommand("SELECT COALESCE(Priority, 'ThÆ°á»ng'), COUNT(*) FROM Documents GROUP BY Priority", connection);
             using var rPrio = cmdPrio.ExecuteReader();
             var prioDict = new Dictionary<string, int>();
-            while (rPrio.Read()) prioDict[rPrio[0]?.ToString() ?? "Thường"] = Convert.ToInt32(rPrio[1]);
+            while (rPrio.Read()) prioDict[rPrio[0]?.ToString() ?? "ThÆ°á»ng"] = Convert.ToInt32(rPrio[1]);
 
-            // 4. Quá hạn
-            using var cmdOverdue = new SqliteCommand("SELECT COUNT(*) FROM Documents WHERE ThoiHan < date('now') AND Status != 'Đã hoàn thành' AND ThoiHan IS NOT NULL", connection);
+            // 4. QuÃ¡ háº¡n
+            using var cmdOverdue = new SqliteCommand("SELECT COUNT(*) FROM Documents WHERE ThoiHan < date('now') AND Status != 'ÄÃ£ hoÃ n thÃ nh' AND ThoiHan IS NOT NULL", connection);
             int overdue = Convert.ToInt32(cmdOverdue.ExecuteScalar());
 
-            // 5. Theo Phòng ban (Đếm tất cả văn bản, bao gồm cả chưa phân loại)
+            // 5. Theo PhÃ²ng ban (Äáº¿m táº¥t cáº£ vÄƒn báº£n, bao gá»“m cáº£ chÆ°a phÃ¢n loáº¡i)
             using var cmdDept = new SqliteCommand(@"
-                SELECT IFNULL(d.Name, 'Chưa phân loại'), COUNT(doc.Id) 
+                SELECT IFNULL(d.Name, 'ChÆ°a phÃ¢n loáº¡i'), COUNT(doc.Id) 
                 FROM Documents doc 
                 LEFT JOIN Departments d ON doc.DepartmentId = d.Id 
                 GROUP BY d.Name", connection);
             using var rDept = cmdDept.ExecuteReader();
             var deptDict = new Dictionary<string, int>();
-            while (rDept.Read()) 
+            while (rDept.Read())
             {
-                var name = rDept[0]?.ToString() ?? "Chưa phân loại";
+                var name = rDept[0]?.ToString() ?? "ChÆ°a phÃ¢n loáº¡i";
                 deptDict[name] = Convert.ToInt32(rDept[1]);
             }
 
-            // 6. Sắp hết hạn (7 ngày tới)
+            // 6. Sáº¯p háº¿t háº¡n (7 ngÃ y tá»›i)
             using var cmdUrgent = new SqliteCommand(@"
                 SELECT COUNT(*) FROM Documents 
                 WHERE ThoiHan >= date('now') AND ThoiHan <= date('now', '+7 days') 
-                AND Status != 'Đã hoàn thành'", connection);
+                AND Status != 'ÄÃ£ hoÃ n thÃ nh'", connection);
             int urgent = Convert.ToInt32(cmdUrgent.ExecuteScalar());
 
-            // 7. Đến hạn hôm nay
+            // 7. Äáº¿n háº¡n hÃ´m nay
             using var cmdToday = new SqliteCommand(@"
                 SELECT COUNT(*) FROM Documents 
                 WHERE date(ThoiHan) = date('now') 
-                AND Status != 'Đã hoàn thành'", connection);
+                AND Status != 'ÄÃ£ hoÃ n thÃ nh'", connection);
             int today = Convert.ToInt32(cmdToday.ExecuteScalar());
 
-            return new {
+            return new
+            {
                 Total = total,
                 ByStatus = statusDict,
                 ByPriority = prioDict,
@@ -1372,7 +901,8 @@ namespace ToolCalendar.Data
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                list.Add(new PushSubscription {
+                list.Add(new PushSubscription
+                {
                     Id = Convert.ToInt32(reader["Id"]),
                     UserId = Convert.ToInt32(reader["UserId"]),
                     Endpoint = reader["Endpoint"].ToString() ?? "",
@@ -1413,10 +943,13 @@ namespace ToolCalendar.Data
         {
             try
             {
+                // MÃ£ hÃ³a máº­t kháº©u má»›i báº±ng BCrypt trÆ°á»›c khi lÆ°u
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
+
                 using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
                 using var cmd = new SqliteCommand("UPDATE Users SET PasswordHash=@p WHERE Id=@id", connection);
-                cmd.Parameters.AddWithValue("@p", newPassword);
+                cmd.Parameters.AddWithValue("@p", hashedPassword);
                 cmd.Parameters.AddWithValue("@id", userId);
                 return cmd.ExecuteNonQuery() > 0;
             }
@@ -1497,3 +1030,4 @@ namespace ToolCalendar.Data
         }
     }
 }
+

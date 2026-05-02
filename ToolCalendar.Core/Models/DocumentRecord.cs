@@ -5,7 +5,7 @@ namespace ToolCalendar.Models
     public class DocumentRecord
     {
         public int Id { get; set; }
-        
+
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public List<string> OcrWarnings { get; set; } = new List<string>();
         public string SoVanBan { get; set; } = "";
@@ -51,7 +51,7 @@ namespace ToolCalendar.Models
             {
                 if (Status == "Đã hoàn thành") return "✅ Đã hoàn thành";
                 if (ThoiHan == null) return "Chưa xác định";
-                
+
                 int days = SoNgayConLai;
                 if (days < 0) return $"🛑 Quá hạn {Math.Abs(days)} ngày";
                 if (days == 0) return "🔥 Hết hạn hôm nay!";

@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ToolCalendar.Data;
 
 namespace ToolCalendar.Api.Controllers
@@ -34,7 +34,8 @@ namespace ToolCalendar.Api.Controllers
             var minDays = DatabaseService.GetAppSetting("Document_MinDeadlineDays", "0");
             var statusList = DatabaseService.GetAppSetting("Document_StatusList", "Chưa xử lý,Đang xử lý,Đã rà soát,Đã hoàn thành,Lỗi OCR,Quá hạn");
 
-            return Ok(new {
+            return Ok(new
+            {
                 maxPagesToScan = int.Parse(maxPages),
                 deadlineKeywords = keywords,
                 deadlineExcludeKeywords = excludeKeywords,
@@ -48,7 +49,8 @@ namespace ToolCalendar.Api.Controllers
         [Authorize(Roles = "Admin,VanThu")]
         public IActionResult SaveSettings([FromBody] System.Text.Json.JsonElement data)
         {
-            try {
+            try
+            {
                 string maxPages = data.GetProperty("maxPagesToScan").ToString();
                 string keywords = data.GetProperty("deadlineKeywords").ToString();
                 string excludeKeywords = data.TryGetProperty("deadlineExcludeKeywords", out var exc) ? exc.ToString() : "";
@@ -61,7 +63,7 @@ namespace ToolCalendar.Api.Controllers
                 DatabaseService.SaveAppSetting("Document_DeadlineExcludeKeywords", excludeKeywords);
                 DatabaseService.SaveAppSetting("Document_MinDeadlineDays", minDays);
                 DatabaseService.SaveAppSetting("Notification_ScanTime", scanTime);
-                
+
                 // Reset chặn quét để cho phép quét lại vào giờ mới ngay trong ngày hôm nay
                 DatabaseService.SaveAppSetting("Notification_LastScanDate", "");
 
@@ -69,7 +71,9 @@ namespace ToolCalendar.Api.Controllers
                     DatabaseService.SaveAppSetting("Document_StatusList", statusList);
 
                 return Ok();
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 return BadRequest(ex.Message);
             }
         }

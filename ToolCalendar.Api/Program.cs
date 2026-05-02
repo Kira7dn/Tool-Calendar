@@ -1,13 +1,14 @@
-using ToolCalendar.Data;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Security.Claims;
-using ToolCalendar.Services;
-using ToolCalendar.Hubs;
-
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
+using ToolCalendar.Core.Data.Interfaces;
+using ToolCalendar.Core.Data.Repositories;
+using ToolCalendar.Data;
+using ToolCalendar.Hubs;
+using ToolCalendar.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,10 @@ builder.Services.AddSwaggerGen();
 
 // Đăng ký SignalR
 builder.Services.AddSignalR();
+
+// Đăng ký Repositories (Clean Architecture)
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
 // Đăng ký OCR & Extraction Services
 builder.Services.AddSingleton<IOcrService, OcrService>();
@@ -71,16 +76,16 @@ builder.Services.AddAuthentication(x =>
         },
         OnTokenValidated = context =>
         {
-            try 
+            try
             {
                 // Log all claims for debugging (only in development)
                 var claims = context.Principal?.Claims.Select(c => $"{c.Type}:{c.Value}");
                 Console.WriteLine($"[AuthDebug] Kiểm tra token cho User: {context.Principal?.Identity?.Name}. Claims: {string.Join(", ", claims ?? Array.Empty<string>())}");
 
-                var userIdStr = context.Principal?.FindFirst("uid")?.Value 
+                var userIdStr = context.Principal?.FindFirst("uid")?.Value
                               ?? context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value
                               ?? context.Principal?.FindFirst("UserId")?.Value;
-                
+
                 var sessionId = context.Principal?.FindFirst("sid")?.Value;
 
                 if (string.IsNullOrEmpty(userIdStr))
@@ -91,7 +96,8 @@ builder.Services.AddAuthentication(x =>
 
                 if (int.TryParse(userIdStr, out int userId))
                 {
-                    var user = DatabaseService.GetUserById(userId);
+                    var userRepo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+                    var user = userRepo.GetUserById(userId);
                     if (user == null)
                     {
                         Console.WriteLine($"[AuthError] Không tìm thấy User ID {userId} trong cơ sở dữ liệu.");

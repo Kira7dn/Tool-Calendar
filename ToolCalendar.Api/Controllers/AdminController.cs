@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
 
@@ -91,7 +91,7 @@ namespace ToolCalendar.Api.Controllers
         // --- SETTINGS ---
         [Authorize(Roles = "Admin")]
         [HttpGet("settings/{key}")]
-        public IActionResult GetSetting(string key) 
+        public IActionResult GetSetting(string key)
         {
             var val = DatabaseService.GetAppSetting(key);
             return Ok(new { key, value = val });

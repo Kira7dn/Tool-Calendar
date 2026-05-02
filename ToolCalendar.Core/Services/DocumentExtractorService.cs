@@ -1,13 +1,12 @@
-﻿using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using iText.Forms;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Parser;
 using iText.Kernel.Pdf.Canvas.Parser.Listener;
-using iText.Forms;
-using iText.Forms.Fields;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using ToolCalendar.Models;
 
 namespace ToolCalendar.Services
@@ -44,7 +43,7 @@ namespace ToolCalendar.Services
                             pageNumber = page.PageNumber,
                             text = page.Text ?? string.Empty
                         }));
-                
+
                 string rawText = ExtractFromPdf(filePath);
                 if (!string.IsNullOrWhiteSpace(rawText)) text += "\n" + rawText;
 
@@ -72,62 +71,65 @@ namespace ToolCalendar.Services
         private string ExtractFromPdf(string filePath)
         {
             var sb = new StringBuilder();
-            try {
+            try
+            {
                 using var reader = new PdfReader(filePath);
                 using var pdf = new PdfDocument(reader);
 
                 for (int i = 1; i <= pdf.GetNumberOfPages(); i++)
-            {
-                var page = pdf.GetPage(i);
-                var strategy = new LocationTextExtractionStrategy();
-                string pageText = PdfTextExtractor.GetTextFromPage(page, strategy);
-                sb.AppendLine(pageText);
-
-                foreach (var ann in page.GetAnnotations())
                 {
-                    var content = ann.GetContents();
-                    if (content != null) sb.AppendLine(content.ToString());
-                    
-                    var appearance = ann.GetAppearanceObject(PdfName.N);
-                    if (appearance is PdfStream appStream)
+                    var page = pdf.GetPage(i);
+                    var strategy = new LocationTextExtractionStrategy();
+                    string pageText = PdfTextExtractor.GetTextFromPage(page, strategy);
+                    sb.AppendLine(pageText);
+
+                    foreach (var ann in page.GetAnnotations())
                     {
-                        try
+                        var content = ann.GetContents();
+                        if (content != null) sb.AppendLine(content.ToString());
+
+                        var appearance = ann.GetAppearanceObject(PdfName.N);
+                        if (appearance is PdfStream appStream)
                         {
-                            var annStrategy = new LocationTextExtractionStrategy();
-                            var processor = new PdfCanvasProcessor(annStrategy);
-                            var resDict = appStream.GetAsDictionary(PdfName.Resources);
-                            var res = resDict != null ? new PdfResources(resDict) : page.GetResources();
-                            
-                            processor.ProcessContent(appStream.GetBytes(), res);
-                            var appText = annStrategy.GetResultantText();
-                            if (!string.IsNullOrWhiteSpace(appText)) sb.AppendLine(appText);
+                            try
+                            {
+                                var annStrategy = new LocationTextExtractionStrategy();
+                                var processor = new PdfCanvasProcessor(annStrategy);
+                                var resDict = appStream.GetAsDictionary(PdfName.Resources);
+                                var res = resDict != null ? new PdfResources(resDict) : page.GetResources();
+
+                                processor.ProcessContent(appStream.GetBytes(), res);
+                                var appText = annStrategy.GetResultantText();
+                                if (!string.IsNullOrWhiteSpace(appText)) sb.AppendLine(appText);
+                            }
+                            catch { }
                         }
-                        catch { }
                     }
+
+                    ExtractTextFromXObjects(page.GetResources(), sb, new HashSet<PdfStream>());
                 }
 
-                ExtractTextFromXObjects(page.GetResources(), sb, new HashSet<PdfStream>());
-            }
-
-            var form = PdfAcroForm.GetAcroForm(pdf, false);
-            if (form != null)
-            {
-                var fields = form.GetAllFormFields();
-                foreach (var field in fields)
+                var form = PdfAcroForm.GetAcroForm(pdf, false);
+                if (form != null)
                 {
-                    string val = field.Value.GetValueAsString();
-                    if (!string.IsNullOrWhiteSpace(val))
+                    var fields = form.GetAllFormFields();
+                    foreach (var field in fields)
                     {
-                        sb.AppendLine($"Field_{field.Key}: {val}");
+                        string val = field.Value.GetValueAsString();
+                        if (!string.IsNullOrWhiteSpace(val))
+                        {
+                            sb.AppendLine($"Field_{field.Key}: {val}");
+                        }
                     }
                 }
-            }
 
-            } catch {
+            }
+            catch
+            {
                 // Ignore errors reading digital signatures or permissions.
                 // The OCR rasterizer will handle the actual image extraction.
             }
-            
+
             return sb.ToString();
         }
 
@@ -151,7 +153,7 @@ namespace ToolCalendar.Services
                         var processor = new PdfCanvasProcessor(strategy);
                         var resDict = obj.GetAsDictionary(PdfName.Resources);
                         var subRes = resDict != null ? new PdfResources(resDict) : resources;
-                        
+
                         processor.ProcessContent(obj.GetBytes(), subRes);
                         string text = strategy.GetResultantText();
                         if (!string.IsNullOrWhiteSpace(text)) sb.AppendLine(text);
@@ -297,7 +299,7 @@ namespace ToolCalendar.Services
 
             // Bóc tách Tên công văn (QUYẾT ĐỊNH, THÔNG BÁO, CÔNG VĂN...)
             var tenCVPatterns = new[] {
-                @"QUYẾT[ ]+ĐỊNH", @"THÔNG[ ]+BÁO", @"CÔNG[ ]+VĂN", @"TỜ[ ]+TRÌNH", 
+                @"QUYẾT[ ]+ĐỊNH", @"THÔNG[ ]+BÁO", @"CÔNG[ ]+VĂN", @"TỜ[ ]+TRÌNH",
                 @"KẾ[ ]+HOẠCH", @"PHƯƠNG[ ]+ÁN", @"BÁO[ ]+CÁO", @"CHỈ[ ]+THỊ", @"NGHỊ[ ]+QUYẾT"
             };
             foreach (var pattern in tenCVPatterns)
@@ -330,7 +332,7 @@ namespace ToolCalendar.Services
             var candidatePattern = new Regex(
                 @"(?<!\d)(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪA-z\.0-9\-/]{1,30})",
                 RegexOptions.IgnoreCase);
-            
+
             // Danh sách các từ khóa chỉ văn bản căn cứ/trích dẫn (bỏ qua số của chúng)
             var referenceKeywords = new Regex(
                 @"(Quy\s*định|Nghị\s*quyết|Nghị\s*định|Thông\s*tư|Luật|Pháp\s*lệnh|Công\s*điện)\s*(?:số|s[ôo6])?\s*$",
@@ -347,7 +349,7 @@ namespace ToolCalendar.Services
 
                 // Lọc: bỏ qua ngày tháng kiểu 10/4 hoặc 31/7 (sau / là 1-2 chữ số không có chữ cái)
                 if (Regex.IsMatch(agency, @"^[/\-]\s*\d{1,2}$")) continue;
-                
+
                 // Lọc: loại trừ số năm như 2025, 2026 (4 chữ số bắt đầu bằng 20)
                 if (Regex.IsMatch(num, @"^20\d{2}$")) continue;
 
@@ -472,7 +474,8 @@ namespace ToolCalendar.Services
                         int.TryParse(m.Groups[2].Value, out int month) &&
                         int.TryParse(m.Groups[3].Value, out int year))
                     {
-                        try {
+                        try
+                        {
                             var detectedDate = new DateTime(year, month, day);
 
                             // Kiểm tra từ khóa loại trừ trong 50 ký tự xung quanh
@@ -499,7 +502,8 @@ namespace ToolCalendar.Services
                                 bestPriority = currentPriority;
                                 bestMatchDate = detectedDate;
                             }
-                        } catch { }
+                        }
+                        catch { }
                     }
                 }
             }
@@ -509,7 +513,7 @@ namespace ToolCalendar.Services
             {
                 var allDates = Regex.Matches(t, @"(\d{1,2})\s*[\/\-\.\s]\s*(\d{1,2})\s*[\/\-\.\s]\s*(\d{4})");
                 string[] formats = { "dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "dd.MM.yyyy", "dd/M/yyyy", "d/MM/yyyy", "d-M-yyyy", "dd-M-yyyy", "d-MM-yyyy", "d.M.yyyy", "dd.M.yyyy", "d.MM.yyyy" };
-                
+
                 foreach (Match m in allDates)
                 {
                     string dateStr = Regex.Replace(m.Value, @"\s+", "");
@@ -549,7 +553,8 @@ namespace ToolCalendar.Services
                         int.TryParse(m.Groups[2].Value, out int month) &&
                         int.TryParse(m.Groups[3].Value, out int year))
                     {
-                        try {
+                        try
+                        {
                             var dt = new DateTime(year, month, day);
                             if (dt > DateTime.Today.AddYears(-5))
                             {
@@ -557,7 +562,8 @@ namespace ToolCalendar.Services
 
                                 if (bestMatchDate == null || dt > bestMatchDate) bestMatchDate = dt;
                             }
-                        } catch { }
+                        }
+                        catch { }
                     }
                 }
             }
@@ -569,13 +575,13 @@ namespace ToolCalendar.Services
             var coQuanLine = lines.Take(5).FirstOrDefault(l =>
                 Regex.IsMatch(l, @"(Sở|UBND|Ủy ban|Phòng|Ban|Cục|Chi cục|Tổng cục|Công an)",
                 RegexOptions.IgnoreCase));
-            
+
             if (!string.IsNullOrWhiteSpace(coQuanLine))
             {
                 // Bỏ phần "CỘNG HÒA" dính liền nếu có
                 int chIndex = coQuanLine.IndexOf("CỘNG", StringComparison.OrdinalIgnoreCase);
                 if (chIndex > 0) coQuanLine = coQuanLine.Substring(0, chIndex);
-                
+
                 record.CoQuanBanHanh = coQuanLine.Trim();
                 record.CoQuanChuQuan = coQuanLine.Trim();
             }
@@ -586,12 +592,12 @@ namespace ToolCalendar.Services
                 if (lines[i].Contains("ỦY BAN") || lines[i].Contains("SỞ") || lines[i].Contains("CÔNG AN"))
                 {
                     string l1 = lines[i];
-                    string l2 = lines[i+1];
+                    string l2 = lines[i + 1];
                     int chIndex1 = l1.IndexOf("CỘNG", StringComparison.OrdinalIgnoreCase);
                     int chIndex2 = l2.IndexOf("Độc", StringComparison.OrdinalIgnoreCase);
                     if (chIndex1 > 0) l1 = l1.Substring(0, chIndex1);
                     if (chIndex2 > 0) l2 = l2.Substring(0, chIndex2);
-                    
+
                     record.CoQuanChuQuan = (l1.Trim() + " " + l2.Trim()).Trim();
                     record.CoQuanBanHanh = record.CoQuanChuQuan;
                     break;
@@ -662,7 +668,7 @@ namespace ToolCalendar.Services
             var rules = Data.DatabaseService.GetAutoRules();
             foreach (var rule in rules)
             {
-                if (!string.IsNullOrEmpty(rule.Keyword) && 
+                if (!string.IsNullOrEmpty(rule.Keyword) &&
                     t.Contains(rule.Keyword, StringComparison.OrdinalIgnoreCase))
                 {
                     // 1. Tự động dán nhãn
@@ -680,7 +686,7 @@ namespace ToolCalendar.Services
                         var baseDate = record.NgayBanHanh ?? DateTime.Today;
                         record.ThoiHan = baseDate.AddDays(rule.DefaultDeadlineDays);
                     }
-                    
+
                     // Chỉ áp dụng luật đầu tiên khớp (có thể thay đổi nếu cần ưu tiên khác)
                     break;
                 }
@@ -736,7 +742,7 @@ namespace ToolCalendar.Services
             // 1. Sửa lỗi OCR dính chữ cái vào số (vd: "f0", "f1", "fO") - đặc biệt font nghiêng
             text = Regex.Replace(text, @"(?<=\s|^)[fF]([0-9])", "1$1");
             text = Regex.Replace(text, @"([0-9])[fF](?=\s|$)", "${1}1");
-            
+
             // 2. Sửa "f" đứng độc lập giữa "ngày" và "tháng"
             text = Regex.Replace(text, @"(?<=(?:ngày|ngay)\s+)[fF](?=\s+(?:tháng|thang))", "1", RegexOptions.IgnoreCase);
 
@@ -752,21 +758,21 @@ namespace ToolCalendar.Services
         {
             if (string.IsNullOrWhiteSpace(record.SoVanBan))
                 record.OcrWarnings.Add("Có vẻ chưa bóc tách được Số hiệu");
-            
+
             if (record.ThoiHan == null)
                 record.OcrWarnings.Add("Chưa tìm thấy Hạn xử lý");
-            
+
             if (record.DepartmentId == null)
                 record.OcrWarnings.Add("Chưa phân loại được Đơn vị xử lý");
-            
+
             if (!string.IsNullOrWhiteSpace(record.TrichYeu))
             {
                 if (Regex.IsMatch(record.TrichYeu, @"[a-zA-ZÀ-ỹ]\d[a-zA-ZÀ-ỹ]"))
                     record.OcrWarnings.Add("Trích yếu có vẻ kẹt số do quét lỗi");
-                
+
                 if (Regex.IsMatch(record.TrichYeu, @"[a-zA-ZÀ-ỹ]['\`\~^]"))
                     record.OcrWarnings.Add("Trích yếu bị rớt dấu nón hoặc nháy đơn");
-                
+
                 if (Regex.IsMatch(record.TrichYeu, @"[^a-zA-Z0-9\sÀ-ỹ\.\,\/\-]{3,}"))
                     record.OcrWarnings.Add("Trích yếu chứa cụm ký tự rác vô nghĩa");
             }

@@ -106,7 +106,8 @@ namespace ToolCalendar.Data
             using var reader = cmd.ExecuteReader();
             if (reader.Read())
             {
-                return new User {
+                return new User
+                {
                     Id = Convert.ToInt32(reader["Id"]),
                     Username = reader["Username"].ToString() ?? "",
                     Role = reader["Role"].ToString() ?? "Guest"
@@ -117,7 +118,8 @@ namespace ToolCalendar.Data
 
         public static bool Register(string username, string password, string role = "Guest")
         {
-            try {
+            try
+            {
                 using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
                 string sql = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES (@u, @p, @r, datetime('now', 'localtime'))";
@@ -127,7 +129,8 @@ namespace ToolCalendar.Data
                 cmd.Parameters.AddWithValue("@r", role);
                 cmd.ExecuteNonQuery();
                 return true;
-            } catch { return false; }
+            }
+            catch { return false; }
         }
 
         // --- COMMENT MANAGEMENT ---
@@ -140,9 +143,10 @@ namespace ToolCalendar.Data
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", docId);
             using var reader = cmd.ExecuteReader();
-            while(reader.Read())
+            while (reader.Read())
             {
-                list.Add(new Comment {
+                list.Add(new Comment
+                {
                     Id = Convert.ToInt32(reader["Id"]),
                     DocumentId = Convert.ToInt32(reader["DocumentId"]),
                     UserId = Convert.ToInt32(reader["UserId"]),

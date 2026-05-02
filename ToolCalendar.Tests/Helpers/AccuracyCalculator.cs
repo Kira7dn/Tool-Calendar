@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-namespace ToolCalendar.Tests.Helpers
+﻿namespace ToolCalendar.Tests.Helpers
 {
     public static class AccuracyCalculator
     {

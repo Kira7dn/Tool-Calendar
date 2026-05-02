@@ -8,38 +8,38 @@ namespace ToolCalendar
     public partial class Form1 : Form
     {
         // ── Color Palette ────────────────────────────────────────
-        private static readonly Color CHeaderBg    = Color.FromArgb(15, 40, 80);
-        private static readonly Color CHeaderText  = Color.White;
-        private static readonly Color CBg          = Color.FromArgb(236, 241, 248);
-        private static readonly Color CAccent      = Color.FromArgb(37, 99, 235);
-        private static readonly Color CCard        = Color.White;
-        private static readonly Color CText        = Color.FromArgb(30, 41, 59);
-        private static readonly Color CMuted       = Color.FromArgb(100, 116, 139);
-        private static readonly Color CBorder      = Color.FromArgb(203, 213, 225);
-        private static readonly Color CToolbar     = Color.FromArgb(248, 250, 252);
+        private static readonly Color CHeaderBg = Color.FromArgb(15, 40, 80);
+        private static readonly Color CHeaderText = Color.White;
+        private static readonly Color CBg = Color.FromArgb(236, 241, 248);
+        private static readonly Color CAccent = Color.FromArgb(37, 99, 235);
+        private static readonly Color CCard = Color.White;
+        private static readonly Color CText = Color.FromArgb(30, 41, 59);
+        private static readonly Color CMuted = Color.FromArgb(100, 116, 139);
+        private static readonly Color CBorder = Color.FromArgb(203, 213, 225);
+        private static readonly Color CToolbar = Color.FromArgb(248, 250, 252);
 
         // Row status colors
-        private static readonly Color CRowDanger    = Color.FromArgb(254, 226, 226);
+        private static readonly Color CRowDanger = Color.FromArgb(254, 226, 226);
         private static readonly Color CRowDangerTxt = Color.FromArgb(153, 27, 27);
-        private static readonly Color CRowWarn      = Color.FromArgb(254, 243, 199);
-        private static readonly Color CRowWarnTxt   = Color.FromArgb(120, 53, 15);
-        private static readonly Color CRowAlert     = Color.FromArgb(255, 237, 213);
-        private static readonly Color CRowAlertTxt  = Color.FromArgb(154, 52, 18);
-        private static readonly Color CRowOk        = Color.White;
-        private static readonly Color CRowOkTxt     = CText;
+        private static readonly Color CRowWarn = Color.FromArgb(254, 243, 199);
+        private static readonly Color CRowWarnTxt = Color.FromArgb(120, 53, 15);
+        private static readonly Color CRowAlert = Color.FromArgb(255, 237, 213);
+        private static readonly Color CRowAlertTxt = Color.FromArgb(154, 52, 18);
+        private static readonly Color CRowOk = Color.White;
+        private static readonly Color CRowOkTxt = CText;
 
         // ── Controls ─────────────────────────────────────────────
-        private DataGridView dgv       = new();
-        private TextBox      txtSearch = new();
-        private Label        lblClock  = new();
-        private Label        lblTong   = new();
-        private Label        lblSapHan = new();
-        private Label        lblQuaHan = new();
-        private Label        lblHomNay = new();
-        private Panel        pnlStatTong   = new();
-        private Panel        pnlStatSap    = new();
-        private Panel        pnlStatQua    = new();
-        private Panel        pnlStatHomNay = new();
+        private DataGridView dgv = new();
+        private TextBox txtSearch = new();
+        private Label lblClock = new();
+        private Label lblTong = new();
+        private Label lblSapHan = new();
+        private Label lblQuaHan = new();
+        private Label lblHomNay = new();
+        private Panel pnlStatTong = new();
+        private Panel pnlStatSap = new();
+        private Panel pnlStatQua = new();
+        private Panel pnlStatHomNay = new();
 
         private readonly NotificationService _notifySvc = new();
         private NotifyIcon _notifyIcon = new();
@@ -60,36 +60,36 @@ namespace ToolCalendar
         // ════════════════════════════════════════════════════════════
         private void BuildUI()
         {
-            this.Text          = "Quản Lý Văn Bản - Hệ Thống Nhắc Nhở Deadline";
-            this.Size          = new Size(1280, 760);
-            this.MinimumSize   = new Size(1000, 620);
+            this.Text = "Quản Lý Văn Bản - Hệ Thống Nhắc Nhở Deadline";
+            this.Size = new Size(1280, 760);
+            this.MinimumSize = new Size(1000, 620);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor     = CBg;
-            this.Font          = new Font("Segoe UI", 9.5f);
-            this.Icon          = SystemIcons.Application;
+            this.BackColor = CBg;
+            this.Font = new Font("Segoe UI", 9.5f);
+            this.Icon = SystemIcons.Application;
 
             // ── Status Bar (Bottom) ─────────────────────────────
             var pnlStatus = new Panel
             {
-                Dock      = DockStyle.Bottom,
-                Height    = 28,
+                Dock = DockStyle.Bottom,
+                Height = 28,
                 BackColor = Color.FromArgb(30, 41, 59)
             };
             var lblStatusBar = new Label
             {
-                Text      = "  ✅  Hệ thống đang hoạt động  |  Nhắc nhở tự động: 7 ngày • 3 ngày • 1 ngày trước hạn  |  Dữ liệu lưu cục bộ",
+                Text = "  ✅  Hệ thống đang hoạt động  |  Nhắc nhở tự động: 7 ngày • 3 ngày • 1 ngày trước hạn  |  Dữ liệu lưu cục bộ",
                 ForeColor = Color.FromArgb(148, 163, 184),
-                Dock      = DockStyle.Fill,
+                Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleLeft,
-                Font      = new Font("Segoe UI", 8.5f)
+                Font = new Font("Segoe UI", 8.5f)
             };
             pnlStatus.Controls.Add(lblStatusBar);
 
             // ── Header ──────────────────────────────────────────
             var pnlHeader = new Panel
             {
-                Dock      = DockStyle.Top,
-                Height    = 84,
+                Dock = DockStyle.Top,
+                Height = 84,
                 BackColor = CHeaderBg
             };
             pnlHeader.Paint += (s, e) =>
@@ -100,7 +100,8 @@ namespace ToolCalendar
             };
 
             // --- User Info Pill (Góc phải trên) ---
-            var pnlUserPill = new Panel {
+            var pnlUserPill = new Panel
+            {
                 BackColor = Color.FromArgb(40, 255, 255, 255), // Màu trắng trong suốt mờ
                 Height = 34,
                 AutoSize = true,
@@ -109,7 +110,8 @@ namespace ToolCalendar
             };
             pnlUserPill.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, 300, 34, 15, 15)); // Sẽ resize sau
 
-            var lblUser = new Label {
+            var lblUser = new Label
+            {
                 Text = $"👤 {SessionService.CurrentUser?.Username} ({SessionService.CurrentUser?.Role})",
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 9f, FontStyle.Bold),
@@ -118,7 +120,8 @@ namespace ToolCalendar
                 Location = new Point(10, 8)
             };
 
-            var btnLogout = new Label {
+            var btnLogout = new Label
+            {
                 Text = "🚪 Đăng xuất",
                 ForeColor = Color.FromArgb(254, 202, 202),
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Underline),
@@ -127,7 +130,8 @@ namespace ToolCalendar
                 Cursor = Cursors.Hand,
                 Location = new Point(10, 8) // Sẽ chỉnh lại trong sự kiện Resize
             };
-            btnLogout.Click += (s, e) => {
+            btnLogout.Click += (s, e) =>
+            {
                 SessionService.Logout();
                 Application.Restart();
             };
@@ -137,41 +141,42 @@ namespace ToolCalendar
             pnlHeader.Controls.Add(pnlUserPill);
 
             // Cập nhật vị trí và kích thước linh hoạt
-            pnlHeader.Resize += (s, e) => {
+            pnlHeader.Resize += (s, e) =>
+            {
                 pnlUserPill.Width = lblUser.Width + btnLogout.Width + 35;
                 pnlUserPill.Location = new Point(pnlHeader.Width - pnlUserPill.Width - 20, 12);
                 lblUser.Location = new Point(10, 8);
                 btnLogout.Location = new Point(lblUser.Right + 10, 9);
-                
+
                 lblClock.Location = new Point(pnlHeader.Width - lblClock.Width - 25, 48); // Đẩy đồng hồ xuống dưới Pill
             };
 
             var lblTitle = new Label
             {
-                Text      = "🏛  HỆ THỐNG QUẢN LÝ VĂN BẢN HÀNH CHÍNH",
+                Text = "🏛  HỆ THỐNG QUẢN LÝ VĂN BẢN HÀNH CHÍNH",
                 ForeColor = CHeaderText,
-                Font      = new Font("Segoe UI", 16f, FontStyle.Bold),
-                AutoSize  = false,
+                Font = new Font("Segoe UI", 16f, FontStyle.Bold),
+                AutoSize = false,
                 UseCompatibleTextRendering = true,
-                Size      = new Size(800, 40),
-                Location  = new Point(20, 8)
+                Size = new Size(800, 40),
+                Location = new Point(20, 8)
             };
             var lblSub = new Label
             {
-                Text      = "Theo dõi thời hạn • Nhắc nhở tự động • Quản lý tập trung",
+                Text = "Theo dõi thời hạn • Nhắc nhở tự động • Quản lý tập trung",
                 ForeColor = Color.FromArgb(147, 197, 253),
-                Font      = new Font("Segoe UI", 9.5f, FontStyle.Italic),
-                AutoSize  = false,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Italic),
+                AutoSize = false,
                 UseCompatibleTextRendering = true,
-                Size      = new Size(800, 30),
-                Location  = new Point(24, 45)
+                Size = new Size(800, 30),
+                Location = new Point(24, 45)
             };
 
             lblClock = new Label
             {
                 ForeColor = Color.FromArgb(147, 197, 253),
-                Font      = new Font("Segoe UI", 9.5f),
-                AutoSize  = true,
+                Font = new Font("Segoe UI", 9.5f),
+                AutoSize = true,
                 TextAlign = ContentAlignment.MiddleRight
             };
             UpdateClock();
@@ -185,23 +190,23 @@ namespace ToolCalendar
             // ── Stats Bar ────────────────────────────────────────
             var pnlStats = new Panel
             {
-                Dock      = DockStyle.Top,
-                Height    = 125,
+                Dock = DockStyle.Top,
+                Height = 125,
                 BackColor = Color.FromArgb(20, 52, 100),
-                Padding   = new Padding(16, 12, 16, 12)
+                Padding = new Padding(16, 12, 16, 12)
             };
 
             var statFlow = new FlowLayoutPanel
             {
-                Dock          = DockStyle.Fill,
+                Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
-                Padding       = new Padding(0),
-                WrapContents  = false
+                Padding = new Padding(0),
+                WrapContents = false
             };
 
-            (pnlStatTong, lblTong)     = CreateStatCard("📄  Tổng Văn Bản",        "0", Color.FromArgb(59, 130, 246));
-            (pnlStatSap, lblSapHan)    = CreateStatCard("⏰  Sắp Hết Hạn (≤7 ngày)", "0", Color.FromArgb(245, 158, 11));
-            (pnlStatQua, lblQuaHan)    = CreateStatCard("🚨  Quá Hạn",              "0", Color.FromArgb(239, 68, 68));
+            (pnlStatTong, lblTong) = CreateStatCard("📄  Tổng Văn Bản", "0", Color.FromArgb(59, 130, 246));
+            (pnlStatSap, lblSapHan) = CreateStatCard("⏰  Sắp Hết Hạn (≤7 ngày)", "0", Color.FromArgb(245, 158, 11));
+            (pnlStatQua, lblQuaHan) = CreateStatCard("🚨  Quá Hạn", "0", Color.FromArgb(239, 68, 68));
             (pnlStatHomNay, lblHomNay) = CreateStatCard("📅  Hôm Nay", DateTime.Today.ToString("dd/MM/yyyy"), Color.FromArgb(16, 185, 129));
 
             statFlow.Controls.AddRange(new Control[] { pnlStatTong, pnlStatSap, pnlStatQua, pnlStatHomNay });
@@ -210,10 +215,10 @@ namespace ToolCalendar
             // ── Toolbar ──────────────────────────────────────────
             var pnlToolbar = new Panel
             {
-                Dock      = DockStyle.Top,
-                Height    = 54,
+                Dock = DockStyle.Top,
+                Height = 54,
                 BackColor = CToolbar,
-                Padding   = new Padding(14, 0, 14, 0)
+                Padding = new Padding(14, 0, 14, 0)
             };
             pnlToolbar.Paint += (s, e) =>
             {
@@ -245,10 +250,10 @@ namespace ToolCalendar
             // Search box — dùng TextBox đơn giản với icon trong Paint để tránh bị che chữ
             var pnlSearch = new Panel
             {
-                Width     = 240,
-                Height    = 32,
+                Width = 240,
+                Height = 32,
                 BackColor = CCard,
-                Margin    = new Padding(12, 0, 0, 0)
+                Margin = new Padding(12, 0, 0, 0)
             };
             pnlSearch.Paint += (s, e) =>
             {
@@ -256,29 +261,29 @@ namespace ToolCalendar
                 e.Graphics.DrawRectangle(borderPen, new Rectangle(0, 0, pnlSearch.Width - 1, pnlSearch.Height - 1));
                 // Vẽ icon 🔍 như text để không tạo control chồng lên TextBox
                 using var iconBrush = new SolidBrush(CMuted);
-                using var iconFont  = new Font("Segoe UI", 10f);
+                using var iconFont = new Font("Segoe UI", 10f);
                 e.Graphics.DrawString("🔍", iconFont, iconBrush, new PointF(5, 6));
             };
 
             txtSearch = new TextBox
             {
-                BorderStyle     = BorderStyle.None,
-                BackColor       = CCard,
-                ForeColor       = CText,
-                Font            = new Font("Segoe UI", 9.5f),
+                BorderStyle = BorderStyle.None,
+                BackColor = CCard,
+                ForeColor = CText,
+                Font = new Font("Segoe UI", 9.5f),
                 PlaceholderText = "Tìm kiếm văn bản...",
-                Location        = new Point(28, 7),
-                Width           = 206
+                Location = new Point(28, 7),
+                Width = 206
             };
             txtSearch.TextChanged += (s, e) => FilterData();
             pnlSearch.Controls.Add(txtSearch);
 
             var toolFlow = new FlowLayoutPanel
             {
-                Dock          = DockStyle.Fill,
+                Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
-                Padding       = new Padding(0, 11, 0, 0),
-                WrapContents  = false
+                Padding = new Padding(0, 11, 0, 0),
+                WrapContents = false
             };
             toolFlow.Controls.AddRange(new Control[]
             {
@@ -297,54 +302,54 @@ namespace ToolCalendar
             // ── DataGridView ─────────────────────────────────────
             var pnlGrid = new Panel
             {
-                Dock    = DockStyle.Fill,
+                Dock = DockStyle.Fill,
                 Padding = new Padding(14, 10, 14, 10)
             };
 
             dgv = new DataGridView
             {
-                Dock                           = DockStyle.Fill,
-                BackgroundColor                = CBg,
-                BorderStyle                    = BorderStyle.None,
-                GridColor                      = CBorder,
-                RowHeadersVisible              = false,
-                AllowUserToAddRows             = false,
-                AllowUserToDeleteRows          = false,
-                AllowUserToResizeColumns       = true,
-                AllowUserToResizeRows          = false,
-                ReadOnly                       = true,
-                SelectionMode                  = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect                    = false,
-                AutoSizeRowsMode               = DataGridViewAutoSizeRowsMode.AllCells,
-                AutoSizeColumnsMode            = DataGridViewAutoSizeColumnsMode.None,
-                ColumnHeadersHeightSizeMode        = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
-                RowTemplate                    = { Height = 38 },
-                Font                           = new Font("Segoe UI", 9.5f),
-                CellBorderStyle                = DataGridViewCellBorderStyle.SingleHorizontal,
-                EnableHeadersVisualStyles      = false
+                Dock = DockStyle.Fill,
+                BackgroundColor = CBg,
+                BorderStyle = BorderStyle.None,
+                GridColor = CBorder,
+                RowHeadersVisible = false,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                AllowUserToResizeColumns = true,
+                AllowUserToResizeRows = false,
+                ReadOnly = true,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                MultiSelect = false,
+                AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
+                RowTemplate = { Height = 38 },
+                Font = new Font("Segoe UI", 9.5f),
+                CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
+                EnableHeadersVisualStyles = false
             };
 
             dgv.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
             {
-                BackColor  = Color.FromArgb(30, 41, 59),
-                ForeColor  = Color.White,
-                Font       = new Font("Segoe UI", 9.5f, FontStyle.Bold),
-                Alignment  = DataGridViewContentAlignment.MiddleLeft,
-                Padding    = new Padding(10, 8, 10, 8),
+                BackColor = Color.FromArgb(30, 41, 59),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                Alignment = DataGridViewContentAlignment.MiddleLeft,
+                Padding = new Padding(10, 8, 10, 8),
                 SelectionBackColor = Color.FromArgb(30, 41, 59),
                 SelectionForeColor = Color.White,
-                WrapMode   = DataGridViewTriState.True
+                WrapMode = DataGridViewTriState.True
             };
             dgv.DefaultCellStyle = new DataGridViewCellStyle
             {
                 SelectionBackColor = Color.FromArgb(219, 234, 254),
                 SelectionForeColor = CText,
-                Padding            = new Padding(8, 2, 8, 2),
-                Font               = new Font("Segoe UI", 9.5f)
+                Padding = new Padding(8, 2, 8, 2),
+                Font = new Font("Segoe UI", 9.5f)
             };
             dgv.AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
             {
-                BackColor          = Color.FromArgb(248, 250, 252),
+                BackColor = Color.FromArgb(248, 250, 252),
                 SelectionBackColor = Color.FromArgb(219, 234, 254),
                 SelectionForeColor = CText
             };
@@ -356,11 +361,12 @@ namespace ToolCalendar
                 if (e.RowIndex >= 0) OpenDetail(e.RowIndex);
             };
             dgv.DataBindingComplete += DgvColorRows;
-            dgv.SelectionChanged   += DgvColorRows;
+            dgv.SelectionChanged += DgvColorRows;
 
             // Xử lý tự động dãn rộng cột Trích Yếu khi Form/Grid thay đổi kích thước
             dgv.Resize += (s, e) => AutoSizeTrichYeuColumn();
-            dgv.ColumnWidthChanged += (s, e) => {
+            dgv.ColumnWidthChanged += (s, e) =>
+            {
                 if (e.Column.Name != "colTrichYeu") AutoSizeTrichYeuColumn();
             };
 
@@ -381,10 +387,10 @@ namespace ToolCalendar
         {
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name       = "colStt",
+                Name = "colStt",
                 HeaderText = "STT",
-                Width      = 48,
-                SortMode   = DataGridViewColumnSortMode.NotSortable,
+                Width = 48,
+                SortMode = DataGridViewColumnSortMode.NotSortable,
                 DefaultCellStyle = new DataGridViewCellStyle
                 {
                     Alignment = DataGridViewContentAlignment.MiddleCenter,
@@ -393,23 +399,23 @@ namespace ToolCalendar
             });
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name         = "colSoVb",
-                HeaderText   = "Số Văn Bản",
-                Width        = 180, // Có thể kéo dãn bằng tay
+                Name = "colSoVb",
+                HeaderText = "Số Văn Bản",
+                Width = 180, // Có thể kéo dãn bằng tay
                 DefaultCellStyle = new DataGridViewCellStyle { Font = new Font("Segoe UI", 9.5f, FontStyle.Bold) }
             });
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name         = "colTrichYeu",
-                HeaderText   = "Trích Yếu / Nội Dung",
-                Width        = 350, // Khởi tạo, sẽ được tự động tính lại ở dưới
+                Name = "colTrichYeu",
+                HeaderText = "Trích Yếu / Nội Dung",
+                Width = 350, // Khởi tạo, sẽ được tự động tính lại ở dưới
                 DefaultCellStyle = new DataGridViewCellStyle { WrapMode = DataGridViewTriState.True }
             });
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name       = "colNgayBH",
+                Name = "colNgayBH",
                 HeaderText = "Ngày Ban Hành",
-                Width      = 125,
+                Width = 125,
                 DefaultCellStyle = new DataGridViewCellStyle
                 {
                     Alignment = DataGridViewContentAlignment.MiddleCenter
@@ -417,42 +423,42 @@ namespace ToolCalendar
             });
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name       = "colChuQuan",
+                Name = "colChuQuan",
                 HeaderText = "Cơ Quan Chủ Quản Tham Mưu",
-                Width      = 210
+                Width = 210
             });
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name       = "colThoiHan",
+                Name = "colThoiHan",
                 HeaderText = "Thời Hạn",
-                Width      = 115,
+                Width = 115,
                 DefaultCellStyle = new DataGridViewCellStyle
                 {
-                    Font      = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                    Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
                     Alignment = DataGridViewContentAlignment.MiddleCenter
                 }
             });
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name       = "colTrangThai",
+                Name = "colTrangThai",
                 HeaderText = "Trạng Thái",
-                Width      = 145,
+                Width = 145,
                 DefaultCellStyle = new DataGridViewCellStyle
                 {
-                    Font      = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                    Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
                     Alignment = DataGridViewContentAlignment.MiddleCenter
                 }
             });
             dgv.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name       = "colLich",
+                Name = "colLich",
                 HeaderText = "Lịch",
-                Width      = 55,
-                SortMode   = DataGridViewColumnSortMode.NotSortable,
+                Width = 55,
+                SortMode = DataGridViewColumnSortMode.NotSortable,
                 DefaultCellStyle = new DataGridViewCellStyle
                 {
                     Alignment = DataGridViewContentAlignment.MiddleCenter,
-                    Font      = new Font("Segoe UI", 11f)
+                    Font = new Font("Segoe UI", 11f)
                 }
             });
         }
@@ -473,11 +479,11 @@ namespace ToolCalendar
             var list = string.IsNullOrEmpty(q)
                 ? _allDocs
                 : _allDocs.Where(d =>
-                    (d.SoVanBan       ?? "").ToLower().Contains(q) ||
-                    (d.TrichYeu       ?? "").ToLower().Contains(q) ||
-                    (d.CoQuanBanHanh  ?? "").ToLower().Contains(q) ||
-                    (d.CoQuanChuQuan  ?? "").ToLower().Contains(q) ||
-                    (d.DonViChiDao    ?? "").ToLower().Contains(q)).ToList();
+                    (d.SoVanBan ?? "").ToLower().Contains(q) ||
+                    (d.TrichYeu ?? "").ToLower().Contains(q) ||
+                    (d.CoQuanBanHanh ?? "").ToLower().Contains(q) ||
+                    (d.CoQuanChuQuan ?? "").ToLower().Contains(q) ||
+                    (d.DonViChiDao ?? "").ToLower().Contains(q)).ToList();
 
             dgv.Rows.Clear();
             int stt = 1;
@@ -502,30 +508,30 @@ namespace ToolCalendar
         {
             if (doc.ThoiHan == null) return "Chưa xác định";
             int d = doc.SoNgayConLai;
-            if (d < 0)   return $"🚨 Quá hạn {Math.Abs(d)} ngày";
-            if (d == 0)  return "⚡ Hết hạn hôm nay!";
-            if (d <= 3)  return $"⚠️ Còn {d} ngày";
-            if (d <= 7)  return $"⏰ Còn {d} ngày";
+            if (d < 0) return $"🚨 Quá hạn {Math.Abs(d)} ngày";
+            if (d == 0) return "⚡ Hết hạn hôm nay!";
+            if (d <= 3) return $"⚠️ Còn {d} ngày";
+            if (d <= 7) return $"⏰ Còn {d} ngày";
             return $"✅ Còn {d} ngày";
         }
 
         private void UpdateStats()
         {
-            int tong   = _allDocs.Count;
-            int sap    = _allDocs.Count(d => d.SoNgayConLai is >= 1 and <= 7);
-            int qua    = _allDocs.Count(d => d.SoNgayConLai < 0);
+            int tong = _allDocs.Count;
+            int sap = _allDocs.Count(d => d.SoNgayConLai is >= 1 and <= 7);
+            int qua = _allDocs.Count(d => d.SoNgayConLai < 0);
             int homNay = _allDocs.Count(d => d.SoNgayConLai == 0);
 
-            lblTong.Text   = tong.ToString();
+            lblTong.Text = tong.ToString();
             lblSapHan.Text = sap.ToString();
             lblQuaHan.Text = qua.ToString();
             lblHomNay.Text = homNay.ToString();
 
             // Highlight if urgent
-            pnlStatQua.BackColor  = qua > 0
+            pnlStatQua.BackColor = qua > 0
                 ? Color.FromArgb(239, 68, 68)
                 : Color.FromArgb(50, 70, 100);
-            pnlStatSap.BackColor  = sap > 0
+            pnlStatSap.BackColor = sap > 0
                 ? Color.FromArgb(217, 119, 6)
                 : Color.FromArgb(50, 70, 100);
             pnlStatHomNay.BackColor = homNay > 0
@@ -541,15 +547,15 @@ namespace ToolCalendar
                 int days = doc.SoNgayConLai;
 
                 Color bg, fg;
-                if      (days < 0)  { bg = CRowDanger; fg = CRowDangerTxt; }
+                if (days < 0) { bg = CRowDanger; fg = CRowDangerTxt; }
                 else if (days == 0) { bg = Color.FromArgb(252, 165, 165); fg = Color.FromArgb(127, 29, 29); }
-                else if (days <= 3) { bg = CRowAlert;  fg = CRowAlertTxt; }
-                else if (days <= 7) { bg = CRowWarn;   fg = CRowWarnTxt; }
-                else                { bg = CRowOk;     fg = CRowOkTxt; }
+                else if (days <= 3) { bg = CRowAlert; fg = CRowAlertTxt; }
+                else if (days <= 7) { bg = CRowWarn; fg = CRowWarnTxt; }
+                else { bg = CRowOk; fg = CRowOkTxt; }
 
-                row.DefaultCellStyle.BackColor      = bg;
-                row.DefaultCellStyle.ForeColor      = fg;
-                
+                row.DefaultCellStyle.BackColor = bg;
+                row.DefaultCellStyle.ForeColor = fg;
+
                 // Giữ nguyên màu gốc khi được chọn, chỉ làm đậm chữ
                 row.DefaultCellStyle.SelectionBackColor = ControlPaint.Dark(bg, 0.05f); // Chỉ hơi sậm lại 5% để phân biệt
                 row.DefaultCellStyle.SelectionForeColor = fg;
@@ -662,7 +668,7 @@ namespace ToolCalendar
             }
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName       = doc.FilePath,
+                FileName = doc.FilePath,
                 UseShellExecute = true
             });
         }
@@ -718,37 +724,37 @@ namespace ToolCalendar
         {
             var pnl = new Panel
             {
-                Width     = 280,
-                Height    = 95,
+                Width = 280,
+                Height = 95,
                 BackColor = Color.FromArgb(50, 70, 100),
-                Margin    = new Padding(0, 0, 10, 0),
-                Cursor    = Cursors.Default
+                Margin = new Padding(0, 0, 10, 0),
+                Cursor = Cursors.Default
             };
 
             var lblCaption = new Label
             {
-                Text      = caption,
+                Text = caption,
                 ForeColor = Color.FromArgb(148, 163, 184),
-                Font      = new Font("Segoe UI", 10f),
-                AutoSize  = false,
+                Font = new Font("Segoe UI", 10f),
+                AutoSize = false,
                 UseCompatibleTextRendering = true,
-                Width     = 265,
-                Height    = 28,
-                Location  = new Point(14, 12),
+                Width = 265,
+                Height = 28,
+                Location = new Point(14, 12),
                 TextAlign = ContentAlignment.TopLeft
             };
 
             // Label giá trị lớn nằm ở NỬA MẶT DƯỚI BÊN PHẢI (Top/Bottom layout)
             var lblValue = new Label
             {
-                Text      = value,
+                Text = value,
                 ForeColor = Color.White,
-                Font      = new Font("Segoe UI", 18f, FontStyle.Bold),
-                AutoSize  = false,
+                Font = new Font("Segoe UI", 18f, FontStyle.Bold),
+                AutoSize = false,
                 UseCompatibleTextRendering = true,
-                Width     = 260,
-                Height    = 46,
-                Location  = new Point(14, 40),
+                Width = 260,
+                Height = 46,
+                Location = new Point(14, 40),
                 TextAlign = ContentAlignment.TopRight
             };
 
@@ -780,15 +786,15 @@ namespace ToolCalendar
         {
             var btn = new Button
             {
-                Text       = text,
-                BackColor  = color,
-                ForeColor  = Color.White,
-                FlatStyle  = FlatStyle.Flat,
-                Font       = new Font("Segoe UI", 9f, FontStyle.Bold),
-                Height     = 32,
-                AutoSize   = true,
-                Cursor     = Cursors.Hand,
-                Margin     = new Padding(0, 0, 6, 0),
+                Text = text,
+                BackColor = color,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
+                Height = 32,
+                AutoSize = true,
+                Cursor = Cursors.Hand,
+                Margin = new Padding(0, 0, 6, 0),
                 FlatAppearance =
                 {
                     BorderSize           = 0,
@@ -806,8 +812,8 @@ namespace ToolCalendar
         {
             _notifyIcon = new NotifyIcon
             {
-                Text    = "Quản Lý Văn Bản - Nhắc Nhở Deadline",
-                Icon    = SystemIcons.Application,
+                Text = "Quản Lý Văn Bản - Nhắc Nhở Deadline",
+                Icon = SystemIcons.Application,
                 Visible = true
             };
 
@@ -862,8 +868,8 @@ namespace ToolCalendar
             }
 
             // Độ rộng khả dụng của Grid (trừ đi khoảng cho scrollbar nếu có)
-            int availableWidth = dgv.ClientSize.Width - 2; 
-            
+            int availableWidth = dgv.ClientSize.Width - 2;
+
             // Cập nhật độ rộng cho cột Trích yếu
             int newWidth = availableWidth - otherColumnsWidth;
             if (newWidth > 200) // Đảm bảo không quá nhỏ
@@ -898,7 +904,7 @@ namespace ToolCalendar
                 this.Enabled = false;
 
                 var result = await DocumentExtractorService.ExtractFromFileAsync(filePath);
-                
+
                 loading.Close();
                 this.Enabled = true;
 

@@ -1,9 +1,9 @@
-using Microsoft.Extensions.Logging;
-using ToolCalendar.Data;
-using ToolCalendar.Models;
-using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using ToolCalendar.Data;
 using ToolCalendar.Hubs;
+using ToolCalendar.Models;
 
 namespace ToolCalendar.Services
 {
@@ -20,8 +20,8 @@ namespace ToolCalendar.Services
         private readonly ILogger<NotificationManager> _logger;
 
         public NotificationManager(
-            IEmailService emailService, 
-            IVapidService vapidService, 
+            IEmailService emailService,
+            IVapidService vapidService,
             IHubContext<NotificationHub> hubContext,
             ILogger<NotificationManager> logger)
         {
@@ -90,7 +90,8 @@ namespace ToolCalendar.Services
             }
 
             // 3. Gửi Real-time SignalR (nếu user đang mở web)
-            await _hubContext.Clients.Group($"User_{userId}").SendAsync("ReceiveNotification", new {
+            await _hubContext.Clients.Group($"User_{userId}").SendAsync("ReceiveNotification", new
+            {
                 title,
                 body,
                 data

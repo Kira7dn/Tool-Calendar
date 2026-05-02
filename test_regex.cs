@@ -6,11 +6,11 @@ class Program
     static void Main()
     {
         string t = @""UBND T?NH QU?NG NINH      C?...
-S? NÔNG NGHI?P VÀ MÔI TRU?NG
+S? Nï¿½NG NGHI?P Vï¿½ Mï¿½I TRU?NG
 -------------------
     S?: 4233 /SNN&MT-CNTY
- V/v d? ngh? hoàn tr? ch?ng t? quy?t toán,
-c?p phát và s? d?ng hóa ch?t phòng, ch?ng"";
+ V/v d? ngh? hoï¿½n tr? ch?ng t? quy?t toï¿½n,
+c?p phï¿½t vï¿½ s? d?ng hï¿½a ch?t phï¿½ng, ch?ng"";
 
         int vVIndex = t.IndexOf(""V/v"", StringComparison.OrdinalIgnoreCase);
         if (vVIndex < 0) vVIndex = t.IndexOf(""V? vi?c"", StringComparison.OrdinalIgnoreCase);
@@ -19,7 +19,7 @@ c?p phát và s? d?ng hóa ch?t phòng, ch?ng"";
         Console.WriteLine(""Search Area: '"" + searchArea + ""'"");
 
         var mSoVb = Regex.Match(searchArea,
-            @""[Ss]?[:\s]*(\d{1,6}\s*[/\-]\s*[A-ZÐÀÁ?Ã?A?????Â?????0-9&\.\-/]{2,}(?:[/\-][A-ZÐÀÁ?Ã?A?????Â?????0-9]+)*)"",
+            @""[Ss]?[:\s]*(\d{1,6}\s*[/\-]\s*[A-Zï¿½ï¿½ï¿½?ï¿½?A?????ï¿½?????0-9&\.\-/]{2,}(?:[/\-][A-Zï¿½ï¿½ï¿½?ï¿½?A?????ï¿½?????0-9]+)*)"",
             RegexOptions.Multiline);
 
         if (mSoVb.Success) {

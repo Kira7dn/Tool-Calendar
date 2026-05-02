@@ -1,6 +1,6 @@
-﻿using System.Text;
+﻿using PDFtoImage;
+using System.Text;
 using Tesseract;
-using PDFtoImage;
 
 namespace ToolCalendar.Services
 {
@@ -14,7 +14,7 @@ namespace ToolCalendar.Services
                 if (Directory.Exists("/usr/share/tesseract-ocr/5/tessdata")) return "/usr/share/tesseract-ocr/5/tessdata";
                 if (Directory.Exists("/usr/share/tesseract-ocr/4.00/tessdata")) return "/usr/share/tesseract-ocr/4.00/tessdata";
             }
-            
+
             // Mặc định cho Windows hoặc local
             string localPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tessdata");
             if (!Directory.Exists(localPath)) Directory.CreateDirectory(localPath);
@@ -31,7 +31,7 @@ namespace ToolCalendar.Services
                 // 1. Chuyển đổi trang PDF đầu tiên thành hình ảnh (PNG stream)
                 // Sử dụng PDFtoImage (dựa trên PDFium & SkiaSharp) - chạy được trên Linux
                 using var pdfStream = File.OpenRead(filePath);
-                
+
                 // Render trang 0 với DPI 300 để OCR chính xác
                 using var imageStream = new MemoryStream();
                 Conversion.SavePng(

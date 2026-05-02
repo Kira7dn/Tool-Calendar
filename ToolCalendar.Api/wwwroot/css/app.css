@@ -1,0 +1,27 @@
+﻿@import 'abstracts/_variables.css';
+@import 'base/_reset.css';
+
+@import 'layout/_sidebar.css';
+@import 'layout/_header.css';
+@import 'layout/_main-content.css';
+@import 'layout/_dashboard.css';
+@import 'layout/_bottom-nav.css';
+
+@import 'components/_stats.css';
+@import 'components/_tables.css';
+@import 'components/_buttons.css';
+@import 'components/_pagination.css';
+@import 'components/_tabs.css';
+@import 'components/_modals.css';
+@import 'components/_loaders.css';
+@import 'components/_dropdowns.css';
+@import 'components/_user-pill.css';
+@import 'components/_multi-select.css';
+@import 'components/_badges.css';
+@import 'components/_notifications.css';
+@import 'components/_others.css';
+
+@import 'pages/_admin.css';
+@import 'pages/_ocr-review.css';
+
+@import 'layout/_responsive.css';

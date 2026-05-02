@@ -1,12 +1,11 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
-using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using iText.Forms;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Parser;
 using iText.Kernel.Pdf.Canvas.Parser.Listener;
-using iText.Forms;
-using iText.Forms.Fields;
+using System.Text;
+using System.Text.RegularExpressions;
 using ToolCalendar.Models;
 
 namespace ToolCalendar.Services
@@ -23,7 +22,7 @@ namespace ToolCalendar.Services
                 // Ưu tiên dùng OCR Native Windows theo yêu cầu của bạn
                 // Quét hình ảnh để tránh lỗi font chữ/mã hóa
                 text = await OcrService.ExtractTextFromPdfOcrAsync(filePath);
-                
+
                 // Bổ sung thêm text thô (nếu có) để tăng cường kết quả
                 string rawText = ExtractFromPdf(filePath);
                 if (!string.IsNullOrWhiteSpace(rawText)) text += "\n" + rawText;
@@ -61,7 +60,7 @@ namespace ToolCalendar.Services
                     // Lấy text trực tiếp từ nội dung ghi chú
                     var content = ann.GetContents();
                     if (content != null) sb.AppendLine(content.ToString());
-                    
+
                     // Xử lý Appearance Streams (Phần hiển thị đồ họa của ghi chú)
                     var appearance = ann.GetAppearanceObject(PdfName.N);
                     if (appearance is PdfStream appStream)
@@ -72,7 +71,7 @@ namespace ToolCalendar.Services
                             var processor = new PdfCanvasProcessor(annStrategy);
                             var resDict = appStream.GetAsDictionary(PdfName.Resources);
                             var res = resDict != null ? new PdfResources(resDict) : page.GetResources();
-                            
+
                             processor.ProcessContent(appStream.GetBytes(), res);
                             var appText = annStrategy.GetResultantText();
                             if (!string.IsNullOrWhiteSpace(appText)) sb.AppendLine(appText);
@@ -123,7 +122,7 @@ namespace ToolCalendar.Services
                         var processor = new PdfCanvasProcessor(strategy);
                         var resDict = obj.GetAsDictionary(PdfName.Resources);
                         var subRes = resDict != null ? new PdfResources(resDict) : resources;
-                        
+
                         processor.ProcessContent(obj.GetBytes(), subRes);
                         string text = strategy.GetResultantText();
                         if (!string.IsNullOrWhiteSpace(text)) sb.AppendLine(text);
@@ -170,7 +169,7 @@ namespace ToolCalendar.Services
             var mSoVb = Regex.Match(searchArea,
                 @"(?:[Ss][ốo06ô]|Field_[^:]+)[:\s]*(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ0-9&\.\-/]+)",
                 RegexOptions.IgnoreCase);
-            
+
             if (mSoVb.Success)
             {
                 record.SoVanBan = (mSoVb.Groups[1].Value + mSoVb.Groups[2].Value).Replace(" ", "").Trim();
@@ -186,7 +185,7 @@ namespace ToolCalendar.Services
             var mNgayBH = Regex.Match(t,
                 @"(?:ngày|Ngày)\s*(\d{1,2})\s*(?:tháng|Tháng)\s*(\d{1,2})\s*(?:năm|Năm)\s*(\d{4})",
                 RegexOptions.IgnoreCase);
-            
+
             if (mNgayBH.Success)
             {
                 if (int.TryParse(mNgayBH.Groups[1].Value, out int d) &&

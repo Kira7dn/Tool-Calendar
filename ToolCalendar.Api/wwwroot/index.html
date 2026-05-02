@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style-v3.css?t=202604302345">
+    <link rel="stylesheet" href="css/app.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
@@ -78,8 +78,8 @@
 
         <main class="main-content">
             <header>
-                <button class="mobile-menu-btn" id="mobile-menu-btn" data-action="open-sidebar"
-                    aria-label="Mở menu"><i data-lucide="menu"></i></button>
+                <button class="mobile-menu-btn" id="mobile-menu-btn" data-action="open-sidebar" aria-label="Mở menu"><i
+                        data-lucide="menu"></i></button>
                 <div class="header-title">
                     <h1 id="page-title">Hệ Thống Điều Phối Công Văn</h1>
                     <p id="page-subtitle">Giám sát và đôn đốc thực thi công việc thời gian thực</p>
@@ -96,7 +96,9 @@
                             <div class="notif-dropdown-box" id="notif-dropdown">
                                 <div class="notif-dropdown-header">
                                     <h3>Thông báo</h3>
-                                    <button class="btn-text" data-action="mark-all-read" style="color: #1877f2; font-weight: normal; font-size: 0.9rem;">Đánh dấu tất cả đã đọc</button>
+                                    <button class="btn-text" data-action="mark-all-read"
+                                        style="color: #1877f2; font-weight: normal; font-size: 0.9rem;">Đánh dấu tất cả
+                                        đã đọc</button>
                                 </div>
                                 <div class="notif-tabs">
                                     <div class="notif-tab active" data-filter="all">Tất cả</div>
@@ -201,17 +203,32 @@
         <div class="data-section" style="width: 400px; padding: 30px;">
             <h3 style="margin-bottom: 20px;">Đổi mật khẩu</h3>
             <div class="form-group">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Mật khẩu mới</label>
-                <input type="password" id="current-user-new-password" placeholder="Nhập mật khẩu mới..."
-                    style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Mật
+                    khẩu mới</label>
+                <div style="position: relative;">
+                    <input type="password" id="current-user-new-password" placeholder="Nhập mật khẩu mới..."
+                        style="width: 100%; box-sizing: border-box; padding: 10px; padding-right: 40px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+                    <span
+                        onclick="var pwd = document.getElementById('current-user-new-password'); var type = pwd.getAttribute('type') === 'password' ? 'text' : 'password'; pwd.setAttribute('type', type); this.innerText = type === 'password' ? '👁️' : '🙈'; this.title = type === 'password' ? 'Hiện mật khẩu' : 'Ẩn mật khẩu';"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b; font-size: 1.1rem; user-select: none;"
+                        title="Hiện mật khẩu">👁️</span>
+                </div>
             </div>
             <div class="form-group" style="margin-top: 15px;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Xác nhận mật khẩu mới</label>
-                <input type="password" id="current-user-confirm-password" placeholder="Xác nhận mật khẩu mới..."
-                    style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Xác
+                    nhận mật khẩu mới</label>
+                <div style="position: relative;">
+                    <input type="password" id="current-user-confirm-password" placeholder="Xác nhận mật khẩu mới..."
+                        style="width: 100%; box-sizing: border-box; padding: 10px; padding-right: 40px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+                    <span
+                        onclick="var pwd = document.getElementById('current-user-confirm-password'); var type = pwd.getAttribute('type') === 'password' ? 'text' : 'password'; pwd.setAttribute('type', type); this.innerText = type === 'password' ? '👁️' : '🙈'; this.title = type === 'password' ? 'Hiện mật khẩu' : 'Ẩn mật khẩu';"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b; font-size: 1.1rem; user-select: none;"
+                        title="Hiện mật khẩu">👁️</span>
+                </div>
             </div>
             <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
-                <button class="btn" style="background: #e2e8f0; color: #1e293b;" data-action="close-change-password-modal">Hủy</button>
+                <button class="btn" style="background: #e2e8f0; color: #1e293b;"
+                    data-action="close-change-password-modal">Hủy</button>
                 <button class="btn btn-primary" data-action="confirm-change-password">Cập nhật</button>
             </div>
         </div>

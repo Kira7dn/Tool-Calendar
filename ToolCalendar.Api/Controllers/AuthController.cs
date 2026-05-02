@@ -1,14 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Channels;
-using ToolCalendar.Models;
-using Microsoft.AspNetCore.SignalR;
+using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Hubs;
-using ToolCalendar.Data;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -18,16 +16,18 @@ namespace ToolCalendar.Api.Controllers
     {
         private readonly string _secretKey = "LinkStrategy_SecretKey_2026_Secure_GiamSatCongVan";
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IUserRepository _userRepository;
 
-        public AuthController(IHubContext<NotificationHub> hubContext)
+        public AuthController(IHubContext<NotificationHub> hubContext, IUserRepository userRepository)
         {
             _hubContext = hubContext;
+            _userRepository = userRepository;
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = DatabaseService.Login(request.Username, request.Password);
+            var user = _userRepository.Login(request.Username, request.Password);
 
             if (user == null)
                 return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không chính xác." });
@@ -72,12 +72,20 @@ namespace ToolCalendar.Api.Controllers
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
 
-            if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 4)
-            {
-                return BadRequest(new { message = "Mật khẩu mới phải có ít nhất 4 ký tự." });
-            }
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+                return BadRequest(new { message = "Mật khẩu mới không được để trống." });
+            if (request.NewPassword.Length < 8)
+                return BadRequest(new { message = "Mật khẩu phải có ít nhất 8 ký tự." });
+            if (!request.NewPassword.Any(char.IsUpper))
+                return BadRequest(new { message = "Mật khẩu phải có ít nhất 1 chữ HOA (A-Z)." });
+            if (!request.NewPassword.Any(char.IsLower))
+                return BadRequest(new { message = "Mật khẩu phải có ít nhất 1 chữ thường (a-z)." });
+            if (!request.NewPassword.Any(char.IsDigit))
+                return BadRequest(new { message = "Mật khẩu phải có ít nhất 1 chữ số (0-9)." });
+            if (!request.NewPassword.Any(c => "!@#$%^&*()_+-=[]{}|;':\",./<>?".Contains(c)))
+                return BadRequest(new { message = "Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%...)." });
 
-            var success = DatabaseService.UpdateUserPassword(userId, request.NewPassword);
+            var success = _userRepository.UpdateUserPassword(userId, request.NewPassword);
             if (success) return Ok(new { message = "Đổi mật khẩu thành công." });
             return BadRequest(new { message = "Không thể đổi mật khẩu." });
         }

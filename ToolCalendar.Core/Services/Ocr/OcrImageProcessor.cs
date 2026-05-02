@@ -20,7 +20,7 @@ namespace ToolCalendar.Services
 
             // Dùng blur nhẹ thay vì Sharpen để làm mịn các đốm nhiễu (noise dots) nhỏ
             using var blur = SKImageFilter.CreateBlur(0.5f, 0.5f);
-            
+
             using var paint = new SKPaint { ColorFilter = cf, ImageFilter = blur };
             canvas.DrawBitmap(bitmap, 0, 0, paint);
             return finalBitmap;

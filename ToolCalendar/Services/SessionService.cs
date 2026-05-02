@@ -7,7 +7,7 @@ namespace ToolCalendar.Services
         public static User? CurrentUser { get; set; }
 
         public static bool IsAdmin => CurrentUser?.Role == "Admin";
-        
+
         public static void Logout() => CurrentUser = null;
     }
 }

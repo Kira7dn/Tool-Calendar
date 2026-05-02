@@ -1,0 +1,173 @@
+﻿/* ====================================================
+   DATA SECTIONS / TABLES
+   ==================================================== */
+.data-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.section-header {
+    padding: 16px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #f8faff;
+}
+
+.section-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sidebar-bg);
+}
+
+.search-box {
+    background: #ffffff;
+    border: 1.5px solid var(--border-strong);
+    padding: 8px 14px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    transition: border-color 0.2s;
+}
+
+.search-box:focus-within {
+    border-color: var(--sidebar-bg);
+}
+
+.search-box input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    outline: none;
+    width: 200px;
+    min-width: 0;
+    font-size: 0.92rem;
+}
+
+/* Table scroll wrapper */
+.table-scroll {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+th {
+    text-align: left;
+    padding: 13px 18px;
+    background: #edf2fb;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--sidebar-bg);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    white-space: nowrap;
+    border-bottom: 2px solid #c9d8f0;
+}
+
+td {
+    padding: 13px 18px;
+    border-bottom: 1px solid #e8edf5;
+    font-size: 0.92rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background: #f0f6ff;
+}
+
+.col-id {
+    width: 60px;
+    text-align: center;
+}
+
+.col-name {
+    width: 200px;
+}
+
+.col-username {
+    width: 140px;
+}
+
+.col-actions {
+    width: 120px;
+    text-align: right;
+}
+
+/* Badges */
+.badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.badge-success {
+    background: #d4efdf;
+    color: #1a7a3a;
+}
+
+.badge-warning {
+    background: #fdebd0;
+    color: #a04000;
+}
+
+.badge-danger {
+    background: #fadbd8;
+    color: #922b21;
+}
+
+.badge-primary {
+    background: #d6eaf8;
+    color: #1b4f72;
+}
+
+.badge-dept {
+    background: #ebf5fb;
+    color: #2e86c1;
+    border: 1px solid #d4e6f1;
+}
+
+/* Status badges */
+.status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.bg-warning {
+    background: #fdebd0;
+    color: #a04000;
+}
+
+.bg-success {
+    background: #d4efdf;
+    color: #1a7a3a;
+}
+
+.bg-danger {
+    background: #fadbd8;
+    color: #922b21;
+}
+

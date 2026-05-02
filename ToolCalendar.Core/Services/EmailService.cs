@@ -23,7 +23,7 @@ namespace ToolCalendar.Services
             _logger.LogInformation($"To: {to}");
             _logger.LogInformation($"Subject: {subject}");
             _logger.LogInformation($"Body: {body}");
-            
+
             return Task.CompletedTask;
         }
     }

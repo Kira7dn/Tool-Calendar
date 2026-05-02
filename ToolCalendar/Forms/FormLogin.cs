@@ -1,8 +1,4 @@
-﻿using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Windows.Forms;
-using ToolCalendar.Data;
+﻿using ToolCalendar.Data;
 using ToolCalendar.Services;
 
 namespace ToolCalendar.Forms
@@ -31,8 +27,9 @@ namespace ToolCalendar.Forms
             this.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, Width, Height, 25, 25));
 
             mainPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(30) };
-            
-            var lblTitle = new Label {
+
+            var lblTitle = new Label
+            {
                 Text = "XIN CHÀO!",
                 Font = new Font("Segoe UI", 24, FontStyle.Bold),
                 ForeColor = Color.FromArgb(41, 128, 185),
@@ -41,7 +38,8 @@ namespace ToolCalendar.Forms
                 Height = 80
             };
 
-            var lblSub = new Label {
+            var lblSub = new Label
+            {
                 Text = "Vui lòng đăng nhập để tiếp tục",
                 Font = new Font("Segoe UI", 10),
                 ForeColor = Color.Gray,
@@ -55,7 +53,8 @@ namespace ToolCalendar.Forms
             txtUsername = CreateStyledTextBox("Tên đăng nhập", 30);
             txtPassword = CreateStyledTextBox("Mật khẩu", 100, true);
 
-            btnLogin = new Button {
+            btnLogin = new Button
+            {
                 Text = "ĐĂNG NHẬP",
                 Dock = DockStyle.Bottom,
                 Height = 50,
@@ -69,7 +68,8 @@ namespace ToolCalendar.Forms
             btnLogin.Click += BtnLogin_Click;
 
 
-            var btnClose = new Label {
+            var btnClose = new Label
+            {
                 Text = "✕",
                 Font = new Font("Arial", 14, FontStyle.Bold),
                 ForeColor = Color.Gray,
@@ -93,7 +93,8 @@ namespace ToolCalendar.Forms
 
         private TextBox CreateStyledTextBox(string placeholder, int y, bool isPassword = false)
         {
-            var txt = new TextBox {
+            var txt = new TextBox
+            {
                 Location = new Point(0, y),
                 Width = 340,
                 Font = new Font("Segoe UI", 12),
@@ -104,16 +105,20 @@ namespace ToolCalendar.Forms
 
             if (isPassword) txt.PasswordChar = '\0';
 
-            txt.Enter += (s, e) => {
-                if (txt.Text == placeholder) {
+            txt.Enter += (s, e) =>
+            {
+                if (txt.Text == placeholder)
+                {
                     txt.Text = "";
                     txt.ForeColor = Color.Black;
                     if (isPassword) txt.PasswordChar = '●';
                 }
             };
 
-            txt.Leave += (s, e) => {
-                if (string.IsNullOrWhiteSpace(txt.Text)) {
+            txt.Leave += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(txt.Text))
+                {
                     txt.Text = placeholder;
                     txt.ForeColor = Color.Gray;
                     if (isPassword) txt.PasswordChar = '\0';
@@ -121,13 +126,14 @@ namespace ToolCalendar.Forms
             };
 
             // Vẽ gạch ngang phía dưới
-            var line = new Panel {
+            var line = new Panel
+            {
                 Location = new Point(0, y + 30),
                 Width = 340,
                 Height = 2,
                 BackColor = Color.FromArgb(41, 128, 185)
             };
-            txt.ParentChanged += (s,e) => { if(txt.Parent != null) txt.Parent.Controls.Add(line); };
+            txt.ParentChanged += (s, e) => { if (txt.Parent != null) txt.Parent.Controls.Add(line); };
 
             return txt;
         }

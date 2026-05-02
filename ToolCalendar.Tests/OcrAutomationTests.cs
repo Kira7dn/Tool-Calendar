@@ -1,12 +1,11 @@
-﻿using Xunit;
-using FluentAssertions;
+﻿using FluentAssertions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
+using ToolCalendar.Data;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
 using ToolCalendar.Tests.Helpers;
-using ToolCalendar.Data;
-using System.IO;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging.Abstractions;
+using Xunit;
 
 namespace ToolCalendar.Tests
 {
@@ -108,19 +107,19 @@ namespace ToolCalendar.Tests
         [Fact]
         public async Task OcrProfessional_Combined_ShouldSucceed()
         {
-             await RunTestInstance("Prof_Combined_Doc.pdf", "Comparison_Prof_Combined.md", "Combined (Noise + Skew)");
+            await RunTestInstance("Prof_Combined_Doc.pdf", "Comparison_Prof_Combined.md", "Combined (Noise + Skew)");
         }
 
         [Fact]
         public async Task OcrProfessional_NoiseOnly_ShouldSucceed()
         {
-             await RunTestInstance("Prof_NoiseOnly_Doc.pdf", "Comparison_Prof_NoiseOnly.md", "Noise Only");
+            await RunTestInstance("Prof_NoiseOnly_Doc.pdf", "Comparison_Prof_NoiseOnly.md", "Noise Only");
         }
 
         [Fact]
         public async Task OcrProfessional_SkewOnly_ShouldSucceed()
         {
-             await RunTestInstance("Prof_SkewOnly_Doc.pdf", "Comparison_Prof_SkewOnly.md", "Skew Only");
+            await RunTestInstance("Prof_SkewOnly_Doc.pdf", "Comparison_Prof_SkewOnly.md", "Skew Only");
         }
 
         [Fact]
@@ -130,7 +129,7 @@ namespace ToolCalendar.Tests
             string resultsFolder = GetResultsFolder();
             string pdfPath = Path.Combine(resultsFolder, "Standard_Long_Doc.pdf");
             string groundTruth = AutomationDocHelper.GenerateStandardPdf(pdfPath, "777/TEST-VB", "18/04/2026", "01/01/2027");
-            
+
             OcrExtractionResult ocrResult = await _ocrService.ExtractPdfOcrResultAsync(pdfPath);
             var docData = await _extractorService.ExtractFromFileAsync(pdfPath, ocrResult);
             double accuracy = AccuracyCalculator.CalculateMatchRate(groundTruth, ocrResult.FullText);

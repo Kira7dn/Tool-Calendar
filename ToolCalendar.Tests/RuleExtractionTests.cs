@@ -1,9 +1,8 @@
-﻿using Xunit;
-using FluentAssertions;
+﻿using FluentAssertions;
+using ToolCalendar.Data;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
-using ToolCalendar.Data;
-using ToolCalendar.Tests.Helpers;
+using Xunit;
 
 namespace ToolCalendar.Tests
 {
@@ -15,7 +14,7 @@ namespace ToolCalendar.Tests
         public RuleExtractionTests() : base()
         {
             _tempPdfPath = Path.Combine(Path.GetTempPath(), $"empty_{Guid.NewGuid()}.pdf");
-            
+
             // Generate a truly empty PDF to avoid interference with test data
             using (var writer = new iText.Kernel.Pdf.PdfWriter(_tempPdfPath))
             {
@@ -34,14 +33,16 @@ namespace ToolCalendar.Tests
         private void SetupTestData()
         {
             // 1. Setup Auto Rules
-            DatabaseService.InsertAutoRule(new AutoRule {
+            DatabaseService.InsertAutoRule(new AutoRule
+            {
                 Keyword = "Kinh tế",
                 LabelId = 1,
                 DepartmentId = 2,
                 DefaultDeadlineDays = 10
             });
 
-            DatabaseService.InsertAutoRule(new AutoRule {
+            DatabaseService.InsertAutoRule(new AutoRule
+            {
                 Keyword = "Tư pháp",
                 LabelId = 3,
                 DepartmentId = 4,
@@ -58,7 +59,7 @@ namespace ToolCalendar.Tests
             // Arrange
             // Cần đúng định dạng "ngày... tháng... năm..." để bắt được NgayBanHanh
             string text = "Văn bản về việc phát triển Kinh tế xã hội năm 2026. ngày 01 tháng 01 năm 2026.";
-            
+
             // Act
             var result = await _extractorService.ExtractFromFileAsync(_tempPdfPath, new OcrExtractionResult { FullText = text });
 
@@ -67,7 +68,7 @@ namespace ToolCalendar.Tests
             result.DepartmentId.Should().Be(2);
             // Có NgayBanHanh 01/01 -> + 10 ngày = 11/01
             result.ThoiHan.Should().NotBeNull();
-            result.ThoiHan?.Day.Should().Be(11); 
+            result.ThoiHan?.Day.Should().Be(11);
         }
 
         [Fact]
@@ -168,7 +169,7 @@ namespace ToolCalendar.Tests
     public class MockOcrService : IOcrService
     {
         public Task<string> ExtractTextFromPdfOcrAsync(string filePath) => Task.FromResult("");
-        public Task<OcrExtractionResult> ExtractPdfOcrResultAsync(string filePath, OcrRunOptions? options = null) 
+        public Task<OcrExtractionResult> ExtractPdfOcrResultAsync(string filePath, OcrRunOptions? options = null)
             => Task.FromResult(new OcrExtractionResult());
     }
 }

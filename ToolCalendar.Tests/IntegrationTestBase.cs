@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using ToolCalendar.Data;
-using ToolCalendar.Models;
+using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text;
-using Microsoft.Extensions.Configuration;
+using ToolCalendar.Data;
 using ToolCalendar.Tests.Helpers;
 
 namespace ToolCalendar.Tests
@@ -48,11 +45,11 @@ namespace ToolCalendar.Tests
         {
             var response = await Client.PostAsJsonAsync("/api/auth/login", new { Username = username, Password = password });
             response.EnsureSuccessStatusCode();
-            
+
             var content = await response.Content.ReadAsStringAsync();
             var doc = JsonDocument.Parse(content);
             var token = doc.RootElement.GetProperty("token").GetString();
-            
+
             Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
@@ -65,7 +62,7 @@ namespace ToolCalendar.Tests
         {
             Client.Dispose();
             Factory.Dispose();
-            
+
             // Dọn dẹp DB tạm
             if (File.Exists(DbPath))
             {

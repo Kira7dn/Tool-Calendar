@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ToolCalendar.Models
+﻿namespace ToolCalendar.Models
 {
     public class User
     {
