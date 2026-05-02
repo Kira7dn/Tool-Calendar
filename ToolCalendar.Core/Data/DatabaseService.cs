@@ -646,7 +646,7 @@ namespace ToolCalendar.Data
         /// Server-side pagination: returns one page of documents + total count for pagination UI.
         /// <para>search is matched against SoVanBan, TrichYeu, CoQuanChuQuan (case-insensitive LIKE).</para>
         /// </summary>
-        public static (List<DocumentRecord> Items, int TotalCount) GetPaged(int page, int pageSize, string search = "", string status = "")
+        public static (List<DocumentRecord> Items, int TotalCount) GetPaged(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc")
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
@@ -666,32 +666,37 @@ namespace ToolCalendar.Data
 
             if (hasStatus)
             {
-                var s = status.ToLower();
+                var s = status.Replace("⏳ ", "").Replace("⚙️ ", "").Replace("🔍 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("🛑 ", "").ToLower();
                 if (s == "overdue")
                 {
-                    // Quá hạn: Chưa hoàn thành AND ThoiHan < Today
-                    filters.Add("Status != 'Đã hoàn thành' AND ThoiHan IS NOT NULL AND ThoiHan < date('now', 'localtime')");
+                    // Công thức chuẩn từ Dashboard Overdue
+                    filters.Add("ThoiHan < date('now') AND Status != 'Đã hoàn thành' AND ThoiHan IS NOT NULL");
                 }
-                else if (s == "pending")
+                else if (s == "urgent")
                 {
-                    filters.Add("Status = 'Chưa xử lý'");
+                    // Công thức chuẩn từ Dashboard Sắp hết hạn (7 ngày tới)
+                    filters.Add("ThoiHan >= date('now') AND ThoiHan <= date('now', '+7 days') AND Status != 'Đã hoàn thành'");
                 }
-                else if (s == "processing")
+                else if (s == "today")
                 {
-                    filters.Add("Status = 'Đang xử lý'");
-                }
-                else if (s == "completed")
-                {
-                    filters.Add("Status = 'Đã hoàn thành'");
+                    // Công thức chuẩn từ Dashboard Đến hạn hôm nay
+                    filters.Add("date(ThoiHan) = date('now') AND Status != 'Đã hoàn thành'");
                 }
                 else
                 {
-                    // Cho phép lọc theo giá trị text chính xác nếu cần
-                    filters.Add("Status = @status");
+                    filters.Add("(LOWER(Status) = @status OR LOWER(Status) = @statusClean)");
                 }
             }
 
             string searchFilter = filters.Count > 0 ? "WHERE " + string.Join(" AND ", filters) : "";
+            
+            string orderBy = sort switch
+            {
+                "newest" => "NgayThem DESC",
+                "oldest" => "NgayThem ASC",
+                "deadline_desc" => "ThoiHan DESC NULLS LAST",
+                _ => "ThoiHan ASC NULLS LAST"
+            };
 
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -700,8 +705,11 @@ namespace ToolCalendar.Data
             string countSql = $"SELECT COUNT(*) FROM Documents {searchFilter}";
             using var countCmd = new SqliteCommand(countSql, connection);
             if (hasSearch) countCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
-            if (hasStatus && status.ToLower() != "overdue" && status.ToLower() != "pending" && status.ToLower() != "processing" && status.ToLower() != "completed") 
-                countCmd.Parameters.AddWithValue("@status", status);
+            if (hasStatus && status.ToLower() != "overdue")
+            {
+                countCmd.Parameters.AddWithValue("@status", status.ToLower());
+                countCmd.Parameters.AddWithValue("@statusClean", status.Replace("⏳ ", "").Replace("⚙️ ", "").Replace("🔍 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("🛑 ", "").ToLower());
+            }
 
             int totalCount = Convert.ToInt32(countCmd.ExecuteScalar());
 
@@ -710,13 +718,16 @@ namespace ToolCalendar.Data
             string dataSql = $@"
                 SELECT * FROM Documents
                 {searchFilter}
-                ORDER BY ThoiHan ASC NULLS LAST
+                ORDER BY {orderBy}
                 LIMIT @pageSize OFFSET @offset";
 
             using var dataCmd = new SqliteCommand(dataSql, connection);
             if (hasSearch) dataCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
-            if (hasStatus && status.ToLower() != "overdue" && status.ToLower() != "pending" && status.ToLower() != "processing" && status.ToLower() != "completed") 
-                dataCmd.Parameters.AddWithValue("@status", status);
+            if (hasStatus && status.ToLower() != "overdue")
+            {
+                dataCmd.Parameters.AddWithValue("@status", status.ToLower());
+                dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("⏳ ", "").Replace("⚙️ ", "").Replace("🔍 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("🛑 ", "").ToLower());
+            }
                 
             dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
             dataCmd.Parameters.AddWithValue("@offset", offset);

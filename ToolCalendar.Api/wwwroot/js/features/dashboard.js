@@ -6,13 +6,7 @@ export function createDashboardFeature(context) {
     let chart = null;
 
     function init() {
-        // Init cơ bản nếu cần
-    }
-
-    let isEventAttached = false;
-    function attachEvents() {
-        if (isEventAttached) return;
-
+        // 1. Gắn sự kiện click cho bảng văn bản gần đây
         document.addEventListener('click', async (event) => {
             const row = event.target.closest('#recent-docs tr[data-doc-id]');
             if (!row) return;
@@ -23,7 +17,47 @@ export function createDashboardFeature(context) {
             }
         });
 
-        isEventAttached = true;
+        // 2. Gắn sự kiện click cho các thẻ thống kê (Actionable Stats)
+        const statsContainer = document.querySelector('.stats-grid');
+        if (statsContainer) {
+            statsContainer.addEventListener('click', (event) => {
+                const card = event.target.closest('.stat-card');
+                if (!card) return;
+
+                const label = card.querySelector('.stat-label')?.innerText;
+
+                // Chuyển sang tab Văn bản
+                context.shell.showTab('documents');
+
+                // Tự động kích hoạt bộ lọc và sắp xếp dựa trên thẻ được click
+                setTimeout(() => {
+                    const filterSelect = document.getElementById('doc-status-filter');
+                    const sortSelect = document.getElementById('doc-sort-filter');
+                    
+                    if (!filterSelect) return;
+
+                    const cleanLabel = label.toLowerCase().trim();
+                    console.log('Dashboard click label:', cleanLabel);
+
+                    if (cleanLabel.includes('quá hạn')) {
+                        filterSelect.value = 'overdue';
+                        if (sortSelect) sortSelect.value = 'deadline_asc';
+                    } else if (cleanLabel.includes('sắp hết hạn')) {
+                        filterSelect.value = 'urgent'; 
+                        if (sortSelect) sortSelect.value = 'deadline_asc';
+                    } else if (cleanLabel.includes('hôm nay')) {
+                        filterSelect.value = 'today'; 
+                        if (sortSelect) sortSelect.value = 'deadline_asc';
+                    } else {
+                        filterSelect.value = ''; 
+                    }
+
+                    // Kích hoạt sự kiện change để bảng tự load lại
+                    filterSelect.dispatchEvent(new Event('change'));
+                    if (sortSelect) sortSelect.dispatchEvent(new Event('change'));
+                }, 500); 
+            });
+        }
     }
 
     async function refresh() {
@@ -102,7 +136,7 @@ export function createDashboardFeature(context) {
         init,
         refresh,
         activate() {
-            attachEvents();
+            // Dashboard refresh logic
         }
     };
 }

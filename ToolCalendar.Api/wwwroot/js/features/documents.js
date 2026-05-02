@@ -21,6 +21,10 @@ export function createDocumentsFeature(context) {
             refresh(1);
         });
 
+        document.getElementById('doc-sort-filter')?.addEventListener('change', () => {
+            refresh(1);
+        });
+
         document.getElementById('btn-prev-docs')?.addEventListener('click', async () => {
             if (page > 1) {
                 await refresh(page - 1);
@@ -82,7 +86,8 @@ export function createDocumentsFeature(context) {
     async function refresh(targetPage = page) {
         const search = document.getElementById('doc-search')?.value?.trim() ?? '';
         const status = document.getElementById('doc-status-filter')?.value ?? '';
-        const url = `/api/documents?page=${targetPage}&size=${pageSize}&search=${encodeURIComponent(search)}&status=${status}`;
+        const sort = document.getElementById('doc-sort-filter')?.value ?? 'deadline_asc';
+        const url = `/api/documents?page=${targetPage}&size=${pageSize}&search=${encodeURIComponent(search)}&status=${status}&sort=${sort}`;
 
         try {
             const response = await context.api.get(url);
@@ -205,6 +210,8 @@ export function createDocumentsFeature(context) {
                 html += `<option value="${s.value}">${s.icon} ${s.label}</option>`;
             });
             html += `<option value="overdue">🛑 Quá hạn</option>`;
+            html += `<option value="urgent">🕒 Sắp hết hạn</option>`;
+            html += `<option value="today">📅 Đến hạn hôm nay</option>`;
             sel.innerHTML = html;
         } catch (e) { console.error('Load status filters error:', e); }
     }

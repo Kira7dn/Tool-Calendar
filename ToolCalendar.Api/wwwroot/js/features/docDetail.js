@@ -1,6 +1,6 @@
 import { escapeAttribute } from '../core/dom.js';
 import { escapeHtml, formatDate, formatDateForTextInput, normalizeDateInputToIso } from '../core/formatters.js';
-import { DOC_STATUS } from '../core/constants.js';
+import { DOC_STATUS, getStatusConfig } from '../core/constants.js';
 
 export function createDocDetailFeature(context) {
     let currentDocId = null;
@@ -210,10 +210,17 @@ export function createDocDetailFeature(context) {
         // Overview chips
         const chipsEl = document.getElementById('doc-page-chips');
         if (chipsEl) {
-            const statusColor = doc.status === 'Đã hoàn thành' ? '#1e8449' : doc.status === 'Quá hạn' ? '#c0392b' : '#d68910';
+            const statusConfig = getStatusConfig(doc.status);
             const priorityColor = doc.priority === 'Thượng khẩn' ? '#c0392b' : doc.priority === 'Khẩn' ? '#d68910' : '#1a3a6e';
+
+            // Giả lập màu hex từ class badge (vì mobile dùng style inline)
+            let sColor = '#64748b'; // mặc định
+            if (statusConfig.badgeClass === 'badge-success') sColor = '#10b981';
+            if (statusConfig.badgeClass === 'badge-danger') sColor = '#ef4444';
+            if (statusConfig.badgeClass === 'badge-warning') sColor = '#f59e0b';
+
             chipsEl.innerHTML = `
-                <span class="doc-page-chip" style="background:${statusColor}22; color:${statusColor};">${doc.status || 'Chưa xử lý'}</span>
+                <span class="doc-page-chip" style="background:${sColor}22; color:${sColor};">${statusConfig.icon} ${doc.trangThai || doc.status || 'Chưa xử lý'}</span>
                 <span class="doc-page-chip" style="background:${priorityColor}22; color:${priorityColor};">⚡ ${doc.priority || 'Thường'}</span>
             `;
         }
@@ -342,20 +349,20 @@ export function createDocDetailFeature(context) {
     /** Tải danh sách trạng thái từ hằng số hệ thống và cập nhật select */
     async function loadStatusOptions() {
         if (isStatusOptionsLoaded) return;
-        
+
         // Chuyển đối tượng DOC_STATUS thành mảng các giá trị
         const statusList = Object.values(DOC_STATUS);
         statusOptions = statusList.map(s => s.value);
-        
+
         const sel = document.getElementById('de-status');
         if (!sel) return;
-        
+
         sel.innerHTML = statusList.map(s =>
             `<option value="${s.value}">${s.icon} ${s.label}</option>`
         ).join('') + `<option value="__custom__">✏️ Tùy chỉnh...</option>`;
 
         isStatusOptionsLoaded = true;
-        
+
         // Gán trực tiếp onchange đảm bảo 100% hoạt động
         sel.onchange = onStatusSelectChange;
     }
@@ -409,7 +416,7 @@ export function createDocDetailFeature(context) {
 
         const originalText = button.innerText;
         button.disabled = true;
-        button.innerText = 'Dang luu...';
+        button.innerText = 'Đang lưu...';
 
         const normalizedDeadline = normalizeDateInputToIso(document.getElementById('de-thoihan').value);
 
@@ -432,14 +439,14 @@ export function createDocDetailFeature(context) {
             });
 
             if (!response.ok) {
-                context.ui.showAlert('Loi khi cap nhat van ban.', '❌');
+                context.ui.showAlert('Lỗi khi cập nhật văn bản.', '❌');
                 return;
             }
 
             currentDocData = updated;
             renderDetail(updated);
             switchTab('view');
-            context.ui.showAlert('Da cap nhat van ban thanh cong!', '✅');
+            context.ui.showAlert('Đã cập nhật văn bản thành công!', '✅');
             await context.services.refreshCoreData();
         } catch (error) {
             context.ui.showAlert('Loi ket noi.', '❌');

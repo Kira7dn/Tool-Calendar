@@ -53,10 +53,12 @@ namespace ToolCalendar.Models
                 if (ThoiHan == null) return "Chưa xác định";
                 
                 int days = SoNgayConLai;
-                if (days < 0) return $"Quá hạn {Math.Abs(days)} ngày";
-                if (days == 0) return "Hết hạn hôm nay!";
-                if (days == 1) return "Còn 1 ngày";
-                return $"Còn {days} ngày";
+                if (days < 0) return $"🛑 Quá hạn {Math.Abs(days)} ngày";
+                if (days == 0) return "🔥 Hết hạn hôm nay!";
+                if (days == 1) return "⏳ Còn 1 ngày";
+                if (days <= 3) return $"⚠️ Còn {days} ngày"; // Cảnh báo cao
+                if (days <= 7) return $"🕒 Còn {days} ngày"; // Cảnh báo vừa
+                return $"📅 Còn {days} ngày";
             }
         }
     }

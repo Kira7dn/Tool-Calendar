@@ -33,9 +33,10 @@ namespace ToolCalendar.Api.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int size = 10,
             [FromQuery] string search = "",
-            [FromQuery] string status = "")
+            [FromQuery] string status = "",
+            [FromQuery] string sort = "deadline_asc")
         {
-            var (items, totalCount) = DatabaseService.GetPaged(page, size, search, status);
+            var (items, totalCount) = DatabaseService.GetPaged(page, size, search, status, sort);
             var totalPages = (int)Math.Ceiling((double)totalCount / size);
 
             return Ok(new
