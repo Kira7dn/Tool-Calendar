@@ -148,6 +148,19 @@ export function initializeApp() {
 
         if (action.dataset.action === 'open-change-password-modal') {
             document.getElementById('change-password-modal').style.display = 'flex';
+            
+            // Reset types and icons
+            ['current-user-new-password', 'current-user-confirm-password'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.type = 'password';
+                    const toggle = input.nextElementSibling;
+                    if (toggle && toggle.tagName === 'SPAN') {
+                        toggle.innerText = '👁️';
+                        toggle.title = 'Hiện mật khẩu';
+                    }
+                }
+            });
         }
 
         if (action.dataset.action === 'close-change-password-modal') {

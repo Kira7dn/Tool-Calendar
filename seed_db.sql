@@ -18,8 +18,12 @@ INSERT INTO Departments (Id, Name) VALUES
 (3, 'Phòng Văn hóa xã hội');
 
 -- SEED USERS --
--- Role: Admin, LanhDao, VanThu, CanBo
+-- Mật khẩu mặc định cho tất cả user seed: DEFAULT_PASSWORD_REDACTED
+-- (Thỏa mãn: >=8 ký tự, 1 HOA, 1 thường, 1 số, 1 đặc biệt, không nằm trong list cấm)
+-- Hash BCrypt (WorkFactor 12): $2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK
+
 INSERT INTO Users (Id, Username, PasswordHash, FullName, Email, PhoneNumber, Role, DepartmentId, CreatedAt) VALUES 
-(1, 'admin', '123456', 'Quản trị viên', 'admin@campha.gov.vn', '0912345678', 'Admin', 1, datetime('now')),
-(2, 'chanhvanphong', '123456', 'Nguyễn Thị Nơ', 'nguyenthino@campha.gov.vn', '0901234455', 'LanhDao', 1, datetime('now')),
-(3, 'vanthu', '123456', 'Hoàng Thị Nhu', 'hoangthinhu@campha.gov.vn', '0902345566', 'VanThu', 1, datetime('now'));
+(1, 'admin', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Quản trị viên', 'admin@campha.gov.vn', '0912345678', 'Admin', 1, datetime('now', '+7 hours')),
+(2, 'chanhvanphong', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Nguyễn Thị Nơ', 'nguyenthino@campha.gov.vn', '0901234455', 'LanhDao', 1, datetime('now', '+7 hours')),
+(3, 'vanthu', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Hoàng Thị Nhu', 'hoangthinhu@campha.gov.vn', '0902345566', 'VanThu', 1, datetime('now', '+7 hours'));
+

@@ -50,7 +50,7 @@ export function createUsersFeature(context) {
                 departments = await response.json();
                 const select = document.getElementById('new-department');
                 if (select) {
-                    select.innerHTML = '<option value="">-- Chọn phòng ban --</option>' + 
+                    select.innerHTML = '<option value="">-- Chọn phòng ban --</option>' +
                         departments.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
                 }
             }
@@ -130,7 +130,14 @@ export function createUsersFeature(context) {
         // Reset form
         idInput.value = userId || '';
         document.getElementById('new-username').value = '';
-        document.getElementById('new-password').value = '';
+        const passInput = document.getElementById('new-password');
+        passInput.value = '';
+        passInput.type = 'password';
+        const passToggle = passInput.nextElementSibling;
+        if (passToggle && passToggle.tagName === 'SPAN') {
+            passToggle.innerText = '👁️';
+            passToggle.title = 'Hiện mật khẩu';
+        }
         document.getElementById('new-fullname').value = '';
         document.getElementById('new-email').value = '';
         document.getElementById('new-phone').value = '';
@@ -197,14 +204,14 @@ export function createUsersFeature(context) {
         try {
             const response = await context.api.post('/api/users', {
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    username, 
-                    passwordHash, 
-                    fullName, 
-                    email, 
-                    phoneNumber, 
-                    role, 
-                    departmentId: departmentId ? parseInt(departmentId, 10) : null 
+                body: JSON.stringify({
+                    username,
+                    passwordHash,
+                    fullName,
+                    email,
+                    phoneNumber,
+                    role,
+                    departmentId: departmentId ? parseInt(departmentId, 10) : null
                 })
             });
 
@@ -229,13 +236,13 @@ export function createUsersFeature(context) {
         const role = document.getElementById('new-role').value;
         const departmentId = document.getElementById('new-department').value;
         const passwordHash = document.getElementById('new-password').value;
-        
-        const payload = { 
-            fullName, 
-            email, 
-            phoneNumber, 
-            role, 
-            departmentId: departmentId ? parseInt(departmentId, 10) : null 
+
+        const payload = {
+            fullName,
+            email,
+            phoneNumber,
+            role,
+            departmentId: departmentId ? parseInt(departmentId, 10) : null
         };
 
         if (passwordHash) {

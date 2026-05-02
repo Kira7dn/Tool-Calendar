@@ -10,9 +10,13 @@
         </div>
         <div class="form-group" style="margin-top: 15px;" id="password-group">
             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;" id="password-label">Mật khẩu</label>
-            <input type="password" id="new-password"
-                placeholder="Nhập mật khẩu mới..."
-                style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+            <div style="position: relative;">
+                <input type="password" id="new-password"
+                    placeholder="Nhập mật khẩu mới..."
+                    style="width: 100%; box-sizing: border-box; padding: 10px; padding-right: 40px; background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; border-radius: 6px;">
+                <span onclick="var pwd = document.getElementById('new-password'); var type = pwd.getAttribute('type') === 'password' ? 'text' : 'password'; pwd.setAttribute('type', type); this.innerText = type === 'password' ? '👁️' : '🙈'; this.title = type === 'password' ? 'Hiện mật khẩu' : 'Ẩn mật khẩu';" 
+                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b; font-size: 1.1rem; user-select: none;" title="Hiện mật khẩu">👁️</span>
+            </div>
         </div>
         <div class="form-group" style="margin-top: 15px;">
             <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Họ tên</label>
