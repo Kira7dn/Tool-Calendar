@@ -128,7 +128,7 @@ export function createDocDetailFeature(context) {
             document.getElementById('doc-tab-edit').style.display = (role === 'Admin' || role === 'VanThu') ? '' : 'none';
         } catch (error) {
             console.error('Document detail load error:', error);
-            context.ui.showAlert('Không thể tải chi tiết văn bản', '❌');
+            context.ui.showAlert(context.i18n.t('error_load_failed'), '❌');
             close();
         }
     }
@@ -173,7 +173,7 @@ export function createDocDetailFeature(context) {
             if (editTab) editTab.style.display = canEdit ? '' : 'none';
         } catch (error) {
             console.error('Page load error:', error);
-            context.ui.showAlert('Không thể tải chi tiết văn bản', '❌');
+            context.ui.showAlert(context.i18n.t('error_load_failed'), '❌');
             closePage();
         }
     }
@@ -183,13 +183,13 @@ export function createDocDetailFeature(context) {
         if (!page) return;
         page.classList.remove('open');
         setTimeout(() => { page.style.display = 'none'; }, 340);
-        
+
         // Clean up PDF resources
         if (pdfDoc) {
             void context.services.pdf.cancelRender('doc-page-pdf-canvas');
             pdfDoc = null;
         }
-        
+
         currentDocId = null;
         currentDocData = null;
     }
@@ -326,7 +326,7 @@ export function createDocDetailFeature(context) {
             const el = document.getElementById(id);
             if (el) el.value = mFields[id];
         });
-        
+
         // Handle mobile status
         const mStatus = document.getElementById('mde-status');
         const mCustom = document.getElementById('mde-status-custom');
@@ -526,8 +526,6 @@ export function createDocDetailFeature(context) {
         const isMobile = !!button.closest('#doc-detail-page');
         const p = isMobile ? 'mde-' : 'de-';
 
-        const normalizedDeadline = normalizeDateInputToIso(document.getElementById(`${p}thoihan`).value);
-
         const getStatus = () => {
             const sel = document.getElementById(`${p}status`);
             if (sel?.value === '__custom__') {
@@ -536,11 +534,38 @@ export function createDocDetailFeature(context) {
             return sel?.value || 'Chưa xử lý';
         };
 
+        const soVanBan = document.getElementById(`${p}so`).value.trim();
+        const trichYeu = document.getElementById(`${p}trichyeu`).value.trim();
+        const ngayBanHanhRaw = document.getElementById(`${p}ngaybanhanh`).value;
+        const thoiHanRaw = document.getElementById(`${p}thoihan`).value;
+
+        // --- Validate Frontend ---
+        if (!soVanBan) {
+            context.ui.showAlert(context.i18n.t('error_missing_so'), '⚠️');
+            button.disabled = false;
+            button.innerText = originalText;
+            return;
+        }
+        if (!trichYeu) {
+            context.ui.showAlert(context.i18n.t('error_missing_summary'), '⚠️');
+            button.disabled = false;
+            button.innerText = originalText;
+            return;
+        }
+
+        const normalizedDeadline = normalizeDateInputToIso(thoiHanRaw);
+        if (thoiHanRaw && !normalizedDeadline) {
+            context.ui.showAlert(context.i18n.t('error_invalid_date'), '⚠️');
+            button.disabled = false;
+            button.innerText = originalText;
+            return;
+        }
+
         const updated = {
             ...currentDocData,
-            soVanBan: document.getElementById(`${p}so`).value,
-            ngayBanHanh: document.getElementById(`${p}ngaybanhanh`).value ? `${document.getElementById(`${p}ngaybanhanh`).value}T00:00:00` : null,
-            trichYeu: document.getElementById(`${p}trichyeu`).value,
+            soVanBan,
+            ngayBanHanh: ngayBanHanhRaw ? `${ngayBanHanhRaw}T00:00:00` : null,
+            trichYeu,
             coQuanBanHanh: document.getElementById(`${p}coquanbanhanh`).value,
             coQuanChuQuan: document.getElementById(`${p}coquanchuquan`).value,
             thoiHan: normalizedDeadline ? `${normalizedDeadline}T00:00:00` : null,
@@ -555,12 +580,25 @@ export function createDocDetailFeature(context) {
             });
 
             if (!response.ok) {
-                context.ui.showAlert('Lỗi khi cập nhật văn bản.', '❌');
+                let errorMsg = context.i18n.t('error_saving');
+                try {
+                    const error = await response.json();
+                    if (error.errors) {
+                        // Trích xuất các câu lỗi từ đối tượng errors của .NET
+                        errorMsg = Object.values(error.errors).flat().join('\n');
+                    } else if (error.message) {
+                        errorMsg = error.message;
+                    }
+                } catch (e) {
+                    const text = await response.text();
+                    if (text) errorMsg = text;
+                }
+                context.ui.showAlert(`${context.i18n.t('error_update_failed')}\n${errorMsg}`, '❌');
                 return;
             }
 
             currentDocData = updated;
-            
+
             if (button.closest('#doc-detail-page')) {
                 renderDetailPage(updated);
                 switchPageTab('view');
@@ -568,11 +606,11 @@ export function createDocDetailFeature(context) {
                 renderDetail(updated);
                 switchTab('view');
             }
-            
+
             context.ui.showAlert('Đã cập nhật văn bản thành công!', '✅');
             await context.services.refreshCoreData();
         } catch (error) {
-            context.ui.showAlert('Loi ket noi.', '❌');
+            context.ui.showAlert(context.i18n.t('error_connection'), '❌');
         } finally {
             button.disabled = false;
             button.innerText = originalText;
@@ -701,7 +739,7 @@ export function createDocDetailFeature(context) {
         const textarea = document.getElementById(textareaId);
         const text = textarea?.value.trim();
         if (!text) {
-            context.ui.showAlert('Vui lòng nhập nội dung bình luận!', '⚠️');
+            context.ui.showAlert(context.i18n.t('error_empty_comment'), '⚠️');
             return;
         }
 
@@ -722,7 +760,7 @@ export function createDocDetailFeature(context) {
 
             if (!response.ok) {
                 const err = await response.text();
-                context.ui.showAlert('Lỗi khi gửi bình luận: ' + err, '❌');
+                context.ui.showAlert(context.i18n.t('error_send_comment_failed') + ' ' + err, '❌');
                 return;
             }
 
@@ -731,7 +769,7 @@ export function createDocDetailFeature(context) {
             renderFilePreview();
             await loadComments();
         } catch (error) {
-            context.ui.showAlert('Lỗi kết nối.', '❌');
+            context.ui.showAlert(context.i18n.t('error_connection'), '❌');
         } finally {
             button.disabled = false;
             button.innerText = originalText;
@@ -739,19 +777,19 @@ export function createDocDetailFeature(context) {
     }
 
     async function deleteComment(commentId) {
-        const confirmed = await context.ui.showConfirm('Xoa binh luan nay?');
+        const confirmed = await context.ui.showConfirm(context.i18n.t('confirm_delete_comment'));
         if (!confirmed) return;
 
         try {
             const response = await context.api.delete(`/api/documents/${currentDocId}/comments/${commentId}`);
             if (!response.ok) {
-                context.ui.showAlert('Loi khi xoa binh luan.', '❌');
+                context.ui.showAlert(context.i18n.t('error_delete_comment_failed'), '❌');
                 return;
             }
 
             await loadComments();
         } catch (error) {
-            context.ui.showAlert('Loi ket noi.', '❌');
+            context.ui.showAlert(context.i18n.t('error_connection'), '❌');
         }
     }
 

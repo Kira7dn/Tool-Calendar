@@ -22,25 +22,40 @@ export function normalizeDateInputToIso(value) {
     const raw = String(value || '').trim();
     if (!raw) return null;
 
+    // 1. Trường hợp ISO sẵn (YYYY-MM-DD)
     if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-        return raw;
+        const [y, m, d] = raw.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        if (date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d) {
+            return raw;
+        }
+        return null;
     }
 
+    // 2. Trường hợp Ngày/Tháng/Năm (DD/MM/YYYY)
     const slashMatch = raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
     if (slashMatch) {
-        const [, dayRaw, monthRaw, yearRaw] = slashMatch;
-        const day = dayRaw.padStart(2, '0');
-        const month = monthRaw.padStart(2, '0');
-        return `${yearRaw}-${month}-${day}`;
+        const [, dRaw, mRaw, yRaw] = slashMatch;
+        const day = parseInt(dRaw, 10);
+        const month = parseInt(mRaw, 10);
+        const year = parseInt(yRaw, 10);
+
+        // Kiểm tra tính hợp lệ của ngày tháng
+        const date = new Date(year, month - 1, day);
+        if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
+            return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
+        return null;
     }
 
+    // 3. Fallback dùng Date parse mặc định
     const parsed = new Date(raw);
     if (Number.isNaN(parsed.getTime())) return null;
 
     const year = parsed.getFullYear();
-    const month = String(parsed.getMonth() + 1).padStart(2, '0');
-    const day = String(parsed.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const month = parsed.getMonth() + 1;
+    const day = parsed.getDate();
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 import { getStatusConfig } from './constants.js';
