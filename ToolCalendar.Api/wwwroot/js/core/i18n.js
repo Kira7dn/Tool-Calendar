@@ -117,7 +117,7 @@ const translations = {
         preparing: "Chuẩn bị xử lý...",
         ocr_queue: "Hàng chờ OCR & điều phối",
         review: "Rà soát",
-        save_all: "Phân công toàn bộ",
+        save_all: "Lưu toàn bộ",
         clear_list: "Xóa danh sách",
 
         // Users Tab
@@ -325,7 +325,7 @@ const translations = {
         preparing: "Preparing...",
         ocr_queue: "OCR Queue & Coordination",
         review: "Review",
-        save_all: "Assign All",
+        save_all: "Save All",
         clear_list: "Clear List",
 
         // Users Tab

@@ -608,13 +608,18 @@ export function createUploadFeature(context) {
     }
 
     async function confirmAllBatch() {
-        const saveTargets = sessionUploads.filter((doc) => doc.batchState === 'Sẵn sàng lưu');
-        if (!saveTargets.length) {
-            context.ui.showAlert('Không có file hợp lệ (chưa chọn phòng ban/cán bộ) để phân công.', '⚠️');
+        // Lấy tất cả văn bản có thể lưu được (không bị lỗi OCR và không đang xử lý)
+        const saveTargets = sessionUploads.filter((doc) => canSave(doc) && doc.batchState !== 'Đã phân công');
+        
+        // Nếu không có cái nào mới, nhưng có những cái đã phân công rồi thì vẫn cho phép lưu lại để cập nhật
+        const allTargets = saveTargets.length > 0 ? saveTargets : sessionUploads.filter(doc => canSave(doc));
+
+        if (!allTargets.length) {
+            context.ui.showAlert('Không có văn bản hợp lệ để lưu.', '⚠️');
             return;
         }
 
-        const confirmed = await context.ui.showConfirm(`Xác nhận phân công ${saveTargets.length} văn bản hợp lệ trong đợt này?`);
+        const confirmed = await context.ui.showConfirm(`Xác nhận lưu và cập nhật ${allTargets.length} văn bản vào hệ thống?`);
         if (!confirmed) return;
 
         // Bật trạng thái loading cho nút bấm
@@ -622,7 +627,7 @@ export function createUploadFeature(context) {
         const originalTexts = [];
         buttons.forEach((btn, idx) => {
             originalTexts[idx] = btn.innerHTML;
-            btn.innerHTML = '<span style="display:inline-block; animation: spin 1s linear infinite; margin-right: 5px;">⏳</span> Đang phân công...';
+            btn.innerHTML = '<span style="display:inline-block; animation: spin 1s linear infinite; margin-right: 5px;">⏳</span> Đang lưu...';
             btn.disabled = true;
             btn.style.pointerEvents = 'none';
         });
@@ -635,7 +640,7 @@ export function createUploadFeature(context) {
 
         let success = 0;
         let failed = 0;
-        for (const doc of saveTargets) {
+        for (const doc of allTargets) {
             const result = await saveBatchItem(doc.id, { silent: true });
             if (result) {
                 success += 1;
@@ -881,12 +886,11 @@ export function createUploadFeature(context) {
     }
 
     function canSave(item) {
+        // Chỉ cấm lưu khi đang xử lý OCR hoặc bị lỗi nặng
         if (item.batchState === 'Đang OCR' || item.batchState === 'Lỗi OCR') return false;
         
-        const hasAssignment = (item.departmentIds && item.departmentIds.length > 0) || 
-                             (item.assignedToIds && item.assignedToIds.length > 0);
-        
-        return hasAssignment;
+        // Cho phép lưu thông tin rà soát kể cả khi chưa phân công
+        return true;
     }
 
     function applyPatch(item, patch) {
