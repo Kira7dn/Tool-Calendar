@@ -192,12 +192,12 @@ export function initializeApp() {
             const confirmPass = document.getElementById('current-user-confirm-password').value;
 
             if (!newPass || newPass.length < 4) {
-                ui.showAlert('Mật khẩu mới phải có ít nhất 4 ký tự!', '⚠️');
+                ui.showAlert(i18nService.t('error_password_length'), '⚠️');
                 return;
             }
 
             if (newPass !== confirmPass) {
-                ui.showAlert('Mật khẩu xác nhận không khớp!', '❌');
+                ui.showAlert(i18nService.t('error_password_mismatch'), '❌');
                 return;
             }
 
@@ -208,16 +208,16 @@ export function initializeApp() {
                 });
 
                 if (response.ok) {
-                    ui.showAlert('Đổi mật khẩu thành công!', '✅');
+                    ui.showAlert(i18nService.t('success_password_changed'), '✅');
                     document.getElementById('change-password-modal').style.display = 'none';
                     document.getElementById('current-user-new-password').value = '';
                     document.getElementById('current-user-confirm-password').value = '';
                 } else {
                     const err = await response.json();
-                    ui.showAlert(err.message || 'Lỗi khi đổi mật khẩu', '❌');
+                    ui.showAlert(err.message || i18nService.t('error_saving'), '❌');
                 }
             } catch (error) {
-                ui.showAlert('Lỗi kết nối', '📡');
+                ui.showAlert(i18nService.t('error_connection'), '📡');
             }
         }
     });
