@@ -56,15 +56,29 @@ export function createMyTasksFeature(context) {
         tbody.innerHTML = tasks.length ? tasks.map((task) => {
             const deadline = task.hanXuLy ? new Date(task.hanXuLy) : null;
             const overdue = deadline && deadline < now;
+            const statusText = task.status || '';
+            const isDoing = statusText.toLowerCase().includes('đang xử lý') || statusText.toLowerCase().includes('processing') || statusText === 'Dang xu ly';
+            const isDone = statusText.toLowerCase().includes('đã hoàn thành') || statusText.toLowerCase().includes('completed');
+
             if (overdue) countOverdue += 1;
-            else if (task.status === 'Dang xu ly') countDoing += 1;
+            else if (isDoing) countDoing += 1;
             else countNew += 1;
+
+            const displayStatus = overdue 
+                ? (context.i18n.t('status_overdue') || 'Quá hạn')
+                : isDone 
+                    ? (context.i18n.t('status_completed') || 'Đã hoàn thành')
+                    : isDoing 
+                        ? (context.i18n.t('status_processing') || 'Đang xử lý')
+                        : (context.i18n.t('status_pending') || 'Chưa xử lý');
+
+            const statusClass = overdue ? 'bg-danger' : isDoing ? 'bg-warning' : isDone ? 'bg-success' : 'bg-info';
 
             return `<tr>
                 <td style="font-weight:700; color:var(--sidebar-bg);">${task.soVanBan || '-'}</td>
                 <td class="text-truncate-2" title="${escapeAttribute(task.trichYeu || '')}">${task.trichYeu || '-'}</td>
                 <td>${formatDate(task.hanXuLy)}</td>
-                <td><span class="status ${overdue ? 'bg-danger' : task.status === 'Dang xu ly' ? 'bg-warning' : 'bg-success'}">${overdue ? 'Qua han' : task.status}</span></td>
+                <td><span class="status ${statusClass}">${displayStatus}</span></td>
                 <td>
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
                         <button class="btn" style="padding:4px 10px; font-size:0.8rem; background:#e2e8f0; color:#1e293b;" data-action="open-pdf" data-doc-id="${task.id}" data-title="${escapeAttribute(task.soVanBan || '')}">📄 Xem PDF</button>
