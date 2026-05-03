@@ -411,8 +411,6 @@ export function createUploadFeature(context) {
                 <td>
                     ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input ${doc.ocrWarnings?.some(w => w.includes('Hạn')) ? 'warning-border' : ''}" type="date" data-field="thoiHan" data-doc-id="${doc.id}" value="${doc.thoiHan ? doc.thoiHan.split('T')[0] : ''}">`}
                 </td>
-                <td>${isProcessing ? '<div class="skeleton-text"></div>' : `<div class="dept-select-container" id="dept-container-${doc.id}"></div>`}</td>
-                <td>${isProcessing ? '<div class="skeleton-text"></div>' : `<div class="user-select-container" id="user-container-${doc.id}"></div>`}</td>
                 <td>
                     ${isProcessing ? '<div class="skeleton-text"></div>' : `<span class="status-badge ${statusClass(doc.batchState)}">${doc.batchState}</span>`}
                 </td>
@@ -426,9 +424,6 @@ export function createUploadFeature(context) {
                         <button class="batch-action-btn batch-action-btn-preview" data-action="preview-batch-item" data-doc-id="${doc.id}" title="Xem trước" ${isProcessing ? 'disabled' : ''}>
                             ${renderBatchActionIcon('preview')}
                         </button>
-                        <button class="batch-action-btn batch-action-btn-save" data-action="save-batch-item" data-doc-id="${doc.id}" ${canSave(doc) ? '' : 'disabled'} title="Phân công">
-                            ${renderBatchActionIcon('save')}
-                        </button>
                         <button class="batch-action-btn batch-action-btn-delete" data-action="delete-batch-item" data-doc-id="${doc.id}" title="Xóa file">
                             ${renderBatchActionIcon('delete')}
                         </button>
@@ -436,17 +431,6 @@ export function createUploadFeature(context) {
                 </td>
             `;
             tbody.appendChild(row);
-
-            if (!isProcessing) {
-                const deptContainer = row.querySelector('.dept-select-container');
-                const userContainer = row.querySelector('.user-select-container');
-                if (deptContainer) {
-                    initDepartmentMultiSelect(deptContainer, doc, (newIds) => processRowChange(doc.id, 'departmentIds', newIds));
-                }
-                if (userContainer) {
-                    initUserMultiSelect(userContainer, doc, (newIds) => processRowChange(doc.id, 'assignedToIds', newIds));
-                }
-            }
         });
 
         tbody.querySelectorAll('[data-field]').forEach((input) => {
@@ -644,7 +628,7 @@ export function createUploadFeature(context) {
                     success += 1;
                     const updatedIndex = findItemIndex(doc.id);
                     if (updatedIndex !== -1) {
-                        try { updateRowUI(sessionUploads[updatedIndex]); } catch(e) { console.error(e); }
+                        try { updateRowUI(sessionUploads[updatedIndex]); } catch (e) { console.error(e); }
                     }
                 } else {
                     failed += 1;
@@ -662,6 +646,30 @@ export function createUploadFeature(context) {
             renderBatchTable();
             await context.services.refreshCoreData();
             context.ui.showAlert(`Đã xử lý xong đợt lưu. Thành công: ${success}, Thất bại: ${failed}`, failed ? '⚠️' : '✅');
+
+            // Dọn dẹp danh sách: Chỉ giữ lại những cái bị lỗi hoặc chưa lưu được
+            // Ở đây sau khi save thành công, item thường sẽ có batchState hoặc trạng thái mới
+            // Tuy nhiên cách đơn giản nhất là remove những cái doc.id mà chúng ta vừa saveBatchItem thành công
+            // Nhưng vì trong vòng lặp ta đã await từng cái, ta có thể lọc lại sessionUploads dựa trên kết quả thực tế
+
+            // Một cách tốt hơn: Nếu không có lỗi nào (failed === 0), dọn sạch và về trang chủ
+            if (success > 0 && failed === 0) {
+                sessionUploads = [];
+                renderBatchTable();
+
+                // Quay lại màn hình chọn file ban đầu
+                const uploadForm = document.getElementById('batch-upload-form');
+                const batchTableContainer = document.getElementById('batch-table-container');
+                if (uploadForm && batchTableContainer) {
+                    uploadForm.classList.remove('d-none');
+                    batchTableContainer.classList.add('d-none');
+                }
+            } else if (success > 0) {
+                // Nếu có thành công và có thất bại, ta nên lọc bỏ những cái đã thành công
+                // (Giả sử saveBatchItem đã cập nhật trạng thái của item thành 'Đã rà soát' hoặc 'Đã phân công')
+                sessionUploads = sessionUploads.filter(doc => doc.batchState === 'Lỗi OCR' || doc.batchState === 'Cần rà soát');
+                renderBatchTable();
+            }
         }
     }
 
@@ -706,11 +714,12 @@ export function createUploadFeature(context) {
             }
 
             // Xác định trạng thái mới dựa trên việc có phân công hay chưa
-            const hasAssignment = (item.departmentIds && item.departmentIds.length > 0) || 
-                                 (item.assignedToIds && item.assignedToIds.length > 0);
+            const hasAssignment = (item.departmentIds && item.departmentIds.length > 0) ||
+                (item.assignedToIds && item.assignedToIds.length > 0);
             const newState = hasAssignment ? 'Đã phân công' : 'Đã rà soát';
 
             sessionUploads[index] = applyPatch(item, { batchState: newState });
+            renderBatchTable(); // Cập nhật lại giao diện bảng bên ngoài
             if (!silent) {
                 context.ui.showAlert(hasAssignment ? 'Đã phân công văn bản thành công.' : 'Đã lưu thông tin rà soát.', '✅');
             }
@@ -891,7 +900,7 @@ export function createUploadFeature(context) {
     function canSave(item) {
         // Chỉ cấm lưu khi đang xử lý OCR hoặc bị lỗi nặng
         if (item.batchState === 'Đang OCR' || item.batchState === 'Lỗi OCR') return false;
-        
+
         // Cho phép lưu thông tin rà soát kể cả khi chưa phân công
         return true;
     }
@@ -914,8 +923,15 @@ export function createUploadFeature(context) {
         }
         */
 
-        if (merged.batchState !== 'Đã phân công' && merged.batchState !== 'Đã rà soát' && merged.batchState !== 'Đang OCR' && merged.batchState !== 'Lỗi OCR') {
-            merged.batchState = (merged.departmentIds?.length || merged.assignedToIds?.length) ? 'Sẵn sàng lưu' : 'Cần rà soát';
+        // Chỉ tự động tính toán trạng thái nếu chưa được lưu (Đã rà soát/Đã phân công)
+        // Hoặc nếu người dùng đang chủ động thay đổi phân công (patch có chứa assignedToIds hoặc departmentIds)
+        const isAlreadySaved = merged.batchState === 'Đã phân công' || merged.batchState === 'Đã rà soát';
+        const isChangingAssignment = patch.assignedToIds || patch.departmentIds;
+
+        if (merged.batchState !== 'Đang OCR' && merged.batchState !== 'Lỗi OCR') {
+            if (!isAlreadySaved || isChangingAssignment) {
+                merged.batchState = (merged.departmentIds?.length || merged.assignedToIds?.length) ? 'Sẵn sàng lưu' : 'Cần rà soát';
+            }
         }
 
         return merged;
