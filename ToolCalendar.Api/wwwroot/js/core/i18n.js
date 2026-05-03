@@ -61,6 +61,12 @@ const translations = {
         error_send_comment_failed: "Lỗi khi gửi bình luận:",
         error_delete_comment_failed: "Lỗi khi xóa bình luận.",
         confirm_delete_comment: "Xóa bình luận này?",
+        error_missing_username: "Tên đăng nhập không được để trống!",
+        error_missing_password: "Mật khẩu không được để trống!",
+        error_missing_fullname: "Họ tên không được để trống!",
+        error_missing_role: "Vui lòng chọn vai trò!",
+        error_create_failed: "Tạo mới thất bại:",
+        error_delete_failed: "Xóa thất bại:",
         
         // Documents Tab
         doc_list_title: "Danh sách văn bản toàn đơn vị",
@@ -236,6 +242,12 @@ const translations = {
         error_send_comment_failed: "Error sending comment:",
         error_delete_comment_failed: "Error deleting comment.",
         confirm_delete_comment: "Delete this comment?",
+        error_missing_username: "Username cannot be empty!",
+        error_missing_password: "Password cannot be empty!",
+        error_missing_fullname: "Full name cannot be empty!",
+        error_missing_role: "Please select a role!",
+        error_create_failed: "Creation failed:",
+        error_delete_failed: "Deletion failed:",
 
         // Documents Tab
         doc_list_title: "Unit-wide Document List",

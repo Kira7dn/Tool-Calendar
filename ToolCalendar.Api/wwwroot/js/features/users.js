@@ -191,16 +191,28 @@ export function createUsersFeature(context) {
     }
 
     async function createUser() {
-        const username = document.getElementById('new-username').value;
-        const passwordHash = document.getElementById('new-password').value; // In the model it's PasswordHash
-        const fullName = document.getElementById('new-fullname').value;
-        const email = document.getElementById('new-email').value;
-        const phoneNumber = document.getElementById('new-phone').value;
+        const username = document.getElementById('new-username').value.trim();
+        const passwordHash = document.getElementById('new-password').value.trim();
+        const fullName = document.getElementById('new-fullname').value.trim();
+        const email = document.getElementById('new-email').value.trim();
+        const phoneNumber = document.getElementById('new-phone').value.trim();
         const role = document.getElementById('new-role').value;
         const departmentId = document.getElementById('new-department').value;
 
-        if (!username || !passwordHash) {
-            context.ui.showAlert(context.i18n.t('error_missing_name'), '⚠️');
+        if (!username) {
+            context.ui.showAlert(context.i18n.t('error_missing_username'), '⚠️');
+            return;
+        }
+        if (!passwordHash) {
+            context.ui.showAlert(context.i18n.t('error_missing_password'), '⚠️');
+            return;
+        }
+        if (!fullName) {
+            context.ui.showAlert(context.i18n.t('error_missing_fullname'), '⚠️');
+            return;
+        }
+        if (!role) {
+            context.ui.showAlert(context.i18n.t('error_missing_role'), '⚠️');
             return;
         }
 
@@ -219,8 +231,19 @@ export function createUsersFeature(context) {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                context.ui.showAlert(error.message || 'Lỗi khi tạo người dùng', '❌');
+                let errorMsg = context.i18n.t('error_create_failed');
+                try {
+                    const error = await response.json();
+                    if (error.errors) {
+                        errorMsg += '\n' + Object.values(error.errors).flat().join('\n');
+                    } else if (error.message) {
+                        errorMsg += '\n' + error.message;
+                    }
+                } catch (e) {
+                    const text = await response.text();
+                    if (text) errorMsg += '\n' + text;
+                }
+                context.ui.showAlert(errorMsg, '❌');
                 return;
             }
 
@@ -228,17 +251,26 @@ export function createUsersFeature(context) {
             closeModal();
             await refresh();
         } catch (error) {
-            context.ui.showAlert('Lỗi kết nối', '📡');
+            context.ui.showAlert(context.i18n.t('error_connection'), '📡');
         }
     }
 
     async function updateUser(id) {
-        const fullName = document.getElementById('new-fullname').value;
-        const email = document.getElementById('new-email').value;
-        const phoneNumber = document.getElementById('new-phone').value;
+        const fullName = document.getElementById('new-fullname').value.trim();
+        const email = document.getElementById('new-email').value.trim();
+        const phoneNumber = document.getElementById('new-phone').value.trim();
         const role = document.getElementById('new-role').value;
         const departmentId = document.getElementById('new-department').value;
-        const passwordHash = document.getElementById('new-password').value;
+        const passwordHash = document.getElementById('new-password').value.trim();
+
+        if (!fullName) {
+            context.ui.showAlert(context.i18n.t('error_missing_fullname'), '⚠️');
+            return;
+        }
+        if (!role) {
+            context.ui.showAlert(context.i18n.t('error_missing_role'), '⚠️');
+            return;
+        }
 
         const payload = {
             fullName,
@@ -259,7 +291,19 @@ export function createUsersFeature(context) {
             });
 
             if (!response.ok) {
-                context.ui.showAlert('Lỗi khi cập nhật', '❌');
+                let errorMsg = context.i18n.t('error_update_failed');
+                try {
+                    const error = await response.json();
+                    if (error.errors) {
+                        errorMsg += '\n' + Object.values(error.errors).flat().join('\n');
+                    } else if (error.message) {
+                        errorMsg += '\n' + error.message;
+                    }
+                } catch (e) {
+                    const text = await response.text();
+                    if (text) errorMsg += '\n' + text;
+                }
+                context.ui.showAlert(errorMsg, '❌');
                 return;
             }
 
@@ -267,7 +311,7 @@ export function createUsersFeature(context) {
             closeModal();
             await refresh();
         } catch (error) {
-            context.ui.showAlert('Lỗi kết nối', '📡');
+            context.ui.showAlert(context.i18n.t('error_connection'), '📡');
         }
     }
 
@@ -276,10 +320,22 @@ export function createUsersFeature(context) {
         if (!confirmed) return;
 
         try {
-            await context.api.delete(`/api/users/${id}`);
+            const response = await context.api.delete(`/api/users/${id}`);
+            if (!response.ok) {
+                let errorMsg = context.i18n.t('error_delete_failed');
+                try {
+                    const error = await response.json();
+                    errorMsg += '\n' + (error.message || 'Unknown error');
+                } catch (e) {
+                    const text = await response.text();
+                    if (text) errorMsg += '\n' + text;
+                }
+                context.ui.showAlert(errorMsg, '❌');
+                return;
+            }
             await refresh();
         } catch (error) {
-            context.ui.showAlert('Lỗi khi xóa', '❌');
+            context.ui.showAlert(context.i18n.t('error_connection'), '❌');
         }
     }
 
