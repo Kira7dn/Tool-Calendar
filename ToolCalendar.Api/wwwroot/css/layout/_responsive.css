@@ -238,14 +238,26 @@
         justify-content: space-between;
     }
 
+    .modal {
+        z-index: 8000 !important;
+        padding: 10px !important;
+        align-items: flex-start !important;
+        /* Allow scrolling if long */
+        padding-top: 50px !important;
+        overflow-y: auto !important;
+    }
+
     .modal>div,
-    #doc-detail-modal>div {
-        width: 98% !important;
+    #doc-detail-modal>div,
+    .modal-content {
+        width: 100% !important;
         max-width: 100% !important;
-        margin: 5px auto;
+        margin: 0 auto 30px auto !important;
         padding: 20px !important;
-        max-height: 98vh !important;
-        border-radius: 12px !important;
+        height: auto !important;
+        max-height: none !important;
+        border-radius: 16px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
     }
 
     .doc-field {

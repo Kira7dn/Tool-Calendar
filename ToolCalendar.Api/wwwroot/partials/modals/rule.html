@@ -1,6 +1,9 @@
-<div id="rule-modal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
-    <div class="data-section" style="width:420px; padding:30px;">
-        <h3 style="margin-bottom:20px;" data-i18n="add">🤖 Thêm Auto Rule</h3>
+<div id="rule-modal" class="modal">
+    <div class="modal-content" style="max-width: 420px;">
+        <div class="modal-header">
+            <h3 data-i18n="add">🤖 Thêm Auto Rule</h3>
+            <button class="modal-close-btn" data-action="close-rule-modal">&times;</button>
+        </div>
         <div class="form-group" style="margin-bottom:16px;">
             <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px;" data-i18n="search_placeholder">Từ khóa nhận diện</label>
             <input type="text" id="rule-keyword" placeholder="Vd: hỏa tốc, khẩn" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.9rem;">
@@ -9,8 +12,8 @@
             <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:6px;" data-i18n="min_deadline">Số ngày xử lý mặc định</label>
             <input type="number" id="rule-days" value="15" min="1" style="width:100%; padding:10px; border:1.5px solid #cbd5e1; border-radius:8px; color:#1e293b; font-size:0.9rem;">
         </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button class="btn" style="background:#e2e8f0; color:#1e293b;" data-action="close-rule-modal" data-i18n="cancel">Hủy</button>
+        <div class="modal-footer" style="display:flex; gap:10px; justify-content:flex-end;">
+            <button class="btn btn-secondary" data-action="close-rule-modal" data-i18n="cancel">Hủy</button>
             <button class="btn btn-primary" data-action="create-rule" data-i18n="save">Lưu rule</button>
         </div>
     </div>
