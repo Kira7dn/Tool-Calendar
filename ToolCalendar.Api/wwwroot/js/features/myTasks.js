@@ -64,11 +64,11 @@ export function createMyTasksFeature(context) {
             else if (isDoing) countDoing += 1;
             else countNew += 1;
 
-            const displayStatus = overdue 
+            const displayStatus = overdue
                 ? (context.i18n.t('status_overdue') || 'Quá hạn')
-                : isDone 
+                : isDone
                     ? (context.i18n.t('status_completed') || 'Đã hoàn thành')
-                    : isDoing 
+                    : isDoing
                         ? (context.i18n.t('status_processing') || 'Đang xử lý')
                         : (context.i18n.t('status_pending') || 'Chưa xử lý');
 
@@ -81,12 +81,12 @@ export function createMyTasksFeature(context) {
                 <td><span class="status ${statusClass}">${displayStatus}</span></td>
                 <td>
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <button class="btn" style="padding:4px 10px; font-size:0.8rem; background:#e2e8f0; color:#1e293b;" data-action="open-pdf" data-doc-id="${task.id}" data-title="${escapeAttribute(task.soVanBan || '')}">📄 Xem PDF</button>
-                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.8rem;" data-action="open-evidence-modal" data-doc-id="${task.id}">📎 Nop bang chung</button>
+                        <button class="btn" style="padding:4px 10px; font-size:0.8rem; background:#e2e8f0; color:#1e293b;" data-action="open-pdf" data-doc-id="${task.id}" data-title="${escapeAttribute(task.soVanBan || '')}">📄 ${context.i18n.t('mt_btn_view') || 'Xem PDF'}</button>
+                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.8rem;" data-action="open-evidence-modal" data-doc-id="${task.id}">📎 ${context.i18n.t('mt_btn_submit') || 'Nộp bằng chứng'}</button>
                     </div>
                 </td>
             </tr>`;
-        }).join('') : `<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-secondary);">📋 Chua co viec nao duoc giao cho ban.</td></tr>`;
+        }).join('') : `<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-secondary);">📋 ${context.i18n.t('mt_empty') || 'Chưa có việc nào được giao cho bạn.'}</td></tr>`;
 
         document.getElementById('mt-stat-new').innerText = countNew;
         document.getElementById('mt-stat-doing').innerText = countDoing;

@@ -74,7 +74,7 @@ const translations = {
         error_missing_role: "Vui lòng chọn vai trò!",
         error_create_failed: "Tạo mới thất bại:",
         error_delete_failed: "Xóa thất bại:",
-        
+
         // Documents Tab
         doc_list_title: "Danh sách văn bản toàn đơn vị",
         add_doc: "Thêm văn bản",
@@ -84,7 +84,7 @@ const translations = {
         sort_oldest: "Cũ nhất",
         sort_deadline_near: "Hạn gần nhất",
         sort_deadline_far: "Hạn xa nhất",
-        
+
         // Table Headers
         stt: "STT",
         doc_no: "Số văn bản",
@@ -106,7 +106,7 @@ const translations = {
         role: "Vai trò",
         file: "Tệp",
         assigned_to: "Cán bộ",
-        
+
         // Upload Tab
         drag_drop_pdf: "Kéo thả file PDF vào đây",
         ocr_notice: "Hệ thống sẽ tự động bóc tách (OCR) thông tin văn bản",
@@ -118,7 +118,7 @@ const translations = {
         review: "Rà soát",
         save_all: "Phân công toàn bộ",
         clear_list: "Xóa danh sách",
-        
+
         // Users Tab
         user_management: "Quản lý người dùng hệ thống",
         create_user: "Tạo User mới",
@@ -127,17 +127,36 @@ const translations = {
         enter_new_pwd: "Nhập mật khẩu mới...",
         confirm_pwd: "Xác nhận mật khẩu mới",
         save_account: "Lưu tài khoản",
-        
+
         // Status Values
         status_pending: "Chưa xử lý",
         status_processing: "Đang xử lý",
         status_reviewed: "Đã rà soát",
         status_completed: "Đã hoàn thành",
+        status_overdue: "Quá hạn",
+
+        // My Tasks
+        mt_title: "Công việc được giao cho tôi",
+        mt_stat_new: "Việc mới",
+        mt_stat_doing: "Đang xử lý",
+        mt_stat_overdue: "Quá hạn",
+        mt_col_number: "Số hiệu",
+        mt_col_summary: "Trích yếu",
+        mt_col_deadline: "Hạn xử lý",
+        mt_col_status: "Trạng thái",
+        mt_col_actions: "Thao tác",
+        mt_btn_view: "Xem PDF",
+        mt_btn_submit: "Nộp bằng chứng",
+        mt_empty: "Chưa có công việc nào được giao cho bạn.",
+        mt_submit_title: "Nộp bằng chứng hoàn thành",
+        mt_submit_notes: "Ghi chú kết quả",
+        mt_submit_files: "Chọn file bằng chứng (Ảnh/PDF/Doc)",
+        mt_submit_btn: "Xác nhận hoàn thành",
         status_error_ocr: "Lỗi OCR",
         status_overdue: "Quá hạn",
         status_urgent: "Sắp hết hạn",
         status_today: "Đến hạn hôm nay",
-        
+
         // Pagination
         prev: "Trước",
         next: "Sau",
@@ -272,7 +291,7 @@ const translations = {
         sort_oldest: "Oldest",
         sort_deadline_near: "Deadline (Soonest)",
         sort_deadline_far: "Deadline (Latest)",
-        
+
         // Table Headers
         stt: "No.",
         doc_no: "Doc Number",
@@ -294,7 +313,7 @@ const translations = {
         role: "Role",
         file: "File",
         assigned_to: "Officer",
-        
+
         // Upload Tab
         drag_drop_pdf: "Drag & drop PDF files here",
         ocr_notice: "The system will automatically extract (OCR) document info",
@@ -306,7 +325,7 @@ const translations = {
         review: "Review",
         save_all: "Assign All",
         clear_list: "Clear List",
-        
+
         // Users Tab
         user_management: "System User Management",
         create_user: "Create New User",
@@ -321,11 +340,30 @@ const translations = {
         status_processing: "Processing",
         status_reviewed: "Reviewed",
         status_completed: "Completed",
+        status_overdue: "Overdue",
+
+        // My Tasks
+        mt_title: "Tasks assigned to me",
+        mt_stat_new: "New Tasks",
+        mt_stat_doing: "In Progress",
+        mt_stat_overdue: "Overdue",
+        mt_col_number: "No.",
+        mt_col_summary: "Summary",
+        mt_col_deadline: "Deadline",
+        mt_col_status: "Status",
+        mt_col_actions: "Actions",
+        mt_btn_view: "View PDF",
+        mt_btn_submit: "Submit Evidence",
+        mt_empty: "No tasks assigned to you yet.",
+        mt_submit_title: "Submit Completion Evidence",
+        mt_submit_notes: "Result Notes",
+        mt_submit_files: "Choose evidence files (Img/PDF/Doc)",
+        mt_submit_btn: "Confirm Completion",
         status_error_ocr: "OCR Error",
         status_overdue: "Overdue",
         status_urgent: "Urgent",
         status_today: "Due Today",
-        
+
         // Pagination
         prev: "Prev",
         next: "Next",
@@ -386,12 +424,12 @@ export function createI18nService() {
     function t(key, params = {}) {
         const langData = translations[currentLang] || translations.vi;
         let text = langData[key] || key;
-        
+
         // Replace params like {current}
         Object.keys(params).forEach(p => {
             text = text.replace(`{${p}}`, params[p]);
         });
-        
+
         return text;
     }
 
@@ -399,7 +437,7 @@ export function createI18nService() {
         if (translations[lang]) {
             currentLang = lang;
             localStorage.setItem('app_language', lang);
-            window.location.reload(); 
+            window.location.reload();
         }
     }
 

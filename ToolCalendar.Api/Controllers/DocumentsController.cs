@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using ToolCalendar.Core.Data.Interfaces;
@@ -242,6 +242,17 @@ namespace ToolCalendar.Api.Controllers
             // 2. Cập nhật vào DB (Lưu danh sách path dưới dạng JSON)
             var evidenceJson = System.Text.Json.JsonSerializer.Serialize(savedPaths);
             await _documentRepository.SubmitEvidenceAsync(id, evidenceJson, notes);
+
+            // 3. Gửi thông báo cho người giao việc
+            try {
+                var currentUserName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Cán bộ";
+                await _notificationManager.SendToUserAsync(
+                    doc.UploadedByUserId, 
+                    "Công việc đã hoàn thành", 
+                    $"{currentUserName} đã nộp bằng chứng và hoàn thành văn bản: {doc.SoVanBan}",
+                    new { docId = id, type = "completed" }
+                );
+            } catch { }
 
             return Ok(new { message = "Nộp bằng chứng hoàn thành thành công.", paths = savedPaths });
         }
