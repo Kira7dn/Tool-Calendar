@@ -637,30 +637,32 @@ export function createUploadFeature(context) {
 
         let success = 0;
         let failed = 0;
-        for (const doc of allTargets) {
-            const result = await saveBatchItem(doc.id, { silent: true });
-            if (result) {
-                success += 1;
-                const updatedIndex = findItemIndex(doc.id);
-                if (updatedIndex !== -1) {
-                    updateRowUI(sessionUploads[updatedIndex]);
+        try {
+            for (const doc of allTargets) {
+                const result = await saveBatchItem(doc.id, { silent: true });
+                if (result) {
+                    success += 1;
+                    const updatedIndex = findItemIndex(doc.id);
+                    if (updatedIndex !== -1) {
+                        try { updateRowUI(sessionUploads[updatedIndex]); } catch(e) { console.error(e); }
+                    }
+                } else {
+                    failed += 1;
                 }
-            } else {
-                failed += 1;
             }
+        } finally {
+            // Khôi phục trạng thái nút bấm (luôn thực hiện)
+            buttons.forEach((btn, idx) => {
+                btn.innerHTML = originalTexts[idx];
+                btn.disabled = false;
+                btn.style.pointerEvents = 'auto';
+            });
+            clearBtns.forEach(btn => btn.disabled = false);
+
+            renderBatchTable();
+            await context.services.refreshCoreData();
+            context.ui.showAlert(`Đã xử lý xong đợt lưu. Thành công: ${success}, Thất bại: ${failed}`, failed ? '⚠️' : '✅');
         }
-
-        // Khôi phục trạng thái nút bấm
-        buttons.forEach((btn, idx) => {
-            btn.innerHTML = originalTexts[idx];
-            btn.disabled = false;
-            btn.style.pointerEvents = 'auto';
-        });
-        clearBtns.forEach(btn => btn.disabled = false);
-
-        renderBatchTable();
-        await context.services.refreshCoreData();
-        context.ui.showAlert(`Đã phân công ${success} file. Thất bại ${failed} file.`, failed ? '⚠️' : '✅');
     }
 
     async function saveBatchItem(docId, { silent = false } = {}) {
@@ -912,7 +914,7 @@ export function createUploadFeature(context) {
         }
         */
 
-        if (merged.batchState !== 'Đã phân công' && merged.batchState !== 'Đang OCR' && merged.batchState !== 'Lỗi OCR') {
+        if (merged.batchState !== 'Đã phân công' && merged.batchState !== 'Đã rà soát' && merged.batchState !== 'Đang OCR' && merged.batchState !== 'Lỗi OCR') {
             merged.batchState = (merged.departmentIds?.length || merged.assignedToIds?.length) ? 'Sẵn sàng lưu' : 'Cần rà soát';
         }
 
@@ -921,6 +923,7 @@ export function createUploadFeature(context) {
 
     function statusClass(batchState) {
         if (batchState === 'Đã phân công') return 'bg-success';
+        if (batchState === 'Đã rà soát') return 'bg-success';
         if (batchState === 'Lỗi OCR') return 'bg-danger';
         if (batchState === 'Sẵn sàng lưu') return 'bg-success';
         return 'bg-warning';
