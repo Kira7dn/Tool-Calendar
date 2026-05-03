@@ -111,7 +111,7 @@ export function createUploadFeature(context) {
 
     function syncConfirmAllButtons() {
         const hasEnoughItems = sessionUploads.length >= 2;
-        const hasSavableItems = sessionUploads.some((doc) => doc.batchState !== 'Đã lưu' && doc.batchState !== 'Lỗi OCR');
+        const hasSavableItems = sessionUploads.some((doc) => doc.batchState !== 'Đã phân công' && doc.batchState !== 'Lỗi OCR');
 
         document.querySelectorAll('[data-action="confirm-all-batch"]').forEach((button) => {
             button.style.display = hasEnoughItems ? 'inline-flex' : 'none';
@@ -414,6 +414,9 @@ export function createUploadFeature(context) {
                 <td>${isProcessing ? '<div class="skeleton-text"></div>' : `<div class="dept-select-container" id="dept-container-${doc.id}"></div>`}</td>
                 <td>${isProcessing ? '<div class="skeleton-text"></div>' : `<div class="user-select-container" id="user-container-${doc.id}"></div>`}</td>
                 <td>
+                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<span class="status-badge ${statusClass(doc.batchState)}">${doc.batchState}</span>`}
+                </td>
+                <td>
                     <div class="batch-actions">
                         ${!isProcessing && doc.ocrWarnings && doc.ocrWarnings.length > 0 ? `
                         <button class="batch-action-btn batch-action-btn-warning" title="${escapeHtml(doc.ocrWarnings.join('\n'))}">
@@ -423,7 +426,7 @@ export function createUploadFeature(context) {
                         <button class="batch-action-btn batch-action-btn-preview" data-action="preview-batch-item" data-doc-id="${doc.id}" title="Xem trước" ${isProcessing ? 'disabled' : ''}>
                             ${renderBatchActionIcon('preview')}
                         </button>
-                        <button class="batch-action-btn batch-action-btn-save" data-action="save-batch-item" data-doc-id="${doc.id}" ${canSave(doc) ? '' : 'disabled'} title="Lưu file">
+                        <button class="batch-action-btn batch-action-btn-save" data-action="save-batch-item" data-doc-id="${doc.id}" ${canSave(doc) ? '' : 'disabled'} title="Phân công">
                             ${renderBatchActionIcon('save')}
                         </button>
                         <button class="batch-action-btn batch-action-btn-delete" data-action="delete-batch-item" data-doc-id="${doc.id}" title="Xóa file">
@@ -462,7 +465,7 @@ export function createUploadFeature(context) {
             processing: sessionUploads.filter((item) => item.batchState === 'Đang OCR').length,
             review: sessionUploads.filter((item) => item.batchState === 'Cần rà soát').length,
             ready: sessionUploads.filter((item) => item.batchState === 'Sẵn sàng lưu').length,
-            saved: sessionUploads.filter((item) => item.batchState === 'Đã lưu').length,
+            saved: sessionUploads.filter((item) => item.batchState === 'Đã phân công').length,
             failed: sessionUploads.filter((item) => item.batchState === 'Lỗi OCR').length
         };
 
@@ -470,7 +473,7 @@ export function createUploadFeature(context) {
             buildBatchSummaryChip('Đang OCR', counts.processing, 'processing'),
             buildBatchSummaryChip('Cần rà soát', counts.review, 'review'),
             buildBatchSummaryChip('Sẵn sàng lưu', counts.ready, 'ready'),
-            buildBatchSummaryChip('Đã lưu', counts.saved, 'saved'),
+            buildBatchSummaryChip('Đã phân công', counts.saved, 'saved'),
             buildBatchSummaryChip('Lỗi OCR', counts.failed, 'failed')
         ].join('');
     }
@@ -484,7 +487,7 @@ export function createUploadFeature(context) {
         patch[key] = value;
         item = applyPatch(item, patch);
 
-        if (item.batchState !== 'Lỗi OCR' && item.batchState !== 'Đã lưu') {
+        if (item.batchState !== 'Lỗi OCR' && item.batchState !== 'Đã phân công') {
             const hasAssign = (item.departmentIds && item.departmentIds.length > 0) || (item.assignedToIds && item.assignedToIds.length > 0);
             item = applyPatch(item, { batchState: hasAssign ? 'Sẵn sàng lưu' : 'Cần rà soát' });
         }
@@ -497,10 +500,10 @@ export function createUploadFeature(context) {
         const row = document.querySelector(`tr[data-row-id="${item.id}"]`);
         if (!row) return;
 
-        const statusSpan = row.querySelector('.status');
-        if (statusSpan) {
-            statusSpan.className = `status ${statusClass(item.batchState)}`;
-            statusSpan.innerText = item.batchState;
+        const statusBadge = row.querySelector('.status-badge');
+        if (statusBadge) {
+            statusBadge.className = `status-badge ${statusClass(item.batchState)}`;
+            statusBadge.innerText = item.batchState;
         }
 
         const saveBtn = row.querySelector('.batch-action-btn-save');
@@ -605,13 +608,13 @@ export function createUploadFeature(context) {
     }
 
     async function confirmAllBatch() {
-        const saveTargets = sessionUploads.filter((doc) => doc.batchState !== 'Đã lưu' && doc.batchState !== 'Lỗi OCR');
+        const saveTargets = sessionUploads.filter((doc) => doc.batchState === 'Sẵn sàng lưu');
         if (!saveTargets.length) {
-            context.ui.showAlert('Không có file hợp lệ để lưu.', '⚠️');
+            context.ui.showAlert('Không có file hợp lệ (chưa chọn phòng ban/cán bộ) để phân công.', '⚠️');
             return;
         }
 
-        const confirmed = await context.ui.showConfirm(`Xác nhận lưu ${saveTargets.length} văn bản hợp lệ trong đợt này?`);
+        const confirmed = await context.ui.showConfirm(`Xác nhận phân công ${saveTargets.length} văn bản hợp lệ trong đợt này?`);
         if (!confirmed) return;
 
         // Bật trạng thái loading cho nút bấm
@@ -619,7 +622,7 @@ export function createUploadFeature(context) {
         const originalTexts = [];
         buttons.forEach((btn, idx) => {
             originalTexts[idx] = btn.innerHTML;
-            btn.innerHTML = '<span style="display:inline-block; animation: spin 1s linear infinite; margin-right: 5px;">⏳</span> Đang lưu...';
+            btn.innerHTML = '<span style="display:inline-block; animation: spin 1s linear infinite; margin-right: 5px;">⏳</span> Đang phân công...';
             btn.disabled = true;
             btn.style.pointerEvents = 'none';
         });
@@ -655,7 +658,7 @@ export function createUploadFeature(context) {
 
         renderBatchTable();
         await context.services.refreshCoreData();
-        context.ui.showAlert(`Đã lưu ${success} file. Thất bại ${failed} file.`, failed ? '⚠️' : '✅');
+        context.ui.showAlert(`Đã phân công ${success} file. Thất bại ${failed} file.`, failed ? '⚠️' : '✅');
     }
 
     async function saveBatchItem(docId, { silent = false } = {}) {
@@ -665,7 +668,7 @@ export function createUploadFeature(context) {
 
         if (!canSave(item)) {
             if (!silent) {
-                context.ui.showAlert('Cần chọn phòng ban hoặc cán bộ trước khi lưu.', '⚠️');
+                context.ui.showAlert('Cần chọn phòng ban hoặc cán bộ trước khi phân công.', '⚠️');
             }
             return false;
         }
@@ -699,14 +702,14 @@ export function createUploadFeature(context) {
                 }
             }
 
-            sessionUploads[index] = applyPatch(item, { batchState: 'Đã lưu' });
+            sessionUploads[index] = applyPatch(item, { batchState: 'Đã phân công' });
             if (!silent) {
-                context.ui.showAlert('Đã lưu và điều phối văn bản thành công.', '✅');
+                context.ui.showAlert('Đã phân công văn bản thành công.', '✅');
             }
             return true;
         } catch (error) {
             if (!silent) {
-                context.ui.showAlert(`Lỗi khi lưu: ${error.message}`, '❌');
+                context.ui.showAlert(`Lỗi khi phân công: ${error.message}`, '❌');
             }
             return false;
         }
@@ -855,7 +858,7 @@ export function createUploadFeature(context) {
     }
 
     function getFirstReviewableDocId() {
-        return sessionUploads.find((item) => item.batchState !== 'Lỗi OCR' && item.batchState !== 'Đã lưu')?.id
+        return sessionUploads.find((item) => item.batchState !== 'Lỗi OCR' && item.batchState !== 'Đã phân công')?.id
             ?? sessionUploads.find((item) => item.batchState !== 'Lỗi OCR')?.id
             ?? null;
     }
@@ -878,7 +881,7 @@ export function createUploadFeature(context) {
     }
 
     function canSave(item) {
-        return item.batchState !== 'Đang OCR' && item.batchState !== 'Lỗi OCR';
+        return item.batchState === 'Sẵn sàng lưu';
     }
 
     function applyPatch(item, patch) {
@@ -899,7 +902,7 @@ export function createUploadFeature(context) {
         }
         */
 
-        if (merged.batchState !== 'Đã lưu' && merged.batchState !== 'Đang OCR' && merged.batchState !== 'Lỗi OCR') {
+        if (merged.batchState !== 'Đã phân công' && merged.batchState !== 'Đang OCR' && merged.batchState !== 'Lỗi OCR') {
             merged.batchState = (merged.departmentIds?.length || merged.assignedToIds?.length) ? 'Sẵn sàng lưu' : 'Cần rà soát';
         }
 
@@ -907,7 +910,7 @@ export function createUploadFeature(context) {
     }
 
     function statusClass(batchState) {
-        if (batchState === 'Đã lưu') return 'bg-success';
+        if (batchState === 'Đã phân công') return 'bg-success';
         if (batchState === 'Lỗi OCR') return 'bg-danger';
         if (batchState === 'Sẵn sàng lưu') return 'bg-success';
         return 'bg-warning';
