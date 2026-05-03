@@ -256,8 +256,9 @@ export async function showTab(tabId) {
 
     currentTab = tabId;
     await activateTab(tabId);
+    translatePage(); // Thêm dòng này để dịch lại toàn bộ khi chuyển tab
     closeSidebar();
-    
+
     // Cập nhật tiêu đề trình duyệt (Browser Tab Title)
     const appName = i18nService.t('app_name');
     const tabName = i18nService.t(tabId);
