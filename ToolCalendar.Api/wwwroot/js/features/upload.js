@@ -608,11 +608,8 @@ export function createUploadFeature(context) {
     }
 
     async function confirmAllBatch() {
-        // Lấy tất cả văn bản có thể lưu được (không bị lỗi OCR và không đang xử lý)
-        const saveTargets = sessionUploads.filter((doc) => canSave(doc) && doc.batchState !== 'Đã phân công');
-        
-        // Nếu không có cái nào mới, nhưng có những cái đã phân công rồi thì vẫn cho phép lưu lại để cập nhật
-        const allTargets = saveTargets.length > 0 ? saveTargets : sessionUploads.filter(doc => canSave(doc));
+        // Đơn giản hóa: Lưu tất cả văn bản không bị lỗi OCR và không đang xử lý
+        const allTargets = sessionUploads.filter((doc) => doc.batchState !== 'Lỗi OCR' && doc.batchState !== 'Đang OCR');
 
         if (!allTargets.length) {
             context.ui.showAlert('Không có văn bản hợp lệ để lưu.', '⚠️');
