@@ -1,4 +1,4 @@
-﻿/* ====================================================
+/* ====================================================
    LAYOUT
    ==================================================== */
 .app-container {
@@ -266,6 +266,13 @@
     border-radius: 12px;
     font-weight: 700;
     border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.batch-toolbar-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
 }
 
 .batch-toolbar-btn-review {

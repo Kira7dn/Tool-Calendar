@@ -28,6 +28,11 @@ export function createMyTasksFeature(context) {
                 await submitEvidence();
             }
         });
+
+        // 3. Lắng nghe cập nhật realtime
+        document.addEventListener('realtime:document_updated', () => {
+            refresh();
+        });
     }
 
     async function activate() {

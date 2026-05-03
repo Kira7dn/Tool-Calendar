@@ -66,6 +66,8 @@
                 <div class="doc-page-field-row" id="dpf-status" data-label="Trạng thái"></div>
                 <div class="doc-page-field-row" id="dpf-priority" data-label="Độ khẩn"></div>
                 <div class="doc-page-field-row" id="dpf-ngaythem" data-label="Ngày thêm"></div>
+                <div class="doc-page-field-row" id="dpf-department" data-label="Phòng ban"></div>
+                <div class="doc-page-field-row" id="dpf-assigned-to" data-label="Cán bộ xử lý"></div>
             </div>
 
             <!-- File attachment -->
@@ -144,13 +146,16 @@
                     </select>
                     <input type="text" id="mde-status-custom" class="modal-input doc-page-input" placeholder="Nhập trạng thái tùy chỉnh..." style="display:none; margin-top:6px;">
                 </div>
-                <div>
-                    <label class="doc-page-input-label">Độ khẩn</label>
-                    <select id="mde-priority" class="modal-input doc-page-input">
-                        <option>Thường</option>
-                        <option>Khẩn</option>
                         <option>Thượng khẩn</option>
                     </select>
+                </div>
+                <div>
+                    <label class="doc-page-input-label">Phòng ban</label>
+                    <select id="mde-department" class="modal-input doc-page-input"></select>
+                </div>
+                <div>
+                    <label class="doc-page-input-label">Cán bộ xử lý</label>
+                    <select id="mde-assigned-to" class="modal-input doc-page-input"></select>
                 </div>
             </div>
             <div style="display:flex; gap:10px;">

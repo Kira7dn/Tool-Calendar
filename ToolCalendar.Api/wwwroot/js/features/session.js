@@ -31,6 +31,10 @@ export function createSessionFeature() {
             document.dispatchEvent(new CustomEvent('realtime:comment_reaction', { detail: data }));
         });
 
+        connection.on("DocumentUpdated", (data) => {
+            document.dispatchEvent(new CustomEvent('realtime:document_updated', { detail: data }));
+        });
+
         connection.on("Kicked", (message) => {
             connection.stop();
             showKickedModal();

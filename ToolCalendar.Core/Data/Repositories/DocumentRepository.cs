@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Models;
@@ -20,7 +20,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 else
                 {
                     string appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ToolCalendar");
-                    _connectionString = $"Data Source={appData}\\documents.db;Pooling=False;Default Timeout=30";
+                    _connectionString = $"Data Source={Path.Combine(appData, "documents.db")};Pooling=False;Default Timeout=30";
                 }
             }
         }
@@ -246,21 +246,21 @@ namespace ToolCalendar.Core.Data.Repositories
 
             if (hasStatus)
             {
-                var s = status.Replace("Ã¢ÂÂ³ ", "").Replace("Ã¢Å¡â„¢Ã¯Â¸Â ", "").Replace("Ã°Å¸â€Â ", "").Replace("Ã¢Å“â€¦ ", "").Replace("Ã¢Å¡Â Ã¯Â¸Â ", "").Replace("Ã°Å¸â€ºâ€˜ ", "").ToLower();
+                var s = status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower();
                 if (s == "overdue")
                 {
-                    // CÃƒÂ´ng thÃ¡Â»Â©c chuÃ¡ÂºÂ©n tÃ¡Â»Â« Dashboard Overdue
-                    filters.Add("ThoiHan < date('now') AND Status != 'Ã„ÂÃƒÂ£ hoÃƒÂ n thÃƒÂ nh' AND ThoiHan IS NOT NULL");
+                    // Công thức chuẩn từ Dashboard Overdue
+                    filters.Add("ThoiHan < date('now') AND Status != 'Đã hoàn thành' AND ThoiHan IS NOT NULL");
                 }
                 else if (s == "urgent")
                 {
-                    // CÃƒÂ´ng thÃ¡Â»Â©c chuÃ¡ÂºÂ©n tÃ¡Â»Â« Dashboard SÃ¡ÂºÂ¯p hÃ¡ÂºÂ¿t hÃ¡ÂºÂ¡n (7 ngÃƒÂ y tÃ¡Â»â€ºi)
-                    filters.Add("ThoiHan >= date('now') AND ThoiHan <= date('now', '+7 days') AND Status != 'Ã„ÂÃƒÂ£ hoÃƒÂ n thÃƒÂ nh'");
+                    // Công thức chuẩn từ Dashboard Sắp hết hạn (7 ngày tới)
+                    filters.Add("ThoiHan >= date('now') AND ThoiHan <= date('now', '+7 days') AND Status != 'Đã hoàn thành'");
                 }
                 else if (s == "today")
                 {
-                    // CÃƒÂ´ng thÃ¡Â»Â©c chuÃ¡ÂºÂ©n tÃ¡Â»Â« Dashboard Ã„ÂÃ¡ÂºÂ¿n hÃ¡ÂºÂ¡n hÃƒÂ´m nay
-                    filters.Add("date(ThoiHan) = date('now') AND Status != 'Ã„ÂÃƒÂ£ hoÃƒÂ n thÃƒÂ nh'");
+                    // Công thức chuẩn từ Dashboard Đến hạn hôm nay
+                    filters.Add("date(ThoiHan) = date('now') AND Status != 'Đã hoàn thành'");
                 }
                 else
                 {
@@ -288,7 +288,7 @@ namespace ToolCalendar.Core.Data.Repositories
             if (hasStatus && status.ToLower() != "overdue")
             {
                 countCmd.Parameters.AddWithValue("@status", status.ToLower());
-                countCmd.Parameters.AddWithValue("@statusClean", status.Replace("Ã¢ÂÂ³ ", "").Replace("Ã¢Å¡â„¢Ã¯Â¸Â ", "").Replace("Ã°Å¸â€Â ", "").Replace("Ã¢Å“â€¦ ", "").Replace("Ã¢Å¡Â Ã¯Â¸Â ", "").Replace("Ã°Å¸â€ºâ€˜ ", "").ToLower());
+                countCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
             }
 
             int totalCount = Convert.ToInt32(countCmd.ExecuteScalar());
@@ -306,7 +306,7 @@ namespace ToolCalendar.Core.Data.Repositories
             if (hasStatus && status.ToLower() != "overdue")
             {
                 dataCmd.Parameters.AddWithValue("@status", status.ToLower());
-                dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("Ã¢ÂÂ³ ", "").Replace("Ã¢Å¡â„¢Ã¯Â¸Â ", "").Replace("Ã°Å¸â€Â ", "").Replace("Ã¢Å“â€¦ ", "").Replace("Ã¢Å¡Â Ã¯Â¸Â ", "").Replace("Ã°Å¸â€ºâ€˜ ", "").ToLower());
+                dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
             }
 
             dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -407,7 +407,7 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             catch { }
 
-            string sql = "UPDATE Documents SET AssignedDepartmentIds=@deptIds, AssignedUserIds=@uIds, DepartmentId=@dId, AssignedTo=@uId, Status='ChÃ†Â°a xÃ¡Â»Â­ lÃƒÂ½' WHERE Id=@docId";
+            string sql = "UPDATE Documents SET AssignedDepartmentIds=@deptIds, AssignedUserIds=@uIds, DepartmentId=@dId, AssignedTo=@uId, Status='Chưa xử lý' WHERE Id=@docId";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@deptIds", (object?)departmentIds ?? "[]");
             cmd.Parameters.AddWithValue("@uIds", (object?)userIds ?? "[]");
@@ -425,7 +425,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 UPDATE Documents SET 
                     EvidencePaths=@paths, 
                     EvidenceNotes=@notes, 
-                    Status='Ã„ÂÃƒÂ£ hoÃƒÂ n thÃƒÂ nh', 
+                    Status='Đã hoàn thành', 
                     CompletionDate=datetime('now', 'localtime') 
                 WHERE Id=@docId";
             using var cmd = new SqliteCommand(sql, connection);
@@ -446,24 +446,24 @@ namespace ToolCalendar.Core.Data.Repositories
                 using var cmd = connection.CreateCommand();
                 cmd.Transaction = transaction;
 
-                // 1. XÃƒÂ³a cÃ¡ÂºÂ£m xÃƒÂºc cÃ¡Â»Â§a cÃƒÂ¡c bÃƒÂ¬nh luÃ¡ÂºÂ­n thuÃ¡Â»â„¢c vÃ„Æ’n bÃ¡ÂºÂ£n nÃƒÂ y
+                // 1. Xóa cảm xúc của các bình luận thuộc văn bản này
                 cmd.CommandText = "DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId=@Id)";
                 cmd.Parameters.AddWithValue("@Id", id);
                 await cmd.ExecuteNonQueryAsync();
 
-                // 2. XÃƒÂ³a cÃƒÂ¡c bÃƒÂ¬nh luÃ¡ÂºÂ­n cÃ¡Â»Â§a vÃ„Æ’n bÃ¡ÂºÂ£n nÃƒÂ y
+                // 2. Xóa các bình luận của văn bản này
                 cmd.CommandText = "DELETE FROM Comments WHERE DocumentId=@Id";
                 await cmd.ExecuteNonQueryAsync();
 
-                // 3. XÃƒÂ³a chÃƒÂ­nh vÃ„Æ’n bÃ¡ÂºÂ£n Ã„â€˜ÃƒÂ³
+                // 3. Xóa chính văn bản đó
                 cmd.CommandText = "DELETE FROM Documents WHERE Id=@Id";
                 await cmd.ExecuteNonQueryAsync();
 
-                transaction.Commit(); // MÃ¡Â»Âi thÃ¡Â»Â© Ã¡Â»â€¢n, chÃ¡Â»â€˜t dÃ¡Â»Â¯ liÃ¡Â»â€¡u
+                transaction.Commit(); // Mọi thứ ổn, chốt dữ liệu
             }
             catch (Exception)
             {
-                transaction.Rollback(); // CÃƒÂ³ lÃ¡Â»â€”i, khÃƒÂ´i phÃ¡Â»Â¥c lÃ¡ÂºÂ¡i nhÃ†Â° cÃ…Â©
+                transaction.Rollback(); // Có lỗi, khôi phục lại như cũ
                 throw;
             }
         }
@@ -515,8 +515,8 @@ namespace ToolCalendar.Core.Data.Repositories
                 ThoiHan = TryParseDate(r["ThoiHan"]?.ToString()),
                 DonViChiDao = r["DonViChiDao"]?.ToString() ?? "",
                 FilePath = r["FilePath"]?.ToString() ?? "",
-                Status = r["Status"]?.ToString() ?? "ChÆ°a xá»­ lÃ½",
-                Priority = r["Priority"]?.ToString() ?? "ThÆ°á»ng",
+                Status = CleanMangledString(r["Status"]?.ToString() ?? "Chưa xử lý"),
+                Priority = CleanMangledString(r["Priority"]?.ToString() ?? "Thường"),
                 DepartmentId = r["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(r["DepartmentId"]),
                 AssignedTo = r["AssignedTo"] == DBNull.Value ? null : Convert.ToInt32(r["AssignedTo"]),
                 AssignedUserIds = r["AssignedUserIds"]?.ToString() ?? "[]",
@@ -543,8 +543,8 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@ThoiHan", r.ThoiHan.HasValue ? (object)r.ThoiHan.Value.ToString("yyyy-MM-dd") : DBNull.Value);
             cmd.Parameters.AddWithValue("@DonViChiDao", (object?)r.DonViChiDao ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@FilePath", (object?)r.FilePath ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@Status", (object?)r.Status ?? "ChÆ°a xá»­ lÃ½");
-            cmd.Parameters.AddWithValue("@Priority", (object?)r.Priority ?? "ThÆ°á»ng");
+            cmd.Parameters.AddWithValue("@Status", (object?)r.Status ?? "Chưa xử lý");
+            cmd.Parameters.AddWithValue("@Priority", (object?)r.Priority ?? "Thường");
             cmd.Parameters.AddWithValue("@DepartmentId", (object?)r.DepartmentId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@AssignedTo", (object?)r.AssignedTo ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@AssignedUserIds", (object?)r.AssignedUserIds ?? "[]");
@@ -562,6 +562,20 @@ namespace ToolCalendar.Core.Data.Repositories
             if (string.IsNullOrEmpty(value)) return null;
             if (DateTime.TryParse(value, out DateTime dt)) return dt;
             return null;
+        }
+
+        private string CleanMangledString(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            
+            // Map common mangled patterns back to correct Vietnamese
+            if (value.Contains("hoÃ") || value.Contains("ho\u00c3")) return "Đã hoàn thành";
+            if (value.Contains("ChÆ") || value.Contains("Ch\u00c6")) return "Chưa xử lý";
+            if (value.Contains("ThÆ") || value.Contains("Th\u00c6")) return "Thường";
+            if (value.Contains("Kháº") || value.Contains("Kh\u1ea7")) return "Khẩn";
+            if (value.Contains("Há»") || value.Contains("H\u1ecf")) return "Hỏa tốc";
+            
+            return value;
         }
 
     }

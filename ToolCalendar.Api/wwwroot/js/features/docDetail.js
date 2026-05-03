@@ -8,6 +8,9 @@ export function createDocDetailFeature(context) {
     let isStatusOptionsLoaded = false;
     let statusOptions = ['Chưa xử lý', 'Đang xử lý', 'Hoàn thành', 'Quá hạn'];
     let selectedFiles = [];
+    let departments = [];
+    let users = [];
+    let isAssignmentOptionsLoaded = false;
 
     function init() {
         // === DESKTOP MODAL ===
@@ -119,6 +122,7 @@ export function createDocDetailFeature(context) {
                 loadComments()
             ];
             if (!isStatusOptionsLoaded) tasks.push(loadStatusOptions());
+            tasks.push(loadAssignmentOptions());
             const results = await Promise.all(tasks);
             const docResponse = results[0];
             if (!docResponse.ok) throw new Error('Failed to fetch doc');
@@ -158,6 +162,7 @@ export function createDocDetailFeature(context) {
                 loadComments()
             ];
             if (!isStatusOptionsLoaded) tasks.push(loadStatusOptions());
+            tasks.push(loadAssignmentOptions());
             const results = await Promise.all(tasks);
             const docResponse = results[0];
             if (!docResponse.ok) throw new Error('Failed');
@@ -312,6 +317,11 @@ export function createDocDetailFeature(context) {
         setField('dpf-priority', doc.priority);
         setField('dpf-ngaythem', formatDate(doc.ngayThem));
 
+        const deptName = departments.find(d => d.id === doc.departmentId)?.name || '-';
+        const userName = users.find(u => u.id === doc.assignedTo)?.fullName || '-';
+        setField('dpf-department', deptName);
+        setField('dpf-assigned-to', userName);
+
         // Sync inputs for mobile edit tab
         const mFields = {
             'mde-so': doc.soVanBan || '',
@@ -320,7 +330,9 @@ export function createDocDetailFeature(context) {
             'mde-coquanbanhanh': doc.coQuanBanHanh || '',
             'mde-coquanchuquan': doc.coQuanChuQuan || '',
             'mde-thoihan': formatDateForTextInput(doc.thoiHan),
-            'mde-priority': doc.priority || 'Thường'
+            'mde-priority': doc.priority || 'Thường',
+            'mde-department': doc.departmentId || '',
+            'mde-assigned-to': doc.assignedTo || ''
         };
         Object.keys(mFields).forEach(id => {
             const el = document.getElementById(id);
@@ -371,6 +383,10 @@ export function createDocDetailFeature(context) {
             const el = document.getElementById(id);
             if (el) el.innerHTML = '<span class="skeleton-text"></span>';
         });
+        ['dv-department', 'dv-assigned-to'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = '';
+        });
         document.getElementById('comment-list').innerHTML = '<div class="loader-inner"></div>';
         document.getElementById('dv-view-pdf').innerHTML = '';
         document.getElementById('dv-evidence').innerHTML = '';
@@ -383,7 +399,7 @@ export function createDocDetailFeature(context) {
     }
 
     function renderDetail(doc) {
-        document.getElementById('doc-modal-title').innerText = doc.soVanBan || 'Chi tiet van ban';
+        document.getElementById('doc-modal-title').innerText = doc.soVanBan || 'Chi tiết văn bản';
         document.getElementById('doc-modal-subtitle').innerText = doc.trichYeu
             ? doc.trichYeu.substring(0, 80) + (doc.trichYeu.length > 80 ? '...' : '')
             : '';
@@ -397,15 +413,20 @@ export function createDocDetailFeature(context) {
         document.getElementById('dv-status').innerText = doc.status || '-';
         document.getElementById('dv-priority').innerText = doc.priority || '-';
         document.getElementById('dv-ngaythem').innerText = formatDate(doc.ngayThem);
+
+        const deptName = departments.find(d => d.id === doc.departmentId)?.name || '-';
+        const userName = users.find(u => u.id === doc.assignedTo)?.fullName || '-';
+        document.getElementById('dv-department').innerText = deptName;
+        document.getElementById('dv-assigned-to').innerText = userName;
         if (doc.filePath) {
             const isPdf = doc.filePath.toLowerCase().endsWith('.pdf');
             if (isPdf) {
                 document.getElementById('dv-view-pdf').innerHTML = `<button class="btn btn-sm btn-primary" data-action="open-pdf" data-doc-id="${doc.id}" data-title="${escapeAttribute(doc.soVanBan || '')}">📄 ${context.i18n.t('view_pdf_content')}</button>`;
             } else {
-                document.getElementById('dv-view-pdf').innerHTML = `<a class="btn btn-sm" style="background:#10b981; color:white; display:inline-block; text-decoration:none; padding: 6px 12px; border-radius:6px; font-size:0.85rem;" href="/api/documents/${doc.id}/file" target="_blank">📝 Tai xuong van ban (Word)</a>`;
+                document.getElementById('dv-view-pdf').innerHTML = `<a class="btn btn-sm" style="background:#10b981; color:white; display:inline-block; text-decoration:none; padding: 6px 12px; border-radius:6px; font-size:0.85rem;" href="/api/documents/${doc.id}/file" target="_blank">📝 Tải xuống văn bản (Word)</a>`;
             }
         } else {
-            document.getElementById('dv-view-pdf').innerHTML = '<i style="color:#94a3b8; font-size:0.85rem;">Khong co tep dinh kem</i>';
+            document.getElementById('dv-view-pdf').innerHTML = '<i style="color:#94a3b8; font-size:0.85rem;">Không có tệp đính kèm</i>';
         }
 
         renderEvidence(doc);
@@ -417,6 +438,8 @@ export function createDocDetailFeature(context) {
         document.getElementById('de-coquanchuquan').value = doc.coQuanChuQuan || '';
         document.getElementById('de-thoihan').value = formatDateForTextInput(doc.thoiHan);
         document.getElementById('de-priority').value = doc.priority || 'Thường';
+        document.getElementById('de-department').value = doc.departmentId || '';
+        document.getElementById('de-assigned-to').value = doc.assignedTo || '';
 
         // Đặt giá trị trạng thái: nếu không nằm trong danh sách → dùng custom input
         setStatusValue(doc.status || 'Chưa xử lý');
@@ -428,9 +451,9 @@ export function createDocDetailFeature(context) {
             try {
                 const paths = JSON.parse(doc.evidencePaths);
                 html += '<div style="margin-top:10px; padding:12px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">';
-                html += `<p style="font-size:0.85rem; font-weight:700; color:#334155; margin-bottom:8px;">Bang chung xu ly (Nop luc ${doc.completionDate ? formatDate(doc.completionDate) : 'Chua ro'})</p>`;
+                html += `<p style="font-size:0.85rem; font-weight:700; color:#334155; margin-bottom:8px;">Bằng chứng xử lý (Nộp lúc ${doc.completionDate ? formatDate(doc.completionDate) : 'Chưa rõ'})</p>`;
                 if (doc.evidenceNotes) {
-                    html += `<p style="font-size:0.85rem; margin-bottom:12px; color:#475569;">Ghi chu: ${doc.evidenceNotes}</p>`;
+                    html += `<p style="font-size:0.85rem; margin-bottom:12px; color:#475569;">Ghi chú: ${doc.evidenceNotes}</p>`;
                 }
                 html += '<div style="display:flex; gap:10px; flex-wrap:wrap;">';
                 paths.forEach((path, index) => {
@@ -438,7 +461,7 @@ export function createDocDetailFeature(context) {
                     let icon = '🖼️ Anh';
                     if (ext === 'pdf') icon = '📄 PDF';
                     if (ext === 'doc' || ext === 'docx') icon = '📝 Word';
-                    html += `<a href="/api/documents/${doc.id}/evidence/${index}" target="_blank" style="padding:6px 14px; background:#3b82f6; color:white; border-radius:6px; font-size:0.8rem; text-decoration:none; display:flex; align-items:center; gap:6px;">${icon} Bang chung ${index + 1}</a>`;
+                    html += `<a href="/api/documents/${doc.id}/evidence/${index}" target="_blank" style="padding:6px 14px; background:#3b82f6; color:white; border-radius:6px; font-size:0.8rem; text-decoration:none; display:flex; align-items:center; gap:6px;">${icon} Bằng chứng ${index + 1}</a>`;
                 });
                 html += '</div></div>';
             } catch (error) {
@@ -507,6 +530,33 @@ export function createDocDetailFeature(context) {
         if (isCustom) customInput.focus();
     }
 
+    async function loadAssignmentOptions() {
+        if (isAssignmentOptionsLoaded) return;
+        try {
+            const [deptRes, userRes] = await Promise.all([
+                context.api.get('/api/admin/departments'),
+                context.api.get('/api/users')
+            ]);
+            if (deptRes.ok) departments = await deptRes.json();
+            if (userRes.ok) users = await userRes.json();
+
+            const renderOptions = (ids, items, labelField = 'name') => {
+                ids.forEach(id => {
+                    const sel = document.getElementById(id);
+                    if (!sel) return;
+                    sel.innerHTML = `<option value="">-- Chọn --</option>` + items.map(item =>
+                        `<option value="${item.id}">${item[labelField] || item.fullName}</option>`
+                    ).join('');
+                });
+            };
+
+            renderOptions(['de-department', 'mde-department'], departments, 'name');
+            renderOptions(['de-assigned-to', 'mde-assigned-to'], users, 'fullName');
+
+            isAssignmentOptionsLoaded = true;
+        } catch (e) { console.error('Load assignment options error:', e); }
+    }
+
     // ─────────────────────────────────────────────────────────────────────
 
     function switchTab(tab) {
@@ -570,7 +620,9 @@ export function createDocDetailFeature(context) {
             coQuanChuQuan: document.getElementById(`${p}coquanchuquan`).value,
             thoiHan: normalizedDeadline ? `${normalizedDeadline}T00:00:00` : null,
             status: getStatus(),
-            priority: document.getElementById(`${p}priority`).value
+            priority: document.getElementById(`${p}priority`).value,
+            departmentId: document.getElementById(`${p}department`).value ? parseInt(document.getElementById(`${p}department`).value, 10) : null,
+            assignedTo: document.getElementById(`${p}assigned-to`).value ? parseInt(document.getElementById(`${p}assigned-to`).value, 10) : null
         };
 
         try {

@@ -58,6 +58,11 @@ export function createDashboardFeature(context) {
                 }, 500); 
             });
         }
+
+        // 3. Lắng nghe cập nhật realtime
+        document.addEventListener('realtime:document_updated', () => {
+            refresh();
+        });
     }
 
     async function refresh() {

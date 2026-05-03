@@ -63,6 +63,14 @@
                         <label data-i18n="date_added">Ngày thêm</label>
                         <p id="dv-ngaythem"></p>
                     </div>
+                    <div class="doc-field">
+                        <label>Phòng ban</label>
+                        <p id="dv-department"></p>
+                    </div>
+                    <div class="doc-field">
+                        <label>Cán bộ xử lý</label>
+                        <p id="dv-assigned-to"></p>
+                    </div>
                     <div class="doc-field" style="grid-column:span 2;">
                         <label data-i18n="original_file">Tệp tin gốc</label>
                         <div id="dv-view-pdf"></div>
@@ -131,6 +139,14 @@
                             <option>Khẩn</option>
                             <option>Thượng khẩn</option>
                         </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Phòng ban</label>
+                        <select id="de-department" class="modal-input"></select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Cán bộ xử lý</label>
+                        <select id="de-assigned-to" class="modal-input"></select>
                     </div>
                 </div>
                 <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">

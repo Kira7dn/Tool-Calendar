@@ -111,7 +111,7 @@ export function createUploadFeature(context) {
 
     function syncConfirmAllButtons() {
         const hasEnoughItems = sessionUploads.length >= 1;
-        const hasSavableItems = sessionUploads.some((doc) => doc.batchState !== 'Đã phân công' && doc.batchState !== 'Lỗi OCR');
+        const hasSavableItems = sessionUploads.some((doc) => doc.batchState !== 'Lỗi OCR' && doc.batchState !== 'Đang OCR');
 
         document.querySelectorAll('[data-action="confirm-all-batch"]').forEach((button) => {
             button.style.display = hasEnoughItems ? 'inline-flex' : 'none';

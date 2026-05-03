@@ -91,6 +91,10 @@ namespace ToolCalendar.Api.Controllers
             {
                 // 2. Gọi OCR trực tiếp để Client nhận được kết quả ngay lập tức
                 record = await _extractor.ExtractFromFileAsync(filePath);
+                
+                // 3. Lưu đường dẫn tương đối vào DB
+                record.FilePath = $"Uploads/{fileName}";
+                record.Status = "Chưa xử lý";
             }
             catch (Exception ex)
             {
@@ -98,7 +102,8 @@ namespace ToolCalendar.Api.Controllers
                 record = new DocumentRecord
                 {
                     Status = "Lỗi OCR",
-                    FullText = $"[Lõi hệ thống OCR] Không thể trích xuất tự động. Vui lòng nhập tay. Chi tiết lỗi: {ex.Message}"
+                    FilePath = $"Uploads/{fileName}",
+                    FullText = $"[Lỗi hệ thống OCR] Không thể trích xuất tự động. Vui lòng nhập tay. Chi tiết lỗi: {ex.Message}"
                 };
             }
 
@@ -108,7 +113,7 @@ namespace ToolCalendar.Api.Controllers
                 record.SoVanBan = Path.GetFileNameWithoutExtension(file.FileName);
             }
 
-            record.FilePath = filePath;
+            // record.FilePath đã được set là đường dẫn tương đối ở trên
             // Đảm bảo mapping status chuẩn cho frontend
             record.Status = record.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
             record.NgayThem = DateTime.Now;
@@ -177,7 +182,24 @@ namespace ToolCalendar.Api.Controllers
         {
             if (record == null) return BadRequest();
             record.Id = id;
+
+            var existing = await _documentRepository.GetDocumentByIdAsync(id);
             await _documentRepository.UpdateAsync(record);
+
+            // Nếu có sự thay đổi về người được giao hoặc gán mới
+            if (record.AssignedTo.HasValue && record.AssignedTo != existing?.AssignedTo)
+            {
+                try {
+                    await _notificationManager.SendToUserAsync(
+                        record.AssignedTo.Value,
+                        "Công việc được giao mới",
+                        $"Văn bản {record.SoVanBan} đã được giao cho bạn xử lý.",
+                        new { docId = id, type = "assignment" }
+                    );
+                } catch { }
+            }
+
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = record.Status });
             return NoContent();
         }
 
@@ -224,6 +246,7 @@ namespace ToolCalendar.Api.Controllers
             if (doc == null) return NotFound();
 
             // 1. Tạo thư mục lưu bằng chứng cho văn bản này
+            // 1. Tạo thư mục lưu bằng chứng cho văn bản này
             var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
             Directory.CreateDirectory(evidenceDir);
 
@@ -236,14 +259,18 @@ namespace ToolCalendar.Api.Controllers
                 {
                     await file.CopyToAsync(stream);
                 }
-                savedPaths.Add(filePath);
+                // Lưu đường dẫn tương đối để đảm bảo hoạt động trên mọi môi trường (Docker/Linux/Windows)
+                savedPaths.Add($"Uploads/Evidence/Doc_{id}/{fileName}");
             }
 
             // 2. Cập nhật vào DB (Lưu danh sách path dưới dạng JSON)
             var evidenceJson = System.Text.Json.JsonSerializer.Serialize(savedPaths);
             await _documentRepository.SubmitEvidenceAsync(id, evidenceJson, notes);
 
-            // 3. Gửi thông báo cho người giao việc
+            // 3. Thông báo SignalR để các máy khác cập nhật giao diện (Dashboard, List)
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = "Đã hoàn thành" });
+
+            // 4. Gửi thông báo cho người giao việc
             try {
                 var currentUserName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Cán bộ";
                 await _notificationManager.SendToUserAsync(
@@ -264,18 +291,50 @@ namespace ToolCalendar.Api.Controllers
             var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
             var allDocs = await _documentRepository.GetAllAsync();
-            var tasks = allDocs.Where(d => d.AssignedTo == userId).OrderBy(d => d.ThoiHan).ToList();
+            var tasks = allDocs
+                .Where(d => {
+                    // Kiểm tra xem user có trong danh sách phân công không
+                    bool isAssigned = (d.AssignedTo == userId);
+                    if (!isAssigned && !string.IsNullOrEmpty(d.AssignedUserIds))
+                    {
+                        try {
+                            var uids = System.Text.Json.JsonSerializer.Deserialize<List<int>>(d.AssignedUserIds);
+                            if (uids != null && uids.Contains(userId)) isAssigned = true;
+                        } catch { }
+                    }
+                    
+                    // Chỉ lấy các việc chưa hoàn thành
+                    bool isNotDone = d.Status != "Đã hoàn thành";
+                    
+                    return isAssigned && isNotDone;
+                })
+                .OrderBy(d => d.ThoiHan)
+                .ToList();
             return Ok(tasks);
         }
 
-        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [AllowAnonymous]
         [HttpGet("{id}/file")]
         public async Task<IActionResult> GetFile(int id)
         {
             var doc = await _documentRepository.GetDocumentByIdAsync(id);
             if (doc == null || string.IsNullOrEmpty(doc.FilePath)) return NotFound("File không tồn tại.");
-            if (!System.IO.File.Exists(doc.FilePath)) return NotFound("File vật lý không tìm thấy.");
-            var fileBytes = System.IO.File.ReadAllBytes(doc.FilePath);
+            
+            var rawPath = doc.FilePath ?? "";
+            string relativePath = rawPath;
+
+            // Nếu là đường dẫn tuyệt đối Windows (C:\...), ta trích xuất phần từ 'Uploads' trở đi
+            if (rawPath.Contains("Uploads", StringComparison.OrdinalIgnoreCase))
+            {
+                int index = rawPath.IndexOf("Uploads", StringComparison.OrdinalIgnoreCase);
+                relativePath = rawPath.Substring(index);
+            }
+
+            // Chuyển đổi đường dẫn tương đối thành đường dẫn tuyệt đối trên Server
+            var filePath = Path.Combine(_env.ContentRootPath, relativePath.Replace('\\', '/'));
+            
+            if (!System.IO.File.Exists(filePath)) return NotFound($"File vật lý không tìm thấy tại: {relativePath}");
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
 
             var ext = Path.GetExtension(doc.FilePath).ToLower();
             var mimeType = ext switch
@@ -288,7 +347,7 @@ namespace ToolCalendar.Api.Controllers
             return File(fileBytes, mimeType);
         }
 
-        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [AllowAnonymous]
         [HttpGet("{id}/evidence/{index}")]
         public async Task<IActionResult> GetEvidenceFile(int id, int index)
         {
@@ -299,9 +358,31 @@ namespace ToolCalendar.Api.Controllers
                 var paths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(doc.EvidencePaths);
                 if (paths == null || index < 0 || index >= paths.Count) return NotFound("Index file không hợp lệ.");
 
-                var filePath = paths[index];
-                if (!System.IO.File.Exists(filePath)) return NotFound("File vật lý không tìm thấy.");
+                var rawPath = paths[index] ?? "";
+                string relativePath = rawPath;
 
+                // Xử lý cả đường dẫn tuyệt đối cũ (Windows) và đường dẫn tương đối mới
+                if (rawPath.Contains("Uploads", StringComparison.OrdinalIgnoreCase))
+                {
+                    int uIndex = rawPath.IndexOf("Uploads", StringComparison.OrdinalIgnoreCase);
+                    relativePath = rawPath.Substring(uIndex);
+                }
+
+                // Chuyển đổi đường dẫn tương đối thành đường dẫn tuyệt đối trên Server
+                var filePath = Path.Combine(_env.ContentRootPath, relativePath.Replace('\\', '/'));
+                
+                if (!System.IO.File.Exists(filePath)) 
+                {
+                    return NotFound(new { 
+                        message = "File vật lý không tìm thấy.", 
+                        searchedPath = filePath,
+                        relativePath = relativePath,
+                        contentRoot = _env.ContentRootPath
+                    });
+                }
+
+                var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                var fileName = Path.GetFileName(filePath);
                 var ext = Path.GetExtension(filePath).ToLower();
                 var mimeType = ext switch
                 {
@@ -312,9 +393,9 @@ namespace ToolCalendar.Api.Controllers
                     ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     _ => "application/octet-stream"
                 };
-                return PhysicalFile(filePath, mimeType);
+                return File(fileBytes, mimeType, fileName);
             }
-            catch { return BadRequest(); }
+            catch (Exception ex) { return BadRequest(new { message = ex.Message, stack = ex.StackTrace }); }
         }
 
         [Authorize(Roles = "Admin")]
