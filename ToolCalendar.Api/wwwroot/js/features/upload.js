@@ -668,10 +668,9 @@ export function createUploadFeature(context) {
         if (index === -1) return false;
         const item = sessionUploads[index];
 
-        if (!canSave(item)) {
-            if (!silent) {
-                context.ui.showAlert('Cần chọn phòng ban hoặc cán bộ trước khi phân công.', '⚠️');
-            }
+        // Bỏ qua kiểm tra phân công, cho phép lưu thông tin rà soát bất cứ lúc nào
+        if (item.batchState === 'Đang OCR' || item.batchState === 'Lỗi OCR') {
+            if (!silent) context.ui.showAlert('Không thể lưu văn bản đang xử lý hoặc bị lỗi OCR.', '⚠️');
             return false;
         }
 
@@ -704,9 +703,14 @@ export function createUploadFeature(context) {
                 }
             }
 
-            sessionUploads[index] = applyPatch(item, { batchState: 'Đã phân công' });
+            // Xác định trạng thái mới dựa trên việc có phân công hay chưa
+            const hasAssignment = (item.departmentIds && item.departmentIds.length > 0) || 
+                                 (item.assignedToIds && item.assignedToIds.length > 0);
+            const newState = hasAssignment ? 'Đã phân công' : 'Đã rà soát';
+
+            sessionUploads[index] = applyPatch(item, { batchState: newState });
             if (!silent) {
-                context.ui.showAlert('Đã phân công văn bản thành công.', '✅');
+                context.ui.showAlert(hasAssignment ? 'Đã phân công văn bản thành công.' : 'Đã lưu thông tin rà soát.', '✅');
             }
             return true;
         } catch (error) {
