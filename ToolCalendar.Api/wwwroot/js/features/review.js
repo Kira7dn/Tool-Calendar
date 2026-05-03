@@ -181,7 +181,20 @@ export function createReviewFeature(context) {
             ocrPagesJson: currentItem.ocrPagesJson || '[]'
         });
 
+        const saveBtn = document.querySelector('[data-action="save-current-review"]');
+        const originalHtml = saveBtn ? saveBtn.innerHTML : '';
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span style="display:inline-block; animation: spin 1s linear infinite; margin-right: 5px;">⏳</span>';
+        }
+
         const saved = await context.services.upload.saveBatchItem(currentItem.id);
+        
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalHtml;
+        }
+
         if (!saved) return;
 
         const docs = context.services.upload.getSessionUploads();

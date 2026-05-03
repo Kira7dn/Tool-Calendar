@@ -881,7 +881,12 @@ export function createUploadFeature(context) {
     }
 
     function canSave(item) {
-        return item.batchState === 'Sẵn sàng lưu';
+        if (item.batchState === 'Đang OCR' || item.batchState === 'Lỗi OCR') return false;
+        
+        const hasAssignment = (item.departmentIds && item.departmentIds.length > 0) || 
+                             (item.assignedToIds && item.assignedToIds.length > 0);
+        
+        return hasAssignment;
     }
 
     function applyPatch(item, patch) {
