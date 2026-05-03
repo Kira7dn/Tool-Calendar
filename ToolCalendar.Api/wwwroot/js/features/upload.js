@@ -614,13 +614,44 @@ export function createUploadFeature(context) {
         const confirmed = await context.ui.showConfirm(`Xác nhận lưu ${saveTargets.length} văn bản hợp lệ trong đợt này?`);
         if (!confirmed) return;
 
+        // Bật trạng thái loading cho nút bấm
+        const buttons = document.querySelectorAll('[data-action="confirm-all-batch"]');
+        const originalTexts = [];
+        buttons.forEach((btn, idx) => {
+            originalTexts[idx] = btn.innerHTML;
+            btn.innerHTML = '<span style="display:inline-block; animation: spin 1s linear infinite; margin-right: 5px;">⏳</span> Đang lưu...';
+            btn.disabled = true;
+            btn.style.pointerEvents = 'none';
+        });
+
+        // Vô hiệu hóa nút xóa danh sách và các thao tác khác
+        const clearBtns = document.querySelectorAll('[data-action="clear-batch"]');
+        clearBtns.forEach(btn => btn.disabled = true);
+        const actionBtns = document.querySelectorAll('.batch-action-btn');
+        actionBtns.forEach(btn => btn.disabled = true);
+
         let success = 0;
         let failed = 0;
         for (const doc of saveTargets) {
             const result = await saveBatchItem(doc.id, { silent: true });
-            if (result) success += 1;
-            else failed += 1;
+            if (result) {
+                success += 1;
+                const updatedIndex = findItemIndex(doc.id);
+                if (updatedIndex !== -1) {
+                    updateRowUI(sessionUploads[updatedIndex]);
+                }
+            } else {
+                failed += 1;
+            }
         }
+
+        // Khôi phục trạng thái nút bấm
+        buttons.forEach((btn, idx) => {
+            btn.innerHTML = originalTexts[idx];
+            btn.disabled = false;
+            btn.style.pointerEvents = 'auto';
+        });
+        clearBtns.forEach(btn => btn.disabled = false);
 
         renderBatchTable();
         await context.services.refreshCoreData();
