@@ -353,7 +353,7 @@ export function createDocDetailFeature(context) {
             if (doc.filePath) {
                 const isPdf = doc.filePath.toLowerCase().endsWith('.pdf');
                 if (isPdf) {
-                    fileEl.innerHTML = `<button class="btn btn-primary" style="border-radius:12px; width:100%;" data-action="open-pdf" data-doc-id="${doc.id}" data-title="${doc.soVanBan || ''}">📄 Xem nội dung bản PDF</button>`;
+                    fileEl.innerHTML = `<button class="btn btn-primary" style="border-radius:12px; width:100%;" data-action="open-pdf" data-doc-id="${doc.id}" data-title="${doc.soVanBan || ''}">📄 ${context.i18n.t('view_pdf_content')}</button>`;
                 } else {
                     fileEl.innerHTML = `<a class="btn" style="background:#10b981; color:white; border-radius:12px; width:100%; text-decoration:none; display:block; text-align:center;" href="/api/documents/${doc.id}/file" target="_blank">📝 Tải xuống văn bản (Word)</a>`;
                 }
@@ -397,11 +397,10 @@ export function createDocDetailFeature(context) {
         document.getElementById('dv-status').innerText = doc.status || '-';
         document.getElementById('dv-priority').innerText = doc.priority || '-';
         document.getElementById('dv-ngaythem').innerText = formatDate(doc.ngayThem);
-
         if (doc.filePath) {
             const isPdf = doc.filePath.toLowerCase().endsWith('.pdf');
             if (isPdf) {
-                document.getElementById('dv-view-pdf').innerHTML = `<button class="btn btn-sm btn-primary" data-action="open-pdf" data-doc-id="${doc.id}" data-title="${escapeAttribute(doc.soVanBan || '')}">📄 Xem noi dung ban PDF</button>`;
+                document.getElementById('dv-view-pdf').innerHTML = `<button class="btn btn-sm btn-primary" data-action="open-pdf" data-doc-id="${doc.id}" data-title="${escapeAttribute(doc.soVanBan || '')}">📄 ${context.i18n.t('view_pdf_content')}</button>`;
             } else {
                 document.getElementById('dv-view-pdf').innerHTML = `<a class="btn btn-sm" style="background:#10b981; color:white; display:inline-block; text-decoration:none; padding: 6px 12px; border-radius:6px; font-size:0.85rem;" href="/api/documents/${doc.id}/file" target="_blank">📝 Tai xuong van ban (Word)</a>`;
             }
@@ -609,7 +608,7 @@ export function createDocDetailFeature(context) {
         if (!comments.length) {
             list.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-secondary);">
                 <p style="font-size:2rem; margin-bottom:8px;">💭</p>
-                <p>Chua co binh luan nao. Hay la nguoi dau tien!</p>
+                <p>${context.i18n.t('no_comments_yet')}</p>
             </div>`;
             return;
         }
