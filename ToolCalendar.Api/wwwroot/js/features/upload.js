@@ -110,7 +110,7 @@ export function createUploadFeature(context) {
     }
 
     function syncConfirmAllButtons() {
-        const hasEnoughItems = sessionUploads.length >= 2;
+        const hasEnoughItems = sessionUploads.length >= 1;
         const hasSavableItems = sessionUploads.some((doc) => doc.batchState !== 'Đã phân công' && doc.batchState !== 'Lỗi OCR');
 
         document.querySelectorAll('[data-action="confirm-all-batch"]').forEach((button) => {
@@ -412,6 +412,12 @@ export function createUploadFeature(context) {
                     ${isProcessing ? '<div class="skeleton-text"></div>' : `<input class="batch-inline-input ${doc.ocrWarnings?.some(w => w.includes('Hạn')) ? 'warning-border' : ''}" type="date" data-field="thoiHan" data-doc-id="${doc.id}" value="${doc.thoiHan ? doc.thoiHan.split('T')[0] : ''}">`}
                 </td>
                 <td>
+                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<div class="batch-multi-select-host" data-field="departmentIds" data-doc-id="${doc.id}"></div>`}
+                </td>
+                <td>
+                    ${isProcessing ? '<div class="skeleton-text"></div>' : `<div class="batch-multi-select-host" data-field="assignedToIds" data-doc-id="${doc.id}"></div>`}
+                </td>
+                <td>
                     ${isProcessing ? '<div class="skeleton-text"></div>' : `<span class="status-badge ${statusClass(doc.batchState)}">${doc.batchState}</span>`}
                 </td>
                 <td>
@@ -431,6 +437,15 @@ export function createUploadFeature(context) {
                 </td>
             `;
             tbody.appendChild(row);
+
+            if (!isProcessing) {
+                initDepartmentMultiSelect(row.querySelector('[data-field="departmentIds"]'), doc, (newIds) => {
+                    processRowChange(doc.id, 'departmentIds', newIds);
+                });
+                initUserMultiSelect(row.querySelector('[data-field="assignedToIds"]'), doc, (newIds) => {
+                    processRowChange(doc.id, 'assignedToIds', newIds);
+                });
+            }
         });
 
         tbody.querySelectorAll('[data-field]').forEach((input) => {
