@@ -263,7 +263,7 @@ namespace ToolCalendar.Data
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
                 // Máº­t kháº©u máº·c Ä‘á»‹nh Ä‘Æ°á»£c mÃ£ hÃ³a BCrypt (work factor 12 â€” chuáº©n cÃ´ng nghiá»‡p)
-                var defaultAdminPwd = BCrypt.Net.BCrypt.HashPassword("Admin@2026!", workFactor: 12);
+                                var defaultAdminPwd = BCrypt.Net.BCrypt.HashPassword("DEFAULT_PASSWORD_REDACTED", workFactor: 12);
                 cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', @pwd, 'Admin', datetime('now', 'localtime'))";
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@pwd", defaultAdminPwd);
