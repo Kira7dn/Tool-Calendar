@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Models;

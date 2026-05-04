@@ -211,7 +211,7 @@ namespace ToolCalendar.Data
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
                 // Máº·c Ä‘á»‹nh cÃ¡c tá»« bÃ³c tÃ¡ch háº¡n xá»­ lÃ½
-                cmd.CommandText = "INSERT INTO AppSettings ([Key], [Value]) VALUES ('Document_DeadlineKeywords', 'háº¡n, Ä‘áº¿n ngÃ y, trÆ°á»›c ngÃ y, trÃ¬nh, xong, xong trÆ°á»›c, hoÃ n thÃ nh')";
+                                cmd.CommandText = "INSERT INTO AppSettings ([Key], [Value]) VALUES ('Document_DeadlineKeywords', 'hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành')";
                 cmd.ExecuteNonQuery();
             }
 
@@ -244,8 +244,8 @@ namespace ToolCalendar.Data
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN ThoiHan TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN DonViChiDao TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN FilePath TEXT"; cmd.ExecuteNonQuery(); } catch { }
-            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN Status TEXT DEFAULT 'ChÆ°a xá»­ lÃ½'"; cmd.ExecuteNonQuery(); } catch { }
-            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN Priority TEXT DEFAULT 'ThÆ°á»ng'"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN Status TEXT DEFAULT 'Chưa xử lý'"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN Priority TEXT DEFAULT 'Thường'"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN DepartmentId INTEGER"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedTo INTEGER"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN EvidencePaths TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
@@ -258,11 +258,11 @@ namespace ToolCalendar.Data
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedUserIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedDepartmentIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
 
-            // Chá»‰ táº¡o admin láº§n Ä‘áº§u â€” KHÃ”NG BAO GIá»œ reset password tá»± Ä‘á»™ng
+            // Chỉ tạo admin lần đầu — KHÔNG BAO GIỜ reset password tự động
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                // Máº­t kháº©u máº·c Ä‘á»‹nh Ä‘Æ°á»£c mÃ£ hÃ³a BCrypt (work factor 12 â€” chuáº©n cÃ´ng nghiá»‡p)
+                // Mật khẩu mặc định được mã hóa BCrypt (work factor 12 — chuẩn công nghiệp)
                                 var defaultAdminPwd = BCrypt.Net.BCrypt.HashPassword("DEFAULT_PASSWORD_REDACTED", workFactor: 12);
                 cmd.CommandText = "INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES ('admin', @pwd, 'Admin', datetime('now', 'localtime'))";
                 cmd.Parameters.Clear();
@@ -270,19 +270,19 @@ namespace ToolCalendar.Data
                 cmd.ExecuteNonQuery();
                 cmd.Parameters.Clear();
             }
-            // KhÃ´ng cÃ³ else â€” khÃ´ng bao giá» reset password tá»± Ä‘á»™ng!
+            // Không có else — không bao giờ reset password tự động!
 
             // --- SEED DEPARTMENTS ---
             cmd.CommandText = "SELECT COUNT(*) FROM Departments";
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
-                var deps = new[] { "VÄƒn phÃ²ng HÄND vÃ  UBND", "PhÃ²ng Kinh táº¿ háº¡ táº§ng vÃ  Ä‘Ã´ thá»‹", "PhÃ²ng vÄƒn hÃ³a xÃ£ há»™i" };
+                var deps = new[] { "Văn phòng HĐND và UBND", "Phòng Kinh tế hạ tầng và đô thị", "Phòng văn hóa xã hội" };
                 foreach (var name in deps)
                 {
                     cmd.CommandText = "INSERT INTO Departments (Name, Description) VALUES (@name, @desc)";
                     cmd.Parameters.Clear();
                     cmd.Parameters.AddWithValue("@name", name);
-                    cmd.Parameters.AddWithValue("@desc", $"PhÃ²ng ban {name}");
+                    cmd.Parameters.AddWithValue("@desc", $"Phòng ban {name}");
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -292,10 +292,10 @@ namespace ToolCalendar.Data
             if (Convert.ToInt32(cmd.ExecuteScalar()) == 0)
             {
                 var labels = new[] {
-                    new { n = "Dá»± Ã¡n", c = "#3b82f6" },
-                    new { n = "Khiáº¿u náº¡i", c = "#ef4444" },
-                    new { n = "MÃ´i trÆ°á»ng", c = "#10b981" },
-                    new { n = "Há»£p tÃ¡c", c = "#8b5cf6" }
+                    new { n = "Dự án", c = "#3b82f6" },
+                    new { n = "Khiếu nại", c = "#ef4444" },
+                    new { n = "Môi trường", c = "#10b981" },
+                    new { n = "Hợp tác", c = "#8b5cf6" }
                 };
                 foreach (var l in labels)
                 {
