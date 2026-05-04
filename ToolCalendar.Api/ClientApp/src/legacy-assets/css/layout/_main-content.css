@@ -7,7 +7,7 @@
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 28px 36px;
+    padding: 20px 0px 0px 36px;
     display: flex;
     flex-direction: column;
     background: var(--bg-color);
@@ -37,4 +37,3 @@
     color: #ffb347;
     margin-top: 20px;
 }
-

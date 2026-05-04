@@ -1,10 +1,13 @@
 @import "tailwindcss";
+@source "../../src/pages/**/*.{js,jsx}";
+@source "../../src/shell/**/*.{js,jsx}";
+@source "../../src/components/**/*.{js,jsx}";
+@source "../../index.html";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@variant dark (&:is(.dark *));
 
-@theme inline {
+@theme {
   /* ====================================================
      1. BRAND COLORS (Source of Truth)
      ==================================================== */
@@ -95,5 +98,26 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Core Layout Migration */
+  .app-container {
+    @apply flex h-screen overflow-hidden bg-background;
+  }
+
+  .main-content {
+    @apply flex-1 flex flex-col min-w-0 h-screen overflow-y-auto overflow-x-hidden bg-background;
+  }
+
+  .tab-host {
+    @apply flex-1 flex flex-col min-h-0;
+  }
+
+  .sidebar-overlay {
+    @apply fixed inset-0 bg-black/50 z-[150] opacity-0 pointer-events-none transition-opacity duration-300;
+  }
+
+  .sidebar-overlay.active {
+    @apply opacity-100 pointer-events-auto;
   }
 }

@@ -13,7 +13,6 @@ import {
 } from './app.js';
 
 const TAB_PARTIALS = [
-    '/partials/tabs/dashboard.html',
     '/partials/tabs/documents.html',
     '/partials/tabs/upload.html',
     '/partials/tabs/my-tasks.html',

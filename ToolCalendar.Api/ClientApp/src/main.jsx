@@ -3,18 +3,18 @@ import { createRoot } from 'react-dom/client';
 import { AppShell } from './shell/AppShell.jsx';
 import './styles/globals.css';
 
-import '@legacy/css/app.css';
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 function Root() {
   useEffect(() => {
     document.body.classList.add('app-booting');
-
-    import('@legacy/js/main.js').catch((error) => {
-      console.error('Frontend bootstrap failed:', error);
-    });
   }, []);
 
-  return <AppShell />;
+  return (
+    <TooltipProvider>
+      <AppShell />
+    </TooltipProvider>
+  );
 }
 
 createRoot(document.getElementById('root')).render(<Root />);

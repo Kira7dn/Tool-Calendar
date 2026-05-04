@@ -4,7 +4,6 @@ import { createUiFeature } from './features/ui.js';
 import { createSessionFeature } from './features/session.js';
 import { createNotificationsFeature } from './features/notifications.js';
 import { createPdfFeature } from './features/pdf.js';
-import { createDashboardFeature } from './features/dashboard.js';
 import { createDocumentsFeature } from './features/documents.js';
 import { createDocDetailFeature } from './features/docDetail.js';
 import { createUploadFeature } from './features/upload.js';
@@ -53,7 +52,6 @@ function activateTab(tabId) {
     if (tabId === 'users') return features.users.activate();
     if (tabId === 'settings') return features.settings.activate();
     if (tabId === 'my-tasks') return features.myTasks.activate();
-    if (tabId === 'dashboard') return features.dashboard.activate();
     if (tabId === 'documents') return features.documents.activate();
     if (tabId === 'upload') return features.upload.activate();
     return Promise.resolve();
@@ -82,7 +80,6 @@ export function initializeApp() {
     };
 
     const pdf = createPdfFeature(context);
-    const dashboard = createDashboardFeature(context);
     const documents = createDocumentsFeature(context);
     const docDetail = createDocDetailFeature(context);
     const upload = createUploadFeature(context);
@@ -101,7 +98,6 @@ export function initializeApp() {
         openDocDetail: (...args) => docDetail.open(...args),
         enterReviewScene: (...args) => review.enterReviewScene(...args),
         refreshCoreData: async () => {
-            await dashboard.refresh();
             await documents.refresh();
         }
     };
@@ -111,7 +107,6 @@ export function initializeApp() {
         session: sessionFeature,
         notifications: notificationsFeature,
         pdf,
-        dashboard,
         documents,
         docDetail,
         upload,
@@ -121,6 +116,9 @@ export function initializeApp() {
         settings,
         adminMeta
     };
+
+    // Expose context to global window for React bridge
+    window.app = context;
 
     Object.values(features).forEach((feature) => {
         feature.init?.();

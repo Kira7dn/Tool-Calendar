@@ -15,42 +15,47 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const navItems = [
   { tab: 'dashboard', labelKey: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { tab: 'documents', labelKey: 'documents', label: 'Văn bản', icon: FileText },
   { tab: 'upload', labelKey: 'upload', label: 'Tải hồ sơ mới', icon: Upload },
-  { tab: 'users', id: 'nav-users', labelKey: 'users', label: 'Nhân sự', icon: Users, hidden: true },
-  { tab: 'my-tasks', id: 'nav-my-tasks', labelKey: 'my_tasks', label: 'Công việc của tôi', icon: CheckSquare, hidden: true },
+  { tab: 'users', id: 'nav-users', labelKey: 'users', label: 'Nhân sự', icon: Users },
+  { tab: 'my-tasks', id: 'nav-my-tasks', labelKey: 'my_tasks', label: 'Công việc của tôi', icon: CheckSquare },
   { tab: 'settings', labelKey: 'settings', label: 'Cấu hình', icon: Settings }
 ];
 
-export function Sidebar({ 
-  isCollapsed, 
-  setIsCollapsed, 
-  isMobileOpen, 
+export function Sidebar({
+  isCollapsed,
+  setIsCollapsed,
+  isMobileOpen,
   setIsMobileOpen,
   activeTab,
   setActiveTab
 }) {
-  
+
   const toggleSidebar = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
     localStorage.setItem('sidebar-collapsed', newState.toString());
-    
-    // Bridge to legacy
-    const sidebarEl = document.getElementById('main-sidebar');
-    if (sidebarEl) {
-      if (newState) sidebarEl.classList.add('collapsed');
-      else sidebarEl.classList.remove('collapsed');
-    }
   };
 
   const labelClasses = cn(
     "font-semibold whitespace-nowrap transition-all duration-400 ease-in-out overflow-hidden shrink-0",
-    isCollapsed 
-      ? "max-md:opacity-100 max-md:translate-x-0 opacity-0 -translate-x-4 pointer-events-none w-0 ml-0" 
+    isCollapsed
+      ? "max-md:opacity-100 max-md:translate-x-0 opacity-0 -translate-x-4 pointer-events-none w-0 ml-0"
       : "opacity-100 translate-x-0 w-auto ml-[-10px] max-md:ml-3"
   );
 
@@ -90,17 +95,17 @@ export function Sidebar({
       {/* Logo Area */}
       <div className="flex items-center h-20 border-b border-white/10 mb-3 overflow-hidden shrink-0">
         <div className="w-[var(--sidebar-icon-zone)] shrink-0 flex items-center justify-center">
-          <img 
-            src="/assets/logo.png" 
-            alt="Logo" 
+          <img
+            src="/assets/logo.png"
+            alt="Logo"
             className="size-10 rounded-lg border-[1.5px] border-white/15 shadow-lg object-contain"
           />
         </div>
-        <h2 
+        <h2
           className={cn(
             "text-[#ffffff] font-extrabold tracking-tight leading-[1.2] transition-all duration-400 overflow-hidden whitespace-normal w-[115px] shrink-0",
-            isCollapsed 
-              ? "max-md:opacity-100 max-md:translate-x-0 opacity-0 -translate-x-4 pointer-events-none ml-0" 
+            isCollapsed
+              ? "max-md:opacity-100 max-md:translate-x-0 opacity-0 -translate-x-4 pointer-events-none ml-0"
               : "opacity-100 translate-x-0 ml-[-10px] text-[1.05rem]"
           )}
         >
@@ -114,69 +119,47 @@ export function Sidebar({
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.tab;
+
+            // Role-based filtering
+            const role = localStorage.getItem('user_role') || 'CanBo';
+            if (item.tab === 'users' && role !== 'Admin') return null;
+            if (item.tab === 'my-tasks' && role !== 'CanBo' && role !== 'VanThu') return null;
+            if (item.tab === 'upload' && role !== 'Admin' && role !== 'VanThu') return null;
+
             if (item.hidden) return null;
-            
+
             return (
-              <li
-                key={item.tab}
-                id={item.id}
-                data-tab={item.tab}
-                onClick={() => handleTabClick(item.tab)}
-                className={cn(
-                  "group relative flex items-center h-[52px] cursor-pointer transition-all duration-200",
-                  "hover:bg-white/10 text-white/70 hover:text-white",
-                  isActive && "bg-white/10 text-white border-l-4 border-[#22d3ee] active"
-                )}
-              >
-                <div className="w-[var(--sidebar-icon-zone)] shrink-0 flex items-center justify-center">
-                  <Icon className={cn("size-5 transition-transform group-hover:scale-110", isActive && "text-[#22d3ee]")} />
-                </div>
-                <span className={cn(labelClasses, "text-[0.93rem]", isActive && "text-white")}>
-                  {item.label}
-                </span>
+              <li key={item.tab} id={item.id}>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <div
+                      onClick={() => handleTabClick(item.tab)}
+                      className={cn(
+                        "group relative flex items-center h-[52px] cursor-pointer transition-all duration-200",
+                        "hover:bg-white/10 text-white/70 hover:text-white",
+                        isActive && "bg-white/10 text-white border-l-4 border-[#22d3ee] active"
+                      )}
+                    >
+                      <div className="w-[var(--sidebar-icon-zone)] shrink-0 flex items-center justify-center">
+                        <Icon className={cn("size-5 transition-transform group-hover:scale-110", isActive && "text-[#22d3ee]")} />
+                      </div>
+                      <span className={cn(labelClasses, "text-[0.93rem]", isActive && "text-white")}>
+                        {item.label}
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  {isCollapsed && (
+                    <TooltipContent side="right" className="bg-[#132a54] border-white/10 text-white font-bold">
+                      {item.label}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
               </li>
             );
           })}
-          
-          <Separator className="my-2 bg-white/5 mx-4 w-auto" />
-          
-          <li className="group flex items-center h-[52px] cursor-pointer hover:bg-white/10 text-white/70 hover:text-white transition-all" data-action="open-change-password-modal">
-            <div className="w-[var(--sidebar-icon-zone)] shrink-0 flex items-center justify-center">
-              <KeyRound className="size-5" />
-            </div>
-            <span className={cn(labelClasses, "text-[0.93rem]")}>Đổi mật khẩu</span>
-          </li>
 
-          <li className="group flex items-center h-[52px] cursor-pointer hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all mt-auto" data-action="logout">
-            <div className="w-[var(--sidebar-icon-zone)] shrink-0 flex items-center justify-center">
-              <LogOut className="size-5" />
-            </div>
-            <span className={cn(labelClasses, "text-[0.93rem]")}>Đăng xuất</span>
-          </li>
         </ul>
       </nav>
-
-      {/* User Pill */}
-      <div className="mt-auto h-16 flex flex-col justify-center bg-black/10 border-t border-white/5 overflow-hidden transition-all duration-300 shrink-0">
-        <div className="flex items-center h-full">
-          <div className="w-[var(--sidebar-icon-zone)] shrink-0 flex justify-center items-center">
-            <div className="size-9 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-              <UserRound className="size-5 text-white/70" />
-            </div>
-          </div>
-          <div 
-            className={cn(
-              "flex flex-col transition-all duration-400 whitespace-nowrap overflow-hidden shrink-0",
-              isCollapsed 
-                ? "max-md:opacity-100 max-md:translate-x-0 opacity-0 translate-x-4 pointer-events-none w-0" 
-                : "opacity-100 translate-x-0 w-auto"
-            )}
-          >
-            <p className="text-[0.65rem] text-white/40 uppercase tracking-wider font-bold">Đang truy cập:</p>
-            <p className="text-sm text-white font-semibold">Admin User</p>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }
