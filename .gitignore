@@ -14,8 +14,8 @@ packages/
 # Environment & Secrets
 .env
 .htpasswd
-nginx/certs/*.pem
-nginx/certs/*.key
+nginx/certs/*
+!nginx/certs/.gitkeep
 nginx/conf.d/.htpasswd
 
 # SQLite
