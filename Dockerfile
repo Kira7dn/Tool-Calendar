@@ -12,21 +12,31 @@ RUN apt-get update && apt-get install -y \
     libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Stage 2: Build
+# Stage 2: Frontend Build
+FROM node:22-alpine AS client-build
+WORKDIR /src/ToolCalendar.Api/ClientApp
+COPY ["ToolCalendar.Api/ClientApp/package.json", "ToolCalendar.Api/ClientApp/package-lock.json", "./"]
+RUN npm ci
+COPY ["ToolCalendar.Api/ClientApp/", "./"]
+COPY ["ToolCalendar.Api/wwwroot/", "../wwwroot/"]
+RUN npm run build
+
+# Stage 3: Build
 FROM base AS build
 WORKDIR /src
 COPY ["ToolCalendar.Api/ToolCalendar.Api.csproj", "ToolCalendar.Api/"]
 COPY ["ToolCalendar.Core/ToolCalendar.Core.csproj", "ToolCalendar.Core/"]
 RUN dotnet restore "ToolCalendar.Api/ToolCalendar.Api.csproj"
 COPY . .
+COPY --from=client-build /src/ToolCalendar.Api/wwwroot ./ToolCalendar.Api/wwwroot
 WORKDIR "/src/ToolCalendar.Api"
 RUN dotnet build "ToolCalendar.Api.csproj" -c Release -o /app/build
 
-# Stage 3: Publish
+# Stage 4: Publish
 FROM build AS publish
 RUN dotnet publish "ToolCalendar.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 4: Final Runtime (Sử dụng aspnet để tối ưu dung lượng khi chạy thật)
+# Stage 5: Final Runtime (Sử dụng aspnet để tối ưu dung lượng khi chạy thật)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 # Phải cài lại dependencies vì aspnet image khác với sdk image

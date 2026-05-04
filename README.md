@@ -27,6 +27,62 @@ Hệ thống quản lý, giám sát và điều phối công văn thời gian th
 
 ---
 
+## 💻 Phát triển Frontend Vite React
+
+Frontend mới nằm trong `ToolCalendar.Api/ClientApp` và build ra `ToolCalendar.Api/wwwroot` để backend .NET vẫn phục vụ static files như trước.
+UI wrapper dùng **React 19**, **Tailwind CSS v4** và **shadcn/ui**; các màn nghiệp vụ legacy vẫn được nạp từ `wwwroot/js` và `wwwroot/partials`.
+
+### Hot reload khi phát triển UI
+
+Cách thuận tiện nhất là chạy backend bằng Docker, còn frontend chạy bằng Vite dev server trên máy host:
+
+```powershell
+docker compose up -d official-doc-backend nginx
+cd ToolCalendar.Api/ClientApp
+npm run dev
+```
+
+Mở frontend dev tại:
+
+```text
+http://localhost:5173/login.html
+```
+
+Backend Docker expose `http://localhost:59607`, và Vite đã proxy các route `/api`, `/notificationHub`, `/Uploads`, `/css`, `/assets`, `/partials`, `/sw.js` về backend này. Khi sửa file React/shadcn/Tailwind trong `ClientApp/src`, trình duyệt sẽ hot reload. Khi sửa legacy CSS/partials trong `wwwroot`, refresh trình duyệt là thấy thay đổi.
+
+1. Chạy backend API:
+   ```powershell
+   dotnet run --project ToolCalendar.Api/ToolCalendar.Api.csproj
+   ```
+2. Cài dependencies frontend:
+   ```powershell
+   cd ToolCalendar.Api/ClientApp
+   npm install
+   ```
+3. Chạy Vite dev server:
+   ```powershell
+   npm run dev
+   ```
+4. Nếu backend không chạy ở `http://localhost:59607`, đặt biến proxy trước khi chạy Vite:
+   ```powershell
+   $env:VITE_BACKEND_URL="https://localhost:59606"; npm run dev
+   ```
+
+Build production frontend thủ công:
+
+```powershell
+cd ToolCalendar.Api/ClientApp
+npm run build
+```
+
+Docker production vẫn dùng:
+
+```powershell
+docker-compose up -d --build
+```
+
+---
+
 ## 🔑 Thông tin Tài khoản Mặc định (Sau khi Seed)
 
 Hệ thống đã được nạp sẵn dữ liệu mẫu (Seed Data) trong file `seed_db.sql`:
@@ -48,4 +104,3 @@ Hệ thống đã được nạp sẵn dữ liệu mẫu (Seed Data) trong file 
 2. **Lãnh đạo**: Theo dõi Dashboard, giám sát dòng chảy công văn và các cảnh báo quá hạn.
 3. **Cán bộ**: Nhận thông báo (Push/SignalR) -> Xử lý văn bản được giao -> Nộp bằng chứng hoàn thành.
 4. **Admin**: Quản trị nhân sự, phòng ban, nhãn văn bản và các luật tự động của hệ thống.
-

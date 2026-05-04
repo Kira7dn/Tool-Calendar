@@ -45,9 +45,7 @@ function applyRoleRestrictions(role) {
 function restoreSidebarState() {
     if (localStorage.getItem('sidebar_collapsed') === '1') {
         const sidebar = document.getElementById('main-sidebar');
-        const button = document.getElementById('sidebar-toggle');
         if (sidebar) sidebar.classList.add('collapsed');
-        if (button) button.textContent = '\u25ba';
     }
 }
 
@@ -130,7 +128,8 @@ export function initializeApp() {
 
     const username = localStorage.getItem('user_name') || 'User';
     const role = localStorage.getItem('user_role') || 'CanBo';
-    document.querySelector('.user-pill p:last-child').innerText = `${username} (${role})`;
+    const pillName = document.querySelector('.user-pill-name');
+    if (pillName) pillName.innerText = `${username} (${role})`;
 
     applyRoleRestrictions(role);
     restoreSidebarState();
@@ -140,16 +139,13 @@ export function initializeApp() {
     showTab('dashboard');
     document.body.classList.remove('app-booting');
 
-    // Dịch các thành phần tĩnh và cập nhật UI bộ chọn ngôn ngữ
     translatePage();
     updateLangSwitcherUI();
 
-    // Initialize Lucide icons
     if (window.lucide) {
         window.lucide.createIcons();
     }
 
-    // Xử lý chuyển đổi ngôn ngữ (Minimalist Style)
     console.log('Initializing language link listeners...');
     const langLinks = document.querySelectorAll('.lang-link');
     langLinks.forEach(link => {
@@ -161,7 +157,6 @@ export function initializeApp() {
         };
     });
 
-    // Xử lý đổi mật khẩu cho user hiện tại
     document.addEventListener('click', async (event) => {
         const action = event.target.closest('[data-action]');
         if (!action) return;
@@ -169,7 +164,6 @@ export function initializeApp() {
         if (action.dataset.action === 'open-change-password-modal') {
             document.getElementById('change-password-modal').style.display = 'flex';
 
-            // Reset types and icons
             ['current-user-new-password', 'current-user-confirm-password'].forEach(id => {
                 const input = document.getElementById(id);
                 if (input) {
@@ -245,7 +239,6 @@ export async function showTab(tabId) {
         window.lucide.createIcons();
     }
 
-    // Tự động đóng các trang/modal toàn màn hình khi chuyển tab
     if (features.review) features.review.exitReviewScene();
 
     const docDetailPage = document.getElementById('doc-detail-page');
@@ -256,10 +249,9 @@ export async function showTab(tabId) {
 
     currentTab = tabId;
     await activateTab(tabId);
-    translatePage(); // Thêm dòng này để dịch lại toàn bộ khi chuyển tab
+    translatePage();
     closeSidebar();
 
-    // Cập nhật tiêu đề trình duyệt (Browser Tab Title)
     const appName = i18nService.t('app_name');
     const tabName = i18nService.t(tabId);
     document.title = `${appName} | ${tabName}`;
@@ -280,18 +272,13 @@ export function toggleSidebar() {
     if (!sidebar) return;
 
     if (window.innerWidth <= 768) {
-        const isOpen = sidebar.classList.contains('open');
-        if (isOpen) {
+        if (sidebar.classList.contains('open')) {
             closeSidebar();
         } else {
             openSidebar();
         }
     } else {
-        const button = document.getElementById('sidebar-toggle');
         const isCollapsed = sidebar.classList.toggle('collapsed');
-        if (button) {
-            button.textContent = isCollapsed ? '\u25ba' : '\u25c4';
-        }
         localStorage.setItem('sidebar_collapsed', isCollapsed ? '1' : '0');
     }
 }
@@ -305,13 +292,11 @@ export async function requestNotificationPermission() {
 }
 
 function translatePage() {
-    console.log('Translating page...');
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         el.innerText = i18nService.t(key);
     });
 
-    // Translate Placeholders
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const key = el.getAttribute('data-i18n-placeholder');
         el.placeholder = i18nService.t(key);
@@ -323,25 +308,18 @@ function translatePage() {
     if (pageTitle) pageTitle.innerText = appName;
     if (pageSubtitle) pageSubtitle.innerText = i18nService.t('page_subtitle');
 
-    // Cập nhật tiêu đề trình duyệt khi đổi ngôn ngữ
     const tabName = i18nService.t(currentTab);
     document.title = `${appName} | ${tabName}`;
 }
 
 function updateLangSwitcherUI() {
     const lang = i18nService.getLanguage();
-    console.log('Updating Lang Switcher UI for:', lang);
-
     document.querySelectorAll('.lang-link').forEach(link => {
         const isActive = link.getAttribute('data-lang') === lang;
         link.classList.toggle('active', isActive);
-        if (isActive) {
-            console.log(`Highlighted active language: ${lang}`);
-        }
     });
 }
 
 export function changeLanguage(lang) {
-    console.log('Changing language to:', lang);
     i18nService.setLanguage(lang);
 }

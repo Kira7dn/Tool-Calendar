@@ -1,0 +1,99 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* ====================================================
+     1. BRAND COLORS (Source of Truth)
+     ==================================================== */
+  --color-background: #eef2f7;
+  --color-foreground: #1a1a2e;
+  
+  --color-card: #ffffff;
+  --color-card-foreground: #1a1a2e;
+  
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1a1a2e;
+
+  /* Project Primary (Đỏ đô) */
+  --color-primary: #c0392b;
+  --color-primary-foreground: #ffffff;
+  
+  /* Project Secondary (Xanh đậm) */
+  --color-secondary: #1a3a6e;
+  --color-secondary-foreground: #ffffff;
+
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+
+  --color-accent: #1a3a6e;
+  --color-accent-foreground: #ffffff;
+
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  --color-border: #d1d5db;
+  --color-input: #d1d5db;
+  --color-ring: #c0392b;
+
+  /* Sidebar Tokens (Dành cho cả React và Legacy) */
+  --color-sidebar: #1a3a6e;
+  --color-sidebar-foreground: rgba(255, 255, 255, 0.82);
+  --color-sidebar-primary: #ffffff;
+  --color-sidebar-primary-foreground: #1a3a6e;
+  --color-sidebar-accent: rgba(255, 255, 255, 0.1);
+  --color-sidebar-accent-foreground: #ffffff;
+  --color-sidebar-border: rgba(255, 255, 255, 0.12);
+  --color-sidebar-ring: #ffffff;
+
+  /* ====================================================
+     2. SPACING & SIZING
+     ==================================================== */
+  --spacing-sidebar: 250px;
+  --spacing-sidebar-collapsed: 80px;
+  --spacing-sidebar-icon-zone: 80px; /* Fixed zone for icons alignment */
+  
+  /* ====================================================
+     3. ELEVATION (Radius & Shadow)
+     ==================================================== */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+:root {
+  /* Cầu nối cho Legacy CSS sử dụng các biến từ Tailwind theme */
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --card: var(--color-card);
+  --primary: var(--color-primary);
+  --secondary: var(--color-secondary);
+  --accent: var(--color-accent);
+  --sidebar-bg: var(--color-sidebar);
+  --sidebar-width: var(--spacing-sidebar);
+  --sidebar-collapsed-width: var(--spacing-sidebar-collapsed);
+  --sidebar-icon-zone: var(--spacing-sidebar-icon-zone);
+  --radius: var(--radius-md);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  /* Bạn có thể bổ sung các biến dark mode tại đây nếu cần */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
