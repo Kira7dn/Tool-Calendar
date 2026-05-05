@@ -9,13 +9,6 @@ namespace ToolCalendar.Api.Controllers
     [Route("api/[controller]")]
     public class StatsController : ControllerBase
     {
-        private readonly AppDbContext _db;
-
-        public StatsController(AppDbContext db)
-        {
-            _db = db;
-        }
-
         [HttpGet]
         public IActionResult GetSummary()
         {
@@ -36,13 +29,25 @@ namespace ToolCalendar.Api.Controllers
         {
             try
             {
-                // Fetch the 10 most recent activities
-                var (logs, _) = DatabaseService.GetAuditLogs(1, 10);
+                var (logs, _) = DatabaseService.GetAuditLogs(1, 10, "CanBo");
                 return Ok(logs);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = $"Lỗi lấy hoạt động: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("deadline-series")]
+        public IActionResult GetDeadlineSeries([FromQuery] int days = 14)
+        {
+            try
+            {
+                return Ok(DatabaseService.GetDashboardDeadlineSeries(days));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi lấy biểu đồ thời hạn: {ex.Message}" });
             }
         }
 

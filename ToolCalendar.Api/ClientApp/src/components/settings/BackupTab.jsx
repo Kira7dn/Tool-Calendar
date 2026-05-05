@@ -2,7 +2,6 @@ import React from 'react';
 import { Database, Trash2, Download, RefreshCcw, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 
 export function BackupTab() {
   return (

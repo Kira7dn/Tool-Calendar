@@ -46,6 +46,7 @@ export function Documents({ onTabChange, filters }) {
 
   useEffect(() => {
     if (filters) {
+      if (filters.search !== undefined) setSearch(filters.search);
       if (filters.status !== undefined) setStatus(filters.status);
       if (filters.sort !== undefined) setSort(filters.sort);
       setPage(1);

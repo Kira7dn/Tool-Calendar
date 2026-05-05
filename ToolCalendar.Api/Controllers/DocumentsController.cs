@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using ToolCalendar.Core.Data.Interfaces;
+using ToolCalendar.Data;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
@@ -270,7 +271,18 @@ namespace ToolCalendar.Api.Controllers
             // 3. Thông báo SignalR để các máy khác cập nhật giao diện (Dashboard, List)
             _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = "Đã hoàn thành" });
 
-            // 4. Gửi thông báo cho người giao việc
+            // 4. Ghi nhận hoạt động cán bộ cho dashboard
+            try
+            {
+                var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(currentUserIdStr, out int currentUserId))
+                {
+                    DatabaseService.InsertAuditLog(currentUserId, $"Đã nộp bằng chứng hoàn thành văn bản {doc.SoVanBan}.");
+                }
+            }
+            catch { }
+
+            // 5. Gửi thông báo cho người giao việc
             try {
                 var currentUserName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Cán bộ";
                 await _notificationManager.SendToUserAsync(

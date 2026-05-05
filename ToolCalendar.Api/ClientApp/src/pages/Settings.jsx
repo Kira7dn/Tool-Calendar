@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   Settings as SettingsIcon,
-  ShieldCheck,
-  Bell,
   Scan,
   Database,
-  History,
-  ChevronRight
+  History
 } from 'lucide-react';
 import {
   getNotificationPermission,
@@ -16,11 +13,12 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
-// Import Tab Components
-import { GeneralTab } from './tabs/GeneralTab';
-import { OCRTab } from './tabs/OCRTab';
-import { AuditTab } from './tabs/AuditTab';
-import { BackupTab } from './tabs/BackupTab';
+// Import Tab Components from components/settings
+import {
+  GeneralTab,
+  AuditTab,
+  BackupTab
+} from '@/components/settings';
 
 export function Settings() {
   const [config, setConfig] = useState({
@@ -46,18 +44,7 @@ export function Settings() {
     setPushStatus(status);
   };
 
-  const handleEnablePush = async () => {
-    const status = await requestNotificationPermission();
-    setPushStatus(status);
-    if (status === 'granted') alert('Đã bật thông báo đẩy thành công!');
-    else if (status === 'denied') alert('Bạn đã chặn thông báo. Vui lòng cho phép trong cài đặt trình duyệt.');
-  };
 
-  const handleDisablePush = async () => {
-    await unsubscribeUserFromPush();
-    setPushStatus('default');
-    alert('Đã tắt thông báo đẩy.');
-  };
 
   const fetchSettings = async () => {
     try {
@@ -122,7 +109,6 @@ export function Settings() {
 
   const navigation = [
     { id: 'general', label: 'Cấu hình chung', icon: SettingsIcon },
-    { id: 'ocr', label: 'Thông số OCR', icon: Scan },
     { id: 'audit', label: 'Nhật ký hệ thống', icon: History },
     { id: 'backup', label: 'Dữ liệu & Sao lưu', icon: Database },
   ];
@@ -168,16 +154,6 @@ export function Settings() {
                   isTesting={isTesting}
                   onTriggerScan={triggerScan}
                   onTestNotification={testNotification}
-                  onEnablePush={handleEnablePush}
-                  onDisablePush={handleDisablePush}
-                />
-              )}
-              {activeTab === 'ocr' && (
-                <OCRTab
-                  config={config}
-                  setConfig={setConfig}
-                  isSaving={isSaving}
-                  onSave={handleSaveSettings}
                 />
               )}
               {activeTab === 'audit' && <AuditTab />}

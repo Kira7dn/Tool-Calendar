@@ -556,7 +556,7 @@ namespace ToolCalendar.Data
             cmd.ExecuteNonQuery();
         }
 
-        public static (List<AuditLog> items, int total) GetAuditLogs(int page = 1, int pageSize = 20)
+        public static (List<AuditLog> items, int total) GetAuditLogs(int page = 1, int pageSize = 20, string? roleFilter = null)
         {
             var list = new List<AuditLog>();
             int total = 0;
@@ -565,17 +565,25 @@ namespace ToolCalendar.Data
                 using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
-                // Láº¥y tá»•ng sá»‘
-                using var totalCmd = new SqliteCommand("SELECT COUNT(*) FROM AuditLogs", connection);
+                string whereSql = string.IsNullOrWhiteSpace(roleFilter) ? "" : "WHERE u.Role = @role";
+
+                using var totalCmd = new SqliteCommand($@"
+                    SELECT COUNT(*)
+                    FROM AuditLogs a
+                    LEFT JOIN Users u ON a.UserId = u.Id
+                    {whereSql}", connection);
+                if (!string.IsNullOrWhiteSpace(roleFilter)) totalCmd.Parameters.AddWithValue("@role", roleFilter);
                 total = Convert.ToInt32(totalCmd.ExecuteScalar());
 
-                string sql = @"
+                string sql = $@"
                     SELECT a.*, u.FullName as UserFullName 
                     FROM AuditLogs a 
                     LEFT JOIN Users u ON a.UserId = u.Id 
+                    {whereSql}
                     ORDER BY a.Timestamp DESC 
                     LIMIT @limit OFFSET @offset";
                 using var cmd = new SqliteCommand(sql, connection);
+                if (!string.IsNullOrWhiteSpace(roleFilter)) cmd.Parameters.AddWithValue("@role", roleFilter);
                 cmd.Parameters.AddWithValue("@limit", pageSize);
                 cmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
                 using var reader = cmd.ExecuteReader();
@@ -585,7 +593,7 @@ namespace ToolCalendar.Data
                     {
                         Id = Convert.ToInt32(reader["Id"]),
                         UserId = reader["UserId"] == DBNull.Value ? null : Convert.ToInt32(reader["UserId"]),
-                        UserFullName = reader["UserFullName"]?.ToString() ?? "Há»‡ thá»‘ng",
+                        UserFullName = reader["UserFullName"]?.ToString() ?? "Hệ thống",
                         Action = reader["Action"].ToString() ?? "",
                         Timestamp = DateTime.Parse(reader["Timestamp"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
                     });
@@ -895,13 +903,23 @@ namespace ToolCalendar.Data
 
             // 8. Top 3 văn bản khẩn nhất
             using var cmdTopUrgent = new SqliteCommand(@"
-                SELECT * FROM Documents 
+                SELECT Id, SoVanBan, TenCongVan, TrichYeu, ThoiHan FROM Documents 
                 WHERE Status != 'Ä Ã£ hoÃ n thÃ nh' 
                 ORDER BY CASE WHEN ThoiHan IS NULL THEN 1 ELSE 0 END, ThoiHan ASC 
                 LIMIT 3", connection);
             using var rTopUrgent = cmdTopUrgent.ExecuteReader();
-            var topUrgent = new List<DocumentRecord>();
-            while (rTopUrgent.Read()) topUrgent.Add(MapRecord(rTopUrgent));
+            var topUrgent = new List<object>();
+            while (rTopUrgent.Read())
+            {
+                topUrgent.Add(new
+                {
+                    Id = Convert.ToInt32(rTopUrgent["Id"]),
+                    SoVanBan = rTopUrgent["SoVanBan"]?.ToString() ?? "",
+                    TenCongVan = rTopUrgent["TenCongVan"]?.ToString() ?? "",
+                    TrichYeu = rTopUrgent["TrichYeu"]?.ToString() ?? "",
+                    ThoiHan = rTopUrgent["ThoiHan"]?.ToString()
+                });
+            }
 
             return new
             {
@@ -914,6 +932,65 @@ namespace ToolCalendar.Data
                 ByDepartment = deptDict,
                 TopUrgent = topUrgent
             };
+        }
+
+        public static object GetDashboardDeadlineSeries(int days = 14)
+        {
+            if (days < 1) days = 14;
+            if (days > 60) days = 60;
+
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            DateTime today = DateTime.Today;
+            string completedStatus = "Đã hoàn thành";
+            var items = new List<object>();
+
+            using (var overdueCmd = new SqliteCommand(@"
+                SELECT COUNT(*)
+                FROM Documents
+                WHERE ThoiHan < date(@today)
+                AND Status != @completed
+                AND ThoiHan IS NOT NULL", connection))
+            {
+                overdueCmd.Parameters.AddWithValue("@today", today.ToString("yyyy-MM-dd"));
+                overdueCmd.Parameters.AddWithValue("@completed", completedStatus);
+                int overdueCount = Convert.ToInt32(overdueCmd.ExecuteScalar());
+                items.Add(new
+                {
+                    Date = "overdue",
+                    Label = "Quá hạn",
+                    Count = overdueCount,
+                    OverdueCount = overdueCount,
+                    TodayCount = 0,
+                    UpcomingCount = 0
+                });
+            }
+
+            for (int i = 0; i < days; i++)
+            {
+                DateTime date = today.AddDays(i);
+                using var dayCmd = new SqliteCommand(@"
+                    SELECT COUNT(*)
+                    FROM Documents
+                    WHERE date(ThoiHan) = date(@date)
+                    AND Status != @completed", connection);
+                dayCmd.Parameters.AddWithValue("@date", date.ToString("yyyy-MM-dd"));
+                dayCmd.Parameters.AddWithValue("@completed", completedStatus);
+                int count = Convert.ToInt32(dayCmd.ExecuteScalar());
+
+                items.Add(new
+                {
+                    Date = date.ToString("yyyy-MM-dd"),
+                    Label = i == 0 ? "Hôm nay" : $"+{i}",
+                    Count = count,
+                    OverdueCount = 0,
+                    TodayCount = i == 0 ? count : 0,
+                    UpcomingCount = i > 0 ? count : 0
+                });
+            }
+
+            return items;
         }
 
         // --- PUSH SUBSCRIPTION MANAGEMENT ---

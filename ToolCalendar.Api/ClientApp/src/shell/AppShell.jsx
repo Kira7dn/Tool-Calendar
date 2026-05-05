@@ -28,7 +28,7 @@ import { Users } from '../pages/Users.jsx';
 import { DocDetail } from '../pages/DocDetail.jsx';
 import { MyTasks } from '../pages/MyTasks.jsx';
 import { Review } from '../pages/Review.jsx';
-import { Settings as SettingsPage } from '../pages/settings/index.jsx';
+import { Settings as SettingsPage } from '../pages/Settings.jsx';
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -98,13 +98,23 @@ export function AppShell() {
     // Register Service Worker and listen for push messages
     registerServiceWorker().then(async (registration) => {
       if (registration) {
-        // Force check for updates to sw.js on every load
         registration.update();
       }
-      setPushPermission(Notification.permission);
-      // Silent re-subscription if permission is already granted
-      if (Notification.permission === 'granted') {
+      const currentPermission = Notification.permission;
+      setPushPermission(currentPermission);
+      
+      if (currentPermission === 'granted') {
+        // Luôn tự động đăng ký lại khi đã có quyền (Chế độ bắt buộc)
         await subscribeUserToPush();
+      } else if (currentPermission === 'default') {
+        // Thử gọi tự động (có thể bị trình duyệt chặn nếu không có user gesture)
+        try {
+          const result = await Notification.requestPermission();
+          setPushPermission(result);
+          if (result === 'granted') await subscribeUserToPush();
+        } catch (e) {
+          console.warn('[Push] Tự động yêu cầu quyền bị chặn, chờ người dùng click.');
+        }
       }
     });
     const handleSWMessage = (event) => {
@@ -167,6 +177,83 @@ export function AppShell() {
     localStorage.clear();
     window.location.href = '/';
   };
+
+  const handleRequestPermission = async () => {
+    try {
+      const result = await Notification.requestPermission();
+      setPushPermission(result);
+      if (result === 'granted') {
+        await subscribeUserToPush();
+      }
+    } catch (error) {
+      console.error('Lỗi khi yêu cầu quyền thông báo:', error);
+    }
+  };
+
+  // Notification Guard: Block access if permission is not granted
+  if (pushPermission !== 'granted') {
+    return (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm p-6 overflow-hidden">
+        <div className="max-w-md w-full glass-card p-10 rounded-[2.5rem] border-2 border-primary/20 shadow-[0_0_50px_-12px_rgba(var(--primary),0.3)] animate-in zoom-in-95 fade-in duration-500 text-center">
+          <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 ring-8 ring-primary/5">
+            <Bell className="size-10 text-primary animate-bounce" />
+          </div>
+          
+          <h2 className="text-2xl font-black tracking-tight text-foreground mb-3">Yêu cầu bật thông báo</h2>
+          <p className="text-muted-foreground font-medium text-sm leading-relaxed mb-8">
+            Để đảm bảo tính tức thời trong việc điều phối công văn, hệ thống yêu cầu bạn phải chấp nhận nhận thông báo từ trình duyệt để tiếp tục sử dụng.
+          </p>
+
+          {pushPermission === 'default' ? (
+            <Button 
+              className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+              onClick={handleRequestPermission}
+            >
+              KÍCH HOẠT THÔNG BÁO NGAY
+            </Button>
+          ) : (
+            <div className="space-y-6">
+              <div className="p-5 rounded-[2rem] bg-destructive/5 border border-destructive/20 text-destructive text-sm font-medium leading-relaxed text-left flex gap-4">
+                <div className="size-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                  <EyeOff className="size-5" />
+                </div>
+                <div>
+                  <p className="font-black mb-1">BẠN ĐÃ CHẶN THÔNG BÁO</p>
+                  <p className="opacity-80">Trình duyệt đã ghi nhớ lựa chọn chặn và không cho phép hệ thống yêu cầu lại. Bạn cần mở thủ công theo các bước sau:</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 text-left">
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 border border-border/50 text-xs font-bold">
+                  <div className="size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0">1</div>
+                  <p>Nhấn vào biểu tượng <span className="px-1.5 py-0.5 bg-muted rounded border border-border shadow-sm">🔒 Khóa</span> hoặc <span className="px-1.5 py-0.5 bg-muted rounded border border-border shadow-sm">⚙️ Cài đặt</span> ở góc trái thanh địa chỉ trình duyệt.</p>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 border border-border/50 text-xs font-bold">
+                  <div className="size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0">2</div>
+                  <p>Tìm mục <span className="text-primary underline underline-offset-4">Thông báo (Notifications)</span> và chuyển trạng thái sang <span className="text-success">Cho phép (Allow)</span>.</p>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 border border-border/50 text-xs font-bold">
+                  <div className="size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0">3</div>
+                  <p>Nhấn nút bên dưới để bắt đầu làm việc.</p>
+                </div>
+              </div>
+
+              <Button 
+                className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base shadow-xl shadow-primary/20 transition-all"
+                onClick={() => window.location.reload()}
+              >
+                TẢI LẠI TRANG NGAY
+              </Button>
+            </div>
+          )}
+
+          <p className="mt-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 text-center">
+            Hệ thống điều phối công văn trực tuyến
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
