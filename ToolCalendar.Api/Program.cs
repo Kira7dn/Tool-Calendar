@@ -9,6 +9,8 @@ using ToolCalendar.Core.Data.Repositories;
 using ToolCalendar.Data;
 using ToolCalendar.Hubs;
 using ToolCalendar.Services;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 

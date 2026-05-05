@@ -556,21 +556,28 @@ namespace ToolCalendar.Data
             cmd.ExecuteNonQuery();
         }
 
-        public static List<AuditLog> GetAuditLogs(int limit = 100)
+        public static (List<AuditLog> items, int total) GetAuditLogs(int page = 1, int pageSize = 20)
         {
             var list = new List<AuditLog>();
+            int total = 0;
             try
             {
                 using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
+
+                // Láº¥y tá»•ng sá»‘
+                using var totalCmd = new SqliteCommand("SELECT COUNT(*) FROM AuditLogs", connection);
+                total = Convert.ToInt32(totalCmd.ExecuteScalar());
+
                 string sql = @"
                     SELECT a.*, u.FullName as UserFullName 
                     FROM AuditLogs a 
                     LEFT JOIN Users u ON a.UserId = u.Id 
                     ORDER BY a.Timestamp DESC 
-                    LIMIT @limit";
+                    LIMIT @limit OFFSET @offset";
                 using var cmd = new SqliteCommand(sql, connection);
-                cmd.Parameters.AddWithValue("@limit", limit);
+                cmd.Parameters.AddWithValue("@limit", pageSize);
+                cmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
@@ -585,7 +592,7 @@ namespace ToolCalendar.Data
                 }
             }
             catch { }
-            return list;
+            return (list, total);
         }
 
         public static void InsertAuditLog(int? userId, string action)
@@ -886,6 +893,16 @@ namespace ToolCalendar.Data
                 AND Status != 'ÄÃ£ hoÃ n thÃ nh'", connection);
             int today = Convert.ToInt32(cmdToday.ExecuteScalar());
 
+            // 8. Top 3 văn bản khẩn nhất
+            using var cmdTopUrgent = new SqliteCommand(@"
+                SELECT * FROM Documents 
+                WHERE Status != 'Ä Ã£ hoÃ n thÃ nh' 
+                ORDER BY CASE WHEN ThoiHan IS NULL THEN 1 ELSE 0 END, ThoiHan ASC 
+                LIMIT 3", connection);
+            using var rTopUrgent = cmdTopUrgent.ExecuteReader();
+            var topUrgent = new List<DocumentRecord>();
+            while (rTopUrgent.Read()) topUrgent.Add(MapRecord(rTopUrgent));
+
             return new
             {
                 Total = total,
@@ -894,7 +911,8 @@ namespace ToolCalendar.Data
                 Overdue = overdue,
                 Urgent = urgent,
                 Today = today,
-                ByDepartment = deptDict
+                ByDepartment = deptDict,
+                TopUrgent = topUrgent
             };
         }
 

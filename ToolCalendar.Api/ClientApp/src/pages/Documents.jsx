@@ -1,28 +1,27 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Eye, 
-  FileEdit, 
-  Trash2, 
+import {
+  Plus,
+  Search,
+  Filter,
+  MoreVertical,
+  Eye,
+  FileEdit,
+  Trash2,
   FileText,
   ChevronLeft,
   ChevronRight,
   Loader2
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { getStatusConfig, DOC_STATUS } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -35,7 +34,6 @@ import {
 } from "@/components/ui/table";
 
 export function Documents({ onTabChange, filters }) {
-  const { t } = useTranslation();
   const [documents, setDocuments] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -43,7 +41,7 @@ export function Documents({ onTabChange, filters }) {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState(filters?.status || '');
   const [sort, setSort] = useState(filters?.sort || 'newest');
-  
+
   const searchTimeout = useRef(null);
 
   useEffect(() => {
@@ -56,7 +54,7 @@ export function Documents({ onTabChange, filters }) {
 
   useEffect(() => {
     fetchDocuments();
-    
+
     const handleUpdate = () => fetchDocuments();
     document.addEventListener('realtime:document_updated', handleUpdate);
     return () => document.removeEventListener('realtime:document_updated', handleUpdate);
@@ -65,7 +63,7 @@ export function Documents({ onTabChange, filters }) {
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
-      const url = `/api/documents?page=${page}&size=10&search=${encodeURIComponent(search)}&status=${status}&sort=${sort}`;
+      const url = `/api/documents?page=${page}&size=5&search=${encodeURIComponent(search)}&status=${status}&sort=${sort}`;
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
@@ -86,7 +84,7 @@ export function Documents({ onTabChange, filters }) {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearch(value);
-    
+
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => {
       setPage(1);
@@ -98,7 +96,7 @@ export function Documents({ onTabChange, filters }) {
     const statusText = doc.trangThai || doc.status;
     const daysLeft = doc.soNgayConLai;
     const config = getStatusConfig(statusText, daysLeft);
-    
+
     return (
       <Badge variant={config.variant} className="font-bold border">
         {config.label}
@@ -121,7 +119,7 @@ export function Documents({ onTabChange, filters }) {
       if (action === 'pdf') window.app.services.openPdfPreview(doc.id, doc.soVanBan);
       if (action === 'delete') {
         if (confirm('Bạn có chắc chắn muốn xóa văn bản này?')) {
-          fetch(`/api/documents/${doc.id}`, { 
+          fetch(`/api/documents/${doc.id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
           }).then(res => {
@@ -133,178 +131,176 @@ export function Documents({ onTabChange, filters }) {
   };
 
   return (
-    <div className="space-y-[var(--space-page)] flex flex-col h-full animate-in fade-in duration-[var(--duration-smooth)]">
+    <div className="space-y-[var(--space-page)] flex flex-col h-full animate-in slide-in-from-bottom-4 duration-700 fill-mode-both">
       <div className="flex flex-col gap-0 border-l-4 border-primary pl-3 py-0.5">
-        <h2 className="text-xl">{t('documents')}</h2>
-        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">Document Management System</p>
+        <h2 className="text-xl">Quản lý văn bản</h2>
+        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">Hệ thống quản lý văn bản</p>
       </div>
 
-      <Card className="glass-card shadow-sm flex-1 flex flex-col overflow-hidden">
+      <Card className="glass-card shadow-sm flex-1 flex flex-col overflow-hidden gap-2 px-2">
         <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0 border-b border-border bg-muted/20">
           <div className="flex items-center gap-4">
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="rounded-full shadow-lg shadow-primary/20"
               onClick={() => onTabChange('upload')}
             >
-              <Plus className="size-4 mr-1" /> {t('new_doc')}
+              <Plus className="size-4 mr-1" /> Thêm mới
             </Button>
           </div>
 
-        <div className="flex items-center gap-3">
-          <div className="relative w-64 max-md:hidden">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input 
-              placeholder="Tìm số hiệu, nội dung..." 
-              className="pl-9 h-9"
-              value={search}
-              onChange={handleSearchChange}
-            />
+          <div className="flex items-center gap-3">
+            <div className="relative w-64 max-md:hidden">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                placeholder="Tìm số hiệu, nội dung..."
+                className="pl-9 h-9"
+                value={search}
+                onChange={handleSearchChange}
+              />
+            </div>
+            <select
+              className="h-9 px-3 text-sm"
+              value={status}
+              onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+            >
+              <option value="">Tất cả trạng thái</option>
+              {Object.values(DOC_STATUS).map(s => (
+                <option key={s.value} value={s.value}>{s.icon} {s.label}</option>
+              ))}
+              <option value="overdue">🛑 Quá hạn</option>
+              <option value="urgent">🕒 Khẩn cấp</option>
+              <option value="today">📅 Hôm nay</option>
+            </select>
+            <select
+              className="h-9 px-3 text-sm max-md:hidden"
+              value={sort}
+              onChange={(e) => { setSort(e.target.value); setPage(1); }}
+            >
+              <option value="newest">📅 Mới nhất</option>
+              <option value="oldest">📅 Cũ nhất</option>
+              <option value="deadline_asc">⏳ Hạn gần nhất</option>
+            </select>
           </div>
-          <select 
-            className="h-9 px-3 text-sm"
-            value={status}
-            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-          >
-            <option value="">{t('all_status')}</option>
-            {Object.values(DOC_STATUS).map(s => (
-              <option key={s.value} value={s.value}>{s.icon} {s.label}</option>
-            ))}
-            <option value="overdue">🛑 {t('status_overdue')}</option>
-            <option value="urgent">🕒 {t('status_urgent')}</option>
-            <option value="today">📅 {t('status_today')}</option>
-          </select>
-          <select 
-            className="h-9 px-3 text-sm max-md:hidden"
-            value={sort}
-            onChange={(e) => { setSort(e.target.value); setPage(1); }}
-          >
-            <option value="newest">📅 Mới nhất</option>
-            <option value="oldest">📅 Cũ nhất</option>
-            <option value="deadline_asc">⏳ Hạn gần nhất</option>
-          </select>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="flex-1 overflow-hidden flex flex-col p-0">
-        <div className="relative flex-1 overflow-auto">
-          <Table>
-            <TableHeader className="bg-muted/50 sticky top-0 z-10">
-              <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="px-4 py-3 font-bold text-center w-12">STT</TableHead>
-                <TableHead className="px-4 py-3 font-bold">Số văn bản</TableHead>
-                <TableHead className="px-4 py-3 font-bold">Ngày ban hành</TableHead>
-                <TableHead className="px-4 py-3 font-bold">Trích yếu</TableHead>
-                <TableHead className="px-4 py-3 font-bold">Tham mưu</TableHead>
-                <TableHead className="px-4 py-3 font-bold">Thời hạn</TableHead>
-                <TableHead className="px-4 py-3 font-bold">Trạng thái</TableHead>
-                <TableHead className="px-4 py-3 font-bold text-center">Thao tác</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 10 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="px-4 py-4 text-center"><Skeleton className="h-4 w-6 mx-auto" /></TableCell>
-                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-64" /></TableCell>
-                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell className="px-4 py-4"><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
-                    <TableCell className="px-4 py-4 text-center"><Skeleton className="h-8 w-8 rounded-full mx-auto" /></TableCell>
-                  </TableRow>
-                ))
-              ) : documents.length > 0 ? (
-                documents.map((doc, idx) => (
-                  <TableRow key={doc.id} className="group transition-colors">
-                    <TableCell className="px-4 py-4 text-center text-muted-foreground font-medium">{(page-1)*10 + idx + 1}</TableCell>
-                    <TableCell 
-                      className="px-4 py-4 font-bold text-secondary cursor-pointer hover:underline"
-                      onClick={() => handleAction('view', doc)}
-                    >
-                      {doc.soVanBan || '-'}
-                    </TableCell>
-                    <TableCell className="px-4 py-4 text-muted-foreground whitespace-nowrap">{formatDate(doc.ngayBanHanh)}</TableCell>
-                    <TableCell className="px-4 py-4 text-foreground/80 max-w-[300px] truncate" title={doc.trichYeu}>
-                      {doc.trichYeu || '-'}
-                    </TableCell>
-                    <TableCell className="px-4 py-4 text-muted-foreground">{doc.coQuanChuQuan || '-'}</TableCell>
-                    <TableCell className="px-4 py-4 text-muted-foreground whitespace-nowrap">{formatDate(doc.thoiHan)}</TableCell>
-                    <TableCell className="px-4 py-4">{getStatusBadge(doc)}</TableCell>
-                    <TableCell className="px-4 py-4 text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                            <MoreVertical className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40 glass-card shadow-2xl">
-                          <DropdownMenuItem onClick={() => handleAction('view', doc)}>
-                            <Eye className="size-4 mr-2" /> Chi tiết
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleAction('pdf', doc)}>
-                            <FileText className="size-4 mr-2" /> Xem PDF
-                          </DropdownMenuItem>
-                          
-                          {(localStorage.getItem('user_role') === 'Admin' || localStorage.getItem('user_role') === 'VanThu') && (
-                            <DropdownMenuItem onClick={() => handleAction('edit', doc)}>
-                              <FileEdit className="size-4 mr-2" /> Chỉnh sửa
-                            </DropdownMenuItem>
-                          )}
-                          
-                          {localStorage.getItem('user_role') === 'Admin' && (
-                            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleAction('delete', doc)}>
-                              <Trash2 className="size-4 mr-2" /> Xóa
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="size-12 rounded-full bg-muted flex items-center justify-center mb-2">
-                        <Search className="size-6 text-muted-foreground/30" />
-                      </div>
-                      <p className="font-medium">Không tìm thấy văn bản nào</p>
-                    </div>
-                  </TableCell>
+        </CardHeader>
+
+        <CardContent className="flex-1 overflow-hidden flex flex-col p-0">
+          <div className="relative flex-1 overflow-auto pt-px">
+            <Table className="table-fixed w-full">
+              <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableHead className="px-4 py-3.5 font-bold text-center w-12 text-foreground">STT</TableHead>
+                  <TableHead className="px-4 py-3.5 font-bold text-foreground w-32">Số văn bản</TableHead>
+                  <TableHead className="px-4 py-3.5 font-bold text-foreground w-32">Ngày ban hành</TableHead>
+                  <TableHead className="px-4 py-3.5 font-bold text-foreground">Trích yếu</TableHead>
+                  <TableHead className="px-4 py-3.5 font-bold text-foreground w-32">Tham mưu</TableHead>
+                  <TableHead className="px-4 py-3.5 font-bold text-foreground w-32">Thời hạn</TableHead>
+                  <TableHead className="px-4 py-3.5 font-bold text-foreground w-32">Trạng thái</TableHead>
+                  <TableHead className="px-4 py-3.5 font-bold text-center text-foreground w-20">Thao tác</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        
-        <div className="p-4 border-t border-border flex items-center justify-between bg-card/50">
-          <p className="text-xs text-muted-foreground font-medium">
-            Trang <span className="text-foreground">{page}</span> / <span className="text-foreground">{totalPages}</span>
-          </p>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              disabled={page <= 1} 
-              onClick={() => setPage(page - 1)}
-              className="h-8 text-xs font-semibold"
-            >
-              <ChevronLeft className="size-4 mr-1" /> Trước
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              disabled={page >= totalPages} 
-              onClick={() => setPage(page + 1)}
-              className="h-8 text-xs font-semibold"
-            >
-              Sau <ChevronRight className="size-4 ml-1" />
-            </Button>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i} className="h-[48px]">
+                      <TableCell className="px-4 py-2.5 text-center w-12"><Skeleton className="h-4 w-6 mx-auto" /></TableCell>
+                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-4 w-16" /></TableCell>
+                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell className="px-4 py-2.5"><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+                      <TableCell className="px-4 py-2.5 text-center w-20"><Skeleton className="h-8 w-8 rounded-full mx-auto" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : documents.length > 0 ? (
+                  documents.map((doc, idx) => (
+                    <TableRow key={doc.id} className="group transition-colors h-[48px]">
+                      <TableCell className="px-4 py-2.5 text-muted-foreground font-medium text-[11px] w-12">{(page - 1) * 5 + idx + 1}</TableCell>
+                      <TableCell
+                        className="px-4 py-2.5 font-bold text-secondary cursor-pointer hover:underline w-32 truncate"
+                        onClick={() => handleAction('view', doc)}
+                      >
+                        {doc.soVanBan || '-'}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 text-muted-foreground whitespace-nowrap w-32 text-xs">{formatDate(doc.ngayBanHanh)}</TableCell>
+                      <TableCell className="px-4 py-2.5 text-foreground/80 truncate text-xs" title={doc.trichYeu}>
+                        {doc.trichYeu || '-'}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 text-muted-foreground w-32 truncate text-xs">{doc.coQuanChuQuan || '-'}</TableCell>
+                      <TableCell className="px-4 py-2.5 text-muted-foreground whitespace-nowrap w-32 text-xs">{formatDate(doc.thoiHan)}</TableCell>
+                      <TableCell className="px-4 py-2.5 w-32">{getStatusBadge(doc)}</TableCell>
+                      <TableCell className="px-4 py-2.5 text-center w-20">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                              <MoreVertical className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40 glass-card shadow-2xl">
+                            <DropdownMenuItem onClick={() => handleAction('view', doc)}>
+                              <Eye className="size-4 mr-2" /> Chi tiết
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAction('pdf', doc)}>
+                              <FileText className="size-4 mr-2" /> Xem PDF
+                            </DropdownMenuItem>
+
+                            {(localStorage.getItem('user_role') === 'Admin' || localStorage.getItem('user_role') === 'VanThu') && (
+                              <DropdownMenuItem onClick={() => handleAction('edit', doc)}>
+                                <FileEdit className="size-4 mr-2" /> Chỉnh sửa
+                              </DropdownMenuItem>
+                            )}
+
+                            {localStorage.getItem('user_role') === 'Admin' && (
+                              <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleAction('delete', doc)}>
+                                <Trash2 className="size-4 mr-2" /> Xóa
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={8} className="h-[240px] text-center p-0 align-middle">
+                      <div className="flex flex-col items-center justify-center gap-3 opacity-20">
+                        <Search className="size-16" />
+                        <p className="text-sm font-bold">Không tìm thấy văn bản nào</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        </div>
-      </CardContent>
+
+          <div className="p-4 border-t border-border flex items-center justify-between bg-card/50">
+            <p className="text-xs text-muted-foreground font-medium">
+              Trang <span className="text-foreground">{page}</span> / <span className="text-foreground">{totalPages || 1}</span>
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+                className="h-8 text-xs font-semibold"
+              >
+                <ChevronLeft className="size-4 mr-1" /> Trước
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+                className="h-8 text-xs font-semibold"
+              >
+                Sau <ChevronRight className="size-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );

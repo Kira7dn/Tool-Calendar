@@ -26,7 +26,6 @@ import {
   Frown,
   Loader2
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { getStatusConfig, DOC_STATUS } from '@/lib/constants';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +46,6 @@ import {
 import { cn } from '@/lib/utils';
 
 export function DocDetail({ docId, onBack }) {
-  const { t } = useTranslation();
   const [doc, setDoc] = useState(null);
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -180,7 +178,7 @@ export function DocDetail({ docId, onBack }) {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <Loader2 className="size-8 animate-spin text-secondary" />
+        <Loader2 className="size-8 animate-spin text-primary" />
         <p className="text-muted-foreground font-medium">Đang tải chi tiết văn bản...</p>
       </div>
     );
@@ -203,7 +201,7 @@ export function DocDetail({ docId, onBack }) {
   const statusConfig = getStatusConfig(doc.trangThai || doc.status, doc.soNgayConLai);
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-6 pb-10">
+    <div className="max-w-[1400px] mx-auto space-y-6 pb-10 animate-in slide-in-from-bottom-4 duration-700 fill-mode-both">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -299,9 +297,9 @@ export function DocDetail({ docId, onBack }) {
                         title="PDF Viewer"
                      />
                   </div>
-                  <div className="w-full md:w-80 bg-secondary p-6 overflow-auto">
+                  <div className="w-full md:w-80 bg-primary p-6 overflow-auto">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4 block">Dữ liệu OCR</Label>
-                    <div className="text-secondary-foreground/80 font-mono text-xs leading-relaxed whitespace-pre-wrap">
+                    <div className="text-primary-foreground/80 font-mono text-xs leading-relaxed whitespace-pre-wrap">
                       {doc.fullText || 'Không có dữ liệu OCR cho văn bản này.'}
                     </div>
                   </div>
@@ -345,7 +343,7 @@ export function DocDetail({ docId, onBack }) {
                 </div>
                 <CardTitle className="text-lg font-bold">Thảo luận</CardTitle>
               </div>
-              <Badge variant="secondary" className="bg-secondary text-secondary-foreground font-bold">{comments.length}</Badge>
+              <Badge variant="default" className="bg-primary text-primary-foreground font-bold">{comments.length}</Badge>
             </CardHeader>
             
             <CardContent className="flex-1 p-0 overflow-hidden flex flex-col">
@@ -366,7 +364,7 @@ export function DocDetail({ docId, onBack }) {
                 {selectedFiles.length > 0 && (
                   <div className="flex flex-wrap gap-2 pb-2">
                     {selectedFiles.map((file, i) => (
-                      <Badge key={i} variant="secondary" className="bg-background group">
+                      <Badge key={i} variant="default" className="bg-background group">
                         {file.name}
                         <X className="size-3 ml-1 cursor-pointer" onClick={() => setSelectedFiles(selectedFiles.filter((_, idx) => idx !== i))} />
                       </Badge>
@@ -420,7 +418,7 @@ export function DocDetail({ docId, onBack }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="size-8 border-2 border-background shadow-sm">
-              <AvatarFallback className="bg-secondary text-secondary-foreground text-[10px] font-bold">
+              <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-bold">
                 {comment.username.substring(0, 1).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -459,7 +457,7 @@ export function DocDetail({ docId, onBack }) {
 function DetailField({ label, value, icon: Icon, highlight }) {
   return (
     <div className="space-y-1.5 group">
-      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-secondary transition-colors">{label}</Label>
+      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">{label}</Label>
       <div className="flex items-center gap-3">
         <div className={cn("p-2 rounded-xl border border-border shadow-sm", highlight ? "bg-warning/10 text-warning border-warning/30" : "bg-background text-muted-foreground")}>
           <Icon className="size-4" />
@@ -493,10 +491,10 @@ function HistoryItem({ title, time, user, active }) {
     <div className="relative pl-10">
       <div className={cn(
         "absolute left-0 mt-1 size-5 rounded-full border-4 border-background shadow-md z-10",
-        active ? "bg-secondary scale-125" : "bg-muted"
+        active ? "bg-primary scale-125" : "bg-muted"
       )} />
       <div className="space-y-1">
-        <p className={cn("text-sm font-bold", active ? "text-secondary" : "text-foreground")}>{title}</p>
+        <p className={cn("text-sm font-bold", active ? "text-primary" : "text-foreground")}>{title}</p>
         <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
           <span className="flex items-center gap-1"><Clock className="size-3" /> {time}</span>
           <span className="flex items-center gap-1"><User className="size-3" /> {user}</span>

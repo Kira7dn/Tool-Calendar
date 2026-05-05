@@ -64,6 +64,8 @@ namespace ToolCalendar.Services
             }
         }
 
+        public async Task ScanDeadlinesAsync(bool force = false)
+        {
             if (!await _scanLock.WaitAsync(0)) 
             {
                 _logger.LogWarning("[DeadlineWorker] Một tiến trình quét đang chạy, bỏ qua lần quét này.");
@@ -73,6 +75,7 @@ namespace ToolCalendar.Services
             try
             {
                 using var scope = _serviceProvider.CreateScope();
+                var notificationManager = scope.ServiceProvider.GetRequiredService<INotificationManager>();
                 var docRepo = scope.ServiceProvider.GetRequiredService<ToolCalendar.Core.Data.Interfaces.IDocumentRepository>();
                 var docs = await docRepo.GetAllAsync();
                 var activeDocs = docs.Where(d => d.Status != "Đã hoàn thành" && d.ThoiHan.HasValue).ToList();

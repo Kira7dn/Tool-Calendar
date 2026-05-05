@@ -106,12 +106,12 @@ namespace ToolCalendar.Api.Controllers
             return Ok(new { message = "Lưu cấu hình thành công." });
         }
 
-        // --- AUDIT LOGS ---
         [Authorize(Roles = "Admin")]
         [HttpGet("audit-logs")]
-        public IActionResult GetAuditLogs([FromQuery] int limit = 100)
+        public IActionResult GetAuditLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            return Ok(DatabaseService.GetAuditLogs(limit));
+            var result = DatabaseService.GetAuditLogs(page, pageSize);
+            return Ok(new { items = result.items, total = result.total });
         }
 
         [Authorize(Roles = "Admin")]

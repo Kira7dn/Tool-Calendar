@@ -43,8 +43,7 @@ export default defineConfig({
     assetsDir: 'vite-assets',
     rollupOptions: {
       input: {
-        index: resolve(__dirname, 'index.html'),
-        login: resolve(__dirname, 'login.html')
+        index: resolve(__dirname, 'index.html')
       }
     }
   }

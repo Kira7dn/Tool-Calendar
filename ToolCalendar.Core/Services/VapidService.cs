@@ -1,4 +1,4 @@
-﻿using ToolCalendar.Data;
+using ToolCalendar.Data;
 using WebPush;
 
 namespace ToolCalendar.Services
@@ -43,7 +43,8 @@ namespace ToolCalendar.Services
             if (string.IsNullOrEmpty(_publicKey) || string.IsNullOrEmpty(_privateKey)) return;
 
             var subscription = new WebPush.PushSubscription(endpoint, p256dh, auth);
-            var vapidDetails = new VapidDetails("mailto:admin@toolcalendar.local", _publicKey, _privateKey);
+            var subject = Environment.GetEnvironmentVariable("VAPID_SUBJECT") ?? "mailto:admin@toolcalendar.local";
+            var vapidDetails = new VapidDetails(subject, _publicKey, _privateKey);
             var webPushClient = new WebPushClient();
 
             try

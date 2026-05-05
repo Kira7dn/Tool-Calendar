@@ -17,7 +17,8 @@ import {
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
-import { Sidebar } from './Sidebar.jsx';
+import { AppSidebar } from './Sidebar.jsx';
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from '@/lib/utils';
 import { registerServiceWorker, subscribeUserToPush } from '@/lib/push-notifications';
 import { Dashboard } from '../pages/Dashboard.jsx';
@@ -27,7 +28,7 @@ import { Users } from '../pages/Users.jsx';
 import { DocDetail } from '../pages/DocDetail.jsx';
 import { MyTasks } from '../pages/MyTasks.jsx';
 import { Review } from '../pages/Review.jsx';
-import { Settings as SettingsPage } from '../pages/Settings.jsx';
+import { Settings as SettingsPage } from '../pages/settings/index.jsx';
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -56,11 +57,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Separator } from '@/components/ui/separator';
 
 export function AppShell() {
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
-  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('dashboard');
   const [tabFilters, setTabFilters] = React.useState({});
   const [currentDocId, setCurrentDocId] = React.useState(null);
@@ -73,13 +77,13 @@ export function AppShell() {
   const [notifCount, setNotifCount] = React.useState(0);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-  const [density, setDensity] = React.useState(localStorage.getItem('ui-density') || 'comfortable');
-
   React.useEffect(() => {
-    localStorage.setItem('ui-density', density);
-  }, [density]);
+    // Auth Guard: Redirect if not authenticated (main.jsx handles this usually)
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/';
+      return;
+    }
 
-  React.useEffect(() => {
     // Load user info from localStorage
     const name = localStorage.getItem('user_name') || 'User';
     const role = localStorage.getItem('user_role') || 'CanBo';
@@ -123,7 +127,35 @@ export function AppShell() {
       setIsReviewOpen(true);
     };
 
+    // Listen for unauthorized event
+    const handleUnauthorized = () => handleLogout();
+    document.addEventListener('auth:unauthorized', handleUnauthorized);
+
+    // Global 401 Interceptor
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      try {
+        const response = await originalFetch(...args);
+        if (response.status === 401) {
+          const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+          // Ignore 401s from specific endpoints that might be 403s in disguise due to .NET Core default challenge
+          const isRoleIssue = url.includes('/api/admin/') || url.includes('/api/users');
+
+          if (!isRoleIssue) {
+            document.dispatchEvent(new CustomEvent('auth:unauthorized'));
+          } else {
+            console.warn(`[Auth] Ignored 401 from ${url} (Likely a role/permission issue)`);
+          }
+        }
+        return response;
+      } catch (error) {
+        throw error;
+      }
+    };
+
     return () => {
+      window.fetch = originalFetch;
+      document.removeEventListener('auth:unauthorized', handleUnauthorized);
       document.removeEventListener('realtime:notifications_updated', handleNotifUpdate);
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', handleSWMessage);
@@ -131,18 +163,9 @@ export function AppShell() {
     };
   }, []);
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
-  const toggleMobileSidebar = () => {
-    setIsMobileOpen(!isMobileOpen);
-  };
-
   const handleLogout = () => {
-    // Logic for logout here (e.g. clearing tokens)
     localStorage.clear();
-    window.location.href = '/login.html';
+    window.location.href = '/';
   };
 
   return (
@@ -152,32 +175,16 @@ export function AppShell() {
         <div className="blob blob-2" />
       </div>
 
-      <div
-        className={cn("sidebar-overlay", isMobileOpen && "active")}
-        onClick={toggleMobileSidebar}
-      />
-
-      <div className="app-container">
-        <Sidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-          isMobileOpen={isMobileOpen}
-          setIsMobileOpen={setIsMobileOpen}
+      <SidebarProvider className="app-container">
+        <AppSidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
         />
 
         <main className="main-content">
-          <header className="px-6 py-3 glass-header">
+          <header className="px-6 h-[var(--header-height)] glass-header flex items-center justify-between shrink-0">
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="mobile-menu-btn md:hidden"
-                onClick={toggleMobileSidebar}
-              >
-                <Menu className="size-5" />
-              </Button>
+              <SidebarTrigger className="size-10 shrink-0 text-muted-foreground hover:bg-muted" />
               <div className="header-title">
                 <h1 className="text-xl font-extrabold text-foreground tracking-tight">Hệ Thống Điều Phối Công Văn</h1>
                 <p className="text-[0.7rem] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-0.5">Giám sát và đôn đốc thực thi công việc</p>
@@ -185,46 +192,32 @@ export function AppShell() {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 max-md:hidden">
-                <Button variant="ghost" size="sm" className="text-xs font-bold text-muted-foreground hover:text-secondary px-2">EN</Button>
-                <div className="w-px h-3 bg-border" />
-                <Button variant="ghost" size="sm" className="text-xs font-bold text-secondary bg-secondary/5 px-2">VI</Button>
-              </div>
-
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-10 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground transition-all"
-                  onClick={() => setDensity(d => d === 'comfortable' ? 'compact' : 'comfortable')}
-                  title={density === 'comfortable' ? 'Chế độ thu gọn' : 'Chế độ rộng rãi'}
-                >
-                  <LayoutDashboard className={cn("size-5", density === 'compact' && "text-secondary scale-90")} />
-                </Button>
-                <div className="w-px h-6 bg-border mx-1" />
                 {/* Notifications */}
-                <DropdownMenu open={isNotifOpen} onOpenChange={setIsNotifOpen}>
-                  <DropdownMenuTrigger asChild>
+                <Popover open={isNotifOpen} onOpenChange={setIsNotifOpen}>
+                  <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" className="relative size-10 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground transition-all">
                       <Bell className="size-5" />
                       <Badge className="absolute -top-1 -right-1 size-5 p-0 flex items-center justify-center bg-destructive border-2 border-background text-[10px] font-bold">
                         {notifCount}
                       </Badge>
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[380px] p-0 overflow-hidden border-none shadow-2xl glass-card rounded-2xl">
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-[380px] p-0 overflow-hidden border-none shadow-2xl glass-card rounded-2xl">
                     <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
                       <h3 className="font-bold text-foreground">Thông báo</h3>
-                      <Button variant="ghost" size="sm" className="h-8 text-xs text-secondary hover:bg-secondary/10 font-bold">
+                      <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:bg-primary/10 font-bold">
                         Đánh dấu đã đọc
                       </Button>
                     </div>
                     <Tabs defaultValue="all" className="w-full">
-                      <TabsList className="w-full justify-start rounded-none bg-transparent border-b border-border h-10 px-4">
-                        <TabsTrigger value="all" className="rounded-none border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:bg-transparent text-xs font-bold px-4">Tất cả</TabsTrigger>
-                        <TabsTrigger value="unread" className="rounded-none border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:bg-transparent text-xs font-bold px-4">Chưa đọc</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="all" className="m-0">
+                      <div className="px-4 pt-3">
+                        <TabsList className="w-full grid grid-cols-2 bg-muted/50">
+                          <TabsTrigger value="all" className="text-xs font-bold">Tất cả</TabsTrigger>
+                          <TabsTrigger value="unread" className="text-xs font-bold">Chưa đọc</TabsTrigger>
+                        </TabsList>
+                      </div>
+                      <TabsContent value="all" className="m-0 mt-2">
                         <ScrollArea className="h-[350px]">
                           <div className="flex flex-col py-2">
                             <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground">
@@ -236,7 +229,7 @@ export function AppShell() {
                           </div>
                         </ScrollArea>
                       </TabsContent>
-                      <TabsContent value="unread" className="m-0">
+                      <TabsContent value="unread" className="m-0 mt-2">
                         <ScrollArea className="h-[350px]">
                           <div className="flex flex-col py-2">
                             <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground">
@@ -246,18 +239,18 @@ export function AppShell() {
                         </ScrollArea>
                       </TabsContent>
                     </Tabs>
-                    <div className="p-3 bg-muted/30 border-t border-border text-center">
-                      <Button variant="link" className="text-xs font-bold text-secondary" onClick={() => setActiveTab('documents')}>Xem tất cả văn bản</Button>
+                    <div className="p-0 bg-muted/30 border-t border-border text-center">
+                      <Button variant="link" className="text-xs font-bold text-primary" onClick={() => setActiveTab('documents')}>Xem tất cả văn bản</Button>
                     </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </PopoverContent>
+                </Popover>
 
                 {/* User Profile */}
                 <DropdownMenu open={isUserOpen} onOpenChange={setIsUserOpen}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="group px-2 hover:bg-secondary/5 rounded-full h-10">
-                      <Avatar className="size-8 border-2 border-background shadow-sm ring-2 ring-secondary/10">
-                        <AvatarFallback className="bg-secondary text-secondary-foreground text-xs font-bold">
+                    <Button variant="ghost" className="group px-2 hover:bg-primary/5 rounded-full h-10">
+                      <Avatar className="size-8 border-2 border-background shadow-sm ring-2 ring-primary/10">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                           {user.name.substring(0, 1).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -273,8 +266,8 @@ export function AppShell() {
                   <DropdownMenuContent align="end" className="w-64 p-2 border-none shadow-2xl glass-card rounded-2xl">
                     <DropdownMenuLabel className="px-3 py-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="size-10 border-2 border-secondary/20">
-                          <AvatarFallback className="bg-secondary text-secondary-foreground font-bold">
+                        <Avatar className="size-10 border-2 border-primary/20">
+                          <AvatarFallback className="bg-primary text-primary-foreground font-bold">
                             {user.name.substring(0, 1).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -289,14 +282,14 @@ export function AppShell() {
                     <DropdownMenuSeparator className="bg-border" />
                     <div className="py-1">
                       <DropdownMenuItem
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-secondary hover:bg-secondary/5 cursor-pointer font-bold text-sm"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 cursor-pointer font-bold text-sm"
                         onSelect={() => setActiveTab('settings')}
                       >
                         <SettingsIcon className="size-4" />
                         <span>Cấu hình hệ thống</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-secondary hover:bg-secondary/5 cursor-pointer font-bold text-sm transition-colors"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 cursor-pointer font-bold text-sm transition-colors"
                         onSelect={() => setIsPasswordModalOpen(true)}
                       >
                         <KeyRound className="size-4" />
@@ -317,10 +310,13 @@ export function AppShell() {
             </div>
           </header>
 
-          <div className={cn(
-            "p-[var(--space-page)] max-md:px-4 flex-1 flex flex-col min-h-0",
-            density === 'compact' ? 'density-compact' : 'density-comfortable'
-          )}>
+          <div
+            key={isReviewOpen ? 'review' : currentDocId ? 'detail' : activeTab}
+            className={cn(
+              "p-[var(--space-page)] max-md:px-4 flex-1 flex flex-col min-h-0 density-comfortable",
+              "animate-in fade-in duration-500 fill-mode-both"
+            )}
+          >
             {isReviewOpen ? (
               <Review onBack={() => setIsReviewOpen(false)} />
             ) : currentDocId ? (
@@ -344,15 +340,15 @@ export function AppShell() {
             )}
           </div>
         </main>
-      </div>
+      </SidebarProvider>
 
       {/* Mobile Bottom Nav */}
       <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border flex items-center justify-around z-[500] md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'dashboard' && "text-secondary border-secondary bg-secondary/5")} onClick={() => setActiveTab('dashboard')}>
+        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'dashboard' && "text-primary border-primary bg-primary/5")} onClick={() => setActiveTab('dashboard')}>
           <LayoutDashboard className="size-5" />
           <span className="text-[10px] font-bold">Trang chủ</span>
         </Button>
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'documents' && "text-secondary border-secondary bg-secondary/5")} onClick={() => setActiveTab('documents')}>
+        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'documents' && "text-primary border-primary bg-primary/5")} onClick={() => setActiveTab('documents')}>
           <FileText className="size-5" />
           <span className="text-[10px] font-bold">Văn bản</span>
         </Button>
@@ -361,7 +357,7 @@ export function AppShell() {
           <Badge className="absolute top-2 right-4 size-4 p-0 flex items-center justify-center bg-destructive border-2 border-background text-[8px] font-bold">{notifCount}</Badge>
           <span className="text-[10px] font-bold">Thông báo</span>
         </Button>
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'my-tasks' && "text-secondary border-secondary bg-secondary/5")} onClick={() => setActiveTab('my-tasks')}>
+        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'my-tasks' && "text-primary border-primary bg-primary/5")} onClick={() => setActiveTab('my-tasks')}>
           <CheckSquare className="size-5" />
           <span className="text-[10px] font-bold">Công việc</span>
         </Button>
@@ -370,7 +366,7 @@ export function AppShell() {
       {/* Change Password Modal */}
       <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
         <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-none shadow-2xl glass-card rounded-2xl">
-          <DialogHeader className="p-6 bg-gradient-to-r from-secondary to-sidebar-mid text-secondary-foreground">
+          <DialogHeader className="p-6 bg-gradient-to-r from-primary to-sidebar-mid text-primary-foreground">
             <DialogTitle className="text-xl font-extrabold flex items-center gap-3">
               <div className="p-2 rounded-lg bg-muted/10">
                 <KeyRound className="size-5" />
@@ -383,7 +379,7 @@ export function AppShell() {
               <div className="space-y-2 group">
                 <Label
                   htmlFor="current-user-new-password"
-                  className="text-xs font-black uppercase tracking-widest text-muted-foreground group-focus-within:text-secondary transition-colors"
+                  className="text-xs font-black uppercase tracking-widest text-muted-foreground group-focus-within:text-primary transition-colors"
                 >
                   Mật khẩu mới
                 </Label>
@@ -397,7 +393,7 @@ export function AppShell() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute right-1 top-1 h-10 w-10 text-muted-foreground hover:text-secondary hover:bg-transparent"
+                    className="absolute right-1 top-1 h-10 w-10 text-muted-foreground hover:text-primary hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -408,7 +404,7 @@ export function AppShell() {
               <div className="space-y-2 group">
                 <Label
                   htmlFor="current-user-confirm-password"
-                  className="text-xs font-black uppercase tracking-widest text-muted-foreground group-focus-within:text-secondary transition-colors"
+                  className="text-xs font-black uppercase tracking-widest text-muted-foreground group-focus-within:text-primary transition-colors"
                 >
                   Xác nhận mật khẩu
                 </Label>
@@ -422,7 +418,7 @@ export function AppShell() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute right-1 top-1 h-10 w-10 text-muted-foreground hover:text-secondary hover:bg-transparent"
+                    className="absolute right-1 top-1 h-10 w-10 text-muted-foreground hover:text-primary hover:bg-transparent"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -440,22 +436,22 @@ export function AppShell() {
                 Hủy bỏ
               </Button>
               <Button
-                className="flex-1 h-12 rounded-xl bg-secondary hover:bg-sidebar-mid text-secondary-foreground font-bold shadow-lg shadow-secondary/20 transition-all"
+                className="flex-1 h-12 rounded-xl bg-primary hover:bg-sidebar-mid text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all"
                 data-action="confirm-change-password"
                 onClick={async (e) => {
                   const newPass = document.getElementById('current-user-new-password').value;
                   const confirmPass = document.getElementById('current-user-confirm-password').value;
-                  
+
                   if (newPass.length < 4) {
                     alert('Mật khẩu mới phải có ít nhất 4 ký tự!');
                     return;
                   }
-                  
+
                   if (newPass !== confirmPass) {
                     alert('Mật khẩu xác nhận không khớp!');
                     return;
                   }
-                  
+
                   try {
                     const response = await fetch('/api/auth/change-password', {
                       method: 'POST',
@@ -465,7 +461,7 @@ export function AppShell() {
                       },
                       body: JSON.stringify({ newPassword: newPass })
                     });
-                    
+
                     if (response.ok) {
                       alert('Đổi mật khẩu thành công!');
                       setIsPasswordModalOpen(false);

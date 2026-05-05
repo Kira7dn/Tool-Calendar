@@ -9,6 +9,13 @@ namespace ToolCalendar.Api.Controllers
     [Route("api/[controller]")]
     public class StatsController : ControllerBase
     {
+        private readonly AppDbContext _db;
+
+        public StatsController(AppDbContext db)
+        {
+            _db = db;
+        }
+
         [HttpGet]
         public IActionResult GetSummary()
         {
@@ -24,6 +31,21 @@ namespace ToolCalendar.Api.Controllers
             }
         }
 
+        [HttpGet("activities")]
+        public IActionResult GetRecentActivities()
+        {
+            try
+            {
+                // Fetch the 10 most recent activities
+                var (logs, _) = DatabaseService.GetAuditLogs(1, 10);
+                return Ok(logs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi lấy hoạt động: {ex.Message}" });
+            }
+        }
+
         [HttpGet("settings")]
         [Authorize(Roles = "Admin,VanThu")]
         public IActionResult GetSettings()
@@ -32,7 +54,6 @@ namespace ToolCalendar.Api.Controllers
             var keywords = DatabaseService.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
             var excludeKeywords = DatabaseService.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
             var minDays = DatabaseService.GetAppSetting("Document_MinDeadlineDays", "0");
-            var statusList = DatabaseService.GetAppSetting("Document_StatusList", "Chưa xử lý,Đang xử lý,Đã rà soát,Đã hoàn thành,Lỗi OCR,Quá hạn");
 
             return Ok(new
             {
@@ -40,8 +61,7 @@ namespace ToolCalendar.Api.Controllers
                 deadlineKeywords = keywords,
                 deadlineExcludeKeywords = excludeKeywords,
                 minDeadlineDays = int.Parse(minDays),
-                notificationScanTime = DatabaseService.GetAppSetting("Notification_ScanTime", "08:30"),
-                statusList = statusList.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList()
+                notificationScanTime = DatabaseService.GetAppSetting("Notification_ScanTime", "08:30")
             });
         }
 
@@ -55,7 +75,6 @@ namespace ToolCalendar.Api.Controllers
                 string keywords = data.GetProperty("deadlineKeywords").ToString();
                 string excludeKeywords = data.TryGetProperty("deadlineExcludeKeywords", out var exc) ? exc.ToString() : "";
                 string minDays = data.TryGetProperty("minDeadlineDays", out var mnd) ? mnd.ToString() : "0";
-                string statusList = data.TryGetProperty("statusList", out var sl) ? sl.ToString() : "";
                 string scanTime = data.TryGetProperty("notificationScanTime", out var st) ? st.ToString() : "08:30";
 
                 DatabaseService.SaveAppSetting("OcrSettings_MaxPagesToScan", maxPages);
@@ -66,9 +85,6 @@ namespace ToolCalendar.Api.Controllers
 
                 // Reset chặn quét để cho phép quét lại vào giờ mới ngay trong ngày hôm nay
                 DatabaseService.SaveAppSetting("Notification_LastScanDate", "");
-
-                if (!string.IsNullOrWhiteSpace(statusList))
-                    DatabaseService.SaveAppSetting("Document_StatusList", statusList);
 
                 return Ok();
             }

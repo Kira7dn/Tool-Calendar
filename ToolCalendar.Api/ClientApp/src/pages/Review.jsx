@@ -165,7 +165,7 @@ export function Review({ onBack }) {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] gap-4">
-        <Loader2 className="size-10 animate-spin text-secondary" />
+        <Loader2 className="size-10 animate-spin text-primary" />
         <p className="text-muted-foreground font-bold">Đang chuẩn bị dữ liệu OCR...</p>
       </div>
     );
@@ -179,7 +179,7 @@ export function Review({ onBack }) {
         </div>
         <h3 className="text-2xl font-black text-foreground">Hoàn tất kiểm duyệt!</h3>
         <p className="text-muted-foreground font-medium">Tất cả văn bản mới đã được xử lý thông tin.</p>
-        <Button onClick={onBack} className="rounded-xl bg-secondary px-8 h-12 font-bold mt-4 shadow-xl">
+        <Button onClick={onBack} className="rounded-xl bg-primary px-8 h-12 font-bold mt-4 shadow-xl">
           Quay lại Dashboard
         </Button>
       </div>
@@ -189,16 +189,16 @@ export function Review({ onBack }) {
   const currentDoc = docs[currentIndex];
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-background flex flex-col animate-in fade-in zoom-in-95 duration-300">
-      <header className="h-16 bg-secondary border-b border-border flex items-center justify-between px-6 shrink-0">
+    <div className="fixed inset-0 z-[1000] bg-background flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both">
+      <header className="h-16 bg-primary border-b border-border flex items-center justify-between px-6 shrink-0">
         <div className="flex items-center gap-6">
-          <Button variant="ghost" size="icon" onClick={onBack} className="text-secondary-foreground hover:bg-secondary-foreground/10 rounded-full">
+          <Button variant="ghost" size="icon" onClick={onBack} className="text-primary-foreground hover:bg-primary-foreground/10 rounded-full">
             <X className="size-5" />
           </Button>
           <div className="h-8 w-px bg-border" />
           <div className="flex flex-col">
-            <h2 className="text-secondary-foreground">Kiểm duyệt bóc tách OCR</h2>
-            <p className="text-secondary-foreground/50 text-[10px] font-black uppercase tracking-widest">
+            <h2 className="text-primary-foreground">Kiểm duyệt bóc tách OCR</h2>
+            <p className="text-primary-foreground/50 text-[10px] font-black uppercase tracking-widest">
               Tài liệu {currentIndex + 1} / {docs.length}
             </p>
           </div>
@@ -209,7 +209,7 @@ export function Review({ onBack }) {
             variant="ghost" 
             disabled={currentIndex === 0}
             onClick={() => setCurrentIndex(prev => prev - 1)}
-            className="text-secondary-foreground hover:bg-secondary-foreground/10 rounded-xl px-4"
+            className="text-primary-foreground hover:bg-primary-foreground/10 rounded-xl px-4"
           >
             <ChevronLeft className="size-4 mr-2" /> Trước đó
           </Button>
@@ -217,7 +217,7 @@ export function Review({ onBack }) {
             variant="ghost" 
             disabled={currentIndex === docs.length - 1}
             onClick={() => setCurrentIndex(prev => prev + 1)}
-            className="text-secondary-foreground hover:bg-secondary-foreground/10 rounded-xl px-4"
+            className="text-primary-foreground hover:bg-primary-foreground/10 rounded-xl px-4"
           >
             Tiếp theo <ChevronRight className="size-4 ml-2" />
           </Button>
@@ -256,7 +256,7 @@ export function Review({ onBack }) {
           <ScrollArea className="flex-1">
             <div className="p-8 space-y-8">
               <div className="space-y-1">
-                <Badge variant="secondary" className="font-black text-[10px] uppercase tracking-tighter mb-2">Thông tin AI đề xuất</Badge>
+                <Badge variant="default" className="font-black text-[10px] uppercase tracking-tighter mb-2">Thông tin AI đề xuất</Badge>
                 <h3 className="text-xl">Bóc tách thông tin</h3>
                 <p className="text-sm text-muted-foreground">Vui lòng kiểm tra và chỉnh sửa nếu AI nhận diện sai</p>
               </div>
@@ -266,7 +266,7 @@ export function Review({ onBack }) {
                   <Input 
                     value={formData.soVanBan} 
                     onChange={e => setFormData({...formData, soVanBan: e.target.value})}
-                    className="h-12 font-bold text-secondary" 
+                    className="h-12 font-bold text-primary" 
                   />
                 </FormField>
 
@@ -341,10 +341,10 @@ function FormField({ label, icon: Icon, children }) {
   return (
     <div className="space-y-3 group">
       <div className="flex items-center justify-between">
-        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-focus-within:text-secondary transition-colors">
+        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-focus-within:text-primary transition-colors">
           {label}
         </Label>
-        <Icon className="size-3.5 text-muted-foreground/50 group-focus-within:text-secondary transition-colors" />
+        <Icon className="size-3.5 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
       </div>
       {children}
     </div>

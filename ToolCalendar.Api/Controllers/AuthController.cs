@@ -14,12 +14,13 @@ namespace ToolCalendar.Api.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly string _secretKey = "LinkStrategy_SecretKey_2026_Secure_GiamSatCongVan";
+        private readonly IConfiguration _configuration;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IUserRepository _userRepository;
 
-        public AuthController(IHubContext<NotificationHub> hubContext, IUserRepository userRepository)
+        public AuthController(IConfiguration configuration, IHubContext<NotificationHub> hubContext, IUserRepository userRepository)
         {
+            _configuration = configuration;
             _hubContext = hubContext;
             _userRepository = userRepository;
         }
@@ -36,7 +37,10 @@ namespace ToolCalendar.Api.Controllers
             await _hubContext.Clients.Group($"User_{user.Id}").SendAsync("Kicked", "Tài khoản đã đăng nhập từ thiết bị khác.");
 
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_secretKey);
+            var jwtSecret = _configuration["JWT_SECRET"] 
+                            ?? Environment.GetEnvironmentVariable("JWT_SECRET") 
+                            ?? "LinkStrategy_Default_Development_Key_2026_DO_NOT_USE_IN_PROD";
+            var key = Encoding.ASCII.GetBytes(jwtSecret);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {

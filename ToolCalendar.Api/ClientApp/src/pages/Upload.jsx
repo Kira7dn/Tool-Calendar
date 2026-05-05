@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Upload as UploadIcon, 
-  FileText, 
-  FolderOpen, 
-  X, 
-  CheckCircle2, 
+import {
+  Upload as UploadIcon,
+  UploadCloud,
+  FileText,
+  FolderOpen,
+  X,
+  CheckCircle2,
   AlertCircle,
   Loader2,
   Calendar,
@@ -63,7 +64,7 @@ export function Upload({ onTabChange }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
   const [currentFileName, setCurrentFileName] = useState('');
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
@@ -73,7 +74,7 @@ export function Upload({ onTabChange }) {
 
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
-  
+
   const fileInputRef = useRef(null);
   const folderInputRef = useRef(null);
 
@@ -125,12 +126,12 @@ export function Upload({ onTabChange }) {
   const handleFileUpload = async (fileList) => {
     setIsProcessing(true);
     setOverallProgress(0);
-    
+
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
       setCurrentFileName(file.name);
       setOverallProgress(Math.round(((i) / fileList.length) * 100));
-      
+
       const tempId = `temp-${Date.now()}-${i}`;
       const newItem = {
         id: tempId,
@@ -144,7 +145,7 @@ export function Upload({ onTabChange }) {
         status: 'processing',
         warnings: []
       };
-      
+
       setBatchItems(prev => [newItem, ...prev]);
 
       const formData = new FormData();
@@ -161,7 +162,7 @@ export function Upload({ onTabChange }) {
           const doc = await response.json();
           const sUserIds = parseIds(doc.assignedUserIds || doc.assignedToIds);
           const sDeptIds = parseIds(doc.assignedDepartmentIds || doc.departmentIds);
-          
+
           setBatchItems(prev => prev.map(item => item.id === tempId ? {
             ...item,
             id: doc.id,
@@ -183,7 +184,7 @@ export function Upload({ onTabChange }) {
         setBatchItems(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
       }
     }
-    
+
     setOverallProgress(100);
     setTimeout(() => {
       setIsProcessing(false);
@@ -195,7 +196,7 @@ export function Upload({ onTabChange }) {
     setBatchItems(prev => prev.map(item => {
       if (item.id === id) {
         let updated = { ...item, [field]: value };
-        
+
         if (field === 'assignedToIds') {
           const userIds = value;
           const currentDeptIds = [...updated.departmentIds];
@@ -258,7 +259,7 @@ export function Upload({ onTabChange }) {
               })
             });
           }
-          
+
           setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'success' } : i));
           successCount++;
         }
@@ -307,7 +308,7 @@ export function Upload({ onTabChange }) {
           },
           body: JSON.stringify([item.id])
         });
-      } catch (e) {}
+      } catch (e) { }
     }
     setBatchItems(prev => prev.filter(i => i.id !== item.id));
   };
@@ -334,113 +335,132 @@ export function Upload({ onTabChange }) {
   const paginatedItems = batchItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-[var(--space-page)] flex flex-col h-full animate-in slide-in-from-bottom-4 duration-700 fill-mode-both">
       <div className="flex flex-col gap-0 border-l-4 border-info pl-3 py-0.5">
         <h2 className="text-xl">Số hóa tài liệu</h2>
-        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">AI-Powered OCR Engine</p>
+        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">PDF OCR Engine</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-1 space-y-4">
-          <Card 
+      <div className="flex flex-col lg:flex-row gap-[var(--space-page)] flex-1 min-h-0">
+        <div className="w-full lg:w-[320px] xl:w-[350px] flex-shrink-0 space-y-4 flex flex-col justify-center">
+          <Card
             className={cn(
-              "relative border-2 border-dashed transition-all duration-300 p-8 text-center h-[300px] flex flex-col items-center justify-center rounded-3xl",
-              isDragging ? "border-primary bg-primary/5 scale-[1.02]" : "glass-card shadow-xl",
-              isProcessing && "opacity-50 pointer-events-none"
+              "gap-2 relative group flex flex-col items-center justify-center p-2 text-center min-h-[320px] rounded-3xl transition-all duration-300 border-2 border-dashed",
+              isDragging
+                ? "border-primary bg-primary/5 ring-4 ring-primary/10 scale-[1.02]"
+                : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30 glass-card"
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <div className="p-4 rounded-2xl bg-primary/10 text-primary mb-4">
-              <UploadIcon className="size-8" />
+            <input
+              type="file"
+              multiple
+              accept="application/pdf"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              onChange={(e) => handleFileUpload(Array.from(e.target.files))}
+              title=""
+            />
+
+            <div className={cn(
+              "flex items-center justify-center size-14 rounded-full mb-3 transition-all duration-300 shadow-sm",
+              isDragging ? "bg-primary text-primary-foreground scale-110" : "bg-primary/10 text-primary group-hover:scale-110 group-hover:bg-primary/20"
+            )}>
+              <UploadCloud className="size-7" />
             </div>
-            <h3 className="text-lg font-bold text-foreground">Thả tệp PDF vào đây</h3>
-            <p className="text-xs text-muted-foreground mt-1 mb-6">Tự động nhận diện & bóc tách</p>
-            
-            <div className="flex flex-col w-full gap-2">
-              <Button 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg font-bold"
-                onClick={() => fileInputRef.current?.click()}
+
+            <h3 className="text-sm font-semibold mb-1 text-foreground">
+              {isDragging ? "Thả tệp vào đây..." : "Tải tệp tin lên"}
+            </h3>
+
+            <p className="text-xs text-muted-foreground max-w-[220px] mb-6">
+              Kéo thả tệp PDF vào đây hoặc chọn tải lên từ máy tính.
+            </p>
+
+            <div className="flex flex-col gap-2 w-full max-w-[200px] relative z-20">
+              <Button
+                variant={isDragging ? "default" : "primary"}
+                className="font-bold rounded-xl shadow-sm w-full pointer-events-none"
               >
                 Chọn tệp tin
               </Button>
-              <Button 
-                variant="ghost" 
-                className="text-muted-foreground hover:bg-muted/50 rounded-xl text-xs font-bold"
-                onClick={() => folderInputRef.current?.click()}
+              <Button
+                variant="outline"
+                className="font-bold rounded-xl text-muted-foreground hover:bg-muted/50 w-full"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); folderInputRef.current?.click(); }}
               >
-                <FolderOpen className="size-4 mr-2" /> Thư mục
+                <FolderOpen className="size-3.5 mr-2" />
+                Tải cả thư mục
               </Button>
             </div>
 
-            <input type="file" ref={fileInputRef} className="hidden" accept=".pdf" multiple onChange={(e) => handleFileUpload(Array.from(e.target.files))} />
             <input type="file" ref={folderInputRef} className="hidden" webkitdirectory="true" directory="true" multiple onChange={(e) => handleFileUpload(Array.from(e.target.files))} />
           </Card>
 
           {isProcessing && (
-            <Card className="border-none shadow-2xl bg-secondary text-secondary-foreground p-6 rounded-3xl animate-in zoom-in-95">
+            <Card className="border-none shadow-2xl bg-primary text-primary-foreground p-6 rounded-3xl animate-in zoom-in-95">
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-secondary-foreground/50">Đang xử lý OCR</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary-foreground/50">Đang xử lý OCR</p>
                     <h4 className="text-sm font-bold truncate max-w-[150px]">{currentFileName}</h4>
                   </div>
                   <div className="text-right">
                     <span className="text-xl font-black">{overallProgress}%</span>
                   </div>
                 </div>
-                <Progress value={overallProgress} className="h-1.5 bg-secondary-foreground/10" indicatorClassName="bg-secondary-foreground" />
+                <Progress value={overallProgress} className="h-1.5 bg-primary-foreground/10" indicatorClassName="bg-primary-foreground" />
               </div>
             </Card>
           )}
 
           {batchItems.length > 0 && (
             <Card className="p-4 shadow-lg space-y-3 glass-card">
-               <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Trạng thái đợt tải</h4>
-               <div className="space-y-2">
-                 <SummaryChip label="Đang OCR" count={summary.processing} color="bg-info/10 text-info" />
-                 <SummaryChip label="Cần rà soát" count={summary.review} countColor="text-warning" color="bg-warning/10 text-warning" />
-                 <SummaryChip label="Sẵn sàng lưu" count={summary.ready} color="bg-success/10 text-success" />
-                 <SummaryChip label="Đã lưu" count={summary.success} color="bg-success text-success-foreground" />
-                 <SummaryChip label="Lỗi OCR" count={summary.error} color="bg-destructive/10 text-destructive" />
-               </div>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Trạng thái đợt tải</h4>
+              <div className="space-y-2">
+                <SummaryChip label="Đang OCR" count={summary.processing} color="bg-info/10 text-info" />
+                <SummaryChip label="Cần rà soát" count={summary.review} countColor="text-warning" color="bg-warning/10 text-warning" />
+                <SummaryChip label="Sẵn sàng lưu" count={summary.ready} color="bg-success/10 text-success" />
+                <SummaryChip label="Đã lưu" count={summary.success} color="bg-success text-success-foreground" />
+                <SummaryChip label="Lỗi OCR" count={summary.error} color="bg-destructive/10 text-destructive" />
+              </div>
             </Card>
           )}
         </div>
 
-        <div className="lg:col-span-3 space-y-4">
+        <div className="flex-1 space-y-4 flex flex-col min-w-0">
           {batchItems.length > 0 ? (
-            <Card className="shadow-2xl overflow-hidden glass-card">
-              <CardHeader className="px-8 py-6 border-b border-border flex flex-row items-center justify-between bg-muted/50">
+            <Card className="shadow-2xl flex-1 flex flex-col overflow-hidden glass-card gap-2 px-2 py-0">
+              <CardHeader className="px-6 py-6 border-b border-border flex flex-col md:flex-row items-center justify-between bg-muted/20">
                 <div>
                   <h3 className="text-lg">Danh sách bóc tách ({batchItems.length})</h3>
                   <CardDescription>Trang {currentPage} / {totalPages || 1}</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                   <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive font-bold" onClick={handleClearBatch}>
-                     <Trash className="size-4 mr-2" /> Hủy đợt tải
-                   </Button>
-                   <Button 
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive font-bold" onClick={handleClearBatch}>
+                    <Trash className="size-4 mr-2" /> Hủy đợt tải
+                  </Button>
+                  <Button
                     variant="outline"
-                    size="sm" 
+                    size="sm"
                     className="border-warning/30 text-warning bg-warning/10 hover:bg-warning/20 font-bold rounded-xl"
                     disabled={!batchItems.some(i => i.status === 'review' || i.status === 'ready')}
                     onClick={() => onTabChange('review')}
-                   >
-                     <SearchCode className="size-4 mr-2" /> Kiểm duyệt đợt tải
-                   </Button>
-                   <Button 
-                    size="sm" 
+                  >
+                    <SearchCode className="size-4 mr-2" /> Kiểm duyệt đợt tải
+                  </Button>
+                  <Button
+                    size="sm"
                     className="bg-success hover:bg-success/90 text-success-foreground font-bold rounded-xl shadow-lg shadow-success/20"
                     disabled={!batchItems.some(i => i.status === 'ready' || i.status === 'review')}
                     onClick={handleSaveAll}
-                   >
-                     <Save className="size-4 mr-2" /> Lưu & Phân công tất cả
-                   </Button>
+                  >
+                    <Save className="size-4 mr-2" /> Lưu & Phân công tất cả
+                  </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-0">
+              <CardContent className="flex-1 overflow-auto p-0">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30">
@@ -465,8 +485,8 @@ export function Upload({ onTabChange }) {
                         </TableCell>
                         <TableCell>
                           <div className="relative">
-                            <Input 
-                              value={item.soVanBan} 
+                            <Input
+                              value={item.soVanBan}
                               onChange={(e) => updateItem(item.id, 'soVanBan', e.target.value)}
                               placeholder="Số hiệu..."
                               className={cn(
@@ -480,36 +500,36 @@ export function Upload({ onTabChange }) {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Input 
+                          <Input
                             type="date"
-                            value={item.thoiHan} 
+                            value={item.thoiHan}
                             onChange={(e) => updateItem(item.id, 'thoiHan', e.target.value)}
                             className="h-9 text-xs font-bold rounded-xl border-border w-32"
                           />
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1 items-center">
-                            <MultiSelectPopover 
+                            <MultiSelectPopover
                               label="Đơn vị"
                               options={departments.map(d => ({ id: d.id, label: d.name }))}
                               selectedIds={item.departmentIds}
                               suggestedIds={item.suggestedDeptIds}
                               onToggle={(id) => {
-                                const newIds = item.departmentIds.includes(id) 
-                                  ? item.departmentIds.filter(i => i !== id) 
+                                const newIds = item.departmentIds.includes(id)
+                                  ? item.departmentIds.filter(i => i !== id)
                                   : [...item.departmentIds, id];
                                 updateItem(item.id, 'departmentIds', newIds);
                               }}
                               icon={Building2}
                             />
-                            <MultiSelectPopover 
+                            <MultiSelectPopover
                               label="Cán bộ"
                               options={users.map(u => ({ id: u.id, label: u.fullName }))}
                               selectedIds={item.assignedToIds}
                               suggestedIds={item.suggestedUserIds}
                               onToggle={(id) => {
-                                const newIds = item.assignedToIds.includes(id) 
-                                  ? item.assignedToIds.filter(i => i !== id) 
+                                const newIds = item.assignedToIds.includes(id)
+                                  ? item.assignedToIds.filter(i => i !== id)
                                   : [...item.assignedToIds, id];
                                 updateItem(item.id, 'assignedToIds', newIds);
                               }}
@@ -522,16 +542,16 @@ export function Upload({ onTabChange }) {
                         </TableCell>
                         <TableCell className="px-8 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="size-8 rounded-xl text-muted-foreground hover:text-info" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 rounded-xl text-muted-foreground hover:text-info"
                               onClick={() => setEditingItem(item)}
                               title="Sửa nhanh chi tiết"
                             >
                               <Edit3 className="size-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="size-8 rounded-xl text-muted-foreground hover:text-secondary" onClick={() => window.app?.services?.openDocDetail(item.id)}>
+                            <Button variant="ghost" size="icon" className="size-8 rounded-xl text-muted-foreground hover:text-primary" onClick={() => window.app?.services?.openDocDetail(item.id)}>
                               <Eye className="size-4" />
                             </Button>
                             <Button variant="ghost" size="icon" className="size-8 rounded-xl text-muted-foreground hover:text-destructive" onClick={() => handleRemoveItem(item)}>
@@ -546,96 +566,99 @@ export function Upload({ onTabChange }) {
               </CardContent>
               {totalPages > 1 && (
                 <div className="p-4 border-t border-border flex items-center justify-center gap-4 bg-muted/30">
-                   <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(p => p - 1)}
                     className="rounded-xl h-8 px-4"
-                   >
-                     <ChevronLeft className="size-4 mr-2" /> Trước
-                   </Button>
-                   <span className="text-xs font-bold text-muted-foreground">Trang {currentPage} / {totalPages}</span>
-                   <Button 
-                    variant="outline" 
-                    size="sm" 
+                  >
+                    <ChevronLeft className="size-4 mr-2" /> Trước
+                  </Button>
+                  <span className="text-xs font-bold text-muted-foreground">Trang {currentPage} / {totalPages}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(p => p + 1)}
                     className="rounded-xl h-8 px-4"
-                   >
-                     Tiếp <ChevronRight className="size-4 ml-2" />
-                   </Button>
+                  >
+                    Tiếp <ChevronRight className="size-4 ml-2" />
+                  </Button>
                 </div>
               )}
             </Card>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-border rounded-3xl opacity-40 py-20">
-              <FileText className="size-16 text-muted-foreground/20 mb-4" />
-              <p className="text-xl font-bold text-muted-foreground/50">Danh sách trống</p>
-              <p className="text-sm text-muted-foreground/50">Tải tệp tin để bắt đầu xử lý hàng loạt</p>
-            </div>
+            <Card className="shadow-sm flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border glass-card bg-muted/10">
+              <div className="p-4 rounded-full bg-muted/50 mb-4">
+                <FileText className="size-10 text-muted-foreground" />
+              </div>
+              <p className="text-lg font-bold text-foreground">Danh sách trống</p>
+              <p className="text-xs text-muted-foreground mt-1">Tải tệp tin để bắt đầu xử lý hàng loạt</p>
+            </Card>
           )}
         </div>
       </div>
 
       {/* Quick Edit Dialog */}
-      <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+      < Dialog open={!!editingItem
+      } onOpenChange={(open) => !open && setEditingItem(null)}>
         <DialogContent className="max-w-2xl rounded-3xl overflow-hidden border-none shadow-2xl">
           <DialogHeader className="bg-muted/50 p-6 border-b border-border">
-            <DialogTitle className="flex items-center gap-2 text-xl font-extrabold text-secondary">
+            <DialogTitle className="flex items-center gap-2 text-xl font-extrabold text-primary">
               <Edit3 className="size-5" /> Sửa nhanh chi tiết
             </DialogTitle>
             <DialogDescription className="font-medium text-muted-foreground">
               Chỉnh sửa thông tin bóc tách cho file: <span className="text-foreground font-bold">{editingItem?.fileName}</span>
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="p-6 grid grid-cols-2 gap-6">
             <div className="space-y-4 col-span-2">
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Trích yếu nội dung</Label>
-                  <Textarea 
-                    value={editingItem?.trichYeu || ''} 
-                    onChange={(e) => setEditingItem({...editingItem, trichYeu: e.target.value})}
-                    placeholder="Nhập trích yếu..."
-                    className="rounded-2xl border-border min-h-[100px] font-medium"
-                  />
-               </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Trích yếu nội dung</Label>
+                <Textarea
+                  value={editingItem?.trichYeu || ''}
+                  onChange={(e) => setEditingItem({ ...editingItem, trichYeu: e.target.value })}
+                  placeholder="Nhập trích yếu..."
+                  className="rounded-2xl border-border min-h-[100px] font-medium"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Số hiệu</Label>
-               <Input 
-                  value={editingItem?.soVanBan || ''} 
-                  onChange={(e) => setEditingItem({...editingItem, soVanBan: e.target.value})}
-                  className="rounded-xl border-border font-bold text-secondary"
-               />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Số hiệu</Label>
+              <Input
+                value={editingItem?.soVanBan || ''}
+                onChange={(e) => setEditingItem({ ...editingItem, soVanBan: e.target.value })}
+                className="rounded-xl border-border font-bold text-primary"
+              />
             </div>
 
             <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Thời hạn</Label>
-               <Input 
-                  type="date"
-                  value={editingItem?.thoiHan || ''} 
-                  onChange={(e) => setEditingItem({...editingItem, thoiHan: e.target.value})}
-                  className="rounded-xl border-border"
-               />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Thời hạn</Label>
+              <Input
+                type="date"
+                value={editingItem?.thoiHan || ''}
+                onChange={(e) => setEditingItem({ ...editingItem, thoiHan: e.target.value })}
+                className="rounded-xl border-border"
+              />
             </div>
 
             <div className="space-y-2 col-span-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cơ quan ban hành</Label>
-               <Input 
-                  value={editingItem?.coQuanChuQuan || ''} 
-                  onChange={(e) => setEditingItem({...editingItem, coQuanChuQuan: e.target.value})}
-                  className="rounded-xl border-border font-medium"
-               />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cơ quan ban hành</Label>
+              <Input
+                value={editingItem?.coQuanChuQuan || ''}
+                onChange={(e) => setEditingItem({ ...editingItem, coQuanChuQuan: e.target.value })}
+                className="rounded-xl border-border font-medium"
+              />
             </div>
           </div>
 
           <DialogFooter className="bg-muted/50 p-6 gap-2">
             <Button variant="ghost" onClick={() => setEditingItem(null)} className="rounded-xl font-bold">Hủy</Button>
-            <Button 
-              className="bg-secondary hover:bg-sidebar-mid text-secondary-foreground rounded-xl px-8 font-bold shadow-lg"
+            <Button
+              className="bg-primary hover:bg-sidebar-mid text-primary-foreground rounded-xl px-8 font-bold shadow-lg"
               onClick={() => {
                 updateItem(editingItem.id, 'trichYeu', editingItem.trichYeu);
                 updateItem(editingItem.id, 'soVanBan', editingItem.soVanBan);
@@ -648,8 +671,8 @@ export function Upload({ onTabChange }) {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-    </div>
+      </Dialog >
+    </div >
   );
 }
 
@@ -657,8 +680,8 @@ function SummaryChip({ label, count, color, countColor }) {
   if (count === 0 && !label.includes('Đã lưu')) return null;
   return (
     <div className={cn("flex items-center justify-between p-2.5 rounded-2xl border border-transparent transition-all", color)}>
-       <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
-       <span className={cn("text-xs font-black", countColor)}>{count}</span>
+      <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
+      <span className={cn("text-xs font-black", countColor)}>{count}</span>
     </div>
   );
 }
@@ -671,7 +694,7 @@ function MultiSelectPopover({ label, options, selectedIds, suggestedIds, onToggl
           <Icon className="size-3 text-muted-foreground" />
           <span className="text-[10px] font-bold">{label}</span>
           {selectedIds.length > 0 && (
-            <Badge className="absolute -top-2 -right-2 size-4 p-0 flex items-center justify-center bg-secondary text-secondary-foreground border-background text-[8px] font-black">
+            <Badge className="absolute -top-2 -right-2 size-4 p-0 flex items-center justify-center bg-primary text-primary-foreground border-background text-[8px] font-black">
               {selectedIds.length}
             </Badge>
           )}
@@ -687,8 +710,8 @@ function MultiSelectPopover({ label, options, selectedIds, suggestedIds, onToggl
             {options.map((opt) => {
               const isSuggested = suggestedIds?.includes(opt.id);
               return (
-                <div 
-                  key={opt.id} 
+                <div
+                  key={opt.id}
                   className={cn(
                     "flex items-center justify-between px-3 py-2 hover:bg-muted/30 cursor-pointer rounded-xl transition-colors",
                     isSuggested && "bg-info/5 border-l-2 border-info"

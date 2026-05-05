@@ -23,7 +23,26 @@ Hệ thống quản lý, giám sát và điều phối công văn thời gian th
    ```powershell
    docker-compose up -d --build
    ```
-3. Hệ thống sẽ khởi chạy Backend, Nginx Proxy và Ngrok (nếu có cấu hình).
+3. Hệ thống sẽ khởi chạy Backend, Nginx Proxy và Ngrok.
+
+### Bước 3: Cấu hình Biến môi trường (.env)
+
+Tạo file `.env` tại thư mục gốc với các thông số sau để đảm bảo tính ổn định và bảo mật:
+
+```ini
+# Bảo mật Token (Tối thiểu 32 ký tự)
+JWT_SECRET=LinkStrategy_Secure_Key_2026_ReplaceMe
+
+# Thông tin Push Notification (HTTPS là bắt buộc)
+VAPID_SUBJECT=mailto:admin@yourdomain.com
+
+# Ngrok (Nếu truy cập từ xa)
+NGROK_AUTHTOKEN=your_ngrok_token
+NGROK_DOMAIN=your_custom_domain.ngrok-free.app
+```
+
+> [!IMPORTANT]
+> **Yêu cầu HTTPS:** Thông báo đẩy (Web Push) chỉ hoạt động trên môi trường **HTTPS**. Nếu chạy local, hãy dùng `localhost` hoặc link Ngrok `https://`.
 
 ---
 
@@ -104,3 +123,15 @@ Hệ thống đã được nạp sẵn dữ liệu mẫu (Seed Data) trong file 
 2. **Lãnh đạo**: Theo dõi Dashboard, giám sát dòng chảy công văn và các cảnh báo quá hạn.
 3. **Cán bộ**: Nhận thông báo (Push/SignalR) -> Xử lý văn bản được giao -> Nộp bằng chứng hoàn thành.
 4. **Admin**: Quản trị nhân sự, phòng ban, nhãn văn bản và các luật tự động của hệ thống.
+
+---
+
+## 🛡️ Tính năng Hardening (Vận hành ổn định)
+
+Hệ thống đã được gia cố (hardened) để đạt tiêu chuẩn vận hành thực tế:
+
+- **Database Concurrency (WAL Mode):** Cho phép bóc tách OCR và truy vấn Dashboard diễn ra song song mà không gây khóa cơ sở dữ liệu.
+- **Silent Re-subscription:** Tự động sửa lỗi và đăng ký lại thông báo đẩy ngầm khi phát hiện thay đổi cấu hình máy chủ.
+- **Rate Limiting:** Bảo vệ API khỏi các cuộc tấn công spam và quá tải (Giới hạn 50 req/10s).
+- **Health Check Banner:** Cảnh báo trực quan ngay trên giao diện nếu trình duyệt đang chặn quyền thông báo.
+- **Logic 7-3-1:** Tự động quét và nhắc việc vào các mốc 7-3-1 ngày trước hạn vào lúc **08:30 sáng** hàng ngày.
