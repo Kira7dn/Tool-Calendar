@@ -71,8 +71,8 @@ export function Sidebar({
     <aside
       id="main-sidebar"
       className={cn(
-        "relative flex flex-col shrink-0 transition-all duration-300 ease-in-out z-[200] border-r border-white/10",
-        "bg-gradient-to-b from-[#1a3a6e] via-[#132a54] to-[#0d1b4b] shadow-[4px_0_24px_rgba(0,0,0,0.3)]",
+        "relative flex flex-col shrink-0 transition-all duration-300 ease-in-out z-[200] border-r border-sidebar-border",
+        "bg-sidebar-gradient shadow-[4px_0_24px_rgba(0,0,0,0.3)]",
         isCollapsed ? "w-[var(--sidebar-collapsed-width)]" : "w-[var(--sidebar-width)]",
         "max-md:fixed max-md:h-full max-md:w-[280px]",
         isMobileOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"
@@ -83,7 +83,7 @@ export function Sidebar({
         variant="ghost"
         size="icon"
         onClick={toggleSidebar}
-        className="absolute top-4 -right-3.5 size-7 rounded-full bg-[#132a54] border border-white/10 text-white/60 hover:bg-[#22d3ee] hover:text-[#0d1b4b] transition-all z-[300] shadow-md group max-md:hidden"
+        className="absolute top-4 -right-3.5 size-7 rounded-full bg-sidebar-mid border border-sidebar-border text-sidebar-foreground hover:bg-accent hover:text-accent-foreground transition-all z-[300] shadow-md group max-md:hidden"
       >
         {isCollapsed ? (
           <ChevronRight className="size-4" />
@@ -93,17 +93,17 @@ export function Sidebar({
       </Button>
 
       {/* Logo Area */}
-      <div className="flex items-center h-20 border-b border-white/10 mb-3 overflow-hidden shrink-0">
+      <div className="flex items-center h-20 border-b border-sidebar-border mb-3 overflow-hidden shrink-0">
         <div className="w-[var(--sidebar-icon-zone)] shrink-0 flex items-center justify-center">
           <img
             src="/assets/logo.png"
             alt="Logo"
-            className="size-10 rounded-lg border-[1.5px] border-white/15 shadow-lg object-contain"
+            className="size-10 rounded-lg border-[1.5px] border-sidebar-border shadow-lg object-contain"
           />
         </div>
         <h2
           className={cn(
-            "text-[#ffffff] font-extrabold tracking-tight leading-[1.2] transition-all duration-400 overflow-hidden whitespace-normal w-[115px] shrink-0",
+            "text-sidebar-primary font-extrabold tracking-tight leading-[1.2] transition-all duration-400 overflow-hidden whitespace-normal w-[115px] shrink-0",
             isCollapsed
               ? "max-md:opacity-100 max-md:translate-x-0 opacity-0 -translate-x-4 pointer-events-none ml-0"
               : "opacity-100 translate-x-0 ml-[-10px] text-[1.05rem]"
@@ -136,20 +136,20 @@ export function Sidebar({
                       onClick={() => handleTabClick(item.tab)}
                       className={cn(
                         "group relative flex items-center h-[52px] cursor-pointer transition-all duration-200",
-                        "hover:bg-white/10 text-white/70 hover:text-white",
-                        isActive && "bg-white/10 text-white border-l-4 border-[#22d3ee] active"
+                        "hover:bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-primary",
+                        isActive && "bg-sidebar-accent text-sidebar-primary border-l-4 border-sidebar-ring active"
                       )}
                     >
                       <div className="w-[var(--sidebar-icon-zone)] shrink-0 flex items-center justify-center">
-                        <Icon className={cn("size-5 transition-transform group-hover:scale-110", isActive && "text-[#22d3ee]")} />
+                        <Icon className={cn("size-5 transition-transform group-hover:scale-110", isActive && "text-sidebar-ring")} />
                       </div>
-                      <span className={cn(labelClasses, "text-[0.93rem]", isActive && "text-white")}>
+                      <span className={cn(labelClasses, "text-[0.93rem]", isActive && "text-sidebar-primary")}>
                         {item.label}
                       </span>
                     </div>
                   </TooltipTrigger>
                   {isCollapsed && (
-                    <TooltipContent side="right" className="bg-[#132a54] border-white/10 text-white font-bold">
+                    <TooltipContent side="right" className="bg-sidebar-mid border-sidebar-border text-sidebar-primary font-bold">
                       {item.label}
                     </TooltipContent>
                   )}

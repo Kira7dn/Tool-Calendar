@@ -9,6 +9,7 @@ namespace ToolCalendar.Services
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DeadlineWorker> _logger;
+        private static readonly SemaphoreSlim _scanLock = new SemaphoreSlim(1, 1);
 
         public DeadlineWorker(IServiceProvider serviceProvider, ILogger<DeadlineWorker> logger)
         {
@@ -63,13 +64,15 @@ namespace ToolCalendar.Services
             }
         }
 
-        public async Task ScanDeadlinesAsync(bool force = false)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var notificationManager = scope.ServiceProvider.GetRequiredService<INotificationManager>();
+            if (!await _scanLock.WaitAsync(0)) 
+            {
+                _logger.LogWarning("[DeadlineWorker] Một tiến trình quét đang chạy, bỏ qua lần quét này.");
+                return;
+            }
 
             try
             {
+                using var scope = _serviceProvider.CreateScope();
                 var docRepo = scope.ServiceProvider.GetRequiredService<ToolCalendar.Core.Data.Interfaces.IDocumentRepository>();
                 var docs = await docRepo.GetAllAsync();
                 var activeDocs = docs.Where(d => d.Status != "Đã hoàn thành" && d.ThoiHan.HasValue).ToList();
@@ -129,6 +132,10 @@ namespace ToolCalendar.Services
             {
                 _logger.LogError(ex, "[DeadlineWorker] Lỗi trong quá trình quét thời hạn.");
                 DatabaseService.InsertAuditLog(null, $"[Hệ thống] Lỗi khi quét thời hạn: {ex.Message}");
+            }
+            finally
+            {
+                _scanLock.Release();
             }
         }
     }

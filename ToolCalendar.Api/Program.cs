@@ -22,6 +22,18 @@ builder.Services.AddSwaggerGen();
 // Đăng ký SignalR
 builder.Services.AddSignalR();
 
+// Cấu hình Rate Limiting để chống tấn công DoS/Spam
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.Window = TimeSpan.FromSeconds(10);
+        opt.PermitLimit = 50; // Giới hạn 50 request mỗi 10 giây
+        opt.QueueLimit = 0;
+    });
+});
+
 // Đăng ký Repositories (Clean Architecture)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
@@ -43,8 +55,16 @@ builder.Services.AddScoped<INotificationManager, NotificationManager>();
 builder.Services.AddSingleton<DeadlineWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DeadlineWorker>());
 
-// Cấu hình JWT
-var key = "LinkStrategy_SecretKey_2026_Secure_GiamSatCongVan"; // Key bí mật cho GĐ 1
+// Cấu hình JWT - Ưu tiên lấy từ biến môi trường để bảo mật Production
+var jwtSecret = builder.Configuration["JWT_SECRET"] 
+                ?? Environment.GetEnvironmentVariable("JWT_SECRET") 
+                ?? "LinkStrategy_Default_Development_Key_2026_DO_NOT_USE_IN_PROD";
+
+if (jwtSecret.Length < 32) {
+    Console.WriteLine("[SecurityWarning] JWT Secret quá ngắn! Nên sử dụng ít nhất 32 ký tự.");
+}
+
+var key = jwtSecret;
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -148,6 +168,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+app.UseRateLimiter(); // Kích hoạt Rate Limiting
 app.UseWebSockets();
 
 // Serve static files

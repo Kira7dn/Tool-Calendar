@@ -165,8 +165,8 @@ export function Review({ onBack }) {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] gap-4">
-        <Loader2 className="size-10 animate-spin text-[#1a3a6e]" />
-        <p className="text-slate-500 font-bold">Đang chuẩn bị dữ liệu OCR...</p>
+        <Loader2 className="size-10 animate-spin text-secondary" />
+        <p className="text-muted-foreground font-bold">Đang chuẩn bị dữ liệu OCR...</p>
       </div>
     );
   }
@@ -174,12 +174,12 @@ export function Review({ onBack }) {
   if (docs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] gap-4">
-        <div className="p-6 rounded-full bg-slate-100">
-          <CheckCircle2 className="size-12 text-emerald-500" />
+        <div className="p-6 rounded-full bg-muted">
+          <CheckCircle2 className="size-12 text-success" />
         </div>
-        <h3 className="text-2xl font-black text-slate-900">Hoàn tất kiểm duyệt!</h3>
-        <p className="text-slate-500 font-medium">Tất cả văn bản mới đã được xử lý thông tin.</p>
-        <Button onClick={onBack} className="rounded-xl bg-[#1a3a6e] px-8 h-12 font-bold mt-4 shadow-xl">
+        <h3 className="text-2xl font-black text-foreground">Hoàn tất kiểm duyệt!</h3>
+        <p className="text-muted-foreground font-medium">Tất cả văn bản mới đã được xử lý thông tin.</p>
+        <Button onClick={onBack} className="rounded-xl bg-secondary px-8 h-12 font-bold mt-4 shadow-xl">
           Quay lại Dashboard
         </Button>
       </div>
@@ -189,16 +189,16 @@ export function Review({ onBack }) {
   const currentDoc = docs[currentIndex];
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-slate-900 flex flex-col animate-in fade-in zoom-in-95 duration-300">
-      <header className="h-16 bg-slate-800 border-b border-white/10 flex items-center justify-between px-6 shrink-0">
+    <div className="fixed inset-0 z-[1000] bg-background flex flex-col animate-in fade-in zoom-in-95 duration-300">
+      <header className="h-16 bg-secondary border-b border-border flex items-center justify-between px-6 shrink-0">
         <div className="flex items-center gap-6">
-          <Button variant="ghost" size="icon" onClick={onBack} className="text-white hover:bg-white/10 rounded-full">
+          <Button variant="ghost" size="icon" onClick={onBack} className="text-secondary-foreground hover:bg-secondary-foreground/10 rounded-full">
             <X className="size-5" />
           </Button>
-          <div className="h-8 w-px bg-white/10" />
+          <div className="h-8 w-px bg-border" />
           <div className="flex flex-col">
-            <h2 className="text-white font-bold text-sm">Kiểm duyệt bóc tách OCR</h2>
-            <p className="text-white/50 text-[10px] font-black uppercase tracking-widest">
+            <h2 className="text-secondary-foreground">Kiểm duyệt bóc tách OCR</h2>
+            <p className="text-secondary-foreground/50 text-[10px] font-black uppercase tracking-widest">
               Tài liệu {currentIndex + 1} / {docs.length}
             </p>
           </div>
@@ -209,7 +209,7 @@ export function Review({ onBack }) {
             variant="ghost" 
             disabled={currentIndex === 0}
             onClick={() => setCurrentIndex(prev => prev - 1)}
-            className="text-white hover:bg-white/10 rounded-xl px-4"
+            className="text-secondary-foreground hover:bg-secondary-foreground/10 rounded-xl px-4"
           >
             <ChevronLeft className="size-4 mr-2" /> Trước đó
           </Button>
@@ -217,13 +217,13 @@ export function Review({ onBack }) {
             variant="ghost" 
             disabled={currentIndex === docs.length - 1}
             onClick={() => setCurrentIndex(prev => prev + 1)}
-            className="text-white hover:bg-white/10 rounded-xl px-4"
+            className="text-secondary-foreground hover:bg-secondary-foreground/10 rounded-xl px-4"
           >
             Tiếp theo <ChevronRight className="size-4 ml-2" />
           </Button>
-          <div className="h-8 w-px bg-white/10 mx-2" />
+          <div className="h-8 w-px bg-border mx-2" />
           <Button 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-6 shadow-lg shadow-emerald-500/20"
+            className="bg-success hover:bg-success/90 text-success-foreground font-bold rounded-xl px-6 shadow-lg shadow-success/20"
             onClick={handleSave}
             disabled={isSaving}
           >
@@ -234,11 +234,11 @@ export function Review({ onBack }) {
       </header>
 
       <main className="flex-1 flex overflow-hidden">
-        <div className="flex-1 bg-slate-700 flex flex-col overflow-hidden relative border-r border-white/5">
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-4">
-            <span className="text-white text-xs font-bold">{currentDoc.fileName}</span>
-            <div className="h-3 w-px bg-white/20" />
-            <a href={currentDoc.filePath} target="_blank" className="text-white hover:text-blue-400">
+        <div className="flex-1 bg-muted flex flex-col overflow-hidden relative border-r border-border">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 glass-card px-4 py-2 rounded-full flex items-center gap-4">
+            <span className="text-foreground text-xs font-bold">{currentDoc.fileName}</span>
+            <div className="h-3 w-px bg-border" />
+            <a href={currentDoc.filePath} target="_blank" className="text-foreground hover:text-info">
                <ExternalLink className="size-4" />
             </a>
           </div>
@@ -252,13 +252,13 @@ export function Review({ onBack }) {
           </div>
         </div>
 
-        <div className="w-[500px] bg-white flex flex-col overflow-hidden">
+        <div className="w-[500px] bg-background flex flex-col overflow-hidden">
           <ScrollArea className="flex-1">
             <div className="p-8 space-y-8">
               <div className="space-y-1">
-                <Badge className="bg-[#1a3a6e] text-white font-black text-[10px] uppercase tracking-tighter mb-2">Thông tin AI đề xuất</Badge>
-                <h3 className="text-xl font-bold text-slate-900">Bóc tách thông tin</h3>
-                <p className="text-sm text-slate-500">Vui lòng kiểm tra và chỉnh sửa nếu AI nhận diện sai</p>
+                <Badge variant="secondary" className="font-black text-[10px] uppercase tracking-tighter mb-2">Thông tin AI đề xuất</Badge>
+                <h3 className="text-xl">Bóc tách thông tin</h3>
+                <p className="text-sm text-muted-foreground">Vui lòng kiểm tra và chỉnh sửa nếu AI nhận diện sai</p>
               </div>
 
               <div className="space-y-6">
@@ -266,7 +266,7 @@ export function Review({ onBack }) {
                   <Input 
                     value={formData.soVanBan} 
                     onChange={e => setFormData({...formData, soVanBan: e.target.value})}
-                    className="rounded-xl border-slate-200 h-12 font-bold text-[#1a3a6e]" 
+                    className="h-12 font-bold text-secondary" 
                   />
                 </FormField>
 
@@ -275,7 +275,7 @@ export function Review({ onBack }) {
                     type="date"
                     value={formData.thoiHan} 
                     onChange={e => setFormData({...formData, thoiHan: e.target.value})}
-                    className="rounded-xl border-slate-200 h-12 font-medium" 
+                    className="h-12 font-medium" 
                   />
                 </FormField>
 
@@ -283,7 +283,7 @@ export function Review({ onBack }) {
                   <Input 
                     value={formData.coQuanChuQuan} 
                     onChange={e => setFormData({...formData, coQuanChuQuan: e.target.value})}
-                    className="rounded-xl border-slate-200 h-12 font-medium" 
+                    className="h-12 font-medium" 
                   />
                 </FormField>
 
@@ -291,30 +291,30 @@ export function Review({ onBack }) {
                   <Textarea 
                     value={formData.trichYeu} 
                     onChange={e => setFormData({...formData, trichYeu: e.target.value})}
-                    className="rounded-xl border-slate-200 min-h-[150px] font-medium leading-relaxed" 
+                    className="min-h-[150px] font-medium leading-relaxed" 
                   />
                 </FormField>
 
-                <div className="pt-4 border-t border-slate-100">
-                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 block">Phân công xử lý</Label>
+                <div className="pt-4 border-t border-border">
+                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4 block">Phân công xử lý</Label>
                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-xs font-bold text-slate-700">Phòng ban</Label>
+                        <Label className="text-xs font-bold text-foreground">Phòng ban</Label>
                         <select 
                           value={formData.departmentId}
                           onChange={e => setFormData({...formData, departmentId: e.target.value})}
-                          className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium"
+                          className="w-full h-10 rounded-xl border border-border bg-muted/50 px-3 text-sm font-medium"
                         >
                           <option value="">Chọn đơn vị...</option>
                           {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs font-bold text-slate-700">Cán bộ</Label>
+                        <Label className="text-xs font-bold text-foreground">Cán bộ</Label>
                         <select 
                           value={formData.assignedTo}
                           onChange={e => setFormData({...formData, assignedTo: e.target.value})}
-                          className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium"
+                          className="w-full h-10 px-3 text-sm font-medium"
                         >
                           <option value="">Chọn cán bộ...</option>
                           {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
@@ -326,8 +326,8 @@ export function Review({ onBack }) {
             </div>
           </ScrollArea>
 
-          <div className="p-6 bg-slate-50 border-t border-slate-100 shrink-0">
-            <Button variant="ghost" onClick={handleDelete} className="w-full text-rose-600 font-bold hover:bg-rose-50 rounded-xl h-12">
+          <div className="p-6 bg-muted/50 border-t border-border shrink-0">
+            <Button variant="ghost" onClick={handleDelete} className="w-full text-destructive font-bold hover:bg-destructive/5 rounded-xl h-12">
               <Trash2 className="size-4 mr-2" /> Xóa tài liệu này
             </Button>
           </div>
@@ -341,10 +341,10 @@ function FormField({ label, icon: Icon, children }) {
   return (
     <div className="space-y-3 group">
       <div className="flex items-center justify-between">
-        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-focus-within:text-[#1a3a6e] transition-colors">
+        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-focus-within:text-secondary transition-colors">
           {label}
         </Label>
-        <Icon className="size-3.5 text-slate-300 group-focus-within:text-[#1a3a6e] transition-colors" />
+        <Icon className="size-3.5 text-muted-foreground/50 group-focus-within:text-secondary transition-colors" />
       </div>
       {children}
     </div>

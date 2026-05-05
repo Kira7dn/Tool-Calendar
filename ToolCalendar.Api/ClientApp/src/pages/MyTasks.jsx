@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   Filter
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -65,6 +66,10 @@ export function MyTasks({ onTabChange }) {
 
   useEffect(() => {
     fetchTasks();
+
+    const handleUpdate = () => fetchTasks();
+    document.addEventListener('realtime:document_updated', handleUpdate);
+    return () => document.removeEventListener('realtime:document_updated', handleUpdate);
   }, []);
 
   const fetchTasks = async () => {
@@ -104,6 +109,10 @@ export function MyTasks({ onTabChange }) {
 
   const handleSubmitEvidence = async () => {
     if (!evidenceNotes.trim()) return;
+    if (selectedFiles.length === 0) {
+      alert('Vui lòng chọn ít nhất 1 file bằng chứng!');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const formData = new FormData();
@@ -142,10 +151,10 @@ export function MyTasks({ onTabChange }) {
     const isOverdue = deadline && deadline < now && (task.status || '').toLowerCase().indexOf('hoàn thành') === -1;
     const status = (task.status || '').toLowerCase();
 
-    if (status.includes('đã hoàn thành')) return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 font-bold uppercase text-[10px]">Đã hoàn thành</Badge>;
-    if (isOverdue) return <Badge className="bg-rose-100 text-rose-700 border-rose-200 font-bold uppercase text-[10px]">Quá hạn</Badge>;
-    if (status.includes('đang xử lý')) return <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-bold uppercase text-[10px]">Đang xử lý</Badge>;
-    return <Badge className="bg-blue-100 text-blue-700 border-blue-200 font-bold uppercase text-[10px]">Mới</Badge>;
+    if (status.includes('đã hoàn thành')) return <Badge variant="success" className="font-bold uppercase text-[10px]">Đã hoàn thành</Badge>;
+    if (isOverdue) return <Badge variant="destructive" className="font-bold uppercase text-[10px]">Quá hạn</Badge>;
+    if (status.includes('đang xử lý')) return <Badge variant="warning" className="font-bold uppercase text-[10px]">Đang xử lý</Badge>;
+    return <Badge variant="info" className="font-bold uppercase text-[10px]">Mới</Badge>;
   };
 
   // Local Filtering Logic
@@ -173,24 +182,24 @@ export function MyTasks({ onTabChange }) {
 
   return (
     <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-500 pb-10">
-      <div className="flex flex-col gap-1 border-l-4 border-[#1a3a6e] pl-4 py-1">
-        <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Việc của tôi</h2>
-        <p className="text-sm text-slate-500 font-medium">Danh sách văn bản được giao xử lý trực tiếp cho bạn</p>
+      <div className="flex flex-col gap-0 border-l-4 border-success pl-3 py-0.5">
+        <h2 className="text-xl">Việc của tôi</h2>
+        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">Personal Task Queue</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <TaskStatCard label="Chưa xử lý" count={stats.new} color="text-blue-600" bgColor="bg-blue-50" onClick={() => setStatusFilter('new')} />
-        <TaskStatCard label="Đang thực hiện" count={stats.doing} color="text-amber-600" bgColor="bg-amber-50" onClick={() => setStatusFilter('doing')} />
-        <TaskStatCard label="Quá hạn" count={stats.overdue} color="text-rose-600" bgColor="bg-rose-50" onClick={() => setStatusFilter('overdue')} />
+        <TaskStatCard label="Chưa xử lý" count={stats.new} color="text-info" bgColor="bg-info/10" onClick={() => setStatusFilter('new')} />
+        <TaskStatCard label="Đang thực hiện" count={stats.doing} color="text-warning" bgColor="bg-warning/10" onClick={() => setStatusFilter('doing')} />
+        <TaskStatCard label="Quá hạn" count={stats.overdue} color="text-destructive" bgColor="bg-destructive/10" onClick={() => setStatusFilter('overdue')} />
       </div>
 
-      <Card className="border-slate-200 shadow-xl rounded-3xl overflow-hidden bg-white/80 backdrop-blur-md">
-        <CardHeader className="px-8 py-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <Card className="shadow-xl overflow-hidden glass-card">
+        <CardHeader className="px-8 py-6 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <CardTitle className="text-lg font-bold flex items-center gap-2">
               Danh sách nhiệm vụ
               {statusFilter !== 'all' && (
-                <Badge variant="secondary" className="bg-slate-100 text-slate-500 rounded-full font-bold">
+                <Badge variant="secondary" className="bg-muted/50 text-muted-foreground rounded-full font-bold">
                   {statusFilter === 'new' ? 'Mới' : statusFilter === 'doing' ? 'Đang làm' : statusFilter === 'overdue' ? 'Quá hạn' : 'Đã xong'}
                   <X className="size-3 ml-1 cursor-pointer" onClick={() => setStatusFilter('all')} />
                 </Badge>
@@ -200,10 +209,10 @@ export function MyTasks({ onTabChange }) {
           </div>
           <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative flex-1 md:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input 
                 placeholder="Tìm kiếm văn bản..." 
-                className="pl-10 h-10 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-[#1a3a6e]/20"
+                className="pl-10 h-10 bg-muted/50"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -213,16 +222,16 @@ export function MyTasks({ onTabChange }) {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-200">
-                  <Filter className="size-4 text-slate-500" />
+                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border">
+                  <Filter className="size-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-2xl border-slate-100">
+              <DropdownMenuContent align="end" className="w-48 shadow-2xl glass-card">
                 <DropdownMenuItem onClick={() => setStatusFilter('all')} className="font-bold">Tất cả</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('new')} className="text-blue-600 font-bold">Việc mới</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('doing')} className="text-amber-600 font-bold">Đang làm</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('overdue')} className="text-rose-600 font-bold">Quá hạn</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('completed')} className="text-emerald-600 font-bold">Đã hoàn thành</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('new')} className="text-info font-bold">Việc mới</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('doing')} className="text-warning font-bold">Đang làm</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('overdue')} className="text-destructive font-bold">Quá hạn</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('completed')} className="text-success font-bold">Đã hoàn thành</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -230,36 +239,36 @@ export function MyTasks({ onTabChange }) {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                <TableHead className="w-16 font-bold px-8 py-4">STT</TableHead>
-                <TableHead className="font-bold py-4">Số hiệu</TableHead>
-                <TableHead className="font-bold">Trích yếu nội dung</TableHead>
-                <TableHead className="font-bold">Thời hạn</TableHead>
-                <TableHead className="font-bold text-center">Trạng thái</TableHead>
-                <TableHead className="font-bold text-right px-8">Thao tác</TableHead>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead className="w-16 font-bold px-8 py-4 text-foreground">STT</TableHead>
+                <TableHead className="font-bold py-4 text-foreground">Số hiệu</TableHead>
+                <TableHead className="font-bold text-foreground">Trích yếu nội dung</TableHead>
+                <TableHead className="font-bold text-foreground">Thời hạn</TableHead>
+                <TableHead className="font-bold text-center text-foreground">Trạng thái</TableHead>
+                <TableHead className="font-bold text-right px-8 text-foreground">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 [...Array(5)].map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell className="px-8"><div className="h-4 w-6 bg-slate-100 animate-pulse rounded" /></TableCell>
-                    <TableCell><div className="h-4 w-32 bg-slate-100 animate-pulse rounded" /></TableCell>
-                    <TableCell><div className="h-4 w-64 bg-slate-100 animate-pulse rounded" /></TableCell>
-                    <TableCell><div className="h-4 w-24 bg-slate-100 animate-pulse rounded" /></TableCell>
-                    <TableCell><div className="h-6 w-20 bg-slate-100 animate-pulse rounded-full mx-auto" /></TableCell>
-                    <TableCell className="px-8 text-right"><div className="h-8 w-24 bg-slate-100 animate-pulse rounded-xl ml-auto" /></TableCell>
+                    <TableCell className="px-8"><div className="h-4 w-6 bg-muted/50 animate-pulse rounded" /></TableCell>
+                    <TableCell><div className="h-4 w-32 bg-muted/50 animate-pulse rounded" /></TableCell>
+                    <TableCell><div className="h-4 w-64 bg-muted/50 animate-pulse rounded" /></TableCell>
+                    <TableCell><div className="h-4 w-24 bg-muted/50 animate-pulse rounded" /></TableCell>
+                    <TableCell><div className="h-6 w-20 bg-muted/50 animate-pulse rounded-full mx-auto" /></TableCell>
+                    <TableCell className="px-8 text-right"><div className="h-8 w-24 bg-muted/50 animate-pulse rounded-xl ml-auto" /></TableCell>
                   </TableRow>
                 ))
               ) : paginatedTasks.length > 0 ? (
                 paginatedTasks.map((task, index) => (
-                  <TableRow key={task.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <TableCell className="px-8 text-slate-400 font-medium text-xs">{(currentPage - 1) * pageSize + index + 1}</TableCell>
-                    <TableCell className="font-bold text-[#1a3a6e] whitespace-nowrap">{task.soVanBan}</TableCell>
-                    <TableCell className="max-w-md truncate font-medium text-slate-600" title={task.trichYeu}>
+                  <TableRow key={task.id} className="hover:bg-muted/30 transition-colors group">
+                    <TableCell className="px-8 text-muted-foreground font-medium text-xs">{(currentPage - 1) * pageSize + index + 1}</TableCell>
+                    <TableCell className="font-bold text-secondary whitespace-nowrap">{task.soVanBan}</TableCell>
+                    <TableCell className="max-w-md truncate font-medium text-muted-foreground" title={task.trichYeu}>
                       {task.trichYeu}
                     </TableCell>
-                    <TableCell className="text-slate-500 font-medium whitespace-nowrap">
+                    <TableCell className="text-muted-foreground font-medium whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="size-3.5" />
                         {formatDate(task.hanXuLy)}
@@ -271,14 +280,14 @@ export function MyTasks({ onTabChange }) {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="rounded-xl text-blue-600 font-bold hover:bg-blue-50"
+                          className="rounded-xl text-info font-bold hover:bg-info/5"
                           onClick={() => window.app?.services?.openDocDetail?.(task.id)}
                         >
                           Chi tiết
                         </Button>
                         <Button 
                           size="sm" 
-                          className="rounded-xl bg-[#1a3a6e] hover:bg-[#132a54] font-bold"
+                          className="rounded-xl bg-secondary hover:bg-sidebar-mid font-bold"
                           onClick={() => {
                             setSelectedDocId(task.id);
                             setIsEvidenceModalOpen(true);
@@ -288,6 +297,17 @@ export function MyTasks({ onTabChange }) {
                         </Button>
                       </div>
                     </TableCell>
+                  </TableRow>
+                ))
+              ) : isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i} className="border-b border-border/50">
+                    <TableCell className="px-8 py-4"><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-full max-w-[200px]" /></TableCell>
+                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell className="px-4 py-4"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                    <TableCell className="px-8 py-4 text-right"><Skeleton className="h-8 w-16 rounded-lg ml-auto" /></TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -304,11 +324,11 @@ export function MyTasks({ onTabChange }) {
           </Table>
         </CardContent>
         {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-100 flex items-center justify-center gap-4 bg-slate-50/30">
+          <div className="p-4 border-t border-border flex items-center justify-center gap-4 bg-muted/30">
              <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="rounded-xl h-8 px-4">
                <ChevronLeft className="size-4 mr-2" /> Trước
              </Button>
-             <span className="text-xs font-bold text-slate-500">Trang {currentPage} / {totalPages}</span>
+             <span className="text-xs font-bold text-muted-foreground">Trang {currentPage} / {totalPages}</span>
              <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="rounded-xl h-8 px-4">
                Tiếp <ChevronRight className="size-4 ml-2" />
              </Button>
@@ -318,31 +338,31 @@ export function MyTasks({ onTabChange }) {
 
       <Dialog open={isEvidenceModalOpen} onOpenChange={setIsEvidenceModalOpen}>
         <DialogContent className="sm:max-w-[500px] rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="p-8 bg-[#1a3a6e] text-white">
+          <DialogHeader className="p-8 bg-secondary text-secondary-foreground">
             <DialogTitle className="text-xl font-extrabold flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-white/10">
+              <div className="p-2 rounded-xl bg-secondary-foreground/10">
                 <Upload className="size-5" />
               </div>
               Nộp bằng chứng kết quả
             </DialogTitle>
-            <DialogDescription className="text-white/70 font-medium">
+            <DialogDescription className="text-secondary-foreground/70 font-medium">
               Tải lên tài liệu hoặc ghi chú kết quả xử lý văn bản này.
             </DialogDescription>
           </DialogHeader>
           <div className="p-8 space-y-6">
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ghi chú xử lý</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ghi chú xử lý</Label>
               <Textarea 
                 placeholder="Mô tả tóm tắt kết quả xử lý..." 
-                className="min-h-[120px] rounded-2xl border-slate-200 bg-slate-50 focus:bg-white transition-all font-medium p-4"
+                className="min-h-[120px] rounded-2xl border-border bg-muted/50 focus:bg-background transition-all font-medium p-4"
                 value={evidenceNotes}
                 onChange={(e) => setEvidenceNotes(e.target.value)}
               />
             </div>
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tệp đính kèm ({selectedFiles.length})</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tệp đính kèm ({selectedFiles.length})</Label>
               <div 
-                className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:bg-slate-50 transition-colors cursor-pointer group relative"
+                className="border-2 border-dashed border-border rounded-2xl p-8 text-center hover:bg-muted/50 transition-colors cursor-pointer group relative"
                 onClick={() => document.getElementById('evidence-file-input').click()}
               >
                 <input 
@@ -352,24 +372,24 @@ export function MyTasks({ onTabChange }) {
                   className="hidden" 
                   onChange={(e) => setSelectedFiles([...selectedFiles, ...Array.from(e.target.files)])}
                 />
-                <FileText className="size-8 mx-auto text-slate-300 group-hover:text-[#1a3a6e] transition-colors mb-2" />
-                <p className="text-xs font-bold text-slate-500">Kéo thả hoặc nhấn để chọn file</p>
+                <FileText className="size-8 mx-auto text-muted-foreground/30 group-hover:text-secondary transition-colors mb-2" />
+                <p className="text-xs font-bold text-muted-foreground">Kéo thả hoặc nhấn để chọn file</p>
                 {selectedFiles.length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-2 justify-center">
                     {selectedFiles.map((file, i) => (
-                      <Badge key={i} variant="secondary" className="bg-white/50">{file.name}</Badge>
+                      <Badge key={i} variant="secondary" className="bg-card/50">{file.name}</Badge>
                     ))}
                   </div>
                 )}
               </div>
             </div>
           </div>
-          <DialogFooter className="p-8 bg-slate-50 gap-3">
+          <DialogFooter className="p-8 bg-muted/50 gap-3">
             <Button variant="ghost" className="rounded-xl font-bold" onClick={() => setIsEvidenceModalOpen(false)}>Hủy bỏ</Button>
             <Button 
-              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold px-8 shadow-lg shadow-emerald-500/20"
+              className="rounded-xl bg-success hover:bg-success/90 font-bold px-8 shadow-lg shadow-success/20"
               onClick={handleSubmitEvidence}
-              disabled={isSubmitting || !evidenceNotes.trim()}
+              disabled={isSubmitting || !evidenceNotes.trim() || selectedFiles.length === 0}
             >
               {isSubmitting ? <Loader2 className="size-4 animate-spin mr-2" /> : <CheckCircle2 className="size-4 mr-2" />}
               Xác nhận hoàn thành
@@ -383,10 +403,10 @@ export function MyTasks({ onTabChange }) {
 
 function TaskStatCard({ label, count, color, bgColor, onClick }) {
   return (
-    <Card className="border-slate-200 shadow-sm overflow-hidden rounded-3xl cursor-pointer hover:shadow-md transition-all group" onClick={onClick}>
+    <Card className="border-border shadow-sm overflow-hidden rounded-3xl cursor-pointer hover:shadow-md transition-all group" onClick={onClick}>
       <CardContent className="p-6 flex items-center justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{label}</p>
           <h3 className={cn("text-3xl font-black tracking-tighter", color)}>{count}</h3>
         </div>
         <div className={cn("p-4 rounded-2xl transition-transform group-hover:scale-110", bgColor)}>

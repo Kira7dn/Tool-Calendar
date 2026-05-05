@@ -17,6 +17,7 @@ import {
   Building2,
   Check
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -201,11 +202,11 @@ export function Users() {
   };
 
   const getRoleBadge = (role) => {
-    let color = 'bg-slate-100 text-slate-600';
-    if (role === 'Admin') color = 'bg-purple-100 text-purple-700 border-purple-200';
-    else if (role === 'LanhDao') color = 'bg-blue-100 text-blue-700 border-blue-200';
-    else if (role === 'VanThu') color = 'bg-orange-100 text-orange-700 border-orange-200';
-    else if (role === 'CanBo') color = 'bg-green-100 text-green-700 border-green-200';
+    let color = 'bg-muted/50 text-muted-foreground';
+    if (role === 'Admin') color = 'bg-info/15 text-info border-info/30';
+    else if (role === 'LanhDao') color = 'bg-secondary/15 text-secondary border-secondary/30';
+    else if (role === 'VanThu') color = 'bg-warning/15 text-warning border-warning/30';
+    else if (role === 'CanBo') color = 'bg-success/15 text-success border-success/30';
 
     return (
       <Badge variant="outline" className={cn("font-bold text-[10px] uppercase tracking-tighter", color)}>
@@ -223,31 +224,32 @@ export function Users() {
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <Card className="shadow-2xl border-white/10 bg-white/80 backdrop-blur-md rounded-3xl overflow-hidden">
-        <CardHeader className="flex flex-col md:flex-row items-center justify-between p-8 border-b border-slate-100 gap-4">
+    <div className="space-y-[var(--space-page)] animate-in fade-in duration-[var(--duration-smooth)]">
+      <div className="flex flex-col gap-0 border-l-4 border-secondary pl-3 py-0.5">
+        <h2 className="text-xl">Quản lý người dùng</h2>
+        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">Access Control & Staff Management</p>
+      </div>
+
+      <Card className="glass-card shadow-2xl overflow-hidden">
+        <CardHeader className="flex flex-col md:flex-row items-center justify-between p-8 border-b border-border gap-4 bg-muted/20">
           <div className="flex items-center gap-6">
-            <div className="p-3 rounded-2xl bg-[#1a3a6e]/10 text-[#1a3a6e]">
+            <div className="p-3 rounded-2xl bg-secondary/10 text-secondary">
               <UsersIcon className="size-6" />
-            </div>
-            <div>
-              <CardTitle className="text-xl font-black text-slate-900 tracking-tight">Quản lý người dùng</CardTitle>
-              <p className="text-sm text-slate-500 font-medium">Danh sách tài khoản cán bộ truy cập hệ thống</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input 
                 placeholder="Tìm theo tên, email..." 
-                className="pl-9 h-11 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-[#1a3a6e]/10"
+                className="pl-9 h-11 bg-muted/50 focus:bg-card"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <Button 
-              className="h-11 px-6 rounded-2xl bg-[#1a3a6e] hover:bg-[#132a54] text-white font-bold shadow-lg shadow-[#1a3a6e]/20"
+              className="h-11 px-6 rounded-2xl bg-secondary hover:bg-sidebar-mid text-secondary-foreground font-bold shadow-lg shadow-secondary/20"
               onClick={() => handleOpenModal()}
             >
               <Plus className="size-4 mr-2" /> Thêm tài khoản
@@ -259,64 +261,72 @@ export function Users() {
           <div className="relative overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                  <TableHead className="px-8 py-4 font-black text-[10px] uppercase tracking-widest text-slate-400 text-center w-16">STT</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Người dùng</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Liên hệ</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Phòng ban</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Vai trò</TableHead>
-                  <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-slate-400 text-right">Thao tác</TableHead>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="px-8 py-4 font-black text-[10px] uppercase tracking-widest text-muted-foreground text-center w-16">STT</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">Người dùng</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">Liên hệ</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">Phòng ban</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">Vai trò</TableHead>
+                  <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-muted-foreground text-right">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  [...Array(5)].map((_, i) => (
-                    <TableRow key={i} className="animate-pulse">
-                      <TableCell className="px-8 py-6"><div className="h-4 bg-slate-100 rounded mx-auto w-4"></div></TableCell>
-                      <TableCell><div className="h-12 bg-slate-100 rounded-xl w-48"></div></TableCell>
-                      <TableCell><div className="h-8 bg-slate-100 rounded-lg w-40"></div></TableCell>
-                      <TableCell><div className="h-6 bg-slate-100 rounded-md w-32"></div></TableCell>
-                      <TableCell><div className="h-6 bg-slate-100 rounded-full w-24"></div></TableCell>
-                      <TableCell className="px-8 py-6"><div className="h-8 bg-slate-100 rounded-xl ml-auto w-24"></div></TableCell>
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="px-8 py-6 text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="size-10 rounded-full" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+                      <TableCell className="px-8 py-6 text-right"><Skeleton className="h-8 w-24 rounded-xl ml-auto" /></TableCell>
                     </TableRow>
                   ))
                 ) : filteredUsers.length > 0 ? (
                   filteredUsers.map((user, index) => (
-                    <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-8 py-5 text-center text-slate-400 font-bold text-xs">{index + 1}</td>
-                      <td className="py-5">
+                    <TableRow key={user.id} className="group transition-colors">
+                      <TableCell className="px-8 py-5 text-center text-muted-foreground font-bold text-xs">{index + 1}</TableCell>
+                      <TableCell className="py-5">
                         <div className="flex items-center gap-4">
-                          <div className="size-10 rounded-2xl bg-[#1a3a6e]/5 flex items-center justify-center text-[#1a3a6e] font-black group-hover:bg-[#1a3a6e] group-hover:text-white transition-all">
+                          <div className="size-10 rounded-2xl bg-secondary/5 flex items-center justify-center text-secondary font-black group-hover:bg-secondary group-hover:text-secondary-foreground transition-all">
                             {user.fullName?.charAt(0) || 'U'}
                           </div>
                           <div>
-                            <div className="font-black text-slate-800 text-sm">{user.fullName}</div>
-                            <div className="text-xs text-slate-400 font-bold">@{user.username}</div>
+                            <div className="font-black text-foreground text-sm">{user.fullName}</div>
+                            <div className="text-xs text-muted-foreground font-bold">@{user.username}</div>
                           </div>
                         </div>
-                      </td>
-                      <td className="py-5">
+                      </TableCell>
+                      <TableCell className="py-5">
                         <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                             <Mail className="size-3 text-slate-300" /> {user.email || '-'}
+                          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                             <Mail className="size-3 text-muted-foreground/30" /> {user.email || '-'}
                           </div>
-                          <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-                             <Phone className="size-3 text-slate-300" /> {user.phoneNumber || '-'}
+                          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                             <Phone className="size-3 text-muted-foreground/30" /> {user.phoneNumber || '-'}
                           </div>
                         </div>
-                      </td>
-                      <td className="py-5">
-                        <Badge variant="secondary" className="bg-slate-100 text-slate-600 font-bold text-[10px]">
+                      </TableCell>
+                      <TableCell className="py-5">
+                        <Badge variant="secondary" className="bg-muted/50 text-muted-foreground font-bold text-[10px]">
                           {user.departmentName || 'Chưa phân phòng'}
                         </Badge>
-                      </td>
-                      <td className="py-5">{getRoleBadge(user.role)}</td>
-                      <td className="px-8 py-5 text-right">
+                      </TableCell>
+                      <TableCell className="py-5">{getRoleBadge(user.role)}</TableCell>
+                      <TableCell className="px-8 py-5 text-right">
                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="size-9 rounded-xl text-blue-600 hover:bg-blue-50"
+                            className="size-9 rounded-xl text-info hover:bg-info/10"
                             onClick={() => handleOpenModal(user)}
                           >
                             <Edit className="size-4" />
@@ -324,25 +334,25 @@ export function Users() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="size-9 rounded-xl text-rose-600 hover:bg-rose-50"
+                            className="size-9 rounded-xl text-destructive hover:bg-destructive/10"
                             disabled={user.username === 'admin'}
                             onClick={() => handleDeleteUser(user)}
                           >
                             <Trash2 className="size-4" />
                           </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan="6" className="px-8 py-20 text-center">
+                  <TableRow>
+                    <TableCell colSpan={6} className="px-8 py-20 text-center">
                       <div className="flex flex-col items-center opacity-20">
                          <UserPlus className="size-16 mb-4" />
                          <p className="text-xl font-black">Không có dữ liệu người dùng</p>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
@@ -352,15 +362,15 @@ export function Users() {
 
       {/* User Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-xl rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="p-8 bg-[#1a3a6e] text-white">
+        <DialogContent className="max-w-xl p-0 overflow-hidden border-none shadow-2xl glass-card">
+          <DialogHeader className="p-8 bg-secondary text-secondary-foreground">
             <DialogTitle className="text-xl font-extrabold flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-white/10">
+              <div className="p-2 rounded-xl bg-secondary-foreground/10">
                 {editingUser ? <Edit className="size-5" /> : <UserPlus className="size-5" />}
               </div>
               {editingUser ? 'Cập nhật tài khoản' : 'Tạo tài khoản mới'}
             </DialogTitle>
-            <DialogDescription className="text-white/60 font-medium">
+            <DialogDescription className="text-secondary-foreground/60 font-medium">
               Thiết lập thông tin đăng nhập và vai trò cho cán bộ
             </DialogDescription>
           </DialogHeader>
@@ -368,78 +378,78 @@ export function Users() {
           <div className="p-8 grid grid-cols-2 gap-6">
             {!editingUser && (
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tên đăng nhập</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tên đăng nhập</Label>
                 <div className="relative">
-                   <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                   <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                    <Input 
                     placeholder="vd: canbo.dv"
                     value={formData.username}
                     onChange={e => setFormData({...formData, username: e.target.value})}
-                    className="pl-10 rounded-xl bg-slate-50 border-none h-11 font-bold"
+                    className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
                    />
                 </div>
               </div>
             )}
             
             <div className={cn("space-y-2", editingUser && "col-span-2")}>
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 {editingUser ? 'Mật khẩu mới (Để trống nếu không đổi)' : 'Mật khẩu'}
               </Label>
               <div className="relative">
-                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                  <Input 
                   type="password"
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={e => setFormData({...formData, password: e.target.value})}
-                  className="pl-10 rounded-xl bg-slate-50 border-none h-11 font-bold"
+                  className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
                  />
               </div>
             </div>
 
             <div className="space-y-2 col-span-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Họ và tên</Label>
+               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Họ và tên</Label>
                <Input 
                   placeholder="Nguyễn Văn A"
                   value={formData.fullName}
                   onChange={e => setFormData({...formData, fullName: e.target.value})}
-                  className="rounded-xl bg-slate-50 border-none h-11 font-black text-slate-800"
+                  className="rounded-xl bg-muted/50 border-none h-11 font-black text-foreground"
                />
             </div>
 
             <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Email</Label>
+               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</Label>
                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <Input 
                     placeholder="email@vidu.com"
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
-                    className="pl-10 rounded-xl bg-slate-50 border-none h-11 font-medium"
+                    className="pl-10 bg-muted/50 h-11 font-medium"
                   />
                </div>
             </div>
 
             <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Số điện thoại</Label>
+               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Số điện thoại</Label>
                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <Input 
                     placeholder="09xx..."
                     value={formData.phoneNumber}
                     onChange={e => setFormData({...formData, phoneNumber: e.target.value})}
-                    className="pl-10 rounded-xl bg-slate-50 border-none h-11 font-medium"
+                    className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-medium"
                   />
                </div>
             </div>
 
             <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Phòng ban</Label>
+               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phòng ban</Label>
                <Select value={formData.departmentId} onValueChange={v => setFormData({...formData, departmentId: v})}>
-                  <SelectTrigger className="rounded-xl bg-slate-50 border-none h-11 font-bold">
+                  <SelectTrigger className="rounded-xl bg-muted/50 border-none h-11 font-bold">
                     <SelectValue placeholder="Chọn phòng ban" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl shadow-2xl border-slate-100">
+                  <SelectContent className="glass-card shadow-2xl">
                     <SelectItem value="0" disabled>Chọn đơn vị</SelectItem>
                     {departments.map(d => <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>)}
                   </SelectContent>
@@ -447,12 +457,12 @@ export function Users() {
             </div>
 
             <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vai trò</Label>
+               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vai trò</Label>
                <Select value={formData.role} onValueChange={v => setFormData({...formData, role: v})}>
-                  <SelectTrigger className="rounded-xl bg-slate-50 border-none h-11 font-bold">
+                  <SelectTrigger className="rounded-xl bg-muted/50 border-none h-11 font-bold">
                     <SelectValue placeholder="Chọn vai trò" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl shadow-2xl border-slate-100">
+                  <SelectContent className="glass-card shadow-2xl">
                     <SelectItem value="CanBo">Cán bộ xử lý</SelectItem>
                     <SelectItem value="VanThu">Văn thư</SelectItem>
                     <SelectItem value="LanhDao">Lãnh đạo</SelectItem>
@@ -462,10 +472,10 @@ export function Users() {
             </div>
           </div>
 
-          <DialogFooter className="p-8 bg-slate-50 gap-3">
+          <DialogFooter className="p-8 bg-muted/50 gap-3">
              <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-bold">Hủy bỏ</Button>
              <Button 
-                className="rounded-xl bg-[#1a3a6e] hover:bg-[#132a54] font-black px-10 shadow-lg shadow-[#1a3a6e]/20"
+                className="rounded-xl bg-secondary hover:bg-sidebar-mid font-black px-10 shadow-lg shadow-secondary/20"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
              >

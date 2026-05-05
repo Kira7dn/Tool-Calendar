@@ -67,7 +67,7 @@ function LoginPage() {
         <div className="blob blob-2" />
       </div>
 
-      <Card className="login-card gap-0 border-t-[5px] border-t-[#c0392b] py-0">
+      <Card className="login-card gap-0 border-t-[5px] border-t-destructive py-0">
         <img
           src="/assets/LINK STRATEGY.png"
           alt="Logo"
@@ -77,20 +77,20 @@ function LoginPage() {
           }}
         />
         <CardHeader className="px-0 pb-0">
-          <CardTitle className="text-[1.45rem] font-extrabold text-[#1a3a6e]">Chào mừng trở lại</CardTitle>
+          <CardTitle className="text-[1.45rem] font-extrabold text-secondary">Chào mừng trở lại</CardTitle>
           <CardDescription>Vui lòng đăng nhập để quản lý công văn</CardDescription>
         </CardHeader>
 
         <CardContent className="px-0">
           {showKickedBanner && (
-            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-left">
+            <div className="mb-5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-left">
               <div className="flex items-center gap-2.5">
-                <TriangleAlert className="size-5 text-red-500" />
+                <TriangleAlert className="size-5 text-destructive" />
                 <div>
-                  <div className="text-sm font-semibold text-red-500">
+                  <div className="text-sm font-semibold text-destructive">
                     Phiên đăng nhập đã bị chấm dứt
                   </div>
-                  <div className="mt-0.5 text-xs text-slate-500">
+                  <div className="mt-0.5 text-xs text-muted-foreground">
                     Tài khoản của bạn đã đăng nhập từ một thiết bị khác.
                   </div>
                 </div>
@@ -127,7 +127,7 @@ function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((value) => !value)}
-                className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center text-slate-500"
+                className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center text-muted-foreground"
                 title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}

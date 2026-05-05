@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AppShell } from './shell/AppShell.jsx';
 import './styles/globals.css';
+import './i18n.js';
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 

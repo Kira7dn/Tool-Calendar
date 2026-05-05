@@ -28,20 +28,28 @@
   --color-secondary: #1a3a6e;
   --color-secondary-foreground: #ffffff;
 
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
+  /* Project Accent (Xanh Cyan) */
+  --color-accent: #22d3ee;
+  --color-accent-foreground: #1a3a6e;
 
-  --color-accent: #1a3a6e;
-  --color-accent-foreground: #ffffff;
-
+  /* Functional Colors */
+  --color-success: #10b981;
+  --color-success-foreground: #ffffff;
+  --color-warning: #f59e0b;
+  --color-warning-foreground: #ffffff;
+  --color-info: #3b82f6;
+  --color-info-foreground: #ffffff;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
+
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
 
   --color-border: #d1d5db;
   --color-input: #d1d5db;
   --color-ring: #c0392b;
 
-  /* Sidebar Tokens (Dành cho cả React và Legacy) */
+  /* Sidebar Tokens */
   --color-sidebar: #1a3a6e;
   --color-sidebar-foreground: rgba(255, 255, 255, 0.82);
   --color-sidebar-primary: #ffffff;
@@ -49,14 +57,19 @@
   --color-sidebar-accent: rgba(255, 255, 255, 0.1);
   --color-sidebar-accent-foreground: #ffffff;
   --color-sidebar-border: rgba(255, 255, 255, 0.12);
-  --color-sidebar-ring: #ffffff;
+  --color-sidebar-ring: #22d3ee;
+  
+  /* Sidebar Gradient Steps */
+  --color-sidebar-start: #1a3a6e;
+  --color-sidebar-mid: #132a54;
+  --color-sidebar-end: #0d1b4b;
 
   /* ====================================================
      2. SPACING & SIZING
      ==================================================== */
   --spacing-sidebar: 250px;
   --spacing-sidebar-collapsed: 80px;
-  --spacing-sidebar-icon-zone: 80px; /* Fixed zone for icons alignment */
+  --spacing-sidebar-icon-zone: 80px;
   
   /* ====================================================
      3. ELEVATION (Radius & Shadow)
@@ -65,13 +78,35 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-2xl: 20px;
   --radius-full: 9999px;
 
+  /* Component specific radius */
+  --radius-card: var(--radius-xl);
+  --radius-input: 10px;
+  --radius-button: 10px;
+
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-floating: 0 10px 30px -5px rgba(0, 0, 0, 0.2), 0 4px 10px -5px rgba(0, 0, 0, 0.1);
+
+  /* ====================================================
+     4. SPACING & LAYOUT
+     ==================================================== */
+  --space-page: 1.5rem;
+  --space-card-gap: 1.5rem;
+  --space-item-gap: 1rem;
+  --space-section: 2rem;
+
+  /* ====================================================
+     5. ANIMATIONS
+     ==================================================== */
+  --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-snappy: 200ms;
+  --duration-smooth: 400ms;
 }
 
 :root {
-  /* Cầu nối cho Legacy CSS sử dụng các biến từ Tailwind theme */
   --background: var(--color-background);
   --foreground: var(--color-foreground);
   --card: var(--color-card);
@@ -86,31 +121,74 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  /* Bạn có thể bổ sung các biến dark mode tại đây nếu cần */
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --primary: #ef4444;
+  --primary-foreground: #ffffff;
+  --secondary: #334155;
+  --secondary-foreground: #f8fafc;
+  --muted: #334155;
+  --muted-foreground: #94a3b8;
+  --accent: #334155;
+  --accent-foreground: #f8fafc;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #f8fafc;
+  --border: #334155;
+  --input: #334155;
+  --ring: #ef4444;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  
+  /* Standard Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40 transition-colors;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* Core Layout Migration */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-foreground;
+  }
+
+  h1 { @apply text-2xl; }
+  h2 { @apply text-xl; }
+  h3 { @apply text-lg; }
+
+  /* Global Form Element Standardization */
+  input, select, textarea {
+    @apply bg-background border border-border text-foreground transition-all duration-200;
+    border-radius: var(--radius-input);
+  }
+
+  input:focus, select:focus, textarea:focus {
+    @apply outline-none ring-2 ring-secondary/10 border-secondary/50 bg-card;
+  }
+
   .app-container {
     @apply flex h-screen overflow-hidden bg-background;
   }
 
   .main-content {
     @apply flex-1 flex flex-col min-w-0 h-screen overflow-y-auto overflow-x-hidden bg-background;
-  }
-
-  .tab-host {
-    @apply flex-1 flex flex-col min-h-0;
   }
 
   .sidebar-overlay {
@@ -121,3 +199,74 @@
     @apply opacity-100 pointer-events-auto;
   }
 }
+
+@layer utilities {
+  .bg-sidebar-gradient {
+    background: linear-gradient(to bottom, var(--color-sidebar-start), var(--color-sidebar-mid), var(--color-sidebar-end));
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-md border border-border/50 shadow-premium;
+    border-radius: var(--radius-card);
+  }
+
+  .glass-header {
+    @apply bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-[100];
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  .input-error {
+    @apply border-destructive/50 ring-destructive/10 focus:border-destructive focus:ring-destructive/20 bg-destructive/5;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* ====================================================
+     DENSITY MODES
+     ==================================================== */
+  .density-compact {
+    --space-page: 0.75rem;
+    --space-card-gap: 0.75rem;
+    --space-item-gap: 0.5rem;
+    
+    & table td, & table th {
+      @apply py-2 px-4 !important;
+    }
+    
+    & .glass-card {
+      @apply shadow-sm;
+    }
+
+    & h2 {
+      @apply text-lg !important;
+    }
+
+    & h3 {
+      @apply text-sm !important;
+    }
+
+    & .CardHeader, & [data-slot="card-header"] {
+      @apply py-3 px-5 !important;
+    }
+  }
+
+  .density-comfortable {
+    --space-page: 1.5rem;
+    --space-card-gap: 1.5rem;
+    --space-item-gap: 1rem;
+  }
+}
+

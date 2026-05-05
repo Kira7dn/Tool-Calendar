@@ -89,23 +89,18 @@ namespace ToolCalendar.Services
                 }
             }
 
-            // 3. Gửi Real-time SignalR (nếu user đang mở web)
-            await _hubContext.Clients.Group($"User_{userId}").SendAsync("ReceiveNotification", new
-            {
-                title,
-                body,
-                data
-            });
-
-            // 4. Lưu vào Database (Lịch sử thông báo)
+            // 4. Lưu vào Database (Lịch sử thông báo) - Thực hiện TRƯỚC khi gửi SignalR để đảm bảo dữ liệu sẵn sàng khi web nhận tin
             int? docIdValue = null;
             if (data != null)
             {
-                var dataDict = JsonSerializer.Deserialize<Dictionary<string, object>>(JsonSerializer.Serialize(data));
-                if (dataDict != null && dataDict.TryGetValue("docId", out var dId))
-                {
-                    if (int.TryParse(dId?.ToString(), out int parsedId)) docIdValue = parsedId;
-                }
+                try {
+                    var jsonStr = JsonSerializer.Serialize(data);
+                    var dataDict = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonStr);
+                    if (dataDict != null && dataDict.TryGetValue("docId", out var dId))
+                    {
+                        if (int.TryParse(dId?.ToString(), out int parsedId)) docIdValue = parsedId;
+                    }
+                } catch { /* Bỏ qua lỗi parse data */ }
             }
 
             DatabaseService.InsertNotification(new Core.Models.NotificationRecord
@@ -118,8 +113,23 @@ namespace ToolCalendar.Services
                 IsRead = false
             });
 
-            // 5. Log vào AuditLog
-            DatabaseService.InsertAuditLog(userId, $"Thông báo: {title} - {body}");
+            // 3. Gửi Real-time SignalR (nếu user đang mở web) - Bọc Try/Catch để không làm gián đoạn luồng chính
+            try 
+            {
+                await _hubContext.Clients.Group($"User_{userId}").SendAsync("ReceiveNotification", new
+                {
+                    title,
+                    body,
+                    data
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"[NotificationManager] Lỗi gửi SignalR cho user {userId}. Có thể user đã disconnect.");
+            }
+
+            // 5. Log vào AuditLog (Tối giản để tránh phình DB)
+            DatabaseService.InsertAuditLog(userId, $"Thông báo: {title}");
         }
     }
 }
