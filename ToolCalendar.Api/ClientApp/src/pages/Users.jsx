@@ -17,7 +17,9 @@ import {
   Building2,
   Check,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +71,7 @@ export function Users() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [showModalPassword, setShowModalPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -139,7 +143,7 @@ export function Users() {
 
   const handleSubmit = async () => {
     if (!formData.fullName || (!editingUser && !formData.username) || (!editingUser && !formData.password)) {
-      alert('Vui lòng nhập đầy đủ thông tin bắt buộc');
+      toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
       return;
     }
 
@@ -174,10 +178,11 @@ export function Users() {
 
       if (response.ok) {
         setIsModalOpen(false);
+        toast.success(editingUser ? 'Cập nhật tài khoản thành công' : 'Tạo tài khoản thành công');
         fetchUsers();
       } else {
         const err = await response.json();
-        alert(err.message || 'Lỗi khi lưu người dùng');
+        toast.error(err.message || 'Lỗi khi lưu người dùng');
       }
     } catch (error) {
       console.error('Submit user failed:', error);
@@ -186,13 +191,19 @@ export function Users() {
     }
   };
 
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, user: null });
+
   const handleDeleteUser = async (user) => {
     if (user.username === 'admin') {
-      alert('Không thể xóa tài khoản Quản trị cấp cao (admin)');
+      toast.error('Không thể xóa tài khoản Quản trị cấp cao (admin)');
       return;
     }
+    setDeleteConfirm({ open: true, user });
+  };
 
-    if (!confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.fullName}"?`)) return;
+  const executeDelete = async () => {
+    const user = deleteConfirm.user;
+    if (!user) return;
 
     try {
       const response = await fetch(`/api/users/${user.id}`, {
@@ -200,9 +211,14 @@ export function Users() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (response.ok) {
+        toast.success(`Đã xóa người dùng ${user.fullName}`);
         fetchUsers();
       }
-    } catch (e) { }
+    } catch (e) {
+      toast.error('Có lỗi xảy ra khi xóa');
+    } finally {
+      setDeleteConfirm({ open: false, user: null });
+    }
   };
 
   const getRoleBadge = (role) => {
@@ -390,14 +406,14 @@ export function Users() {
       {/* User Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-xl p-0 overflow-hidden border-none shadow-2xl glass-card">
-          <DialogHeader className="p-8 bg-primary text-primary-foreground">
-            <DialogTitle className="text-xl font-extrabold flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-primary-foreground/10">
-                {editingUser ? <Edit className="size-5" /> : <UserPlus className="size-5" />}
+          <DialogHeader className="p-8 bg-red-600 text-white relative">
+            <DialogTitle className="text-xl font-extrabold flex items-center gap-3 text-white">
+              <div className="p-2 rounded-xl bg-white/10 backdrop-blur-md">
+                {editingUser ? <Edit className="size-5 text-white" /> : <UserPlus className="size-5 text-white" />}
               </div>
-              {editingUser ? 'Cập nhật tài khoản' : 'Tạo tài khoản mới'}
+              <span className="drop-shadow-sm">{editingUser ? 'Cập nhật tài khoản' : 'Tạo tài khoản mới'}</span>
             </DialogTitle>
-            <DialogDescription className="text-primary-foreground/60 font-medium">
+            <DialogDescription className="text-white/80 font-medium mt-2">
               Thiết lập thông tin đăng nhập và vai trò cho cán bộ
             </DialogDescription>
           </DialogHeader>
@@ -425,12 +441,20 @@ export function Users() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
-                  type="password"
+                  type={showModalPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={e => setFormData({ ...formData, password: e.target.value })}
-                  className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
+                  className="pl-10 pr-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
                 />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 size-8 text-muted-foreground hover:bg-transparent"
+                  onClick={() => setShowModalPassword(!showModalPassword)}
+                >
+                  {showModalPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </Button>
               </div>
             </div>
 
@@ -502,7 +526,7 @@ export function Users() {
           <DialogFooter className="p-8 bg-muted/50 gap-3">
             <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-bold">Hủy bỏ</Button>
             <Button
-              className="rounded-xl bg-primary hover:bg-sidebar-mid font-black px-10 shadow-lg shadow-primary/20"
+              className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-black px-10 shadow-lg shadow-red-100 transition-all"
               onClick={handleSubmit}
               disabled={isSubmitting}
             >
@@ -510,6 +534,37 @@ export function Users() {
               {editingUser ? 'Lưu thay đổi' : 'Tạo tài khoản'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Delete Confirmation Modal */}
+      <Dialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, user: null })}>
+        <DialogContent className="max-w-[400px] rounded-3xl border-none shadow-2xl overflow-hidden p-0">
+           <div className="p-8 flex flex-col items-center text-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-2">
+                 <Trash2 size={32} strokeWidth={2.5} />
+              </div>
+              <div className="space-y-2">
+                 <h3 className="text-xl font-black text-slate-900 tracking-tight">Xác nhận xóa?</h3>
+                 <p className="text-sm font-medium text-slate-500 leading-relaxed px-4">
+                    Bạn có chắc chắn muốn xóa tài khoản <span className="font-bold text-slate-900">{deleteConfirm.user?.fullName}</span>? Thao tác này không thể hoàn tác.
+                 </p>
+              </div>
+           </div>
+           <div className="p-5 bg-slate-50 flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                className="flex-1 rounded-xl font-bold text-slate-400"
+                onClick={() => setDeleteConfirm({ open: false, user: null })}
+              >
+                HỦY BỎ
+              </Button>
+              <Button 
+                className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-100"
+                onClick={executeDelete}
+              >
+                XÓA NGAY
+              </Button>
+           </div>
         </DialogContent>
       </Dialog>
     </div>

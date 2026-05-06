@@ -25,6 +25,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from 'sonner';
+import {
   Table,
   TableBody,
   TableCell,
@@ -60,6 +69,8 @@ export function Documents({ onTabChange, filters }) {
     document.addEventListener('realtime:document_updated', handleUpdate);
     return () => document.removeEventListener('realtime:document_updated', handleUpdate);
   }, [page, status, sort]);
+
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, doc: null });
 
   const fetchDocuments = async () => {
     setIsLoading(true);
@@ -119,15 +130,28 @@ export function Documents({ onTabChange, filters }) {
       if (action === 'edit') window.app.services.openDocDetail(doc.id, 'edit');
       if (action === 'pdf') window.app.services.openPdfPreview(doc.id, doc.soVanBan);
       if (action === 'delete') {
-        if (confirm('Bạn có chắc chắn muốn xóa văn bản này?')) {
-          fetch(`/api/documents/${doc.id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-          }).then(res => {
-            if (res.ok) fetchDocuments();
-          });
-        }
+        setDeleteConfirm({ open: true, doc });
       }
+    }
+  };
+
+  const executeDelete = async () => {
+    const doc = deleteConfirm.doc;
+    if (!doc) return;
+
+    try {
+      const res = await fetch(`/api/documents/${doc.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (res.ok) {
+        toast.success('Đã xóa văn bản thành công');
+        fetchDocuments();
+      }
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi xóa');
+    } finally {
+      setDeleteConfirm({ open: false, doc: null });
     }
   };
 
@@ -239,22 +263,27 @@ export function Documents({ onTabChange, filters }) {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40 glass-card shadow-2xl">
-                            <DropdownMenuItem onClick={() => handleAction('view', doc)}>
-                              <Eye className="size-4 mr-2" /> Chi tiết
+                            <DropdownMenuItem
+                              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-600 hover:text-primary hover:bg-primary/5 cursor-pointer transition-all font-bold text-xs"
+                              onClick={() => handleAction('view', doc)}
+                            >
+                              <Eye className="size-4 text-primary" />
+                              <span>Chi tiết</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleAction('pdf', doc)}>
-                              <FileText className="size-4 mr-2" /> Xem PDF
+                            <DropdownMenuItem
+                              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50 cursor-pointer transition-all font-bold text-xs"
+                              onClick={() => handleAction('pdf', doc)}
+                            >
+                              <FileText className="size-4 text-blue-500" />
+                              <span>Xem PDF</span>
                             </DropdownMenuItem>
-
-                            {(localStorage.getItem('user_role') === 'Admin' || localStorage.getItem('user_role') === 'VanThu') && (
-                              <DropdownMenuItem onClick={() => handleAction('edit', doc)}>
-                                <FileEdit className="size-4 mr-2" /> Chỉnh sửa
-                              </DropdownMenuItem>
-                            )}
-
                             {localStorage.getItem('user_role') === 'Admin' && (
-                              <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleAction('delete', doc)}>
-                                <Trash2 className="size-4 mr-2" /> Xóa
+                              <DropdownMenuItem
+                                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-destructive hover:bg-destructive/10 cursor-pointer transition-all font-bold text-xs"
+                                onClick={() => handleAction('delete', doc)}
+                              >
+                                <Trash2 className="size-4" />
+                                <span>Xóa văn bản</span>
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
@@ -303,6 +332,38 @@ export function Documents({ onTabChange, filters }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Confirmation Modal */}
+      <Dialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, doc: null })}>
+        <DialogContent className="max-w-[400px] rounded-3xl border-none shadow-2xl overflow-hidden p-0">
+          <div className="p-8 flex flex-col items-center text-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-2">
+              <Trash2 size={32} strokeWidth={2.5} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">Xác nhận xóa?</h3>
+              <p className="text-sm font-medium text-slate-500 leading-relaxed px-4">
+                Bạn có chắc chắn muốn xóa văn bản <span className="font-bold text-slate-900">{deleteConfirm.doc?.soVanBan}</span>? Thao tác này không thể hoàn tác.
+              </p>
+            </div>
+          </div>
+          <div className="p-5 bg-slate-50 flex items-center gap-3">
+            <Button
+              variant="ghost"
+              className="flex-1 rounded-xl font-bold text-slate-400"
+              onClick={() => setDeleteConfirm({ open: false, doc: null })}
+            >
+              HỦY BỎ
+            </Button>
+            <Button
+              className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-100"
+              onClick={executeDelete}
+            >
+              XÓA NGAY
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

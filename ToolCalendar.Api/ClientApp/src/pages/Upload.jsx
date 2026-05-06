@@ -1,52 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import {
-  Upload as UploadIcon,
-  UploadCloud,
-  FileText,
-  FolderOpen,
-  X,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  Calendar,
-  Building2,
-  User,
-  MoreVertical,
-  Trash2,
-  Eye,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  ChevronLeft,
-  AlertTriangle,
-  Save,
-  Trash,
-  Send,
-  Layers,
-  Edit3,
-  SearchCode,
-  Sparkles
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
+import React, { useState, useRef, useEffect } from "react";
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -55,9 +8,100 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import {
+  ArrowLeft,
+  Clock,
+  Calendar,
+  FileText,
+  User,
+  Building2,
+  AlertCircle,
+  Edit,
+  ExternalLink,
+  MessageSquare,
+  Paperclip,
+  Send,
+  Loader2,
+  X,
+  Save,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Trash2,
+  Plus,
+  Search,
+  Filter,
+  CheckCircle2,
+  AlertTriangle,
+  Sparkles,
+  ChevronDown
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/* ── tiny icon helper ── */
+const Svg = ({ children, size = 20, cls = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}
+    strokeLinecap="round" strokeLinejoin="round" className={cls}>{children}</svg>
+);
+
+const UploadCloudIcon = () => <Svg size={40} cls="text-blue-400"><polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" /><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" /></Svg>;
+const FileIcon = () => <Svg size={14}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></Svg>;
+const FolderIcon = () => <Svg size={14}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></Svg>;
+const TrashIcon = () => <Svg size={13}><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" /></Svg>;
+const EyeIcon = () => <Svg size={13}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></Svg>;
+const EditIcon2 = () => <Svg size={13}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></Svg>;
+const ChipIcon = () => <Svg size={16}><rect x="9" y="9" width="6" height="6" rx="1" /><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" /><rect x="3" y="3" width="18" height="18" rx="2" /></Svg>;
+const CheckCircleIcon = () => <Svg size={14} cls="text-emerald-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></Svg>;
+const ClockIcon = () => <Svg size={14} cls="text-blue-500"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></Svg>;
+const XCircleIcon = () => <Svg size={14} cls="text-slate-400"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></Svg>;
+
+/* ── status badge ── */
+function StatusBadge({ status }) {
+  if (status === "processing") return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+      <span className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />Đang OCR
+    </span>
+  );
+  if (status === "success") return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+      <span className="w-1 h-1 rounded-full bg-emerald-500" />Đã lưu
+    </span>
+  );
+  if (status === "ready") return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+      Sẵn sàng
+    </span>
+  );
+  if (status === "error") return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
+      Lỗi
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+      Chờ rà soát
+    </span>
+  );
+}
+
+/* ── progress ring ── */
+function Ring({ pct }) {
+  const r = 22; const c = 2 * Math.PI * r;
+  return (
+    <svg width={56} height={56} viewBox="0 0 56 56">
+      <circle cx={28} cy={28} r={r} fill="none" stroke="#e2e8f0" strokeWidth={4} />
+      <circle cx={28} cy={28} r={r} fill="none" stroke="#3b82f6" strokeWidth={4}
+        strokeDasharray={c} strokeDashoffset={c - (c * pct) / 100}
+        strokeLinecap="round" transform="rotate(-90 28 28)" />
+      <text x={28} y={32} textAnchor="middle" fontSize={10} fontWeight={700} fill="#1e293b">{Math.round(pct)}%</text>
+    </svg>
+  );
+}
+
+/* ── main ── */
 export function Upload({ onTabChange }) {
   const [isDragging, setIsDragging] = useState(false);
   const [batchItems, setBatchItems] = useState([]);
@@ -65,17 +109,10 @@ export function Upload({ onTabChange }) {
   const [overallProgress, setOverallProgress] = useState(0);
   const [currentFileName, setCurrentFileName] = useState('');
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
-
-  // Edit Modal State
-  const [editingItem, setEditingItem] = useState(null);
-
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
 
-  const fileInputRef = useRef(null);
+  const inputRef = useRef(null);
   const folderInputRef = useRef(null);
 
   useEffect(() => {
@@ -99,38 +136,15 @@ export function Upload({ onTabChange }) {
     }
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const droppedFiles = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
-    if (droppedFiles.length > 0) {
-      handleFileUpload(droppedFiles);
-    }
-  };
-
-  const parseIds = (val) => {
-    if (!val) return [];
-    if (Array.isArray(val)) return val;
-    try { return JSON.parse(val || '[]'); } catch { return []; }
-  };
-
   const handleFileUpload = async (fileList) => {
+    if (!fileList.length) return;
     setIsProcessing(true);
     setOverallProgress(0);
 
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
       setCurrentFileName(file.name);
-      setOverallProgress(Math.round(((i) / fileList.length) * 100));
+      setOverallProgress(((i) / fileList.length) * 100);
 
       const tempId = `temp-${Date.now()}-${i}`;
       const newItem = {
@@ -143,7 +157,6 @@ export function Upload({ onTabChange }) {
         departmentIds: [],
         assignedToIds: [],
         status: 'processing',
-        warnings: []
       };
 
       setBatchItems(prev => [newItem, ...prev]);
@@ -160,9 +173,6 @@ export function Upload({ onTabChange }) {
 
         if (response.ok) {
           const doc = await response.json();
-          const sUserIds = parseIds(doc.assignedUserIds || doc.assignedToIds);
-          const sDeptIds = parseIds(doc.assignedDepartmentIds || doc.departmentIds);
-
           setBatchItems(prev => prev.map(item => item.id === tempId ? {
             ...item,
             id: doc.id,
@@ -170,12 +180,8 @@ export function Upload({ onTabChange }) {
             trichYeu: doc.trichYeu || '',
             coQuanChuQuan: doc.coQuanChuQuan || '',
             thoiHan: doc.thoiHan ? doc.thoiHan.split('T')[0] : '',
-            status: (sUserIds.length || sDeptIds.length) ? 'ready' : 'review',
-            warnings: doc.ocrWarnings || [],
-            suggestedUserIds: sUserIds,
-            suggestedDeptIds: sDeptIds,
-            assignedToIds: sUserIds,
-            departmentIds: sDeptIds
+            filePath: doc.filePath || '',
+            status: 'ready'
           } : item));
         } else {
           setBatchItems(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
@@ -193,31 +199,9 @@ export function Upload({ onTabChange }) {
   };
 
   const updateItem = (id, field, value) => {
-    setBatchItems(prev => prev.map(item => {
-      if (item.id === id) {
-        let updated = { ...item, [field]: value };
-
-        if (field === 'assignedToIds') {
-          const userIds = value;
-          const currentDeptIds = [...updated.departmentIds];
-          userIds.forEach(uid => {
-            const user = users.find(u => u.id === uid);
-            if (user && user.departmentId && !currentDeptIds.includes(user.departmentId)) {
-              currentDeptIds.push(user.departmentId);
-            }
-          });
-          updated.departmentIds = currentDeptIds;
-        }
-
-        if (updated.status === 'review' && (updated.departmentIds.length > 0 || updated.assignedToIds.length > 0)) {
-          updated.status = 'ready';
-        } else if (updated.status === 'ready' && updated.departmentIds.length === 0 && updated.assignedToIds.length === 0) {
-          updated.status = 'review';
-        }
-        return updated;
-      }
-      return item;
-    }));
+    setBatchItems(prev => prev.map(item =>
+      item.id === id ? { ...item, [field]: value } : item
+    ));
   };
 
   const handleSaveAll = async () => {
@@ -225,11 +209,9 @@ export function Upload({ onTabChange }) {
     if (targets.length === 0) return;
 
     setIsProcessing(true);
-    let successCount = 0;
-
     for (const item of targets) {
       try {
-        const saveRes = await fetch(`/api/documents/${item.id}`, {
+        const response = await fetch(`/api/documents/${item.id}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -241,505 +223,321 @@ export function Upload({ onTabChange }) {
             trichYeu: item.trichYeu,
             coQuanChuQuan: item.coQuanChuQuan,
             thoiHan: item.thoiHan ? `${item.thoiHan}T00:00:00` : null,
+            filePath: item.filePath,
             status: 'Chưa xử lý'
           })
         });
 
-        if (saveRes.ok) {
-          if (item.departmentIds.length > 0 || item.assignedToIds.length > 0) {
-            await fetch(`/api/documents/${item.id}/assign`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                departmentIds: item.departmentIds,
-                userIds: item.assignedToIds
-              })
-            });
-          }
-
+        if (response.ok) {
           setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'success' } : i));
-          successCount++;
         }
       } catch (e) {
         console.error(e);
       }
     }
-
     setIsProcessing(false);
-    if (successCount === targets.length) {
-      setTimeout(() => setBatchItems([]), 2000);
-    }
+    toast.success('Đã lưu tất cả văn bản');
   };
+
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleClearBatch = async () => {
-    if (batchItems.length === 0) return;
-    if (!confirm('Bạn có chắc chắn muốn hủy đợt bóc tách này? Thao tác này sẽ xóa vĩnh viễn các văn bản khỏi hệ thống.')) return;
+    setShowClearConfirm(true);
+  };
 
-    const realIds = batchItems.filter(i => typeof i.id === 'number').map(i => i.id);
-    if (realIds.length > 0) {
-      try {
-        await fetch('/api/documents/bulk-delete', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(realIds)
-        });
-      } catch (e) {
-        console.error('Failed to cleanup on server:', e);
-      }
-    }
+  const executeClearBatch = async () => {
     setBatchItems([]);
-    setCurrentPage(1);
+    setShowClearConfirm(false);
   };
 
-  const handleRemoveItem = async (item) => {
-    if (typeof item.id === 'number') {
-      try {
-        await fetch('/api/documents/bulk-delete', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify([item.id])
-        });
-      } catch (e) { }
-    }
-    setBatchItems(prev => prev.filter(i => i.id !== item.id));
+  const statCounts = {
+    ocr: batchItems.filter(f => f.status === "processing").length,
+    saved: batchItems.filter(f => f.status === "success").length,
+    pending: batchItems.filter(f => f.status === "ready").length,
   };
-
-  const shortenFileName = (name, maxLength = 24) => {
-    if (name.length <= maxLength) return name;
-    const extIndex = name.lastIndexOf('.');
-    if (extIndex === -1) return name.substring(0, maxLength) + '...';
-    const ext = name.substring(extIndex);
-    const base = name.substring(0, extIndex);
-    const chars = Math.max(5, maxLength - ext.length - 3);
-    return base.substring(0, chars) + '...' + ext;
-  };
-
-  const summary = {
-    processing: batchItems.filter(i => i.status === 'processing').length,
-    review: batchItems.filter(i => i.status === 'review').length,
-    ready: batchItems.filter(i => i.status === 'ready').length,
-    success: batchItems.filter(i => i.status === 'success').length,
-    error: batchItems.filter(i => i.status === 'error').length
-  };
-
-  const totalPages = Math.ceil(batchItems.length / pageSize);
-  const paginatedItems = batchItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="space-y-[var(--space-page)] flex flex-col h-full animate-in slide-in-from-bottom-4 duration-700 fill-mode-both">
-      <div className="flex flex-col gap-0 border-l-4 border-info pl-3 py-0.5">
-        <h2 className="text-xl">Số hóa tài liệu</h2>
-        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">PDF OCR Engine</p>
+    <div className="h-full bg-slate-100 flex flex-col overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+
+      {/* ── Page title bar ── */}
+      <div className="bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+            <ChipIcon />
+          </div>
+          <div>
+            <h1 className="text-sm font-bold text-slate-900 leading-tight">Số hóa tài liệu</h1>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">PDF OCR Engine</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleClearBatch}
+            className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-[11px] font-bold hover:bg-slate-50 transition-all"
+          >
+            HỦY ĐỢT TẢI
+          </button>
+          <button
+            onClick={handleSaveAll}
+            disabled={isProcessing || batchItems.length === 0}
+            className="px-6 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
+          >
+            LƯU & PHÂN CÔNG TẤT CẢ
+          </button>
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-[var(--space-page)] flex-1 min-h-0">
-        <div className="w-full lg:w-[320px] xl:w-[350px] flex-shrink-0 space-y-4 flex flex-col justify-center">
-          <Card
+      {/* ── Body ── */}
+      <div className="flex-1 flex gap-4 p-4 overflow-hidden min-h-0">
+
+        {/* LEFT: upload + status */}
+        <div className="w-64 flex-shrink-0 flex flex-col gap-3">
+
+          {/* Upload dropzone */}
+          <div
+            onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={e => {
+              e.preventDefault();
+              setIsDragging(false);
+              const files = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+              handleFileUpload(files);
+            }}
             className={cn(
-              "gap-2 relative group flex flex-col items-center justify-center p-2 text-center min-h-[320px] rounded-3xl transition-all duration-300 border-2 border-dashed",
-              isDragging
-                ? "border-primary bg-primary/5 ring-4 ring-primary/10 scale-[1.02]"
-                : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30 glass-card"
+              "rounded-xl border-2 border-dashed p-5 flex flex-col items-center gap-3 cursor-pointer transition-all",
+              isDragging ? "border-blue-400 bg-blue-50" : "border-slate-300 bg-white hover:border-blue-300 hover:bg-blue-50/40"
             )}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+            onClick={() => inputRef.current?.click()}
           >
             <input
+              ref={inputRef}
               type="file"
               multiple
-              accept="application/pdf"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              accept=".pdf"
+              className="hidden"
               onChange={(e) => handleFileUpload(Array.from(e.target.files))}
-              title=""
             />
-
             <div className={cn(
-              "flex items-center justify-center size-14 rounded-full mb-3 transition-all duration-300 shadow-sm",
-              isDragging ? "bg-primary text-primary-foreground scale-110" : "bg-primary/10 text-primary group-hover:scale-110 group-hover:bg-primary/20"
+              "w-14 h-14 rounded-2xl flex items-center justify-center transition-colors",
+              isDragging ? "bg-blue-100" : "bg-slate-50"
             )}>
-              <UploadCloud className="size-7" />
+              <UploadCloudIcon />
             </div>
-
-            <h3 className="text-sm font-semibold mb-1 text-foreground">
-              {isDragging ? "Thả tệp vào đây..." : "Tải tệp tin lên"}
-            </h3>
-
-            <p className="text-xs text-muted-foreground max-w-[220px] mb-6">
-              Kéo thả tệp PDF vào đây hoặc chọn tải lên từ máy tính.
-            </p>
-
-            <div className="flex flex-col gap-2 w-full max-w-[200px] relative z-20">
-              <Button
-                variant={isDragging ? "default" : "primary"}
-                className="font-bold rounded-xl shadow-sm w-full pointer-events-none"
-              >
-                Chọn tệp tin
-              </Button>
-              <Button
-                variant="outline"
-                className="font-bold rounded-xl text-muted-foreground hover:bg-muted/50 w-full"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); folderInputRef.current?.click(); }}
-              >
-                <FolderOpen className="size-3.5 mr-2" />
-                Tải cả thư mục
-              </Button>
+            <div className="text-center">
+              <p className="text-xs font-bold text-slate-700">Tải tệp tin lên</p>
+              <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">Kéo thả tệp PDF vào đây<br />hoặc nhấn để chọn file</p>
             </div>
+            <div className="flex flex-col gap-2 w-full mt-1">
+              <button
+                onClick={e => { e.stopPropagation(); inputRef.current?.click(); }}
+                className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-blue-600 text-white text-[11px] font-semibold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+              >
+                <FileIcon /> Chọn tệp tin
+              </button>
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  folderInputRef.current?.click();
+                }}
+                className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-[11px] font-semibold hover:bg-slate-50 transition-colors"
+              >
+                <FolderIcon /> Tải cả thư mục
+              </button>
+              <input
+                type="file"
+                ref={folderInputRef}
+                className="hidden"
+                webkitdirectory="true"
+                directory="true"
+                multiple
+                onChange={(e) => handleFileUpload(Array.from(e.target.files))}
+              />
+            </div>
+          </div>
 
-            <input type="file" ref={folderInputRef} className="hidden" webkitdirectory="true" directory="true" multiple onChange={(e) => handleFileUpload(Array.from(e.target.files))} />
-          </Card>
-
+          {/* OCR progress */}
           {isProcessing && (
-            <Card className="border-none shadow-2xl bg-primary text-primary-foreground p-6 rounded-3xl animate-in zoom-in-95">
-              <div className="space-y-4">
-                <div className="flex justify-between items-end">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary-foreground/50">Đang xử lý OCR</p>
-                    <h4 className="text-sm font-bold truncate max-w-[150px]">{currentFileName}</h4>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xl font-black">{overallProgress}%</span>
-                  </div>
-                </div>
-                <Progress value={overallProgress} className="h-1.5 bg-primary-foreground/10" indicatorClassName="bg-primary-foreground" />
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Đang xử lý OCR</p>
               </div>
-            </Card>
-          )}
-
-          {batchItems.length > 0 && (
-            <Card className="p-4 shadow-lg space-y-3 glass-card">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Trạng thái đợt tải</h4>
-              <div className="space-y-2">
-                <SummaryChip label="Đang OCR" count={summary.processing} color="bg-info/10 text-info" />
-                <SummaryChip label="Cần rà soát" count={summary.review} countColor="text-warning" color="bg-warning/10 text-warning" />
-                <SummaryChip label="Sẵn sàng lưu" count={summary.ready} color="bg-success/10 text-success" />
-                <SummaryChip label="Đã lưu" count={summary.success} color="bg-success text-success-foreground" />
-                <SummaryChip label="Lỗi OCR" count={summary.error} color="bg-destructive/10 text-destructive" />
+              <div className="flex items-center gap-3">
+                <Ring pct={overallProgress} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-800 truncate">{currentFileName}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Đang nhận diện văn bản...</p>
+                </div>
               </div>
-            </Card>
-          )}
-        </div>
-
-        <div className="flex-1 space-y-4 flex flex-col min-w-0">
-          {batchItems.length > 0 ? (
-            <Card className="shadow-2xl flex-1 flex flex-col overflow-hidden glass-card gap-2 px-2 py-0">
-              <CardHeader className="px-6 py-6 border-b border-border flex flex-col md:flex-row items-center justify-between bg-muted/20">
-                <div>
-                  <h3 className="text-lg">Danh sách bóc tách ({batchItems.length})</h3>
-                  <CardDescription>Trang {currentPage} / {totalPages || 1}</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive font-bold" onClick={handleClearBatch}>
-                    <Trash className="size-4 mr-2" /> Hủy đợt tải
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-warning/30 text-warning bg-warning/10 hover:bg-warning/20 font-bold rounded-xl"
-                    disabled={!batchItems.some(i => i.status === 'review' || i.status === 'ready')}
-                    onClick={() => onTabChange('review')}
-                  >
-                    <SearchCode className="size-4 mr-2" /> Kiểm duyệt đợt tải
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-success hover:bg-success/90 text-success-foreground font-bold rounded-xl shadow-lg shadow-success/20"
-                    disabled={!batchItems.some(i => i.status === 'ready' || i.status === 'review')}
-                    onClick={handleSaveAll}
-                  >
-                    <Save className="size-4 mr-2" /> Lưu & Phân công tất cả
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 overflow-auto p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30">
-                      <TableHead className="px-8 py-4 font-bold text-foreground">Tên tệp</TableHead>
-                      <TableHead className="font-bold text-foreground">Số hiệu</TableHead>
-                      <TableHead className="font-bold text-foreground">Thời hạn</TableHead>
-                      <TableHead className="font-bold text-foreground">Phân công</TableHead>
-                      <TableHead className="font-bold text-foreground">Trạng thái</TableHead>
-                      <TableHead className="px-8 font-bold text-right text-foreground">Thao tác</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedItems.map((item) => (
-                      <TableRow key={item.id} className="group hover:bg-muted/30 transition-colors">
-                        <TableCell className="px-8">
-                          <div className="flex items-center gap-3">
-                            <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-black text-[10px]">PDF</div>
-                            <span className="text-sm font-bold text-foreground max-w-[150px] truncate" title={item.fileName}>
-                              {shortenFileName(item.fileName)}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="relative">
-                            <Input
-                              value={item.soVanBan}
-                              onChange={(e) => updateItem(item.id, 'soVanBan', e.target.value)}
-                              placeholder="Số hiệu..."
-                              className={cn(
-                                "h-9 text-xs font-bold rounded-xl border-border",
-                                item.warnings?.some(w => w.includes('Số')) && "border-warning/50 bg-warning/10"
-                              )}
-                            />
-                            {item.warnings?.some(w => w.includes('Số')) && (
-                              <AlertTriangle className="absolute right-2 top-1/2 -translate-y-1/2 size-3 text-warning" />
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="date"
-                            value={item.thoiHan}
-                            onChange={(e) => updateItem(item.id, 'thoiHan', e.target.value)}
-                            className="h-9 text-xs font-bold rounded-xl border-border w-32"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1 items-center">
-                            <MultiSelectPopover
-                              label="Đơn vị"
-                              options={departments.map(d => ({ id: d.id, label: d.name }))}
-                              selectedIds={item.departmentIds}
-                              suggestedIds={item.suggestedDeptIds}
-                              onToggle={(id) => {
-                                const newIds = item.departmentIds.includes(id)
-                                  ? item.departmentIds.filter(i => i !== id)
-                                  : [...item.departmentIds, id];
-                                updateItem(item.id, 'departmentIds', newIds);
-                              }}
-                              icon={Building2}
-                            />
-                            <MultiSelectPopover
-                              label="Cán bộ"
-                              options={users.map(u => ({ id: u.id, label: u.fullName }))}
-                              selectedIds={item.assignedToIds}
-                              suggestedIds={item.suggestedUserIds}
-                              onToggle={(id) => {
-                                const newIds = item.assignedToIds.includes(id)
-                                  ? item.assignedToIds.filter(i => i !== id)
-                                  : [...item.assignedToIds, id];
-                                updateItem(item.id, 'assignedToIds', newIds);
-                              }}
-                              icon={User}
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge status={item.status} />
-                        </TableCell>
-                        <TableCell className="px-8 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 rounded-xl text-muted-foreground hover:text-info"
-                              onClick={() => setEditingItem(item)}
-                              title="Sửa nhanh chi tiết"
-                            >
-                              <Edit3 className="size-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="size-8 rounded-xl text-muted-foreground hover:text-primary" onClick={() => window.app?.services?.openDocDetail(item.id)}>
-                              <Eye className="size-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="size-8 rounded-xl text-muted-foreground hover:text-destructive" onClick={() => handleRemoveItem(item)}>
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-              {totalPages > 1 && (
-                <div className="p-4 border-t border-border flex items-center justify-center gap-4 bg-muted/30">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(p => p - 1)}
-                    className="rounded-xl h-8 px-4"
-                  >
-                    <ChevronLeft className="size-4 mr-2" /> Trước
-                  </Button>
-                  <span className="text-xs font-bold text-muted-foreground">Trang {currentPage} / {totalPages}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(p => p + 1)}
-                    className="rounded-xl h-8 px-4"
-                  >
-                    Tiếp <ChevronRight className="size-4 ml-2" />
-                  </Button>
-                </div>
-              )}
-            </Card>
-          ) : (
-            <Card className="shadow-sm flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border glass-card bg-muted/10">
-              <div className="p-4 rounded-full bg-muted/50 mb-4">
-                <FileText className="size-10 text-muted-foreground" />
-              </div>
-              <p className="text-lg font-bold text-foreground">Danh sách trống</p>
-              <p className="text-xs text-muted-foreground mt-1">Tải tệp tin để bắt đầu xử lý hàng loạt</p>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Quick Edit Dialog */}
-      < Dialog open={!!editingItem
-      } onOpenChange={(open) => !open && setEditingItem(null)}>
-        <DialogContent className="max-w-2xl rounded-3xl overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="bg-muted/50 p-6 border-b border-border">
-            <DialogTitle className="flex items-center gap-2 text-xl font-extrabold text-primary">
-              <Edit3 className="size-5" /> Sửa nhanh chi tiết
-            </DialogTitle>
-            <DialogDescription className="font-medium text-muted-foreground">
-              Chỉnh sửa thông tin bóc tách cho file: <span className="text-foreground font-bold">{editingItem?.fileName}</span>
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="p-6 grid grid-cols-2 gap-6">
-            <div className="space-y-4 col-span-2">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Trích yếu nội dung</Label>
-                <Textarea
-                  value={editingItem?.trichYeu || ''}
-                  onChange={(e) => setEditingItem({ ...editingItem, trichYeu: e.target.value })}
-                  placeholder="Nhập trích yếu..."
-                  className="rounded-2xl border-border min-h-[100px] font-medium"
+              <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
+                  style={{ width: `${overallProgress}%` }}
                 />
               </div>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Số hiệu</Label>
-              <Input
-                value={editingItem?.soVanBan || ''}
-                onChange={(e) => setEditingItem({ ...editingItem, soVanBan: e.target.value })}
-                className="rounded-xl border-border font-bold text-primary"
-              />
+          {/* Batch status */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-slate-100">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trạng thái đợt tải</p>
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Thời hạn</Label>
-              <Input
-                type="date"
-                value={editingItem?.thoiHan || ''}
-                onChange={(e) => setEditingItem({ ...editingItem, thoiHan: e.target.value })}
-                className="rounded-xl border-border"
-              />
-            </div>
-
-            <div className="space-y-2 col-span-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cơ quan ban hành</Label>
-              <Input
-                value={editingItem?.coQuanChuQuan || ''}
-                onChange={(e) => setEditingItem({ ...editingItem, coQuanChuQuan: e.target.value })}
-                className="rounded-xl border-border font-medium"
-              />
+            <div className="divide-y divide-slate-100">
+              {[
+                { label: "Đang OCR", count: statCounts.ocr, color: "blue", icon: <ClockIcon /> },
+                { label: "Đã lưu", count: statCounts.saved, color: "emerald", icon: <CheckCircleIcon /> },
+                { label: "Chờ rà soát", count: statCounts.pending, color: "slate", icon: <XCircleIcon /> },
+              ].map(row => (
+                <div key={row.label} className="flex items-center justify-between px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    {row.icon}
+                    <span className="text-xs font-medium text-slate-600">{row.label}</span>
+                  </div>
+                  <span className={`min-w-[24px] h-6 px-2 flex items-center justify-center rounded-full text-xs font-bold
+                    ${row.color === "blue" ? "bg-blue-50 text-blue-700" :
+                      row.color === "emerald" ? "bg-emerald-50 text-emerald-700" :
+                        "bg-slate-100 text-slate-500"}`}>
+                    {row.count}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
+        </div>
 
-          <DialogFooter className="bg-muted/50 p-6 gap-2">
-            <Button variant="ghost" onClick={() => setEditingItem(null)} className="rounded-xl font-bold">Hủy</Button>
+        {/* RIGHT: document list */}
+        <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden min-w-0">
+          {/* Table */}
+          <div className="flex-1 overflow-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                  {["Tên tệp", "Số hiệu", "Thời hạn", "Đơn vị", "Cán bộ", "Trạng thái", ""].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {batchItems.map(row => (
+                  <tr key={row.id} className="hover:bg-slate-50/60 transition-colors group">
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-md bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
+                          <span className="text-[8px] font-black text-red-500 uppercase">PDF</span>
+                        </div>
+                        <span className="font-semibold text-slate-800 truncate max-w-[120px]">{row.fileName}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <input
+                        value={row.soVanBan}
+                        onChange={(e) => updateItem(row.id, 'soVanBan', e.target.value)}
+                        placeholder="Số hiệu..."
+                        className="w-24 text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white placeholder-slate-300 transition-all font-bold text-slate-900"
+                      />
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <input
+                        type="date"
+                        value={row.thoiHan}
+                        onChange={(e) => updateItem(row.id, 'thoiHan', e.target.value)}
+                        className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all"
+                      />
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <select
+                        value={row.departmentIds[0] || ''}
+                        onChange={(e) => updateItem(row.id, 'departmentIds', [parseInt(e.target.value)])}
+                        className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
+                      >
+                        <option value="">Chọn đơn vị</option>
+                        {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <select
+                        value={row.assignedToIds[0] || ''}
+                        onChange={(e) => updateItem(row.id, 'assignedToIds', [parseInt(e.target.value)])}
+                        className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
+                      >
+                        <option value="">Chọn cán bộ</option>
+                        {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <StatusBadge status={row.status} />
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => setBatchItems(prev => prev.filter(i => i.id !== row.id))}
+                          className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Empty state when no files */}
+            {batchItems.length === 0 && (
+              <div className="flex-1 flex flex-col items-center justify-center py-20 text-center px-8">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                  <UploadCloudIcon />
+                </div>
+                <p className="text-sm font-bold text-slate-600">Chưa có tệp nào</p>
+                <p className="text-xs text-slate-400 mt-1.5">Tải tệp PDF lên từ panel bên trái để bắt đầu bóc tách</p>
+              </div>
+            )}
+          </div>
+
+          {/* Table footer */}
+          <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+            <p className="text-[10px] text-slate-400 font-medium">Hiển thị {batchItems.length} tệp</p>
+            <div className="flex items-center gap-1">
+              <button className="w-6 h-6 rounded text-[10px] font-bold bg-blue-600 text-white">1</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirmation Modal */}
+      <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <DialogContent className="max-w-[400px] rounded-3xl border-none shadow-2xl overflow-hidden p-0">
+          <div className="p-8 flex flex-col items-center text-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2">
+              <AlertTriangle size={32} strokeWidth={2.5} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">Hủy đợt tải?</h3>
+              <p className="text-sm font-medium text-slate-500 leading-relaxed px-4">
+                Bạn có chắc chắn muốn hủy đợt bóc tách này? Tất cả dữ liệu chưa lưu sẽ bị xóa vĩnh viễn.
+              </p>
+            </div>
+          </div>
+          <div className="p-5 bg-slate-50 flex items-center gap-3">
             <Button
-              className="bg-primary hover:bg-sidebar-mid text-primary-foreground rounded-xl px-8 font-bold shadow-lg"
-              onClick={() => {
-                updateItem(editingItem.id, 'trichYeu', editingItem.trichYeu);
-                updateItem(editingItem.id, 'soVanBan', editingItem.soVanBan);
-                updateItem(editingItem.id, 'thoiHan', editingItem.thoiHan);
-                updateItem(editingItem.id, 'coQuanChuQuan', editingItem.coQuanChuQuan);
-                setEditingItem(null);
-              }}
+              variant="ghost"
+              className="flex-1 rounded-xl font-bold text-slate-400"
+              onClick={() => setShowClearConfirm(false)}
             >
-              Cập nhật thông tin
+              QUAY LẠI
             </Button>
-          </DialogFooter>
+            <Button
+              className="flex-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest shadow-lg shadow-amber-100"
+              onClick={executeClearBatch}
+            >
+              XÁC NHẬN HỦY
+            </Button>
+          </div>
         </DialogContent>
-      </Dialog >
-    </div >
-  );
-}
-
-function SummaryChip({ label, count, color, countColor }) {
-  if (count === 0 && !label.includes('Đã lưu')) return null;
-  return (
-    <div className={cn("flex items-center justify-between p-2.5 rounded-2xl border border-transparent transition-all", color)}>
-      <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
-      <span className={cn("text-xs font-black", countColor)}>{count}</span>
+      </Dialog>
     </div>
   );
-}
-
-function MultiSelectPopover({ label, options, selectedIds, suggestedIds, onToggle, icon: Icon }) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 rounded-xl border-border px-2 flex gap-1 relative">
-          <Icon className="size-3 text-muted-foreground" />
-          <span className="text-[10px] font-bold">{label}</span>
-          {selectedIds.length > 0 && (
-            <Badge className="absolute -top-2 -right-2 size-4 p-0 flex items-center justify-center bg-primary text-primary-foreground border-background text-[8px] font-black">
-              {selectedIds.length}
-            </Badge>
-          )}
-          <ChevronDown className="size-3 text-muted-foreground/30" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-56 p-0 rounded-2xl overflow-hidden shadow-2xl border-border" align="start">
-        <div className="p-2 border-b border-border bg-muted/50">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2 py-1">{label}</p>
-        </div>
-        <div className="h-48 overflow-auto">
-          <div className="p-1">
-            {options.map((opt) => {
-              const isSuggested = suggestedIds?.includes(opt.id);
-              return (
-                <div
-                  key={opt.id}
-                  className={cn(
-                    "flex items-center justify-between px-3 py-2 hover:bg-muted/30 cursor-pointer rounded-xl transition-colors",
-                    isSuggested && "bg-info/5 border-l-2 border-info"
-                  )}
-                  onClick={() => onToggle(opt.id)}
-                >
-                  <div className="flex items-center gap-2">
-                    <Checkbox checked={selectedIds.includes(opt.id)} className="rounded-md border-border" />
-                    <span className={cn("text-xs font-bold", isSuggested ? "text-info" : "text-foreground")}>{opt.label}</span>
-                  </div>
-                  {isSuggested && <Sparkles className="size-3 text-info" />}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function StatusBadge({ status }) {
-  switch (status) {
-    case 'processing': return <Badge variant="info" className="animate-pulse">Đang OCR...</Badge>;
-    case 'review': return <Badge variant="warning">Cần rà soát</Badge>;
-    case 'ready': return <Badge variant="success">Sẵn sàng</Badge>;
-    case 'success': return <Badge variant="success" className="bg-success text-success-foreground font-black flex gap-1"><Check className="size-3" /> Đã lưu</Badge>;
-    case 'error': return <Badge variant="destructive">Lỗi OCR</Badge>;
-    default: return null;
-  }
 }

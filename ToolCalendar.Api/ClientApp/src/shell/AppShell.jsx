@@ -63,6 +63,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from '@/components/ui/separator';
+import { Toaster } from 'sonner';
 
 export function AppShell() {
   const [activeTab, setActiveTab] = React.useState('dashboard');
@@ -102,7 +103,7 @@ export function AppShell() {
       }
       const currentPermission = Notification.permission;
       setPushPermission(currentPermission);
-      
+
       if (currentPermission === 'granted') {
         // Luôn tự động đăng ký lại khi đã có quyền (Chế độ bắt buộc)
         await subscribeUserToPush();
@@ -135,6 +136,9 @@ export function AppShell() {
     };
     window.app.services.openReview = () => {
       setIsReviewOpen(true);
+    };
+    window.app.services.openPdfPreview = (id) => {
+      window.open(`/api/documents/${id}/file`, '_blank');
     };
 
     // Listen for unauthorized event
@@ -198,14 +202,14 @@ export function AppShell() {
           <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 ring-8 ring-primary/5">
             <Bell className="size-10 text-primary animate-bounce" />
           </div>
-          
+
           <h2 className="text-2xl font-black tracking-tight text-foreground mb-3">Yêu cầu bật thông báo</h2>
           <p className="text-muted-foreground font-medium text-sm leading-relaxed mb-8">
             Để đảm bảo tính tức thời trong việc điều phối công văn, hệ thống yêu cầu bạn phải chấp nhận nhận thông báo từ trình duyệt để tiếp tục sử dụng.
           </p>
 
           {pushPermission === 'default' ? (
-            <Button 
+            <Button
               className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
               onClick={handleRequestPermission}
             >
@@ -238,7 +242,7 @@ export function AppShell() {
                 </div>
               </div>
 
-              <Button 
+              <Button
                 className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base shadow-xl shadow-primary/20 transition-all"
                 onClick={() => window.location.reload()}
               >
@@ -257,6 +261,7 @@ export function AppShell() {
 
   return (
     <>
+      <Toaster position="top-right" expand={true} richColors closeButton />
       <div className="bg-blobs fixed inset-0 pointer-events-none -z-10 overflow-hidden">
         <div className="blob blob-1" />
         <div className="blob blob-2" />
@@ -266,6 +271,8 @@ export function AppShell() {
         <AppSidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          setCurrentDocId={setCurrentDocId}
+          setIsReviewOpen={setIsReviewOpen}
         />
 
         <main className="main-content">
@@ -453,12 +460,12 @@ export function AppShell() {
       {/* Change Password Modal */}
       <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
         <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-none shadow-2xl glass-card rounded-2xl">
-          <DialogHeader className="p-6 bg-gradient-to-r from-primary to-sidebar-mid text-primary-foreground">
-            <DialogTitle className="text-xl font-extrabold flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted/10">
-                <KeyRound className="size-5" />
+          <DialogHeader className="p-6 bg-gradient-to-r from-red-600 to-red-700 relative">
+            <DialogTitle className="text-xl font-extrabold flex items-center gap-3 text-white">
+              <div className="p-2 rounded-lg bg-white/10 backdrop-blur-md">
+                <KeyRound className="size-5 text-white" />
               </div>
-              <span>Thay đổi mật khẩu</span>
+              <span className="drop-shadow-sm">Thay đổi mật khẩu</span>
             </DialogTitle>
           </DialogHeader>
           <div className="p-6 space-y-6">
@@ -523,19 +530,19 @@ export function AppShell() {
                 Hủy bỏ
               </Button>
               <Button
-                className="flex-1 h-12 rounded-xl bg-primary hover:bg-sidebar-mid text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all"
+                className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-100 transition-all"
                 data-action="confirm-change-password"
                 onClick={async (e) => {
                   const newPass = document.getElementById('current-user-new-password').value;
                   const confirmPass = document.getElementById('current-user-confirm-password').value;
 
                   if (newPass.length < 4) {
-                    alert('Mật khẩu mới phải có ít nhất 4 ký tự!');
+                    toast.error('Mật khẩu mới phải có ít nhất 4 ký tự!');
                     return;
                   }
 
                   if (newPass !== confirmPass) {
-                    alert('Mật khẩu xác nhận không khớp!');
+                    toast.error('Mật khẩu xác nhận không khớp!');
                     return;
                   }
 
@@ -550,16 +557,16 @@ export function AppShell() {
                     });
 
                     if (response.ok) {
-                      alert('Đổi mật khẩu thành công!');
+                      toast.success('Đổi mật khẩu thành công!');
                       setIsPasswordModalOpen(false);
                       document.getElementById('current-user-new-password').value = '';
                       document.getElementById('current-user-confirm-password').value = '';
                     } else {
                       const err = await response.json();
-                      alert(err.message || 'Có lỗi xảy ra khi đổi mật khẩu!');
+                      toast.error(err.message || 'Có lỗi xảy ra khi đổi mật khẩu!');
                     }
                   } catch (error) {
-                    alert('Không thể kết nối đến máy chủ!');
+                    toast.error('Không thể kết nối đến máy chủ!');
                   }
                 }}
               >

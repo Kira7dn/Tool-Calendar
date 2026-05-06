@@ -31,12 +31,16 @@ const navItems = [
 
 export function AppSidebar({
   activeTab,
-  setActiveTab
+  setActiveTab,
+  setCurrentDocId,
+  setIsReviewOpen
 }) {
   const { setOpenMobile } = useSidebar();
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
+    if (setCurrentDocId) setCurrentDocId(null);
+    if (setIsReviewOpen) setIsReviewOpen(false);
     setOpenMobile(false);
   };
 
