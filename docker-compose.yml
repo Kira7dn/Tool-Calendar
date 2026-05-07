@@ -17,7 +17,7 @@ services:
       - JWT_SECRET=${JWT_SECRET:-LinkStrategy_Production_ChangeMe_2026_Key}
       - VAPID_SUBJECT=mailto:admin@linkstrategy.vn
     volumes:
-      - tool-calendar-data:/app/data
+      - ./data_dump:/app/data
       - ./ToolCalendar.Api/Uploads:/app/Uploads
     restart: always
 
@@ -47,6 +47,3 @@ services:
       - nginx-proxy:80
     depends_on:
       - nginx
-
-volumes:
-  tool-calendar-data:
