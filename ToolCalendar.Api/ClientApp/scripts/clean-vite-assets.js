@@ -1,7 +1,10 @@
 import { rmSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-rmSync(resolve(import.meta.dirname, '../../wwwroot/vite-assets'), {
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+rmSync(resolve(__dirname, '../../wwwroot/vite-assets'), {
   recursive: true,
   force: true
 });
