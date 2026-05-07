@@ -12,6 +12,7 @@ import {
 } from '@/lib/push-notifications';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Import Tab Components from components/settings
 import {
