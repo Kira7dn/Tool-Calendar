@@ -21,6 +21,7 @@ import { AppSidebar } from './Sidebar.jsx';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from '@/lib/utils';
 import { registerServiceWorker, subscribeUserToPush } from '@/lib/push-notifications';
+import { signalRService } from '@/lib/signalr';
 import { Dashboard } from '../pages/Dashboard.jsx';
 import { Documents } from '../pages/Documents.jsx';
 import { Upload } from '../pages/Upload.jsx';
@@ -63,7 +64,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from '@/components/ui/separator';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 
 export function AppShell() {
   const [activeTab, setActiveTab] = React.useState('dashboard');
@@ -78,6 +79,61 @@ export function AppShell() {
   const [notifCount, setNotifCount] = React.useState(0);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [notifications, setNotifications] = React.useState([]);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch('/api/notification', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+        const unreadCount = data.filter(n => !n.isRead).length;
+        setNotifCount(unreadCount);
+        
+        // Show toast for latest unread if it's new
+        if (data.length > 0 && !data[0].isRead) {
+           const lastSeenId = localStorage.getItem('last_notif_id');
+           if (lastSeenId !== data[0].id.ToString()) {
+              toast.info(data[0].title, {
+                 description: data[0].body,
+                 action: {
+                    label: 'Xem',
+                    onClick: () => {
+                       if (data[0].docId) setCurrentDocId(data[0].docId);
+                       markRead(data[0].id);
+                    }
+                 }
+              });
+              localStorage.setItem('last_notif_id', data[0].id.ToString());
+           }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch notifications:', e);
+    }
+  };
+
+  const markRead = async (id) => {
+    try {
+      await fetch(`/api/notification/mark-read/${id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      fetchNotifications();
+    } catch (e) {}
+  };
+
+  const markAllRead = async () => {
+    try {
+      await fetch('/api/notification/mark-all-read', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      fetchNotifications();
+    } catch (e) {}
+  };
   React.useEffect(() => {
     // Auth Guard: Redirect if not authenticated (main.jsx handles this usually)
     if (!localStorage.getItem('auth_token')) {
@@ -92,9 +148,10 @@ export function AppShell() {
 
     // Listen for notification updates
     const handleNotifUpdate = (e) => {
-      if (e.detail?.count !== undefined) setNotifCount(e.detail.count);
+      fetchNotifications();
     };
     document.addEventListener('realtime:notifications_updated', handleNotifUpdate);
+    fetchNotifications();
 
     // Register Service Worker and listen for push messages
     registerServiceWorker().then(async (registration) => {
@@ -167,6 +224,9 @@ export function AppShell() {
       }
     };
 
+    // SignalR Connection
+    signalRService.start();
+
     return () => {
       window.fetch = originalFetch;
       document.removeEventListener('auth:unauthorized', handleUnauthorized);
@@ -174,6 +234,7 @@ export function AppShell() {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', handleSWMessage);
       }
+      signalRService.stop();
     };
   }, []);
 
@@ -300,41 +361,90 @@ export function AppShell() {
                   <PopoverContent align="end" className="w-[380px] p-0 overflow-hidden border-none shadow-2xl glass-card rounded-2xl">
                     <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
                       <h3 className="font-bold text-foreground">Thông báo</h3>
-                      <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:bg-primary/10 font-bold">
+                      <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:bg-primary/10 font-bold" onClick={markAllRead}>
                         Đánh dấu đã đọc
                       </Button>
                     </div>
                     <Tabs defaultValue="all" className="w-full">
                       <div className="px-4 pt-3">
                         <TabsList className="w-full grid grid-cols-2 bg-muted/50">
-                          <TabsTrigger value="all" className="text-xs font-bold">Tất cả</TabsTrigger>
-                          <TabsTrigger value="unread" className="text-xs font-bold">Chưa đọc</TabsTrigger>
+                          <TabsTrigger value="all" className="text-xs font-bold">Tất cả ({notifications.length})</TabsTrigger>
+                          <TabsTrigger value="unread" className="text-xs font-bold">Chưa đọc ({notifications.filter(n => !n.isRead).length})</TabsTrigger>
                         </TabsList>
                       </div>
                       <TabsContent value="all" className="m-0 mt-2">
                         <ScrollArea className="h-[350px]">
-                          <div className="flex flex-col py-2">
-                            <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground">
-                              <div className="size-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                                <Bell className="size-6 text-muted-foreground/30" />
+                          <div className="flex flex-col">
+                            {notifications.length > 0 ? (
+                              notifications.map((n) => (
+                                <div 
+                                  key={n.id} 
+                                  className={cn(
+                                    "p-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors relative group",
+                                    !n.isRead && "bg-primary/5"
+                                  )}
+                                  onClick={() => {
+                                    if (n.docId) setCurrentDocId(n.docId);
+                                    if (!n.isRead) markRead(n.id);
+                                    setIsNotifOpen(false);
+                                  }}
+                                >
+                                  {!n.isRead && <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />}
+                                  <div className="flex flex-col gap-1">
+                                    <p className={cn("text-xs leading-tight", n.isRead ? "font-medium text-muted-foreground" : "font-black text-foreground")}>{n.title}</p>
+                                    <p className="text-[11px] text-muted-foreground line-clamp-2">{n.body}</p>
+                                    <p className="text-[9px] text-muted-foreground/60 font-bold uppercase mt-1">
+                                      {new Date(n.createdAt).toLocaleString('vi-VN')}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground">
+                                <div className="size-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                                  <Bell className="size-6 text-muted-foreground/30" />
+                                </div>
+                                <p className="text-sm font-medium">Không có thông báo mới</p>
                               </div>
-                              <p className="text-sm font-medium">Không có thông báo mới</p>
-                            </div>
+                            )}
                           </div>
                         </ScrollArea>
                       </TabsContent>
                       <TabsContent value="unread" className="m-0 mt-2">
                         <ScrollArea className="h-[350px]">
-                          <div className="flex flex-col py-2">
-                            <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground">
-                              <p className="text-sm font-medium">Tất cả thông báo đã được đọc</p>
-                            </div>
+                          <div className="flex flex-col">
+                            {notifications.filter(n => !n.isRead).length > 0 ? (
+                              notifications.filter(n => !n.isRead).map((n) => (
+                                <div 
+                                  key={n.id} 
+                                  className="p-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors relative bg-primary/5"
+                                  onClick={() => {
+                                    if (n.docId) setCurrentDocId(n.docId);
+                                    markRead(n.id);
+                                    setIsNotifOpen(false);
+                                  }}
+                                >
+                                  <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
+                                  <div className="flex flex-col gap-1">
+                                    <p className="text-xs leading-tight font-black text-foreground">{n.title}</p>
+                                    <p className="text-[11px] text-muted-foreground line-clamp-2">{n.body}</p>
+                                    <p className="text-[9px] text-muted-foreground/60 font-bold uppercase mt-1">
+                                      {new Date(n.createdAt).toLocaleString('vi-VN')}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground">
+                                <p className="text-sm font-medium">Tất cả thông báo đã được đọc</p>
+                              </div>
+                            )}
                           </div>
                         </ScrollArea>
                       </TabsContent>
                     </Tabs>
                     <div className="p-0 bg-muted/30 border-t border-border text-center">
-                      <Button variant="link" className="text-xs font-bold text-primary" onClick={() => setActiveTab('documents')}>Xem tất cả văn bản</Button>
+                      <Button variant="link" className="text-xs font-bold text-primary" onClick={() => { setActiveTab('documents'); setIsNotifOpen(false); }}>Xem tất cả văn bản</Button>
                     </div>
                   </PopoverContent>
                 </Popover>

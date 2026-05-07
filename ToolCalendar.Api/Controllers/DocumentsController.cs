@@ -506,8 +506,18 @@ namespace ToolCalendar.Api.Controllers
             };
             await _documentRepository.InsertCommentAsync(comment);
 
-            // Realtime broadcast SignalR
+            // Realtime broadcast SignalR cho các client đang mở văn bản
             _ = _hubContext.Clients.All.SendAsync("ReceiveComment", new { documentId = id });
+
+            // Gửi thông báo Notification cho người liên quan
+            var doc = await _documentRepository.GetDocumentByIdAsync(id);
+            if (doc != null)
+            {
+                if (doc.AssignedTo.HasValue && doc.AssignedTo != userId)
+                {
+                    await _notificationManager.SendToUserAsync(doc.AssignedTo.Value, "Thảo luận mới", $"{username} vừa bình luận trong văn bản {doc.SoVanBan}", new { docId = id });
+                }
+            }
 
             return Ok(new { message = "Đã thêm comment thành công.", attachments = savedPaths });
         }

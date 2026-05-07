@@ -224,7 +224,11 @@ export function Upload({ onTabChange }) {
             coQuanChuQuan: item.coQuanChuQuan,
             thoiHan: item.thoiHan ? `${item.thoiHan}T00:00:00` : null,
             filePath: item.filePath,
-            status: 'Chưa xử lý'
+            status: 'Chưa xử lý',
+            departmentId: item.departmentIds?.[0] || null,
+            assignedTo: item.assignedToIds?.[0] || null,
+            assignedDepartmentIds: JSON.stringify(item.departmentIds || []),
+            assignedUserIds: JSON.stringify(item.assignedToIds || [])
           })
         });
 

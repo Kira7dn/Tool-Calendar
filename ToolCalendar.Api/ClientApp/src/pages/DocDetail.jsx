@@ -58,6 +58,8 @@ export function DocDetail({ docId, onBack }) {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
+  const [commentFiles, setCommentFiles] = useState([]);
+  const fileInputRef = React.useRef(null);
   
   // Modal & PDF states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -133,6 +135,12 @@ export function DocDetail({ docId, onBack }) {
       const formData = new FormData();
       formData.append('content', newComment);
 
+      if (commentFiles.length > 0) {
+        commentFiles.forEach(file => {
+          formData.append('files', file);
+        });
+      }
+
       const response = await fetch(`/api/documents/${docId}/comments`, {
         method: 'POST',
         headers: {
@@ -142,6 +150,7 @@ export function DocDetail({ docId, onBack }) {
       });
       if (response.ok) {
         setNewComment('');
+        setCommentFiles([]);
         await fetchComments();
       }
     } catch (error) {
@@ -210,8 +219,8 @@ export function DocDetail({ docId, onBack }) {
   const steps = [
     { label: "Tiếp nhận", done: true },
     { label: "Phân công", done: doc.departmentId != null },
-    { label: "Xử lý", done: doc.status === 'processing' || doc.status === 'completed' },
-    { label: "Hoàn thành", done: doc.status === 'completed' },
+    { label: "Xử lý", done: doc.status === 'Đang xử lý' || doc.status === 'Đã hoàn thành' },
+    { label: "Hoàn thành", done: doc.status === 'Đã hoàn thành' },
   ];
 
   const pdfUrl = `/api/documents/${docId}/file#page=${pdfPage}&toolbar=0&navpanes=0`;
@@ -232,10 +241,13 @@ export function DocDetail({ docId, onBack }) {
               <h1 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">{doc.soVanBan}</h1>
               <span className={cn(
                 "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                doc.soNgayConLai === 9999 ? "bg-green-50 text-green-700 border-green-200" :
                 doc.soNgayConLai <= 3 ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"
               )}>
-                <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", doc.soNgayConLai <= 3 ? "bg-red-500" : "bg-amber-500")}></span>
-                {doc.soNgayConLai} NGÀY CÒN LẠI
+                <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", 
+                  doc.soNgayConLai === 9999 ? "bg-green-500" :
+                  doc.soNgayConLai <= 3 ? "bg-red-500" : "bg-amber-500")}></span>
+                {doc.soNgayConLai === 9999 ? "ĐÃ HOÀN THÀNH" : `${doc.soNgayConLai} NGÀY CÒN LẠI`}
               </span>
             </div>
             <p className="text-[11px] font-bold text-slate-400 mt-1 truncate max-w-[600px] uppercase tracking-wide">
@@ -385,6 +397,14 @@ export function DocDetail({ docId, onBack }) {
                     user={users.find(u => u.id === doc.assignedTo)?.fullName} 
                   />
                 )}
+                {doc.status === 'Đã hoàn thành' && (
+                  <HistoryPoint 
+                    title="HOÀN THÀNH VĂN BẢN" 
+                    time={doc.completionDate ? new Date(doc.completionDate).toLocaleString('vi-VN') : '---'} 
+                    user={users.find(u => u.id === doc.assignedTo)?.fullName} 
+                    active
+                  />
+                )}
               </div>
             </div>
           )}
@@ -431,6 +451,22 @@ export function DocDetail({ docId, onBack }) {
 
             <div className="p-5 border-t border-slate-100 bg-slate-50/50 shrink-0">
               <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-inner focus-within:border-red-300 focus-within:ring-8 focus-within:ring-red-50 transition-all duration-500">
+                {commentFiles.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-2 animate-in fade-in slide-in-from-bottom-2">
+                    {commentFiles.map((file, idx) => (
+                      <div key={idx} className="group relative flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600">
+                        <Paperclip size={10} className="text-slate-400" />
+                        <span className="max-w-[120px] truncate">{file.name}</span>
+                        <button 
+                          onClick={() => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
+                          className="ml-1 text-slate-400 hover:text-red-500 transition-colors"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
@@ -439,7 +475,21 @@ export function DocDetail({ docId, onBack }) {
                   className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 resize-none outline-none leading-relaxed"
                 />
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                  <button className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
+                  <input 
+                    type="file" 
+                    multiple 
+                    hidden 
+                    ref={fileInputRef}
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files);
+                      setCommentFiles(prev => [...prev, ...files]);
+                      e.target.value = null; // Reset to allow same file again
+                    }}
+                  />
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                  >
                     <Paperclip size={20} />
                   </button>
                   <button
