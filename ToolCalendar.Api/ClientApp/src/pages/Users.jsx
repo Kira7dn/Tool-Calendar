@@ -124,7 +124,7 @@ export function Users() {
         email: user.email || '',
         phoneNumber: user.phoneNumber || '',
         role: user.role || 'CanBo',
-        departmentId: user.departmentId?.toString() || ''
+        departmentId: user.departmentId ? user.departmentId.toString() : "0"
       });
     } else {
       setEditingUser(null);
@@ -135,7 +135,7 @@ export function Users() {
         email: '',
         phoneNumber: '',
         role: 'CanBo',
-        departmentId: ''
+        departmentId: "0"
       });
     }
     setIsModalOpen(true);
@@ -157,7 +157,7 @@ export function Users() {
         email: formData.email,
         phoneNumber: formData.phoneNumber,
         role: formData.role,
-        departmentId: formData.departmentId ? parseInt(formData.departmentId) : null
+        departmentId: (formData.departmentId && formData.departmentId !== "0") ? parseInt(formData.departmentId) : null
       };
 
       if (!editingUser) {
@@ -405,7 +405,7 @@ export function Users() {
 
       {/* User Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-xl p-0 overflow-hidden border-none shadow-2xl glass-card">
+        <DialogContent className="max-w-xl p-0 border-none shadow-2xl glass-card">
           <DialogHeader className="p-8 bg-red-600 text-white relative">
             <DialogTitle className="text-xl font-extrabold flex items-center gap-3 text-white">
               <div className="p-2 rounded-xl bg-white/10 backdrop-blur-md">
@@ -496,30 +496,28 @@ export function Users() {
 
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phòng ban</Label>
-              <Select value={formData.departmentId} onValueChange={v => setFormData({ ...formData, departmentId: v })}>
-                <SelectTrigger className="rounded-xl bg-muted/50 border-none h-11 font-bold">
-                  <SelectValue placeholder="Chọn phòng ban" />
-                </SelectTrigger>
-                <SelectContent className="glass-card shadow-2xl">
-                  <SelectItem value="0" disabled>Chọn đơn vị</SelectItem>
-                  {departments.map(d => <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <select
+                value={formData.departmentId}
+                onChange={e => setFormData({ ...formData, departmentId: e.target.value })}
+                className="w-full px-4 h-11 rounded-xl bg-muted/50 border-none text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
+              >
+                <option value="0">Chưa phân phòng</option>
+                {departments.map(d => <option key={d.id} value={d.id.toString()}>{d.name}</option>)}
+              </select>
             </div>
 
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vai trò</Label>
-              <Select value={formData.role} onValueChange={v => setFormData({ ...formData, role: v })}>
-                <SelectTrigger className="rounded-xl bg-muted/50 border-none h-11 font-bold">
-                  <SelectValue placeholder="Chọn vai trò" />
-                </SelectTrigger>
-                <SelectContent className="glass-card shadow-2xl">
-                  <SelectItem value="CanBo">Cán bộ xử lý</SelectItem>
-                  <SelectItem value="VanThu">Văn thư</SelectItem>
-                  <SelectItem value="LanhDao">Lãnh đạo</SelectItem>
-                  <SelectItem value="Admin">Quản trị viên</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={formData.role}
+                onChange={e => setFormData({ ...formData, role: e.target.value })}
+                className="w-full px-4 h-11 rounded-xl bg-muted/50 border-none text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
+              >
+                <option value="CanBo">Cán bộ xử lý</option>
+                <option value="VanThu">Văn thư</option>
+                <option value="LanhDao">Lãnh đạo</option>
+                <option value="Admin">Quản trị viên</option>
+              </select>
             </div>
           </div>
 
@@ -539,32 +537,32 @@ export function Users() {
       {/* Delete Confirmation Modal */}
       <Dialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, user: null })}>
         <DialogContent className="max-w-[400px] rounded-3xl border-none shadow-2xl overflow-hidden p-0">
-           <div className="p-8 flex flex-col items-center text-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-2">
-                 <Trash2 size={32} strokeWidth={2.5} />
-              </div>
-              <div className="space-y-2">
-                 <h3 className="text-xl font-black text-slate-900 tracking-tight">Xác nhận xóa?</h3>
-                 <p className="text-sm font-medium text-slate-500 leading-relaxed px-4">
-                    Bạn có chắc chắn muốn xóa tài khoản <span className="font-bold text-slate-900">{deleteConfirm.user?.fullName}</span>? Thao tác này không thể hoàn tác.
-                 </p>
-              </div>
-           </div>
-           <div className="p-5 bg-slate-50 flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                className="flex-1 rounded-xl font-bold text-slate-400"
-                onClick={() => setDeleteConfirm({ open: false, user: null })}
-              >
-                HỦY BỎ
-              </Button>
-              <Button 
-                className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-100"
-                onClick={executeDelete}
-              >
-                XÓA NGAY
-              </Button>
-           </div>
+          <div className="p-8 flex flex-col items-center text-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-2">
+              <Trash2 size={32} strokeWidth={2.5} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">Xác nhận xóa?</h3>
+              <p className="text-sm font-medium text-slate-500 leading-relaxed px-4">
+                Bạn có chắc chắn muốn xóa tài khoản <span className="font-bold text-slate-900">{deleteConfirm.user?.fullName}</span>? Thao tác này không thể hoàn tác.
+              </p>
+            </div>
+          </div>
+          <div className="p-5 bg-slate-50 flex items-center gap-3">
+            <Button
+              variant="ghost"
+              className="flex-1 rounded-xl font-bold text-slate-400"
+              onClick={() => setDeleteConfirm({ open: false, user: null })}
+            >
+              HỦY BỎ
+            </Button>
+            <Button
+              className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-100"
+              onClick={executeDelete}
+            >
+              XÓA NGAY
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
