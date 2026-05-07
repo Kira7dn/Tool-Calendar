@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { toast } from 'sonner';
 
 export function AuditTab() {
   const [auditLogs, setAuditLogs] = useState([]);
@@ -53,7 +54,7 @@ export function AuditTab() {
         setAuditLogs([]);
         setTotalCount(0);
         setCurrentPage(1);
-        alert('Đã dọn sạch nhật ký hệ thống!');
+        toast.success('Đã dọn sạch nhật ký hệ thống!');
       }
     } catch (e) { }
   };

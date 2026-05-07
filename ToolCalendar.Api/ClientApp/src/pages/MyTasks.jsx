@@ -45,6 +45,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export function MyTasks({ onTabChange }) {
   const [tasks, setTasks] = useState([]);
@@ -105,7 +106,7 @@ export function MyTasks({ onTabChange }) {
   const handleSubmitEvidence = async () => {
     if (!evidenceNotes.trim()) return;
     if (selectedFiles.length === 0) {
-      alert('Vui lòng chọn ít nhất 1 file bằng chứng!');
+      toast.warning('Vui lòng chọn ít nhất 1 file bằng chứng!');
       return;
     }
     setIsSubmitting(true);

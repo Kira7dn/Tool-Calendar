@@ -46,7 +46,7 @@ export function LoginPage({ onLoginSuccess }) {
         localStorage.setItem('user_name', data.username);
         localStorage.setItem('user_role', data.role);
         localStorage.setItem('user_id', data.userId);
-        
+
         if (onLoginSuccess) {
           onLoginSuccess();
         } else {
@@ -76,11 +76,11 @@ export function LoginPage({ onLoginSuccess }) {
         {/* Decorative Glow */}
         <div className="absolute -top-[5%] -left-[5%] size-32 bg-primary/10 rounded-full blur-[60px]" />
         <div className="absolute -bottom-[5%] -right-[5%] size-32 bg-primary/10 rounded-full blur-[60px]" />
-        
+
         <Card className="relative glass-card border-none shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] overflow-hidden rounded-[2rem]">
           {/* Top Accent Line */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary to-primary opacity-80" />
-          
+
           <CardHeader className="pt-8 pb-4 text-center space-y-3">
             <div className="mx-auto size-20 rounded-2xl bg-white/50 backdrop-blur-md flex items-center justify-center ring-1 ring-white/20 shadow-sm transition-transform hover:scale-105 duration-500">
               <img
@@ -114,8 +114,8 @@ export function LoginPage({ onLoginSuccess }) {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5 group">
-                <Label 
-                  htmlFor="username" 
+                <Label
+                  htmlFor="username"
                   className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1 group-focus-within:text-primary transition-colors"
                 >
                   Tên đăng nhập
@@ -138,8 +138,8 @@ export function LoginPage({ onLoginSuccess }) {
               </div>
 
               <div className="space-y-1.5 group">
-                <Label 
-                  htmlFor="password" 
+                <Label
+                  htmlFor="password"
                   className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1 group-focus-within:text-primary transition-colors"
                 >
                   Mật khẩu
@@ -168,13 +168,13 @@ export function LoginPage({ onLoginSuccess }) {
               </div>
 
               <div className="pt-2">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isSubmitting}
                   className={cn(
                     "w-full h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all duration-300 shadow-lg",
-                    isSubmitting 
-                      ? "bg-muted text-muted-foreground opacity-50" 
+                    isSubmitting
+                      ? "bg-muted text-muted-foreground opacity-50"
                       : "bg-primary hover:bg-sidebar-mid text-primary-foreground shadow-primary/20 hover:-translate-y-0.5"
                   )}
                 >
@@ -196,7 +196,7 @@ export function LoginPage({ onLoginSuccess }) {
               )}
             </form>
           </CardContent>
-          
+
           <div className="bg-white/20 backdrop-blur-md p-4 border-t border-white/5 text-center">
             <p className="text-[9px] text-muted-foreground/50 font-black uppercase tracking-widest">
               &copy; 2026 LINK STRATEGY SYSTEM

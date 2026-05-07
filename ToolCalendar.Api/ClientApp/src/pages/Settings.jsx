@@ -10,8 +10,8 @@ import {
   requestNotificationPermission,
   unsubscribeUserFromPush
 } from '@/lib/push-notifications';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 // Import Tab Components from components/settings
 import {
@@ -71,7 +71,7 @@ export function Settings() {
         },
         body: JSON.stringify(config)
       });
-      if (response.ok) alert('Đã lưu cấu hình hệ thống thành công!');
+      if (response.ok) toast.success('Đã lưu cấu hình hệ thống thành công!');
     } catch (error) {
       console.error('Failed to save settings:', error);
     } finally {
@@ -86,7 +86,7 @@ export function Settings() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
-      if (res.ok) alert('Đã bắt đầu quét thời hạn văn bản!');
+      if (res.ok) toast.success('Đã bắt đầu quét thời hạn văn bản!');
     } catch (e) {
     } finally {
       setIsTesting(false);
@@ -100,7 +100,7 @@ export function Settings() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
-      if (res.ok) alert('Đã gửi thông báo thử nghiệm thành công!');
+      if (res.ok) toast.success('Đã gửi thông báo thử nghiệm thành công!');
     } catch (e) {
     } finally {
       setIsTesting(false);
