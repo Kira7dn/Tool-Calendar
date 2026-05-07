@@ -41,12 +41,12 @@ function Avatar({ name, role }) {
   }
   const initials = name.slice(0, 1).toUpperCase();
   const isAdmin = role === 'Admin';
-  
+
   return (
     <span className={cn(
       "inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-black border",
-      isAdmin 
-        ? "bg-amber-50 text-amber-600 border-amber-100" 
+      isAdmin
+        ? "bg-amber-50 text-amber-600 border-amber-100"
         : "bg-red-50 text-red-600 border-red-100"
     )}>
       {initials}
@@ -100,7 +100,7 @@ export function AuditTab() {
         setCurrentPage(1);
         toast.success('Đã dọn sạch nhật ký hệ thống!');
       }
-    } catch (e) { 
+    } catch (e) {
       toast.error('Có lỗi xảy ra khi dọn nhật ký');
     } finally {
       setIsClearing(false);
@@ -116,13 +116,13 @@ export function AuditTab() {
     >
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
-           <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
             {totalCount} hoạt động ghi nhận
-           </p>
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
+          <Button
             variant="ghost"
             size="sm"
             onClick={() => fetchAuditLogs(currentPage)}
@@ -131,7 +131,7 @@ export function AuditTab() {
             <RefreshCcw className={cn("size-3 mr-1.5", isLoadingLogs && "animate-spin")} />
             Làm mới
           </Button>
-          <Button 
+          <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsConfirmOpen(true)}
@@ -223,7 +223,7 @@ export function AuditTab() {
         </div>
       </div>
 
-      <ConfirmationModal 
+      <ConfirmationModal
         open={isConfirmOpen}
         onOpenChange={setIsConfirmOpen}
         title="Xác nhận xóa sạch?"

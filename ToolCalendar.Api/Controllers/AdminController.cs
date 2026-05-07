@@ -88,24 +88,6 @@ namespace ToolCalendar.Api.Controllers
             return NoContent();
         }
 
-        // --- SETTINGS ---
-        [Authorize(Roles = "Admin")]
-        [HttpGet("settings/{key}")]
-        public IActionResult GetSetting(string key)
-        {
-            var val = DatabaseService.GetAppSetting(key);
-            return Ok(new { key, value = val });
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpPost("settings")]
-        public IActionResult SaveSetting([FromBody] SettingUpdateRequest request)
-        {
-            if (request == null) return BadRequest();
-            DatabaseService.SaveAppSetting(request.Key, request.Value);
-            return Ok(new { message = "Lưu cấu hình thành công." });
-        }
-
         [Authorize(Roles = "Admin")]
         [HttpGet("audit-logs")]
         public IActionResult GetAuditLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
@@ -122,11 +104,5 @@ namespace ToolCalendar.Api.Controllers
             DatabaseService.InsertAuditLog(null, "Quản trị viên đã dọn sạch toàn bộ nhật ký hệ thống.");
             return Ok(new { message = "Đã dọn sạch nhật ký hệ thống." });
         }
-    }
-
-    public class SettingUpdateRequest
-    {
-        public string Key { get; set; } = "";
-        public string Value { get; set; } = "";
     }
 }
