@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  ArrowLeft, 
-  Clock, 
-  Calendar, 
-  FileText, 
-  User, 
-  Building2, 
-  AlertCircle, 
+import {
+  ArrowLeft,
+  Clock,
+  Calendar,
+  FileText,
+  User,
+  Building2,
+  AlertCircle,
   Edit,
   ExternalLink,
   MessageSquare,
@@ -40,7 +40,7 @@ const InfoRow = ({
         <Icon size={12} strokeWidth={2.5} />
       </div>
       <span className={cn(
-        "text-sm font-bold transition-colors leading-tight", 
+        "text-sm font-bold transition-colors leading-tight",
         highlight ? "text-amber-700" : "text-slate-900"
       )}>
         {value || '---'}
@@ -60,7 +60,7 @@ export function DocDetail({ docId, onBack }) {
   const [users, setUsers] = useState([]);
   const [commentFiles, setCommentFiles] = useState([]);
   const fileInputRef = React.useRef(null);
-  
+
   // Modal & PDF states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editForm, setEditForm] = useState(null);
@@ -106,7 +106,7 @@ export function DocDetail({ docId, onBack }) {
       }
       if (deptRes.ok) setDepartments(await deptRes.json());
       if (userRes.ok) setUsers(await userRes.json());
-      
+
       await fetchComments();
     } catch (error) {
       console.error('Failed to fetch document details:', error);
@@ -230,7 +230,7 @@ export function DocDetail({ docId, onBack }) {
       {/* 1. Header Section */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 py-1">
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={onBack}
             className="p-2 rounded-xl bg-white border border-slate-200 shadow-sm hover:bg-slate-50 text-slate-500 transition-all flex-shrink-0"
           >
@@ -242,11 +242,11 @@ export function DocDetail({ docId, onBack }) {
               <span className={cn(
                 "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
                 doc.soNgayConLai === 9999 ? "bg-green-50 text-green-700 border-green-200" :
-                doc.soNgayConLai <= 3 ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                  doc.soNgayConLai <= 3 ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"
               )}>
-                <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", 
+                <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse",
                   doc.soNgayConLai === 9999 ? "bg-green-500" :
-                  doc.soNgayConLai <= 3 ? "bg-red-500" : "bg-amber-500")}></span>
+                    doc.soNgayConLai <= 3 ? "bg-red-500" : "bg-amber-500")}></span>
                 {doc.soNgayConLai === 9999 ? "ĐÃ HOÀN THÀNH" : `${doc.soNgayConLai} NGÀY CÒN LẠI`}
               </span>
             </div>
@@ -256,17 +256,19 @@ export function DocDetail({ docId, onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2.5 w-full md:w-auto flex-shrink-0">
-          <button 
-            onClick={() => {
-              setEditForm({...doc});
-              setIsEditModalOpen(true);
-            }}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
-          >
-            <Edit size={14} strokeWidth={2.5} />
-            SỬA
-          </button>
-          <button 
+          {(localStorage.getItem('user_role') === 'Admin' || localStorage.getItem('user_role') === 'VanThu') && (
+            <button
+              onClick={() => {
+                setEditForm({ ...doc });
+                setIsEditModalOpen(true);
+              }}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
+            >
+              <Edit size={14} strokeWidth={2.5} />
+              SỬA
+            </button>
+          )}
+          <button
             onClick={() => window.open(`/api/documents/${docId}/file`, '_blank')}
             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-100"
           >
@@ -283,11 +285,10 @@ export function DocDetail({ docId, onBack }) {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`relative px-5 py-3.5 text-[11px] font-black tracking-[0.1em] transition-all ${
-                activeTab === tab.key
-                  ? "text-red-600"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
+              className={`relative px-5 py-3.5 text-[11px] font-black tracking-[0.1em] transition-all ${activeTab === tab.key
+                ? "text-red-600"
+                : "text-slate-400 hover:text-slate-600"
+                }`}
             >
               {tab.label}
               {activeTab === tab.key && (
@@ -298,31 +299,31 @@ export function DocDetail({ docId, onBack }) {
         </div>
 
         <div className="flex items-center gap-4 px-4 pb-4 md:pb-0">
-           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 hidden xl:block self-end mb-2">TIẾN ĐỘ:</span>
-           <div className="relative flex items-end justify-between min-w-[300px] sm:min-w-[400px] flex-1 pb-2">
-              <div className="absolute bottom-[18px] left-0 right-0 h-[2px] bg-slate-100 z-0 mx-3">
-                <div 
-                  className="h-full bg-green-400 transition-all duration-500 shadow-[0_0_8px_rgba(74,222,128,0.4)]"
-                  style={{ width: `${Math.max(0, (steps.filter(s => s.done).length - 1) / (steps.length - 1) * 100)}%` }}
-                ></div>
-              </div>
-              {steps.map((step, i) => (
-                <div key={step.label} className="flex flex-col-reverse items-center group/step relative z-10 w-0 flex-1">
-                  <div className={cn(
-                    "w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black transition-all shadow-sm z-20 relative border",
-                    step.done ? "bg-green-500 text-white border-green-400" : "bg-white text-slate-400 border-slate-100"
-                  )}>
-                    {step.done ? "✓" : i + 1}
-                  </div>
-                  <span className={cn(
-                    "text-[8px] font-black uppercase tracking-tighter mb-1.5 transition-colors whitespace-nowrap",
-                    step.done ? "text-slate-700" : "text-slate-400"
-                  )}>
-                    {step.label}
-                  </span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 hidden xl:block self-end mb-2">TIẾN ĐỘ:</span>
+          <div className="relative flex items-end justify-between min-w-[300px] sm:min-w-[400px] flex-1 pb-2">
+            <div className="absolute bottom-[18px] left-0 right-0 h-[2px] bg-slate-100 z-0 mx-3">
+              <div
+                className="h-full bg-green-400 transition-all duration-500 shadow-[0_0_8px_rgba(74,222,128,0.4)]"
+                style={{ width: `${Math.max(0, (steps.filter(s => s.done).length - 1) / (steps.length - 1) * 100)}%` }}
+              ></div>
+            </div>
+            {steps.map((step, i) => (
+              <div key={step.label} className="flex flex-col-reverse items-center group/step relative z-10 w-0 flex-1">
+                <div className={cn(
+                  "w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black transition-all shadow-sm z-20 relative border",
+                  step.done ? "bg-green-500 text-white border-green-400" : "bg-white text-slate-400 border-slate-100"
+                )}>
+                  {step.done ? "✓" : i + 1}
                 </div>
-              ))}
-           </div>
+                <span className={cn(
+                  "text-[8px] font-black uppercase tracking-tighter mb-1.5 transition-colors whitespace-nowrap",
+                  step.done ? "text-slate-700" : "text-slate-400"
+                )}>
+                  {step.label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -347,10 +348,10 @@ export function DocDetail({ docId, onBack }) {
                   <InfoRow icon={User} label="Cán bộ xử lý" value={users.find(u => u.id === doc.assignedTo)?.fullName || 'CHƯA PHÂN CÔNG'} />
                 </div>
                 <div className="mt-8 pt-8 border-t border-slate-50">
-                   <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-4">TRÍCH YẾU NỘI DUNG</p>
-                   <p className="text-sm font-bold text-slate-700 leading-relaxed bg-slate-50/50 border border-slate-100 p-6 rounded-2xl shadow-inner min-h-[140px]">
-                      {doc.trichYeu}
-                   </p>
+                  <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-4">TRÍCH YẾU NỘI DUNG</p>
+                  <p className="text-sm font-bold text-slate-700 leading-relaxed bg-slate-50/50 border border-slate-100 p-6 rounded-2xl shadow-inner min-h-[140px]">
+                    {doc.trichYeu}
+                  </p>
                 </div>
               </div>
             </div>
@@ -364,8 +365,8 @@ export function DocDetail({ docId, onBack }) {
               </div>
               <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                 <div className="flex-1 bg-slate-100/50 border-r border-slate-100 relative">
-                  <iframe 
-                    src={pdfUrl} 
+                  <iframe
+                    src={pdfUrl}
                     className="w-full h-full border-none"
                     title="PDF Viewer"
                   />
@@ -384,24 +385,24 @@ export function DocDetail({ docId, onBack }) {
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 flex flex-col h-full overflow-auto animate-in fade-in slide-in-from-bottom-4 duration-400">
               <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-12 shrink-0">QUY TRÌNH XỬ LÝ VĂN BẢN</h2>
               <div className="relative space-y-10 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-slate-100">
-                <HistoryPoint 
-                  title="TIẾP NHẬN VĂN BẢN" 
-                  time={new Date(doc.ngayThem).toLocaleString('vi-VN')} 
-                  user="HỆ THỐNG" 
-                  active 
+                <HistoryPoint
+                  title="TIẾP NHẬN VĂN BẢN"
+                  time={new Date(doc.ngayThem).toLocaleString('vi-VN')}
+                  user="HỆ THỐNG"
+                  active
                 />
                 {doc.assignedTo && (
-                  <HistoryPoint 
-                    title="PHÂN CÔNG XỬ LÝ" 
-                    time={new Date(doc.ngayThem).toLocaleString('vi-VN')} 
-                    user={users.find(u => u.id === doc.assignedTo)?.fullName} 
+                  <HistoryPoint
+                    title="PHÂN CÔNG XỬ LÝ"
+                    time={new Date(doc.ngayThem).toLocaleString('vi-VN')}
+                    user={users.find(u => u.id === doc.assignedTo)?.fullName}
                   />
                 )}
                 {doc.status === 'Đã hoàn thành' && (
-                  <HistoryPoint 
-                    title="HOÀN THÀNH VĂN BẢN" 
-                    time={doc.completionDate ? new Date(doc.completionDate).toLocaleString('vi-VN') : '---'} 
-                    user={users.find(u => u.id === doc.assignedTo)?.fullName} 
+                  <HistoryPoint
+                    title="HOÀN THÀNH VĂN BẢN"
+                    time={doc.completionDate ? new Date(doc.completionDate).toLocaleString('vi-VN') : '---'}
+                    user={users.find(u => u.id === doc.assignedTo)?.fullName}
                     active
                   />
                 )}
@@ -444,7 +445,7 @@ export function DocDetail({ docId, onBack }) {
                   <div className="p-6 rounded-full bg-slate-100 mb-5">
                     <MessageSquare size={40} strokeWidth={2} className="text-slate-400" />
                   </div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center leading-loose">CHƯA CÓ Ý KIẾN CHỈ ĐẠO<br/>NÀO ĐƯỢC GHI NHẬN</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center leading-loose">CHƯA CÓ Ý KIẾN CHỈ ĐẠO<br />NÀO ĐƯỢC GHI NHẬN</p>
                 </div>
               )}
             </div>
@@ -457,7 +458,7 @@ export function DocDetail({ docId, onBack }) {
                       <div key={idx} className="group relative flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600">
                         <Paperclip size={10} className="text-slate-400" />
                         <span className="max-w-[120px] truncate">{file.name}</span>
-                        <button 
+                        <button
                           onClick={() => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
                           className="ml-1 text-slate-400 hover:text-red-500 transition-colors"
                         >
@@ -475,10 +476,10 @@ export function DocDetail({ docId, onBack }) {
                   className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 resize-none outline-none leading-relaxed"
                 />
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                  <input 
-                    type="file" 
-                    multiple 
-                    hidden 
+                  <input
+                    type="file"
+                    multiple
+                    hidden
                     ref={fileInputRef}
                     onChange={(e) => {
                       const files = Array.from(e.target.files);
@@ -486,7 +487,7 @@ export function DocDetail({ docId, onBack }) {
                       e.target.value = null; // Reset to allow same file again
                     }}
                   />
-                  <button 
+                  <button
                     onClick={() => fileInputRef.current?.click()}
                     className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
                   >
@@ -497,8 +498,8 @@ export function DocDetail({ docId, onBack }) {
                     disabled={isSubmittingComment || !newComment.trim()}
                     className={cn(
                       "flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                      newComment.trim() 
-                        ? "bg-red-600 text-white shadow-2xl shadow-red-200 hover:bg-red-700 hover:-translate-y-1 active:translate-y-0" 
+                      newComment.trim()
+                        ? "bg-red-600 text-white shadow-2xl shadow-red-200 hover:bg-red-700 hover:-translate-y-1 active:translate-y-0"
                         : "bg-slate-200 text-slate-400"
                     )}
                   >
@@ -527,7 +528,7 @@ export function DocDetail({ docId, onBack }) {
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Đối chiếu trực tiếp với bản gốc PDF</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-all"
               >
@@ -539,118 +540,118 @@ export function DocDetail({ docId, onBack }) {
             <div className="flex-1 flex overflow-hidden">
               {/* Left Side: PDF Viewer with Custom Controls */}
               <div className="hidden md:flex flex-1 flex-col bg-slate-100 border-r border-slate-100 relative">
-                 <div className="flex-1 relative overflow-hidden">
-                    <iframe 
-                      key={pdfPage}
-                      src={`/api/documents/${docId}/file#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`} 
-                      className="w-full h-full border-none shadow-inner"
-                      title="PDF Comparison"
-                    />
-                 </div>
-                 
-                 {/* Custom PDF Toolbar */}
-                 <div className="h-14 bg-slate-900 flex items-center justify-between px-6 shrink-0 border-t border-slate-800">
-                    <div className="flex items-center gap-3">
-                       <div className="p-2 rounded-lg bg-slate-800 text-slate-400">
-                          <FileText size={16} />
-                       </div>
-                       <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Bản gốc PDF</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 bg-slate-800 p-1.5 rounded-xl border border-slate-700">
-                       <button 
-                         onClick={() => setPdfPage(Math.max(1, pdfPage - 1))}
-                         disabled={pdfPage <= 1}
-                         className="p-1.5 rounded-lg hover:bg-slate-700 text-white disabled:opacity-30 transition-all"
-                       >
-                          <ChevronLeft size={16} strokeWidth={3} />
-                       </button>
-                       <div className="flex items-center gap-2 px-3 border-x border-slate-700">
-                          <span className="text-[10px] font-black text-red-500">TRANG</span>
-                          <span className="text-xs font-black text-white">{pdfPage}</span>
-                       </div>
-                       <button 
-                         onClick={() => setPdfPage(pdfPage + 1)}
-                         className="p-1.5 rounded-lg hover:bg-slate-700 text-white transition-all"
-                       >
-                          <ChevronRight size={16} strokeWidth={3} />
-                       </button>
-                    </div>
+                <div className="flex-1 relative overflow-hidden">
+                  <iframe
+                    key={pdfPage}
+                    src={`/api/documents/${docId}/file#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                    className="w-full h-full border-none shadow-inner"
+                    title="PDF Comparison"
+                  />
+                </div>
 
-                    <button 
-                      onClick={() => window.open(`/api/documents/${docId}/file`, '_blank')}
-                      className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-red-600 transition-all"
+                {/* Custom PDF Toolbar */}
+                <div className="h-14 bg-slate-900 flex items-center justify-between px-6 shrink-0 border-t border-slate-800">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-slate-800 text-slate-400">
+                      <FileText size={16} />
+                    </div>
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Bản gốc PDF</span>
+                  </div>
+
+                  <div className="flex items-center gap-4 bg-slate-800 p-1.5 rounded-xl border border-slate-700">
+                    <button
+                      onClick={() => setPdfPage(Math.max(1, pdfPage - 1))}
+                      disabled={pdfPage <= 1}
+                      className="p-1.5 rounded-lg hover:bg-slate-700 text-white disabled:opacity-30 transition-all"
                     >
-                       <Maximize2 size={16} />
+                      <ChevronLeft size={16} strokeWidth={3} />
                     </button>
-                 </div>
+                    <div className="flex items-center gap-2 px-3 border-x border-slate-700">
+                      <span className="text-[10px] font-black text-red-500">TRANG</span>
+                      <span className="text-xs font-black text-white">{pdfPage}</span>
+                    </div>
+                    <button
+                      onClick={() => setPdfPage(pdfPage + 1)}
+                      className="p-1.5 rounded-lg hover:bg-slate-700 text-white transition-all"
+                    >
+                      <ChevronRight size={16} strokeWidth={3} />
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => window.open(`/api/documents/${docId}/file`, '_blank')}
+                    className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-red-600 transition-all"
+                  >
+                    <Maximize2 size={16} />
+                  </button>
+                </div>
               </div>
 
               {/* Right Side: Edit Form */}
               <div className="w-full md:w-[450px] flex flex-col bg-white overflow-auto">
                 <div className="p-8 space-y-6">
                   <div className="space-y-4">
-                    <FormField 
-                      label="Số văn bản" 
-                      value={editForm?.soVanBan} 
-                      onChange={(val) => setEditForm({...editForm, soVanBan: val})} 
+                    <FormField
+                      label="Số văn bản"
+                      value={editForm?.soVanBan}
+                      onChange={(val) => setEditForm({ ...editForm, soVanBan: val })}
                       icon={FileText}
                     />
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField 
-                        label="Ngày ban hành" 
+                      <FormField
+                        label="Ngày ban hành"
                         type="date"
-                        value={editForm?.ngayBanHanh?.split('T')[0]} 
-                        onChange={(val) => setEditForm({...editForm, ngayBanHanh: val})} 
+                        value={editForm?.ngayBanHanh?.split('T')[0]}
+                        onChange={(val) => setEditForm({ ...editForm, ngayBanHanh: val })}
                         icon={Calendar}
                       />
-                      <FormField 
-                        label="Thời hạn xử lý" 
+                      <FormField
+                        label="Thời hạn xử lý"
                         type="date"
-                        value={editForm?.thoiHan?.split('T')[0]} 
-                        onChange={(val) => setEditForm({...editForm, thoiHan: val})} 
+                        value={editForm?.thoiHan?.split('T')[0]}
+                        onChange={(val) => setEditForm({ ...editForm, thoiHan: val })}
                         icon={Clock}
                       />
                     </div>
-                    <FormField 
-                      label="Cơ quan ban hành" 
-                      value={editForm?.coQuanBanHanh} 
-                      onChange={(val) => setEditForm({...editForm, coQuanBanHanh: val})} 
+                    <FormField
+                      label="Cơ quan ban hành"
+                      value={editForm?.coQuanBanHanh}
+                      onChange={(val) => setEditForm({ ...editForm, coQuanBanHanh: val })}
                       icon={Building2}
                     />
-                    <FormField 
-                      label="Trích yếu nội dung" 
+                    <FormField
+                      label="Trích yếu nội dung"
                       type="textarea"
-                      value={editForm?.trichYeu} 
-                      onChange={(val) => setEditForm({...editForm, trichYeu: val})} 
+                      value={editForm?.trichYeu}
+                      onChange={(val) => setEditForm({ ...editForm, trichYeu: val })}
                     />
-                    
+
                     <div className="pt-4 border-t border-slate-50">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Thông tin nâng cao</p>
-                       <div className="space-y-4">
-                          <div className="flex flex-col gap-1.5">
-                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Đơn vị chủ trì</label>
-                             <select 
-                               value={editForm?.departmentId || ''} 
-                               onChange={(e) => setEditForm({...editForm, departmentId: parseInt(e.target.value)})}
-                               className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all appearance-none cursor-pointer"
-                             >
-                                <option value="">Chọn đơn vị...</option>
-                                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                             </select>
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Cán bộ xử lý</label>
-                             <select 
-                               value={editForm?.assignedTo || ''} 
-                               onChange={(e) => setEditForm({...editForm, assignedTo: parseInt(e.target.value)})}
-                               className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all appearance-none cursor-pointer"
-                             >
-                                <option value="">Chọn cán bộ...</option>
-                                {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
-                             </select>
-                          </div>
-                       </div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Thông tin nâng cao</p>
+                      <div className="space-y-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Đơn vị chủ trì</label>
+                          <select
+                            value={editForm?.departmentId || ''}
+                            onChange={(e) => setEditForm({ ...editForm, departmentId: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all appearance-none cursor-pointer"
+                          >
+                            <option value="">Chọn đơn vị...</option>
+                            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Cán bộ xử lý</label>
+                          <select
+                            value={editForm?.assignedTo || ''}
+                            onChange={(e) => setEditForm({ ...editForm, assignedTo: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all appearance-none cursor-pointer"
+                          >
+                            <option value="">Chọn cán bộ...</option>
+                            {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                          </select>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -659,13 +660,13 @@ export function DocDetail({ docId, onBack }) {
 
             {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-slate-100 bg-white shrink-0 flex items-center justify-between">
-              <button 
+              <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all"
               >
                 Hủy bỏ
               </button>
-              <button 
+              <button
                 onClick={handleSaveEdit}
                 disabled={isSaving}
                 className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200 disabled:opacity-50"
@@ -691,16 +692,16 @@ const FormField = ({ label, value, onChange, icon: Icon, type = "text" }) => (
         </div>
       )}
       {type === "textarea" ? (
-        <textarea 
-          value={value || ''} 
+        <textarea
+          value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           rows={4}
           className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all leading-relaxed resize-none"
         />
       ) : (
-        <input 
+        <input
           type={type}
-          value={value || ''} 
+          value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
             "w-full py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all",

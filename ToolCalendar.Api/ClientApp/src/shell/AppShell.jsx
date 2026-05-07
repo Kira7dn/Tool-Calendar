@@ -91,23 +91,23 @@ export function AppShell() {
         setNotifications(data);
         const unreadCount = data.filter(n => !n.isRead).length;
         setNotifCount(unreadCount);
-        
+
         // Show toast for latest unread if it's new
         if (data.length > 0 && !data[0].isRead) {
-           const lastSeenId = localStorage.getItem('last_notif_id');
-           if (lastSeenId !== data[0].id.ToString()) {
-              toast.info(data[0].title, {
-                 description: data[0].body,
-                 action: {
-                    label: 'Xem',
-                    onClick: () => {
-                       if (data[0].docId) setCurrentDocId(data[0].docId);
-                       markRead(data[0].id);
-                    }
-                 }
-              });
-              localStorage.setItem('last_notif_id', data[0].id.ToString());
-           }
+          const lastSeenId = localStorage.getItem('last_notif_id');
+          if (lastSeenId !== data[0].id.toString()) {
+            toast.info(data[0].title, {
+              description: data[0].body,
+              action: {
+                label: 'Xem',
+                onClick: () => {
+                  if (data[0].docId) setCurrentDocId(data[0].docId);
+                  markRead(data[0].id);
+                }
+              }
+            });
+            localStorage.setItem('last_notif_id', data[0].id.toString());
+          }
         }
       }
     } catch (e) {
@@ -122,7 +122,7 @@ export function AppShell() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       fetchNotifications();
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const markAllRead = async () => {
@@ -132,7 +132,7 @@ export function AppShell() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       fetchNotifications();
-    } catch (e) {}
+    } catch (e) { }
   };
   React.useEffect(() => {
     // Auth Guard: Redirect if not authenticated (main.jsx handles this usually)
@@ -377,8 +377,8 @@ export function AppShell() {
                           <div className="flex flex-col">
                             {notifications.length > 0 ? (
                               notifications.map((n) => (
-                                <div 
-                                  key={n.id} 
+                                <div
+                                  key={n.id}
                                   className={cn(
                                     "p-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors relative group",
                                     !n.isRead && "bg-primary/5"
@@ -415,8 +415,8 @@ export function AppShell() {
                           <div className="flex flex-col">
                             {notifications.filter(n => !n.isRead).length > 0 ? (
                               notifications.filter(n => !n.isRead).map((n) => (
-                                <div 
-                                  key={n.id} 
+                                <div
+                                  key={n.id}
                                   className="p-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors relative bg-primary/5"
                                   onClick={() => {
                                     if (n.docId) setCurrentDocId(n.docId);

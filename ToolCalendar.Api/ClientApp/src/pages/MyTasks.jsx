@@ -332,14 +332,14 @@ export function MyTasks({ onTabChange }) {
 
       <Dialog open={isEvidenceModalOpen} onOpenChange={setIsEvidenceModalOpen}>
         <DialogContent className="sm:max-w-[500px] rounded-3xl p-0 overflow-hidden border-none shadow-2xl glass-card">
-          <DialogHeader className="p-8 bg-primary text-primary-foreground">
-            <DialogTitle className="text-xl font-extrabold flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-primary-foreground/10">
-                <Upload className="size-5" />
+          <DialogHeader className="p-8 bg-primary text-white">
+            <DialogTitle className="text-xl font-extrabold flex items-center gap-3 text-white">
+              <div className="p-2 rounded-xl bg-white/10">
+                <Upload className="size-5 text-white" />
               </div>
               Nộp kết quả xử lý
             </DialogTitle>
-            <DialogDescription className="text-primary-foreground/70 font-medium">
+            <DialogDescription className="text-white/80 font-medium">
               Hệ thống sẽ ghi nhận và cập nhật trạng thái văn bản sau khi bạn nộp bằng chứng.
             </DialogDescription>
           </DialogHeader>
