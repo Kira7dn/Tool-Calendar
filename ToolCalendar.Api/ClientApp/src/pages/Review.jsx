@@ -24,6 +24,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from 'sonner';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 
 export function Review({ onBack }) {
   const [docs, setDocs] = useState([]);
@@ -41,6 +43,8 @@ export function Review({ onBack }) {
     departmentId: '',
     assignedTo: ''
   });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchReviewDocs();
@@ -143,7 +147,7 @@ export function Review({ onBack }) {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Bạn có chắc chắn muốn xóa văn bản này?')) return;
+    setIsDeleting(true);
     const doc = docs[currentIndex];
     try {
       const response = await fetch(`/api/documents/bulk-delete`, {
@@ -155,11 +159,19 @@ export function Review({ onBack }) {
         body: JSON.stringify([doc.id])
       });
       if (response.ok) {
+        toast.success('Đã xóa văn bản thành công');
         const newDocs = [...docs];
         newDocs.splice(currentIndex, 1);
         setDocs(newDocs);
+      } else {
+        toast.error('Lỗi khi xóa văn bản');
       }
-    } catch (e) {}
+    } catch (e) {
+      toast.error('Có lỗi xảy ra khi xóa');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
   };
 
   if (isLoading) {
@@ -327,12 +339,23 @@ export function Review({ onBack }) {
           </ScrollArea>
 
           <div className="p-6 bg-muted/50 border-t border-border shrink-0">
-            <Button variant="ghost" onClick={handleDelete} className="w-full text-destructive font-bold hover:bg-destructive/5 rounded-xl h-12">
+            <Button variant="ghost" onClick={() => setIsDeleteModalOpen(true)} className="w-full text-destructive font-bold hover:bg-destructive/5 rounded-xl h-12">
               <Trash2 className="size-4 mr-2" /> Xóa tài liệu này
             </Button>
           </div>
         </div>
       </main>
+
+      <ConfirmationModal 
+        open={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        title="Xác nhận xóa tài liệu?"
+        description={`Bạn có chắc chắn muốn xóa văn bản "${currentDoc?.fileName}"? Hành động này sẽ gỡ bỏ hoàn toàn dữ liệu khỏi hệ thống.`}
+        confirmLabel="XÓA TÀI LIỆU"
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+        variant="destructive"
+      />
     </div>
   );
 }

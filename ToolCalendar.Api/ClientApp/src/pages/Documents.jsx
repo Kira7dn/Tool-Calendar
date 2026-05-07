@@ -32,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { toast } from 'sonner';
 import {
   Table,
@@ -333,37 +334,15 @@ export function Documents({ onTabChange, filters }) {
         </CardContent>
       </Card>
 
-      {/* Confirmation Modal */}
-      <Dialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, doc: null })}>
-        <DialogContent className="max-w-[400px] rounded-3xl border-none shadow-2xl overflow-hidden p-0">
-          <div className="p-8 flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-2">
-              <Trash2 size={32} strokeWidth={2.5} />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-slate-900 tracking-tight">Xác nhận xóa?</h3>
-              <p className="text-sm font-medium text-slate-500 leading-relaxed px-4">
-                Bạn có chắc chắn muốn xóa văn bản <span className="font-bold text-slate-900">{deleteConfirm.doc?.soVanBan}</span>? Thao tác này không thể hoàn tác.
-              </p>
-            </div>
-          </div>
-          <div className="p-5 bg-slate-50 flex items-center gap-3">
-            <Button
-              variant="ghost"
-              className="flex-1 rounded-xl font-bold text-slate-400"
-              onClick={() => setDeleteConfirm({ open: false, doc: null })}
-            >
-              HỦY BỎ
-            </Button>
-            <Button
-              className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-100"
-              onClick={executeDelete}
-            >
-              XÓA NGAY
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmationModal
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}
+        title="Xác nhận xóa?"
+        description={`Bạn có chắc chắn muốn xóa văn bản "${deleteConfirm.doc?.soVanBan}"? Thao tác này không thể hoàn tác.`}
+        confirmLabel="XÓA NGAY"
+        onConfirm={executeDelete}
+        variant="destructive"
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from 'sonner';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 
 export function AuditTab() {
   const [auditLogs, setAuditLogs] = useState([]);
@@ -18,6 +19,8 @@ export function AuditTab() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const pageSize = 6;
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   useEffect(() => {
     fetchAuditLogs(currentPage);
@@ -44,7 +47,7 @@ export function AuditTab() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const clearAuditLogs = async () => {
-    if (!confirm('Bạn có chắc chắn muốn xóa toàn bộ nhật ký hệ thống?')) return;
+    setIsClearing(true);
     try {
       const res = await fetch('/api/admin/clear-audit-logs', {
         method: 'POST',
@@ -56,7 +59,12 @@ export function AuditTab() {
         setCurrentPage(1);
         toast.success('Đã dọn sạch nhật ký hệ thống!');
       }
-    } catch (e) { }
+    } catch (e) { 
+      toast.error('Có lỗi xảy ra khi dọn nhật ký');
+    } finally {
+      setIsClearing(false);
+      setIsConfirmOpen(false);
+    }
   };
 
   return (
@@ -73,7 +81,7 @@ export function AuditTab() {
           <Button variant="secondary" size="sm" onClick={() => fetchAuditLogs(currentPage)}>
             <RefreshCcw className="size-4 mr-2" /> Làm mới
           </Button>
-          <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={clearAuditLogs}>
+          <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => setIsConfirmOpen(true)}>
             <Trash2 className="size-4 mr-2" /> Xóa tất cả
           </Button>
         </div>
@@ -133,18 +141,18 @@ export function AuditTab() {
               Trang {currentPage} / {totalPages || 1}
             </p>
             <div className="flex gap-1">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 disabled={currentPage === 1 || isLoadingLogs}
                 onClick={() => setCurrentPage(prev => prev - 1)}
                 className="h-7 px-3 text-xs"
               >
                 Trước
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 disabled={currentPage >= totalPages || isLoadingLogs}
                 onClick={() => setCurrentPage(prev => prev + 1)}
                 className="h-7 px-3 text-xs"
@@ -155,6 +163,17 @@ export function AuditTab() {
           </div>
         </div>
       </CardContent>
+
+      <ConfirmationModal 
+        open={isConfirmOpen}
+        onOpenChange={setIsConfirmOpen}
+        title="Xác nhận xóa?"
+        description="Bạn có chắc chắn muốn xóa toàn bộ nhật ký hệ thống? Thao tác này không thể hoàn tác và sẽ xóa mọi lịch sử hoạt động."
+        confirmLabel="XÓA TẤT CẢ"
+        onConfirm={clearAuditLogs}
+        isLoading={isClearing}
+        variant="destructive"
+      />
     </Card>
   );
 }

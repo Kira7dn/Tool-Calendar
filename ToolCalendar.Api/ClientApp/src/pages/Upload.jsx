@@ -1,45 +1,29 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { Button } from '@/components/ui/button';
 import {
-  ArrowLeft,
   Clock,
   Calendar,
   FileText,
-  User,
   Building2,
-  AlertCircle,
   Edit,
-  ExternalLink,
-  MessageSquare,
-  Paperclip,
-  Send,
-  Loader2,
-  X,
   Save,
   ChevronLeft,
   ChevronRight,
-  Maximize2,
-  Trash2,
-  Plus,
-  Search,
-  Filter,
-  CheckCircle2,
-  AlertTriangle,
-  Sparkles,
-  ChevronDown
+  Maximize2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /* ── tiny icon helper ── */
 const Svg = ({ children, size = 20, cls = "" }) => (
@@ -257,6 +241,7 @@ export function Upload({ onTabChange }) {
   };
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [deleteItemConfirm, setDeleteItemConfirm] = useState({ open: false, item: null });
 
   const handleClearBatch = async () => {
     setShowClearConfirm(true);
@@ -489,23 +474,39 @@ export function Upload({ onTabChange }) {
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => {
-                            setReviewItem({ ...row });
-                            setIsReviewModalOpen(true);
-                            setPdfPage(1);
-                          }}
-                          className="p-1 rounded text-blue-500 hover:bg-blue-50 transition-colors"
-                          title="Đối soát PDF & Dữ liệu"
-                        >
-                          <EyeIcon />
-                        </button>
-                        <button
-                          onClick={() => setBatchItems(prev => prev.filter(i => i.id !== row.id))}
-                          className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                        >
-                          <TrashIcon />
-                        </button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => {
+                                  setReviewItem({ ...row });
+                                  setIsReviewModalOpen(true);
+                                  setPdfPage(1);
+                                }}
+                                className="p-1 rounded text-blue-500 hover:bg-blue-50 transition-colors"
+                              >
+                                <EyeIcon />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-slate-900 text-white border-none font-bold text-[10px]">
+                              Đối soát PDF
+                            </TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => setDeleteItemConfirm({ open: true, item: row })}
+                                className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                              >
+                                <TrashIcon />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-red-600 text-white border-none font-bold text-[10px]">
+                              Xóa khỏi danh sách
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </td>
                   </tr>
@@ -712,37 +713,30 @@ export function Upload({ onTabChange }) {
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation Modal */}
-      <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-        <DialogContent className="max-w-[400px] rounded-3xl border-none shadow-2xl overflow-hidden p-0">
-          <div className="p-8 flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2">
-              <AlertTriangle size={32} strokeWidth={2.5} />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-slate-900 tracking-tight">Hủy đợt tải?</h3>
-              <p className="text-sm font-medium text-slate-500 leading-relaxed px-4">
-                Bạn có chắc chắn muốn hủy đợt bóc tách này? Tất cả dữ liệu chưa lưu sẽ bị xóa vĩnh viễn.
-              </p>
-            </div>
-          </div>
-          <div className="p-5 bg-slate-50 flex items-center gap-3">
-            <Button
-              variant="ghost"
-              className="flex-1 rounded-xl font-bold text-slate-400"
-              onClick={() => setShowClearConfirm(false)}
-            >
-              QUAY LẠI
-            </Button>
-            <Button
-              className="flex-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest shadow-lg shadow-amber-100"
-              onClick={executeClearBatch}
-            >
-              XÁC NHẬN HỦY
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmationModal
+        open={showClearConfirm}
+        onOpenChange={setShowClearConfirm}
+        title="Hủy đợt tải?"
+        description="Bạn có chắc chắn muốn hủy đợt bóc tách này? Tất cả dữ liệu chưa lưu sẽ bị xóa vĩnh viễn."
+        confirmLabel="XÁC NHẬN HỦY"
+        cancelLabel="QUAY LẠI"
+        onConfirm={executeClearBatch}
+        variant="warning"
+      />
+
+      <ConfirmationModal
+        open={deleteItemConfirm.open}
+        onOpenChange={(open) => setDeleteItemConfirm(prev => ({ ...prev, open }))}
+        title="Xóa khỏi đợt tải?"
+        description={`Bạn có chắc chắn muốn xóa văn bản "${deleteItemConfirm.item?.fileName}"? Tài liệu này sẽ bị gỡ bỏ khỏi đợt xử lý hiện tại.`}
+        confirmLabel="XÓA NGAY"
+        onConfirm={() => {
+          setBatchItems(prev => prev.filter(i => i.id !== deleteItemConfirm.item.id));
+          setDeleteItemConfirm({ open: false, item: null });
+          toast.success('Đã gỡ bỏ văn bản');
+        }}
+        variant="destructive"
+      />
     </div>
   );
 }
