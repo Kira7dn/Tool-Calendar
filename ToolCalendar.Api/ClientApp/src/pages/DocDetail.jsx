@@ -17,7 +17,10 @@ import {
   Save,
   ChevronLeft,
   ChevronRight,
-  Maximize2
+  Maximize2,
+  CheckCircle2,
+  Play,
+  Image
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -125,6 +128,27 @@ export function DocDetail({ docId, onBack }) {
       }
     } catch (error) {
       console.error('Failed to fetch comments:', error);
+    }
+  };
+
+  const handleUpdateStatus = async (newStatus) => {
+    try {
+      const res = await fetch(`/api/documents/${docId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ ...doc, status: newStatus })
+      });
+      if (res.ok) {
+        toast.success(`Đã chuyển trạng thái sang: ${newStatus}`);
+        fetchData(); // Tải lại toàn bộ dữ liệu văn bản
+      } else {
+        toast.error("Không thể cập nhật trạng thái.");
+      }
+    } catch (err) {
+      toast.error("Lỗi kết nối máy chủ.");
     }
   };
 
@@ -256,6 +280,28 @@ export function DocDetail({ docId, onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2.5 w-full md:w-auto flex-shrink-0">
+          {/* Nút Tiếp nhận xử lý (Dành cho cán bộ được giao) */}
+          {doc.status === 'Chưa xử lý' && doc.assignedTo == localStorage.getItem('user_id') && (
+            <button
+              onClick={() => handleUpdateStatus('Đang xử lý')}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+            >
+              <Play size={14} strokeWidth={2.5} />
+              TIẾP NHẬN XỬ LÝ
+            </button>
+          )}
+
+          {/* Nút Hoàn thành (Khi đang xử lý) */}
+          {doc.status === 'Đang xử lý' && (doc.assignedTo == localStorage.getItem('user_id') || localStorage.getItem('user_role') === 'Admin') && (
+            <button
+              onClick={() => handleUpdateStatus('Đã hoàn thành')}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-100"
+            >
+              <CheckCircle2 size={14} strokeWidth={2.5} />
+              HOÀN THÀNH
+            </button>
+          )}
+
           {(localStorage.getItem('user_role') === 'Admin' || localStorage.getItem('user_role') === 'VanThu') && (
             <button
               onClick={() => {
@@ -437,7 +483,7 @@ export function DocDetail({ docId, onBack }) {
                     </div>
                     <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl rounded-tl-none group-hover:bg-white group-hover:shadow-xl group-hover:border-slate-200 transition-all duration-500">
                       <p className="text-xs font-bold text-slate-700 leading-relaxed italic">"{c.content}"</p>
-                      
+
                       {/* Hiển thị file đính kèm */}
                       {c.attachmentPaths && (
                         <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
