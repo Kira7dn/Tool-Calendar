@@ -12,7 +12,7 @@ function Root() {
 
   useEffect(() => {
     document.body.classList.add('app-booting');
-    
+
     // Listen for storage changes (e.g. logout from another tab)
     const handleStorageChange = () => {
       setIsAuthenticated(!!localStorage.getItem('auth_token'));
@@ -26,7 +26,7 @@ function Root() {
 
     window.addEventListener('storage', handleStorageChange);
     document.addEventListener('auth:unauthorized', handleUnauthorized);
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       document.removeEventListener('auth:unauthorized', handleUnauthorized);
@@ -38,7 +38,7 @@ function Root() {
   };
 
   // Hỗ trợ đường dẫn công khai (không cần đăng nhập)
-  const isPublicRoute = window.location.pathname === "/van-ban-den-han";
+  const isPublicRoute = window.location.pathname === "/campha";
 
   if (isPublicRoute) {
     return <PublicSchedule />;
