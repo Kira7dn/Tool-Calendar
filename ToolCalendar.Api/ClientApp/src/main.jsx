@@ -38,7 +38,7 @@ function Root() {
   };
 
   // Hỗ trợ đường dẫn công khai (không cần đăng nhập)
-  const isPublicRoute = window.location.pathname === "/public-schedule";
+  const isPublicRoute = window.location.pathname === "/van-ban-den-han";
 
   if (isPublicRoute) {
     return <PublicSchedule />;
