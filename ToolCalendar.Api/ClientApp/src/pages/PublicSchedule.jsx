@@ -11,12 +11,19 @@ function ScheduleBlock({ day }) {
       </p>
       <div className="space-y-2">
         {day.items.map((item, idx) => (
-          <div key={idx} className="text-sm leading-snug border-l-2 border-[#d4edda] pl-2">
-            <span className="text-[#cc0000] font-bold">{item.time} - </span>
-            {item.docNumber && (
-              <span className="text-[#cc0000] font-semibold">[{item.docNumber}] </span>
-            )}
-            <span className="text-gray-800"> {item.content}</span>
+          <div
+            key={idx}
+            onClick={() => window.open(`/api/documents/${item.id}/file`, '_blank')}
+            className="text-sm leading-snug border-l-2 border-[#d4edda] pl-2 hover:border-[#0a3d8f] hover:bg-white/50 cursor-pointer transition-all py-1 group flex justify-between items-center"
+          >
+            <div>
+              <span className="text-[#cc0000] font-bold">{item.time} - </span>
+              {item.docNumber && (
+                <span className="text-[#cc0000] font-semibold">[{item.docNumber}] </span>
+              )}
+              <span className="text-gray-800"> {item.content}</span>
+            </div>
+            <svg className="opacity-0 group-hover:opacity-100 transition-opacity ml-2" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a3d8f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
           </div>
         ))}
       </div>
@@ -62,8 +69,8 @@ function Header() {
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-20 h-20 flex items-center justify-center bg-[#c8102e] rounded-full shadow-lg border-2 border-[#f5c518]">
-             <svg viewBox="0 0 100 100" className="w-14 h-14">
-              <polygon points="50,10 61,35 88,35 66,53 74,78 50,62 26,78 34,53 12,35 39,35" fill="#f5c518"/>
+            <svg viewBox="0 0 100 100" className="w-14 h-14">
+              <polygon points="50,10 61,35 88,35 66,53 74,78 50,62 26,78 34,53 12,35 39,35" fill="#f5c518" />
             </svg>
           </div>
           <div>
@@ -76,8 +83,8 @@ function Header() {
           </div>
         </div>
         <div className="text-right hidden md:block text-gray-500 text-xs font-bold">
-            <p>Hệ thống giám sát thực thi công việc</p>
-            <p>Phiên bản công cộng v1.0</p>
+          <p>Hệ thống giám sát thực thi công việc</p>
+          <p>Phiên bản công cộng v1.0</p>
         </div>
       </div>
     </header>
@@ -105,8 +112,8 @@ export default function PublicSchedule() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c8102e] mx-auto mb-4"></div>
-           <p className="text-gray-600 font-bold">Đang tải lịch công tác...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c8102e] mx-auto mb-4"></div>
+          <p className="text-gray-600 font-bold">Đang tải lịch công tác...</p>
         </div>
       </div>
     );
@@ -138,20 +145,27 @@ export default function PublicSchedule() {
                   {today && today.items.length > 0 ? (
                     <div className="space-y-6">
                       {today.items.map((item, idx) => (
-                        <div key={idx} className="flex gap-6 items-start group">
+                        <div
+                          key={idx}
+                          onClick={() => window.open(`/api/documents/${item.id}/file`, '_blank')}
+                          className="flex gap-6 items-start group cursor-pointer"
+                        >
                           <div className="flex-shrink-0 w-24 text-center">
-                             <span className="block text-xl font-black text-[#cc0000]">{item.time}</span>
-                             <span className="text-[10px] text-gray-400 font-bold uppercase">Bắt đầu</span>
+                            <span className="block text-xl font-black text-[#cc0000]">{item.time}</span>
+                            <span className="text-[10px] text-gray-400 font-bold uppercase">Bắt đầu</span>
                           </div>
-                          <div className="flex-1 bg-gray-50 p-6 rounded-lg border-l-4 border-[#cc0000] group-hover:bg-red-50 transition-colors">
+                          <div className="flex-1 bg-gray-50 p-6 rounded-lg border-l-4 border-[#cc0000] group-hover:bg-blue-50 group-hover:border-[#0a3d8f] group-hover:shadow-md transition-all duration-300 relative">
                             {item.docNumber && (
-                              <div className="inline-block bg-[#cc0000] text-white px-2 py-0.5 rounded text-[10px] font-bold mb-2">
+                              <div className="inline-block bg-[#cc0000] group-hover:bg-[#0a3d8f] text-white px-2 py-0.5 rounded text-[10px] font-bold mb-2 transition-colors">
                                 {item.docNumber}
                               </div>
                             )}
-                            <p className="text-lg text-gray-800 font-medium leading-relaxed italic">
+                            <p className="text-lg text-gray-800 font-medium leading-relaxed italic pr-8">
                               "{item.content}"
                             </p>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a3d8f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                            </div>
                           </div>
                         </div>
                       ))}

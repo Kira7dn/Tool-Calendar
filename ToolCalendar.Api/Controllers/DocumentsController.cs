@@ -597,7 +597,8 @@ namespace ToolCalendar.Api.Controllers
                     dayLabel = GetDayLabel(g.Key),
                     items = g.Select(d => new
                     {
-                        time = "08:00", // Mặc định hoặc lấy từ một trường khác nếu có
+                        id = d.Id,
+                        time = "08:00", 
                         docNumber = d.SoVanBan,
                         content = d.TrichYeu
                     }).ToList()
