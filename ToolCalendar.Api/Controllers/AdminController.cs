@@ -11,7 +11,7 @@ namespace ToolCalendar.Api.Controllers
     public class AdminController : ControllerBase
     {
         // --- DEPARTMENTS ---
-        [Authorize(Roles = "Admin,VanThu")]
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("departments")]
         public IActionResult GetDepartments() => Ok(DatabaseService.GetDepartments());
 

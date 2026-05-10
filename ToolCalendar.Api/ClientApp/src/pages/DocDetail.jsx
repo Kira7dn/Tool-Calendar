@@ -66,9 +66,13 @@ export function DocDetail({ docId, onBack }) {
 
   // Modal & PDF states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEvidenceModalOpen, setIsEvidenceModalOpen] = useState(false);
   const [editForm, setEditForm] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [pdfPage, setPdfPage] = useState(1);
+  const [evidenceNote, setEvidenceNote] = useState('');
+  const [evidenceFiles, setEvidenceFiles] = useState([]);
+  const [previewImage, setPreviewImage] = useState(null);
 
   useEffect(() => {
     if (docId) {
@@ -208,6 +212,64 @@ export function DocDetail({ docId, onBack }) {
       toast.error('Lỗi kết nối máy chủ');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSubmitEvidence = async () => {
+    setIsSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('notes', evidenceNote);
+      evidenceFiles.forEach(file => {
+        formData.append('files', file);
+      });
+
+      const response = await fetch(`/api/documents/${docId}/submit-evidence`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        toast.success('Đã nộp kết quả thành công');
+        setIsEvidenceModalOpen(false);
+        setEvidenceNote('');
+        setEvidenceFiles([]);
+        fetchData();
+      } else {
+        toast.error('Lỗi khi nộp kết quả');
+      }
+    } catch (error) {
+      console.error('Submit evidence failed:', error);
+      toast.error('Lỗi kết nối máy chủ');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleViewEvidence = async (path) => {
+    try {
+      const response = await fetch(`/api/documents/evidence-file?path=${encodeURIComponent(path)}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        
+        // Nếu là ảnh thì hiện modal trong app, nếu là PDF thì vẫn mở tab mới
+        const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path);
+        if (isImg) {
+          setPreviewImage(url);
+        } else {
+          window.open(url, '_blank');
+        }
+      } else {
+        toast.error("Không có quyền xem file này hoặc file không tồn tại.");
+      }
+    } catch (error) {
+      toast.error("Lỗi khi tải file bằng chứng.");
     }
   };
 
@@ -399,6 +461,71 @@ export function DocDetail({ docId, onBack }) {
                     {doc.trichYeu}
                   </p>
                 </div>
+
+                {/* Phần kết quả xử lý dành cho Admin/Lãnh đạo kiểm tra */}
+                {(doc.status === 'Đã hoàn thành' || doc.evidenceNotes || doc.evidencePaths) && (
+                  <div className="mt-8 pt-8 border-t border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 rounded-xl bg-green-50 text-green-600 shadow-sm border border-green-100">
+                        <CheckCircle2 size={18} strokeWidth={2.5} />
+                      </div>
+                      <h2 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">KẾT QUẢ XỬ LÝ & BẰNG CHỨNG</h2>
+                    </div>
+
+                    <div className="bg-white border-2 border-green-100 rounded-3xl p-6 lg:p-8 shadow-xl shadow-green-50/50 relative overflow-hidden">
+                      {/* Badge hoàn thành */}
+                      <div className="absolute top-0 right-0 px-4 py-1.5 bg-green-500 text-white text-[9px] font-black uppercase tracking-widest rounded-bl-2xl">
+                        CONFIRMED
+                      </div>
+
+                      <div className="space-y-6">
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <MessageSquare size={12} /> NỘI DUNG GIẢI TRÌNH
+                          </p>
+                          <div className="text-sm font-bold text-slate-700 leading-relaxed pl-4 border-l-4 border-green-200">
+                            {doc.evidenceNotes || "Không có ghi chú bổ sung."}
+                          </div>
+                        </div>
+
+                        {doc.evidencePaths && (
+                          <div className="pt-4">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                              <Paperclip size={12} /> DANH SÁCH FILE BẰNG CHỨNG ({JSON.parse(doc.evidencePaths || "[]").length})
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {(() => {
+                                try {
+                                  const paths = JSON.parse(doc.evidencePaths || "[]");
+                                  return paths.map((path, idx) => {
+                                    const fileName = path.split('/').pop().split('_').slice(1).join('_') || "Attachment";
+                                    const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path);
+                                    return (
+                                      <button
+                                        key={idx}
+                                        onClick={() => handleViewEvidence(path)}
+                                        className="group flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-green-400 hover:shadow-lg transition-all duration-300 w-full text-left"
+                                      >
+                                        <div className="size-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-green-500 transition-colors shadow-sm">
+                                          {isImg ? <Image size={18} /> : <FileText size={18} />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-[10px] font-black text-slate-900 truncate uppercase tracking-tight">{fileName}</p>
+                                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Click để xem chi tiết</p>
+                                        </div>
+                                        <ExternalLink size={14} className="text-slate-300 group-hover:text-green-500" />
+                                      </button>
+                                    );
+                                  });
+                                } catch (e) { return null; }
+                              })()}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -750,6 +877,75 @@ export function DocDetail({ docId, onBack }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* --- Evidence Submission Modal --- */}
+      {isEvidenceModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-400">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Nộp kết quả xử lý</h3>
+              <button onClick={() => setIsEvidenceModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ghi chú kết quả</label>
+                <textarea
+                  value={evidenceNote}
+                  onChange={(e) => setEvidenceNote(e.target.value)}
+                  placeholder="Mô tả kết quả công việc..."
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 text-sm font-bold text-slate-700 outline-none focus:border-red-300 min-h-[100px] resize-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">File bằng chứng (Ảnh/PDF)</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    id="evidence-upload"
+                    onChange={(e) => setEvidenceFiles(Array.from(e.target.files))}
+                  />
+                  <label htmlFor="evidence-upload" className="cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-[10px] font-black text-slate-600 hover:bg-slate-200 transition-all uppercase">
+                    <Paperclip size={14} /> Chọn file
+                  </label>
+                  <span className="text-[10px] font-bold text-slate-400">{evidenceFiles.length} file đã chọn</span>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/50">
+              <button onClick={() => setIsEvidenceModalOpen(false)} className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hủy</button>
+              <button
+                onClick={handleSubmitEvidence}
+                disabled={isSaving || evidenceFiles.length === 0}
+                className="px-8 py-2.5 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-100 disabled:opacity-50"
+              >
+                {isSaving ? <Loader2 size={14} className="animate-spin" /> : "HOÀN THÀNH VĂN BẢN"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Image Lightbox Modal --- */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-300 p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button 
+            onClick={() => setPreviewImage(null)}
+            className="absolute top-6 right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all border border-white/20"
+          >
+            <X size={24} />
+          </button>
+          <img 
+            src={previewImage} 
+            alt="Preview" 
+            className="max-w-full max-h-full rounded-2xl shadow-2xl animate-in zoom-in-95 duration-500 border-4 border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>

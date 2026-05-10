@@ -177,7 +177,7 @@ namespace ToolCalendar.Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = record.Id }, record);
         }
 
-        [Authorize(Roles = "Admin,VanThu")]
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] DocumentRecord record)
         {
@@ -575,6 +575,30 @@ namespace ToolCalendar.Api.Controllers
             return Ok(new { status = result, reactions = updatedReactions });
         }
 
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
+        [HttpGet("evidence-file")]
+        public IActionResult GetEvidenceFile([FromQuery] string path)
+        {
+            if (string.IsNullOrEmpty(path)) return BadRequest();
+            
+            // Bảo mật: Chỉ cho phép truy cập file trong thư mục Evidence
+            string normalizedPath = path.TrimStart('/').Replace("\\", "/");
+            if (!normalizedPath.StartsWith("Uploads/Evidence/", StringComparison.OrdinalIgnoreCase)) 
+                return Forbid();
+
+            // Chuyển đổi đường dẫn tương đối thành đường dẫn tuyệt đối trên server
+            var fullPath = Path.Combine(Directory.GetCurrentDirectory(), normalizedPath);
+            if (!System.IO.File.Exists(fullPath)) return NotFound();
+
+            var contentType = "application/octet-stream";
+            var ext = Path.GetExtension(normalizedPath).ToLower();
+            if (ext == ".pdf") contentType = "application/pdf";
+            else if (ext == ".jpg" || ext == ".jpeg") contentType = "image/jpeg";
+            else if (ext == ".png") contentType = "image/png";
+
+            return PhysicalFile(fullPath, contentType);
+        }
+
         [AllowAnonymous]
         [HttpGet("public-schedule")]
         public async Task<IActionResult> GetPublicSchedule()
@@ -586,7 +610,7 @@ namespace ToolCalendar.Api.Controllers
             var filtered = allDocs
                 .Where(d => d.ThoiHan.HasValue && d.ThoiHan.Value.Date >= now)
                 .OrderBy(d => d.ThoiHan)
-                .Take(50) // Giới hạn 50 mục gần nhất
+                .Take(50) 
                 .ToList();
 
             // Nhóm theo ngày

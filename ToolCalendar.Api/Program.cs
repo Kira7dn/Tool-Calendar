@@ -190,6 +190,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationHub>("/notificationHub");
+app.MapFallbackToFile("index.html");
+
 
 // Chạy ứng dụng
 app.Run();

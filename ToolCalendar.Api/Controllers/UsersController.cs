@@ -44,7 +44,7 @@ namespace ToolCalendar.Api.Controllers
         }
         // ────────────────────────────────────────────────────────────────────────
 
-        [Authorize(Roles = "Admin,VanThu")]
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
         public IActionResult Get([FromQuery] int? departmentId = null)
         {
