@@ -155,18 +155,28 @@ export default function PublicSchedule() {
                             <span className="text-[10px] text-gray-400 font-bold uppercase">Bắt đầu</span>
                           </div>
                           <div className="flex-1 bg-gray-50 p-6 rounded-lg border-l-4 border-[#cc0000] group-hover:bg-blue-50 group-hover:border-[#0a3d8f] group-hover:shadow-md transition-all duration-300 relative">
-                            {item.docNumber && (
-                              <div className="inline-block bg-[#cc0000] group-hover:bg-[#0a3d8f] text-white px-2 py-0.5 rounded text-[10px] font-bold mb-2 transition-colors">
-                                {item.docNumber}
-                              </div>
-                            )}
-                            <p className="text-lg text-gray-800 font-medium leading-relaxed italic pr-8">
+                            <div className="flex justify-between items-start mb-2">
+                              {item.docNumber && (
+                                <div className="inline-block bg-[#cc0000] group-hover:bg-[#0a3d8f] text-white px-2 py-0.5 rounded text-[10px] font-bold transition-colors">
+                                  {item.docNumber}
+                                </div>
+                              )}
+                              <a 
+                                href={`/api/documents/${item.id}/file`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center gap-1 text-[#0a3d8f] hover:text-[#cc0000] transition-colors"
+                              >
+                                <span className="text-[10px] font-bold uppercase underline">Xem tệp PDF</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                              </a>
+                            </div>
+                            <p className="text-lg text-gray-800 font-medium leading-relaxed italic">
                               "{item.content}"
                             </p>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a3d8f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
-                            </div>
                           </div>
+
                         </div>
                       ))}
                     </div>
