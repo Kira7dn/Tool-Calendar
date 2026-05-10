@@ -280,7 +280,7 @@ export function DocDetail({ docId, onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2.5 w-full md:w-auto flex-shrink-0">
-          {/* Nút Tiếp nhận xử lý (Dành cho cán bộ được giao) */}
+          {/* Nút Tiếp nhận xử lý */}
           {doc.status === 'Chưa xử lý' && doc.assignedTo == localStorage.getItem('user_id') && (
             <button
               onClick={() => handleUpdateStatus('Đang xử lý')}
@@ -291,14 +291,14 @@ export function DocDetail({ docId, onBack }) {
             </button>
           )}
 
-          {/* Nút Hoàn thành (Khi đang xử lý) */}
+          {/* Nút Nộp kết quả (Hiện sau khi đã tiếp nhận) */}
           {doc.status === 'Đang xử lý' && (doc.assignedTo == localStorage.getItem('user_id') || localStorage.getItem('user_role') === 'Admin') && (
             <button
-              onClick={() => handleUpdateStatus('Đã hoàn thành')}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-100"
+              onClick={() => setIsEvidenceModalOpen(true)}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-100"
             >
-              <CheckCircle2 size={14} strokeWidth={2.5} />
-              HOÀN THÀNH
+              <ExternalLink size={14} strokeWidth={2.5} />
+              NỘP KẾT QUẢ
             </button>
           )}
 

@@ -275,16 +275,46 @@ export function MyTasks({ onTabChange }) {
                           >
                             Chi tiết
                           </Button>
-                          <Button
-                            size="sm"
-                            className="h-8 px-3 rounded-lg bg-primary hover:bg-sidebar-mid font-bold text-[11px] shadow-sm"
-                            onClick={() => {
-                              setSelectedDocId(task.id);
-                              setIsEvidenceModalOpen(true);
-                            }}
-                          >
-                            <Upload className="size-3 mr-1.5" /> Nộp
-                          </Button>
+                          
+                          {/* Nút Tiếp nhận (Màu xanh) - Hiện khi chưa xử lý */}
+                          {(!task.status || task.status === 'Chưa xử lý') ? (
+                            <Button
+                              size="sm"
+                              className="h-8 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold text-[11px] shadow-sm text-white"
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch(`/api/documents/${task.id}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                                    },
+                                    body: JSON.stringify({ ...task, status: 'Đang xử lý' })
+                                  });
+                                  if (res.ok) {
+                                    toast.success('Đã tiếp nhận văn bản');
+                                    fetchTasks();
+                                  }
+                                } catch (e) { toast.error('Lỗi kết nối'); }
+                              }}
+                            >
+                              Tiếp nhận
+                            </Button>
+                          ) : (
+                            /* Nút Nộp (Màu đỏ) - Hiện khi đang xử lý */
+                            task.status === 'Đang xử lý' && (
+                              <Button
+                                size="sm"
+                                className="h-8 px-3 rounded-lg bg-red-600 hover:bg-red-700 font-bold text-[11px] shadow-sm text-white"
+                                onClick={() => {
+                                  setSelectedDocId(task.id);
+                                  setIsEvidenceModalOpen(true);
+                                }}
+                              >
+                                <Upload className="size-3 mr-1.5" /> Nộp
+                              </Button>
+                            )
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
