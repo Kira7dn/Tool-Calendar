@@ -3,18 +3,13 @@ import {
   Plus,
   UserPlus,
   Search,
-  MoreVertical,
   Edit,
   Trash2,
-  ShieldCheck,
   User,
-  Users as UsersIcon,
   Loader2,
-  X,
   Lock,
   Mail,
   Phone,
-  Building2,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -22,19 +17,13 @@ import {
   EyeOff
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { toast } from 'sonner';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -43,13 +32,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -535,7 +517,7 @@ export function Users() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <ConfirmationModal 
+      <ConfirmationModal
         open={deleteConfirm.open}
         onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}
         title="Xác nhận xóa?"

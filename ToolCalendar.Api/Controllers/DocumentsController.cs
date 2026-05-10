@@ -332,20 +332,11 @@ namespace ToolCalendar.Api.Controllers
             var doc = await _documentRepository.GetDocumentByIdAsync(id);
             if (doc == null || string.IsNullOrEmpty(doc.FilePath)) return NotFound("File không tồn tại.");
             
-            var rawPath = doc.FilePath ?? "";
-            string relativePath = rawPath;
-
-            // Nếu là đường dẫn tuyệt đối Windows (C:\...), ta trích xuất phần từ 'Uploads' trở đi
-            if (rawPath.Contains("Uploads", StringComparison.OrdinalIgnoreCase))
-            {
-                int index = rawPath.IndexOf("Uploads", StringComparison.OrdinalIgnoreCase);
-                relativePath = rawPath.Substring(index);
-            }
-
-            // Chuyển đổi đường dẫn tương đối thành đường dẫn tuyệt đối trên Server
-            var filePath = Path.Combine(_env.ContentRootPath, relativePath.Replace('\\', '/'));
+            // Lấy đường dẫn từ DB và chuẩn hóa dấu gạch chéo cho Linux
+            var normalizedPath = doc.FilePath.Replace('\\', '/').TrimStart('/');
+            var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
             
-            if (!System.IO.File.Exists(filePath)) return NotFound($"File vật lý không tìm thấy tại: {relativePath}");
+            if (!System.IO.File.Exists(filePath)) return NotFound($"File vật lý không tìm thấy tại: {normalizedPath}");
             var fileBytes = System.IO.File.ReadAllBytes(filePath);
 
             var ext = Path.GetExtension(doc.FilePath).ToLower();
@@ -370,29 +361,12 @@ namespace ToolCalendar.Api.Controllers
                 var paths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(doc.EvidencePaths);
                 if (paths == null || index < 0 || index >= paths.Count) return NotFound("Index file không hợp lệ.");
 
-                var rawPath = paths[index] ?? "";
-                string relativePath = rawPath;
-
-                // Xử lý cả đường dẫn tuyệt đối cũ (Windows) và đường dẫn tương đối mới
-                if (rawPath.Contains("Uploads", StringComparison.OrdinalIgnoreCase))
-                {
-                    int uIndex = rawPath.IndexOf("Uploads", StringComparison.OrdinalIgnoreCase);
-                    relativePath = rawPath.Substring(uIndex);
-                }
-
-                // Chuyển đổi đường dẫn tương đối thành đường dẫn tuyệt đối trên Server
-                var filePath = Path.Combine(_env.ContentRootPath, relativePath.Replace('\\', '/'));
+                var relativePath = paths[index];
+                var normalizedPath = relativePath.Replace('\\', '/').TrimStart('/');
+                var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
                 
-                if (!System.IO.File.Exists(filePath)) 
-                {
-                    return NotFound(new { 
-                        message = "File vật lý không tìm thấy.", 
-                        searchedPath = filePath,
-                        relativePath = relativePath,
-                        contentRoot = _env.ContentRootPath
-                    });
-                }
-
+                if (!System.IO.File.Exists(filePath)) return NotFound("Không tìm thấy file vật lý.");
+                
                 var fileBytes = System.IO.File.ReadAllBytes(filePath);
                 var fileName = Path.GetFileName(filePath);
                 var ext = Path.GetExtension(filePath).ToLower();
@@ -464,6 +438,32 @@ namespace ToolCalendar.Api.Controllers
             return Ok(result);
         }
 
+        [AllowAnonymous]
+        [HttpGet("comment-attachment")]
+        public IActionResult GetCommentAttachment([FromQuery] string path)
+        {
+            if (string.IsNullOrEmpty(path)) return BadRequest("Đường dẫn không hợp lệ.");
+            
+            // Chuẩn hóa và bảo mật đường dẫn (chỉ cho phép trong thư mục Uploads/Comments)
+            var normalizedPath = path.Replace('\\', '/').TrimStart('/');
+            if (!normalizedPath.Contains("Uploads/Comments", StringComparison.OrdinalIgnoreCase))
+                return BadRequest("Truy cập trái phép.");
+
+            var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
+            if (!System.IO.File.Exists(filePath)) return NotFound("File đính kèm không tồn tại.");
+
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            var ext = Path.GetExtension(filePath).ToLower();
+            var mimeType = ext switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".pdf" => "application/pdf",
+                _ => "application/octet-stream"
+            };
+            return File(fileBytes, mimeType, Path.GetFileName(filePath));
+        }
+
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpPost("{id}/comments")]
         public async Task<IActionResult> AddComment(int id, [FromForm] string content, [FromForm] List<IFormFile> files)
@@ -485,8 +485,8 @@ namespace ToolCalendar.Api.Controllers
                     var fileName = $"{DateTime.Now:yyyyMMddHHmmss}_{file.FileName}";
                     var filePath = Path.Combine(commentUploadDir, fileName);
 
-                    // Chỉ lưu tên file tương đối để frontend dễ xử lý
-                    var relativePath = $"/Uploads/Comments/Doc_{id}/{fileName}";
+                    // THỐNG NHẤT: Lưu đường dẫn không có dấu gạch chéo ở đầu
+                    var relativePath = $"Uploads/Comments/Doc_{id}/{fileName}";
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {

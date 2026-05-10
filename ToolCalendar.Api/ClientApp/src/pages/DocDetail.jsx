@@ -437,6 +437,34 @@ export function DocDetail({ docId, onBack }) {
                     </div>
                     <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl rounded-tl-none group-hover:bg-white group-hover:shadow-xl group-hover:border-slate-200 transition-all duration-500">
                       <p className="text-xs font-bold text-slate-700 leading-relaxed italic">"{c.content}"</p>
+                      
+                      {/* Hiển thị file đính kèm */}
+                      {c.attachmentPaths && (
+                        <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
+                          {(() => {
+                            try {
+                              const paths = JSON.parse(c.attachmentPaths);
+                              if (!Array.isArray(paths) || paths.length === 0) return null;
+                              return paths.map((path, pIdx) => {
+                                const fileName = path.split('/').pop();
+                                const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path);
+                                return (
+                                  <a
+                                    key={pIdx}
+                                    href={`/api/documents/comment-attachment?path=${encodeURIComponent(path)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-red-600 hover:border-red-500 hover:bg-red-50 transition-all uppercase"
+                                  >
+                                    {isImg ? <Image size={10} /> : <Paperclip size={10} />}
+                                    <span className="max-w-[100px] truncate">{fileName}</span>
+                                  </a>
+                                );
+                              });
+                            } catch (e) { return null; }
+                          })()}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
