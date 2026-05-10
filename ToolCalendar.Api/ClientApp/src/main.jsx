@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AppShell } from './shell/AppShell.jsx';
 import { LoginPage } from './pages/Login.jsx';
+import PublicSchedule from './pages/PublicSchedule.jsx';
 import './styles/globals.css';
 
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -35,6 +36,13 @@ function Root() {
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
   };
+
+  // Hỗ trợ đường dẫn công khai (không cần đăng nhập)
+  const isPublicRoute = window.location.pathname === "/public-schedule";
+
+  if (isPublicRoute) {
+    return <PublicSchedule />;
+  }
 
   if (!isAuthenticated) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;

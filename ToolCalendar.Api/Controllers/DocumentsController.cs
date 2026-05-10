@@ -572,8 +572,47 @@ namespace ToolCalendar.Api.Controllers
                 commentId = commentId,
                 reactions = updatedReactions
             });
-
             return Ok(new { status = result, reactions = updatedReactions });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("public-schedule")]
+        public async Task<IActionResult> GetPublicSchedule()
+        {
+            var allDocs = await _documentRepository.GetAllAsync();
+            var now = DateTime.Now.Date;
+
+            // Lấy văn bản từ hôm nay trở đi
+            var filtered = allDocs
+                .Where(d => d.ThoiHan.HasValue && d.ThoiHan.Value.Date >= now)
+                .OrderBy(d => d.ThoiHan)
+                .Take(50) // Giới hạn 50 mục gần nhất
+                .ToList();
+
+            // Nhóm theo ngày
+            var groups = filtered.GroupBy(d => d.ThoiHan.Value.Date)
+                .Select(g => new
+                {
+                    date = g.Key.ToString("dd/MM/yyyy"),
+                    dayLabel = GetDayLabel(g.Key),
+                    items = g.Select(d => new
+                    {
+                        time = "08:00", // Mặc định hoặc lấy từ một trường khác nếu có
+                        docNumber = d.SoVanBan,
+                        content = d.TrichYeu
+                    }).ToList()
+                })
+                .OrderBy(x => DateTime.ParseExact(x.date, "dd/MM/yyyy", null))
+                .ToList();
+
+            return Ok(groups);
+        }
+
+        private string GetDayLabel(DateTime date)
+        {
+            var days = new[] { "Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy" };
+            if (date.Date == DateTime.Now.Date) return "Hôm nay (" + days[(int)date.DayOfWeek] + ")";
+            return days[(int)date.DayOfWeek];
         }
     }
 
