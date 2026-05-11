@@ -6,34 +6,88 @@ import PublicSchedule from './pages/PublicSchedule.jsx';
 import './styles/globals.css';
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ShieldAlert, LogOut } from 'lucide-react';
 
+// ─── Modal cảnh báo bị đá phiên (toàn hệ thống) ───────────────────────────
+function KickedModal({ isOpen, onConfirm }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+        {/* Header vàng cảnh báo */}
+        <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-8 text-center">
+          <div className="size-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
+            <ShieldAlert className="text-white" size={40} />
+          </div>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+            Phiên bị chấm dứt
+          </h2>
+          <p className="text-white/80 text-sm font-semibold mt-3 leading-relaxed">
+            Tài khoản của bạn vừa được đăng nhập từ một <strong>thiết bị khác</strong>.
+            <br />
+            Phiên làm việc hiện tại đã bị kết thúc để bảo vệ tài khoản.
+          </p>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-3">
+          <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl">
+            <div className="text-orange-500 mt-0.5">⚠️</div>
+            <p className="text-xs text-orange-700 font-semibold leading-relaxed">
+              Nếu không phải bạn đăng nhập, hãy đổi mật khẩu ngay để bảo vệ tài khoản.
+            </p>
+          </div>
+          <button
+            onClick={onConfirm}
+            className="w-full py-4 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-100"
+          >
+            <LogOut size={16} /> Đăng nhập lại
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Root Component ─────────────────────────────────────────────────────────
 function Root() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('auth_token'));
+  const [isKicked, setIsKicked] = useState(false);
 
   useEffect(() => {
     document.body.classList.add('app-booting');
 
-    // Listen for storage changes (e.g. logout from another tab)
+    // Lắng nghe thay đổi localStorage (đăng xuất từ tab khác)
     const handleStorageChange = () => {
       setIsAuthenticated(!!localStorage.getItem('auth_token'));
     };
 
-    // Listen for unauthorized event from anywhere in the app
+    // Lắng nghe sự kiện unauthorized từ bất kỳ đâu
     const handleUnauthorized = () => {
       localStorage.removeItem('auth_token');
       setIsAuthenticated(false);
     };
 
+    // 🔴 Lắng nghe sự kiện bị đá (từ signalr.js)
+    const handleKicked = (e) => {
+      console.warn("[Root] Nhận sự kiện auth:kicked:", e.detail);
+      setIsKicked(true);
+      setIsAuthenticated(false);
+    };
+
     window.addEventListener('storage', handleStorageChange);
     document.addEventListener('auth:unauthorized', handleUnauthorized);
+    document.addEventListener('auth:kicked', handleKicked);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       document.removeEventListener('auth:unauthorized', handleUnauthorized);
+      document.removeEventListener('auth:kicked', handleKicked);
     };
   }, []);
 
   const handleLoginSuccess = () => {
+    setIsKicked(false);
     setIsAuthenticated(true);
   };
 
@@ -44,14 +98,21 @@ function Root() {
     return <PublicSchedule />;
   }
 
-  if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-  }
-
   return (
-    <TooltipProvider>
-      <AppShell />
-    </TooltipProvider>
+    <>
+      {/* Modal bị đá - hiển thị trên tất cả màn hình */}
+      <KickedModal
+        isOpen={isKicked}
+        onConfirm={() => setIsKicked(false)}
+      />
+
+      <TooltipProvider>
+        {!isAuthenticated
+          ? <LoginPage onLoginSuccess={handleLoginSuccess} />
+          : <AppShell />
+        }
+      </TooltipProvider>
+    </>
   );
 }
 

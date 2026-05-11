@@ -257,7 +257,7 @@ export function DocDetail({ docId, onBack }) {
       if (response.ok) {
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
-        
+
         // Nếu là ảnh thì hiện modal trong app, nếu là PDF thì vẫn mở tab mới
         const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path);
         if (isImg) {
@@ -912,6 +912,16 @@ export function DocDetail({ docId, onBack }) {
                   </label>
                   <span className="text-[10px] font-bold text-slate-400">{evidenceFiles.length} file đã chọn</span>
                 </div>
+                {evidenceFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {evidenceFiles.map((file, i) => (
+                      <div key={i} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-600 shadow-sm animate-in zoom-in-95 duration-300">
+                        <Paperclip size={10} className="text-slate-400" />
+                        <span className="max-w-[120px] truncate">{file.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/50">
@@ -930,19 +940,19 @@ export function DocDetail({ docId, onBack }) {
 
       {/* --- Image Lightbox Modal --- */}
       {previewImage && (
-        <div 
+        <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-300 p-4"
           onClick={() => setPreviewImage(null)}
         >
-          <button 
+          <button
             onClick={() => setPreviewImage(null)}
             className="absolute top-6 right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all border border-white/20"
           >
             <X size={24} />
           </button>
-          <img 
-            src={previewImage} 
-            alt="Preview" 
+          <img
+            src={previewImage}
+            alt="Preview"
             className="max-w-full max-h-full rounded-2xl shadow-2xl animate-in zoom-in-95 duration-500 border-4 border-white/10"
             onClick={(e) => e.stopPropagation()}
           />

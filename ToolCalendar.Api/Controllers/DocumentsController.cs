@@ -325,7 +325,7 @@ namespace ToolCalendar.Api.Controllers
             return Ok(tasks);
         }
 
-        [AllowAnonymous]
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("{id}/file")]
         public async Task<IActionResult> GetFile(int id)
         {
@@ -350,7 +350,7 @@ namespace ToolCalendar.Api.Controllers
             return File(fileBytes, mimeType);
         }
 
-        [AllowAnonymous]
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("{id}/evidence/{index}")]
         public async Task<IActionResult> GetEvidenceFile(int id, int index)
         {

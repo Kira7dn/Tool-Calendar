@@ -12,7 +12,8 @@ import {
   Loader2,
   CheckCircle2,
   Filter,
-  X
+  X,
+  Paperclip
 } from 'lucide-react';
 import { getStatusConfig } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -275,7 +276,7 @@ export function MyTasks({ onTabChange }) {
                           >
                             Chi tiết
                           </Button>
-                          
+
                           {/* Nút Tiếp nhận (Màu xanh) - Hiện khi chưa xử lý */}
                           {(!task.status || task.status === 'Chưa xử lý') ? (
                             <Button
@@ -404,7 +405,10 @@ export function MyTasks({ onTabChange }) {
                 {selectedFiles.length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-2 justify-center">
                     {selectedFiles.map((file, i) => (
-                      <Badge key={i} variant="default" className="bg-card/50 text-[10px]">{file.name}</Badge>
+                      <Badge key={i} variant="secondary" className="bg-slate-100 text-slate-700 border border-slate-200 text-[10px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                        <Paperclip size={10} className="text-slate-400" />
+                        {file.name}
+                      </Badge>
                     ))}
                   </div>
                 )}

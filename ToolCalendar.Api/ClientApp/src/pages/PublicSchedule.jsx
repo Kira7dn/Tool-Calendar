@@ -1,9 +1,105 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { X, Lock, User, Key, Loader2, CheckCircle2, Eye, EyeOff, ShieldAlert, LogOut } from "lucide-react";
+import { toast } from "sonner";
+import * as signalR from "@microsoft/signalr";
 
 const DAYS_OF_WEEK = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
 
-function ScheduleBlock({ day }) {
+function LoginModal({ isOpen, onClose, onSuccess }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const { token, ...userInfo } = data; // Tách token ra, còn lại là thông tin user
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("user_info", JSON.stringify(userInfo));
+        toast.success("Đăng nhập thành công!");
+        onSuccess();
+      } else {
+        toast.error("Tên đăng nhập hoặc mật khẩu không chính xác.");
+      }
+    } catch (error) {
+      toast.error("Lỗi kết nối hệ thống.");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500">
+        <div className="bg-[#c8102e] p-8 text-center relative">
+          <button onClick={onClose} className="absolute top-6 right-6 text-white/50 hover:text-white"><X size={20} /></button>
+          <div className="size-16 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-white/20">
+            <Lock className="text-white" size={32} />
+          </div>
+          <h3 className="text-xl font-black text-white uppercase tracking-tight">Yêu cầu xác thực</h3>
+          <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-1">Vui lòng đăng nhập để xem nội dung văn bản</p>
+        </div>
+
+        <form onSubmit={handleLogin} className="p-8 space-y-6">
+          <div className="space-y-4">
+            <div className="relative group">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#c8102e] transition-colors" size={18} />
+              <input
+                type="text"
+                placeholder="Tên đăng nhập"
+                className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-sm font-bold outline-none focus:border-[#c8102e] transition-all"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div className="relative group">
+              <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#c8102e] transition-colors" size={18} />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Mật khẩu"
+                className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-sm font-bold outline-none focus:border-[#c8102e] transition-all"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#c8102e] transition-colors"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoggingIn}
+            className="w-full py-4 bg-[#c8102e] text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#a00d25] transition-all shadow-xl shadow-red-100 flex items-center justify-center gap-2"
+          >
+            {isLoggingIn ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+            Đăng nhập & Tiếp tục
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ScheduleBlock({ day, onViewDoc }) {
   return (
     <div className="mb-6">
       <p className="text-[#0a3d8f] font-black text-sm mb-2 uppercase flex items-center gap-2">
@@ -12,9 +108,9 @@ function ScheduleBlock({ day }) {
       </p>
       <div className="space-y-3">
         {day.items.map((item, idx) => (
-          <div 
-            key={idx} 
-            onClick={() => window.open(`/api/documents/${item.id}/file`, '_blank')}
+          <div
+            key={idx}
+            onClick={() => onViewDoc(item.id)}
             className="bg-white/60 p-3 rounded-lg border-l-4 border-gray-300 hover:border-[#cc0000] hover:bg-white cursor-pointer transition-all group shadow-sm"
           >
             <div className="flex justify-between items-start mb-1">
@@ -64,7 +160,17 @@ function NavBar() {
   );
 }
 
-function Header() {
+function Header({ user, onLogout, onOpenLogin }) {
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Kiểm tra thêm trực tiếp từ localStorage để dự phòng trường hợp state bị trễ
+  const effectiveUser = user || (() => {
+    try {
+      const saved = localStorage.getItem("user_info");
+      return (saved && saved !== "undefined") ? JSON.parse(saved) : null;
+    } catch { return null; }
+  })();
+
   return (
     <header className="bg-white border-b-4 border-[#c8102e]">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -83,20 +189,154 @@ function Header() {
             </p>
           </div>
         </div>
-        <div className="text-right hidden md:block text-gray-500 text-[10px] font-bold uppercase tracking-widest">
-          <p>Hệ thống giám sát thực thi công việc</p>
-          <p>Dữ liệu thời gian thực</p>
+
+        <div className="flex items-center gap-6">
+          <div className="text-right hidden md:block text-gray-500 text-[10px] font-bold uppercase tracking-widest">
+            <p>Hệ thống giám sát thực thi công việc</p>
+            <p>Dữ liệu thời gian thực</p>
+          </div>
+
+          {effectiveUser ? (
+            <div className="flex items-center gap-3 pl-6 border-l border-gray-100 animate-in fade-in duration-500">
+              <div className="text-right hidden sm:block">
+                <p className="text-[10px] font-black text-slate-900 uppercase tracking-tighter leading-none">
+                  {effectiveUser.fullName || effectiveUser.username || effectiveUser.name || "Người dùng"}
+                </p>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">{effectiveUser.role || 'Thành viên'}</p>
+              </div>
+              <div className="relative">
+                <div
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="size-10 rounded-2xl bg-gradient-to-br from-[#c8102e] to-[#a00d25] flex items-center justify-center text-white font-black shadow-lg shadow-red-100 border-2 border-white cursor-pointer hover:scale-105 active:scale-95 transition-all"
+                >
+                  {(effectiveUser.fullName || effectiveUser.username || effectiveUser.name || "U").charAt(0).toUpperCase()}
+                </div>
+                {/* Logout Dropdown */}
+                {showDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)}></div>
+                    <div className="absolute right-0 top-full pt-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <button
+                        onClick={() => {
+                          onLogout();
+                          setShowDropdown(false);
+                        }}
+                        className="bg-white border border-slate-100 shadow-2xl rounded-xl py-3 px-5 text-[10px] font-black text-red-600 uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center gap-2 whitespace-nowrap"
+                      >
+                        <X size={14} strokeWidth={3} /> Đăng xuất hệ thống
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenLogin}
+              className="size-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-all cursor-pointer group animate-in fade-in duration-500"
+              title="Click để đăng nhập"
+            >
+              <User size={20} className="group-hover:scale-110 transition-transform" />
+            </button>
+          )}
         </div>
       </div>
     </header>
   );
 }
 
+// Modal cảnh báo bị đá khỏi phiên
+function KickedModal({ isOpen, onConfirm }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-8 text-center">
+          <div className="size-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/30">
+            <ShieldAlert className="text-white" size={32} />
+          </div>
+          <h2 className="text-xl font-black text-white uppercase tracking-tight">Phiên bị chấm dứt</h2>
+          <p className="text-white/80 text-xs font-semibold mt-2 leading-relaxed">
+            Tài khoản của bạn vừa đăng nhập từ một thiết bị khác.<br />
+            Phiên làm việc hiện tại đã bị kết thúc.
+          </p>
+        </div>
+        <div className="p-6">
+          <button
+            onClick={onConfirm}
+            className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2"
+          >
+            <LogOut size={16} /> Tôi đã hiểu, đăng nhập lại
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PublicSchedule() {
   const [scheduleData, setScheduleData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [pendingDocId, setPendingDocId] = useState(null);
+  const [user, setUser] = useState(null);
+  const [isKicked, setIsKicked] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const signalRRef = useRef(null);
+
+  const refreshUser = () => {
+    try {
+      const savedUser = localStorage.getItem("user_info");
+      if (savedUser && savedUser !== "undefined" && savedUser !== "null") {
+        setUser(JSON.parse(savedUser));
+      } else {
+        setUser(null);
+      }
+    } catch (e) {
+      console.error("Lỗi đồng bộ user:", e);
+      setUser(null);
+    }
+  };
+
+  const connectSignalR = (token) => {
+    // Hủy kết nối cũ nếu có
+    if (signalRRef.current) {
+      signalRRef.current.stop();
+    }
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl("/notificationHub", {
+        accessTokenFactory: () => token
+      })
+      .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Warning)
+      .build();
+
+    // Lắng nghe sự kiện bị đá (Backend tự join group qua JWT trong OnConnectedAsync)
+    connection.on("Kicked", (message) => {
+      console.warn("[SignalR] Bị đá khỏi phiên:", message);
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_info");
+      setUser(null);
+      setIsKicked(true);
+    });
+
+    connection.start()
+      .then(() => console.log("[SignalR] Đã kết nối vào /notificationHub"))
+      .catch(err => console.warn("[SignalR] Lỗi kết nối:", err));
+
+    signalRRef.current = connection;
+  };
 
   useEffect(() => {
+    refreshUser();
+
+    // Nếu đã có token khi load trang → kết nối SignalR luôn
+    const token = localStorage.getItem("auth_token");
+    if (token && token !== "undefined") {
+      connectSignalR(token);
+    }
+
     fetch("/api/documents/public-schedule")
       .then(res => res.json())
       .then(data => {
@@ -107,7 +347,69 @@ export default function PublicSchedule() {
         console.error("Lỗi tải dữ liệu:", err);
         setLoading(false);
       });
+
+    // Cleanup khi unmount
+    return () => {
+      if (signalRRef.current) signalRRef.current.stop();
+    };
   }, []);
+
+  const handleViewDoc = async (docId) => {
+    const token = localStorage.getItem("auth_token");
+    if (!token || token === "undefined" || token === "null") {
+      setPendingDocId(docId);
+      setIsLoginModalOpen(true);
+      return;
+    }
+
+    // Sử dụng fetch để gửi kèm Token bảo mật
+    try {
+      const response = await fetch(`/api/documents/${docId}/file`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const fileUrl = URL.createObjectURL(blob);
+        window.open(fileUrl, "_blank");
+      } else if (response.status === 401) {
+        toast.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.");
+        setIsLoginModalOpen(true);
+      } else {
+        toast.error("Không thể tải file văn bản.");
+      }
+    } catch (error) {
+      console.error("Lỗi tải file:", error);
+      toast.error("Lỗi kết nối máy chủ.");
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    setIsLoginModalOpen(false);
+    refreshUser();
+
+    // Kết nối SignalR sau khi đăng nhập thành công
+    const token = localStorage.getItem("auth_token");
+    if (token) connectSignalR(token);
+
+    if (pendingDocId) {
+      handleViewDoc(pendingDocId);
+      setPendingDocId(null);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    if (signalRRef.current) signalRRef.current.stop();
+    setTimeout(() => {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_info");
+      setUser(null);
+      setIsLoggingOut(false);
+    }, 1500);
+  };
 
   if (loading) {
     return (
@@ -126,7 +428,47 @@ export default function PublicSchedule() {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-[#f4f7f6] font-sans">
-        <Header />
+
+        {/* ── Logout Animation Overlay ───────────────────────── */}
+        {isLoggingOut && (
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 animate-in fade-in duration-300">
+            <div className="relative mb-8">
+              <div className="size-24 rounded-3xl bg-white/10 border-2 border-white/20 flex items-center justify-center">
+                <svg viewBox="0 0 100 100" className="w-12 h-12">
+                  <polygon points="50,10 61,35 88,35 66,53 74,78 50,62 26,78 34,53 12,35 39,35" fill="#f5c518" />
+                </svg>
+              </div>
+              <div className="absolute inset-0 rounded-3xl border-2 border-transparent border-t-red-400 animate-spin" />
+            </div>
+            <p className="text-white font-black text-xl uppercase tracking-[0.3em] mb-2">Đang đăng xuất</p>
+            <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Hệ thống điều phối công văn</p>
+            <div className="flex gap-2 mt-8">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="size-2 rounded-full bg-red-400"
+                  style={{ animation: `ps-bounce 1s ease-in-out ${i * 0.15}s infinite` }}
+                />
+              ))}
+            </div>
+            <style>{`
+              @keyframes ps-bounce {
+                0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+                40% { transform: scale(1); opacity: 1; }
+              }
+            `}</style>
+          </div>
+        )}
+
+        <KickedModal
+          isOpen={isKicked}
+          onConfirm={() => {
+            setIsKicked(false);
+            setIsLoginModalOpen(true); // Mở lại form đăng nhập
+          }}
+        />
+
+        <Header user={user} onLogout={handleLogout} onOpenLogin={() => setIsLoginModalOpen(true)} />
         <NavBar />
 
         <main className="max-w-6xl mx-auto px-4 py-8">
@@ -154,9 +496,9 @@ export default function PublicSchedule() {
                   {today && today.items.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {today.items.map((item, idx) => (
-                        <div 
-                          key={idx} 
-                          onClick={() => window.open(`/api/documents/${item.id}/file`, '_blank')}
+                        <div
+                          key={idx}
+                          onClick={() => handleViewDoc(item.id)}
                           className="bg-white border-2 border-gray-100 p-5 rounded-xl hover:border-[#0a3d8f] hover:shadow-xl cursor-pointer transition-all duration-300 relative group flex flex-col justify-between h-full"
                         >
                           <div>
@@ -204,7 +546,7 @@ export default function PublicSchedule() {
                   {upcomingDays.length > 0 ? (
                     <div className="space-y-4">
                       {upcomingDays.map((day, idx) => (
-                        <ScheduleBlock key={idx} day={day} />
+                        <ScheduleBlock key={idx} day={day} onViewDoc={handleViewDoc} />
                       ))}
                     </div>
                   ) : (
@@ -217,6 +559,12 @@ export default function PublicSchedule() {
             </div>
           </div>
         </main>
+
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onSuccess={handleLoginSuccess}
+        />
 
         <footer className="mt-12 bg-gray-800 text-gray-400 py-8 px-4 text-center text-xs">
           <p className="mb-2">© 2026 Bản quyền thuộc về UBND phường Cẩm Phả</p>

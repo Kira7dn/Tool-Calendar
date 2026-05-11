@@ -29,6 +29,18 @@ class SignalRService {
       document.dispatchEvent(new CustomEvent('realtime:new_comment', { detail: data }));
     });
 
+    // Lắng nghe sự kiện bị đá khỏi phiên (ai đó login cùng tài khoản)
+    this.connection.on("Kicked", (message) => {
+      console.warn("[SignalR] Bị đá khỏi phiên:", message);
+      // Xóa toàn bộ thông tin phiên
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_info");
+      localStorage.removeItem("user_name");
+      localStorage.removeItem("user_role");
+      // Phát sự kiện toàn cục để UI xử lý
+      document.dispatchEvent(new CustomEvent("auth:kicked", { detail: { message } }));
+    });
+
     try {
       await this.connection.start();
       console.log("[SignalR] Connected successfully");

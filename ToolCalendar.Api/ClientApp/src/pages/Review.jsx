@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Save, 
-  Trash2, 
-  Maximize2, 
-  X, 
-  FileText, 
-  CheckCircle2, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Save,
+  Trash2,
+  Maximize2,
+  X,
+  FileText,
+  CheckCircle2,
   AlertCircle,
   Loader2,
   Calendar,
@@ -34,7 +34,7 @@ export function Review({ onBack }) {
   const [isSaving, setIsSaving] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
-  
+
   const [formData, setFormData] = useState({
     soVanBan: '',
     coQuanChuQuan: '',
@@ -63,7 +63,7 @@ export function Review({ onBack }) {
         const userData = await userRes.json();
         setUsers(userData.filter(u => u.role === 'CanBo'));
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export function Review({ onBack }) {
         'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         'Content-Type': 'application/json'
       };
-      
+
       const response = await fetch(`/api/documents/${doc.id}`, {
         method: 'PUT',
         headers,
@@ -217,16 +217,16 @@ export function Review({ onBack }) {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             disabled={currentIndex === 0}
             onClick={() => setCurrentIndex(prev => prev - 1)}
             className="text-primary-foreground hover:bg-primary-foreground/10 rounded-xl px-4"
           >
             <ChevronLeft className="size-4 mr-2" /> Trước đó
           </Button>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             disabled={currentIndex === docs.length - 1}
             onClick={() => setCurrentIndex(prev => prev + 1)}
             className="text-primary-foreground hover:bg-primary-foreground/10 rounded-xl px-4"
@@ -234,7 +234,7 @@ export function Review({ onBack }) {
             Tiếp theo <ChevronRight className="size-4 ml-2" />
           </Button>
           <div className="h-8 w-px bg-border mx-2" />
-          <Button 
+          <Button
             className="bg-success hover:bg-success/90 text-success-foreground font-bold rounded-xl px-6 shadow-lg shadow-success/20"
             onClick={handleSave}
             disabled={isSaving}
@@ -251,16 +251,16 @@ export function Review({ onBack }) {
             <span className="text-foreground text-xs font-bold">{currentDoc.fileName}</span>
             <div className="h-3 w-px bg-border" />
             <a href={currentDoc.filePath} target="_blank" className="text-foreground hover:text-info">
-               <ExternalLink className="size-4" />
+              <ExternalLink className="size-4" />
             </a>
           </div>
-          
+
           <div className="flex-1">
-             <iframe 
-                src={`${currentDoc.filePath}#toolbar=0&navpanes=0`} 
-                className="w-full h-full border-none"
-                title="PDF Preview"
-             />
+            <iframe
+              src={`${currentDoc.filePath}#toolbar=0&navpanes=0`}
+              className="w-full h-full border-none"
+              title="PDF Preview"
+            />
           </div>
         </div>
 
@@ -275,64 +275,64 @@ export function Review({ onBack }) {
 
               <div className="space-y-6">
                 <FormField label="Số văn bản / Số hiệu" icon={FileText}>
-                  <Input 
-                    value={formData.soVanBan} 
-                    onChange={e => setFormData({...formData, soVanBan: e.target.value})}
-                    className="h-12 font-bold text-primary" 
+                  <Input
+                    value={formData.soVanBan}
+                    onChange={e => setFormData({ ...formData, soVanBan: e.target.value })}
+                    className="h-12 font-bold text-primary"
                   />
                 </FormField>
 
                 <FormField label="Ngày ban hành / Thời hạn" icon={Calendar}>
-                  <Input 
+                  <Input
                     type="date"
-                    value={formData.thoiHan} 
-                    onChange={e => setFormData({...formData, thoiHan: e.target.value})}
-                    className="h-12 font-medium" 
+                    value={formData.thoiHan}
+                    onChange={e => setFormData({ ...formData, thoiHan: e.target.value })}
+                    className="h-12 font-medium"
                   />
                 </FormField>
 
                 <FormField label="Cơ quan chủ quản / Ban hành" icon={Building2}>
-                  <Input 
-                    value={formData.coQuanChuQuan} 
-                    onChange={e => setFormData({...formData, coQuanChuQuan: e.target.value})}
-                    className="h-12 font-medium" 
+                  <Input
+                    value={formData.coQuanChuQuan}
+                    onChange={e => setFormData({ ...formData, coQuanChuQuan: e.target.value })}
+                    className="h-12 font-medium"
                   />
                 </FormField>
 
                 <FormField label="Trích yếu nội dung" icon={Layout}>
-                  <Textarea 
-                    value={formData.trichYeu} 
-                    onChange={e => setFormData({...formData, trichYeu: e.target.value})}
-                    className="min-h-[150px] font-medium leading-relaxed" 
+                  <Textarea
+                    value={formData.trichYeu}
+                    onChange={e => setFormData({ ...formData, trichYeu: e.target.value })}
+                    className="min-h-[150px] font-medium leading-relaxed"
                   />
                 </FormField>
 
                 <div className="pt-4 border-t border-border">
-                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4 block">Phân công xử lý</Label>
-                   <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-bold text-foreground">Phòng ban</Label>
-                        <select 
-                          value={formData.departmentId}
-                          onChange={e => setFormData({...formData, departmentId: e.target.value})}
-                          className="w-full h-10 rounded-xl border border-border bg-muted/50 px-3 text-sm font-medium"
-                        >
-                          <option value="">Chọn đơn vị...</option>
-                          {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-bold text-foreground">Cán bộ</Label>
-                        <select 
-                          value={formData.assignedTo}
-                          onChange={e => setFormData({...formData, assignedTo: e.target.value})}
-                          className="w-full h-10 px-3 text-sm font-medium"
-                        >
-                          <option value="">Chọn cán bộ...</option>
-                          {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
-                        </select>
-                      </div>
-                   </div>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4 block">Phân công xử lý</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-foreground">Phòng ban</Label>
+                      <select
+                        value={formData.departmentId}
+                        onChange={e => setFormData({ ...formData, departmentId: e.target.value })}
+                        className="w-full h-10 rounded-xl border border-border bg-muted/50 px-3 text-sm font-medium"
+                      >
+                        <option value="">Chọn đơn vị...</option>
+                        {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-foreground">Cán bộ</Label>
+                      <select
+                        value={formData.assignedTo}
+                        onChange={e => setFormData({ ...formData, assignedTo: e.target.value })}
+                        className="w-full h-10 px-3 text-sm font-medium"
+                      >
+                        <option value="">Chọn cán bộ...</option>
+                        {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                      </select>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -346,7 +346,7 @@ export function Review({ onBack }) {
         </div>
       </main>
 
-      <ConfirmationModal 
+      <ConfirmationModal
         open={isDeleteModalOpen}
         onOpenChange={setIsDeleteModalOpen}
         title="Xác nhận xóa tài liệu?"

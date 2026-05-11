@@ -64,6 +64,7 @@ namespace ToolCalendar.Api.Controllers
             {
                 token = tokenString,
                 username = user.Username,
+                fullName = user.FullName ?? user.Username, // Trả về FullName để frontend hiển thị
                 role = user.Role,
                 userId = user.Id
             });

@@ -80,6 +80,7 @@ export function AppShell() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [notifications, setNotifications] = React.useState([]);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
   const fetchNotifications = async () => {
     try {
@@ -202,6 +203,13 @@ export function AppShell() {
     const handleUnauthorized = () => handleLogout();
     document.addEventListener('auth:unauthorized', handleUnauthorized);
 
+    // 🔴 Listen for kicked event (ai đó login cùng tài khoản)
+    const handleKicked = () => {
+      signalRService.stop(); // Ngắt kết nối SignalR ngay lập tức
+      // main.jsx sẽ xử lý UI - AppShell chỉ cần cleanup
+    };
+    document.addEventListener('auth:kicked', handleKicked);
+
     // Global 401 Interceptor
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
@@ -230,6 +238,7 @@ export function AppShell() {
     return () => {
       window.fetch = originalFetch;
       document.removeEventListener('auth:unauthorized', handleUnauthorized);
+      document.removeEventListener('auth:kicked', handleKicked);
       document.removeEventListener('realtime:notifications_updated', handleNotifUpdate);
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', handleSWMessage);
@@ -239,8 +248,13 @@ export function AppShell() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = '/';
+    setIsLoggingOut(true);
+    signalRService.stop();
+    // Chờ animation chạy xong mới redirect
+    setTimeout(() => {
+      localStorage.clear();
+      window.location.href = '/';
+    }, 1500);
   };
 
   const handleRequestPermission = async () => {
@@ -322,6 +336,43 @@ export function AppShell() {
 
   return (
     <>
+      {/* ── Logout Animation Overlay ─────────────────────────── */}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 animate-in fade-in duration-300">
+          {/* Logo ring */}
+          <div className="relative mb-8">
+            <div className="size-24 rounded-3xl bg-white/10 border-2 border-white/20 flex items-center justify-center backdrop-blur-sm">
+              <svg viewBox="0 0 100 100" className="w-12 h-12">
+                <polygon points="50,10 61,35 88,35 66,53 74,78 50,62 26,78 34,53 12,35 39,35" fill="#f5c518" />
+              </svg>
+            </div>
+            {/* Spinning ring */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-transparent border-t-red-400 animate-spin" />
+          </div>
+
+          {/* Text */}
+          <p className="text-white font-black text-xl uppercase tracking-[0.3em] mb-2">Đang đăng xuất</p>
+          <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Hệ thống điều phối công văn</p>
+
+          {/* Dots loading */}
+          <div className="flex gap-2 mt-8">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="size-2 rounded-full bg-red-400"
+                style={{ animation: `bounce 1s ease-in-out ${i * 0.15}s infinite` }}
+              />
+            ))}
+          </div>
+          <style>{`
+            @keyframes bounce {
+              0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+              40% { transform: scale(1); opacity: 1; }
+            }
+          `}</style>
+        </div>
+      )}
+
       <Toaster position="top-right" expand={true} richColors closeButton />
       <div className="bg-blobs fixed inset-0 pointer-events-none -z-10 overflow-hidden">
         <div className="blob blob-1" />
