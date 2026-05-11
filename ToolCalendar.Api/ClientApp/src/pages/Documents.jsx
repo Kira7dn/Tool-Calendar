@@ -46,7 +46,9 @@ import {
 export function Documents({ onTabChange, filters }) {
   const [documents, setDocuments] = useState([]);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState(filters?.status || '');
@@ -69,14 +71,14 @@ export function Documents({ onTabChange, filters }) {
     const handleUpdate = () => fetchDocuments();
     document.addEventListener('realtime:document_updated', handleUpdate);
     return () => document.removeEventListener('realtime:document_updated', handleUpdate);
-  }, [page, status, sort]);
+  }, [page, pageSize, status, sort]);
 
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, doc: null });
 
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
-      const url = `/api/documents?page=${page}&size=5&search=${encodeURIComponent(search)}&status=${status}&sort=${sort}`;
+      const url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(search)}&status=${status}&sort=${sort}`;
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
@@ -86,6 +88,7 @@ export function Documents({ onTabChange, filters }) {
         const data = await response.json();
         setDocuments(data.data || []);
         setTotalPages(data.totalPages || 1);
+        setTotalCount(data.totalCount || 0);
       }
     } catch (error) {
       console.error('Failed to fetch documents:', error);
@@ -242,7 +245,9 @@ export function Documents({ onTabChange, filters }) {
                 ) : documents.length > 0 ? (
                   documents.map((doc, idx) => (
                     <TableRow key={doc.id} className="group transition-colors h-[48px]">
-                      <TableCell className="px-4 py-2.5 text-muted-foreground font-medium text-[11px] w-12">{(page - 1) * 5 + idx + 1}</TableCell>
+                      <TableCell className="px-4 py-2.5 text-muted-foreground font-medium text-[11px] w-12 text-center">
+                        {(page - 1) * pageSize + idx + 1}
+                      </TableCell>
                       <TableCell
                         className="px-4 py-2.5 font-bold text-secondary cursor-pointer hover:underline w-32 truncate"
                         onClick={() => handleAction('view', doc)}
@@ -307,16 +312,38 @@ export function Documents({ onTabChange, filters }) {
           </div>
 
           <div className="p-4 border-t border-border flex items-center justify-between bg-card/50">
-            <p className="text-xs text-muted-foreground font-medium">
-              Trang <span className="text-foreground">{page}</span> / <span className="text-foreground">{totalPages || 1}</span>
-            </p>
+            <div className="flex items-center gap-6">
+              <p className="text-xs text-muted-foreground font-medium">
+                Trang <span className="text-foreground">{page}</span> / <span className="text-foreground">{totalPages || 1}</span>
+                <span className="mx-2 text-muted-foreground/30">|</span>
+                Tổng <span className="text-foreground font-bold">{totalCount}</span> văn bản
+              </p>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Hiển thị:</span>
+                <select
+                  className="h-7 px-2 text-[11px] font-bold bg-background border rounded-md outline-none focus:ring-1 ring-primary/30"
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                >
+                  <option value={10}>10 dòng</option>
+                  <option value={15}>15 dòng</option>
+                  <option value={20}>20 dòng</option>
+                  <option value={25}>25 dòng</option>
+                </select>
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
-                className="h-8 text-xs font-semibold"
+                className="h-8 text-xs font-semibold px-4"
               >
                 <ChevronLeft className="size-4 mr-1" /> Trước
               </Button>
@@ -325,7 +352,7 @@ export function Documents({ onTabChange, filters }) {
                 size="sm"
                 disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
-                className="h-8 text-xs font-semibold"
+                className="h-8 text-xs font-semibold px-4"
               >
                 Sau <ChevronRight className="size-4 ml-1" />
               </Button>
