@@ -834,7 +834,11 @@ export function DocDetail({ docId, onBack }) {
                           <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Đơn vị chủ trì</label>
                           <select
                             value={editForm?.departmentId || ''}
-                            onChange={(e) => setEditForm({ ...editForm, departmentId: parseInt(e.target.value) })}
+                            onChange={(e) => setEditForm({
+                              ...editForm,
+                              departmentId: e.target.value ? parseInt(e.target.value) : null,
+                              assignedTo: null // Reset cán bộ khi đổi đơn vị
+                            })}
                             className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all appearance-none cursor-pointer"
                           >
                             <option value="">Chọn đơn vị...</option>
@@ -842,15 +846,37 @@ export function DocDetail({ docId, onBack }) {
                           </select>
                         </div>
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Cán bộ xử lý</label>
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">
+                            Cán bộ xử lý
+                            {editForm?.departmentId && (
+                              <span className="ml-2 text-red-500 normal-case tracking-normal font-bold">
+                                — {departments.find(d => d.id === editForm.departmentId)?.name}
+                              </span>
+                            )}
+                          </label>
                           <select
                             value={editForm?.assignedTo || ''}
-                            onChange={(e) => setEditForm({ ...editForm, assignedTo: parseInt(e.target.value) })}
+                            onChange={(e) => setEditForm({ ...editForm, assignedTo: e.target.value ? parseInt(e.target.value) : null })}
                             className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all appearance-none cursor-pointer"
                           >
                             <option value="">Chọn cán bộ...</option>
-                            {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                            {(editForm?.departmentId
+                              ? users.filter(u =>
+                                u.role === 'Admin' ||
+                                u.departmentId === editForm.departmentId
+                              )
+                              : users
+                            ).map(u => (
+                              <option key={u.id} value={u.id}>
+                                {u.fullName}{u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                              </option>
+                            ))}
                           </select>
+                          {editForm?.departmentId && (
+                            <p className="text-[9px] font-bold text-slate-400 ml-1 mt-0.5">
+                              * Hiển thị cán bộ thuộc đơn vị này và Quản trị viên hệ thống
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
