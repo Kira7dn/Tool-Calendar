@@ -64,6 +64,22 @@ export function Users() {
     role: 'CanBo',
     departmentId: ''
   });
+  const [errors, setErrors] = useState({
+    email: '',
+    phoneNumber: ''
+  });
+
+  const validateEmail = (email) => {
+    if (!email) return true; // Cho phép để trống nếu không bắt buộc
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone) return true; // Cho phép để trống
+    const re = /^0[0-9]{9}$/; // 10 số, bắt đầu bằng 0
+    return re.test(phone);
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -109,6 +125,7 @@ export function Users() {
         role: user.role || 'CanBo',
         departmentId: user.departmentId ? user.departmentId.toString() : "0"
       });
+      setErrors({ email: '', phoneNumber: '' });
     } else {
       setEditingUser(null);
       setFormData({
@@ -120,6 +137,7 @@ export function Users() {
         role: 'CanBo',
         departmentId: "0"
       });
+      setErrors({ email: '', phoneNumber: '' });
     }
     setIsModalOpen(true);
   };
@@ -127,6 +145,16 @@ export function Users() {
   const handleSubmit = async () => {
     if (!formData.fullName || (!editingUser && !formData.username) || (!editingUser && !formData.password)) {
       toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
+      return;
+    }
+
+    if (formData.email && !validateEmail(formData.email)) {
+      toast.error('Email không đúng định dạng');
+      return;
+    }
+
+    if (formData.phoneNumber && !validatePhone(formData.phoneNumber)) {
+      toast.error('Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0');
       return;
     }
 
@@ -413,115 +441,133 @@ export function Users() {
 
           <div className="p-5 md:p-8 flex-1 overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {!editingUser && (
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tên đăng nhập</Label>
+              {!editingUser && (
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tên đăng nhập</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                      placeholder="vd: canbo.dv"
+                      value={formData.username}
+                      onChange={e => setFormData({ ...formData, username: e.target.value })}
+                      className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className={cn("space-y-2", editingUser && "col-span-2")}>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  {editingUser ? 'Mật khẩu mới (Để trống nếu không đổi)' : 'Mật khẩu'}
+                </Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <Input
-                    placeholder="vd: canbo.dv"
-                    value={formData.username}
-                    onChange={e => setFormData({ ...formData, username: e.target.value })}
-                    className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
+                    type={showModalPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    className="pl-10 pr-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
                   />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 size-8 text-muted-foreground hover:bg-transparent"
+                    onClick={() => setShowModalPassword(!showModalPassword)}
+                  >
+                    {showModalPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </Button>
                 </div>
               </div>
-            )}
 
-            <div className={cn("space-y-2", editingUser && "col-span-2")}>
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                {editingUser ? 'Mật khẩu mới (Để trống nếu không đổi)' : 'Mật khẩu'}
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <div className="space-y-2 col-span-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Họ và tên</Label>
                 <Input
-                  type={showModalPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={e => setFormData({ ...formData, password: e.target.value })}
-                  className="pl-10 pr-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
+                  placeholder="Nguyễn Văn A"
+                  value={formData.fullName}
+                  onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                  className="rounded-xl bg-muted/50 border-none h-11 font-black text-foreground"
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 size-8 text-muted-foreground hover:bg-transparent"
-                  onClick={() => setShowModalPassword(!showModalPassword)}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input
+                    placeholder="email@vidu.com"
+                    value={formData.email}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setFormData({ ...formData, email: val });
+                      if (val && !validateEmail(val)) {
+                        setErrors(prev => ({ ...prev, email: 'Email không hợp lệ (vd: abc@gmail.com)' }));
+                      } else {
+                        setErrors(prev => ({ ...prev, email: '' }));
+                      }
+                    }}
+                    className={cn("pl-10 h-11 font-medium", errors.email ? "border-red-500 bg-red-50" : "bg-muted/50 border-none")}
+                  />
+                </div>
+                {errors.email && <p className="text-[10px] text-red-500 font-bold ml-1 mt-1">{errors.email}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Số điện thoại</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input
+                    placeholder="09xx..."
+                    value={formData.phoneNumber}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setFormData({ ...formData, phoneNumber: val });
+                      if (val && !validatePhone(val)) {
+                        setErrors(prev => ({ ...prev, phoneNumber: 'SĐT phải có 10 số, bắt đầu bằng 0' }));
+                      } else {
+                        setErrors(prev => ({ ...prev, phoneNumber: '' }));
+                      }
+                    }}
+                    className={cn("pl-10 rounded-xl h-11 font-medium", errors.phoneNumber ? "border-red-500 bg-red-50" : "bg-muted/50 border-none")}
+                  />
+                </div>
+                {errors.phoneNumber && <p className="text-[10px] text-red-500 font-bold ml-1 mt-1">{errors.phoneNumber}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phòng ban</Label>
+                <select
+                  value={formData.departmentId}
+                  onChange={e => setFormData({ ...formData, departmentId: e.target.value })}
+                  className="w-full px-4 h-11 rounded-xl bg-muted/50 border-none text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
                 >
-                  {showModalPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </Button>
+                  <option value="0">Chưa phân phòng</option>
+                  {departments.map(d => <option key={d.id} value={d.id.toString()}>{d.name}</option>)}
+                </select>
               </div>
-            </div>
 
-            <div className="space-y-2 col-span-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Họ và tên</Label>
-              <Input
-                placeholder="Nguyễn Văn A"
-                value={formData.fullName}
-                onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-                className="rounded-xl bg-muted/50 border-none h-11 font-black text-foreground"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="email@vidu.com"
-                  value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className="pl-10 bg-muted/50 h-11 font-medium"
-                />
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vai trò</Label>
+                <select
+                  value={formData.role}
+                  onChange={e => setFormData({ ...formData, role: e.target.value })}
+                  className="w-full px-4 h-11 rounded-xl bg-muted/50 border-none text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
+                >
+                  <option value="CanBo">Cán bộ xử lý</option>
+                  <option value="VanThu">Văn thư</option>
+                  <option value="LanhDao">Lãnh đạo</option>
+                  <option value="Admin">Quản trị viên</option>
+                </select>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Số điện thoại</Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="09xx..."
-                  value={formData.phoneNumber}
-                  onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-medium"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phòng ban</Label>
-              <select
-                value={formData.departmentId}
-                onChange={e => setFormData({ ...formData, departmentId: e.target.value })}
-                className="w-full px-4 h-11 rounded-xl bg-muted/50 border-none text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
-              >
-                <option value="0">Chưa phân phòng</option>
-                {departments.map(d => <option key={d.id} value={d.id.toString()}>{d.name}</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vai trò</Label>
-              <select
-                value={formData.role}
-                onChange={e => setFormData({ ...formData, role: e.target.value })}
-                className="w-full px-4 h-11 rounded-xl bg-muted/50 border-none text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
-              >
-                <option value="CanBo">Cán bộ xử lý</option>
-                <option value="VanThu">Văn thư</option>
-                <option value="LanhDao">Lãnh đạo</option>
-                <option value="Admin">Quản trị viên</option>
-              </select>
             </div>
           </div>
-        </div>
 
-        <DialogFooter className="p-4 md:p-6 bg-slate-50 flex items-center justify-end gap-3 border-t border-slate-100 shrink-0">
+          <DialogFooter className="p-4 md:p-6 bg-slate-50 flex items-center justify-end gap-3 border-t border-slate-100 shrink-0">
             <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-bold text-slate-500">Hủy bỏ</Button>
             <Button
-              className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-black px-8 md:px-10 shadow-lg shadow-red-100 transition-all active:scale-95"
+              className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-black px-8 md:px-10 shadow-lg shadow-red-100 transition-all active:scale-95 disabled:bg-slate-300 disabled:shadow-none"
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!errors.email || !!errors.phoneNumber}
             >
               {isSubmitting ? <Loader2 className="size-4 animate-spin mr-2" /> : <Check className="size-4 mr-2" />}
               {editingUser ? 'Lưu thay đổi' : 'Tạo tài khoản'}
