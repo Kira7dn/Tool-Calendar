@@ -20,10 +20,12 @@ import {
   Maximize2,
   CheckCircle2,
   Play,
-  Image
+  Image,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 
 // --- Helper Components ---
 
@@ -73,6 +75,7 @@ export function DocDetail({ docId, onBack }) {
   const [evidenceNote, setEvidenceNote] = useState('');
   const [evidenceFiles, setEvidenceFiles] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     if (docId) {
@@ -249,6 +252,33 @@ export function DocDetail({ docId, onBack }) {
     }
   };
 
+  const handleDeleteDoc = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const executeDelete = async () => {
+    try {
+      const response = await fetch(`/api/documents/${docId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+
+      if (response.ok) {
+        toast.success('Xóa văn bản thành công');
+        onBack();
+      } else {
+        toast.error('Có lỗi xảy ra khi xóa văn bản');
+      }
+    } catch (error) {
+      console.error('Failed to delete document:', error);
+      toast.error('Lỗi kết nối máy chủ');
+    } finally {
+      setIsDeleteModalOpen(false);
+    }
+  };
+
   const handleViewEvidence = async (path) => {
     try {
       const response = await fetch(`/api/documents/evidence-file?path=${encodeURIComponent(path)}`, {
@@ -375,6 +405,15 @@ export function DocDetail({ docId, onBack }) {
             >
               <Edit size={14} strokeWidth={2.5} />
               SỬA
+            </button>
+          )}
+          {localStorage.getItem('user_role') === 'Admin' && (
+            <button
+              onClick={handleDeleteDoc}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all shadow-sm"
+            >
+              <Trash2 size={14} strokeWidth={2.5} />
+              XÓA
             </button>
           )}
           <button
@@ -994,6 +1033,16 @@ export function DocDetail({ docId, onBack }) {
           />
         </div>
       )}
+
+      <ConfirmationModal
+        open={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        title="Xác nhận xóa văn bản?"
+        description="Bạn có chắc chắn muốn xóa văn bản này không? Thao tác này sẽ xóa vĩnh viễn dữ liệu và các tệp đính kèm liên quan."
+        confirmLabel="XÓA NGAY"
+        onConfirm={executeDelete}
+        variant="destructive"
+      />
     </div>
   );
 }
