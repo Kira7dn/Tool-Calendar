@@ -309,7 +309,8 @@ export function DocDetail({ docId, onBack }) {
     { label: "Hoàn thành", done: doc.status === 'Đã hoàn thành' },
   ];
 
-  const pdfUrl = `/api/documents/${docId}/file#page=${pdfPage}&toolbar=0&navpanes=0`;
+  const token = localStorage.getItem('auth_token');
+  const pdfUrl = `/api/documents/${docId}/file?access_token=${token}#page=${pdfPage}&toolbar=0&navpanes=0`;
 
   return (
     <div className="h-full font-sans flex flex-col gap-4 overflow-hidden px-2 pb-2" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -324,7 +325,7 @@ export function DocDetail({ docId, onBack }) {
           </button>
           <div className="flex flex-col">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">{doc.soVanBan}</h1>
+              <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-none">{doc.soVanBan}</h1>
               <span className={cn(
                 "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
                 doc.soNgayConLai === 9999 ? "bg-green-50 text-green-700 border-green-200" :
@@ -377,8 +378,11 @@ export function DocDetail({ docId, onBack }) {
             </button>
           )}
           <button
-            onClick={() => window.open(`/api/documents/${docId}/file`, '_blank')}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-100"
+            onClick={() => {
+              const token = localStorage.getItem('auth_token');
+              window.open(`/api/documents/${docId}/file?access_token=${token}`, '_blank');
+            }}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-100"
           >
             <ExternalLink size={14} strokeWidth={2.5} />
             XEM PDF
@@ -393,7 +397,7 @@ export function DocDetail({ docId, onBack }) {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`relative px-5 py-3.5 text-[11px] font-black tracking-[0.1em] transition-all ${activeTab === tab.key
+              className={`relative px-4 py-3 text-[10px] font-black tracking-[0.1em] transition-all ${activeTab === tab.key
                 ? "text-red-600"
                 : "text-slate-400 hover:text-slate-600"
                 }`}
@@ -444,8 +448,8 @@ export function DocDetail({ docId, onBack }) {
               <div className="px-6 py-3 border-b border-slate-50 bg-slate-50/30 shrink-0">
                 <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">THÔNG TIN CHI TIẾT VĂN BẢN</h2>
               </div>
-              <div className="flex-1 overflow-auto p-8 lg:p-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8">
+              <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                   <InfoRow icon={FileText} label="Số văn bản" value={doc.soVanBan} />
                   <InfoRow icon={Calendar} label="Ngày ban hành" value={new Date(doc.ngayBanHanh).toLocaleDateString('vi-VN')} />
                   <InfoRow icon={Building2} label="Cơ quan ban hành" value={doc.coQuanBanHanh} />
@@ -472,7 +476,7 @@ export function DocDetail({ docId, onBack }) {
                       <h2 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">KẾT QUẢ XỬ LÝ & BẰNG CHỨNG</h2>
                     </div>
 
-                    <div className="bg-white border-2 border-green-100 rounded-3xl p-6 lg:p-8 shadow-xl shadow-green-50/50 relative overflow-hidden">
+                    <div className="bg-white border-2 border-green-100 rounded-2xl p-4 md:p-6 shadow-xl shadow-green-50/50 relative overflow-hidden">
                       {/* Badge hoàn thành */}
                       <div className="absolute top-0 right-0 px-4 py-1.5 bg-green-500 text-white text-[9px] font-black uppercase tracking-widest rounded-bl-2xl">
                         CONFIRMED
@@ -534,7 +538,10 @@ export function DocDetail({ docId, onBack }) {
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-400">
               <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
                 <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">FILE & OCR RESULT</h2>
-                <button className="text-[10px] font-black text-red-600 hover:underline uppercase tracking-widest" onClick={() => window.open(`/api/documents/${docId}/file`, '_blank')}>FULLSCREEN</button>
+                <button className="text-[10px] font-black text-red-600 hover:underline uppercase tracking-widest" onClick={() => {
+                  const token = localStorage.getItem('auth_token');
+                  window.open(`/api/documents/${docId}/file?access_token=${token}`, '_blank');
+                }}>FULLSCREEN</button>
               </div>
               <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                 <div className="flex-1 bg-slate-100/50 border-r border-slate-100 relative">
@@ -744,7 +751,7 @@ export function DocDetail({ docId, onBack }) {
                 <div className="flex-1 relative overflow-hidden">
                   <iframe
                     key={pdfPage}
-                    src={`/api/documents/${docId}/file#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                    src={`/api/documents/${docId}/file?access_token=${token}#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
                     className="w-full h-full border-none shadow-inner"
                     title="PDF Comparison"
                   />
@@ -780,7 +787,10 @@ export function DocDetail({ docId, onBack }) {
                   </div>
 
                   <button
-                    onClick={() => window.open(`/api/documents/${docId}/file`, '_blank')}
+                    onClick={() => {
+                      const token = localStorage.getItem('auth_token');
+                      window.open(`/api/documents/${docId}/file?access_token=${token}`, '_blank');
+                    }}
                     className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-red-600 transition-all"
                   >
                     <Maximize2 size={16} />

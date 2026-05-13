@@ -262,20 +262,31 @@ export function Users() {
             <Table className="table-fixed w-full">
               <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
                 <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="px-8 py-3.5 font-black text-[10px] uppercase tracking-widest text-foreground text-center w-16">STT</TableHead>
-                  <TableHead className="py-3.5 font-black text-[10px] uppercase tracking-widest text-foreground">Người dùng</TableHead>
-                  <TableHead className="py-3.5 font-black text-[10px] uppercase tracking-widest text-foreground w-48">Liên hệ</TableHead>
-                  <TableHead className="py-3.5 font-black text-[10px] uppercase tracking-widest text-foreground w-40">Phòng ban</TableHead>
-                  <TableHead className="py-3.5 font-black text-[10px] uppercase tracking-widest text-foreground w-32">Vai trò</TableHead>
-                  <TableHead className="px-8 py-3.5 font-black text-[10px] uppercase tracking-widest text-foreground text-right w-32">Thao tác</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground text-center w-12">STT</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground">Người dùng</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-44">Liên hệ</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-36">Phòng ban</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-28">Vai trò</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground text-right w-24">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="relative">
+                {isLoading && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/40 backdrop-blur-[1px] transition-all duration-300">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="relative">
+                        <Loader2 className="size-10 text-primary animate-spin" strokeWidth={2.5} />
+                        <div className="absolute inset-0 size-10 border-4 border-primary/10 rounded-full" />
+                      </div>
+                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">Đang tải người dùng...</span>
+                    </div>
+                  </div>
+                )}
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i} className="h-[64px]">
-                      <TableCell className="px-8 py-3 text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
-                      <TableCell className="py-3">
+                      <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-3">
                           <Skeleton className="size-10 rounded-full" />
                           <div className="space-y-2">
@@ -287,14 +298,14 @@ export function Users() {
                       <TableCell className="py-3"><Skeleton className="h-4 w-40" /></TableCell>
                       <TableCell className="py-3"><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell className="py-3"><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
-                      <TableCell className="px-8 py-3 text-right"><Skeleton className="h-8 w-24 rounded-xl ml-auto" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-8 w-24 rounded-xl ml-auto" /></TableCell>
                     </TableRow>
                   ))
                 ) : paginatedUsers.length > 0 ? (
                   paginatedUsers.map((user, index) => (
                     <TableRow key={user.id} className="group transition-colors h-[64px]">
-                      <TableCell className="px-8 py-3 text-center text-muted-foreground font-bold text-xs">{(currentPage - 1) * pageSize + index + 1}</TableCell>
-                      <TableCell className="py-3">
+                      <TableCell className="text-center text-muted-foreground font-bold text-xs">{(currentPage - 1) * pageSize + index + 1}</TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-4">
                           <div className="size-10 rounded-2xl bg-primary/5 flex items-center justify-center text-primary font-black group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                             {user.fullName?.charAt(0) || 'U'}
@@ -305,7 +316,7 @@ export function Users() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 truncate">
+                      <TableCell className="truncate">
                         <div className="flex flex-col gap-1 truncate">
                           <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground truncate">
                             <Mail className="size-3 text-muted-foreground/30 shrink-0" /> <span className="truncate">{user.email || '-'}</span>
@@ -315,13 +326,13 @@ export function Users() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 truncate">
+                      <TableCell className="truncate">
                         <Badge variant="default" className="bg-muted/50 text-muted-foreground font-bold text-[10px] truncate max-w-full">
                           {user.departmentName || 'Chưa phân phòng'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-3">{getRoleBadge(user.role)}</TableCell>
-                      <TableCell className="px-8 py-3 text-right">
+                      <TableCell>{getRoleBadge(user.role)}</TableCell>
+                      <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
@@ -386,10 +397,9 @@ export function Users() {
         </CardContent>
       </Card>
 
-      {/* User Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-xl p-0 border-none shadow-2xl glass-card">
-          <DialogHeader className="p-8 bg-red-600 text-white relative">
+        <DialogContent className="max-w-xl w-[95vw] p-0 border-none shadow-2xl glass-card flex flex-col max-h-[95vh] overflow-hidden">
+          <DialogHeader className="p-5 md:p-8 bg-red-600 text-white relative shrink-0">
             <DialogTitle className="text-xl font-extrabold flex items-center gap-3 text-white">
               <div className="p-2 rounded-xl bg-white/10 backdrop-blur-md">
                 {editingUser ? <Edit className="size-5 text-white" /> : <UserPlus className="size-5 text-white" />}
@@ -401,7 +411,8 @@ export function Users() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="p-8 grid grid-cols-2 gap-6">
+          <div className="p-5 md:p-8 flex-1 overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {!editingUser && (
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tên đăng nhập</Label>
@@ -503,11 +514,12 @@ export function Users() {
               </select>
             </div>
           </div>
+        </div>
 
-          <DialogFooter className="p-8 bg-muted/50 gap-3">
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-bold">Hủy bỏ</Button>
+        <DialogFooter className="p-4 md:p-6 bg-slate-50 flex items-center justify-end gap-3 border-t border-slate-100 shrink-0">
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-bold text-slate-500">Hủy bỏ</Button>
             <Button
-              className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-black px-10 shadow-lg shadow-red-100 transition-all"
+              className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-black px-8 md:px-10 shadow-lg shadow-red-100 transition-all active:scale-95"
               onClick={handleSubmit}
               disabled={isSubmitting}
             >

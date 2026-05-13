@@ -218,17 +218,28 @@ export function Documents({ onTabChange, filters }) {
             <Table className="table-fixed w-full">
               <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
                 <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="px-4 py-3.5 font-bold text-center w-12 text-foreground">STT</TableHead>
-                  <TableHead className="px-4 py-3.5 font-bold text-foreground w-32">Số văn bản</TableHead>
-                  <TableHead className="px-4 py-3.5 font-bold text-foreground w-32">Ngày ban hành</TableHead>
-                  <TableHead className="px-4 py-3.5 font-bold text-foreground">Trích yếu</TableHead>
-                  <TableHead className="px-4 py-3.5 font-bold text-foreground w-32">Tham mưu</TableHead>
-                  <TableHead className="px-4 py-3.5 font-bold text-foreground w-32">Thời hạn</TableHead>
-                  <TableHead className="px-4 py-3.5 font-bold text-foreground w-32">Trạng thái</TableHead>
-                  <TableHead className="px-4 py-3.5 font-bold text-center text-foreground w-20">Thao tác</TableHead>
+                  <TableHead className="font-bold text-center w-12 text-foreground">STT</TableHead>
+                  <TableHead className="font-bold text-foreground w-32">Số văn bản</TableHead>
+                  <TableHead className="font-bold text-foreground w-32">Ngày ban hành</TableHead>
+                  <TableHead className="font-bold text-foreground">Trích yếu</TableHead>
+                  <TableHead className="font-bold text-foreground w-32">Tham mưu</TableHead>
+                  <TableHead className="font-bold text-foreground w-32">Thời hạn</TableHead>
+                  <TableHead className="font-bold text-foreground w-32">Trạng thái</TableHead>
+                  <TableHead className="font-bold text-center text-foreground w-20">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="relative">
+                {isLoading && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/40 backdrop-blur-[1px] transition-all duration-300">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="relative">
+                        <Loader2 className="size-10 text-primary animate-spin" strokeWidth={2.5} />
+                        <div className="absolute inset-0 size-10 border-4 border-primary/10 rounded-full" />
+                      </div>
+                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">Đang tải dữ liệu...</span>
+                    </div>
+                  </div>
+                )}
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i} className="h-[48px]">
@@ -245,23 +256,23 @@ export function Documents({ onTabChange, filters }) {
                 ) : documents.length > 0 ? (
                   documents.map((doc, idx) => (
                     <TableRow key={doc.id} className="group transition-colors h-[48px]">
-                      <TableCell className="px-4 py-2.5 text-muted-foreground font-medium text-[11px] w-12 text-center">
+                      <TableCell className="text-muted-foreground font-medium text-[11px] w-12 text-center">
                         {(page - 1) * pageSize + idx + 1}
                       </TableCell>
                       <TableCell
-                        className="px-4 py-2.5 font-bold text-secondary cursor-pointer hover:underline w-32 truncate"
+                        className="font-bold text-secondary cursor-pointer hover:underline w-32 truncate"
                         onClick={() => handleAction('view', doc)}
                       >
                         {doc.soVanBan || '-'}
                       </TableCell>
-                      <TableCell className="px-4 py-2.5 text-muted-foreground whitespace-nowrap w-32 text-xs">{formatDate(doc.ngayBanHanh)}</TableCell>
-                      <TableCell className="px-4 py-2.5 text-foreground/80 truncate text-xs" title={doc.trichYeu}>
+                      <TableCell className="text-muted-foreground whitespace-nowrap w-32 text-xs">{formatDate(doc.ngayBanHanh)}</TableCell>
+                      <TableCell className="text-foreground/80 truncate text-xs" title={doc.trichYeu}>
                         {doc.trichYeu || '-'}
                       </TableCell>
-                      <TableCell className="px-4 py-2.5 text-muted-foreground w-32 truncate text-xs">{doc.coQuanChuQuan || '-'}</TableCell>
-                      <TableCell className="px-4 py-2.5 text-muted-foreground whitespace-nowrap w-32 text-xs">{formatDate(doc.thoiHan)}</TableCell>
-                      <TableCell className="px-4 py-2.5 w-32">{getStatusBadge(doc)}</TableCell>
-                      <TableCell className="px-4 py-2.5 text-center w-20">
+                      <TableCell className="text-muted-foreground w-32 truncate text-xs">{doc.coQuanChuQuan || '-'}</TableCell>
+                      <TableCell className="text-muted-foreground whitespace-nowrap w-32 text-xs">{formatDate(doc.thoiHan)}</TableCell>
+                      <TableCell className="w-32">{getStatusBadge(doc)}</TableCell>
+                      <TableCell className="text-center w-20">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">

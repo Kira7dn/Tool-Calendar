@@ -105,6 +105,18 @@
   --duration-smooth: 400ms;
 }
 
+/* Media query for Surface Go / Small screens */
+@media (max-width: 1366px) {
+  :root {
+    --spacing-sidebar: 210px;
+    --header-height: 56px;
+    --space-page: 0.85rem;
+    --space-card-gap: 0.85rem;
+    --space-item-gap: 0.6rem;
+    --radius-xl: 12px;
+  }
+}
+
 :root {
   --background: var(--color-background);
   --foreground: var(--color-foreground);
@@ -247,44 +259,82 @@
   }
 
   .animate-shimmer {
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
     background: linear-gradient(90deg,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.05) 50%,
-        rgba(255, 255, 255, 0) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%);
+    animation: shimmer-premium 2s infinite ease-out;
   }
 
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-
+  @keyframes shimmer-premium {
     100% {
-      background-position: 200% 0;
+      transform: translateX(100%);
     }
   }
 
-  .density-compact {
-    --space-page: 0.75rem;
-    --space-card-gap: 0.75rem;
-    --space-item-gap: 0.5rem;
+  [data-slot="skeleton"] {
+    @apply bg-slate-200/60 relative overflow-hidden;
 
-    & table td,
-    & table th {
-      padding: 0.5rem 1rem !important;
-    }
-
-    & .glass-card {
-      @apply shadow-sm;
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.5),
+          transparent);
+      animation: shimmer-premium 1.5s infinite;
     }
   }
+}
 
-  .density-comfortable {
-    --space-page: 1.5rem;
-    --space-card-gap: 1.5rem;
-    --space-item-gap: 1rem;
-  }
+.density-compact {
+  --space-page: 0.85rem;
+  --space-card-gap: 0.85rem;
+  --space-item-gap: 0.6rem;
+  --header-height: 56px;
+}
+
+.density-compact table td {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.75rem;
+}
+
+.density-compact table th {
+  padding: 0.7rem 0.75rem !important;
+  font-size: 0.7rem;
+}
+
+.density-compact h1 {
+  font-size: 1.25rem !important;
+}
+
+.density-compact h2 {
+  font-size: 1.1rem !important;
+}
+
+.density-compact .glass-card {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-xl);
+}
+
+.density-compact .glass-card>div:first-child {
+  padding: 1rem 1.25rem;
+}
+
+.density-compact .glass-card>div:nth-child(2) {
+  padding: 0.75rem 1.25rem;
+}
+
+.density-comfortable {
+  --space-page: 1.5rem;
+  --space-card-gap: 1.5rem;
+  --space-item-gap: 1rem;
+  --header-height: 68px;
 }
 
 @theme inline {

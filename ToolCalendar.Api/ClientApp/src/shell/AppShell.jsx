@@ -196,7 +196,8 @@ export function AppShell() {
       setIsReviewOpen(true);
     };
     window.app.services.openPdfPreview = (id) => {
-      window.open(`/api/documents/${id}/file`, '_blank');
+      const token = localStorage.getItem('auth_token');
+      window.open(`/api/documents/${id}/file?access_token=${token}`, '_blank');
     };
 
     // Listen for unauthorized event
@@ -272,63 +273,65 @@ export function AppShell() {
   // Notification Guard: Block access if permission is not granted
   if (pushPermission !== 'granted') {
     return (
-      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm p-6 overflow-hidden">
-        <div className="max-w-md w-full glass-card p-10 rounded-[2.5rem] border-2 border-primary/20 shadow-[0_0_50px_-12px_rgba(var(--primary),0.3)] animate-in zoom-in-95 fade-in duration-500 text-center">
-          <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 ring-8 ring-primary/5">
-            <Bell className="size-10 text-primary animate-bounce" />
-          </div>
-
-          <h2 className="text-2xl font-black tracking-tight text-foreground mb-3">Yêu cầu bật thông báo</h2>
-          <p className="text-muted-foreground font-medium text-sm leading-relaxed mb-8">
-            Để đảm bảo tính tức thời trong việc điều phối công văn, hệ thống yêu cầu bạn phải chấp nhận nhận thông báo từ trình duyệt để tiếp tục sử dụng.
-          </p>
-
-          {pushPermission === 'default' ? (
-            <Button
-              className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
-              onClick={handleRequestPermission}
-            >
-              KÍCH HOẠT THÔNG BÁO NGAY
-            </Button>
-          ) : (
-            <div className="space-y-6">
-              <div className="p-5 rounded-[2rem] bg-destructive/5 border border-destructive/20 text-destructive text-sm font-medium leading-relaxed text-left flex gap-4">
-                <div className="size-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
-                  <EyeOff className="size-5" />
-                </div>
-                <div>
-                  <p className="font-black mb-1">BẠN ĐÃ CHẶN THÔNG BÁO</p>
-                  <p className="opacity-80">Trình duyệt đã ghi nhớ lựa chọn chặn và không cho phép hệ thống yêu cầu lại. Bạn cần mở thủ công theo các bước sau:</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 text-left">
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 border border-border/50 text-xs font-bold">
-                  <div className="size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0">1</div>
-                  <p>Nhấn vào biểu tượng <span className="px-1.5 py-0.5 bg-muted rounded border border-border shadow-sm">🔒 Khóa</span> hoặc <span className="px-1.5 py-0.5 bg-muted rounded border border-border shadow-sm">⚙️ Cài đặt</span> ở góc trái thanh địa chỉ trình duyệt.</p>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 border border-border/50 text-xs font-bold">
-                  <div className="size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0">2</div>
-                  <p>Tìm mục <span className="text-primary underline underline-offset-4">Thông báo (Notifications)</span> và chuyển trạng thái sang <span className="text-success">Cho phép (Allow)</span>.</p>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 border border-border/50 text-xs font-bold">
-                  <div className="size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0">3</div>
-                  <p>Nhấn nút bên dưới để bắt đầu làm việc.</p>
-                </div>
-              </div>
-
-              <Button
-                className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base shadow-xl shadow-primary/20 transition-all"
-                onClick={() => window.location.reload()}
-              >
-                TẢI LẠI TRANG NGAY
-              </Button>
+      <div className="fixed inset-0 z-[9999] flex flex-col bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6">
+        <div className="my-auto mx-auto w-full max-w-md py-8">
+          <div className="glass-card p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border-2 border-primary/20 shadow-2xl animate-in zoom-in-95 fade-in duration-500 text-center">
+            <div className="size-14 md:size-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 md:mb-6 ring-8 ring-primary/5">
+              <Bell className="size-7 md:size-10 text-primary animate-bounce" />
             </div>
-          )}
 
-          <p className="mt-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 text-center">
-            Hệ thống điều phối công văn trực tuyến
-          </p>
+            <h2 className="text-xl md:text-2xl font-black tracking-tight text-foreground mb-2 md:mb-3">Yêu cầu bật thông báo</h2>
+            <p className="text-muted-foreground font-medium text-xs md:text-sm leading-relaxed mb-6 md:mb-8">
+              Để đảm bảo tính tức thời trong việc điều phối công văn, hệ thống yêu cầu bạn phải chấp nhận nhận thông báo từ trình duyệt để tiếp tục sử dụng.
+            </p>
+
+            {pushPermission === 'default' ? (
+              <Button
+                className="w-full h-12 md:h-14 rounded-xl md:rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm md:text-base shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                onClick={handleRequestPermission}
+              >
+                KÍCH HOẠT THÔNG BÁO NGAY
+              </Button>
+            ) : (
+              <div className="space-y-4 md:space-y-6">
+                <div className="p-4 md:p-5 rounded-xl md:rounded-[2rem] bg-destructive/5 border border-destructive/20 text-destructive text-xs md:text-sm font-medium leading-relaxed text-left flex gap-3 md:gap-4">
+                  <div className="size-8 md:size-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                    <EyeOff className="size-4 md:size-5" />
+                  </div>
+                  <div>
+                    <p className="font-black mb-0.5 md:mb-1">BẠN ĐÃ CHẶN THÔNG BÁO</p>
+                    <p className="opacity-80">Trình duyệt đã ghi nhớ lựa chọn chặn. Bạn cần mở thủ công theo các bước sau:</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 md:gap-3 text-left">
+                  <div className="flex items-center gap-2 md:gap-3 p-3 rounded-xl md:rounded-2xl bg-muted/50 border border-border/50 text-[10px] md:text-xs font-bold">
+                    <div className="size-5 md:size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 text-[10px]">1</div>
+                    <p>Nhấn vào biểu tượng <span className="px-1.5 py-0.5 bg-muted rounded border border-border shadow-sm">🔒 Khóa</span> ở thanh địa chỉ.</p>
+                  </div>
+                  <div className="flex items-center gap-2 md:gap-3 p-3 rounded-xl md:rounded-2xl bg-muted/50 border border-border/50 text-[10px] md:text-xs font-bold">
+                    <div className="size-5 md:size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 text-[10px]">2</div>
+                    <p>Tìm mục <span className="text-primary underline underline-offset-4">Thông báo</span> và chuyển sang <span className="text-success">Cho phép</span>.</p>
+                  </div>
+                  <div className="flex items-center gap-2 md:gap-3 p-3 rounded-xl md:rounded-2xl bg-muted/50 border border-border/50 text-[10px] md:text-xs font-bold">
+                    <div className="size-5 md:size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 text-[10px]">3</div>
+                    <p>Nhấn nút bên dưới để tải lại trang.</p>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full h-12 md:h-14 rounded-xl md:rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm md:text-base shadow-xl shadow-primary/20 transition-all"
+                  onClick={() => window.location.reload()}
+                >
+                  TẢI LẠI TRANG NGAY
+                </Button>
+              </div>
+            )}
+
+            <p className="mt-8 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 text-center">
+              Hệ thống điều phối công văn trực tuyến
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -567,8 +570,9 @@ export function AppShell() {
 
           <div
             key={isReviewOpen ? 'review' : currentDocId ? 'detail' : activeTab}
+            style={{ padding: 'var(--space-page)' }}
             className={cn(
-              "p-[var(--space-page)] max-md:px-4 flex-1 flex flex-col min-h-0 density-comfortable",
+              "max-md:px-4 flex-1 flex flex-col min-h-0 density-compact xl:density-comfortable",
               "animate-in fade-in duration-500 fill-mode-both"
             )}
           >
@@ -620,8 +624,8 @@ export function AppShell() {
 
       {/* Change Password Modal */}
       <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
-        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-none shadow-2xl glass-card rounded-2xl">
-          <DialogHeader className="p-6 bg-gradient-to-r from-red-600 to-red-700 relative">
+        <DialogContent className="max-w-[95vw] sm:max-w-[425px] p-0 overflow-hidden border-none shadow-2xl glass-card rounded-2xl flex flex-col max-h-[95vh]">
+          <DialogHeader className="p-5 md:p-6 bg-gradient-to-r from-red-600 to-red-700 relative shrink-0">
             <DialogTitle className="text-xl font-extrabold flex items-center gap-3 text-white">
               <div className="p-2 rounded-lg bg-white/10 backdrop-blur-md">
                 <KeyRound className="size-5 text-white" />
@@ -629,7 +633,7 @@ export function AppShell() {
               <span className="drop-shadow-sm">Thay đổi mật khẩu</span>
             </DialogTitle>
           </DialogHeader>
-          <div className="p-6 space-y-6">
+          <div className="p-5 md:p-6 space-y-6 flex-1 overflow-y-auto">
             <div className="space-y-4">
               <div className="space-y-2 group">
                 <Label

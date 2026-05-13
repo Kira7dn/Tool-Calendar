@@ -130,8 +130,8 @@ export function Settings() {
   return (
     <div className="flex h-full bg-slate-50/50 -m-6 overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0">
-        <div className="px-6 pt-8 pb-6 border-b border-slate-100">
+      <aside className="w-64 md:w-72 bg-white border-r border-slate-200 flex flex-col shrink-0">
+        <div className="px-5 md:px-6 pt-6 md:pt-8 pb-4 md:pb-6 border-b border-slate-100">
           <div className="flex items-center gap-2.5 mb-1.5">
             <span className="w-1.5 h-7 rounded-full bg-red-600 shadow-lg shadow-red-200"></span>
             <h1 className="text-lg font-black text-slate-900 tracking-tight">Cấu hình hệ thống</h1>

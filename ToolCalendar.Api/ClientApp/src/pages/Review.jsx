@@ -264,7 +264,7 @@ export function Review({ onBack }) {
           </div>
         </div>
 
-        <div className="w-[500px] bg-background flex flex-col overflow-hidden">
+        <div className="w-full md:w-[400px] lg:w-[450px] bg-background flex flex-col overflow-hidden">
           <ScrollArea className="flex-1">
             <div className="p-8 space-y-8">
               <div className="space-y-1">

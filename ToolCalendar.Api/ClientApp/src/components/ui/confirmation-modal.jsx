@@ -62,8 +62,8 @@ export function ConfirmationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[400px] rounded-3xl border-none shadow-2xl overflow-hidden p-0 gap-0">
-        <div className="p-8 flex flex-col items-center text-center gap-4">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-[400px] rounded-[2rem] border-none shadow-2xl overflow-hidden p-0 gap-0 max-h-[95vh] flex flex-col">
+        <div className="p-6 md:p-8 flex flex-col items-center text-center gap-4 overflow-y-auto">
           <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-2", styles.iconBg)}>
             {activeIcon}
           </div>
@@ -74,7 +74,7 @@ export function ConfirmationModal({
             </p>
           </div>
         </div>
-        <div className="p-5 bg-slate-50 flex items-center gap-3 border-t border-slate-100">
+        <div className="p-4 md:p-5 bg-slate-50 flex items-center gap-3 border-t border-slate-100 shrink-0">
           <Button 
             variant="ghost" 
             className="flex-1 rounded-xl font-bold text-slate-400 hover:bg-slate-200"

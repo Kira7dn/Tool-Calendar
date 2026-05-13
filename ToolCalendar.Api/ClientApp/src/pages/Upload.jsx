@@ -316,7 +316,7 @@ export function Upload({ onTabChange }) {
       <div className="flex-1 flex gap-4 p-4 overflow-hidden min-h-0">
 
         {/* LEFT: upload + status */}
-        <div className="w-64 flex-shrink-0 flex flex-col gap-3">
+        <div className="w-56 md:w-64 flex-shrink-0 flex flex-col gap-3">
 
           {/* Upload dropzone */}
           <div
@@ -439,7 +439,7 @@ export function Upload({ onTabChange }) {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                   {["Tên tệp", "Số hiệu", "Thời hạn", "Đơn vị", "Cán bộ", "Trạng thái", ""].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                    <th key={h} className="px-3 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
                   ))}
@@ -448,7 +448,7 @@ export function Upload({ onTabChange }) {
               <tbody className="divide-y divide-slate-100">
                 {batchItems.map(row => (
                   <tr key={row.id} className="hover:bg-slate-50/60 transition-colors group">
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-md bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
                           <span className="text-[8px] font-black text-red-500 uppercase">PDF</span>
@@ -456,7 +456,7 @@ export function Upload({ onTabChange }) {
                         <span className="font-semibold text-slate-800 truncate max-w-[120px]">{row.fileName}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-2">
                       <input
                         value={row.soVanBan}
                         onChange={(e) => updateItem(row.id, 'soVanBan', e.target.value)}
@@ -464,7 +464,7 @@ export function Upload({ onTabChange }) {
                         className="w-24 text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white placeholder-slate-300 transition-all font-bold text-slate-900"
                       />
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-2">
                       <input
                         type="date"
                         value={row.thoiHan}
@@ -472,7 +472,7 @@ export function Upload({ onTabChange }) {
                         className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all"
                       />
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-2">
                       <select
                         value={row.departmentIds[0] || ''}
                         onChange={(e) => updateItem(row.id, 'departmentIds', [parseInt(e.target.value)])}
@@ -482,7 +482,7 @@ export function Upload({ onTabChange }) {
                         {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                       </select>
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-2">
                       <select
                         value={row.assignedToIds[0] || ''}
                         onChange={(e) => updateItem(row.id, 'assignedToIds', [parseInt(e.target.value)])}
@@ -492,10 +492,10 @@ export function Upload({ onTabChange }) {
                         {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
                       </select>
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-2">
                       <StatusBadge status={row.status} />
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-2">
                       <div className="flex items-center gap-1">
                         <TooltipProvider>
                           <Tooltip>

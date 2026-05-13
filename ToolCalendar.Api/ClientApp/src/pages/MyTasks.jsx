@@ -229,44 +229,55 @@ export function MyTasks({ onTabChange }) {
             <Table className="table-fixed w-full">
               <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
                 <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="px-5 py-4 font-bold text-center w-16 text-foreground">STT</TableHead>
-                  <TableHead className="px-4 py-4 font-bold text-foreground w-32">Số hiệu</TableHead>
-                  <TableHead className="px-4 py-4 font-bold text-foreground">Trích yếu nội dung</TableHead>
-                  <TableHead className="px-4 py-4 font-bold text-foreground w-32">Thời hạn</TableHead>
-                  <TableHead className="px-4 py-4 font-bold text-center text-foreground w-32">Trạng thái</TableHead>
-                  <TableHead className="px-5 py-4 font-bold text-center text-foreground w-40">Thao tác</TableHead>
+                  <TableHead className="font-bold text-center w-12 text-foreground">STT</TableHead>
+                  <TableHead className="font-bold text-foreground w-28">Số hiệu</TableHead>
+                  <TableHead className="font-bold text-foreground">Trích yếu nội dung</TableHead>
+                  <TableHead className="font-bold text-foreground w-28">Thời hạn</TableHead>
+                  <TableHead className="font-bold text-center text-foreground w-28">Trạng thái</TableHead>
+                  <TableHead className="font-bold text-center text-foreground w-36">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="relative">
+                {isLoading && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/40 backdrop-blur-[1px] transition-all duration-300">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="relative">
+                        <Loader2 className="size-10 text-primary animate-spin" strokeWidth={2.5} />
+                        <div className="absolute inset-0 size-10 border-4 border-primary/10 rounded-full" />
+                      </div>
+                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">Đang tải dữ liệu...</span>
+                    </div>
+                  </div>
+                )}
                 {isLoading ? (
                   Array.from({ length: pageSize }).map((_, i) => (
                     <TableRow key={i} className="h-[48px]">
-                      <TableCell className="px-5 py-2.5 text-center w-16"><Skeleton className="h-4 w-6 mx-auto" /></TableCell>
-                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell className="px-4 py-2.5"><Skeleton className="h-4 w-full" /></TableCell>
-                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-4 w-20" /></TableCell>
-                      <TableCell className="px-4 py-2.5 text-center w-32"><Skeleton className="h-6 w-20 rounded-full mx-auto" /></TableCell>
-                      <TableCell className="px-5 py-2.5 text-center w-40"><Skeleton className="h-8 w-32 rounded-lg mx-auto" /></TableCell>
+                      <TableCell className="text-center w-12"><Skeleton className="h-4 w-6 mx-auto" /></TableCell>
+                      <TableCell className="w-28"><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell className="w-28"><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell className="text-center w-28"><Skeleton className="h-6 w-20 rounded-full mx-auto" /></TableCell>
+                      <TableCell className="text-center w-36"><Skeleton className="h-8 w-32 rounded-lg mx-auto" /></TableCell>
                     </TableRow>
                   ))
                 ) : paginatedTasks.length > 0 ? (
                   paginatedTasks.map((task, index) => (
                     <TableRow key={task.id} className="group transition-colors h-[48px]">
-                      <TableCell className="px-5 py-2.5 text-center text-muted-foreground font-medium text-[11px] w-16">
+                      <TableCell className="text-center text-muted-foreground font-medium text-[11px] w-12">
                         {(currentPage - 1) * pageSize + index + 1}
                       </TableCell>
-                      <TableCell className="px-4 py-2.5 font-bold text-primary text-xs whitespace-nowrap w-32">{task.soVanBan}</TableCell>
-                      <TableCell className="px-4 py-2.5 truncate font-medium text-muted-foreground text-xs" title={task.trichYeu}>
+                      <TableCell className="font-bold text-primary text-xs whitespace-nowrap w-28">{task.soVanBan}</TableCell>
+                      <TableCell className="truncate font-medium text-muted-foreground text-xs" title={task.trichYeu}>
                         {task.trichYeu}
                       </TableCell>
-                      <TableCell className="px-4 py-2.5 text-muted-foreground font-bold text-[10px] whitespace-nowrap uppercase w-32">
+                      <TableCell className="text-muted-foreground font-bold text-[10px] whitespace-nowrap uppercase w-28">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="size-3 text-muted-foreground/50" />
                           {formatDate(task.hanXuLy)}
                         </div>
                       </TableCell>
-                      <TableCell className="px-4 py-2.5 text-center w-32">{getStatusBadge(task)}</TableCell>
-                      <TableCell className="px-5 py-2.5 text-center w-40">
+                      <TableCell className="text-center w-28">{getStatusBadge(task)}</TableCell>
+                      <TableCell className="text-center w-36">
                         <div className="flex items-center justify-center gap-2">
                           <Button
                             variant="ghost"
