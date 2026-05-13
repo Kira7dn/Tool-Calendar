@@ -206,13 +206,13 @@ export function Search() {
             <Table className="w-full">
               <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
                 <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="font-bold text-center w-14 text-foreground">STT</TableHead>
-                  <TableHead className="font-bold text-foreground w-40">Số văn bản</TableHead>
-                  <TableHead className="font-bold text-foreground w-36">Hạn xử lý</TableHead>
-                  <TableHead className="font-bold text-foreground min-w-[300px]">Trích yếu nội dung</TableHead>
-                  <TableHead className="font-bold text-foreground w-40">Tham mưu</TableHead>
-                  <TableHead className="font-bold text-foreground w-36">Trạng thái</TableHead>
-                  <TableHead className="font-bold text-center text-foreground w-24">Chi tiết</TableHead>
+                  <TableHead className="font-bold text-center w-12 text-foreground">STT</TableHead>
+                  <TableHead className="font-bold text-foreground w-36">Số văn bản</TableHead>
+                  <TableHead className="font-bold text-foreground w-32">Hạn xử lý</TableHead>
+                  <TableHead className="font-bold text-foreground">Trích yếu</TableHead>
+                  <TableHead className="font-bold text-foreground w-44">Tham mưu</TableHead>
+                  <TableHead className="font-bold text-foreground w-32">Trạng thái</TableHead>
+                  <TableHead className="font-bold text-center text-foreground w-20">Chi tiết</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="relative">
@@ -238,12 +238,16 @@ export function Search() {
                       <TableCell className="py-1 text-red-600 font-black whitespace-nowrap w-36 text-[10px]">
                         {formatDate(doc.thoiHan)}
                       </TableCell>
-                      <TableCell className="py-1 text-foreground/80 text-[11px] font-medium" title={doc.trichYeu}>
-                        <div className="line-clamp-1 leading-normal">
+                      <TableCell className="py-1 max-w-0" title={doc.trichYeu}>
+                        <div className="truncate text-[11px] text-foreground/80 font-medium">
                           {doc.trichYeu || '-'}
                         </div>
                       </TableCell>
-                      <TableCell className="py-1 text-muted-foreground w-40 truncate text-[10px] font-bold">{doc.coQuanChuQuan || '-'}</TableCell>
+                      <TableCell className="py-1 w-44" title={doc.coQuanChuQuan}>
+                        <div className="truncate text-[10px] text-muted-foreground font-bold max-w-[160px]">
+                          {doc.coQuanChuQuan || '-'}
+                        </div>
+                      </TableCell>
                       <TableCell className="py-1 w-36">{getStatusBadge(doc)}</TableCell>
                       <TableCell className="py-1 text-center w-24">
                         <Button
