@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  CheckSquare,
-  Clock,
-  AlertTriangle,
   FileText,
   Upload,
   Search,
@@ -11,13 +8,12 @@ import {
   ChevronRight,
   Loader2,
   CheckCircle2,
-  Filter,
   X,
   Paperclip
 } from 'lucide-react';
 import { getStatusConfig } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -39,12 +35,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 

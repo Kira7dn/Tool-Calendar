@@ -5,7 +5,8 @@ import {
   Upload,
   Users,
   CheckSquare,
-  Settings
+  Settings,
+  Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -23,6 +24,7 @@ import {
 const navItems = [
   { tab: 'dashboard', labelKey: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { tab: 'documents', labelKey: 'documents', label: 'Văn bản', icon: FileText },
+  { tab: 'search', labelKey: 'search', label: 'Tìm kiếm', icon: Search },
   { tab: 'upload', labelKey: 'upload', label: 'Tải hồ sơ mới', icon: Upload },
   { tab: 'users', id: 'nav-users', labelKey: 'users', label: 'Nhân sự', icon: Users },
   { tab: 'my-tasks', id: 'nav-my-tasks', labelKey: 'my_tasks', label: 'Công việc của tôi', icon: CheckSquare },

@@ -2,10 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
   Plus,
   Search,
-  Filter,
   MoreVertical,
   Eye,
-  FileEdit,
   Trash2,
   FileText,
   ChevronLeft,
@@ -14,7 +12,7 @@ import {
 } from 'lucide-react';
 import { getStatusConfig, DOC_STATUS } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -24,14 +22,6 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { toast } from 'sonner';
 import {

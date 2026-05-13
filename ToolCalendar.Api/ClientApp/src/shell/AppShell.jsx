@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  ArrowLeft,
   Bell,
   CheckSquare,
   Eye,
@@ -9,13 +8,8 @@ import {
   KeyRound,
   LayoutDashboard,
   LogOut,
-  Menu,
   Settings as SettingsIcon,
-  UserRound,
-  Users as UsersIcon,
-  Upload as UploadIcon,
-  ChevronDown,
-  ChevronRight
+  ChevronDown
 } from 'lucide-react';
 import { AppSidebar } from './Sidebar.jsx';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -30,11 +24,11 @@ import { DocDetail } from '../pages/DocDetail.jsx';
 import { MyTasks } from '../pages/MyTasks.jsx';
 import { Review } from '../pages/Review.jsx';
 import { Settings as SettingsPage } from '../pages/Settings.jsx';
+import { Search as SearchPage } from '../pages/Search.jsx';
 
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,20 +48,17 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Separator } from '@/components/ui/separator';
 import { Toaster, toast } from 'sonner';
 
 export function AppShell() {
-  const [activeTab, setActiveTab] = React.useState('dashboard');
+  const [activeTab, setActiveTab] = React.useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') || 'dashboard';
+  });
   const [tabFilters, setTabFilters] = React.useState({});
   const [currentDocId, setCurrentDocId] = React.useState(null);
   const [isReviewOpen, setIsReviewOpen] = React.useState(false);
@@ -75,7 +66,12 @@ export function AppShell() {
   const [pushPermission, setPushPermission] = React.useState('default');
   const [isUserOpen, setIsUserOpen] = React.useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = React.useState(false);
-  const [user, setUser] = React.useState({ name: 'User', role: 'CanBo' });
+  const [user, setUser] = React.useState(() => {
+    return {
+      name: localStorage.getItem('user_full_name') || localStorage.getItem('user_name') || 'Cán bộ',
+      role: localStorage.getItem('user_role') || 'CanBo'
+    };
+  });
   const [notifCount, setNotifCount] = React.useState(0);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
@@ -588,7 +584,8 @@ export function AppShell() {
                 {activeTab === 'users' && <Users />}
                 {activeTab === 'my-tasks' && <MyTasks filters={tabFilters['my-tasks']} onTabChange={(tab, filters) => { setActiveTab(tab); if (filters) setTabFilters(prev => ({ ...prev, [tab]: filters })); }} />}
                 {activeTab === 'settings' && <SettingsPage />}
-                {!['dashboard', 'documents', 'upload', 'users', 'my-tasks', 'settings'].includes(activeTab) && (
+                {activeTab === 'search' && <SearchPage />}
+                {!['dashboard', 'documents', 'upload', 'users', 'my-tasks', 'settings', 'search'].includes(activeTab) && (
                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                     <LayoutDashboard className="size-16 mb-4 opacity-20" />
                     <h3 className="text-xl font-bold">Tính năng đang được phát triển</h3>

@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
   Settings as SettingsIcon,
-  Scan,
   Database,
   History
 } from 'lucide-react';
 import {
-  getNotificationPermission,
-  requestNotificationPermission,
-  unsubscribeUserFromPush
+  getNotificationPermission
 } from '@/lib/push-notifications';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';

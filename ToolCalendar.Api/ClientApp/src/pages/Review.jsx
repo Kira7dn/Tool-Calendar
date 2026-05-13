@@ -1,28 +1,23 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
   Save,
   Trash2,
-  Maximize2,
   X,
   FileText,
   CheckCircle2,
-  AlertCircle,
   Loader2,
   Calendar,
   Building2,
-  User,
   Layout,
   ExternalLink
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';

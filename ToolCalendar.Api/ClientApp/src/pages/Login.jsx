@@ -44,6 +44,7 @@ export function LoginPage({ onLoginSuccess }) {
         const data = await res.json();
         localStorage.setItem('auth_token', data.token);
         localStorage.setItem('user_name', data.username);
+        localStorage.setItem('user_full_name', data.fullName || data.username);
         localStorage.setItem('user_role', data.role);
         localStorage.setItem('user_id', data.userId);
 

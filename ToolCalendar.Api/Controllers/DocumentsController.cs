@@ -37,9 +37,11 @@ namespace ToolCalendar.Api.Controllers
             [FromQuery] int size = 10,
             [FromQuery] string search = "",
             [FromQuery] string status = "",
-            [FromQuery] string sort = "deadline_asc")
+            [FromQuery] string sort = "deadline_asc",
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null)
         {
-            var (items, totalCount) = await _documentRepository.GetPagedAsync(page, size, search, status, sort);
+            var (items, totalCount) = await _documentRepository.GetPagedAsync(page, size, search, status, sort, fromDate, toDate);
             var totalPages = (int)Math.Ceiling((double)totalCount / size);
 
             return Ok(new

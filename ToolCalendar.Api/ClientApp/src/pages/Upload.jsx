@@ -1,44 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
-  ArrowLeft,
   Clock,
   Calendar,
   FileText,
-  User,
   Building2,
-  AlertCircle,
   Edit,
-  ExternalLink,
-  MessageSquare,
-  Paperclip,
-  Send,
-  Loader2,
-  X,
   Save,
   ChevronLeft,
   ChevronRight,
-  Maximize2,
-  Trash2,
-  Plus,
-  Search,
-  Filter,
-  CheckCircle2,
-  AlertTriangle,
-  Sparkles,
-  ChevronDown
+  Maximize2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {

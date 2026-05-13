@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Models;
@@ -226,7 +226,7 @@ namespace ToolCalendar.Core.Data.Repositories
         /// Server-side pagination: returns one page of documents + total count for pagination UI.
         /// <para>search is matched against SoVanBan, TrichYeu, CoQuanChuQuan (case-insensitive LIKE).</para>
         /// </summary>
-        public async Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc")
+        public async Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
@@ -268,6 +268,16 @@ namespace ToolCalendar.Core.Data.Repositories
                 }
             }
 
+            if (fromDate.HasValue)
+            {
+                filters.Add("date(ThoiHan) >= date(@fromDate)");
+            }
+
+            if (toDate.HasValue)
+            {
+                filters.Add("date(ThoiHan) <= date(@toDate)");
+            }
+
             string searchFilter = filters.Count > 0 ? "WHERE " + string.Join(" AND ", filters) : "";
 
             string orderBy = sort switch
@@ -290,6 +300,8 @@ namespace ToolCalendar.Core.Data.Repositories
                 countCmd.Parameters.AddWithValue("@status", status.ToLower());
                 countCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
             }
+            if (fromDate.HasValue) countCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
+            if (toDate.HasValue) countCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
 
             int totalCount = Convert.ToInt32(countCmd.ExecuteScalar());
 
@@ -308,6 +320,8 @@ namespace ToolCalendar.Core.Data.Repositories
                 dataCmd.Parameters.AddWithValue("@status", status.ToLower());
                 dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
             }
+            if (fromDate.HasValue) dataCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
+            if (toDate.HasValue) dataCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
 
             dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
             dataCmd.Parameters.AddWithValue("@offset", offset);

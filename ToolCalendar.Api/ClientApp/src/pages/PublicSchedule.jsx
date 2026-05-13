@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { X, Lock, User, Key, Loader2, CheckCircle2, Eye, EyeOff, ShieldAlert, LogOut } from "lucide-react";
 import { toast } from "sonner";
@@ -24,8 +24,9 @@ function LoginModal({ isOpen, onClose, onSuccess }) {
       if (response.ok) {
         const data = await response.json();
         const { token, ...userInfo } = data; // Tách token ra, còn lại là thông tin user
-        localStorage.setItem("auth_token", token);
-        localStorage.setItem("user_info", JSON.stringify(userInfo));
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("user_name", data.username || data.fullName);
+        localStorage.setItem("user_role", data.role);
         toast.success("Đăng nhập thành công!");
         onSuccess();
       } else {
@@ -119,9 +120,15 @@ function ScheduleBlock({ day, onViewDoc }) {
               </span>
               <svg className="opacity-0 group-hover:opacity-100 transition-opacity" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#cc0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
             </div>
-            <p className="text-gray-700 text-xs leading-relaxed font-medium line-clamp-2 italic">
+            <p className="text-gray-700 text-xs leading-relaxed font-medium line-clamp-2 italic mb-3">
               "{item.content}"
             </p>
+            <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-[9px] text-[#0a3d8f] font-black uppercase flex items-center gap-1 group-hover:text-[#cc0000] transition-colors">
+                Xem chi tiết PDF
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              </span>
+            </div>
           </div>
         ))}
       </div>
@@ -137,13 +144,25 @@ function NavBar() {
     "TÌM KIẾM",
   ];
 
+  const handleNavClick = (item) => {
+    if (item === "TRANG CHỦ") {
+      window.location.href = "/";
+      return;
+    }
+    if (item === "TÌM KIẾM") {
+      window.location.href = "/?tab=search";
+      return;
+    }
+    setActiveNav(item);
+  };
+
   return (
     <nav className="bg-[#2c6e49] w-full shadow-md">
       <div className="max-w-6xl mx-auto flex items-center">
         {navItems.map((item) => (
           <button
             key={item}
-            onClick={() => setActiveNav(item)}
+            onClick={() => handleNavClick(item)}
             className={`
               px-6 py-3 text-xs font-bold tracking-wide transition-all uppercase
               ${activeNav === item
@@ -164,12 +183,18 @@ function Header({ user, onLogout, onOpenLogin }) {
   const [showDropdown, setShowDropdown] = useState(false);
 
   // Kiểm tra thêm trực tiếp từ localStorage để dự phòng trường hợp state bị trễ
-  const effectiveUser = user || (() => {
+  const effectiveUser = React.useMemo(() => {
+    if (user) return user;
     try {
-      const saved = localStorage.getItem("user_info");
-      return (saved && saved !== "undefined") ? JSON.parse(saved) : null;
+      const fullName = localStorage.getItem("user_full_name");
+      const username = localStorage.getItem("user_name");
+      const role = localStorage.getItem("user_role");
+      if (fullName || username) {
+        return { fullName: fullName || username, role: role || 'Thành viên' };
+      }
+      return null;
     } catch { return null; }
-  })();
+  }, [user]);
 
   return (
     <header className="bg-white border-b-4 border-[#c8102e]">
@@ -286,9 +311,10 @@ export default function PublicSchedule() {
 
   const refreshUser = () => {
     try {
-      const savedUser = localStorage.getItem("user_info");
-      if (savedUser && savedUser !== "undefined" && savedUser !== "null") {
-        setUser(JSON.parse(savedUser));
+      const username = localStorage.getItem("user_name");
+      const role = localStorage.getItem("user_role");
+      if (username) {
+        setUser({ fullName: username, role: role || 'Thành viên' });
       } else {
         setUser(null);
       }
@@ -387,8 +413,8 @@ export default function PublicSchedule() {
   };
 
   const handleLoginSuccess = () => {
-    setIsLoginModalOpen(false);
     refreshUser();
+    setIsLoginModalOpen(false);
 
     // Kết nối SignalR sau khi đăng nhập thành công
     const token = localStorage.getItem("auth_token");
@@ -405,7 +431,10 @@ export default function PublicSchedule() {
     if (signalRRef.current) signalRRef.current.stop();
     setTimeout(() => {
       localStorage.removeItem("auth_token");
-      localStorage.removeItem("user_info");
+      localStorage.removeItem("user_name");
+      localStorage.removeItem("user_full_name");
+      localStorage.removeItem("user_role");
+      localStorage.removeItem("user_id");
       setUser(null);
       setIsLoggingOut(false);
     }, 1500);
@@ -515,8 +544,8 @@ export default function PublicSchedule() {
                               {item.content}
                             </p>
                           </div>
-                          <div className="flex justify-between items-center pt-4 border-t border-gray-50">
-                            <span className="text-[10px] text-[#0a3d8f] font-black uppercase flex items-center gap-1">
+                          <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                            <span className="text-[10px] text-[#0a3d8f] font-black uppercase flex items-center gap-1 group-hover:text-[#cc0000] transition-colors">
                               Xem chi tiết PDF
                               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                             </span>
