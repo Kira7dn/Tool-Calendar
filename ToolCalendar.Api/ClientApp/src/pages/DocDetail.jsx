@@ -580,7 +580,7 @@ export function DocDetail({ docId, onBack }) {
                 <button className="text-[10px] font-black text-red-600 hover:underline uppercase tracking-widest" onClick={() => {
                   const token = localStorage.getItem('auth_token');
                   window.open(`/api/documents/${docId}/file?access_token=${token}`, '_blank');
-                }}>FULLSCREEN</button>
+                }}>XEM TOÀN MÀN HÌNH</button>
               </div>
               <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                 <div className="flex-1 bg-slate-100/50 border-r border-slate-100 relative">

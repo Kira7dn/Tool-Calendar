@@ -146,7 +146,7 @@ export function Review({ onBack }) {
     const doc = docs[currentIndex];
     try {
       const response = await fetch(`/api/documents/bulk-delete`, {
-        method: 'POST',
+        method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json'

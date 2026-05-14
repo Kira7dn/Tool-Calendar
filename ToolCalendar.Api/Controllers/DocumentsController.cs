@@ -532,12 +532,34 @@ namespace ToolCalendar.Api.Controllers
             var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
             bool isAdmin = role == "Admin";
 
+            var comments = await _documentRepository.GetCommentsAsync(docId);
+            var comment = comments.FirstOrDefault(c => c.Id == commentId);
+            if (comment != null && !string.IsNullOrEmpty(comment.AttachmentPaths))
+            {
+                try
+                {
+                    var paths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(comment.AttachmentPaths);
+                    if (paths != null)
+                    {
+                        foreach (var path in paths)
+                        {
+                            var fullPath = Path.Combine(_env.ContentRootPath, path.Replace('\\', '/').TrimStart('/'));
+                            if (System.IO.File.Exists(fullPath))
+                            {
+                                System.IO.File.Delete(fullPath);
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+
             await _documentRepository.DeleteCommentAsync(commentId, userId, isAdmin);
 
             // Realtime broadcast SignalR
             _ = _hubContext.Clients.All.SendAsync("DeleteComment", new { documentId = docId, commentId = commentId });
 
-            return Ok(new { message = "Đã xóa comment." });
+            return Ok(new { message = "Đã xóa comment và các file đính kèm liên quan." });
         }
 
         // =============================================
