@@ -25,14 +25,18 @@ namespace ToolCalendar.Core.Data.Repositories
             }
         }
         // --- COMMENT MANAGEMENT ---
-        public async Task<List<Comment>> GetCommentsAsync(int docId)
+        public async Task<List<Comment>> GetCommentsAsync(int docId, int page = 1, int pageSize = 500)
         {
             var list = new List<Comment>();
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            string sql = "SELECT * FROM Comments WHERE DocumentId=@id ORDER BY CreatedAt ASC";
+            
+            int offset = (page - 1) * pageSize;
+            string sql = "SELECT Id, DocumentId, UserId, Username, Content, AttachmentPaths, CreatedAt FROM Comments WHERE DocumentId=@id ORDER BY CreatedAt ASC LIMIT @pageSize OFFSET @offset";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", docId);
+            cmd.Parameters.AddWithValue("@pageSize", pageSize);
+            cmd.Parameters.AddWithValue("@offset", offset);
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
@@ -103,7 +107,7 @@ namespace ToolCalendar.Core.Data.Repositories
             var list = new List<CommentReaction>();
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            using var cmd = new SqliteCommand("SELECT * FROM CommentReactions WHERE CommentId=@id", connection);
+            using var cmd = new SqliteCommand("SELECT Id, CommentId, UserId, Username, ReactionType, CreatedAt FROM CommentReactions WHERE CommentId=@id", connection);
             cmd.Parameters.AddWithValue("@id", commentId);
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -196,7 +200,7 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            string sql = "SELECT * FROM Documents ORDER BY ThoiHan ASC NULLS LAST";
+            string sql = "SELECT Id, SoVanBan, TenCongVan, TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich FROM Documents ORDER BY ThoiHan ASC NULLS LAST";
             using var cmd = new SqliteCommand(sql, connection);
             using var reader = await cmd.ExecuteReaderAsync();
 
@@ -308,7 +312,8 @@ namespace ToolCalendar.Core.Data.Repositories
             // 2. Paged data
             int offset = (page - 1) * pageSize;
             string dataSql = $@"
-                SELECT * FROM Documents
+                SELECT Id, SoVanBan, TenCongVan, TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich
+                FROM Documents
                 {searchFilter}
                 ORDER BY {orderBy}
                 LIMIT @pageSize OFFSET @offset";

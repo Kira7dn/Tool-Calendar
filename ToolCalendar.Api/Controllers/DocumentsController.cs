@@ -413,9 +413,9 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("{id}/comments")]
-        public async Task<IActionResult> GetComments(int id)
+        public async Task<IActionResult> GetComments(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 500)
         {
-            var comments = await _documentRepository.GetCommentsAsync(id);
+            var comments = await _documentRepository.GetCommentsAsync(id, page, pageSize);
             // Attach reactions for each comment
             var result = new List<object>();
             foreach (var c in comments)

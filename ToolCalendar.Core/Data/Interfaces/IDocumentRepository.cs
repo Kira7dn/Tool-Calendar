@@ -18,7 +18,7 @@ namespace ToolCalendar.Core.Data.Interfaces
         Task<byte[]> ExportDocumentsToCsvAsync();
 
         // Comment Management
-        Task<List<Comment>> GetCommentsAsync(int docId);
+        Task<List<Comment>> GetCommentsAsync(int docId, int page = 1, int pageSize = 500);
         Task InsertCommentAsync(Comment c);
         Task DeleteCommentAsync(int commentId, int requestingUserId, bool isAdmin);
         Task<List<CommentReaction>> GetReactionsForCommentAsync(int commentId);

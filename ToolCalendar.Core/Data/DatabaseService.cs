@@ -379,7 +379,7 @@ namespace ToolCalendar.Data
             connection.Open();
 
             // BÆ°á»›c 1: Láº¥y user theo username (khÃ´ng so sÃ¡nh password trá»±c tiáº¿p trong SQL)
-            string sql = "SELECT * FROM Users WHERE Username=@u";
+            string sql = "SELECT Id, Username, PasswordHash, FullName, Role, DepartmentId, SessionId FROM Users WHERE Username=@u";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@u", username);
             using var reader = cmd.ExecuteReader();
@@ -663,7 +663,7 @@ namespace ToolCalendar.Data
             var list = new List<Department>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("SELECT * FROM Departments", connection);
+            using var cmd = new SqliteCommand("SELECT Id, Name, Description FROM Departments", connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -736,7 +736,7 @@ namespace ToolCalendar.Data
             var list = new List<DocumentLabel>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("SELECT * FROM Labels", connection);
+            using var cmd = new SqliteCommand("SELECT Id, Name, Color FROM Labels", connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -798,7 +798,7 @@ namespace ToolCalendar.Data
             var list = new List<AutoRule>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("SELECT * FROM AutoRules", connection);
+            using var cmd = new SqliteCommand("SELECT Id, Keyword, LabelId, DepartmentId, DefaultDeadlineDays FROM AutoRules", connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -999,7 +999,7 @@ namespace ToolCalendar.Data
             var list = new List<PushSubscription>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "SELECT * FROM PushSubscriptions WHERE UserId=@uId";
+            string sql = "SELECT Id, UserId, Endpoint, P256dh, Auth, CreatedAt FROM PushSubscriptions WHERE UserId=@uId";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@uId", userId);
             using var reader = cmd.ExecuteReader();
@@ -1078,7 +1078,7 @@ namespace ToolCalendar.Data
             var list = new List<Core.Models.NotificationRecord>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "SELECT * FROM Notifications WHERE UserId=@uId ORDER BY CreatedAt DESC LIMIT @limit";
+            string sql = "SELECT Id, UserId, Title, Body, Type, DocId, IsRead, CreatedAt FROM Notifications WHERE UserId=@uId ORDER BY CreatedAt DESC LIMIT @limit";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@uId", userId);
             cmd.Parameters.AddWithValue("@limit", limit);
