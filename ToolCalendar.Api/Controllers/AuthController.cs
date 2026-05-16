@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -25,6 +26,8 @@ namespace ToolCalendar.Api.Controllers
             _userRepository = userRepository;
         }
 
+        // Áp dụng rate limit: tối đa 5 lần đăng nhập / 60 giây / IP → chống Brute Force
+        [EnableRateLimiting("login-policy")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -37,9 +40,9 @@ namespace ToolCalendar.Api.Controllers
             await _hubContext.Clients.Group($"User_{user.Id}").SendAsync("Kicked", "Tài khoản đã đăng nhập từ thiết bị khác.");
 
             var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtSecret = _configuration["JWT_SECRET"] 
-                            ?? Environment.GetEnvironmentVariable("JWT_SECRET") 
-                            ?? "LinkStrategy_Default_Development_Key_2026_DO_NOT_USE_IN_PROD";
+            var jwtSecret = _configuration["JWT_SECRET"]
+                            ?? Environment.GetEnvironmentVariable("JWT_SECRET")
+                            ?? throw new InvalidOperationException("[SECURITY] JWT_SECRET chưa được cấu hình.");
             var key = Encoding.ASCII.GetBytes(jwtSecret);
 
             var tokenDescriptor = new SecurityTokenDescriptor

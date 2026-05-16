@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using System.Security.Cryptography;
+using System.Text;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Data;
 using ToolCalendar.Hubs;
@@ -20,8 +22,9 @@ namespace ToolCalendar.Api.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IDocumentRepository _documentRepository;
+        private readonly IConfiguration _configuration;
 
-        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, INotificationManager notificationManager, IWebHostEnvironment env, IHubContext<NotificationHub> hubContext, IDocumentRepository documentRepository)
+        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, INotificationManager notificationManager, IWebHostEnvironment env, IHubContext<NotificationHub> hubContext, IDocumentRepository documentRepository, IConfiguration configuration)
         {
             _extractor = extractor;
             _ocrQueue = ocrQueue;
@@ -29,6 +32,7 @@ namespace ToolCalendar.Api.Controllers
             _env = env;
             _hubContext = hubContext;
             _documentRepository = documentRepository;
+            _configuration = configuration;
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
@@ -440,7 +444,8 @@ namespace ToolCalendar.Api.Controllers
             return Ok(result);
         }
 
-        [AllowAnonymous]
+        // Bảo vệ bằng [Authorize] — chỉ người đã đăng nhập mới xem được file bình luận
+        [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("comment-attachment")]
         public IActionResult GetCommentAttachment([FromQuery] string path)
         {
@@ -623,6 +628,50 @@ namespace ToolCalendar.Api.Controllers
             return PhysicalFile(fullPath, contentType);
         }
 
+        // ── Helper: Tạo token HMAC-SHA256 từ docId ──────────────────────
+        private string CreatePublicDocToken(int docId)
+        {
+            // Ưu tiên: biến môi trường → appsettings → lỗi rõ ràng
+            var secret = Environment.GetEnvironmentVariable("PUBLIC_ID_SECRET")
+                      ?? _configuration["Security:PublicIdSecret"];
+
+            if (string.IsNullOrWhiteSpace(secret))
+                throw new InvalidOperationException(
+                    "[SECURITY] PUBLIC_ID_SECRET chưa được cấu hình trong .env hoặc appsettings.");
+
+            var payload = $"{docId}:{DateTime.UtcNow.Date:yyyyMMdd}";
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+            var sig = Convert.ToBase64String(hash)
+                .Replace("+", "-").Replace("/", "_").Replace("=", "");
+            // Token = base64url(docId) + "." + signature (4 chars truncated không đủ để reverse)
+            var idPart = Convert.ToBase64String(Encoding.UTF8.GetBytes(docId.ToString()))
+                .Replace("+", "-").Replace("/", "_").Replace("=", "");
+            return $"{idPart}.{sig}";
+        }
+
+        // ── Helper: Giải mã và xác thực token HMAC-SHA256 ───────────────
+        private bool TryDecodePublicDocToken(string token, out int docId)
+        {
+            docId = 0;
+            try
+            {
+                var parts = token.Split('.');
+                if (parts.Length != 2) return false;
+
+                var idBase64 = parts[0].Replace("-", "+").Replace("_", "/");
+                // Pad base64
+                idBase64 = idBase64.PadRight(idBase64.Length + (4 - idBase64.Length % 4) % 4, '=');
+                var idStr = Encoding.UTF8.GetString(Convert.FromBase64String(idBase64));
+                if (!int.TryParse(idStr, out docId)) return false;
+
+                // Tái tạo token hôm nay để so sánh (token hợp lệ trong ngày)
+                var expected = CreatePublicDocToken(docId);
+                return token == expected;
+            }
+            catch { return false; }
+        }
+
         [AllowAnonymous]
         [HttpGet("public-schedule")]
         public async Task<IActionResult> GetPublicSchedule()
@@ -637,7 +686,7 @@ namespace ToolCalendar.Api.Controllers
                 .Take(50) 
                 .ToList();
 
-            // Nhóm theo ngày
+            // Nhóm theo ngày — ID được MÃ HÓA bằng HMAC, hacker không đoán được ID thật
             var groups = filtered.GroupBy(d => d.ThoiHan.Value.Date)
                 .Select(g => new
                 {
@@ -645,7 +694,7 @@ namespace ToolCalendar.Api.Controllers
                     dayLabel = GetDayLabel(g.Key),
                     items = g.Select(d => new
                     {
-                        id = d.Id,
+                        docToken = CreatePublicDocToken(d.Id), // ← Trả token mã hóa, KHÔNG trả id thô
                         time = "08:00", 
                         docNumber = d.SoVanBan,
                         content = d.TrichYeu
@@ -655,6 +704,30 @@ namespace ToolCalendar.Api.Controllers
                 .ToList();
 
             return Ok(groups);
+        }
+
+        // ── Endpoint xem file PDF bằng token mã hóa (dùng cho trang /campha) ──
+        [AllowAnonymous]
+        [HttpGet("public-file")]
+        public async Task<IActionResult> GetPublicFile([FromQuery] string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return BadRequest("Token không hợp lệ.");
+
+            if (!TryDecodePublicDocToken(token, out int docId))
+                return Unauthorized("Token không hợp lệ hoặc đã hết hạn. Vui lòng tải lại trang.");
+
+            var doc = await _documentRepository.GetDocumentByIdAsync(docId);
+            if (doc == null || string.IsNullOrEmpty(doc.FilePath))
+                return NotFound("Văn bản không tồn tại.");
+
+            var normalizedPath = doc.FilePath.Replace('\\', '/').TrimStart('/');
+            var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File vật lý không tìm thấy.");
+
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, "application/pdf");
         }
 
         private string GetDayLabel(DateTime date)

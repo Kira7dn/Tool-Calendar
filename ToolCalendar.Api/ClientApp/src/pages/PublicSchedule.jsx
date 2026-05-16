@@ -111,7 +111,7 @@ function ScheduleBlock({ day, onViewDoc }) {
         {day.items.map((item, idx) => (
           <div
             key={idx}
-            onClick={() => onViewDoc(item.id)}
+            onClick={() => onViewDoc(item.docToken)}
             className="bg-white/60 p-3 rounded-lg border-l-4 border-gray-300 hover:border-[#cc0000] hover:bg-white cursor-pointer transition-all group shadow-sm"
           >
             <div className="flex justify-between items-start mb-1">
@@ -380,29 +380,18 @@ export default function PublicSchedule() {
     };
   }, []);
 
-  const handleViewDoc = async (docId) => {
-    const token = localStorage.getItem("auth_token");
-    if (!token || token === "undefined" || token === "null") {
-      setPendingDocId(docId);
-      setIsLoginModalOpen(true);
-      return;
-    }
-
-    // Sử dụng fetch để gửi kèm Token bảo mật
+  const handleViewDoc = async (docToken) => {
+    // Trường hợp: chỉ xem lịch công khai — dùng token mã hóa, không cần JWT
+    // Backend sẽ xác thực HMAC token và trả file PDF
     try {
-      const response = await fetch(`/api/documents/${docId}/file`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
+      const response = await fetch(`/api/documents/public-file?token=${encodeURIComponent(docToken)}`);
 
       if (response.ok) {
         const blob = await response.blob();
         const fileUrl = URL.createObjectURL(blob);
         window.open(fileUrl, "_blank");
       } else if (response.status === 401) {
-        toast.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.");
-        setIsLoginModalOpen(true);
+        toast.error("Liên kết đã hết hạn, vui lòng tải lại trang.");
       } else {
         toast.error("Không thể tải file văn bản.");
       }
@@ -527,7 +516,7 @@ export default function PublicSchedule() {
                       {today.items.map((item, idx) => (
                         <div
                           key={idx}
-                          onClick={() => handleViewDoc(item.id)}
+                          onClick={() => handleViewDoc(item.docToken)}
                           className="bg-white border-2 border-gray-100 p-5 rounded-xl hover:border-[#0a3d8f] hover:shadow-xl cursor-pointer transition-all duration-300 relative group flex flex-col justify-between h-full"
                         >
                           <div>

@@ -96,6 +96,11 @@ export function Upload({ onTabChange }) {
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
 
+  // ── Bulk selection state ──
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
   // Review Modal state
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewItem, setReviewItem] = useState(null);
@@ -242,6 +247,56 @@ export function Upload({ onTabChange }) {
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [deleteItemConfirm, setDeleteItemConfirm] = useState({ open: false, item: null });
+
+  // ── Bulk selection handlers ──
+  const selectableItems = batchItems.filter(i => typeof i.id === 'number');
+  const isAllSelected = selectableItems.length > 0 && selectableItems.every(i => selectedIds.has(i.id));
+  const isIndeterminate = !isAllSelected && selectableItems.some(i => selectedIds.has(i.id));
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(selectableItems.map(i => i.id)));
+    }
+  };
+
+  const toggleSelectOne = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      const ids = Array.from(selectedIds).filter(id => typeof id === 'number');
+      const response = await fetch('/api/documents/bulk-delete', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(ids)
+      });
+      if (response.ok) {
+        setBatchItems(prev => prev.filter(i => !selectedIds.has(i.id)));
+        setSelectedIds(new Set());
+        toast.success(`Đã xóa ${ids.length} văn bản thành công.`);
+      } else {
+        toast.error('Xóa thất bại, vui lòng thử lại.');
+      }
+    } catch (e) {
+      toast.error('Lỗi kết nối khi xóa.');
+    } finally {
+      setIsBulkDeleting(false);
+      setShowBulkDeleteConfirm(false);
+    }
+  };
 
   const handleClearBatch = async () => {
     setShowClearConfirm(true);
@@ -415,6 +470,16 @@ export function Upload({ onTabChange }) {
             <table className="w-full text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                  {/* Checkbox select-all */}
+                  <th className="pl-4 pr-2 py-2 w-8">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      ref={el => { if (el) el.indeterminate = isIndeterminate; }}
+                      onChange={toggleSelectAll}
+                      className="w-3.5 h-3.5 rounded accent-blue-600 cursor-pointer"
+                    />
+                  </th>
                   {["Tên tệp", "Số hiệu", "Thời hạn", "Đơn vị", "Cán bộ", "Trạng thái", ""].map(h => (
                     <th key={h} className="px-3 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
@@ -423,12 +488,24 @@ export function Upload({ onTabChange }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {batchItems.map(row => (
-                  <tr key={row.id} className="hover:bg-slate-50/60 transition-colors group">
+                {batchItems.map(row => {
+                  const isRowSelected = selectedIds.has(row.id);
+                  return (
+                  <tr key={row.id} className={cn("transition-colors group", isRowSelected ? "bg-blue-50 hover:bg-blue-50/80" : "hover:bg-slate-50/60")}>
+                    {/* Row checkbox */}
+                    <td className="pl-4 pr-2 py-2">
+                      <input
+                        type="checkbox"
+                        checked={isRowSelected}
+                        onChange={() => toggleSelectOne(row.id)}
+                        disabled={typeof row.id !== 'number'}
+                        className="w-3.5 h-3.5 rounded accent-blue-600 cursor-pointer disabled:opacity-30"
+                      />
+                    </td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-md bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[8px] font-black text-red-500 uppercase">PDF</span>
+                        <div className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 border", isRowSelected ? "bg-blue-100 border-blue-200" : "bg-red-50 border-red-100")}>
+                          <span className={cn("text-[8px] font-black uppercase", isRowSelected ? "text-blue-600" : "text-red-500")}>PDF</span>
                         </div>
                         <span className="font-semibold text-slate-800 truncate max-w-[120px]">{row.fileName}</span>
                       </div>
@@ -510,7 +587,8 @@ export function Upload({ onTabChange }) {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
 
@@ -528,7 +606,12 @@ export function Upload({ onTabChange }) {
 
           {/* Table footer */}
           <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
-            <p className="text-[10px] text-slate-400 font-medium">Hiển thị {batchItems.length} tệp</p>
+            <p className="text-[10px] text-slate-400 font-medium">
+              Hiển thị {batchItems.length} tệp
+              {selectedIds.size > 0 && (
+                <span className="ml-2 text-blue-600 font-bold">· Đã chọn {selectedIds.size}</span>
+              )}
+            </p>
             <div className="flex items-center gap-1">
               <button className="w-6 h-6 rounded text-[10px] font-bold bg-blue-600 text-white">1</button>
             </div>
@@ -713,6 +796,33 @@ export function Upload({ onTabChange }) {
         </DialogContent>
       </Dialog>
 
+      {/* ── Floating bulk-action bar ── */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-3.5 rounded-2xl bg-slate-900 shadow-2xl shadow-slate-900/40 border border-white/10 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-md bg-blue-500 flex items-center justify-center">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span className="text-sm font-bold text-white">Đã chọn <span className="text-blue-400">{selectedIds.size}</span> văn bản</span>
+          </div>
+          <div className="w-px h-5 bg-white/10" />
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-[11px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-wider"
+          >
+            Bỏ chọn
+          </button>
+          <button
+            onClick={() => setShowBulkDeleteConfirm(true)}
+            disabled={isBulkDeleting}
+            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-500 hover:bg-red-400 text-white text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-red-900/40"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            {isBulkDeleting ? 'Đang xóa...' : `Xóa ${selectedIds.size} văn bản`}
+          </button>
+        </div>
+      )}
+
       <ConfirmationModal
         open={showClearConfirm}
         onOpenChange={setShowClearConfirm}
@@ -722,6 +832,17 @@ export function Upload({ onTabChange }) {
         cancelLabel="QUAY LẠI"
         onConfirm={executeClearBatch}
         variant="warning"
+      />
+
+      <ConfirmationModal
+        open={showBulkDeleteConfirm}
+        onOpenChange={setShowBulkDeleteConfirm}
+        title={`Xóa ${selectedIds.size} văn bản?`}
+        description={`Bạn sắp xóa vĩnh viễn ${selectedIds.size} văn bản đã chọn cùng toàn bộ file đính kèm. Hành động này không thể hoàn tác.`}
+        confirmLabel={`XÓA ${selectedIds.size} VĂN BẢN`}
+        cancelLabel="QUAY LẠI"
+        onConfirm={handleBulkDelete}
+        variant="destructive"
       />
 
       <ConfirmationModal
