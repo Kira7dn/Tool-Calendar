@@ -1,4 +1,4 @@
-﻿# Stage 1: Base - Cài đặt các công cụ hệ thống cần thiết (Dùng chung cho cả Dev và Prod)
+# Stage 1: Base - Cài đặt các công cụ hệ thống cần thiết (Dùng chung cho cả Dev và Prod)
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS base
 WORKDIR /app
 
@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 FROM node:22-alpine AS client-build
 WORKDIR /src/ToolCalendar.Api/ClientApp
 COPY ["ToolCalendar.Api/ClientApp/package.json", "ToolCalendar.Api/ClientApp/package-lock.json", "./"]
-RUN npm ci
+RUN npm install
 COPY ["ToolCalendar.Api/ClientApp/", "./"]
 COPY ["ToolCalendar.Api/wwwroot/", "../wwwroot/"]
 RUN npm run build

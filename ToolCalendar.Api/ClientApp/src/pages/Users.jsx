@@ -441,22 +441,21 @@ export function Users() {
 
           <div className="p-5 md:p-8 flex-1 overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              {!editingUser && (
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tên đăng nhập</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input
-                      placeholder="vd: canbo.dv"
-                      value={formData.username}
-                      onChange={e => setFormData({ ...formData, username: e.target.value })}
-                      className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
-                    />
-                  </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tên đăng nhập</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input
+                    placeholder="vd: canbo.dv"
+                    value={formData.username}
+                    onChange={e => !editingUser && setFormData({ ...formData, username: e.target.value })}
+                    className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-bold disabled:opacity-50"
+                    disabled={!!editingUser}
+                  />
                 </div>
-              )}
+              </div>
 
-              <div className={cn("space-y-2", editingUser && "col-span-2")}>
+              <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   {editingUser ? 'Mật khẩu mới (Để trống nếu không đổi)' : 'Mật khẩu'}
                 </Label>

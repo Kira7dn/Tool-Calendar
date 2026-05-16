@@ -39,11 +39,10 @@ services:
     container_name: doc-coordination-ngrok
     restart: always
     environment:
-      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+      - NGROK_AUTHTOKEN=NGROK_TOKEN_REDACTED
     command:
       - http
-      - ${NGROK_DOMAIN:+--url=${NGROK_DOMAIN}}
-      - ${NGROK_DOMAIN:+--pooling-enabled}
       - nginx-proxy:80
+      - --domain=NGROK_DOMAIN_REDACTED
     depends_on:
       - nginx
