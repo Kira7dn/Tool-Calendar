@@ -14,7 +14,8 @@ services:
       - OcrSettings__TessDataPath=/usr/share/tesseract-ocr/5/tessdata
       - TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
       - TZ=Asia/Ho_Chi_Minh
-      - JWT_SECRET=${JWT_SECRET:-LinkStrategy_Production_ChangeMe_2026_Key}
+      - JWT_SECRET=${JWT_SECRET}
+      - PUBLIC_ID_SECRET=${PUBLIC_ID_SECRET}
       - VAPID_SUBJECT=mailto:admin@linkstrategy.vn
     volumes:
       - ./data_dump:/app/data

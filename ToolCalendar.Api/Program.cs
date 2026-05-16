@@ -28,11 +28,23 @@ builder.Services.AddSignalR();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Policy chung toàn hệ thống: 50 request / 10 giây
     options.AddFixedWindowLimiter("fixed", opt =>
     {
         opt.Window = TimeSpan.FromSeconds(10);
-        opt.PermitLimit = 50; // Giới hạn 50 request mỗi 10 giây
+        opt.PermitLimit = 50;
         opt.QueueLimit = 0;
+    });
+
+    // Policy STRICT cho Login: tối đa 5 lần thử / 60 giây / mỗi IP → chống Brute Force
+    options.AddSlidingWindowLimiter("login-policy", opt =>
+    {
+        opt.Window = TimeSpan.FromSeconds(60);
+        opt.PermitLimit = 5;
+        opt.SegmentsPerWindow = 6;
+        opt.QueueLimit = 0;
+        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
     });
 });
 
@@ -57,13 +69,17 @@ builder.Services.AddScoped<INotificationManager, NotificationManager>();
 builder.Services.AddSingleton<DeadlineWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DeadlineWorker>());
 
-// Cấu hình JWT - Ưu tiên lấy từ biến môi trường để bảo mật Production
-var jwtSecret = builder.Configuration["JWT_SECRET"] 
-                ?? Environment.GetEnvironmentVariable("JWT_SECRET") 
-                ?? "LinkStrategy_Default_Development_Key_2026_DO_NOT_USE_IN_PROD";
+// Cấu hình JWT - Bắt buộc phải có trong biến môi trường hoặc appsettings
+var jwtSecret = builder.Configuration["JWT_SECRET"]
+                ?? Environment.GetEnvironmentVariable("JWT_SECRET");
 
-if (jwtSecret.Length < 32) {
-    Console.WriteLine("[SecurityWarning] JWT Secret quá ngắn! Nên sử dụng ít nhất 32 ký tự.");
+// Nếu không có secret → DỪNG ứng dụng ngay, không cho chạy với key rỗng/yếu
+if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
+{
+    throw new InvalidOperationException(
+        "[SECURITY FATAL] JWT_SECRET chưa được cấu hình hoặc quá ngắn (tối thiểu 32 ký tự).\n" +
+        "Vui lòng thêm JWT_SECRET vào file .env hoặc biến môi trường hệ thống.\n" +
+        "Tạo secret mạnh bằng lệnh: openssl rand -base64 64");
 }
 
 var key = jwtSecret;
@@ -145,11 +161,28 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
-// Cấu hình CORS để giao diện Web gọi được API
+// Cấu hình CORS - chỉ cho phép các domain tin cậy
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+        policy => policy
+            // Cho phép: localhost (dev), ngrok/localtunnel (staging), và IP LAN nội bộ
+            .SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrEmpty(origin)) return false;
+                var uri = new Uri(origin);
+                return
+                    uri.Host == "localhost" ||
+                    uri.Host == "127.0.0.1" ||
+                    uri.Host.StartsWith("192.168.") ||  // LAN nội bộ
+                    uri.Host.EndsWith(".ngrok-free.dev") ||
+                    uri.Host.EndsWith(".ngrok.io") ||
+                    uri.Host.EndsWith(".loca.lt") ||    // localtunnel
+                    uri.Host.EndsWith(".trycloudflare.com"); // cloudflare tunnel
+            })
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
 });
 
 var app = builder.Build();
@@ -177,18 +210,15 @@ app.UseCors("AllowAll");
 app.UseRateLimiter(); // Kích hoạt Rate Limiting
 app.UseWebSockets();
 
-// Serve static files
+// Serve static files (chỉ wwwroot - giao diện web, KHÔNG phải Uploads)
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Serve files from Uploads directory
+// ⚠️  KHÔNG serve thư mục /Uploads qua static files!
+// Tất cả file PDF/Evidence phải đi qua API có xác thực JWT.
+// Xem: GET /api/documents/{id}/file (yêu cầu Bearer Token)
 var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "Uploads");
 if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/Uploads"
-});
 
 app.UseAuthentication();
 app.UseAuthorization();
