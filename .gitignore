@@ -17,6 +17,9 @@ packages/
 nginx/certs/*
 !nginx/certs/.gitkeep
 nginx/conf.d/.htpasswd
+# appsettings chứa secret - KHÔNG commit lên git
+appsettings.Production.json
+appsettings.Staging.json
 
 # SQLite
 *.db
