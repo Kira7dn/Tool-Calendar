@@ -707,7 +707,7 @@ namespace ToolCalendar.Api.Controllers
         }
 
         // ── Endpoint xem file PDF bằng token mã hóa (dùng cho trang /campha) ──
-        [AllowAnonymous]
+        [Authorize]
         [HttpGet("public-file")]
         public async Task<IActionResult> GetPublicFile([FromQuery] string token)
         {

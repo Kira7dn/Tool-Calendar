@@ -381,17 +381,27 @@ export default function PublicSchedule() {
   }, []);
 
   const handleViewDoc = async (docToken) => {
-    // Trường hợp: chỉ xem lịch công khai — dùng token mã hóa, không cần JWT
-    // Backend sẽ xác thực HMAC token và trả file PDF
+    // Trường hợp: người dùng phải đăng nhập mới xem được nội dung chi tiết
+    const token = localStorage.getItem("auth_token");
+    if (!token || token === "undefined") {
+      setPendingDocId(docToken);
+      setIsLoginModalOpen(true);
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/documents/public-file?token=${encodeURIComponent(docToken)}`);
+      const response = await fetch(`/api/documents/public-file?token=${encodeURIComponent(docToken)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
       if (response.ok) {
         const blob = await response.blob();
         const fileUrl = URL.createObjectURL(blob);
         window.open(fileUrl, "_blank");
-      } else if (response.status === 401) {
-        toast.error("Liên kết đã hết hạn, vui lòng tải lại trang.");
+      } else if (response.status === 401 || response.status === 403) {
+        toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+        setPendingDocId(docToken);
+        setIsLoginModalOpen(true);
       } else {
         toast.error("Không thể tải file văn bản.");
       }
