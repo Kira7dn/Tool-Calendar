@@ -15,7 +15,7 @@ export function KpiCard({ title, description, value, icon: Icon, tone, isLoading
     <Card className="glass-card border-border/60 shadow-subtle rounded-xl overflow-hidden py-4 gap-0">
       <CardContent className="px-4">
         <div className="group w-full text-left">
-          <div className="grid grid-cols-[minmax(128px,0.75fr)_minmax(0,1.25fr)] items-center gap-3">
+          <div className="grid grid-cols-[minmax(100px,0.7fr)_minmax(0,1.3fr)] items-center gap-2">
             <div 
               className="flex flex-col min-w-0 border-r border-border/70 pr-3 gap-1.5 cursor-pointer"
               onClick={onClick}

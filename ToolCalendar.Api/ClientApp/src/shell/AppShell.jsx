@@ -54,6 +54,113 @@ import {
 } from "@/components/ui/popover";
 import { Toaster, toast } from 'sonner';
 
+// ─── Helper: Relative Time ───────────────────────────────────────────────────
+function formatRelativeTime(dateStr) {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now - date;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) return 'Vừa xong';
+  if (diffMin < 60) return `${diffMin} phút trước`;
+  if (diffHour < 24) return `${diffHour} giờ trước`;
+  if (diffDay === 1) return 'Hôm qua';
+  if (diffDay < 7) return `${diffDay} ngày trước`;
+  return date.toLocaleDateString('vi-VN');
+}
+
+// ─── Notification Icon Avatar ────────────────────────────────────────────────
+function NotifAvatar({ title, isRead }) {
+  // Pick icon/color based on keyword in title
+  const isOverdue = /quá hạn/i.test(title);
+  const isNew = /mới|tiếp nhận|tải lên/i.test(title);
+  const isAssign = /phân công|giao/i.test(title);
+  const isComplete = /hoàn thành|xử lý xong/i.test(title);
+
+  let bg = 'bg-info/15';
+  let icon = '📄';
+  if (isOverdue) { bg = 'bg-destructive/15'; icon = '⚠️'; }
+  else if (isNew) { bg = 'bg-success/15'; icon = '📥'; }
+  else if (isAssign) { bg = 'bg-warning/15'; icon = '📋'; }
+  else if (isComplete) { bg = 'bg-success/15'; icon = '✅'; }
+
+  return (
+    <div className={`relative shrink-0 size-12 rounded-full ${bg} flex items-center justify-center text-xl`}>
+      {icon}
+      {!isRead && (
+        <span className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-primary border-2 border-background" />
+      )}
+    </div>
+  );
+}
+
+// ─── Notification List (Facebook-style) ─────────────────────────────────────
+function NotificationList({ notifications, onClickItem }) {
+  // Group into "Mới" (< 24h) and "Trước đó"
+  const now = new Date();
+  const newNotifs = notifications.filter(n => (now - new Date(n.createdAt)) < 86400000);
+  const oldNotifs = notifications.filter(n => (now - new Date(n.createdAt)) >= 86400000);
+
+  const renderItem = (n) => (
+    <button
+      key={n.id}
+      type="button"
+      className={cn(
+        'w-full flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors rounded-xl mx-1 text-left group',
+        !n.isRead && 'bg-primary/5 hover:bg-primary/10'
+      )}
+      onClick={() => onClickItem(n)}
+    >
+      <NotifAvatar title={n.title} isRead={n.isRead} />
+
+      <div className="flex-1 min-w-0">
+        <p className={cn(
+          'text-[13px] leading-snug line-clamp-2 mb-0.5',
+          n.isRead ? 'text-muted-foreground font-medium' : 'text-foreground font-bold'
+        )}>
+          {n.title}
+        </p>
+        {n.body && (
+          <p className="text-[12px] text-muted-foreground line-clamp-2 leading-snug mb-1">
+            {n.body}
+          </p>
+        )}
+        <p className={cn(
+          'text-[11px] font-bold',
+          n.isRead ? 'text-muted-foreground/60' : 'text-primary'
+        )}>
+          {formatRelativeTime(n.createdAt)}
+        </p>
+      </div>
+
+      {/* Unread blue dot (right side) */}
+      {!n.isRead && (
+        <div className="shrink-0 size-2.5 rounded-full bg-primary mt-2" />
+      )}
+    </button>
+  );
+
+  return (
+    <div className="py-2 px-1">
+      {newNotifs.length > 0 && (
+        <>
+          <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground px-4 py-1.5">Mới</p>
+          {newNotifs.map(renderItem)}
+        </>
+      )}
+      {oldNotifs.length > 0 && (
+        <>
+          <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground px-4 py-1.5 mt-1">Trước đó</p>
+          {oldNotifs.map(renderItem)}
+        </>
+      )}
+    </div>
+  );
+}
+
 export function AppShell() {
   const [activeTab, setActiveTab] = React.useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -388,113 +495,111 @@ export function AppShell() {
 
         <main className="main-content">
           <header className="px-6 h-[var(--header-height)] glass-header flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 min-w-0">
               <SidebarTrigger className="size-10 shrink-0 text-muted-foreground hover:bg-muted" />
-              <div className="header-title">
-                <h1 className="text-xl font-extrabold text-foreground tracking-tight">Hệ Thống Điều Phối Công Văn</h1>
-                <p className="text-[0.7rem] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-0.5">Giám sát và đôn đốc thực thi công việc</p>
+              <div className="header-title min-w-0">
+                <h1 className="font-extrabold text-foreground tracking-tight leading-tight"
+                  style={{ fontSize: 'clamp(0.8rem, 3.5vw, 1.2rem)' }}
+                >
+                  <span className="md:hidden">Hệ Thống</span>
+                  <span className="md:hidden block text-[0.7rem] font-bold text-muted-foreground uppercase tracking-widest">Điều Phối Công Văn</span>
+                  <span className="hidden md:inline">Hệ Thống Điều Phối Công Văn</span>
+                </h1>
+                <p className="hidden md:block text-[0.7rem] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-0.5">Giám sát và đôn đốc thực thi công việc</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               <div className="flex items-center gap-2">
-                {/* Notifications */}
+                {/* Notifications - hidden visually on mobile but kept for popover anchor */}
                 <Popover open={isNotifOpen} onOpenChange={setIsNotifOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative size-10 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground transition-all">
+                    <Button variant="ghost" size="icon" className="relative rounded-full bg-muted/50 hover:bg-muted text-muted-foreground transition-all flex size-0 p-0 overflow-hidden border-none md:size-10 md:p-2">
                       <Bell className="size-5" />
-                      <Badge className="absolute -top-1 -right-1 size-5 p-0 flex items-center justify-center bg-destructive border-2 border-background text-[10px] font-bold">
-                        {notifCount}
-                      </Badge>
+                      {notifCount > 0 && (
+                        <Badge className="absolute -top-1 -right-1 size-5 p-0 flex items-center justify-center bg-destructive border-2 border-background text-[10px] font-bold">
+                          {notifCount}
+                        </Badge>
+                      )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-[380px] p-0 overflow-hidden border-none shadow-2xl glass-card rounded-2xl">
-                    <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
-                      <h3 className="font-bold text-foreground">Thông báo</h3>
-                      <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:bg-primary/10 font-bold" onClick={markAllRead}>
-                        Đánh dấu đã đọc
+                  <PopoverContent align="end" sideOffset={8} className="w-[420px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl bg-card">
+                    {/* Header */}
+                    <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+                      <h3 className="text-xl font-black text-foreground">Thông báo</h3>
+                      <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:bg-primary/10 font-bold rounded-lg" onClick={markAllRead}>
+                        Đánh dấu tất cả đã đọc
                       </Button>
                     </div>
+
+                    {/* Tabs */}
                     <Tabs defaultValue="all" className="w-full">
-                      <div className="px-4 pt-3">
-                        <TabsList className="w-full grid grid-cols-2 bg-muted/50">
-                          <TabsTrigger value="all" className="text-xs font-bold">Tất cả ({notifications.length})</TabsTrigger>
-                          <TabsTrigger value="unread" className="text-xs font-bold">Chưa đọc ({notifications.filter(n => !n.isRead).length})</TabsTrigger>
+                      <div className="px-5">
+                        <TabsList className="h-9 bg-muted/60 rounded-xl p-1 w-full grid grid-cols-2">
+                          <TabsTrigger value="all" className="text-xs font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                            Tất cả
+                          </TabsTrigger>
+                          <TabsTrigger value="unread" className="text-xs font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                            Chưa đọc {notifications.filter(n => !n.isRead).length > 0 && (
+                              <span className="ml-1.5 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center bg-destructive text-destructive-foreground text-[10px] font-black rounded-full">
+                                {notifications.filter(n => !n.isRead).length}
+                              </span>
+                            )}
+                          </TabsTrigger>
                         </TabsList>
                       </div>
-                      <TabsContent value="all" className="m-0 mt-2">
-                        <ScrollArea className="h-[350px]">
-                          <div className="flex flex-col">
-                            {notifications.length > 0 ? (
-                              notifications.map((n) => (
-                                <div
-                                  key={n.id}
-                                  className={cn(
-                                    "p-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors relative group",
-                                    !n.isRead && "bg-primary/5"
-                                  )}
-                                  onClick={() => {
-                                    if (n.docId) setCurrentDocId(n.docId);
-                                    if (!n.isRead) markRead(n.id);
-                                    setIsNotifOpen(false);
-                                  }}
-                                >
-                                  {!n.isRead && <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />}
-                                  <div className="flex flex-col gap-1">
-                                    <p className={cn("text-xs leading-tight", n.isRead ? "font-medium text-muted-foreground" : "font-black text-foreground")}>{n.title}</p>
-                                    <p className="text-[11px] text-muted-foreground line-clamp-2">{n.body}</p>
-                                    <p className="text-[9px] text-muted-foreground/60 font-bold uppercase mt-1">
-                                      {new Date(n.createdAt).toLocaleString('vi-VN')}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground">
-                                <div className="size-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                                  <Bell className="size-6 text-muted-foreground/30" />
-                                </div>
-                                <p className="text-sm font-medium">Không có thông báo mới</p>
+
+                      {/* All notifications */}
+                      <TabsContent value="all" className="m-0 mt-1">
+                        <ScrollArea className="h-[420px]">
+                          {notifications.length > 0 ? (
+                            <NotificationList
+                              notifications={notifications}
+                              onClickItem={(n) => {
+                                if (n.docId) setCurrentDocId(n.docId);
+                                if (!n.isRead) markRead(n.id);
+                                setIsNotifOpen(false);
+                              }}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-16 px-4 text-center text-muted-foreground">
+                              <div className="size-16 rounded-full bg-muted/60 flex items-center justify-center mb-4">
+                                <Bell className="size-7 text-muted-foreground/30" />
                               </div>
-                            )}
-                          </div>
+                              <p className="text-sm font-bold">Không có thông báo nào</p>
+                              <p className="text-xs text-muted-foreground/60 mt-1">Mọi hoạt động trong hệ thống sẽ hiển thị ở đây</p>
+                            </div>
+                          )}
                         </ScrollArea>
                       </TabsContent>
-                      <TabsContent value="unread" className="m-0 mt-2">
-                        <ScrollArea className="h-[350px]">
-                          <div className="flex flex-col">
-                            {notifications.filter(n => !n.isRead).length > 0 ? (
-                              notifications.filter(n => !n.isRead).map((n) => (
-                                <div
-                                  key={n.id}
-                                  className="p-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors relative bg-primary/5"
-                                  onClick={() => {
-                                    if (n.docId) setCurrentDocId(n.docId);
-                                    markRead(n.id);
-                                    setIsNotifOpen(false);
-                                  }}
-                                >
-                                  <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
-                                  <div className="flex flex-col gap-1">
-                                    <p className="text-xs leading-tight font-black text-foreground">{n.title}</p>
-                                    <p className="text-[11px] text-muted-foreground line-clamp-2">{n.body}</p>
-                                    <p className="text-[9px] text-muted-foreground/60 font-bold uppercase mt-1">
-                                      {new Date(n.createdAt).toLocaleString('vi-VN')}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground">
-                                <p className="text-sm font-medium">Tất cả thông báo đã được đọc</p>
+
+                      {/* Unread notifications */}
+                      <TabsContent value="unread" className="m-0 mt-1">
+                        <ScrollArea className="h-[420px]">
+                          {notifications.filter(n => !n.isRead).length > 0 ? (
+                            <NotificationList
+                              notifications={notifications.filter(n => !n.isRead)}
+                              onClickItem={(n) => {
+                                if (n.docId) setCurrentDocId(n.docId);
+                                markRead(n.id);
+                                setIsNotifOpen(false);
+                              }}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-16 px-4 text-center text-muted-foreground">
+                              <div className="size-16 rounded-full bg-muted/60 flex items-center justify-center mb-4">
+                                <Bell className="size-7 text-muted-foreground/30" />
                               </div>
-                            )}
-                          </div>
+                              <p className="text-sm font-bold">Tất cả đã được đọc!</p>
+                            </div>
+                          )}
                         </ScrollArea>
                       </TabsContent>
                     </Tabs>
-                    <div className="p-0 bg-muted/30 border-t border-border text-center">
-                      <Button variant="link" className="text-xs font-bold text-primary" onClick={() => { setActiveTab('documents'); setIsNotifOpen(false); }}>Xem tất cả văn bản</Button>
+
+                    {/* Footer */}
+                    <div className="border-t border-border/50 bg-muted/20 text-center flex justify-center py-1">
+                      <Button variant="link" className="text-xs font-bold text-primary w-full" onClick={() => { setActiveTab('documents'); setIsNotifOpen(false); }}>Xem tất cả văn bản</Button>
                     </div>
                   </PopoverContent>
                 </Popover>
