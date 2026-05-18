@@ -26,7 +26,7 @@ function ActivityRow({ log }) {
 
 export function EventLogCard({ className, activities, isLoading }) {
   return (
-    <Card className={cn('glass-card border-border/60 shadow-subtle rounded-xl min-h-0 h-full overflow-hidden', className)}>
+    <Card className={cn('glass-card border-border/60 shadow-subtle rounded-xl overflow-hidden', className)}>
       <CardHeader className="pb-2 py-3">
         <CardTitle className="text-base font-black tracking-tight flex items-center gap-2">
           <Activity className="size-5 text-primary" />
@@ -34,7 +34,7 @@ export function EventLogCard({ className, activities, isLoading }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="h-[calc(100vh-430px)] min-h-[220px] overflow-y-auto p-3 space-y-3 scrollbar-none">
+        <div className="h-[280px] xl:h-[calc(100vh-430px)] xl:min-h-[220px] overflow-y-auto p-3 space-y-3 scrollbar-none">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="h-12 w-full rounded-lg" />)
           ) : activities.length > 0 ? (

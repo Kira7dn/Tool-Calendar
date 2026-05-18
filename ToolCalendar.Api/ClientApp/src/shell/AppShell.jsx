@@ -9,7 +9,8 @@ import {
   LayoutDashboard,
   LogOut,
   Settings as SettingsIcon,
-  ChevronDown
+  ChevronDown,
+  X
 } from 'lucide-react';
 import { AppSidebar } from './Sidebar.jsx';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -170,6 +171,7 @@ export function AppShell() {
   const [currentDocId, setCurrentDocId] = React.useState(null);
   const [isReviewOpen, setIsReviewOpen] = React.useState(false);
   const [isNotifOpen, setIsNotifOpen] = React.useState(false);
+  const [isNotifMobileOpen, setIsNotifMobileOpen] = React.useState(false);
   const [pushPermission, setPushPermission] = React.useState('default');
   const [isUserOpen, setIsUserOpen] = React.useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = React.useState(false);
@@ -713,7 +715,7 @@ export function AppShell() {
           <FileText className="size-5" />
           <span className="text-[10px] font-bold">Văn bản</span>
         </Button>
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent relative")} onClick={() => setIsNotifOpen(true)}>
+        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent relative")} onClick={() => setIsNotifMobileOpen(true)}>
           <Bell className="size-5" />
           <Badge className="absolute top-2 right-4 size-4 p-0 flex items-center justify-center bg-destructive border-2 border-background text-[8px] font-bold">{notifCount}</Badge>
           <span className="text-[10px] font-bold">Thông báo</span>
@@ -723,6 +725,83 @@ export function AppShell() {
           <span className="text-[10px] font-bold">Công việc</span>
         </Button>
       </nav>
+
+      {/* Mobile Full-Screen Notification Panel (Facebook style) */}
+      {isNotifMobileOpen && (
+        <div className="fixed inset-0 z-[600] bg-background flex flex-col animate-in slide-in-from-bottom-4 duration-300 md:hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-background">
+            <h2 className="text-xl font-black text-foreground">Thông báo</h2>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:bg-primary/10 font-bold rounded-lg" onClick={markAllRead}>
+                Đánh dấu đã đọc
+              </Button>
+              <Button variant="ghost" size="icon" className="size-9 rounded-full hover:bg-muted" onClick={() => setIsNotifMobileOpen(false)}>
+                <X className="size-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <Tabs defaultValue="all" className="flex flex-col flex-1 overflow-hidden">
+            <div className="px-4 pt-3 shrink-0">
+              <TabsList className="h-10 bg-muted/60 rounded-xl p-1 w-full grid grid-cols-2">
+                <TabsTrigger value="all" className="text-sm font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                  Tất cả
+                </TabsTrigger>
+                <TabsTrigger value="unread" className="text-sm font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                  Chưa đọc {notifications.filter(n => !n.isRead).length > 0 && (
+                    <span className="ml-1.5 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center bg-destructive text-destructive-foreground text-[10px] font-black rounded-full">
+                      {notifications.filter(n => !n.isRead).length}
+                    </span>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="all" className="flex-1 overflow-y-auto m-0 mt-2 pb-20">
+              {notifications.length > 0 ? (
+                <NotificationList
+                  notifications={notifications}
+                  onClickItem={(n) => {
+                    if (n.docId) setCurrentDocId(n.docId);
+                    if (!n.isRead) markRead(n.id);
+                    setIsNotifMobileOpen(false);
+                  }}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
+                  <div className="size-20 rounded-full bg-muted/60 flex items-center justify-center mb-4">
+                    <Bell className="size-9 text-muted-foreground/30" />
+                  </div>
+                  <p className="text-base font-bold">Không có thông báo nào</p>
+                  <p className="text-sm text-muted-foreground/60 mt-1">Mọi hoạt động sẽ hiển thị ở đây</p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="unread" className="flex-1 overflow-y-auto m-0 mt-2 pb-20">
+              {notifications.filter(n => !n.isRead).length > 0 ? (
+                <NotificationList
+                  notifications={notifications.filter(n => !n.isRead)}
+                  onClickItem={(n) => {
+                    if (n.docId) setCurrentDocId(n.docId);
+                    markRead(n.id);
+                    setIsNotifMobileOpen(false);
+                  }}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
+                  <div className="size-20 rounded-full bg-muted/60 flex items-center justify-center mb-4">
+                    <Bell className="size-9 text-muted-foreground/30" />
+                  </div>
+                  <p className="text-base font-bold">Tất cả đã được đọc!</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
 
       {/* Change Password Modal */}
       <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>

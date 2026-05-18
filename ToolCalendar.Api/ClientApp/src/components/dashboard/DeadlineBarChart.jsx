@@ -38,7 +38,7 @@ export function DeadlineBarChart({ className, data, isLoading }) {
   const hasData = chartData.some((item) => (item.count || 0) > 0);
 
   return (
-    <Card className={cn('glass-card border-border/60 shadow-subtle rounded-xl min-h-0 h-full overflow-hidden', className)}>
+    <Card className={cn('glass-card border-border/60 shadow-subtle rounded-xl overflow-hidden', className)}>
       <CardHeader className="pb-2 py-3">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -49,7 +49,7 @@ export function DeadlineBarChart({ className, data, isLoading }) {
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="h-[calc(100%-72px)] pb-3">
+      <CardContent className="pb-3" style={{ height: '280px' }}>
         <div className="flex h-full flex-col">
           <div className="flex-1 px-1 py-3 relative">
             {/* Legend Overlay */}

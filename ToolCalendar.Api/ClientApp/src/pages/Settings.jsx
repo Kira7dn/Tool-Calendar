@@ -125,24 +125,26 @@ export function Settings() {
   ];
 
   return (
-    <div className="flex h-full bg-slate-50/50 -m-6 overflow-hidden">
+    <div className="flex flex-col md:flex-row h-full bg-slate-50/50 -m-6 overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 md:w-72 bg-white border-r border-slate-200 flex flex-col shrink-0">
-        <div className="px-5 md:px-6 pt-6 md:pt-8 pb-4 md:pb-6 border-b border-slate-100">
-          <div className="flex items-center gap-2.5 mb-1.5">
-            <span className="w-1.5 h-7 rounded-full bg-red-600 shadow-lg shadow-red-200"></span>
-            <h1 className="text-lg font-black text-slate-900 tracking-tight">Cấu hình hệ thống</h1>
+      <aside className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col shrink-0 z-10 shadow-sm md:shadow-none">
+        <div className="px-5 md:px-6 pt-5 md:pt-8 pb-3 md:pb-6 border-b border-slate-100 flex items-center justify-between md:block">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1 md:mb-1.5">
+              <span className="w-1.5 h-6 md:h-7 rounded-full bg-red-600 shadow-lg shadow-red-200"></span>
+              <h1 className="text-base md:text-lg font-black text-slate-900 tracking-tight">Cấu hình hệ thống</h1>
+            </div>
+            <p className="text-[9px] md:text-[10px] text-slate-400 uppercase tracking-widest font-black pl-4">Thiết lập vận hành</p>
           </div>
-          <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black pl-4">Thiết lập vận hành & Bảo mật</p>
         </div>
 
-        <nav className="flex flex-col gap-1.5 p-4 flex-1">
+        <nav className="flex flex-row md:flex-col gap-2 md:gap-1.5 p-3 md:p-4 overflow-x-auto md:flex-1 scrollbar-none snap-x">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-bold text-left transition-all duration-300",
+                "group flex items-center gap-3 px-4 py-2.5 md:py-3.5 rounded-2xl text-sm font-bold text-left transition-all duration-300 shrink-0 snap-center md:shrink",
                 activeTab === tab.id
                   ? "bg-red-600 text-white shadow-xl shadow-red-100 scale-[1.02]"
                   : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
@@ -155,9 +157,9 @@ export function Settings() {
                 {tab.icon}
               </span>
               <div className="flex flex-col">
-                <span>{tab.label}</span>
+                <span className="text-sm md:text-base">{tab.label}</span>
                 <span className={cn(
-                  "text-[10px] font-medium leading-tight mt-0.5",
+                  "text-[9px] md:text-[10px] font-medium leading-tight mt-0.5",
                   activeTab === tab.id ? "text-red-200/80" : "text-slate-400"
                 )}>
                   {tab.desc}
@@ -167,7 +169,7 @@ export function Settings() {
           ))}
         </nav>
 
-        <div className="p-4 m-4 rounded-2xl bg-gradient-to-br from-red-50 to-white border border-red-100 shadow-sm">
+        <div className="hidden md:block p-4 m-4 rounded-2xl bg-gradient-to-br from-red-50 to-white border border-red-100 shadow-sm">
           <p className="text-[11px] font-black text-red-700 uppercase tracking-wider mb-1">Phiên bản hệ thống</p>
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-red-400/80">v2.4.1</p>
@@ -177,8 +179,8 @@ export function Settings() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 overflow-hidden flex flex-col">
-        <ScrollArea className="flex-1 px-8 py-8">
+      <main className="flex-1 min-w-0 overflow-hidden flex flex-col relative">
+        <ScrollArea className="flex-1 px-4 md:px-8 py-6 md:py-8">
           <div className="max-w-4xl mx-auto space-y-8 pb-12">
             <div key={activeTab} className="animate-in fade-in slide-in-from-right-8 duration-700 fill-mode-both">
               {activeTab === 'general' && (

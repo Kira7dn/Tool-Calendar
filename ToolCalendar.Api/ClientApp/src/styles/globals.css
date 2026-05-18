@@ -325,10 +325,9 @@
     display: none;
   }
 
-  /* Notification popover full width on mobile */
+  /* Ensure dropdown menus align properly on mobile - don't override width */
   [data-radix-popper-content-wrapper] {
-    width: calc(100vw - 16px) !important;
-    max-width: 100vw !important;
+    max-width: calc(100vw - 16px);
   }
 
   /* Mobile bottom nav active border fix */
@@ -341,8 +340,22 @@
 /* Sidebar overlay on mobile - ensure it closes properly */
 @media (max-width: 767px) {
   [data-sidebar="sidebar"][data-mobile="true"] {
-    width: 240px !important;
+    width: 280px !important;
     max-width: 85vw;
+    background-color: #ffffff !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Ensure all child elements of mobile sidebar also have white bg */
+  [data-sidebar="sidebar"][data-mobile="true"] [data-sidebar="header"],
+  [data-sidebar="sidebar"][data-mobile="true"] [data-sidebar="content"],
+  [data-sidebar="sidebar"][data-mobile="true"] [data-sidebar="footer"] {
+    background-color: #ffffff !important;
+  }
+
+  /* The header gradient stays for the brand area */
+  [data-sidebar="sidebar"][data-mobile="true"] .bg-sidebar-gradient {
+    background: linear-gradient(to bottom, var(--color-sidebar-start), var(--color-sidebar-mid), var(--color-sidebar-end)) !important;
   }
 }
 

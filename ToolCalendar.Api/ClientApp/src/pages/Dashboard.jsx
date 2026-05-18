@@ -134,7 +134,7 @@ export function Dashboard({ onTabChange }) {
         />
       </section>
 
-      <section className="grid grid-cols-1 xl:grid-cols-12 gap-3 min-h-0 flex-1">
+      <section className="grid grid-cols-1 xl:grid-cols-12 gap-3">
         <DeadlineBarChart className="xl:col-span-8" data={deadlineSeries} isLoading={isLoading} />
         <EventLogCard className="xl:col-span-4" activities={activities} isLoading={isLoading} />
       </section>

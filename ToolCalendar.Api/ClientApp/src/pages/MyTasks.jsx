@@ -216,7 +216,8 @@ export function MyTasks({ onTabChange }) {
 
         <CardContent className="flex-1 overflow-hidden flex flex-col p-0">
           <div className="relative flex-1 overflow-auto pt-px">
-            <Table className="table-fixed w-full">
+            {/* Desktop Table */}
+            <Table className="table-fixed w-full hidden md:table">
               <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
                 <TableRow className="hover:bg-transparent border-none">
                   <TableHead className="font-bold text-center w-12 text-foreground">STT</TableHead>
@@ -278,7 +279,6 @@ export function MyTasks({ onTabChange }) {
                             Chi tiết
                           </Button>
 
-                          {/* Nút Tiếp nhận (Màu xanh) - Hiện khi chưa xử lý */}
                           {(!task.status || task.status === 'Chưa xử lý') ? (
                             <Button
                               size="sm"
@@ -303,7 +303,6 @@ export function MyTasks({ onTabChange }) {
                               Tiếp nhận
                             </Button>
                           ) : (
-                            /* Nút Nộp (Màu đỏ) - Hiện khi đang xử lý */
                             task.status === 'Đang xử lý' && (
                               <Button
                                 size="sm"
@@ -333,6 +332,82 @@ export function MyTasks({ onTabChange }) {
                 )}
               </TableBody>
             </Table>
+
+            {/* Mobile Card List */}
+            <div className="md:hidden flex flex-col divide-y divide-border">
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="p-4 flex flex-col gap-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                ))
+              ) : paginatedTasks.length > 0 ? (
+                paginatedTasks.map((task, index) => (
+                  <div key={task.id} className="p-4 flex flex-col gap-2 hover:bg-muted/30 transition-colors">
+                    {/* Row 1: STT + Số hiệu + Badge */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-[10px] text-muted-foreground font-bold shrink-0">{(currentPage - 1) * pageSize + index + 1}.</span>
+                        <span className="font-black text-primary text-xs truncate">{task.soVanBan || '—'}</span>
+                      </div>
+                      {getStatusBadge(task)}
+                    </div>
+
+                    {/* Row 2: Trích yếu */}
+                    <p className="text-xs font-medium text-muted-foreground leading-snug line-clamp-2">{task.trichYeu || '—'}</p>
+
+                    {/* Row 3: Thời hạn + Actions */}
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-bold">
+                        <Calendar className="size-3 text-muted-foreground/50" />
+                        <span>{formatDate(task.hanXuLy)}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 rounded-lg text-info font-bold text-[11px]"
+                          onClick={() => window.app?.services?.openDocDetail?.(task.id)}
+                        >
+                          Chi tiết
+                        </Button>
+                        {(!task.status || task.status === 'Chưa xử lý') ? (
+                          <Button
+                            size="sm"
+                            className="h-7 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold text-[11px] text-white"
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(`/api/documents/${task.id}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+                                  body: JSON.stringify({ ...task, status: 'Đang xử lý' })
+                                });
+                                if (res.ok) { toast.success('Đã tiếp nhận văn bản'); fetchTasks(); }
+                              } catch (e) { toast.error('Lỗi kết nối'); }
+                            }}
+                          >Tiếp nhận</Button>
+                        ) : task.status === 'Đang xử lý' && (
+                          <Button
+                            size="sm"
+                            className="h-7 px-2.5 rounded-lg bg-red-600 hover:bg-red-700 font-bold text-[11px] text-white"
+                            onClick={() => { setSelectedDocId(task.id); setIsEvidenceModalOpen(true); }}
+                          >
+                            <Upload className="size-3 mr-1" /> Nộp
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-3 py-20 opacity-20">
+                  <CheckCircle2 className="size-16" />
+                  <p className="text-sm font-bold">Không có nhiệm vụ nào cần xử lý.</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="p-4 border-t border-border flex items-center justify-between bg-card/50">

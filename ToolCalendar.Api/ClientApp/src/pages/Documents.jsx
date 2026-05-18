@@ -205,7 +205,7 @@ export function Documents({ onTabChange, filters }) {
 
         <CardContent className="flex-1 overflow-hidden flex flex-col p-0">
           <div className="relative flex-1 overflow-auto pt-px">
-            <Table className="table-fixed w-full">
+            <Table className="w-full min-w-[1000px] table-fixed">
               <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
                 <TableRow className="hover:bg-transparent border-none">
                   <TableHead className="font-bold text-center w-12 text-foreground">STT</TableHead>
