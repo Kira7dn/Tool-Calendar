@@ -4,7 +4,17 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@legacy/*": [
+        "./src/legacy-assets/*"
       ]
-    }
-  }
+    },
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src/**/*"
+  ]
 }

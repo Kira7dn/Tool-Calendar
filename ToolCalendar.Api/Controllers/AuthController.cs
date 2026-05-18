@@ -63,6 +63,15 @@ namespace ToolCalendar.Api.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
+            // Gắn token vào HttpOnly Cookie để trình duyệt tự động gửi khi tải PDF
+            Response.Cookies.Append("jwt_cookie", tokenString, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTime.UtcNow.AddHours(24)
+            });
+
             return Ok(new
             {
                 token = tokenString,
@@ -71,6 +80,13 @@ namespace ToolCalendar.Api.Controllers
                 role = user.Role,
                 userId = user.Id
             });
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("jwt_cookie");
+            return Ok(new { message = "Đăng xuất thành công" });
         }
 
         [HttpPost("change-password")]

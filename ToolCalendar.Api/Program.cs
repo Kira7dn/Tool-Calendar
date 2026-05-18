@@ -104,11 +104,19 @@ builder.Services.AddAuthentication(x =>
         // SignalR client gửi token trong query string "access_token"
         OnMessageReceived = context =>
         {
+            // Cách A: Đọc token từ HttpOnly Cookie (ưu tiên cao nhất, an toàn nhất)
+            if (context.Request.Cookies.TryGetValue("jwt_cookie", out var cookieToken))
+            {
+                context.Token = cookieToken;
+                return Task.CompletedTask;
+            }
+
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
             if (!string.IsNullOrEmpty(accessToken) && 
                 (path.StartsWithSegments("/notificationHub") || 
                  path.Value.Contains("/file") || 
+                 path.Value.Contains("/public-file") || 
                  path.Value.Contains("/evidence") ||
                  path.Value.Contains("/Uploads")))
             {

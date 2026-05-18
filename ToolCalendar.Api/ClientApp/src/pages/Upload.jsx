@@ -771,10 +771,10 @@ export function Upload({ onTabChange }) {
               </div>
 
               {/* Modal Footer (Ảnh 2 Style) */}
-              <div className="p-8 border-t border-slate-100 bg-white flex items-center justify-between">
+              <div className="p-8 border-t border-slate-100 bg-white flex items-center justify-end gap-3">
                 <Button
                   variant="ghost"
-                  className="px-8 rounded-xl font-bold text-slate-400 hover:text-red-500 transition-colors"
+                  className="px-8 h-12 rounded-2xl bg-slate-100 font-black uppercase tracking-widest text-slate-600 hover:bg-slate-200 transition-all"
                   onClick={() => setIsReviewModalOpen(false)}
                 >
                   HỦY BỎ

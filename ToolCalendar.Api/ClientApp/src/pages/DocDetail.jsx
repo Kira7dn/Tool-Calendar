@@ -285,8 +285,10 @@ export function DocDetail({ docId, onBack }) {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
+        const url = `/api/documents/evidence-file?path=${encodeURIComponent(path)}`;
+
+        const token = localStorage.getItem('auth_token');
+        document.cookie = `jwt_cookie=${token}; path=/; max-age=86400; Secure; SameSite=Lax`;
 
         // Nếu là ảnh thì hiện modal trong app, nếu là PDF thì vẫn mở tab mới
         const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path);
@@ -339,8 +341,7 @@ export function DocDetail({ docId, onBack }) {
     { label: "Hoàn thành", done: doc.status === 'Đã hoàn thành' },
   ];
 
-  const token = localStorage.getItem('auth_token');
-  const pdfUrl = `/api/documents/${docId}/file?access_token=${token}#page=${pdfPage}&toolbar=0&navpanes=0`;
+  const pdfUrl = `/api/documents/${docId}/file#page=${pdfPage}&toolbar=0&navpanes=0`;
 
   return (
     <div className="h-full font-sans flex flex-col gap-4 overflow-hidden px-2 pb-2" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -419,7 +420,8 @@ export function DocDetail({ docId, onBack }) {
           <button
             onClick={() => {
               const token = localStorage.getItem('auth_token');
-              window.open(`/api/documents/${docId}/file?access_token=${token}`, '_blank');
+              document.cookie = `jwt_cookie=${token}; path=/; max-age=86400; Secure; SameSite=Lax`;
+              window.open(`/api/documents/${docId}/file`, '_blank');
             }}
             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-100"
           >
@@ -579,7 +581,8 @@ export function DocDetail({ docId, onBack }) {
                 <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">FILE & OCR RESULT</h2>
                 <button className="text-[10px] font-black text-red-600 hover:underline uppercase tracking-widest" onClick={() => {
                   const token = localStorage.getItem('auth_token');
-                  window.open(`/api/documents/${docId}/file?access_token=${token}`, '_blank');
+                  document.cookie = `jwt_cookie=${token}; path=/; max-age=86400; Secure; SameSite=Lax`;
+                  window.open(`/api/documents/${docId}/file`, '_blank');
                 }}>XEM TOÀN MÀN HÌNH</button>
               </div>
               <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
@@ -790,7 +793,7 @@ export function DocDetail({ docId, onBack }) {
                 <div className="flex-1 relative overflow-hidden">
                   <iframe
                     key={pdfPage}
-                    src={`/api/documents/${docId}/file?access_token=${token}#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                    src={`/api/documents/${docId}/file#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
                     className="w-full h-full border-none shadow-inner"
                     title="PDF Comparison"
                   />
@@ -935,12 +938,12 @@ export function DocDetail({ docId, onBack }) {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-slate-100 bg-white shrink-0 flex items-center justify-between">
+            <div className="px-6 py-4 border-t border-slate-100 bg-white shrink-0 flex items-center justify-end gap-3">
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all"
+                className="px-6 py-2.5 rounded-xl text-[11px] bg-slate-100 font-black uppercase tracking-widest text-slate-600 hover:bg-slate-200 transition-all"
               >
-                Hủy bỏ
+                HỦY BỎ
               </button>
               <button
                 onClick={handleSaveEdit}

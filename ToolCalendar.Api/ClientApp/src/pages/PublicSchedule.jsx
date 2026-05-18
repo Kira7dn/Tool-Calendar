@@ -395,8 +395,9 @@ export default function PublicSchedule() {
       });
 
       if (response.ok) {
-        const blob = await response.blob();
-        const fileUrl = URL.createObjectURL(blob);
+        document.cookie = `jwt_cookie=${token}; path=/; max-age=86400; Secure; SameSite=Lax`;
+
+        const fileUrl = `/api/documents/public-file?token=${encodeURIComponent(docToken)}`;
         window.open(fileUrl, "_blank");
       } else if (response.status === 401 || response.status === 403) {
         toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
