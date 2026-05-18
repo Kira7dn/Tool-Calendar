@@ -104,7 +104,7 @@ builder.Services.AddAuthentication(x =>
         // SignalR client gửi token trong query string "access_token"
         OnMessageReceived = context =>
         {
-            // Cách A: Đọc token từ HttpOnly Cookie (ưu tiên cao nhất, an toàn nhất)
+            // Đọc token từ HttpOnly Cookie (ưu tiên cao nhất, an toàn nhất)
             if (context.Request.Cookies.TryGetValue("jwt_cookie", out var cookieToken))
             {
                 context.Token = cookieToken;
