@@ -762,9 +762,9 @@ namespace ToolCalendar.Services
                 if (!string.IsNullOrEmpty(record.CoQuanBanHanh))
                 {
                     var mapping = new (string Pattern, string TargetDept)[] {
-                        ("Giáo dục|Y tế|Nội vụ|Văn hóa|Khoa học|Dân tộc|Tôn giáo", "văn hóa xã hội"),
-                        ("Tư pháp|Ngoại vụ|Thanh tra", "Văn phòng HĐND"),
-                        ("Công thương|Nông nghiệp|Môi trường|Tài chính|Xây dựng", "Kinh tế hạ tầng")
+                        ("Giáo dục|Y tế|Nội vụ|Văn hóa|Khoa học|Dân tộc|Tôn giáo|Xã hội|Lao động|Thương binh", "văn hóa xã hội"),
+                        ("Tư pháp|Ngoại vụ|Thanh tra|UBND|HĐND|Ủy ban nhân dân|Hội đồng nhân dân|Văn phòng|Ủy ban", "Văn phòng HĐND"),
+                        ("Công thương|Nông nghiệp|Môi trường|Tài chính|Xây dựng|Kinh tế|Đô thị|Quản lý đô thị|Hạ tầng", "Kinh tế hạ tầng")
                     };
 
                     foreach (var m in mapping)
@@ -809,6 +809,14 @@ namespace ToolCalendar.Services
                     var matchedUserIds = allUsers
                         .Where(u => u.DepartmentId.HasValue && matchedDeptIds.Contains(u.DepartmentId.Value) && u.Role == "CanBo")
                         .Select(u => u.Id).ToList();
+
+                    if (matchedUserIds.Count == 0)
+                    {
+                        // Fallback: Nếu không tìm thấy cán bộ xử lý (CanBo), lấy bất kỳ người dùng nào thuộc phòng ban đó
+                        matchedUserIds = allUsers
+                            .Where(u => u.DepartmentId.HasValue && matchedDeptIds.Contains(u.DepartmentId.Value))
+                            .Select(u => u.Id).ToList();
+                    }
                     
                     if (matchedUserIds.Count > 0)
                     {

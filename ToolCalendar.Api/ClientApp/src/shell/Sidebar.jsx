@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { tab: 'dashboard', labelKey: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { tab: 'dashboard', labelKey: 'dashboard', label: 'Trang chủ', icon: LayoutDashboard },
   { tab: 'documents', labelKey: 'documents', label: 'Văn bản', icon: FileText },
   { tab: 'search', labelKey: 'search', label: 'Tìm kiếm', icon: Search },
   { tab: 'upload', labelKey: 'upload', label: 'Tải hồ sơ mới', icon: Upload },

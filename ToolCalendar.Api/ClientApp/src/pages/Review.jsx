@@ -56,7 +56,7 @@ export function Review({ onBack }) {
       if (deptRes.ok) setDepartments(await deptRes.json());
       if (userRes.ok) {
         const userData = await userRes.json();
-        setUsers(userData.filter(u => u.role === 'CanBo'));
+        setUsers(userData.filter(u => u.role === 'CanBo' || u.role === 'Admin'));
       }
     } catch (e) { }
   };
@@ -309,25 +309,42 @@ export function Review({ onBack }) {
                       <Label className="text-xs font-bold text-foreground">Phòng ban</Label>
                       <select
                         value={formData.departmentId}
-                        onChange={e => setFormData({ ...formData, departmentId: e.target.value })}
-                        className="w-full h-10 rounded-xl border border-border bg-muted/50 px-3 text-sm font-medium"
+                        onChange={e => {
+                          const val = e.target.value ? parseInt(e.target.value) : '';
+                          setFormData({ ...formData, departmentId: val, assignedTo: '' });
+                        }}
+                        className="w-full h-10 rounded-xl border border-border bg-muted/50 px-3 text-sm font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                       >
                         <option value="">Chọn đơn vị...</option>
                         {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-foreground">Cán bộ</Label>
+                      <Label className="text-xs font-bold text-foreground">
+                        Cán bộ
+                      </Label>
                       <select
                         value={formData.assignedTo}
-                        onChange={e => setFormData({ ...formData, assignedTo: e.target.value })}
-                        className="w-full h-10 px-3 text-sm font-medium"
+                        onChange={e => setFormData({ ...formData, assignedTo: e.target.value ? parseInt(e.target.value) : '' })}
+                        className="w-full h-10 rounded-xl border border-border bg-muted/50 px-3 text-sm font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                       >
                         <option value="">Chọn cán bộ...</option>
-                        {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                        {(formData.departmentId
+                          ? users.filter(u => u.role === 'Admin' || u.departmentId === formData.departmentId)
+                          : users
+                        ).map(u => (
+                          <option key={u.id} value={u.id}>
+                            {u.fullName}{u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
+                  {formData.departmentId && (
+                    <p className="text-[9px] font-bold text-muted-foreground mt-2 ml-1">
+                      * Hiển thị cán bộ thuộc đơn vị này và Quản trị viên hệ thống
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

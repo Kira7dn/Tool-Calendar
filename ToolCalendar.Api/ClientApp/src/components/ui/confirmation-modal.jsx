@@ -1,9 +1,9 @@
 import React from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
@@ -11,9 +11,9 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Trash2, Info, CheckCircle2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
-export function ConfirmationModal({ 
-  open, 
-  onOpenChange, 
+export function ConfirmationModal({
+  open,
+  onOpenChange,
   title = "Xác nhận hành động",
   description = "Bạn có chắc chắn muốn thực hiện hành động này? Thao tác này có thể không thể hoàn tác.",
   onConfirm,
@@ -23,7 +23,7 @@ export function ConfirmationModal({
   isLoading = false,
   icon
 }) {
-  
+
   const getVariantStyles = () => {
     switch (variant) {
       case 'destructive':
@@ -75,15 +75,15 @@ export function ConfirmationModal({
           </div>
         </div>
         <div className="p-4 md:p-5 bg-slate-50 flex items-center gap-3 border-t border-slate-100 shrink-0">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="flex-1 rounded-xl font-bold text-slate-400 hover:bg-slate-200"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
             {cancelLabel}
           </Button>
-          <Button 
+          <Button
             className={cn(
               "flex-1 rounded-xl text-white font-black uppercase tracking-widest shadow-lg transition-all active:scale-95",
               styles.confirmBtn

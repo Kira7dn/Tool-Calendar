@@ -345,10 +345,10 @@ export function Upload({ onTabChange }) {
       </div>
 
       {/* ── Body ── */}
-      <div className="flex-1 flex gap-4 p-4 overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-y-auto lg:overflow-hidden min-h-0">
 
         {/* LEFT: upload + status */}
-        <div className="w-56 md:w-64 flex-shrink-0 flex flex-col gap-3">
+        <div className="w-full lg:w-64 flex-shrink-0 flex flex-col gap-3">
 
           {/* Upload dropzone */}
           <div
@@ -464,10 +464,10 @@ export function Upload({ onTabChange }) {
         </div>
 
         {/* RIGHT: document list */}
-        <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden min-w-0">
+        <div className="flex-1 min-h-[500px] lg:min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden min-w-0">
           {/* Table */}
           <div className="flex-1 overflow-auto">
-            <table className="w-full text-xs border-collapse">
+            <table className="w-full text-xs border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                   {/* Checkbox select-all */}
@@ -529,7 +529,14 @@ export function Upload({ onTabChange }) {
                     <td className="px-3 py-2">
                       <select
                         value={row.departmentIds[0] || ''}
-                        onChange={(e) => updateItem(row.id, 'departmentIds', [parseInt(e.target.value)])}
+                        onChange={(e) => {
+                          const val = e.target.value ? parseInt(e.target.value) : '';
+                          setBatchItems(prev => prev.map(item =>
+                            item.id === row.id
+                              ? { ...item, departmentIds: val ? [val] : [], assignedToIds: [] }
+                              : item
+                          ));
+                        }}
                         className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
                       >
                         <option value="">Chọn đơn vị</option>
@@ -539,11 +546,18 @@ export function Upload({ onTabChange }) {
                     <td className="px-3 py-2">
                       <select
                         value={row.assignedToIds[0] || ''}
-                        onChange={(e) => updateItem(row.id, 'assignedToIds', [parseInt(e.target.value)])}
+                        onChange={(e) => updateItem(row.id, 'assignedToIds', e.target.value ? [parseInt(e.target.value)] : [])}
                         className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
                       >
                         <option value="">Chọn cán bộ</option>
-                        {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                        {(row.departmentIds[0]
+                          ? users.filter(u => u.role === 'Admin' || u.departmentId === row.departmentIds[0])
+                          : users
+                        ).map(u => (
+                          <option key={u.id} value={u.id}>
+                            {u.fullName}{u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                          </option>
+                        ))}
                       </select>
                     </td>
                     <td className="px-3 py-2">
@@ -747,7 +761,14 @@ export function Upload({ onTabChange }) {
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Đơn vị chủ trì</label>
                       <select
                         value={reviewItem?.departmentIds?.[0] || ''}
-                        onChange={(e) => setReviewItem({ ...reviewItem, departmentIds: [parseInt(e.target.value)] })}
+                        onChange={(e) => {
+                          const val = e.target.value ? parseInt(e.target.value) : '';
+                          setReviewItem({
+                            ...reviewItem,
+                            departmentIds: val ? [val] : [],
+                            assignedToIds: []
+                          });
+                        }}
                         className="w-full px-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all appearance-none cursor-pointer"
                       >
                         <option value="">Chọn đơn vị...</option>
@@ -756,15 +777,34 @@ export function Upload({ onTabChange }) {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Cán bộ xử lý</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">
+                        Cán bộ xử lý
+                        {reviewItem?.departmentIds?.[0] && (
+                          <span className="ml-2 text-blue-500 normal-case tracking-normal font-bold">
+                            — {departments.find(d => d.id === reviewItem.departmentIds[0])?.name}
+                          </span>
+                        )}
+                      </label>
                       <select
                         value={reviewItem?.assignedToIds?.[0] || ''}
-                        onChange={(e) => setReviewItem({ ...reviewItem, assignedToIds: [parseInt(e.target.value)] })}
+                        onChange={(e) => setReviewItem({ ...reviewItem, assignedToIds: e.target.value ? [parseInt(e.target.value)] : [] })}
                         className="w-full px-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all appearance-none cursor-pointer"
                       >
                         <option value="">Chọn cán bộ...</option>
-                        {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                        {(reviewItem?.departmentIds?.[0]
+                          ? users.filter(u => u.role === 'Admin' || u.departmentId === reviewItem.departmentIds[0])
+                          : users
+                        ).map(u => (
+                          <option key={u.id} value={u.id}>
+                            {u.fullName}{u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                          </option>
+                        ))}
                       </select>
+                      {reviewItem?.departmentIds?.[0] && (
+                        <p className="text-[9px] font-bold text-slate-400 ml-1 mt-0.5">
+                          * Hiển thị cán bộ thuộc đơn vị này và Quản trị viên hệ thống
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
