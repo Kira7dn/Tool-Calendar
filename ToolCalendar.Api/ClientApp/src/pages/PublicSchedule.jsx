@@ -389,24 +389,63 @@ export default function PublicSchedule() {
       return;
     }
 
+    // Hiển thị thông báo đang tải
+    const toastId = toast.loading("Đang tải văn bản...");
+
     try {
+      // ✅ Fetch PDF dưới dạng blob — URL thật không bao giờ xuất hiện trong browser history
+      // Điều này ngăn người dùng copy URL và dùng lại trong tab ẩn danh
       const response = await fetch(`/api/documents/public-file?token=${encodeURIComponent(docToken)}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
-        document.cookie = `jwt_cookie=${token}; path=/; max-age=86400; Secure; SameSite=Lax`;
-
-        const fileUrl = `/api/documents/public-file?token=${encodeURIComponent(docToken)}`;
-        window.open(fileUrl, "_blank");
+        const blob = await response.blob();
+        // Tạo URL tạm thời từ blob — URL dạng blob:// chỉ hợp lệ trong tab này
+        // Không thể share, không lưu trong history, tự hủy khi tab đóng
+        const blobUrl = URL.createObjectURL(blob);
+        const pdfWindow = window.open("", "_blank");
+        if (pdfWindow) {
+          pdfWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Văn bản công vụ</title>
+              <style>body,html{margin:0;padding:0;height:100%;overflow:hidden}iframe{width:100%;height:100vh;border:none}</style>
+            </head>
+            <body>
+              <iframe src="${blobUrl}" type="application/pdf"></iframe>
+              <script>
+                // Tự động giải phóng blob URL sau khi tải xong (bảo mật bộ nhớ)
+                window.addEventListener('load', function() {
+                  setTimeout(function() { URL.revokeObjectURL('${blobUrl}'); }, 60000);
+                });
+              </script>
+            </body>
+            </html>
+          `);
+          pdfWindow.document.close();
+        } else {
+          // Trình duyệt chặn popup — fallback: tải thẳng file
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = `vanban_${docToken.substring(0, 8)}.pdf`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        }
+        toast.dismiss(toastId);
+        toast.success("Đã tải văn bản thành công.");
       } else if (response.status === 401 || response.status === 403) {
+        toast.dismiss(toastId);
         toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
         setPendingDocId(docToken);
         setIsLoginModalOpen(true);
       } else {
+        toast.dismiss(toastId);
         toast.error("Không thể tải file văn bản.");
       }
     } catch (error) {
+      toast.dismiss(toastId);
       console.error("Lỗi tải file:", error);
       toast.error("Lỗi kết nối máy chủ.");
     }
@@ -435,6 +474,8 @@ export default function PublicSchedule() {
       localStorage.removeItem("user_full_name");
       localStorage.removeItem("user_role");
       localStorage.removeItem("user_id");
+      // ✅ Xóa jwt_cookie khi đăng xuất để ngăn truy cập trái phép
+      document.cookie = "jwt_cookie=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
       setUser(null);
       setIsLoggingOut(false);
     }, 1500);

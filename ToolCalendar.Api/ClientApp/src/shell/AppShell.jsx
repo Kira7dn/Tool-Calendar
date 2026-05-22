@@ -259,28 +259,45 @@ export function AppShell() {
     document.addEventListener('realtime:notifications_updated', handleNotifUpdate);
     fetchNotifications();
 
-    // Register Service Worker and listen for push messages
-    registerServiceWorker().then(async (registration) => {
-      if (registration) {
-        registration.update();
-      }
-      const currentPermission = Notification.permission;
-      setPushPermission(currentPermission);
+    // Warn if connection is not secure
+    const isSecure = typeof window !== 'undefined' && window.isSecureContext;
+    if (!isSecure) {
+      toast.warning('Kết nối HTTP không bảo mật: Trình duyệt không hỗ trợ gửi thông báo đẩy trên các liên kết HTTP.', {
+        description: 'Vui lòng truy cập qua đường dẫn HTTPS hoặc dùng link Ngrok để có thể nhận được thông báo đẩy tức thời!',
+        duration: 10000
+      });
+    }
 
-      if (currentPermission === 'granted') {
-        // Luôn tự động đăng ký lại khi đã có quyền (Chế độ bắt buộc)
-        await subscribeUserToPush();
-      } else if (currentPermission === 'default') {
-        // Thử gọi tự động (có thể bị trình duyệt chặn nếu không có user gesture)
-        try {
-          const result = await Notification.requestPermission();
-          setPushPermission(result);
-          if (result === 'granted') await subscribeUserToPush();
-        } catch (e) {
-          console.warn('[Push] Tự động yêu cầu quyền bị chặn, chờ người dùng click.');
+    // Register Service Worker and listen for push messages
+    if ('Notification' in window) {
+      registerServiceWorker().then(async (registration) => {
+        if (registration) {
+          registration.update();
         }
-      }
-    });
+        try {
+          const currentPermission = Notification.permission;
+          setPushPermission(currentPermission);
+
+          if (currentPermission === 'granted') {
+            // Luôn tự động đăng ký lại khi đã có quyền (Chế độ bắt buộc)
+            await subscribeUserToPush();
+          } else if (currentPermission === 'default') {
+            // Thử gọi tự động (có thể bị trình duyệt chặn nếu không có user gesture)
+            try {
+              const result = await Notification.requestPermission();
+              setPushPermission(result);
+              if (result === 'granted') await subscribeUserToPush();
+            } catch (e) {
+              console.warn('[Push] Tự động yêu cầu quyền bị chặn, chờ người dùng click.');
+            }
+          }
+        } catch (err) {
+          console.warn('[Push] Error checking notifications:', err);
+        }
+      });
+    } else {
+      console.warn('[Push] Trình duyệt không hỗ trợ API thông báo.');
+    }
     const handleSWMessage = (event) => {
       if (event.data && event.data.type === 'PUSH_RECEIVED') {
         // Trigger notification count refresh or show local toast
@@ -364,6 +381,7 @@ export function AppShell() {
   };
 
   const handleRequestPermission = async () => {
+    if (!('Notification' in window)) return;
     try {
       const result = await Notification.requestPermission();
       setPushPermission(result);
@@ -376,7 +394,11 @@ export function AppShell() {
   };
 
   // Notification Guard: Block access if permission is not granted
-  if (pushPermission !== 'granted') {
+  // Bypass if the context is insecure (HTTP IP) or if the browser does not support Notification,
+  // because the browser will never allow or support notifications in these cases.
+  const isSecureContext = typeof window !== 'undefined' && window.isSecureContext;
+  const isNotificationSupported = typeof window !== 'undefined' && 'Notification' in window;
+  if (isSecureContext && isNotificationSupported && pushPermission !== 'granted') {
     return (
       <div className="fixed inset-0 z-[9999] flex flex-col bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6">
         <div className="my-auto mx-auto w-full max-w-md py-8">
@@ -497,7 +519,7 @@ export function AppShell() {
 
         <main className="main-content">
           <header className="px-6 h-[var(--header-height)] glass-header flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
               <SidebarTrigger className="size-10 shrink-0 text-muted-foreground hover:bg-muted" />
               <div className="header-title min-w-0">
                 <h1 className="font-extrabold text-foreground tracking-tight leading-tight"

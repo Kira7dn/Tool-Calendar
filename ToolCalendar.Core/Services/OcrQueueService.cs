@@ -1,137 +1,288 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Threading.Channels;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using System.Text;
+using System.Text.Json;
 using ToolCalendar.Core.Data.Interfaces;
+using ToolCalendar.Hubs;
 
 namespace ToolCalendar.Services
 {
     public interface IOcrQueueService
     {
         ValueTask EnqueueAsync(int documentId);
+        int PendingCount { get; }
     }
 
     public class OcrQueueService : BackgroundService, IOcrQueueService
     {
-        private readonly Channel<int> _queue;
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<OcrQueueService> _logger;
+        private readonly IConfiguration _configuration;
 
-        private const int MaxConcurrentFiles = 3;
-        private readonly SemaphoreSlim _concurrencyLimit = new(MaxConcurrentFiles, MaxConcurrentFiles);
+        private const string QueueName = "ocr_document_queue";
+        private const int MaxConcurrentFiles = 8; // Xử lý song song 8 file
 
-        public OcrQueueService(IServiceProvider serviceProvider, ILogger<OcrQueueService> logger)
+        private IConnection? _connection;
+        private IModel? _channel;
+        private bool _isConnecting = false;
+
+        private int _pendingCount = 0;
+        public int PendingCount => _pendingCount;
+
+        public OcrQueueService(
+            IServiceProvider serviceProvider, 
+            ILogger<OcrQueueService> logger,
+            IConfiguration configuration)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
+            _configuration = configuration;
 
-            var options = new BoundedChannelOptions(200)
+            InitializeRabbitMQ();
+        }
+
+        private void InitializeRabbitMQ()
+        {
+            if (_isConnecting) return;
+            _isConnecting = true;
+
+            var factory = new ConnectionFactory
             {
-                FullMode = BoundedChannelFullMode.Wait
+                HostName = _configuration["RabbitMQ:HostName"] ?? "localhost",
+                UserName = _configuration["RabbitMQ:UserName"] ?? "guest",
+                Password = _configuration["RabbitMQ:Password"] ?? "guest",
+                Port = int.TryParse(_configuration["RabbitMQ:Port"], out var port) ? port : 5672,
+                AutomaticRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
+                DispatchConsumersAsync = true
             };
 
-            _queue = Channel.CreateBounded<int>(options);
+            try
+            {
+                _logger.LogInformation("[RabbitMQ] Đang kết nối tới {Host}...", factory.HostName);
+                _connection = factory.CreateConnection();
+                _channel = _connection.CreateModel();
+
+                // Khai báo hàng đợi bền vững (Durable = true) để không mất tin nhắn khi restart server
+                _channel.QueueDeclare(
+                    queue: QueueName,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null);
+
+                // Giới hạn prefetch để RabbitMQ phân phối công bằng giữa các worker
+                _channel.BasicQos(prefetchSize: 0, prefetchCount: (ushort)MaxConcurrentFiles, global: false);
+
+                _logger.LogInformation("[RabbitMQ] Kết nối thành công và khai báo queue '{QueueName}'.", QueueName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[RabbitMQ] Không thể kết nối tới RabbitMQ Broker. Sẽ tự động khôi phục khi gửi tin nhắn hoặc chạy nền.");
+            }
+            finally
+            {
+                _isConnecting = false;
+            }
+        }
+
+        private void EnsureChannel()
+        {
+            if (_channel == null || _channel.IsClosed)
+            {
+                InitializeRabbitMQ();
+            }
         }
 
         public async ValueTask EnqueueAsync(int documentId)
         {
-            await _queue.Writer.WriteAsync(documentId);
-            _logger.LogInformation("[OcrQueue] Da them DocumentId {DocumentId} vao hang doi.", documentId);
+            try
+            {
+                EnsureChannel();
+
+                if (_channel == null)
+                {
+                    throw new InvalidOperationException("Không có kết nối tới RabbitMQ Broker.");
+                }
+
+                var body = Encoding.UTF8.GetBytes(documentId.ToString());
+
+                var properties = _channel.CreateBasicProperties();
+                properties.Persistent = true; // Lưu trữ tin nhắn xuống ổ đĩa đề phòng sự cố
+
+                lock (_channel)
+                {
+                    _channel.BasicPublish(
+                        exchange: string.Empty,
+                        routingKey: QueueName,
+                        basicProperties: properties,
+                        body: body);
+                }
+
+                Interlocked.Increment(ref _pendingCount);
+                _logger.LogInformation("[RabbitMQ] Đã gửi DocumentId {DocumentId} vào queue thành công.", documentId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[RabbitMQ] Thất bại khi đẩy DocumentId {DocumentId} vào queue. Chuyển sang xử lý dự phòng tại chỗ.", documentId);
+                // Fallback: Xử lý chạy nền không đồng bộ lập tức để không mất request của khách hàng
+                _ = Task.Run(() => ProcessDocumentAsync(documentId, CancellationToken.None));
+            }
+            await ValueTask.CompletedTask;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("[OcrQueue] Worker dang chay.");
+            _logger.LogInformation("[RabbitMQ Worker] Khởi chạy consumer lắng nghe hàng đợi.");
 
-            try
+            // Loop liên tục đề phòng kết nối RabbitMQ bị ngắt lúc khởi động
+            while (!stoppingToken.IsCancellationRequested)
             {
-                using var scope = _serviceProvider.CreateScope();
-                var docRepo = scope.ServiceProvider.GetRequiredService<IDocumentRepository>();
-                var allDocs = await docRepo.GetAllAsync();
-                var interruptedDocs = allDocs
-                    .Where(d => d.Status == "Đang xử lý")
-                    .ToList();
-
-                if (interruptedDocs.Count > 0)
+                try
                 {
-                    _logger.LogInformation(
-                        "[OcrQueue] Resume {Count} job OCR dang do luc startup.",
-                        interruptedDocs.Count);
+                    EnsureChannel();
 
-                    foreach (var doc in interruptedDocs)
+                    if (_channel != null)
                     {
-                        await EnqueueAsync(doc.Id);
+                        var consumer = new AsyncEventingBasicConsumer(_channel);
+                        consumer.Received += async (model, ea) =>
+                        {
+                            var body = ea.Body.ToArray();
+                            var message = Encoding.UTF8.GetString(body);
+
+                            if (int.TryParse(message, out int docId))
+                            {
+                                try
+                                {
+                                    await ProcessDocumentAsync(docId, stoppingToken);
+                                    _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "[RabbitMQ Worker] Thất bại nghiêm trọng khi xử lý DocumentId {DocumentId}. Từ chối tin nhắn.", docId);
+                                    // Từ chối và không requeue để tránh vòng lặp vô hạn (chuyển sang Lỗi OCR trong DB)
+                                    _channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
+                                }
+                                finally
+                                {
+                                    Interlocked.Decrement(ref _pendingCount);
+                                }
+                            }
+                            else
+                            {
+                                _logger.LogWarning("[RabbitMQ Worker] Định dạng tin nhắn không hợp lệ: '{Message}'", message);
+                                _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                            }
+                        };
+
+                        _channel.BasicConsume(
+                            queue: QueueName,
+                            autoAck: false,
+                            consumer: consumer);
+
+                        _logger.LogInformation("[RabbitMQ Worker] Đăng ký lắng nghe BasicConsume thành công.");
+                        break; // Đã đăng ký thành công consumer, thoát loop retry
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[OcrQueue] Loi khi resume job OCR dang do luc startup.");
-            }
-
-            await foreach (var docId in _queue.Reader.ReadAllAsync(stoppingToken))
-            {
-                await _concurrencyLimit.WaitAsync(stoppingToken);
-
-                _ = Task.Run(async () =>
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        await ProcessDocumentAsync(docId);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "[OcrQueue] Loi khi xu ly DocumentId {DocumentId}", docId);
-                    }
-                    finally
-                    {
-                        _concurrencyLimit.Release();
-                    }
-                }, stoppingToken);
+                    _logger.LogWarning("[RabbitMQ Worker] Chưa thể kết nối RabbitMQ Broker, thử lại sau 5 giây... Chi tiết: {Msg}", ex.Message);
+                }
+
+                await Task.Delay(5000, stoppingToken);
             }
+
+            // Giữ background service sống
+            await Task.Delay(Timeout.Infinite, stoppingToken);
         }
 
-        private async Task ProcessDocumentAsync(int docId)
+        private async Task ProcessDocumentAsync(int docId, CancellationToken cancellationToken)
         {
             using var scope = _serviceProvider.CreateScope();
             var extractor = scope.ServiceProvider.GetRequiredService<IDocumentExtractorService>();
             var docRepo = scope.ServiceProvider.GetRequiredService<IDocumentRepository>();
 
-            var allDocs = await docRepo.GetAllAsync();
-            var doc = allDocs.FirstOrDefault(d => d.Id == docId);
-
-            if (doc == null || string.IsNullOrEmpty(doc.FilePath) || !File.Exists(doc.FilePath))
+            var doc = await docRepo.GetDocumentByIdAsync(docId);
+            if (doc == null)
             {
-                _logger.LogWarning("[OcrQueue] Khong tim thay file cho DocumentId {DocumentId}", docId);
+                _logger.LogWarning("[RabbitMQ Worker] Không thấy DocumentId {Id} trong database.", docId);
                 return;
             }
 
-            _logger.LogInformation("[OcrQueue] Dang xu ly OCR cho DocumentId {DocumentId}", docId);
+            string absolutePath = ResolveAbsolutePath(doc.FilePath);
+            if (string.IsNullOrEmpty(absolutePath) || !File.Exists(absolutePath))
+            {
+                _logger.LogWarning("[RabbitMQ Worker] File không tồn tại: '{Path}'", doc.FilePath);
+                return;
+            }
+
+            _logger.LogInformation("[RabbitMQ Worker] Đang chạy OCR DocumentId {Id} — '{File}'", docId, Path.GetFileName(absolutePath));
 
             doc.Status = "Đang xử lý";
             await docRepo.UpdateAsync(doc);
+            await NotifyProgressAsync(scope, docId, "Đang xử lý");
 
             try
             {
-                var updatedDoc = await extractor.ExtractFromFileAsync(doc.FilePath);
+                var updatedDoc = await extractor.ExtractFromFileAsync(absolutePath);
                 updatedDoc.Id = doc.Id;
+                updatedDoc.FilePath = doc.FilePath;
+                updatedDoc.NgayThem = doc.NgayThem;
+                updatedDoc.LabelId = doc.LabelId;
+                updatedDoc.DaTaoLich = doc.DaTaoLich;
                 updatedDoc.Status = updatedDoc.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
+
                 await docRepo.UpdateAsync(updatedDoc);
+                await NotifyProgressAsync(scope, docId, updatedDoc.Status);
 
-                if (updatedDoc.Status == "Lỗi OCR")
-                {
-                    _logger.LogWarning("[OcrQueue] OCR gap loi native/engine cho DocumentId {DocumentId}. Da luu trang thai Loi OCR.", docId);
-                    return;
-                }
-
-                _logger.LogInformation("[OcrQueue] Hoan tat xu ly DocumentId {DocumentId} thanh cong.", docId);
+                _logger.LogInformation("[RabbitMQ Worker] ✅ OCR thành công DocumentId {Id} → {Status}", docId, updatedDoc.Status);
             }
             catch (Exception ex)
             {
                 doc.Status = "Lỗi OCR";
                 await docRepo.UpdateAsync(doc);
-                _logger.LogError(ex, "[OcrQueue] That bai khi OCR DocumentId {DocumentId}", docId);
+                await NotifyProgressAsync(scope, docId, "Lỗi OCR");
+                _logger.LogError(ex, "[RabbitMQ Worker] ❌ OCR thất bại DocumentId {Id}", docId);
+                throw; // Throw để Nack tin nhắn
             }
+        }
+
+        private static async Task NotifyProgressAsync(IServiceScope scope, int docId, string status)
+        {
+            try
+            {
+                var hubContext = scope.ServiceProvider.GetService<IHubContext<NotificationHub>>();
+                if (hubContext != null)
+                {
+                    await hubContext.Clients.All.SendAsync("ocr_progress", new { docId, status });
+                }
+            }
+            catch { }
+        }
+
+        private static string ResolveAbsolutePath(string? relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath)) return string.Empty;
+            if (Path.IsPathRooted(relativePath)) return relativePath;
+            return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativePath));
+        }
+
+        public override void Dispose()
+        {
+            try
+            {
+                _channel?.Close();
+                _channel?.Dispose();
+                _connection?.Close();
+                _connection?.Dispose();
+            }
+            catch { }
+            base.Dispose();
         }
     }
 }

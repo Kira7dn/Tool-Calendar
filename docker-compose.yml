@@ -17,9 +17,32 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - PUBLIC_ID_SECRET=${PUBLIC_ID_SECRET}
       - VAPID_SUBJECT=mailto:admin@linkstrategy.vn
+      # --- OCR Performance Tuning ---
+      - OcrSettings__RenderDpi=200          # Giảm từ 300 → 200 DPI: nhanh hơn ~2x, vẫn đủ chất lượng nhận dạng tiếng Việt
+      - OcrSettings__MaxParallelPages=4     # Xử lý song song 4 trang/lúc (thay vì 2)
+      - OcrSettings__MaxPagesToScan=7       # Chỉ OCR tối đa 7 trang đầu tiên (công văn thường < 5 trang)
+      - OcrSettings__EnableOsd=false        # Tắt auto-rotate detection: tiết kiệm ~2-3 giây/trang
+      - OcrSettings__EnableDeskew=false     # Tắt deskew: tiết kiệm ~1-2 giây/trang
+      # --- RabbitMQ Settings ---
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    depends_on:
+      - rabbitmq
     volumes:
       - ./data_dump:/app/data
       - ./ToolCalendar.Api/Uploads:/app/Uploads
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: doc-coordination-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
     restart: always
 
   nginx:
@@ -47,3 +70,4 @@ services:
       - --domain=NGROK_DOMAIN_REDACTED
     depends_on:
       - nginx
+

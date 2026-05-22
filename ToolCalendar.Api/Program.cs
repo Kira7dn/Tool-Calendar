@@ -11,6 +11,9 @@ using ToolCalendar.Hubs;
 using ToolCalendar.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using ToolCalendar.Middleware;   // ✅ FileAccessSecurityMiddleware
+using ToolCalendar.Policies;    // ✅ AppPolicies (phân quyền tập trung)
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,26 +104,25 @@ builder.Services.AddAuthentication(x =>
     };
     x.Events = new JwtBearerEvents
     {
-        // SignalR client gửi token trong query string "access_token"
+        // ✅ Chỉ cho phép query string "access_token" cho SignalR Hub
+        // Các endpoint file PDF/Evidence BẮT BUỘC phải dùng Authorization header
+        // để ngăn việc nhúng token vào URL và share cho người khác
         OnMessageReceived = context =>
         {
-            // Đọc token từ HttpOnly Cookie (ưu tiên cao nhất, an toàn nhất)
-            if (context.Request.Cookies.TryGetValue("jwt_cookie", out var cookieToken))
-            {
-                context.Token = cookieToken;
-                return Task.CompletedTask;
-            }
-
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
+            
+            // 1. Chỉ SignalR mới được dùng query string auth
             if (!string.IsNullOrEmpty(accessToken) && 
-                (path.StartsWithSegments("/notificationHub") || 
-                 path.Value.Contains("/file") || 
-                 path.Value.Contains("/public-file") || 
-                 path.Value.Contains("/evidence") ||
-                 path.Value.Contains("/Uploads")))
+                path.StartsWithSegments("/notificationHub"))
             {
                 context.Token = accessToken;
+            }
+            // 2. Đọc token từ HttpOnly Cookie (jwt_cookie) do AuthController set lúc Login
+            // Giúp mở file PDF an toàn bằng iframe/window.open không cần token trên URL
+            else if (context.Request.Cookies.TryGetValue("jwt_cookie", out var cookieToken))
+            {
+                context.Token = cookieToken;
             }
             return Task.CompletedTask;
         },
@@ -169,7 +171,10 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
-// Cấu hình CORS - chỉ cho phép các domain tin cậy
+// ✅ Đăng ký Authorization Policies tập trung (phân quyền theo Role + Session)
+builder.Services.AddAppAuthorizationPolicies();
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -214,9 +219,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// ✅ SECURITY MIDDLEWARE: Chặn toàn bộ truy cập trực tiếp vào /Uploads/*
+// Phải đặt TRƯỚC UseAuthentication để block request sớm nhất có thể
+app.UseFileAccessSecurity();
+
 app.UseCors("AllowAll");
 app.UseRateLimiter(); // Kích hoạt Rate Limiting
 app.UseWebSockets();
+
 
 // Serve static files (chỉ wwwroot - giao diện web, KHÔNG phải Uploads)
 app.UseDefaultFiles();

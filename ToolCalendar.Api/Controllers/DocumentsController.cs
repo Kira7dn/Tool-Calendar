@@ -93,41 +93,21 @@ namespace ToolCalendar.Api.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            DocumentRecord record;
-            try
+            var record = new DocumentRecord
             {
-                // 2. Gọi OCR trực tiếp để Client nhận được kết quả ngay lập tức
-                record = await _extractor.ExtractFromFileAsync(filePath);
-                
-                // 3. Lưu đường dẫn tương đối vào DB
-                record.FilePath = $"Uploads/{fileName}";
-                record.Status = "Chưa xử lý";
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[OCR_CRITICAL_ERROR] {ex}");
-                record = new DocumentRecord
-                {
-                    Status = "Lỗi OCR",
-                    FilePath = $"Uploads/{fileName}",
-                    FullText = $"[Lỗi hệ thống OCR] Không thể trích xuất tự động. Vui lòng nhập tay. Chi tiết lỗi: {ex.Message}"
-                };
-            }
+                SoVanBan = Path.GetFileNameWithoutExtension(file.FileName),
+                FilePath = $"Uploads/{fileName}",
+                Status = "Đang xử lý",
+                NgayThem = DateTime.Now,
+                FullText = "Đang trích xuất tự động..."
+            };
 
-            // Nếu SoVanBan trống thì mặc định lấy theo tên file
-            if (string.IsNullOrWhiteSpace(record.SoVanBan))
-            {
-                record.SoVanBan = Path.GetFileNameWithoutExtension(file.FileName);
-            }
-
-            // record.FilePath đã được set là đường dẫn tương đối ở trên
-            // Đảm bảo mapping status chuẩn cho frontend
-            record.Status = record.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
-            record.NgayThem = DateTime.Now;
-
-            // Lưu vào DB kể cả khi OCR lỗi, để UI có ID thật và mở được ảnh con mắt (Preview)
+            // Lưu vào DB để có ID thật cho giao diện
             int id = await _documentRepository.InsertAsync(record);
             record.Id = id;
+
+            // Đẩy vào hàng đợi RabbitMQ xử lý nền không đồng bộ
+            await _ocrQueue.EnqueueAsync(id);
 
             return Ok(record);
         }
@@ -353,6 +333,10 @@ namespace ToolCalendar.Api.Controllers
                 ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 _ => "application/octet-stream"
             };
+            // ✅ Bảo mật: Ngăn browser cache file nhạy cảm
+            Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
             return File(fileBytes, mimeType);
         }
 
@@ -385,6 +369,10 @@ namespace ToolCalendar.Api.Controllers
                     ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     _ => "application/octet-stream"
                 };
+                // ✅ Bảo mật: Ngăn browser cache file bằng chứng
+                Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
+                Response.Headers["Pragma"] = "no-cache";
+                Response.Headers["X-Content-Type-Options"] = "nosniff";
                 return File(fileBytes, mimeType, fileName);
             }
             catch (Exception ex) { return BadRequest(new { message = ex.Message, stack = ex.StackTrace }); }
@@ -468,6 +456,10 @@ namespace ToolCalendar.Api.Controllers
                 ".pdf" => "application/pdf",
                 _ => "application/octet-stream"
             };
+            // ✅ Bảo mật: Ngăn browser cache file đính kèm bình luận
+            Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
             return File(fileBytes, mimeType, Path.GetFileName(filePath));
         }
 
@@ -625,6 +617,10 @@ namespace ToolCalendar.Api.Controllers
             else if (ext == ".jpg" || ext == ".jpeg") contentType = "image/jpeg";
             else if (ext == ".png") contentType = "image/png";
 
+            // ✅ Bảo mật: Ngăn browser cache file bằng chứng
+            Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
             return PhysicalFile(fullPath, contentType);
         }
 
@@ -727,6 +723,10 @@ namespace ToolCalendar.Api.Controllers
                 return NotFound("File vật lý không tìm thấy.");
 
             var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            // ✅ Bảo mật: Ngăn browser cache file PDF công vụ
+            Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
             return File(fileBytes, "application/pdf");
         }
 

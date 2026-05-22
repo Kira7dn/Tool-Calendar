@@ -135,42 +135,35 @@ export function Upload({ onTabChange }) {
     setIsProcessing(true);
     setOverallProgress(0);
 
-    for (let i = 0; i < fileList.length; i++) {
-      const file = fileList[i];
-      setCurrentFileName(file.name);
-      setOverallProgress(((i) / fileList.length) * 100);
+    const MAX_CONCURRENT = 3; // Tối đa 3 file OCR song song cùng lúc
+    let completedCount = 0;
+    const total = fileList.length;
 
-      const tempId = `temp-${Date.now()}-${i}`;
-      const newItem = {
-        id: tempId,
-        fileName: file.name,
-        soVanBan: '',
-        trichYeu: '',
-        coQuanBanHanh: '',
-        coQuanChuQuan: '',
-        ngayBanHanh: '',
-        thoiHan: '',
-        departmentIds: [],
-        assignedToIds: [],
-        status: 'processing',
-      };
+    // Thêm TẤT CẢ file vào danh sách ngay lập tức với trạng thái "đang xử lý"
+    const newItems = Array.from(fileList).map((file, i) => ({
+      id: `temp-${Date.now()}-${i}`,
+      fileName: file.name,
+      soVanBan: '', trichYeu: '', coQuanBanHanh: '', coQuanChuQuan: '',
+      ngayBanHanh: '', thoiHan: '', departmentIds: [], assignedToIds: [],
+      status: 'processing',
+      _tempFile: file,
+    }));
+    setBatchItems(prev => [...newItems, ...prev]);
+    setCurrentFileName(`Đang xử lý ${total} file...`);
 
-      setBatchItems(prev => [newItem, ...prev]);
-
+    const uploadOne = async (item) => {
       const formData = new FormData();
-      formData.append('file', file);
-
+      formData.append('file', item._tempFile);
       try {
         const response = await fetch('/api/documents/upload', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
           body: formData
         });
-
         if (response.ok) {
           const doc = await response.json();
-          setBatchItems(prev => prev.map(item => item.id === tempId ? {
-            ...item,
+          setBatchItems(prev => prev.map(b => b.id === item.id ? {
+            ...b, _tempFile: undefined,
             id: doc.id,
             soVanBan: doc.soVanBan || '',
             trichYeu: doc.trichYeu || '',
@@ -182,20 +175,31 @@ export function Upload({ onTabChange }) {
             assignedToIds: doc.assignedTo ? [doc.assignedTo] : [],
             filePath: doc.filePath || '',
             status: 'ready'
-          } : item));
+          } : b));
         } else {
-          setBatchItems(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
+          setBatchItems(prev => prev.map(b => b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b));
         }
-      } catch (error) {
-        setBatchItems(prev => prev.map(item => item.id === tempId ? { ...item, status: 'error' } : item));
+      } catch {
+        setBatchItems(prev => prev.map(b => b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b));
+      } finally {
+        completedCount++;
+        setOverallProgress(Math.round((completedCount / total) * 100));
+        const remaining = total - completedCount;
+        setCurrentFileName(remaining > 0 ? `Còn ${remaining} file đang xử lý...` : '');
       }
+    };
+
+    // Chia thành các nhóm và chạy song song từng nhóm
+    for (let i = 0; i < newItems.length; i += MAX_CONCURRENT) {
+      const chunk = newItems.slice(i, i + MAX_CONCURRENT);
+      await Promise.all(chunk.map(uploadOne));
     }
 
     setOverallProgress(100);
     setTimeout(() => {
       setIsProcessing(false);
       setCurrentFileName('');
-    }, 1000);
+    }, 800);
   };
 
   const updateItem = (id, field, value) => {
@@ -491,116 +495,116 @@ export function Upload({ onTabChange }) {
                 {batchItems.map(row => {
                   const isRowSelected = selectedIds.has(row.id);
                   return (
-                  <tr key={row.id} className={cn("transition-colors group", isRowSelected ? "bg-blue-50 hover:bg-blue-50/80" : "hover:bg-slate-50/60")}>
-                    {/* Row checkbox */}
-                    <td className="pl-4 pr-2 py-2">
-                      <input
-                        type="checkbox"
-                        checked={isRowSelected}
-                        onChange={() => toggleSelectOne(row.id)}
-                        disabled={typeof row.id !== 'number'}
-                        className="w-3.5 h-3.5 rounded accent-blue-600 cursor-pointer disabled:opacity-30"
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <div className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 border", isRowSelected ? "bg-blue-100 border-blue-200" : "bg-red-50 border-red-100")}>
-                          <span className={cn("text-[8px] font-black uppercase", isRowSelected ? "text-blue-600" : "text-red-500")}>PDF</span>
+                    <tr key={row.id} className={cn("transition-colors group", isRowSelected ? "bg-blue-50 hover:bg-blue-50/80" : "hover:bg-slate-50/60")}>
+                      {/* Row checkbox */}
+                      <td className="pl-4 pr-2 py-2">
+                        <input
+                          type="checkbox"
+                          checked={isRowSelected}
+                          onChange={() => toggleSelectOne(row.id)}
+                          disabled={typeof row.id !== 'number'}
+                          className="w-3.5 h-3.5 rounded accent-blue-600 cursor-pointer disabled:opacity-30"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 border", isRowSelected ? "bg-blue-100 border-blue-200" : "bg-red-50 border-red-100")}>
+                            <span className={cn("text-[8px] font-black uppercase", isRowSelected ? "text-blue-600" : "text-red-500")}>PDF</span>
+                          </div>
+                          <span className="font-semibold text-slate-800 truncate max-w-[120px]">{row.fileName}</span>
                         </div>
-                        <span className="font-semibold text-slate-800 truncate max-w-[120px]">{row.fileName}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        value={row.soVanBan}
-                        onChange={(e) => updateItem(row.id, 'soVanBan', e.target.value)}
-                        placeholder="Số hiệu..."
-                        className="w-24 text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white placeholder-slate-300 transition-all font-bold text-slate-900"
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="date"
-                        value={row.thoiHan}
-                        onChange={(e) => updateItem(row.id, 'thoiHan', e.target.value)}
-                        className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all"
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <select
-                        value={row.departmentIds[0] || ''}
-                        onChange={(e) => {
-                          const val = e.target.value ? parseInt(e.target.value) : '';
-                          setBatchItems(prev => prev.map(item =>
-                            item.id === row.id
-                              ? { ...item, departmentIds: val ? [val] : [], assignedToIds: [] }
-                              : item
-                          ));
-                        }}
-                        className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
-                      >
-                        <option value="">Chọn đơn vị</option>
-                        {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                      </select>
-                    </td>
-                    <td className="px-3 py-2">
-                      <select
-                        value={row.assignedToIds[0] || ''}
-                        onChange={(e) => updateItem(row.id, 'assignedToIds', e.target.value ? [parseInt(e.target.value)] : [])}
-                        className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
-                      >
-                        <option value="">Chọn cán bộ</option>
-                        {(row.departmentIds[0]
-                          ? users.filter(u => u.role === 'Admin' || u.departmentId === row.departmentIds[0])
-                          : users
-                        ).map(u => (
-                          <option key={u.id} value={u.id}>
-                            {u.fullName}{u.role === 'Admin' ? ' (Quản trị viên)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-3 py-2">
-                      <StatusBadge status={row.status} />
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-1">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => {
-                                  setReviewItem({ ...row });
-                                  setIsReviewModalOpen(true);
-                                  setPdfPage(1);
-                                }}
-                                className="p-1 rounded text-blue-500 hover:bg-blue-50 transition-colors"
-                              >
-                                <EyeIcon />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="bg-slate-900 text-white border-none font-bold text-[10px]">
-                              Đối soát PDF
-                            </TooltipContent>
-                          </Tooltip>
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          value={row.soVanBan}
+                          onChange={(e) => updateItem(row.id, 'soVanBan', e.target.value)}
+                          placeholder="Số hiệu..."
+                          className="w-24 text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white placeholder-slate-300 transition-all font-bold text-slate-900"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="date"
+                          value={row.thoiHan}
+                          onChange={(e) => updateItem(row.id, 'thoiHan', e.target.value)}
+                          className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={row.departmentIds[0] || ''}
+                          onChange={(e) => {
+                            const val = e.target.value ? parseInt(e.target.value) : '';
+                            setBatchItems(prev => prev.map(item =>
+                              item.id === row.id
+                                ? { ...item, departmentIds: val ? [val] : [], assignedToIds: [] }
+                                : item
+                            ));
+                          }}
+                          className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
+                        >
+                          <option value="">Chọn đơn vị</option>
+                          {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={row.assignedToIds[0] || ''}
+                          onChange={(e) => updateItem(row.id, 'assignedToIds', e.target.value ? [parseInt(e.target.value)] : [])}
+                          className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
+                        >
+                          <option value="">Chọn cán bộ</option>
+                          {(row.departmentIds[0]
+                            ? users.filter(u => u.role === 'Admin' || u.departmentId === row.departmentIds[0])
+                            : users
+                          ).map(u => (
+                            <option key={u.id} value={u.id}>
+                              {u.fullName}{u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <StatusBadge status={row.status} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-1">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => {
+                                    setReviewItem({ ...row });
+                                    setIsReviewModalOpen(true);
+                                    setPdfPage(1);
+                                  }}
+                                  className="p-1 rounded text-blue-500 hover:bg-blue-50 transition-colors"
+                                >
+                                  <EyeIcon />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="bg-slate-900 text-white border-none font-bold text-[10px]">
+                                Đối soát PDF
+                              </TooltipContent>
+                            </Tooltip>
 
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => setDeleteItemConfirm({ open: true, item: row })}
-                                className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                              >
-                                <TrashIcon />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="bg-red-600 text-white border-none font-bold text-[10px]">
-                              Xóa khỏi danh sách
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </td>
-                  </tr>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => setDeleteItemConfirm({ open: true, item: row })}
+                                  className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                  <TrashIcon />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="bg-red-600 text-white border-none font-bold text-[10px]">
+                                Xóa khỏi danh sách
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
@@ -841,7 +845,7 @@ export function Upload({ onTabChange }) {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-3.5 rounded-2xl bg-slate-900 shadow-2xl shadow-slate-900/40 border border-white/10 animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-md bg-blue-500 flex items-center justify-center">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
             <span className="text-sm font-bold text-white">Đã chọn <span className="text-blue-400">{selectedIds.size}</span> văn bản</span>
           </div>
@@ -857,7 +861,7 @@ export function Upload({ onTabChange }) {
             disabled={isBulkDeleting}
             className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-500 hover:bg-red-400 text-white text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-red-900/40"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" /></svg>
             {isBulkDeleting ? 'Đang xóa...' : `Xóa ${selectedIds.size} văn bản`}
           </button>
         </div>
