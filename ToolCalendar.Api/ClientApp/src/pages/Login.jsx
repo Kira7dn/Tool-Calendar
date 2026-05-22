@@ -23,6 +23,14 @@ export function LoginPage({ onLoginSuccess }) {
       sessionStorage.removeItem('kicked_out');
     }
 
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    if (err === 'unauthorized') {
+      setError('Bạn cần đăng nhập để xem nội dung này.');
+    } else if (err === 'forbidden') {
+      setError('Bạn không có quyền truy cập nội dung này. Vui lòng đăng nhập với tài khoản có thẩm quyền.');
+    }
+
     return () => {
       document.body.classList.remove('login-page');
     };

@@ -167,6 +167,31 @@ builder.Services.AddAuthentication(x =>
                 Console.WriteLine($"[AuthFatalError] {ex.Message}\n{ex.StackTrace}");
             }
             return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            var accept = context.Request.Headers["Accept"].ToString();
+            var path = context.Request.Path.Value ?? "";
+            
+            // Nếu người dùng mở URL trực tiếp trên trình duyệt (Accept: text/html)
+            // Thay vì hiện màn hình lỗi 401 mặc định, redirect về trang chủ để báo lỗi thân thiện
+            if (accept.Contains("text/html") && path.StartsWith("/api/documents") && path.EndsWith("/file"))
+            {
+                context.HandleResponse(); // Ngăn chặn response 401 mặc định
+                context.Response.Redirect("/?error=unauthorized");
+            }
+            return Task.CompletedTask;
+        },
+        OnForbidden = context =>
+        {
+            var accept = context.Request.Headers["Accept"].ToString();
+            var path = context.Request.Path.Value ?? "";
+            
+            if (accept.Contains("text/html") && path.StartsWith("/api/documents") && path.EndsWith("/file"))
+            {
+                context.Response.Redirect("/?error=forbidden");
+            }
+            return Task.CompletedTask;
         }
     };
 });
