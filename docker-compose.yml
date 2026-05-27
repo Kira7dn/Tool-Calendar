@@ -64,8 +64,8 @@ services:
     restart: always
     environment:
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    entrypoint: /bin/sh
     command:
-      - "sh"
       - "-c"
       - |
         if [ -n "$$NGROK_DOMAIN" ]; then
