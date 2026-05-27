@@ -16,7 +16,7 @@ services:
       - TZ=Asia/Ho_Chi_Minh
       - JWT_SECRET=${JWT_SECRET}
       - PUBLIC_ID_SECRET=${PUBLIC_ID_SECRET}
-      - VAPID_SUBJECT=mailto:admin@linkstrategy.vn
+      - VAPID_SUBJECT=${VAPID_SUBJECT}
       # --- OCR Performance Tuning ---
       - OcrSettings__RenderDpi=200          # Giảm từ 300 → 200 DPI: nhanh hơn ~2x, vẫn đủ chất lượng nhận dạng tiếng Việt
       - OcrSettings__MaxParallelPages=4     # Xử lý song song 4 trang/lúc (thay vì 2)
@@ -25,8 +25,8 @@ services:
       - OcrSettings__EnableDeskew=false     # Tắt deskew: tiết kiệm ~1-2 giây/trang
       # --- RabbitMQ Settings ---
       - RabbitMQ__HostName=rabbitmq
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASS}
     depends_on:
       - rabbitmq
     volumes:
@@ -41,8 +41,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
     restart: always
 
   nginx:
@@ -63,11 +63,16 @@ services:
     container_name: doc-coordination-ngrok
     restart: always
     environment:
-      - NGROK_AUTHTOKEN=NGROK_TOKEN_REDACTED
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
     command:
-      - http
-      - nginx-proxy:80
-      - --domain=NGROK_DOMAIN_REDACTED
+      - "sh"
+      - "-c"
+      - |
+        if [ -n "$$NGROK_DOMAIN" ]; then
+          ngrok http nginx-proxy:80 --domain=$$NGROK_DOMAIN
+        else
+          ngrok http nginx-proxy:80
+        fi
     depends_on:
       - nginx
 

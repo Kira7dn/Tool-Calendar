@@ -20,6 +20,13 @@ nginx/conf.d/.htpasswd
 # appsettings chứa secret - KHÔNG commit lên git
 appsettings.Production.json
 appsettings.Staging.json
+appsettings.Development.json
+
+# TLS/SSL Certificates
+*.pem
+*.key
+*.crt
+*.pfx
 
 # SQLite
 *.db

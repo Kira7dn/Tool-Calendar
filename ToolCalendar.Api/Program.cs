@@ -93,7 +93,7 @@ builder.Services.AddAuthentication(x =>
 })
 .AddJwtBearer(x =>
 {
-    x.RequireHttpsMetadata = false;
+    x.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); // ✅ true trong Production, false chỉ ở Development
     x.SaveToken = true;
     x.TokenValidationParameters = new TokenValidationParameters
     {
@@ -130,9 +130,12 @@ builder.Services.AddAuthentication(x =>
         {
             try
             {
-                // Log all claims for debugging (only in development)
-                var claims = context.Principal?.Claims.Select(c => $"{c.Type}:{c.Value}");
-                Console.WriteLine($"[AuthDebug] Kiểm tra token cho User: {context.Principal?.Identity?.Name}. Claims: {string.Join(", ", claims ?? Array.Empty<string>())}");
+                // Chỉ log chi tiết claims trong môi trường Development để tránh lộ thông tin nhạy cảm ra production logs
+                if (builder.Environment.IsDevelopment())
+                {
+                    var claims = context.Principal?.Claims.Select(c => $"{c.Type}:{c.Value}");
+                    Console.WriteLine($"[AuthDebug] Kiểm tra token cho User: {context.Principal?.Identity?.Name}. Claims: {string.Join(", ", claims ?? Array.Empty<string>())}");
+                }
 
                 var userIdStr = context.Principal?.FindFirst("uid")?.Value
                               ?? context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value

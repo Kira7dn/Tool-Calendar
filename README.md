@@ -102,15 +102,13 @@ docker-compose up -d --build
 
 ---
 
-## 🔑 Thông tin Tài khoản Mặc định (Sau khi Seed)
+## 🔑 Tài khoản Mặc định (Sau khi Seed)
 
-Hệ thống đã được nạp sẵn dữ liệu mẫu (Seed Data) trong file `seed_db.sql`:
+Hệ thống được nạp sẵn dữ liệu mẫu (Seed Data) trong file `seed_db.sql` với các vai trò: **Admin**, **Lãnh đạo**, **Văn thư**, **Cán bộ**.
 
-- **Mật khẩu chung**: `DEFAULT_PASSWORD_REDACTED`
-- **Tài khoản Quản trị**: `admin`
-- **Tài khoản Lãnh đạo**: `chanhvanphong`
-- **Tài khoản Văn thư**: `vanthu`
-- **Tài khoản Cán bộ**: `nguyenanhduc`
+> [!WARNING]
+> Thông tin tài khoản và mật khẩu mặc định **không được ghi công khai** ở đây vì lý do bảo mật. Liên hệ quản trị viên hệ thống để nhận thông tin đăng nhập ban đầu.
+> **Bắt buộc thay đổi mật khẩu ngay sau lần đăng nhập đầu tiên.**
 
 - **Địa chỉ truy cập nội bộ**: [https://localhost](https://localhost) hoặc IP của máy chủ.
 - **Địa chỉ truy cập từ xa**: Sử dụng link do Ngrok cung cấp (kiểm tra trong Docker logs của container ngrok).
