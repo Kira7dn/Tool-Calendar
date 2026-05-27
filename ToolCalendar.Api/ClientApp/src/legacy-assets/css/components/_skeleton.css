@@ -1,0 +1,93 @@
+/* ====================================================
+   Skeleton Loading — shimmer animation for dashboard
+   ==================================================== */
+
+@keyframes skeleton-shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position: 600px 0; }
+}
+
+.skeleton-box {
+    display: inline-block;
+    background: linear-gradient(
+        90deg,
+        var(--skeleton-base, #e2e8f0) 25%,
+        var(--skeleton-shine, #f1f5f9) 50%,
+        var(--skeleton-base, #e2e8f0) 75%
+    );
+    background-size: 1200px 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    border-radius: 6px;
+    color: transparent !important;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Stat cards khi đang load */
+.stat-card.sk-loading .stat-value {
+    display: inline-block;
+    width: 72px;
+    height: 2.4rem;
+    margin: 4px 0;
+    border-radius: 6px;
+    background: linear-gradient(
+        90deg,
+        var(--skeleton-base, #e2e8f0) 25%,
+        var(--skeleton-shine, #f1f5f9) 50%,
+        var(--skeleton-base, #e2e8f0) 75%
+    );
+    background-size: 1200px 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    color: transparent !important;
+}
+
+.stat-card.sk-loading .stat-label,
+.stat-card.sk-loading .stat-info {
+    display: inline-block;
+    width: 90px;
+    height: 0.85rem;
+    border-radius: 4px;
+    background: linear-gradient(
+        90deg,
+        var(--skeleton-base, #e2e8f0) 25%,
+        var(--skeleton-shine, #f1f5f9) 50%,
+        var(--skeleton-base, #e2e8f0) 75%
+    );
+    background-size: 1200px 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    color: transparent !important;
+}
+
+/* Table rows khi đang load */
+.sk-row td {
+    padding: 10px 12px;
+}
+
+.sk-cell {
+    display: inline-block;
+    height: 0.9rem;
+    border-radius: 4px;
+    background: linear-gradient(
+        90deg,
+        var(--skeleton-base, #e2e8f0) 25%,
+        var(--skeleton-shine, #f1f5f9) 50%,
+        var(--skeleton-base, #e2e8f0) 75%
+    );
+    background-size: 1200px 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Placeholder cho canvas chart */
+.sk-chart-placeholder {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: linear-gradient(
+        90deg,
+        var(--skeleton-base, #e2e8f0) 25%,
+        var(--skeleton-shine, #f1f5f9) 50%,
+        var(--skeleton-base, #e2e8f0) 75%
+    );
+    background-size: 1200px 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}

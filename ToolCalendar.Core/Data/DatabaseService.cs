@@ -315,6 +315,26 @@ namespace ToolCalendar.Data
                     cmd.ExecuteNonQuery();
                 }
             }
+
+            // =========================================================
+            // --- PERFORMANCE INDEXES (tự động thêm nếu chưa có) ---
+            // Composite index: tăng tốc mọi dashboard query dùng ThoiHan + Status
+            cmd.Parameters.Clear();
+            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_documents_thoihan_status ON Documents(ThoiHan, Status)";
+            cmd.ExecuteNonQuery();
+            // Index cho GROUP BY / ORDER BY DepartmentId
+            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_documents_department ON Documents(DepartmentId)";
+            cmd.ExecuteNonQuery();
+            // Index cho ORDER BY NgayThem (newest / oldest sort)
+            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_documents_ngaythem ON Documents(NgayThem DESC)";
+            cmd.ExecuteNonQuery();
+            // Index cho AuditLogs ORDER BY Timestamp DESC
+            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_auditlogs_timestamp ON AuditLogs(Timestamp DESC)";
+            cmd.ExecuteNonQuery();
+            // Index cho Notifications per user
+            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_notifications_user ON Notifications(UserId, CreatedAt DESC)";
+            cmd.ExecuteNonQuery();
+            // =========================================================
         }
 
         // --- USER MANAGEMENT ---
@@ -838,102 +858,103 @@ namespace ToolCalendar.Data
 
 
 
-        // --- DASHBOARD STATS ---
+        // --- DASHBOARD STATS (Optimized: 8 queries → 2) ---
         public static object GetDashboardStats()
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            var stats = new
-            {
-                Total = 0,
-                ByStatus = new Dictionary<string, int>(),
-                ByPriority = new Dictionary<string, int>(),
-                Overdue = 0,
-                ByDepartment = new Dictionary<string, int>()
-            };
-
-            // 1. Tá»•ng sá»‘
-            using var cmdTotal = new SqliteCommand("SELECT COUNT(*) FROM Documents", connection);
-            int total = Convert.ToInt32(cmdTotal.ExecuteScalar());
-
-            // 2. Theo Tráº¡ng thÃ¡i
-            using var cmdStatus = new SqliteCommand("SELECT COALESCE(Status, 'ChÆ°a xá»­ lÃ½'), COUNT(*) FROM Documents GROUP BY Status", connection);
-            using var rStatus = cmdStatus.ExecuteReader();
-            var statusDict = new Dictionary<string, int>();
-            while (rStatus.Read()) statusDict[rStatus[0]?.ToString() ?? "ChÆ°a xá»­ lÃ½"] = Convert.ToInt32(rStatus[1]);
-
-            // 3. Theo Äá»™ kháº©n
-            using var cmdPrio = new SqliteCommand("SELECT COALESCE(Priority, 'ThÆ°á»ng'), COUNT(*) FROM Documents GROUP BY Priority", connection);
-            using var rPrio = cmdPrio.ExecuteReader();
-            var prioDict = new Dictionary<string, int>();
-            while (rPrio.Read()) prioDict[rPrio[0]?.ToString() ?? "ThÆ°á»ng"] = Convert.ToInt32(rPrio[1]);
-
-            // 4. QuÃ¡ háº¡n
-            using var cmdOverdue = new SqliteCommand("SELECT COUNT(*) FROM Documents WHERE ThoiHan < date('now') AND Status != 'ÄÃ£ hoÃ n thÃ nh' AND ThoiHan IS NOT NULL", connection);
-            int overdue = Convert.ToInt32(cmdOverdue.ExecuteScalar());
-
-            // 5. Theo PhÃ²ng ban (Äáº¿m táº¥t cáº£ vÄƒn báº£n, bao gá»“m cáº£ chÆ°a phÃ¢n loáº¡i)
-            using var cmdDept = new SqliteCommand(@"
-                SELECT IFNULL(d.Name, 'ChÆ°a phÃ¢n loáº¡i'), COUNT(doc.Id) 
-                FROM Documents doc 
-                LEFT JOIN Departments d ON doc.DepartmentId = d.Id 
-                GROUP BY d.Name", connection);
-            using var rDept = cmdDept.ExecuteReader();
-            var deptDict = new Dictionary<string, int>();
-            while (rDept.Read())
-            {
-                var name = rDept[0]?.ToString() ?? "ChÆ°a phÃ¢n loáº¡i";
-                deptDict[name] = Convert.ToInt32(rDept[1]);
-            }
-
-            // 6. Sáº¯p háº¿t háº¡n (7 ngÃ y tá»›i)
-            using var cmdUrgent = new SqliteCommand(@"
-                SELECT COUNT(*) FROM Documents 
-                WHERE ThoiHan >= date('now') AND ThoiHan <= date('now', '+7 days') 
-                AND Status != 'ÄÃ£ hoÃ n thÃ nh'", connection);
-            int urgent = Convert.ToInt32(cmdUrgent.ExecuteScalar());
-
-            // 7. Äáº¿n háº¡n hÃ´m nay
-            using var cmdToday = new SqliteCommand(@"
-                SELECT COUNT(*) FROM Documents 
-                WHERE date(ThoiHan) = date('now') 
-                AND Status != 'ÄÃ£ hoÃ n thÃ nh'", connection);
-            int today = Convert.ToInt32(cmdToday.ExecuteScalar());
-
-            // 8. Top 3 văn bản khẩn nhất
-            using var cmdTopUrgent = new SqliteCommand(@"
-                SELECT Id, SoVanBan, TenCongVan, TrichYeu, ThoiHan FROM Documents 
-                WHERE Status != 'Ä Ã£ hoÃ n thÃ nh' 
-                ORDER BY CASE WHEN ThoiHan IS NULL THEN 1 ELSE 0 END, ThoiHan ASC 
-                LIMIT 3", connection);
-            using var rTopUrgent = cmdTopUrgent.ExecuteReader();
+            // ✅ QUERY 1: Tất cả scalar counters trong 1 lượt dùng CASE WHEN
+            // Thay thế cho 5 queries riêng lẻ (Total, Overdue, Today, Urgent, TopUrgent)
+            int total = 0, overdue = 0, today = 0, urgent = 0;
             var topUrgent = new List<object>();
-            while (rTopUrgent.Read())
+
+            using (var cmdCounters = new SqliteCommand(@"
+                SELECT
+                    COUNT(*) AS Total,
+                    SUM(CASE WHEN ThoiHan IS NOT NULL
+                              AND ThoiHan < date('now')
+                              AND Status != 'Đã hoàn thành' THEN 1 ELSE 0 END) AS Overdue,
+                    SUM(CASE WHEN ThoiHan >= date('now')
+                              AND ThoiHan < date('now', '+1 day')
+                              AND Status != 'Đã hoàn thành' THEN 1 ELSE 0 END) AS Today,
+                    SUM(CASE WHEN ThoiHan >= date('now')
+                              AND ThoiHan <= date('now', '+7 days')
+                              AND Status != 'Đã hoàn thành' THEN 1 ELSE 0 END) AS Urgent
+                FROM Documents
+            ", connection))
             {
-                topUrgent.Add(new
+                using var r = cmdCounters.ExecuteReader();
+                if (r.Read())
                 {
-                    Id = Convert.ToInt32(rTopUrgent["Id"]),
-                    SoVanBan = rTopUrgent["SoVanBan"]?.ToString() ?? "",
-                    TenCongVan = rTopUrgent["TenCongVan"]?.ToString() ?? "",
-                    TrichYeu = rTopUrgent["TrichYeu"]?.ToString() ?? "",
-                    ThoiHan = rTopUrgent["ThoiHan"]?.ToString()
-                });
+                    total   = r["Total"]   == DBNull.Value ? 0 : Convert.ToInt32(r["Total"]);
+                    overdue = r["Overdue"] == DBNull.Value ? 0 : Convert.ToInt32(r["Overdue"]);
+                    today   = r["Today"]   == DBNull.Value ? 0 : Convert.ToInt32(r["Today"]);
+                    urgent  = r["Urgent"]  == DBNull.Value ? 0 : Convert.ToInt32(r["Urgent"]);
+                }
             }
 
-            return new
+            // ✅ QUERY 2: Group-by status, priority, department + top urgent — 1 connection, sequential
+            var statusDict = new Dictionary<string, int>();
+            using (var cmdStatus = new SqliteCommand(
+                "SELECT COALESCE(Status,'Chưa xử lý'), COUNT(*) FROM Documents GROUP BY Status", connection))
             {
-                Total = total,
-                ByStatus = statusDict,
-                ByPriority = prioDict,
-                Overdue = overdue,
-                Urgent = urgent,
-                Today = today,
+                using var r = cmdStatus.ExecuteReader();
+                while (r.Read()) statusDict[r[0]?.ToString() ?? "Chưa xử lý"] = Convert.ToInt32(r[1]);
+            }
+
+            var prioDict = new Dictionary<string, int>();
+            using (var cmdPrio = new SqliteCommand(
+                "SELECT COALESCE(Priority,'Thường'), COUNT(*) FROM Documents GROUP BY Priority", connection))
+            {
+                using var r = cmdPrio.ExecuteReader();
+                while (r.Read()) prioDict[r[0]?.ToString() ?? "Thường"] = Convert.ToInt32(r[1]);
+            }
+
+            var deptDict = new Dictionary<string, int>();
+            using (var cmdDept = new SqliteCommand(@"
+                SELECT IFNULL(d.Name,'Chưa phân loại'), COUNT(doc.Id)
+                FROM Documents doc
+                LEFT JOIN Departments d ON doc.DepartmentId = d.Id
+                GROUP BY d.Name
+            ", connection))
+            {
+                using var r = cmdDept.ExecuteReader();
+                while (r.Read())
+                    deptDict[r[0]?.ToString() ?? "Chưa phân loại"] = Convert.ToInt32(r[1]);
+            }
+
+            using (var cmdTop = new SqliteCommand(@"
+                SELECT Id, SoVanBan, TenCongVan, TrichYeu, ThoiHan FROM Documents
+                WHERE Status != 'Đã hoàn thành'
+                ORDER BY CASE WHEN ThoiHan IS NULL THEN 1 ELSE 0 END, ThoiHan ASC
+                LIMIT 3
+            ", connection))
+            {
+                using var r = cmdTop.ExecuteReader();
+                while (r.Read())
+                    topUrgent.Add(new {
+                        Id         = Convert.ToInt32(r["Id"]),
+                        SoVanBan   = r["SoVanBan"]?.ToString()   ?? "",
+                        TenCongVan = r["TenCongVan"]?.ToString() ?? "",
+                        TrichYeu   = r["TrichYeu"]?.ToString()   ?? "",
+                        ThoiHan    = r["ThoiHan"]?.ToString()
+                    });
+            }
+
+            return new {
+                Total        = total,
+                ByStatus     = statusDict,
+                ByPriority   = prioDict,
+                Overdue      = overdue,
+                Urgent       = urgent,
+                Today        = today,
                 ByDepartment = deptDict,
-                TopUrgent = topUrgent
+                TopUrgent    = topUrgent
             };
         }
 
+        // ✅ OPTIMIZED: N+1 loop (15 queries) → 1 query grouped by ThoiHan
         public static object GetDashboardDeadlineSeries(int days = 14)
         {
             if (days < 1) days = 14;
@@ -942,51 +963,62 @@ namespace ToolCalendar.Data
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            DateTime today = DateTime.Today;
-            string completedStatus = "Đã hoàn thành";
+            var today   = DateTime.Today;
+            var endDate = today.AddDays(days);
+            var todayStr  = today.ToString("yyyy-MM-dd");
+            var endStr    = endDate.ToString("yyyy-MM-dd");
+
+            // Một query duy nhất lấy toàn bộ dữ liệu:
+            //   - Bucket '__overdue__' = tất cả văn bản quá hạn (ThoiHan < today)
+            //   - Các ngày còn lại = from today → today+days
+            // Dùng được composite index idx_documents_thoihan_status
+            var buckets = new Dictionary<string, int>();
+            using (var cmd = new SqliteCommand(@"
+                SELECT
+                    CASE WHEN ThoiHan < @today THEN '__overdue__' ELSE ThoiHan END AS Bucket,
+                    COUNT(*) AS Cnt
+                FROM Documents
+                WHERE Status != 'Đã hoàn thành'
+                  AND ThoiHan IS NOT NULL
+                  AND ThoiHan < @endDate
+                GROUP BY Bucket
+            ", connection))
+            {
+                cmd.Parameters.AddWithValue("@today",   todayStr);
+                cmd.Parameters.AddWithValue("@endDate", endStr);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                {
+                    var key = r["Bucket"]?.ToString() ?? "";
+                    buckets[key] = Convert.ToInt32(r["Cnt"]);
+                }
+            }
+
+            // Lắp ráp kết quả theo format frontend mong đợi
             var items = new List<object>();
 
-            using (var overdueCmd = new SqliteCommand(@"
-                SELECT COUNT(*)
-                FROM Documents
-                WHERE ThoiHan < date(@today)
-                AND Status != @completed
-                AND ThoiHan IS NOT NULL", connection))
-            {
-                overdueCmd.Parameters.AddWithValue("@today", today.ToString("yyyy-MM-dd"));
-                overdueCmd.Parameters.AddWithValue("@completed", completedStatus);
-                int overdueCount = Convert.ToInt32(overdueCmd.ExecuteScalar());
-                items.Add(new
-                {
-                    Date = "overdue",
-                    Label = "Quá hạn",
-                    Count = overdueCount,
-                    OverdueCount = overdueCount,
-                    TodayCount = 0,
-                    UpcomingCount = 0
-                });
-            }
+            int overdueCount = buckets.TryGetValue("__overdue__", out int ov) ? ov : 0;
+            items.Add(new {
+                Date         = "overdue",
+                Label        = "Quá hạn",
+                Count        = overdueCount,
+                OverdueCount = overdueCount,
+                TodayCount   = 0,
+                UpcomingCount= 0
+            });
 
             for (int i = 0; i < days; i++)
             {
-                DateTime date = today.AddDays(i);
-                using var dayCmd = new SqliteCommand(@"
-                    SELECT COUNT(*)
-                    FROM Documents
-                    WHERE date(ThoiHan) = date(@date)
-                    AND Status != @completed", connection);
-                dayCmd.Parameters.AddWithValue("@date", date.ToString("yyyy-MM-dd"));
-                dayCmd.Parameters.AddWithValue("@completed", completedStatus);
-                int count = Convert.ToInt32(dayCmd.ExecuteScalar());
-
-                items.Add(new
-                {
-                    Date = date.ToString("yyyy-MM-dd"),
-                    Label = i == 0 ? "Hôm nay" : $"+{i}",
-                    Count = count,
+                var date  = today.AddDays(i);
+                var key   = date.ToString("yyyy-MM-dd");
+                int count = buckets.TryGetValue(key, out int c) ? c : 0;
+                items.Add(new {
+                    Date         = key,
+                    Label        = i == 0 ? "Hôm nay" : $"+{i}",
+                    Count        = count,
                     OverdueCount = 0,
-                    TodayCount = i == 0 ? count : 0,
-                    UpcomingCount = i > 0 ? count : 0
+                    TodayCount   = i == 0 ? count : 0,
+                    UpcomingCount= i > 0  ? count : 0
                 });
             }
 

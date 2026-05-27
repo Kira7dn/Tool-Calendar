@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using ToolCalendar.Data;
 
 namespace ToolCalendar.Api.Controllers
@@ -9,12 +10,32 @@ namespace ToolCalendar.Api.Controllers
     [Route("api/[controller]")]
     public class StatsController : ControllerBase
     {
+        private readonly IMemoryCache _cache;
+
+        // Cache keys
+        private const string STATS_KEY    = "dashboard_stats";
+        private const string TIMELINE_KEY = "dashboard_timeline_{0}"; // {0} = days
+
+        public StatsController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         [HttpGet]
         public IActionResult GetSummary()
         {
             try
             {
-                var stats = DatabaseService.GetDashboardStats();
+                // ✅ Cache 30 giây — đủ fresh cho dashboard, tránh 8 DB queries mỗi refresh
+                if (!_cache.TryGetValue(STATS_KEY, out object? stats))
+                {
+                    stats = DatabaseService.GetDashboardStats();
+                    _cache.Set(STATS_KEY, stats, new MemoryCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30),
+                        SlidingExpiration = TimeSpan.FromSeconds(20)
+                    });
+                }
                 return Ok(stats);
             }
             catch (Exception ex)
@@ -43,12 +64,36 @@ namespace ToolCalendar.Api.Controllers
         {
             try
             {
-                return Ok(DatabaseService.GetDashboardDeadlineSeries(days));
+                // ✅ Cache 60 giây — biểu đồ timeline thay đổi ít hơn stats
+                string cacheKey = string.Format(TIMELINE_KEY, days);
+                if (!_cache.TryGetValue(cacheKey, out object? series))
+                {
+                    series = DatabaseService.GetDashboardDeadlineSeries(days);
+                    _cache.Set(cacheKey, series, new MemoryCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60),
+                        SlidingExpiration = TimeSpan.FromSeconds(40)
+                    });
+                }
+                return Ok(series);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = $"Lỗi lấy biểu đồ thời hạn: {ex.Message}" });
             }
+        }
+
+        /// <summary>
+        /// Invalidate dashboard cache — gọi sau khi upload/cập nhật/xóa văn bản
+        /// </summary>
+        [HttpPost("invalidate-cache")]
+        public IActionResult InvalidateCache()
+        {
+            _cache.Remove(STATS_KEY);
+            // Xóa cache timeline cho các giá trị days phổ biến
+            foreach (var d in new[] { 7, 14, 30 })
+                _cache.Remove(string.Format(TIMELINE_KEY, d));
+            return Ok(new { message = "Cache cleared" });
         }
 
         [HttpGet("settings")]
