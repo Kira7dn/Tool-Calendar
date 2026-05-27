@@ -87,8 +87,8 @@ namespace ToolCalendar.Middleware
                         headers["Cache-Control"] = "no-store, private";
                 }
 
-                // Chống Clickjacking
-                headers["X-Frame-Options"] = "DENY";
+                // Chống Clickjacking (Cho phép iframe cùng domain để xem PDF)
+                headers["X-Frame-Options"] = "SAMEORIGIN";
                 // Chống MIME sniffing
                 headers["X-Content-Type-Options"] = "nosniff";
                 // Chống XSS
@@ -97,7 +97,7 @@ namespace ToolCalendar.Middleware
                 headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
                 // Content Security Policy
                 headers["Content-Security-Policy"] =
-                    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' wss: ws:; frame-src blob:; object-src blob:;";
+                    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' wss: ws:; frame-src 'self' blob:; object-src 'self' blob:;";
 
                 return Task.CompletedTask;
             });

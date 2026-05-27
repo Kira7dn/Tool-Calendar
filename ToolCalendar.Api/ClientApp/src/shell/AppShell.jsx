@@ -319,7 +319,9 @@ export function AppShell() {
     };
     window.app.services.openPdfPreview = (id) => {
       const token = localStorage.getItem('auth_token');
-      window.open(`/api/documents/${id}/file?access_token=${token}`, '_blank');
+      // ✅ Bảo mật: Dùng cookie thay vì ?access_token= trên URL
+      document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`;
+      window.open(`/api/documents/${id}/file`, '_blank');
     };
 
     // Listen for unauthorized event

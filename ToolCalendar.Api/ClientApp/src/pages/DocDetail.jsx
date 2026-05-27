@@ -420,7 +420,8 @@ export function DocDetail({ docId, onBack }) {
           <button
             onClick={() => {
               const token = localStorage.getItem('auth_token');
-              document.cookie = `jwt_cookie=${token}; path=/; max-age=86400; Secure; SameSite=Lax`;
+              // ✅ Bảo mật: Dùng cookie thay vì token trên URL
+              document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`;
               window.open(`/api/documents/${docId}/file`, '_blank');
             }}
             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-100"
@@ -581,7 +582,8 @@ export function DocDetail({ docId, onBack }) {
                 <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">FILE & OCR RESULT</h2>
                 <button className="text-[10px] font-black text-red-600 hover:underline uppercase tracking-widest" onClick={() => {
                   const token = localStorage.getItem('auth_token');
-                  document.cookie = `jwt_cookie=${token}; path=/; max-age=86400; Secure; SameSite=Lax`;
+                  // ✅ Bảo mật: Dùng cookie thay vì token trên URL
+                  document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`;
                   window.open(`/api/documents/${docId}/file`, '_blank');
                 }}>XEM TOÀN MÀN HÌNH</button>
               </div>
@@ -831,7 +833,9 @@ export function DocDetail({ docId, onBack }) {
                   <button
                     onClick={() => {
                       const token = localStorage.getItem('auth_token');
-                      window.open(`/api/documents/${docId}/file?access_token=${token}`, '_blank');
+                      // ✅ Bảo mật: Dùng cookie thay vì ?access_token= trên URL
+                      document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`;
+                      window.open(`/api/documents/${docId}/file`, '_blank');
                     }}
                     className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-red-600 transition-all"
                   >
