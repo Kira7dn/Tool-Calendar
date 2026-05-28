@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using ToolCalendar.Middleware;   // ✅ FileAccessSecurityMiddleware
 using ToolCalendar.Policies;    // ✅ AppPolicies (phân quyền tập trung)
+using ToolCalendar.Services.Security; // ✅ ClamAvService, BackupService
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,6 +51,15 @@ builder.Services.AddRateLimiter(options =>
         opt.QueueLimit = 0;
         opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
     });
+
+    // Policy cho Upload: tối đa 10 file / 60 giây / mỗi user → chống upload bomb
+    options.AddFixedWindowLimiter("upload-limit", opt =>
+    {
+        opt.Window = TimeSpan.FromSeconds(60);
+        opt.PermitLimit = 10;
+        opt.QueueLimit = 2; // Cho phép chờ thêm 2 request
+        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+    });
 });
 
 // Đăng ký Repositories (Clean Architecture)
@@ -72,6 +82,10 @@ builder.Services.AddSingleton<IVapidService, VapidService>();
 builder.Services.AddScoped<INotificationManager, NotificationManager>();
 builder.Services.AddSingleton<DeadlineWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DeadlineWorker>());
+
+// ✅ Security Services
+builder.Services.AddSingleton<IClamAvService, ClamAvService>();  // Virus scanning
+builder.Services.AddHostedService<BackupService>();               // Auto DB backup mỗi 6h
 
 // Cấu hình JWT - Bắt buộc phải có trong biến môi trường hoặc appsettings
 var jwtSecret = builder.Configuration["JWT_SECRET"]

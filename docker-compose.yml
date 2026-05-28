@@ -8,6 +8,9 @@ services:
       - "5000"
     ports:
       - "59607:5000"
+    # ✅ Tầng 5: Chạy container với quyền tối thiểu — chống leo thang quyền (ransomware)
+    security_opt:
+      - no-new-privileges:true
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - DB_PATH=/app/data/documents.db
@@ -17,18 +20,22 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - PUBLIC_ID_SECRET=${PUBLIC_ID_SECRET}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
+      # --- ClamAV Config ---
+      - ClamAv__Host=clamav
+      - ClamAv__Port=3310
       # --- OCR Performance Tuning ---
-      - OcrSettings__RenderDpi=200          # Giảm từ 300 → 200 DPI: nhanh hơn ~2x, vẫn đủ chất lượng nhận dạng tiếng Việt
-      - OcrSettings__MaxParallelPages=4     # Xử lý song song 4 trang/lúc (thay vì 2)
-      - OcrSettings__MaxPagesToScan=7       # Chỉ OCR tối đa 7 trang đầu tiên (công văn thường < 5 trang)
-      - OcrSettings__EnableOsd=false        # Tắt auto-rotate detection: tiết kiệm ~2-3 giây/trang
-      - OcrSettings__EnableDeskew=false     # Tắt deskew: tiết kiệm ~1-2 giây/trang
+      - OcrSettings__RenderDpi=200
+      - OcrSettings__MaxParallelPages=4
+      - OcrSettings__MaxPagesToScan=7
+      - OcrSettings__EnableOsd=false
+      - OcrSettings__EnableDeskew=false
       # --- RabbitMQ Settings ---
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=${RABBITMQ_USER}
       - RabbitMQ__Password=${RABBITMQ_PASS}
     depends_on:
       - rabbitmq
+      - clamav
     volumes:
       - ./data_dump:/app/data
       - ./ToolCalendar.Api/Uploads:/app/Uploads
@@ -43,6 +50,19 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    restart: always
+
+  # ✅ Tầng 1: ClamAV Anti-Virus Scanner
+  # Container riêng biệt, cô lập hoàn toàn với backend
+  clamav:
+    image: clamav/clamav:latest
+    container_name: doc-clamav
+    environment:
+      - CLAMAV_NO_FRESHCLAMD=false  # Cập nhật database virus tự động
+      - CLAMD_CONF_MaxFileSize=100M
+      - CLAMD_CONF_StreamMaxLength=100M
+    volumes:
+      - clamav-db:/var/lib/clamav  # Database virus được persist giữa các lần khởi động
     restart: always
 
   nginx:
@@ -76,3 +96,5 @@ services:
     depends_on:
       - nginx
 
+volumes:
+  clamav-db:  # Named volume — ClamAV virus database tồn tại giữa các lần restart

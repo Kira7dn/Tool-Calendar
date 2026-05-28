@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,6 +9,7 @@ using ToolCalendar.Data;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
+using ToolCalendar.Services.Security;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -23,8 +25,17 @@ namespace ToolCalendar.Api.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IDocumentRepository _documentRepository;
         private readonly IConfiguration _configuration;
+        private readonly IClamAvService _clamAv;
 
-        public DocumentsController(IDocumentExtractorService extractor, IOcrQueueService ocrQueue, INotificationManager notificationManager, IWebHostEnvironment env, IHubContext<NotificationHub> hubContext, IDocumentRepository documentRepository, IConfiguration configuration)
+        public DocumentsController(
+            IDocumentExtractorService extractor,
+            IOcrQueueService ocrQueue,
+            INotificationManager notificationManager,
+            IWebHostEnvironment env,
+            IHubContext<NotificationHub> hubContext,
+            IDocumentRepository documentRepository,
+            IConfiguration configuration,
+            IClamAvService clamAv)
         {
             _extractor = extractor;
             _ocrQueue = ocrQueue;
@@ -33,6 +44,7 @@ namespace ToolCalendar.Api.Controllers
             _hubContext = hubContext;
             _documentRepository = documentRepository;
             _configuration = configuration;
+            _clamAv = clamAv;
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
@@ -77,36 +89,90 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpPost("upload")]
+        [EnableRateLimiting("upload-limit")] // Tầng 4: tối đa 10 file/phút/user
         public async Task<IActionResult> Upload(IFormFile file)
         {
-            if (file == null || file.Length == 0) return BadRequest("Không có file.");
+            // ─── Tầng cơ bản: kiểm tra null ────────────────────────────────────
+            if (file == null || file.Length == 0)
+                return BadRequest(new { error = "Không có file." });
 
-            // 1. Lưu file vào thư mục Uploads
+            // ─── Tầng 2: Magic Bytes + Extension whitelist + Size limit ─────────
+            using var fileStream = file.OpenReadStream();
+            var (isValidSignature, signatureError) = FileSignatureValidator.Validate(
+                fileStream, file.FileName, file.Length);
+
+            if (!isValidSignature)
+                return BadRequest(new { error = signatureError });
+
+            // ─── Tầng 3: Tính hash SHA256 để kiểm tra tính toàn vẹn (mất mạng) ───
+            fileStream.Seek(0, SeekOrigin.Begin);
+            string? expectedHash = Request.Headers["X-File-Hash"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(expectedHash))
+            {
+                using var sha256 = SHA256.Create();
+                var hashBytes = await sha256.ComputeHashAsync(fileStream);
+                var actualHash = Convert.ToHexString(hashBytes);
+
+                if (!actualHash.Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
+                    return BadRequest(new {
+                        error = "File bị hỏng trong quá trình upload (hash không khớp). Vui lòng upload lại."
+                    });
+            }
+
+            // ─── Lưu file vào thư mục QUARANTINE tạm thời để quét virus ─────────
+            var quarantineDir = Path.Combine(_env.ContentRootPath, "Uploads", ".quarantine");
+            Directory.CreateDirectory(quarantineDir);
+
+            var safeFileName = FileSignatureValidator.SanitizeFileName(file.FileName);
+            var quarantinePath = Path.Combine(quarantineDir, $"{Guid.NewGuid()}_{safeFileName}");
+
+            fileStream.Seek(0, SeekOrigin.Begin);
+            await using (var fs = new FileStream(quarantinePath, FileMode.Create, FileAccess.Write))
+                await fileStream.CopyToAsync(fs);
+
+            // ─── Tầng 1: ClamAV Virus Scan (quét trong quarantine, chưa vào Uploads) ─
+            ClamAvScanResult scanResult;
+            try
+            {
+                scanResult = await _clamAv.ScanFileAsync(quarantinePath);
+            }
+            catch
+            {
+                scanResult = ClamAvScanResult.ServiceUnavailable; // Fail-open
+            }
+
+            if (!scanResult.IsClean)
+            {
+                // Xóa file nhiễm ngay lập tức
+                if (System.IO.File.Exists(quarantinePath))
+                    System.IO.File.Delete(quarantinePath);
+
+                return BadRequest(new {
+                    error = $"❌ File bị từ chối: phát hiện mã độc ({scanResult.VirusName}). Liên hệ quản trị viên.",
+                    virus = scanResult.VirusName
+                });
+            }
+
+            // ─── File đã qua kiểm tra → chuyển vào Uploads chính thức ─────────
             var uploadsDir = Path.Combine(_env.ContentRootPath, "Uploads");
             Directory.CreateDirectory(uploadsDir);
 
-            var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-            var filePath = Path.Combine(uploadsDir, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            var finalFileName = $"{Guid.NewGuid()}_{safeFileName}";
+            var finalPath = Path.Combine(uploadsDir, finalFileName);
+            System.IO.File.Move(quarantinePath, finalPath);
 
             var record = new DocumentRecord
             {
-                SoVanBan = Path.GetFileNameWithoutExtension(file.FileName),
-                FilePath = $"Uploads/{fileName}",
+                SoVanBan = Path.GetFileNameWithoutExtension(safeFileName),
+                FilePath = $"Uploads/{finalFileName}",
                 Status = "Đang xử lý",
                 NgayThem = DateTime.Now,
                 FullText = "Đang trích xuất tự động..."
             };
 
-            // Lưu vào DB để có ID thật cho giao diện
             int id = await _documentRepository.InsertAsync(record);
             record.Id = id;
 
-            // Đẩy vào hàng đợi RabbitMQ xử lý nền không đồng bộ
             await _ocrQueue.EnqueueAsync(id);
 
             return Ok(record);
