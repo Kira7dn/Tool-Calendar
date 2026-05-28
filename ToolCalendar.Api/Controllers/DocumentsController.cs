@@ -104,6 +104,15 @@ namespace ToolCalendar.Api.Controllers
             if (!isValidSignature)
                 return BadRequest(new { error = signatureError });
 
+            // ─── Tầng 2.1: Chống Zip Bomb (dành cho file nén như docx, xlsx) ─────
+            var ext = Path.GetExtension(file.FileName).ToLower();
+            if (ext == ".docx" || ext == ".xlsx" || ext == ".zip")
+            {
+                var (isSafeZip, zipError) = ZipBombDetector.CheckZipBomb(fileStream, file.Length);
+                if (!isSafeZip)
+                    return BadRequest(new { error = zipError });
+            }
+
             // ─── Tầng 3: Tính hash SHA256 để kiểm tra tính toàn vẹn (mất mạng) ───
             fileStream.Seek(0, SeekOrigin.Begin);
             string? expectedHash = Request.Headers["X-File-Hash"].FirstOrDefault();
@@ -151,6 +160,14 @@ namespace ToolCalendar.Api.Controllers
                     error = $"❌ File bị từ chối: phát hiện mã độc ({scanResult.VirusName}). Liên hệ quản trị viên.",
                     virus = scanResult.VirusName
                 });
+            }
+
+            // ─── Tầng 1.1: Xóa siêu dữ liệu ảnh (Metadata Stripping) ─────────
+            var (isMetadataStripped, metadataError) = await MetadataStripper.StripImageMetadataAsync(quarantinePath);
+            if (!isMetadataStripped)
+            {
+                if (System.IO.File.Exists(quarantinePath)) System.IO.File.Delete(quarantinePath);
+                return BadRequest(new { error = metadataError });
             }
 
             // ─── File đã qua kiểm tra → chuyển vào Uploads chính thức ─────────
