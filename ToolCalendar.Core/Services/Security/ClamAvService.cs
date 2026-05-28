@@ -36,7 +36,7 @@ public class ClamAvService : IClamAvService
             using var tcp = new TcpClient();
             // Timeout kết nối 3 giây — nếu ClamAV không chạy thì không block upload
             var connectTask = tcp.ConnectAsync(_host, _port, ct).AsTask();
-            if (!await Task.WhenAny(connectTask, Task.Delay(3000, ct)) == connectTask || connectTask.IsFaulted)
+            if (await Task.WhenAny(connectTask, Task.Delay(3000, ct)) != connectTask || connectTask.IsFaulted)
             {
                 _logger.LogWarning("[ClamAV] Không thể kết nối tới {Host}:{Port} — bỏ qua quét virus", _host, _port);
                 return ClamAvScanResult.ServiceUnavailable;
