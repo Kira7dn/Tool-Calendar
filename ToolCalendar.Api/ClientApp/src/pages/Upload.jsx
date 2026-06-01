@@ -108,9 +108,24 @@ export function Upload({ onTabChange }) {
 
   const inputRef = useRef(null);
   const folderInputRef = useRef(null);
+  const tableScrollRef = useRef(null);
+  const [tableScrollTop, setTableScrollTop] = useState(0);
+  const [tableHeight, setTableHeight] = useState(600);
 
   useEffect(() => {
     fetchReferenceData();
+  }, []);
+
+  // Theo dõi chiều cao của container bảng để tính virtual scroll chính xác
+  useEffect(() => {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) setTableHeight(entry.contentRect.height);
+    });
+    ro.observe(el);
+    setTableHeight(el.clientHeight);
+    return () => ro.disconnect();
   }, []);
 
   const fetchReferenceData = async () => {
@@ -135,7 +150,7 @@ export function Upload({ onTabChange }) {
     setIsProcessing(true);
     setOverallProgress(0);
 
-    const MAX_CONCURRENT = 3; // Tối đa 3 file OCR song song cùng lúc
+    const MAX_CONCURRENT = 8; // Tăng lên 8 — luôn duy trì 8 upload chạy song song
     let completedCount = 0;
     const total = fileList.length;
 
@@ -189,11 +204,16 @@ export function Upload({ onTabChange }) {
       }
     };
 
-    // Chia thành các nhóm và chạy song song từng nhóm
-    for (let i = 0; i < newItems.length; i += MAX_CONCURRENT) {
-      const chunk = newItems.slice(i, i + MAX_CONCURRENT);
-      await Promise.all(chunk.map(uploadOne));
-    }
+    // Semaphore: luôn duy trì đúng MAX_CONCURRENT requests đang chạy
+    // Không bị gap giữa các batch — ngay khi 1 file xong, 1 file mới bắt đầu lên ngay
+    const uploadQueue = [...newItems];
+    const workers = Array.from({ length: MAX_CONCURRENT }, async () => {
+      while (uploadQueue.length > 0) {
+        const item = uploadQueue.shift();
+        if (item) await uploadOne(item);
+      }
+    });
+    await Promise.all(workers);
 
     setOverallProgress(100);
     setTimeout(() => {
@@ -213,7 +233,8 @@ export function Upload({ onTabChange }) {
     if (targets.length === 0) return;
 
     setIsProcessing(true);
-    for (const item of targets) {
+
+    const saveOne = async (item) => {
       try {
         const response = await fetch(`/api/documents/${item.id}`, {
           method: 'PUT',
@@ -237,16 +258,26 @@ export function Upload({ onTabChange }) {
             assignedUserIds: JSON.stringify(item.assignedToIds || [])
           })
         });
-
         if (response.ok) {
           setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'success' } : i));
         }
       } catch (e) {
         console.error(e);
       }
-    }
+    };
+
+    // Song song 10 request cùng lúc thay vì tuần tự — 1000 file giảm từ ~50s xuống ~5s
+    const saveQueue = [...targets];
+    const saveWorkers = Array.from({ length: 10 }, async () => {
+      while (saveQueue.length > 0) {
+        const item = saveQueue.shift();
+        if (item) await saveOne(item);
+      }
+    });
+    await Promise.all(saveWorkers);
+
     setIsProcessing(false);
-    toast.success('Đã lưu tất cả văn bản');
+    toast.success(`Đã lưu ${targets.length} văn bản`);
   };
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -316,6 +347,16 @@ export function Upload({ onTabChange }) {
     saved: batchItems.filter(f => f.status === "success").length,
     pending: batchItems.filter(f => f.status === "ready").length,
   };
+
+  // ── Virtual scroll: chỉ render rows đang hiển thị trong viewport ──
+  // Thay vì render 1244 rows cùng lúc, chỉ render ~25–30 rows có thể nhìn thấy + buffer
+  const ROW_HEIGHT = 44; // ước tính chiều cao mỗi row (px)
+  const BUFFER = 8;      // số row dự phòng trên/dưới viewport
+  const visibleStart = Math.max(0, Math.floor(tableScrollTop / ROW_HEIGHT) - BUFFER);
+  const visibleEnd = Math.min(batchItems.length, Math.ceil((tableScrollTop + tableHeight) / ROW_HEIGHT) + BUFFER);
+  const visibleItems = batchItems.slice(visibleStart, visibleEnd);
+  const topSpacer = visibleStart * ROW_HEIGHT;
+  const bottomSpacer = Math.max(0, (batchItems.length - visibleEnd) * ROW_HEIGHT);
 
   return (
     <div className="h-full bg-slate-100 flex flex-col overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -469,8 +510,12 @@ export function Upload({ onTabChange }) {
 
         {/* RIGHT: document list */}
         <div className="flex-1 min-h-[500px] lg:min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden min-w-0">
-          {/* Table */}
-          <div className="flex-1 overflow-auto">
+          {/* Table — virtual scroll: chỉ render rows trong viewport */}
+          <div
+            ref={tableScrollRef}
+            className="flex-1 overflow-auto"
+            onScroll={e => setTableScrollTop(e.currentTarget.scrollTop)}
+          >
             <table className="w-full text-xs border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
@@ -492,7 +537,9 @@ export function Upload({ onTabChange }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {batchItems.map(row => {
+                {/* Spacer trên: giữ đúng scroll position cho các rows ở trước viewport */}
+                {topSpacer > 0 && <tr style={{ height: topSpacer }}><td colSpan={8} /></tr>}
+                {visibleItems.map(row => {
                   const isRowSelected = selectedIds.has(row.id);
                   return (
                     <tr key={row.id} className={cn("transition-colors group", isRowSelected ? "bg-blue-50 hover:bg-blue-50/80" : "hover:bg-slate-50/60")}>
@@ -607,6 +654,8 @@ export function Upload({ onTabChange }) {
                     </tr>
                   );
                 })}
+                {/* Spacer dưới: giữ đúng tổng chiều cao bảng, cho phép scroll đến cuối */}
+                {bottomSpacer > 0 && <tr style={{ height: bottomSpacer }}><td colSpan={8} /></tr>}
               </tbody>
             </table>
 

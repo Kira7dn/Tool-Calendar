@@ -4,9 +4,6 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "@legacy/*": [
-        "./src/legacy-assets/*"
       ]
     },
     "target": "es2022",

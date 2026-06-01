@@ -52,12 +52,13 @@ builder.Services.AddRateLimiter(options =>
         opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
     });
 
-    // Policy cho Upload: tối đa 10 file / 60 giây / mỗi user → chống upload bomb
+    // Policy cho Upload: tối đa 200 file / 60 giây / mỗi user
+    // Tăng từ 10 → 200 để hỗ trợ tải hàng loạt (batch upload 1000+ file)
     options.AddFixedWindowLimiter("upload-limit", opt =>
     {
         opt.Window = TimeSpan.FromSeconds(60);
-        opt.PermitLimit = 10;
-        opt.QueueLimit = 2; // Cho phép chờ thêm 2 request
+        opt.PermitLimit = 200;
+        opt.QueueLimit = 20; // Cho phép chờ thêm 20 request trong queue
         opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
     });
 });

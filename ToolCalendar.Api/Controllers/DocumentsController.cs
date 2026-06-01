@@ -213,22 +213,20 @@ namespace ToolCalendar.Api.Controllers
         {
             if (ids == null || ids.Count == 0) return BadRequest("Danh sách ID trống.");
 
-            var allDocs = await _documentRepository.GetAllAsync();
-            foreach (var id in ids)
+            // ✅ Perf: Query chỉ Id + FilePath thay vì GetAllAsync() toàn bộ bảng
+            var filePaths = await _documentRepository.GetFilePathsByIdsAsync(ids);
+            foreach (var (id, filePath) in filePaths)
             {
-                var doc = allDocs.FirstOrDefault(x => x.Id == id);
-                if (doc != null)
+                if (!string.IsNullOrEmpty(filePath))
                 {
-                    if (!string.IsNullOrEmpty(doc.FilePath) && System.IO.File.Exists(doc.FilePath))
-                    {
-                        System.IO.File.Delete(doc.FilePath);
-                    }
-                    var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
-                    if (Directory.Exists(evidenceDir))
-                    {
-                        Directory.Delete(evidenceDir, true);
-                    }
+                    var normalizedPath = filePath.Replace('\\', '/').TrimStart('/');
+                    var fullPath = Path.Combine(_env.ContentRootPath, normalizedPath);
+                    if (System.IO.File.Exists(fullPath))
+                        System.IO.File.Delete(fullPath);
                 }
+                var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
+                if (Directory.Exists(evidenceDir))
+                    Directory.Delete(evidenceDir, true);
             }
 
             await _documentRepository.BulkDeleteAsync(ids);
@@ -371,26 +369,8 @@ namespace ToolCalendar.Api.Controllers
         {
             var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-            var allDocs = await _documentRepository.GetAllAsync();
-            var tasks = allDocs
-                .Where(d => {
-                    // Kiểm tra xem user có trong danh sách phân công không
-                    bool isAssigned = (d.AssignedTo == userId);
-                    if (!isAssigned && !string.IsNullOrEmpty(d.AssignedUserIds))
-                    {
-                        try {
-                            var uids = System.Text.Json.JsonSerializer.Deserialize<List<int>>(d.AssignedUserIds);
-                            if (uids != null && uids.Contains(userId)) isAssigned = true;
-                        } catch { }
-                    }
-                    
-                    // Chỉ lấy các việc chưa hoàn thành
-                    bool isNotDone = d.Status != "Đã hoàn thành";
-                    
-                    return isAssigned && isNotDone;
-                })
-                .OrderBy(d => d.ThoiHan)
-                .ToList();
+            // ✅ Perf: lọc tại DB thay vì GetAllAsync() + LINQ scan toàn bộ bảng
+            var tasks = await _documentRepository.GetTasksByUserIdAsync(userId);
             return Ok(tasks);
         }
 
@@ -406,7 +386,6 @@ namespace ToolCalendar.Api.Controllers
             var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
             
             if (!System.IO.File.Exists(filePath)) return NotFound($"File vật lý không tìm thấy tại: {normalizedPath}");
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
 
             var ext = Path.GetExtension(doc.FilePath).ToLower();
             var mimeType = ext switch
@@ -417,10 +396,11 @@ namespace ToolCalendar.Api.Controllers
                 _ => "application/octet-stream"
             };
             // ✅ Bảo mật: Ngăn browser cache file nhạy cảm
+            // ✅ Perf: PhysicalFile stream trực tiếp từ disk, không load vào RAM trước
             Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            return File(fileBytes, mimeType);
+            return PhysicalFile(filePath, mimeType);
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -440,7 +420,6 @@ namespace ToolCalendar.Api.Controllers
                 
                 if (!System.IO.File.Exists(filePath)) return NotFound("Không tìm thấy file vật lý.");
                 
-                var fileBytes = System.IO.File.ReadAllBytes(filePath);
                 var fileName = Path.GetFileName(filePath);
                 var ext = Path.GetExtension(filePath).ToLower();
                 var mimeType = ext switch
@@ -453,10 +432,11 @@ namespace ToolCalendar.Api.Controllers
                     _ => "application/octet-stream"
                 };
                 // ✅ Bảo mật: Ngăn browser cache file bằng chứng
+                // ✅ Perf: PhysicalFile stream trực tiếp, không load vào RAM
                 Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
                 Response.Headers["Pragma"] = "no-cache";
                 Response.Headers["X-Content-Type-Options"] = "nosniff";
-                return File(fileBytes, mimeType, fileName);
+                return PhysicalFile(filePath, mimeType, fileName);
             }
             catch (Exception ex) { return BadRequest(new { message = ex.Message, stack = ex.StackTrace }); }
         }
@@ -491,12 +471,17 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> GetComments(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 500)
         {
             var comments = await _documentRepository.GetCommentsAsync(id, page, pageSize);
-            // Attach reactions for each comment
-            var result = new List<object>();
-            foreach (var c in comments)
+
+            // ✅ Perf: 1 batch query cho tất cả reactions thay vì N queries (N+1 → 2)
+            var commentIds = comments.Select(c => c.Id).ToList();
+            var allReactions = await _documentRepository.GetReactionsForCommentsAsync(commentIds);
+            var reactionsByComment = allReactions.GroupBy(r => r.CommentId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var result = comments.Select(c =>
             {
-                var rx = await _documentRepository.GetReactionsForCommentAsync(c.Id);
-                result.Add(new
+                var rx = reactionsByComment.TryGetValue(c.Id, out var list) ? list : new List<CommentReaction>();
+                return (object)new
                 {
                     c.Id,
                     c.DocumentId,
@@ -510,8 +495,9 @@ namespace ToolCalendar.Api.Controllers
                         Count = g.Count(),
                         Users = g.Select(r => r.Username).ToList()
                     })
-                });
-            }
+                };
+            }).ToList();
+
             return Ok(result);
         }
 
@@ -530,7 +516,6 @@ namespace ToolCalendar.Api.Controllers
             var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
             if (!System.IO.File.Exists(filePath)) return NotFound("File đính kèm không tồn tại.");
 
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
             var ext = Path.GetExtension(filePath).ToLower();
             var mimeType = ext switch
             {
@@ -540,10 +525,11 @@ namespace ToolCalendar.Api.Controllers
                 _ => "application/octet-stream"
             };
             // ✅ Bảo mật: Ngăn browser cache file đính kèm bình luận
+            // ✅ Perf: PhysicalFile stream trực tiếp, không ReadAllBytes
             Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            return File(fileBytes, mimeType, Path.GetFileName(filePath));
+            return PhysicalFile(filePath, mimeType, Path.GetFileName(filePath));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]

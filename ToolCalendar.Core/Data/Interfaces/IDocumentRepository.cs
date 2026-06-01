@@ -22,7 +22,15 @@ namespace ToolCalendar.Core.Data.Interfaces
         Task InsertCommentAsync(Comment c);
         Task DeleteCommentAsync(int commentId, int requestingUserId, bool isAdmin);
         Task<List<CommentReaction>> GetReactionsForCommentAsync(int commentId);
+        /// <summary>Lấy reactions cho nhiều comment cùng lúc (tránh N+1 queries)</summary>
+        Task<List<CommentReaction>> GetReactionsForCommentsAsync(IEnumerable<int> commentIds);
         Task<string> ToggleReactionAsync(int commentId, int userId, string username, string reactionType);
+
+        // Performance: lọc tại DB thay vì load tất cả rồi lọc bằng C#
+        /// <summary>Lấy task của user: lọc bằng SQL thay vì GetAllAsync + LINQ</summary>
+        Task<List<DocumentRecord>> GetTasksByUserIdAsync(int userId);
+        /// <summary>Lấy Id + FilePath của nhiều document: dùng cho BulkDelete</summary>
+        Task<Dictionary<int, string>> GetFilePathsByIdsAsync(IEnumerable<int> ids);
     }
 }
 

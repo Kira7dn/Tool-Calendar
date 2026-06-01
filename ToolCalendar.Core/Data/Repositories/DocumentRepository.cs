@@ -162,6 +162,91 @@ namespace ToolCalendar.Core.Data.Repositories
                 return reactionType;
             }
         }
+        public async Task<List<CommentReaction>> GetReactionsForCommentsAsync(IEnumerable<int> commentIds)
+        {
+            var ids = commentIds.ToList();
+            if (ids.Count == 0) return new List<CommentReaction>();
+
+            var list = new List<CommentReaction>();
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // 1 query thay vì N queries — dùng IN clause
+            var inClause = string.Join(",", ids);
+            using var cmd = new SqliteCommand(
+                $"SELECT Id, CommentId, UserId, Username, ReactionType, CreatedAt FROM CommentReactions WHERE CommentId IN ({inClause})",
+                connection);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                list.Add(new CommentReaction
+                {
+                    Id           = Convert.ToInt32(reader["Id"]),
+                    CommentId    = Convert.ToInt32(reader["CommentId"]),
+                    UserId       = Convert.ToInt32(reader["UserId"]),
+                    Username     = reader["Username"].ToString() ?? "",
+                    ReactionType = reader["ReactionType"].ToString() ?? "",
+                    CreatedAt    = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
+                });
+            }
+            return list;
+        }
+
+        /// <summary>Lấy task được giao cho userId: lọc tại SQL, không load toàn bộ bảng.</summary>
+        public async Task<List<DocumentRecord>> GetTasksByUserIdAsync(int userId)
+        {
+            var records = new List<DocumentRecord>();
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // LIKE '%"userId"%' bắt được cả AssignedUserIds dạng JSON array
+            string sql = @"
+                SELECT Id, SoVanBan, TenCongVan, TrichYeu, '' AS FullText, '[]' AS OcrPagesJson,
+                       NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath,
+                       Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds,
+                       EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich
+                FROM Documents
+                WHERE Status != 'Đã hoàn thành'
+                  AND (
+                      AssignedTo = @userId
+                      OR AssignedUserIds LIKE @pattern
+                  )
+                ORDER BY ThoiHan ASC NULLS LAST";
+
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@userId", userId);
+            cmd.Parameters.AddWithValue("@pattern", $"%{userId}%");
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                records.Add(MapRecord(reader));
+
+            return records;
+        }
+
+        /// <summary>Lấy Id + FilePath theo danh sách ID: dùng cho BulkDelete thay vì GetAllAsync.</summary>
+        public async Task<Dictionary<int, string>> GetFilePathsByIdsAsync(IEnumerable<int> ids)
+        {
+            var idList = ids.ToList();
+            if (idList.Count == 0) return new Dictionary<int, string>();
+
+            var result = new Dictionary<int, string>();
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            var inClause = string.Join(",", idList);
+            using var cmd = new SqliteCommand(
+                $"SELECT Id, FilePath FROM Documents WHERE Id IN ({inClause})",
+                connection);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                int id = Convert.ToInt32(reader["Id"]);
+                string filePath = reader["FilePath"]?.ToString() ?? "";
+                result[id] = filePath;
+            }
+            return result;
+        }
+
         public async Task<byte[]> ExportDocumentsToCsvAsync()
         {
             var sb = new System.Text.StringBuilder();

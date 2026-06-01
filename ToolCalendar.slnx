@@ -1,6 +1,5 @@
-﻿<Solution>
+<Solution>
   <Project Path="ToolCalendar.Api/ToolCalendar.Api.csproj" />
   <Project Path="ToolCalendar.Core/ToolCalendar.Core.csproj" />
   <Project Path="ToolCalendar.Tests/ToolCalendar.Tests.csproj" />
-  <Project Path="ToolCalendar/ToolCalendar.csproj" />
 </Solution>

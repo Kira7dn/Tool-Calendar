@@ -15,8 +15,7 @@ export default defineConfig({
   plugins: [tailwindcss(), react()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
-      '@legacy': resolve(__dirname, './src/legacy-assets')
+      '@': resolve(__dirname, './src')
     }
   },
   server: {
