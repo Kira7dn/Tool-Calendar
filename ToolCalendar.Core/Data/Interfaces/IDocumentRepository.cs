@@ -31,6 +31,13 @@ namespace ToolCalendar.Core.Data.Interfaces
         Task<List<DocumentRecord>> GetTasksByUserIdAsync(int userId);
         /// <summary>Lấy Id + FilePath của nhiều document: dùng cho BulkDelete</summary>
         Task<Dictionary<int, string>> GetFilePathsByIdsAsync(IEnumerable<int> ids);
+
+        /// <summary>
+        /// Tra cứu document theo SHA-256 hash nội dung file.
+        /// Dùng để phát hiện và ngăn chặn upload file trùng lặp.
+        /// Trả về null nếu không tìm thấy (file chưa từng được upload).
+        /// </summary>
+        Task<DocumentRecord?> GetByContentHashAsync(string sha256Hash);
     }
 }
 

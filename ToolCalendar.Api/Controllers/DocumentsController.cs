@@ -2,14 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
-using System.Security.Cryptography;
-using System.Text;
+using System.Security.Claims;
+using System.Security.Cryptography;  // HMACSHA256 - dùng cho webhook notifications
+using System.Text;                   // Encoding - dùng cho webhook notifications
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Data;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
-using ToolCalendar.Services.Security;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -25,7 +25,7 @@ namespace ToolCalendar.Api.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IDocumentRepository _documentRepository;
         private readonly IConfiguration _configuration;
-        private readonly IClamAvService _clamAv;
+        private readonly IDocumentUploadService _uploadService;
 
         public DocumentsController(
             IDocumentExtractorService extractor,
@@ -35,7 +35,7 @@ namespace ToolCalendar.Api.Controllers
             IHubContext<NotificationHub> hubContext,
             IDocumentRepository documentRepository,
             IConfiguration configuration,
-            IClamAvService clamAv)
+            IDocumentUploadService uploadService)
         {
             _extractor = extractor;
             _ocrQueue = ocrQueue;
@@ -44,7 +44,7 @@ namespace ToolCalendar.Api.Controllers
             _hubContext = hubContext;
             _documentRepository = documentRepository;
             _configuration = configuration;
-            _clamAv = clamAv;
+            _uploadService = uploadService;
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
@@ -89,110 +89,38 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpPost("upload")]
-        [EnableRateLimiting("upload-limit")] // Tầng 4: tối đa 10 file/phút/user
+        [EnableRateLimiting("upload-limit")] // Tầng 4: tối đa 200 file/phút/user
         public async Task<IActionResult> Upload(IFormFile file)
         {
-            // ─── Tầng cơ bản: kiểm tra null ────────────────────────────────────
-            if (file == null || file.Length == 0)
-                return BadRequest(new { error = "Không có file." });
+            // Lấy userId của người đang đăng nhập từ JWT claims
+            var userIdStr = User.FindFirstValue("uid") ?? User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            int.TryParse(userIdStr, out int userId);
 
-            // ─── Tầng 2: Magic Bytes + Extension whitelist + Size limit ─────────
-            using var fileStream = file.OpenReadStream();
-            var (isValidSignature, signatureError) = FileSignatureValidator.Validate(
-                fileStream, file.FileName, file.Length);
+            // Ủy quyền toàn bộ logic nghiệp vụ cho DocumentUploadService
+            var result = await _uploadService.UploadAsync(file, userId);
 
-            if (!isValidSignature)
-                return BadRequest(new { error = signatureError });
+            // Xử lý kết quả trả về
+            if (!result.IsSuccess)
+                return BadRequest(new { error = result.ErrorMessage });
 
-            // ─── Tầng 2.1: Chống Zip Bomb (dành cho file nén như docx, xlsx) ─────
-            var ext = Path.GetExtension(file.FileName).ToLower();
-            if (ext == ".docx" || ext == ".xlsx" || ext == ".zip")
-            {
-                var (isSafeZip, zipError) = ZipBombDetector.CheckZipBomb(fileStream, file.Length);
-                if (!isSafeZip)
-                    return BadRequest(new { error = zipError });
-            }
-
-            // ─── Tầng 3: Tính hash SHA256 để kiểm tra tính toàn vẹn (mất mạng) ───
-            fileStream.Seek(0, SeekOrigin.Begin);
-            string? expectedHash = Request.Headers["X-File-Hash"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(expectedHash))
-            {
-                using var sha256 = SHA256.Create();
-                var hashBytes = await sha256.ComputeHashAsync(fileStream);
-                var actualHash = Convert.ToHexString(hashBytes);
-
-                if (!actualHash.Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
-                    return BadRequest(new {
-                        error = "File bị hỏng trong quá trình upload (hash không khớp). Vui lòng upload lại."
-                    });
-            }
-
-            // ─── Lưu file vào thư mục QUARANTINE tạm thời để quét virus ─────────
-            var quarantineDir = Path.Combine(_env.ContentRootPath, "Uploads", ".quarantine");
-            Directory.CreateDirectory(quarantineDir);
-
-            var safeFileName = FileSignatureValidator.SanitizeFileName(file.FileName);
-            var quarantinePath = Path.Combine(quarantineDir, $"{Guid.NewGuid()}_{safeFileName}");
-
-            fileStream.Seek(0, SeekOrigin.Begin);
-            await using (var fs = new FileStream(quarantinePath, FileMode.Create, FileAccess.Write))
-                await fileStream.CopyToAsync(fs);
-
-            // ─── Tầng 1: ClamAV Virus Scan (quét trong quarantine, chưa vào Uploads) ─
-            ClamAvScanResult scanResult;
-            try
-            {
-                scanResult = await _clamAv.ScanFileAsync(quarantinePath);
-            }
-            catch
-            {
-                scanResult = ClamAvScanResult.ServiceUnavailable; // Fail-open
-            }
-
-            if (!scanResult.IsClean)
-            {
-                // Xóa file nhiễm ngay lập tức
-                if (System.IO.File.Exists(quarantinePath))
-                    System.IO.File.Delete(quarantinePath);
-
-                return BadRequest(new {
-                    error = $"❌ File bị từ chối: phát hiện mã độc ({scanResult.VirusName}). Liên hệ quản trị viên.",
-                    virus = scanResult.VirusName
+            if (result.IsDuplicate)
+                // 409 Conflict: file này đã tồn tại trong hệ thống
+                return Conflict(new
+                {
+                    error = "File này đã được upload trước đó (nội dung trùng lặp).",
+                    hint = "Bạn có thể tìm tài liệu gốc theo ID bên dưới.",
+                    existingDocument = new
+                    {
+                        result.Document!.Id,
+                        result.Document.SoVanBan,
+                        result.Document.TenCongVan,
+                        result.Document.NgayThem,
+                        result.Document.FilePath,
+                        result.Document.Status
+                    }
                 });
-            }
 
-            // ─── Tầng 1.1: Xóa siêu dữ liệu ảnh (Metadata Stripping) ─────────
-            var (isMetadataStripped, metadataError) = await MetadataStripper.StripImageMetadataAsync(quarantinePath);
-            if (!isMetadataStripped)
-            {
-                if (System.IO.File.Exists(quarantinePath)) System.IO.File.Delete(quarantinePath);
-                return BadRequest(new { error = metadataError });
-            }
-
-            // ─── File đã qua kiểm tra → chuyển vào Uploads chính thức ─────────
-            var uploadsDir = Path.Combine(_env.ContentRootPath, "Uploads");
-            Directory.CreateDirectory(uploadsDir);
-
-            var finalFileName = $"{Guid.NewGuid()}_{safeFileName}";
-            var finalPath = Path.Combine(uploadsDir, finalFileName);
-            System.IO.File.Move(quarantinePath, finalPath);
-
-            var record = new DocumentRecord
-            {
-                SoVanBan = Path.GetFileNameWithoutExtension(safeFileName),
-                FilePath = $"Uploads/{finalFileName}",
-                Status = "Đang xử lý",
-                NgayThem = DateTime.Now,
-                FullText = "Đang trích xuất tự động..."
-            };
-
-            int id = await _documentRepository.InsertAsync(record);
-            record.Id = id;
-
-            await _ocrQueue.EnqueueAsync(id);
-
-            return Ok(record);
+            return Ok(result.Document);
         }
 
         [Authorize(Roles = "Admin,VanThu")]

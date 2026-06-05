@@ -33,6 +33,13 @@ namespace ToolCalendar.Models
         public bool DaTaoLich { get; set; } = false;
         public int UploadedByUserId { get; set; } = 1;
 
+        /// <summary>
+        /// SHA-256 hash (hex string) của nội dung file gốc.
+        /// Dùng để phát hiện file trùng lặp khi upload.
+        /// Nullable vì các bản ghi cũ (trước khi tích hợp tính năng này) không có hash.
+        /// </summary>
+        public string? ContentHash { get; set; }
+
         [JsonInclude]
         public int SoNgayConLai
         {

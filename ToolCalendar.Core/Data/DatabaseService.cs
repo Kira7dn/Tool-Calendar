@@ -72,7 +72,8 @@ namespace ToolCalendar.Data
                     LabelId INTEGER,
                     NgayThem TEXT,
                     DaTaoLich INTEGER DEFAULT 0,
-                    UploadedByUserId INTEGER DEFAULT 1
+                    UploadedByUserId INTEGER DEFAULT 1,
+                    ContentHash TEXT
                 )";
 
             string createUsersTable = @"
@@ -207,6 +208,13 @@ namespace ToolCalendar.Data
 
             // Migration cho Comments
             try { cmd.CommandText = "ALTER TABLE Comments ADD COLUMN AttachmentPaths TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
+
+            // Migration: Thêm cột ContentHash cho tính năng SHA-256 Deduplication
+            // Dùng try/catch vì SQLite không hỗ trợ "ADD COLUMN IF NOT EXISTS"
+            try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN ContentHash TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            // Tạo index để tăng tốc truy vấn tra cứu hash (O(log n) thay vì O(n))
+            try { cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_documents_content_hash ON Documents(ContentHash) WHERE ContentHash IS NOT NULL"; cmd.ExecuteNonQuery(); } catch { }
+
 
             // --- SEED SETTINGS ---
             cmd.CommandText = "SELECT COUNT(*) FROM AppSettings WHERE [Key] = 'Notification_ScanTime'";

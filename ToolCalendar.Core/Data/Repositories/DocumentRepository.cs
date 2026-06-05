@@ -451,8 +451,8 @@ namespace ToolCalendar.Core.Data.Repositories
             try
             {
                 string sql = @"
-                    INSERT INTO Documents (SoVanBan, TenCongVan, TrichYeu, FullText, OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich)
-                    VALUES (@SoVanBan, @TenCongVan, @TrichYeu, @FullText, @OcrPagesJson, @NgayBanHanh, @CoQuanBanHanh, @CoQuanChuQuan, @ThoiHan, @DonViChiDao, @FilePath, @Status, @Priority, @DepartmentId, @AssignedTo, @AssignedUserIds, @AssignedDepartmentIds, @EvidencePaths, @EvidenceNotes, @CompletionDate, @LabelId, @NgayThem, @DaTaoLich);
+                    INSERT INTO Documents (SoVanBan, TenCongVan, TrichYeu, FullText, OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich, ContentHash)
+                    VALUES (@SoVanBan, @TenCongVan, @TrichYeu, @FullText, @OcrPagesJson, @NgayBanHanh, @CoQuanBanHanh, @CoQuanChuQuan, @ThoiHan, @DonViChiDao, @FilePath, @Status, @Priority, @DepartmentId, @AssignedTo, @AssignedUserIds, @AssignedDepartmentIds, @EvidencePaths, @EvidenceNotes, @CompletionDate, @LabelId, @NgayThem, @DaTaoLich, @ContentHash);
                     SELECT last_insert_rowid();";
 
                 using var cmd = new SqliteCommand(sql, connection, transaction);
@@ -603,6 +603,35 @@ namespace ToolCalendar.Core.Data.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        /// <summary>
+        /// Tra cứu document theo SHA-256 hash nội dung file.
+        /// Dùng để phát hiện file trùng lặp trước khi lưu bản ghi mới.
+        /// </summary>
+        public async Task<DocumentRecord?> GetByContentHashAsync(string sha256Hash)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // Chỉ lấy các cột cần thiết để hiển thị thông báo trùng lặp — không cần FullText (nặng)
+            string sql = @"
+                SELECT Id, SoVanBan, TenCongVan, TrichYeu, '' AS FullText, '[]' AS OcrPagesJson,
+                       NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath,
+                       Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds,
+                       EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich, ContentHash
+                FROM Documents
+                WHERE ContentHash = @hash
+                LIMIT 1";
+
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@hash", sha256Hash);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+                return MapRecord(reader);
+
+            return null;
+        }
+
         private DocumentRecord MapRecord(SqliteDataReader r)
         {
             return new DocumentRecord
@@ -630,7 +659,10 @@ namespace ToolCalendar.Core.Data.Repositories
                 CompletionDate = TryParseDate(r["CompletionDate"]?.ToString()),
                 LabelId = r["LabelId"] == DBNull.Value ? null : Convert.ToInt32(r["LabelId"]),
                 NgayThem = DateTime.Parse(r["NgayThem"]?.ToString() ?? DateTime.UtcNow.AddHours(7).ToString()),
-                DaTaoLich = r["DaTaoLich"] != DBNull.Value && Convert.ToInt32(r["DaTaoLich"]) > 0
+                DaTaoLich = r["DaTaoLich"] != DBNull.Value && Convert.ToInt32(r["DaTaoLich"]) > 0,
+                ContentHash = r.HasColumn("ContentHash") && r["ContentHash"] != DBNull.Value
+                    ? r["ContentHash"].ToString()
+                    : null
             };
         }
 
@@ -659,6 +691,7 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@LabelId", (object?)r.LabelId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@NgayThem", r.NgayThem.ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.Parameters.AddWithValue("@DaTaoLich", r.DaTaoLich ? 1 : 0);
+            cmd.Parameters.AddWithValue("@ContentHash", (object?)r.ContentHash ?? DBNull.Value);
         }
 
         private DateTime? TryParseDate(string? value)
@@ -684,6 +717,24 @@ namespace ToolCalendar.Core.Data.Repositories
 
     }
 }
+
+/// <summary>
+/// Extension methods cho SqliteDataReader để kiểm tra sự tồn tại của cột.
+/// Cần thiết vì DB cũ (trước khi migration) có thể chưa có cột ContentHash.
+/// </summary>
+internal static class SqliteDataReaderExtensions
+{
+    public static bool HasColumn(this SqliteDataReader reader, string columnName)
+    {
+        for (int i = 0; i < reader.FieldCount; i++)
+        {
+            if (reader.GetName(i).Equals(columnName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+}
+
 
 
 

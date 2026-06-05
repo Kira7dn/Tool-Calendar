@@ -274,6 +274,7 @@ export function Users() {
                 className="pl-9 h-11 bg-muted/50 focus:bg-card"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                autoComplete="off"
               />
             </div>
             <Button
@@ -451,6 +452,7 @@ export function Users() {
                     onChange={e => !editingUser && setFormData({ ...formData, username: e.target.value })}
                     className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-bold disabled:opacity-50"
                     disabled={!!editingUser}
+                    autoComplete="username"
                   />
                 </div>
               </div>
@@ -467,6 +469,7 @@ export function Users() {
                     value={formData.password}
                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                     className="pl-10 pr-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
+                    autoComplete="new-password"
                   />
                   <Button
                     variant="ghost"

@@ -67,6 +67,9 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
+// Đăng ký Upload Service (tách logic upload ra khỏi Controller)
+builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
+
 // Đăng ký OCR & Extraction Services
 builder.Services.AddSingleton<IOcrService, OcrService>();
 builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();
