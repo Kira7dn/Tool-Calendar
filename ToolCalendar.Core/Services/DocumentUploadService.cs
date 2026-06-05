@@ -55,37 +55,37 @@ public class DocumentUploadService : IDocumentUploadService
                 return UploadResult.Failure(zipError!);
         }
 
-        // ─── Tầng 3: Tính SHA-256 ───────────────────────────────────────────
-        // Tính hash một lần, dùng cho 2 mục đích:
-        //   (a) Kiểm tra tính toàn vẹn file khi truyền (integrity check)
-        //   (b) Phát hiện file trùng lặp (deduplication)
-        fileStream.Seek(0, SeekOrigin.Begin);
-        byte[] fileBytes;
-        using (var ms = new MemoryStream())
-        {
-            await fileStream.CopyToAsync(ms);
-            fileBytes = ms.ToArray();
-        }
-
-        using var sha256 = SHA256.Create();
-        var contentHash = Convert.ToHexString(sha256.ComputeHash(fileBytes)).ToLowerInvariant();
-
-        // ─── Tầng 3.1: Deduplication — tra cứu hash trong DB ────────────────
-        var existingDoc = await _documentRepository.GetByContentHashAsync(contentHash);
-        if (existingDoc != null)
-        {
-            // File đã tồn tại — trả về bản ghi cũ, không lưu file mới
-            return UploadResult.Duplicate(existingDoc);
-        }
-
-        // ─── Lưu file vào thư mục QUARANTINE tạm thời để quét virus ─────────
+        // ─── Tầng 3: Stream file trực tiếp xuống ổ cứng (TIẾT KIỆM RAM) ─────
         var quarantineDir = Path.Combine(_env.ContentRootPath, "Uploads", ".quarantine");
         Directory.CreateDirectory(quarantineDir);
 
         var safeFileName = FileSignatureValidator.SanitizeFileName(file.FileName);
         var quarantinePath = Path.Combine(quarantineDir, $"{Guid.NewGuid()}_{safeFileName}");
 
-        await File.WriteAllBytesAsync(quarantinePath, fileBytes);
+        fileStream.Seek(0, SeekOrigin.Begin);
+        // Ghi thẳng xuống file tạm, dùng bộ đệm siêu nhỏ (4KB)
+        using (var fs = new FileStream(quarantinePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+        {
+            await fileStream.CopyToAsync(fs);
+        }
+
+        // ─── Tầng 3.1: Tính SHA-256 từ file trên ổ cứng ────────────────────
+        string contentHash;
+        using (var fs = new FileStream(quarantinePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true))
+        using (var sha256 = SHA256.Create())
+        {
+            var hashBytes = await sha256.ComputeHashAsync(fs);
+            contentHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
+        }
+
+        // ─── Tầng 3.2: Deduplication — tra cứu hash trong DB ────────────────
+        var existingDoc = await _documentRepository.GetByContentHashAsync(contentHash);
+        if (existingDoc != null)
+        {
+            // File đã tồn tại — xóa file tạm và trả về bản ghi cũ
+            if (File.Exists(quarantinePath)) File.Delete(quarantinePath);
+            return UploadResult.Duplicate(existingDoc);
+        }
 
         // ─── Tầng 4: ClamAV Virus Scan ──────────────────────────────────────
         ClamAvScanResult scanResult;
@@ -130,12 +130,37 @@ public class DocumentUploadService : IDocumentUploadService
             NgayThem = DateTime.Now,
             FullText = "Đang trích xuất tự động...",
             UploadedByUserId = uploadedByUserId,
-            ContentHash = contentHash   // ← Lưu hash để dedup về sau
+            ContentHash = contentHash
         };
 
-        int id = await _documentRepository.InsertAsync(record);
-        record.Id = id;
+        int id = 0;
+        int maxRetries = 15; // Thử tối đa 15 lần
+        int baseDelayMs = 50;
 
+        for (int i = 0; i < maxRetries; i++)
+        {
+            try
+            {
+                id = await _documentRepository.InsertAsync(record);
+                break; // Ghi thành công, thoát vòng lặp
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.SqliteErrorCode == 5 || ex.SqliteErrorCode == 10 || ex.SqliteErrorCode == 14)
+            {
+                // Error 5: SQLITE_BUSY, Error 10: SQLITE_IOERR, Error 14: SQLITE_CANTOPEN
+                if (i == maxRetries - 1) 
+                {
+                    // Hết số lần thử mà vẫn lỗi -> Xóa file vừa lưu để tránh file rác
+                    if (File.Exists(finalPath)) File.Delete(finalPath);
+                    throw; 
+                }
+                
+                // Exponential Backoff với Jitter (tránh đồng loạt thử lại cùng lúc)
+                int delay = baseDelayMs * (int)Math.Pow(1.5, i) + Random.Shared.Next(10, 50);
+                await Task.Delay(delay);
+            }
+        }
+        
+        record.Id = id;
         await _ocrQueue.EnqueueAsync(id);
 
         return UploadResult.Success(record);

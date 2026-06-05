@@ -57,8 +57,8 @@ builder.Services.AddRateLimiter(options =>
     options.AddFixedWindowLimiter("upload-limit", opt =>
     {
         opt.Window = TimeSpan.FromSeconds(60);
-        opt.PermitLimit = 200;
-        opt.QueueLimit = 20; // Cho phép chờ thêm 20 request trong queue
+        opt.PermitLimit = 1000;
+        opt.QueueLimit = 100; // Cho phép chờ thêm 100 request trong queue
         opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
     });
 });

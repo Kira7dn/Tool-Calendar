@@ -259,7 +259,15 @@ export function Upload({ onTabChange }) {
           })
         });
         if (response.ok) {
-          setBatchItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'success' } : i));
+          setBatchItems(prev => prev.filter(i => i.id !== item.id));
+          setSelectedIds(prev => {
+            if (prev.has(item.id)) {
+              const next = new Set(prev);
+              next.delete(item.id);
+              return next;
+            }
+            return prev;
+          });
         }
       } catch (e) {
         console.error(e);
