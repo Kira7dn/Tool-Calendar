@@ -470,24 +470,38 @@ namespace ToolCalendar.Core.Data.Repositories
 
         public async Task UpdateAsync(DocumentRecord record)
         {
-            using var connection = new SqliteConnection(_connectionString);
-            await connection.OpenAsync();
+            int maxRetries = 10;
+            int delayMs = 150;
+            for (int i = 0; i < maxRetries; i++)
+            {
+                try
+                {
+                    using var connection = new SqliteConnection(_connectionString);
+                    await connection.OpenAsync();
 
-            string sql = @"
-                UPDATE Documents SET
-                    SoVanBan=@SoVanBan, TenCongVan=@TenCongVan, TrichYeu=@TrichYeu, FullText=@FullText, OcrPagesJson=@OcrPagesJson,
-                    NgayBanHanh=@NgayBanHanh, CoQuanBanHanh=@CoQuanBanHanh, CoQuanChuQuan=@CoQuanChuQuan,
-                    ThoiHan=@ThoiHan, DonViChiDao=@DonViChiDao, FilePath=@FilePath, 
-                    Status=@Status, Priority=@Priority, DepartmentId=@DepartmentId, 
-                    AssignedTo=@AssignedTo, AssignedUserIds=@AssignedUserIds, AssignedDepartmentIds=@AssignedDepartmentIds,
-                    EvidencePaths=@EvidencePaths, EvidenceNotes=@EvidenceNotes, 
-                    CompletionDate=@CompletionDate, LabelId=@LabelId, DaTaoLich=@DaTaoLich
-                WHERE Id=@Id";
+                    string sql = @"
+                        UPDATE Documents SET
+                            SoVanBan=@SoVanBan, TenCongVan=@TenCongVan, TrichYeu=@TrichYeu, FullText=@FullText, OcrPagesJson=@OcrPagesJson,
+                            NgayBanHanh=@NgayBanHanh, CoQuanBanHanh=@CoQuanBanHanh, CoQuanChuQuan=@CoQuanChuQuan,
+                            ThoiHan=@ThoiHan, DonViChiDao=@DonViChiDao, FilePath=@FilePath, 
+                            Status=@Status, Priority=@Priority, DepartmentId=@DepartmentId, 
+                            AssignedTo=@AssignedTo, AssignedUserIds=@AssignedUserIds, AssignedDepartmentIds=@AssignedDepartmentIds,
+                            EvidencePaths=@EvidencePaths, EvidenceNotes=@EvidenceNotes, 
+                            CompletionDate=@CompletionDate, LabelId=@LabelId, DaTaoLich=@DaTaoLich
+                        WHERE Id=@Id";
 
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@Id", record.Id);
-            AddParams(cmd, record);
-            await cmd.ExecuteNonQueryAsync();
+                    using var cmd = new SqliteCommand(sql, connection);
+                    cmd.Parameters.AddWithValue("@Id", record.Id);
+                    AddParams(cmd, record);
+                    await cmd.ExecuteNonQueryAsync();
+                    return;
+                }
+                catch (SqliteException ex) when (ex.SqliteErrorCode == 5)
+                {
+                    if (i == maxRetries - 1) throw;
+                    await Task.Delay(delayMs * (i + 1));
+                }
+            }
         }
 
         public async Task AssignDocumentAsync(int docId, string departmentIds, string userIds)

@@ -234,6 +234,9 @@ export function Upload({ onTabChange }) {
 
     setIsProcessing(true);
 
+    let successCount = 0;
+    let failCount = 0;
+
     const saveOne = async (item) => {
       try {
         const response = await fetch(`/api/documents/${item.id}`, {
@@ -259,6 +262,7 @@ export function Upload({ onTabChange }) {
           })
         });
         if (response.ok) {
+          successCount++;
           setBatchItems(prev => prev.filter(i => i.id !== item.id));
           setSelectedIds(prev => {
             if (prev.has(item.id)) {
@@ -268,9 +272,12 @@ export function Upload({ onTabChange }) {
             }
             return prev;
           });
+        } else {
+          failCount++;
         }
       } catch (e) {
         console.error(e);
+        failCount++;
       }
     };
 
@@ -285,7 +292,12 @@ export function Upload({ onTabChange }) {
     await Promise.all(saveWorkers);
 
     setIsProcessing(false);
-    toast.success(`Đã lưu ${targets.length} văn bản`);
+    if (successCount > 0) {
+      toast.success(`Đã lưu thành công ${successCount} văn bản`);
+    }
+    if (failCount > 0) {
+      toast.error(`Có ${failCount} văn bản lưu thất bại. Vui lòng thử lại.`);
+    }
   };
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
