@@ -1172,6 +1172,53 @@ namespace ToolCalendar.Data
             cmd.Parameters.AddWithValue("@uId", userId);
             cmd.ExecuteNonQuery();
         }
+
+        // --- REPORTS ---
+        public static object GetMonthlyDepartmentReport(int month, int year)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            string monthStr = month.ToString("D2");
+            string yearStr = year.ToString();
+            string prefix = $"{yearStr}-{monthStr}";
+
+            string sql = @"
+                SELECT 
+                    d.Id,
+                    d.Name,
+                    COUNT(doc.Id) AS Total,
+                    SUM(CASE WHEN doc.Status = 'Đã hoàn thành' THEN 1 ELSE 0 END) AS OnTime,
+                    0 AS Overdue,
+                    SUM(CASE WHEN doc.Status != 'Đã hoàn thành' AND (doc.ThoiHan IS NULL OR doc.ThoiHan >= date('now')) THEN 1 ELSE 0 END) AS ProcessingOnTime,
+                    SUM(CASE WHEN doc.Status != 'Đã hoàn thành' AND doc.ThoiHan IS NOT NULL AND doc.ThoiHan < date('now') THEN 1 ELSE 0 END) AS ProcessingOverdue
+                FROM Departments d
+                LEFT JOIN Documents doc ON d.Id = doc.DepartmentId AND doc.NgayThem LIKE @prefix
+                GROUP BY d.Id, d.Name
+                ORDER BY d.Id
+            ";
+
+            var list = new List<object>();
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@prefix", prefix + "%");
+            using var reader = cmd.ExecuteReader();
+            
+            while (reader.Read())
+            {
+                list.Add(new
+                {
+                    id = Convert.ToInt32(reader["Id"]),
+                    name = reader["Name"]?.ToString() ?? "",
+                    total = reader["Total"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Total"]),
+                    onTime = reader["OnTime"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OnTime"]),
+                    overdue = reader["Overdue"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Overdue"]),
+                    processingOnTime = reader["ProcessingOnTime"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ProcessingOnTime"]),
+                    processingOverdue = reader["ProcessingOverdue"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ProcessingOverdue"])
+                });
+            }
+
+            return list;
+        }
     }
 }
 

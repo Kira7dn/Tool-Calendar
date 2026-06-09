@@ -6,7 +6,8 @@ import {
   Users,
   CheckSquare,
   Settings,
-  Search
+  Search,
+  BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -25,6 +26,7 @@ const navItems = [
   { tab: 'dashboard', labelKey: 'dashboard', label: 'Trang chủ', icon: LayoutDashboard },
   { tab: 'documents', labelKey: 'documents', label: 'Văn bản', icon: FileText },
   { tab: 'search', labelKey: 'search', label: 'Tìm kiếm', icon: Search },
+  { tab: 'reports', labelKey: 'reports', label: 'Báo cáo thống kê', icon: BarChart3 },
   { tab: 'upload', labelKey: 'upload', label: 'Tải hồ sơ mới', icon: Upload },
   { tab: 'users', id: 'nav-users', labelKey: 'users', label: 'Nhân sự', icon: Users },
   { tab: 'my-tasks', id: 'nav-my-tasks', labelKey: 'my_tasks', label: 'Công việc của tôi', icon: CheckSquare },

@@ -96,6 +96,20 @@ namespace ToolCalendar.Api.Controllers
             return Ok(new { message = "Cache cleared" });
         }
 
+        [HttpGet("monthly-report")]
+        public IActionResult GetMonthlyReport([FromQuery] int month, [FromQuery] int year)
+        {
+            try
+            {
+                var data = DatabaseService.GetMonthlyDepartmentReport(month, year);
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi lấy báo cáo tháng: {ex.Message}" });
+            }
+        }
+
         [HttpGet("settings")]
         [Authorize(Roles = "Admin,VanThu")]
         public IActionResult GetSettings()

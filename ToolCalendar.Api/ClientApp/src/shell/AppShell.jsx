@@ -26,6 +26,7 @@ import { MyTasks } from '../pages/MyTasks.jsx';
 import { Review } from '../pages/Review.jsx';
 import { Settings as SettingsPage } from '../pages/Settings.jsx';
 import { Search as SearchPage } from '../pages/Search.jsx';
+import { MonthlyReport } from '../pages/MonthlyReport.jsx';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -716,7 +717,8 @@ export function AppShell() {
                 {activeTab === 'my-tasks' && <MyTasks filters={tabFilters['my-tasks']} onTabChange={(tab, filters) => { setActiveTab(tab); if (filters) setTabFilters(prev => ({ ...prev, [tab]: filters })); }} />}
                 {activeTab === 'settings' && <SettingsPage />}
                 {activeTab === 'search' && <SearchPage />}
-                {!['dashboard', 'documents', 'upload', 'users', 'my-tasks', 'settings', 'search'].includes(activeTab) && (
+                {activeTab === 'reports' && <MonthlyReport />}
+                {!['dashboard', 'documents', 'upload', 'users', 'my-tasks', 'settings', 'search', 'reports'].includes(activeTab) && (
                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                     <LayoutDashboard className="size-16 mb-4 opacity-20" />
                     <h3 className="text-xl font-bold">Tính năng đang được phát triển</h3>
