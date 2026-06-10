@@ -26,6 +26,8 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+import { DocumentRoutingTree } from '@/components/DocumentRoutingTree';
+import { ForwardDocumentModal } from '@/components/ForwardDocumentModal';
 
 // --- Helper Components ---
 
@@ -76,6 +78,9 @@ export function DocDetail({ docId, onBack }) {
   const [evidenceFiles, setEvidenceFiles] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
+
+  const [routings, setRoutings] = useState([]);
 
   useEffect(() => {
     if (docId) {
@@ -117,11 +122,24 @@ export function DocDetail({ docId, onBack }) {
       if (deptRes.ok) setDepartments(await deptRes.json());
       if (userRes.ok) setUsers(await userRes.json());
 
-      await fetchComments();
+      await Promise.all([fetchComments(), fetchRoutings()]);
     } catch (error) {
       console.error('Failed to fetch document details:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchRoutings = async () => {
+    try {
+      const response = await fetch(`/api/documents/${docId}/routings`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (response.ok) {
+        setRoutings(await response.json());
+      }
+    } catch (error) {
+      console.error('Failed to fetch routings:', error);
     }
   };
 
@@ -331,6 +349,7 @@ export function DocDetail({ docId, onBack }) {
   const tabs = [
     { key: "overview", label: "TỔNG QUAN" },
     { key: "content", label: "NỘI DUNG" },
+    { key: "routing", label: "QUÁ TRÌNH XỬ LÝ" },
     { key: "history", label: "LỊCH SỬ" },
   ];
 
@@ -482,15 +501,15 @@ export function DocDetail({ docId, onBack }) {
       </div>
 
       {/* 3. Main Content Container */}
-      <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pb-10 lg:pb-0">
         {/* Left Panel */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-none lg:flex-1 flex flex-col min-h-0">
           {activeTab === "overview" && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-left-4 duration-400">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-auto lg:h-full animate-in fade-in slide-in-from-left-4 duration-400">
               <div className="px-6 py-3 border-b border-slate-50 bg-slate-50/30 shrink-0">
                 <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">THÔNG TIN CHI TIẾT VĂN BẢN</h2>
               </div>
-              <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
+              <div className="flex-1 lg:overflow-auto p-4 md:p-6 lg:p-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                   <InfoRow icon={FileText} label="Số văn bản" value={doc.soVanBan} />
                   <InfoRow icon={Calendar} label="Ngày ban hành" value={new Date(doc.ngayBanHanh).toLocaleDateString('vi-VN')} />
@@ -577,7 +596,7 @@ export function DocDetail({ docId, onBack }) {
           )}
 
           {activeTab === "content" && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-400">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[500px] lg:h-full animate-in fade-in zoom-in-95 duration-400">
               <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
                 <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">FILE & OCR RESULT</h2>
                 <button className="text-[10px] font-black text-red-600 hover:underline uppercase tracking-widest" onClick={() => {
@@ -605,8 +624,27 @@ export function DocDetail({ docId, onBack }) {
             </div>
           )}
 
+          {activeTab === "routing" && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8 flex flex-col h-auto lg:h-full overflow-hidden animate-in fade-in zoom-in-95 duration-400">
+              <div className="flex items-center justify-between mb-6 shrink-0">
+                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">QUÁ TRÌNH XỬ LÝ (LUÂN CHUYỂN)</h2>
+                {doc.status !== 'Đã hoàn thành' && (
+                  <button 
+                    onClick={() => setIsForwardModalOpen(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold hover:bg-blue-100 transition-colors"
+                  >
+                    <Send size={14} /> Chuyển xử lý
+                  </button>
+                )}
+              </div>
+              <div className="flex-1 lg:overflow-auto h-[400px] lg:h-auto overflow-y-auto">
+                <DocumentRoutingTree routings={routings} onRefresh={fetchRoutings} />
+              </div>
+            </div>
+          )}
+
           {activeTab === "history" && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 flex flex-col h-full overflow-auto animate-in fade-in slide-in-from-bottom-4 duration-400">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 flex flex-col h-auto lg:h-full overflow-hidden lg:overflow-auto animate-in fade-in slide-in-from-bottom-4 duration-400">
               <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-12 shrink-0">QUY TRÌNH XỬ LÝ VĂN BẢN</h2>
               <div className="relative space-y-10 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-slate-100">
                 <HistoryPoint
@@ -636,7 +674,7 @@ export function DocDetail({ docId, onBack }) {
         </div>
 
         {/* Right Panel (Discussion) */}
-        <div className="w-full lg:w-80 shrink-0 flex flex-col h-full">
+        <div className="w-full lg:w-80 shrink-0 flex flex-col h-[500px] lg:h-full">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden">
             <div className="px-5 py-3 border-b border-slate-50 flex items-center justify-between bg-slate-50/20 shrink-0">
               <div className="flex items-center gap-2.5">
@@ -961,6 +999,29 @@ export function DocDetail({ docId, onBack }) {
           </div>
         </div>
       )}
+
+      {/* --- Forward Modal --- */}
+      <ForwardDocumentModal
+        isOpen={isForwardModalOpen}
+        onClose={() => setIsForwardModalOpen(false)}
+        documentId={docId}
+        parentRoutingId={null} // TODO: pass correct parent ID if replying to a specific routing
+        onForwardSuccess={() => {
+          fetchRoutings();
+          fetchData();
+        }}
+      />
+
+      <ConfirmationModal
+        open={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        title="Xác nhận xóa văn bản?"
+        description="Bạn có chắc chắn muốn xóa văn bản này không? Thao tác này sẽ xóa vĩnh viễn dữ liệu và các tệp đính kèm liên quan."
+        confirmLabel="XÓA NGAY"
+        onConfirm={executeDelete}
+        variant="destructive"
+      />
+
       {/* --- Evidence Submission Modal --- */}
       {isEvidenceModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">

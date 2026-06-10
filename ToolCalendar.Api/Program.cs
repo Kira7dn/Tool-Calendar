@@ -66,6 +66,7 @@ builder.Services.AddRateLimiter(options =>
 // Đăng ký Repositories (Clean Architecture)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<ToolCalendar.Data.Repositories.IDocumentRoutingRepository, ToolCalendar.Data.Repositories.DocumentRoutingRepository>();
 
 // Đăng ký Upload Service (tách logic upload ra khỏi Controller)
 builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();

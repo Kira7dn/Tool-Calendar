@@ -215,6 +215,25 @@ namespace ToolCalendar.Data
             // Tạo index để tăng tốc truy vấn tra cứu hash (O(log n) thay vì O(n))
             try { cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_documents_content_hash ON Documents(ContentHash) WHERE ContentHash IS NOT NULL"; cmd.ExecuteNonQuery(); } catch { }
 
+            string createDocumentRoutingsTable = @"
+                CREATE TABLE IF NOT EXISTS DocumentRoutings (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    DocumentId INTEGER,
+                    SenderId INTEGER,
+                    ReceiverId INTEGER,
+                    ParentRoutingId INTEGER,
+                    Role TEXT,
+                    ForwardDate TEXT,
+                    Deadline TEXT,
+                    Comment TEXT,
+                    ProcessingContent TEXT,
+                    Status TEXT DEFAULT 'Chưa xử lý',
+                    CreatedAt TEXT,
+                    FOREIGN KEY(DocumentId) REFERENCES Documents(Id)
+                )";
+            cmd.CommandText = createDocumentRoutingsTable;
+            cmd.ExecuteNonQuery();
+
 
             // --- SEED SETTINGS ---
             cmd.CommandText = "SELECT COUNT(*) FROM AppSettings WHERE [Key] = 'Notification_ScanTime'";

@@ -733,11 +733,11 @@ export function AppShell() {
 
       {/* Mobile Bottom Nav */}
       <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border flex items-center justify-around z-[500] md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'dashboard' && "text-primary border-primary bg-primary/5")} onClick={() => setActiveTab('dashboard')}>
+        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'dashboard' && "text-primary border-primary bg-primary/5")} onClick={() => { setActiveTab('dashboard'); setCurrentDocId(null); setIsReviewOpen(false); }}>
           <LayoutDashboard className="size-5" />
           <span className="text-[10px] font-bold">Trang chủ</span>
         </Button>
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'documents' && "text-primary border-primary bg-primary/5")} onClick={() => setActiveTab('documents')}>
+        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'documents' && "text-primary border-primary bg-primary/5")} onClick={() => { setActiveTab('documents'); setCurrentDocId(null); setIsReviewOpen(false); }}>
           <FileText className="size-5" />
           <span className="text-[10px] font-bold">Văn bản</span>
         </Button>
@@ -746,7 +746,7 @@ export function AppShell() {
           <Badge className="absolute top-2 right-4 size-4 p-0 flex items-center justify-center bg-destructive border-2 border-background text-[8px] font-bold">{notifCount}</Badge>
           <span className="text-[10px] font-bold">Thông báo</span>
         </Button>
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'my-tasks' && "text-primary border-primary bg-primary/5")} onClick={() => setActiveTab('my-tasks')}>
+        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'my-tasks' && "text-primary border-primary bg-primary/5")} onClick={() => { setActiveTab('my-tasks'); setCurrentDocId(null); setIsReviewOpen(false); }}>
           <CheckSquare className="size-5" />
           <span className="text-[10px] font-bold">Công việc</span>
         </Button>
