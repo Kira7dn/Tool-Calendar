@@ -1188,8 +1188,8 @@ namespace ToolCalendar.Data
                     d.Id,
                     d.Name,
                     COUNT(doc.Id) AS Total,
-                    SUM(CASE WHEN doc.Status = 'Đã hoàn thành' THEN 1 ELSE 0 END) AS OnTime,
-                    0 AS Overdue,
+                    SUM(CASE WHEN doc.Status = 'Đã hoàn thành' AND (doc.ThoiHan IS NULL OR doc.CompletionDate IS NULL OR date(doc.CompletionDate) <= date(doc.ThoiHan)) THEN 1 ELSE 0 END) AS OnTime,
+                    SUM(CASE WHEN doc.Status = 'Đã hoàn thành' AND doc.ThoiHan IS NOT NULL AND doc.CompletionDate IS NOT NULL AND date(doc.CompletionDate) > date(doc.ThoiHan) THEN 1 ELSE 0 END) AS Overdue,
                     SUM(CASE WHEN doc.Status != 'Đã hoàn thành' AND (doc.ThoiHan IS NULL OR doc.ThoiHan >= date('now')) THEN 1 ELSE 0 END) AS ProcessingOnTime,
                     SUM(CASE WHEN doc.Status != 'Đã hoàn thành' AND doc.ThoiHan IS NOT NULL AND doc.ThoiHan < date('now') THEN 1 ELSE 0 END) AS ProcessingOverdue
                 FROM Departments d

@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export function Search() {
+export function Search({ filters, onTabChange }) {
   const [documents, setDocuments] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -31,11 +31,51 @@ export function Search() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Search Filters
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [sort, setSort] = useState('newest');
+  const [search, setSearch] = useState(filters?.search || '');
+  const [status, setStatus] = useState(filters?.status || '');
+  const [fromDate, setFromDate] = useState(filters?.fromDate || '');
+  const [toDate, setToDate] = useState(filters?.toDate || '');
+  const [addFromDate, setAddFromDate] = useState(filters?.addFromDate || '');
+  const [addToDate, setAddToDate] = useState(filters?.addToDate || '');
+  const [sort, setSort] = useState(filters?.sort || 'newest');
+
+  useEffect(() => {
+    if (filters) {
+      const newSearch = filters.search ?? '';
+      const newStatus = filters.status ?? '';
+      const newSort = filters.sort ?? 'newest';
+      const newFrom = filters.fromDate ?? '';
+      const newTo = filters.toDate ?? '';
+      const newAddFrom = filters.addFromDate ?? '';
+      const newAddTo = filters.addToDate ?? '';
+
+      setSearch(newSearch);
+      setStatus(newStatus);
+      setSort(newSort);
+      setFromDate(newFrom);
+      setToDate(newTo);
+      setAddFromDate(newAddFrom);
+      setAddToDate(newAddTo);
+      setPage(1);
+
+      setIsLoading(true);
+      let url = `/api/documents?page=1&size=${pageSize}&search=${encodeURIComponent(newSearch)}&status=${newStatus}&sort=${newSort}`;
+      if (newFrom) url += `&fromDate=${newFrom}`;
+      if (newTo) url += `&toDate=${newTo}`;
+      if (newAddFrom) url += `&addFromDate=${newAddFrom}`;
+      if (newAddTo) url += `&addToDate=${newAddTo}`;
+
+      fetch(url, { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` } })
+        .then(res => res.json())
+        .then(data => {
+          setDocuments(data.data || []);
+          setTotalPages(data.totalPages || 1);
+          setTotalCount(data.totalCount || 0);
+          setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+    }
+  }, [filters]);
 
   useEffect(() => {
     fetchDocuments();
@@ -47,6 +87,8 @@ export function Search() {
       let url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(search)}&status=${status}&sort=${sort}`;
       if (fromDate) url += `&fromDate=${fromDate}`;
       if (toDate) url += `&toDate=${toDate}`;
+      if (addFromDate) url += `&addFromDate=${addFromDate}`;
+      if (addToDate) url += `&addToDate=${addToDate}`;
 
       const response = await fetch(url, {
         headers: {
@@ -158,30 +200,50 @@ export function Search() {
           </div>
         </div>
 
-        {/* Dòng 2: Hạn xử lý + Nút tìm */}
-        <div className="flex items-center gap-2 border-t border-border/40 pt-2">
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground shrink-0 flex items-center gap-1.5">
+        {/* Dòng 2: Ngày tiếp nhận + Hạn xử lý + Nút tìm */}
+        <div className="flex items-center gap-2 border-t border-border/40 pt-2 flex-wrap">
+          {/* Ngày tiếp nhận */}
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground shrink-0 flex items-center gap-1.5 ml-1">
+            <Calendar className="size-3 text-primary" />
+            Tiếp nhận từ ngày
+          </span>
+          <Input
+            type="date"
+            className="h-7 px-2 bg-muted/30 border-none rounded-lg text-xs w-[125px]"
+            value={addFromDate}
+            onChange={(e) => setAddFromDate(e.target.value)}
+          />
+          <span className="text-[10px] font-black text-muted-foreground shrink-0">đến</span>
+          <Input
+            type="date"
+            className="h-7 px-2 bg-muted/30 border-none rounded-lg text-xs w-[125px]"
+            value={addToDate}
+            onChange={(e) => setAddToDate(e.target.value)}
+          />
+
+          {/* Hạn xử lý */}
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground shrink-0 flex items-center gap-1.5 ml-4">
             <Calendar className="size-3 text-primary" />
             Hạn xử lý từ ngày
           </span>
           <Input
             type="date"
-            className="h-7 px-2 bg-muted/30 border-none rounded-lg text-xs w-[135px]"
+            className="h-7 px-2 bg-muted/30 border-none rounded-lg text-xs w-[125px]"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
           />
-          <span className="text-[10px] font-black text-muted-foreground shrink-0">đến ngày</span>
+          <span className="text-[10px] font-black text-muted-foreground shrink-0">đến</span>
           <Input
             type="date"
-            className="h-7 px-2 bg-muted/30 border-none rounded-lg text-xs w-[135px]"
+            className="h-7 px-2 bg-muted/30 border-none rounded-lg text-xs w-[125px]"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
           />
-          {(fromDate || toDate) && (
+          {(fromDate || toDate || addFromDate || addToDate) && (
             <button
               type="button"
-              onClick={() => { setFromDate(''); setToDate(''); }}
-              className="text-[10px] font-bold text-muted-foreground/60 hover:text-destructive transition-colors underline underline-offset-2"
+              onClick={() => { setFromDate(''); setToDate(''); setAddFromDate(''); setAddToDate(''); }}
+              className="text-[10px] font-bold text-muted-foreground/60 hover:text-destructive transition-colors underline underline-offset-2 ml-2"
             >
               Xóa bộ lọc
             </button>

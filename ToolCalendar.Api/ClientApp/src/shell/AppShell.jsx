@@ -716,8 +716,8 @@ export function AppShell() {
                 {activeTab === 'users' && <Users />}
                 {activeTab === 'my-tasks' && <MyTasks filters={tabFilters['my-tasks']} onTabChange={(tab, filters) => { setActiveTab(tab); if (filters) setTabFilters(prev => ({ ...prev, [tab]: filters })); }} />}
                 {activeTab === 'settings' && <SettingsPage />}
-                {activeTab === 'search' && <SearchPage />}
-                {activeTab === 'reports' && <MonthlyReport />}
+                {activeTab === 'search' && <SearchPage filters={tabFilters['search']} onTabChange={(tab, filters) => { setActiveTab(tab); if (filters) setTabFilters(prev => ({ ...prev, [tab]: filters })); }} />}
+                {activeTab === 'reports' && <MonthlyReport onTabChange={(tab, filters) => { setActiveTab(tab); if (filters) setTabFilters(prev => ({ ...prev, [tab]: filters })); }} />}
                 {!['dashboard', 'documents', 'upload', 'users', 'my-tasks', 'settings', 'search', 'reports'].includes(activeTab) && (
                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                     <LayoutDashboard className="size-16 mb-4 opacity-20" />

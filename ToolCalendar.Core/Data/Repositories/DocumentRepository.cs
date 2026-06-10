@@ -315,7 +315,7 @@ namespace ToolCalendar.Core.Data.Repositories
         /// Server-side pagination: returns one page of documents + total count for pagination UI.
         /// <para>search is matched against SoVanBan, TrichYeu, CoQuanChuQuan (case-insensitive LIKE).</para>
         /// </summary>
-        public async Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null, DateTime? addFromDate = null, DateTime? addToDate = null)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
@@ -327,9 +327,10 @@ namespace ToolCalendar.Core.Data.Repositories
             if (hasSearch)
             {
                 filters.Add(@"(
-                    LOWER(SoVanBan)      LIKE @search OR
-                    LOWER(TrichYeu)      LIKE @search OR
-                    LOWER(CoQuanChuQuan) LIKE @search
+                    LOWER(doc.SoVanBan)      LIKE @search OR
+                    LOWER(doc.TrichYeu)      LIKE @search OR
+                    LOWER(doc.CoQuanChuQuan) LIKE @search OR
+                    dep.Name                 LIKE @searchRaw
                 )");
             }
 
@@ -339,51 +340,76 @@ namespace ToolCalendar.Core.Data.Repositories
                 if (s == "overdue")
                 {
                     // Công thức chuẩn từ Dashboard Overdue
-                    filters.Add("ThoiHan < date('now') AND Status != 'Đã hoàn thành' AND ThoiHan IS NOT NULL");
+                    filters.Add("doc.ThoiHan < date('now') AND doc.Status != 'Đã hoàn thành' AND doc.ThoiHan IS NOT NULL");
                 }
                 else if (s == "urgent")
                 {
                     // Công thức chuẩn từ Dashboard Sắp hết hạn (7 ngày tới)
-                    filters.Add("ThoiHan >= date('now') AND ThoiHan <= date('now', '+7 days') AND Status != 'Đã hoàn thành'");
+                    filters.Add("doc.ThoiHan >= date('now') AND doc.ThoiHan <= date('now', '+7 days') AND doc.Status != 'Đã hoàn thành'");
+                }
+                else if (s == "processing_ontime")
+                {
+                    filters.Add("doc.Status != 'Đã hoàn thành' AND (doc.ThoiHan IS NULL OR date(doc.ThoiHan) >= date('now'))");
+                }
+                else if (s == "completed_ontime")
+                {
+                    filters.Add("doc.Status = 'Đã hoàn thành' AND (doc.ThoiHan IS NULL OR doc.CompletionDate IS NULL OR date(doc.CompletionDate) <= date(doc.ThoiHan))");
+                }
+                else if (s == "completed_overdue")
+                {
+                    filters.Add("doc.Status = 'Đã hoàn thành' AND doc.ThoiHan IS NOT NULL AND doc.CompletionDate IS NOT NULL AND date(doc.CompletionDate) > date(doc.ThoiHan)");
                 }
                 else if (s == "today")
                 {
                     // Công thức chuẩn từ Dashboard Đến hạn hôm nay
-                    filters.Add("date(ThoiHan) = date('now') AND Status != 'Đã hoàn thành'");
+                    filters.Add("date(doc.ThoiHan) = date('now') AND doc.Status != 'Đã hoàn thành'");
                 }
                 else
                 {
-                    filters.Add("(LOWER(Status) = @status OR LOWER(Status) = @statusClean)");
+                    filters.Add("(LOWER(doc.Status) = @status OR LOWER(doc.Status) = @statusClean)");
                 }
             }
 
             if (fromDate.HasValue)
             {
-                filters.Add("date(ThoiHan) >= date(@fromDate)");
+                filters.Add("date(doc.ThoiHan) >= date(@fromDate)");
             }
 
             if (toDate.HasValue)
             {
-                filters.Add("date(ThoiHan) <= date(@toDate)");
+                filters.Add("date(doc.ThoiHan) <= date(@toDate)");
+            }
+
+            if (addFromDate.HasValue)
+            {
+                filters.Add("date(doc.NgayThem) >= date(@addFromDate)");
+            }
+
+            if (addToDate.HasValue)
+            {
+                filters.Add("date(doc.NgayThem) <= date(@addToDate)");
             }
 
             string searchFilter = filters.Count > 0 ? "WHERE " + string.Join(" AND ", filters) : "";
 
             string orderBy = sort switch
             {
-                "newest" => "NgayThem DESC",
-                "oldest" => "NgayThem ASC",
-                "deadline_desc" => "ThoiHan DESC NULLS LAST",
-                _ => "ThoiHan ASC NULLS LAST"
+                "newest" => "doc.NgayThem DESC",
+                "oldest" => "doc.NgayThem ASC",
+                "deadline_desc" => "doc.ThoiHan DESC NULLS LAST",
+                _ => "doc.ThoiHan ASC NULLS LAST"
             };
 
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
             // 1. Total count
-            string countSql = $"SELECT COUNT(*) FROM Documents {searchFilter}";
+            string countSql = $"SELECT COUNT(*) FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id {searchFilter}";
             using var countCmd = new SqliteCommand(countSql, connection);
-            if (hasSearch) countCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
+            if (hasSearch) {
+                countCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
+                countCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
+            }
             if (hasStatus && status.ToLower() != "overdue")
             {
                 countCmd.Parameters.AddWithValue("@status", status.ToLower());
@@ -391,20 +417,26 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             if (fromDate.HasValue) countCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
             if (toDate.HasValue) countCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
+            if (addFromDate.HasValue) countCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
+            if (addToDate.HasValue) countCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
 
             int totalCount = Convert.ToInt32(countCmd.ExecuteScalar());
 
             // 2. Paged data
             int offset = (page - 1) * pageSize;
             string dataSql = $@"
-                SELECT Id, SoVanBan, TenCongVan, TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich
-                FROM Documents
+                SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich
+                FROM Documents doc
+                LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id
                 {searchFilter}
-                ORDER BY {orderBy}
+                ORDER BY {orderBy} 
                 LIMIT @pageSize OFFSET @offset";
 
             using var dataCmd = new SqliteCommand(dataSql, connection);
-            if (hasSearch) dataCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
+            if (hasSearch) {
+                dataCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
+                dataCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
+            }
             if (hasStatus && status.ToLower() != "overdue")
             {
                 dataCmd.Parameters.AddWithValue("@status", status.ToLower());
@@ -412,6 +444,8 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             if (fromDate.HasValue) dataCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
             if (toDate.HasValue) dataCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
+            if (addFromDate.HasValue) dataCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
+            if (addToDate.HasValue) dataCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
 
             dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
             dataCmd.Parameters.AddWithValue("@offset", offset);

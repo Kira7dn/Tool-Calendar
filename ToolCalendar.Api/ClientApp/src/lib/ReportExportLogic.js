@@ -116,19 +116,19 @@ export const exportToWord = (data, month, year) => {
                 children: [
                   new TableCell({
                     children: [
-                      new Paragraph({ children: [new TextRun({ text: "ỦY BAN NHÂN DÂN CẤP HUYỆN", size: 24 })], alignment: AlignmentType.CENTER }),
-                      new Paragraph({ children: [new TextRun({ text: "VĂN PHÒNG HĐND & UBND", size: 24, bold: true })], alignment: AlignmentType.CENTER }),
-                      new Paragraph({ children: [new TextRun({ text: "Số: ..../BC-VP", size: 26 })], alignment: AlignmentType.CENTER }),
+                      new Paragraph({ children: [new TextRun({ text: "ỦY BAN NHÂN DÂN", size: 24 })], alignment: AlignmentType.CENTER }),
+                      new Paragraph({ children: [new TextRun({ text: "PHƯỜNG CẨM PHẢ", size: 24, bold: true, underline: { type: "single" } })], alignment: AlignmentType.CENTER }),
+                      new Paragraph({ children: [new TextRun({ text: "Số: ..../BC-UBND", size: 26 })], alignment: AlignmentType.CENTER }),
                     ],
-                    width: { size: 40, type: WidthType.PERCENTAGE },
+                    width: { size: 35, type: WidthType.PERCENTAGE },
                   }),
                   new TableCell({
                     children: [
                       new Paragraph({ children: [new TextRun({ text: "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", size: 24, bold: true })], alignment: AlignmentType.CENTER }),
-                      new Paragraph({ children: [new TextRun({ text: "Độc lập - Tự do - Hạnh phúc", size: 28, bold: true })], alignment: AlignmentType.CENTER }),
-                      new Paragraph({ children: [new TextRun({ text: `Địa danh, ngày ... tháng ... năm ${year}`, size: 28, italics: true })], alignment: AlignmentType.CENTER }),
+                      new Paragraph({ children: [new TextRun({ text: "Độc lập - Tự do - Hạnh phúc", size: 28, bold: true, underline: { type: "single" } })], alignment: AlignmentType.CENTER }),
+                      new Paragraph({ children: [new TextRun({ text: `Cẩm Phả, ngày ... tháng ... năm ${year}`, size: 28, italics: true })], alignment: AlignmentType.CENTER }),
                     ],
-                    width: { size: 60, type: WidthType.PERCENTAGE },
+                    width: { size: 65, type: WidthType.PERCENTAGE },
                   }),
                 ],
               }),
@@ -147,14 +147,14 @@ export const exportToWord = (data, month, year) => {
             alignment: AlignmentType.CENTER,
           }),
           new Paragraph({
-            children: [new TextRun({ text: `(Tháng ${month} năm ${year})`, italics: true, size: 28 })],
+            children: [new TextRun({ text: `(Tháng ${month} năm ${year})`, italics: true, size: 28, underline: { type: "single" } })],
             alignment: AlignmentType.CENTER,
             spacing: { after: 400 },
           }),
 
           // Intro
           new Paragraph({
-            children: [new TextRun({ text: `Thực hiện quy chế làm việc của Ủy ban nhân dân, Văn phòng HĐND & UBND báo cáo tình hình tiếp nhận và xử lý văn bản đến của các cơ quan, đơn vị trực thuộc trong tháng ${month} năm ${year} cụ thể như sau:`, size: 28 })],
+            children: [new TextRun({ text: `Thực hiện quy chế làm việc của Ủy ban nhân dân, UBND phường Cẩm Phả báo cáo tình hình tiếp nhận và xử lý văn bản đến của các cơ quan, đơn vị trực thuộc trong tháng ${month} năm ${year} cụ thể như sau:`, size: 28 })],
             alignment: AlignmentType.JUSTIFIED,
             indent: { firstLine: 720 }, // 0.5 inch indent
             spacing: { after: 400 },
@@ -185,8 +185,12 @@ export const exportToWord = (data, month, year) => {
                   new TableCell({
                     children: [
                       new Paragraph({ children: [new TextRun({ text: "Nơi nhận:", bold: true, italics: true, size: 24 })] }),
-                      new Paragraph({ children: [new TextRun({ text: "- Thường trực HĐND, UBND Huyện;", size: 24 })] }),
-                      new Paragraph({ children: [new TextRun({ text: "- Các cơ quan, ban ngành;", size: 24 })] }),
+                      new Paragraph({ children: [new TextRun({ text: "- UBND tỉnh Quảng Ninh (b/c);", size: 24 })] }),
+                      new Paragraph({ children: [new TextRun({ text: "- Công an tỉnh (b/c);", size: 24 })] }),
+                      new Paragraph({ children: [new TextRun({ text: "- TT. Đảng ủy, HĐND phường (b/c);", size: 24 })] }),
+                      new Paragraph({ children: [new TextRun({ text: "- Chủ tịch, các PCT UBND;", size: 24 })] }),
+                      new Paragraph({ children: [new TextRun({ text: "- Công an phường (biết);", size: 24 })] }),
+                      new Paragraph({ children: [new TextRun({ text: "- Các phòng, đơn vị: VP HĐND và UBND, VHXH, KTHTĐT, TT PVHCC (biết);", size: 24 })] }),
                       new Paragraph({ children: [new TextRun({ text: "- Lưu: VT.", size: 24 })] }),
                     ],
                     width: { size: 50, type: WidthType.PERCENTAGE },

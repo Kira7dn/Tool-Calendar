@@ -48,16 +48,18 @@ namespace ToolCalendar.Api.Controllers
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
-        public async Task<IActionResult> GetAll(
+        public async Task<IActionResult> GetDocuments(
             [FromQuery] int page = 1,
             [FromQuery] int size = 10,
             [FromQuery] string search = "",
             [FromQuery] string status = "",
             [FromQuery] string sort = "deadline_asc",
             [FromQuery] DateTime? fromDate = null,
-            [FromQuery] DateTime? toDate = null)
+            [FromQuery] DateTime? toDate = null,
+            [FromQuery] DateTime? addFromDate = null,
+            [FromQuery] DateTime? addToDate = null)
         {
-            var (items, totalCount) = await _documentRepository.GetPagedAsync(page, size, search, status, sort, fromDate, toDate);
+            var (items, totalCount) = await _documentRepository.GetPagedAsync(page, size, search, status, sort, fromDate, toDate, addFromDate, addToDate);
             var totalPages = (int)Math.Ceiling((double)totalCount / size);
 
             return Ok(new

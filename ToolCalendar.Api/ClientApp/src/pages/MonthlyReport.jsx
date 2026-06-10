@@ -4,7 +4,7 @@ import { FileText, Printer } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exportToWord } from '@/lib/ReportExportLogic';
 
-export function MonthlyReport() {
+export function MonthlyReport({ onTabChange }) {
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [reportData, setReportData] = useState([]);
@@ -32,6 +32,30 @@ export function MonthlyReport() {
     };
     fetchData();
   }, [month, year]);
+
+  const handleCellClick = (departmentName, count, statusFilter, sortFilter = 'newest') => {
+    if (count > 0 && onTabChange) {
+      const pad = (n) => String(n).padStart(2, '0');
+      const m = parseInt(month, 10);
+      const y = parseInt(year, 10);
+      const firstDay = `${y}-${pad(m)}-01`;
+      const lastDay = `${y}-${pad(m)}-${pad(new Date(y, m, 0).getDate())}`;
+
+      onTabChange('search', { 
+        search: departmentName, 
+        status: statusFilter, 
+        addFromDate: firstDay,
+        addToDate: lastDay,
+        sort: sortFilter 
+      });
+    }
+  };
+
+  const totalTotal = reportData.reduce((acc, curr) => acc + curr.total, 0);
+  const totalOnTime = reportData.reduce((acc, curr) => acc + curr.onTime, 0);
+  const totalOverdue = reportData.reduce((acc, curr) => acc + curr.overdue, 0);
+  const totalProcessingOnTime = reportData.reduce((acc, curr) => acc + curr.processingOnTime, 0);
+  const totalProcessingOverdue = reportData.reduce((acc, curr) => acc + curr.processingOverdue, 0);
 
   const handleExportWord = () => {
     exportToWord(reportData, month, year);
@@ -110,14 +134,14 @@ export function MonthlyReport() {
           {/* Header */}
           <div className="flex justify-between items-start mb-8">
             <div className="text-center w-[40%]">
-              <p className="uppercase font-bold text-[13px]">Ủy ban nhân dân cấp Huyện</p>
-              <p className="uppercase font-bold text-[13px] border-b-[1.5px] border-black inline-block pb-1">VĂN PHÒNG HĐND & UBND</p>
-              <p className="mt-2 text-[13px]">Số: ..../BC-VP</p>
+              <p className="uppercase font-bold text-[13px]">ỦY BAN NHÂN DÂN</p>
+              <p className="uppercase font-bold text-[13px] border-b-[1.5px] border-black inline-block pb-1">PHƯỜNG CẨM PHẢ</p>
+              <p className="mt-2 text-[14px]">Số: ..../BC-UBND</p>
             </div>
             <div className="text-center w-[60%]">
               <p className="uppercase font-bold text-[13px]">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
               <p className="font-bold text-[14px] border-b-[1.5px] border-black inline-block pb-1">Độc lập - Tự do - Hạnh phúc</p>
-              <p className="mt-2 italic text-[14px]">Địa danh, ngày ... tháng ... năm {year}</p>
+              <p className="mt-2 italic text-[14px]">Cẩm Phả, ngày ... tháng ... năm {year}</p>
             </div>
           </div>
 
@@ -159,13 +183,34 @@ export function MonthlyReport() {
                 <tr key={row.id}>
                   <td className="border border-black p-2">{index + 1}</td>
                   <td className="border border-black p-2 text-left">{row.name}</td>
-                  <td className="border border-black p-2 font-semibold">{row.total}</td>
-                  <td className="border border-black p-2">{row.onTime}</td>
-                  <td className={`border border-black p-2 font-bold ${row.overdue > 0 ? 'text-red-600 print:text-black cursor-pointer underline underline-offset-2' : ''}`}>
+                  <td 
+                    className={`border border-black p-2 font-semibold ${row.total > 0 ? 'cursor-pointer hover:bg-slate-100 underline underline-offset-2' : ''}`}
+                    onClick={() => handleCellClick(row.name, row.total, '', 'newest')}
+                  >
+                    {row.total}
+                  </td>
+                  <td 
+                    className={`border border-black p-2 ${row.onTime > 0 ? 'cursor-pointer hover:bg-slate-100 underline underline-offset-2' : ''}`}
+                    onClick={() => handleCellClick(row.name, row.onTime, 'completed_ontime', 'newest')}
+                  >
+                    {row.onTime}
+                  </td>
+                  <td 
+                    className={`border border-black p-2 font-bold ${row.overdue > 0 ? 'text-red-600 print:text-black cursor-pointer hover:bg-red-50 underline underline-offset-2' : ''}`}
+                    onClick={() => handleCellClick(row.name, row.overdue, 'completed_overdue', 'newest')}
+                  >
                     {row.overdue}
                   </td>
-                  <td className="border border-black p-2">{row.processingOnTime}</td>
-                  <td className={`border border-black p-2 ${row.processingOverdue > 0 ? 'text-orange-600 font-bold print:text-black' : ''}`}>
+                  <td 
+                    className={`border border-black p-2 ${row.processingOnTime > 0 ? 'cursor-pointer hover:bg-slate-100 underline underline-offset-2' : ''}`}
+                    onClick={() => handleCellClick(row.name, row.processingOnTime, 'processing_ontime', 'deadline_asc')}
+                  >
+                    {row.processingOnTime}
+                  </td>
+                  <td 
+                    className={`border border-black p-2 ${row.processingOverdue > 0 ? 'text-orange-600 font-bold print:text-black cursor-pointer hover:bg-orange-50 underline underline-offset-2' : ''}`}
+                    onClick={() => handleCellClick(row.name, row.processingOverdue, 'overdue', 'deadline_asc')}
+                  >
                     {row.processingOverdue}
                   </td>
                 </tr>
@@ -174,11 +219,36 @@ export function MonthlyReport() {
               {!loading && reportData.length > 0 && (
                 <tr className="font-bold bg-slate-50 print:bg-transparent">
                   <td className="border border-black p-2" colSpan="2">TỔNG CỘNG</td>
-                  <td className="border border-black p-2">{reportData.reduce((acc, curr) => acc + curr.total, 0)}</td>
-                  <td className="border border-black p-2">{reportData.reduce((acc, curr) => acc + curr.onTime, 0)}</td>
-                  <td className="border border-black p-2 text-red-600 print:text-black">{reportData.reduce((acc, curr) => acc + curr.overdue, 0)}</td>
-                  <td className="border border-black p-2">{reportData.reduce((acc, curr) => acc + curr.processingOnTime, 0)}</td>
-                  <td className="border border-black p-2">{reportData.reduce((acc, curr) => acc + curr.processingOverdue, 0)}</td>
+                  <td 
+                    className={`border border-black p-2 ${totalTotal > 0 ? 'cursor-pointer hover:bg-slate-200 underline underline-offset-2' : ''}`}
+                    onClick={() => handleCellClick('', totalTotal, '', 'newest')}
+                  >
+                    {totalTotal}
+                  </td>
+                  <td 
+                    className={`border border-black p-2 ${totalOnTime > 0 ? 'cursor-pointer hover:bg-slate-200 underline underline-offset-2' : ''}`}
+                    onClick={() => handleCellClick('', totalOnTime, 'completed_ontime', 'newest')}
+                  >
+                    {totalOnTime}
+                  </td>
+                  <td 
+                    className={`border border-black p-2 text-red-600 print:text-black ${totalOverdue > 0 ? 'cursor-pointer hover:bg-red-100 underline underline-offset-2' : ''}`}
+                    onClick={() => handleCellClick('', totalOverdue, 'completed_overdue', 'newest')}
+                  >
+                    {totalOverdue}
+                  </td>
+                  <td 
+                    className={`border border-black p-2 ${totalProcessingOnTime > 0 ? 'cursor-pointer hover:bg-slate-200 underline underline-offset-2' : ''}`}
+                    onClick={() => handleCellClick('', totalProcessingOnTime, 'processing_ontime', 'deadline_asc')}
+                  >
+                    {totalProcessingOnTime}
+                  </td>
+                  <td 
+                    className={`border border-black p-2 ${totalProcessingOverdue > 0 ? 'text-orange-600 cursor-pointer hover:bg-orange-100 underline underline-offset-2' : ''}`}
+                    onClick={() => handleCellClick('', totalProcessingOverdue, 'overdue', 'deadline_asc')}
+                  >
+                    {totalProcessingOverdue}
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -188,8 +258,12 @@ export function MonthlyReport() {
           <div className="flex justify-between items-start mt-4">
             <div className="w-[50%] text-[12px]">
               <p className="font-bold italic mb-1 text-[13px]">Nơi nhận:</p>
-              <p>- Thường trực HĐND, UBND Huyện;</p>
-              <p>- Các cơ quan, ban ngành;</p>
+              <p>- UBND tỉnh Quảng Ninh (b/c);</p>
+              <p>- Công an tỉnh (b/c);</p>
+              <p>- TT. Đảng ủy, HĐND phường (b/c);</p>
+              <p>- Chủ tịch, các PCT UBND;</p>
+              <p>- Công an phường (biết);</p>
+              <p>- Các phòng, đơn vị: VP HĐND và UBND, VHXH, KTHTĐT, TT PVHCC (biết);</p>
               <p>- Lưu: VT.</p>
             </div>
             <div className="w-[50%] text-center">

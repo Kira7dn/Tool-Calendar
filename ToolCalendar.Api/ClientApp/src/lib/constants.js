@@ -23,10 +23,34 @@ export const DOC_STATUS = {
         icon: "✅",
         variant: "success"
     },
+    COMPLETED_ON_TIME: {
+        value: "completed_ontime",
+        label: "Đã xử lý (Đúng hạn)",
+        icon: "✅",
+        variant: "success"
+    },
+    COMPLETED_OVERDUE: {
+        value: "completed_overdue",
+        label: "Đã xử lý (Quá hạn)",
+        icon: "⏰",
+        variant: "destructive"
+    },
     LOI_OCR: {
         value: "Lỗi OCR",
         label: "Lỗi OCR",
         icon: "⚠️",
+        variant: "destructive"
+    },
+    PROCESSING_ON_TIME: {
+        value: "processing_ontime",
+        label: "Đang giải quyết (Trong hạn)",
+        icon: "⏳",
+        variant: "info"
+    },
+    PROCESSING_OVERDUE: {
+        value: "overdue",
+        label: "Đang giải quyết (Quá hạn)",
+        icon: "🛑",
         variant: "destructive"
     }
 };

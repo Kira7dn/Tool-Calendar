@@ -4,7 +4,7 @@ namespace ToolCalendar.Core.Data.Interfaces
 {
     public interface IDocumentRepository
     {
-        Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null);
+        Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null, DateTime? addFromDate = null, DateTime? addToDate = null);
         Task<List<string>> GetUniqueStatusesAsync();
         Task<DocumentRecord?> GetDocumentByIdAsync(int id);
         Task<int> InsertAsync(DocumentRecord record);
