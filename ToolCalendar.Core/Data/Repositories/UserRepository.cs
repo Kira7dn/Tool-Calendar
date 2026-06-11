@@ -103,56 +103,102 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            string sql = "SELECT * FROM Users WHERE Username=@u";
+
+            // Lấy user kèm thông tin lockout
+            string sql = @"SELECT Id, Username, PasswordHash, FullName, Role, DepartmentId,
+                                  FailedLoginCount, LockoutUntil
+                           FROM Users WHERE Username=@u";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@u", username);
             using var reader = cmd.ExecuteReader();
 
-            if (reader.Read())
+            if (!reader.Read()) return null;
+
+            int userId            = Convert.ToInt32(reader["Id"]);
+            string storedHash     = reader["PasswordHash"]?.ToString() ?? "";
+            string? lockoutUtilRaw = reader["LockoutUntil"]?.ToString();
+
+            // ── Bước 1: Kiểm tra Account Lockout ──────────────────────────────
+            if (!string.IsNullOrEmpty(lockoutUtilRaw) &&
+                DateTime.TryParse(lockoutUtilRaw, out DateTime lockoutUntil) &&
+                lockoutUntil > DateTime.UtcNow)
             {
-                string storedHash = reader["PasswordHash"]?.ToString() ?? "";
-                bool isValid = false;
-
-                if (storedHash.StartsWith("$2"))
-                {
-                    try { isValid = BCrypt.Net.BCrypt.Verify(password, storedHash); } catch { }
-                }
-                else
-                {
-                    isValid = storedHash == password;
-                }
-
-                if (!isValid) return null;
-
-                var user = new User
-                {
-                    Id = Convert.ToInt32(reader["Id"]),
-                    Username = reader["Username"].ToString() ?? "",
-                    FullName = reader["FullName"]?.ToString() ?? "",
-                    Role = reader["Role"].ToString() ?? "Guest",
-                    DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"])
-                };
-
-                reader.Close();
-
-                if (!storedHash.StartsWith("$2"))
-                {
-                    var newHash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
-                    using var migrateCmd = new SqliteCommand("UPDATE Users SET PasswordHash=@h WHERE Id=@id", connection);
-                    migrateCmd.Parameters.AddWithValue("@h", newHash);
-                    migrateCmd.Parameters.AddWithValue("@id", user.Id);
-                    migrateCmd.ExecuteNonQuery();
-                }
-
-                user.SessionId = Guid.NewGuid().ToString();
-                using var updateCmd = new SqliteCommand("UPDATE Users SET SessionId=@s WHERE Id=@id", connection);
-                updateCmd.Parameters.AddWithValue("@s", user.SessionId);
-                updateCmd.Parameters.AddWithValue("@id", user.Id);
-                updateCmd.ExecuteNonQuery();
-
-                return user;
+                // Trả về null mà không tiết lộ lý do (chống user enumeration)
+                return null;
             }
-            return null;
+
+            var user = new User
+            {
+                Id           = userId,
+                Username     = reader["Username"].ToString() ?? "",
+                FullName     = reader["FullName"]?.ToString() ?? "",
+                Role         = reader["Role"].ToString() ?? "Guest",
+                DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"])
+            };
+            reader.Close();
+
+            // ── Bước 2: Xác minh mật khẩu (Timing-Safe) ──────────────────────
+            bool isValid = false;
+            if (storedHash.StartsWith("$2"))
+            {
+                // BCrypt – timing-safe nội tại
+                try { isValid = BCrypt.Net.BCrypt.Verify(password, storedHash); } catch { }
+            }
+            else
+            {
+                // Mật khẩu cũ plain-text: dùng FixedTimeEquals để chống Timing Attack
+                var storedBytes = System.Text.Encoding.UTF8.GetBytes(storedHash);
+                var inputBytes  = System.Text.Encoding.UTF8.GetBytes(password);
+                // Đệm về cùng độ dài để so sánh constant-time
+                var paddedInput = inputBytes.Length == storedBytes.Length
+                    ? inputBytes
+                    : System.Text.Encoding.UTF8.GetBytes(password.PadRight(storedHash.Length));
+                isValid = System.Security.Cryptography.CryptographicOperations
+                              .FixedTimeEquals(storedBytes, paddedInput);
+            }
+
+            // ── Bước 3: Xử lý kết quả xác minh ──────────────────────────────
+            if (!isValid)
+            {
+                // Tăng bộ đếm sai → tự động khóa sau 5 lần
+                using var incCmd = new SqliteCommand(@"
+                    UPDATE Users SET
+                        FailedLoginCount = COALESCE(FailedLoginCount, 0) + 1,
+                        LockoutUntil = CASE
+                            WHEN COALESCE(FailedLoginCount, 0) + 1 >= 5
+                            THEN datetime('now', '+15 minutes')
+                            ELSE LockoutUntil
+                        END
+                    WHERE Id = @id", connection);
+                incCmd.Parameters.AddWithValue("@id", userId);
+                incCmd.ExecuteNonQuery();
+                return null;
+            }
+
+            // ── Bước 4: Đăng nhập thành công ─────────────────────────────────
+            // Tự động migrate plain-text → BCrypt
+            if (!storedHash.StartsWith("$2"))
+            {
+                var newHash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
+                using var migrateCmd = new SqliteCommand(
+                    "UPDATE Users SET PasswordHash=@h WHERE Id=@id", connection);
+                migrateCmd.Parameters.AddWithValue("@h", newHash);
+                migrateCmd.Parameters.AddWithValue("@id", userId);
+                migrateCmd.ExecuteNonQuery();
+                Console.WriteLine($"[Security] Đã migrate mật khẩu plain-text → BCrypt cho user: {user.Username}");
+            }
+
+            // Reset bộ đếm sai + tạo SessionId mới
+            user.SessionId = Guid.NewGuid().ToString();
+            using var updateCmd = new SqliteCommand(@"
+                UPDATE Users
+                SET SessionId = @s, FailedLoginCount = 0, LockoutUntil = NULL
+                WHERE Id = @id", connection);
+            updateCmd.Parameters.AddWithValue("@s",  user.SessionId);
+            updateCmd.Parameters.AddWithValue("@id", userId);
+            updateCmd.ExecuteNonQuery();
+
+            return user;
         }
 
         public bool CreateUser(User user)

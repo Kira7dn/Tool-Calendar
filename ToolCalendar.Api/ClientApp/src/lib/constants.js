@@ -66,7 +66,7 @@ export function getStatusConfig(statusValue, daysLeft) {
     if (statusValue === 'overdue' || daysLeft < 0 || (statusValue && statusValue.includes("Quá hạn"))) {
         return { label: statusValue === 'overdue' ? 'Đã quá hạn' : statusValue, icon: "🛑", variant: "destructive" };
     }
-    
+
     if (statusValue === 'urgent' || (daysLeft >= 0 && daysLeft <= 3)) {
         return { label: statusValue === 'urgent' ? 'Sắp hết hạn' : statusValue, icon: "🕒", variant: "warning" };
     }

@@ -31,10 +31,27 @@ namespace ToolCalendar.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
+            // Lấy IP thật của client (hỗ trợ qua Nginx reverse proxy)
+            string? clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                               ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+            string? userAgent = Request.Headers["User-Agent"].FirstOrDefault();
+
             var user = _userRepository.Login(request.Username, request.Password);
 
             if (user == null)
-                return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không chính xác." });
+            {
+                // Phân biệt: tài khoản bị khóa hay sai mật khẩu (không lộ thông tin nhạy cảm)
+                // Ghi audit log thất bại
+                ToolCalendar.Data.DatabaseService.InsertLoginAuditLog(
+                    username:   request.Username,
+                    userId:     null,
+                    ipAddress:  clientIp,
+                    userAgent:  userAgent,
+                    isSuccess:  false,
+                    failReason: "wrong_password_or_locked"
+                );
+                return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa." });
+            }
 
             // Kick tất cả phiên cũ của user này ngay lập tức (real-time SignalR)
             await _hubContext.Clients.Group($"User_{user.Id}").SendAsync("Kicked", "Tài khoản đã đăng nhập từ thiết bị khác.");
@@ -72,6 +89,15 @@ namespace ToolCalendar.Api.Controllers
                 Expires = DateTime.UtcNow.AddHours(24)
             });
 
+            // Ghi audit log thành công
+            ToolCalendar.Data.DatabaseService.InsertLoginAuditLog(
+                username:  user.Username,
+                userId:    user.Id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                isSuccess: true
+            );
+
             return Ok(new
             {
                 token = tokenString,
@@ -81,6 +107,7 @@ namespace ToolCalendar.Api.Controllers
                 userId = user.Id
             });
         }
+
 
         [HttpPost("logout")]
         public IActionResult Logout()

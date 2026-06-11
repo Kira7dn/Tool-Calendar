@@ -13,6 +13,22 @@ namespace ToolCalendar.Models
         public string? DepartmentName { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public string? SessionId { get; set; }
+
+        // --- Account Lockout ---
+        public int FailedLoginCount { get; set; } = 0;
+        public DateTime? LockoutUntil { get; set; } // null = không bị khóa
+    }
+
+    public class LoginAuditLog
+    {
+        public int Id { get; set; }
+        public string Username { get; set; } = "";
+        public int? UserId { get; set; }
+        public string? IpAddress { get; set; }
+        public string? UserAgent { get; set; }
+        public bool IsSuccess { get; set; }
+        public string? FailReason { get; set; } // 'wrong_password' | 'account_locked'
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 
     public class Comment

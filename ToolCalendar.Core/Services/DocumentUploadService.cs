@@ -147,7 +147,7 @@ public class DocumentUploadService : IDocumentUploadService
             catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.SqliteErrorCode == 5 || ex.SqliteErrorCode == 10 || ex.SqliteErrorCode == 14)
             {
                 // Error 5: SQLITE_BUSY, Error 10: SQLITE_IOERR, Error 14: SQLITE_CANTOPEN
-                if (i == maxRetries - 1) 
+                if (i == maxRetries - 1)
                 {
                     // Hết số lần thử mà vẫn lỗi -> Xóa file vừa lưu để tránh file rác
                     if (File.Exists(finalPath)) File.Delete(finalPath);

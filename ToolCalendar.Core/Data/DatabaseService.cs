@@ -267,6 +267,9 @@ namespace ToolCalendar.Data
             try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN DepartmentId INTEGER"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN CreatedAt TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN SessionId TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            // --- MIGRATION: Account Lockout columns ---
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN FailedLoginCount INTEGER DEFAULT 0"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN LockoutUntil TEXT NULL"; cmd.ExecuteNonQuery(); } catch { }
 
             // --- MIGRATION: Documents Schema Update (All Columns) ---
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN SoVanBan TEXT"; cmd.ExecuteNonQuery(); } catch { }
@@ -361,6 +364,25 @@ namespace ToolCalendar.Data
             // Index cho Notifications per user
             cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_notifications_user ON Notifications(UserId, CreatedAt DESC)";
             cmd.ExecuteNonQuery();
+
+            // --- LOGIN AUDIT LOG TABLE (bảng mới, tách riêng để không ảnh hưởng AuditLogs cũ) ---
+            cmd.CommandText = @"
+                CREATE TABLE IF NOT EXISTS LoginAuditLog (
+                    Id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Username   TEXT NOT NULL,
+                    UserId     INTEGER NULL,
+                    IpAddress  TEXT,
+                    UserAgent  TEXT,
+                    IsSuccess  INTEGER DEFAULT 0,
+                    FailReason TEXT NULL,
+                    CreatedAt  TEXT NOT NULL
+                )";
+            cmd.ExecuteNonQuery();
+            // Index để query nhanh theo thời gian và username
+            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_loginaudit_created  ON LoginAuditLog(CreatedAt DESC)";
+            cmd.ExecuteNonQuery();
+            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_loginaudit_username ON LoginAuditLog(Username)";
+            cmd.ExecuteNonQuery();
             // =========================================================
         }
 
@@ -402,12 +424,13 @@ namespace ToolCalendar.Data
                 cmd.Transaction = transaction;
 
                 // 1. Gá»¡ ngÆ°á»i dÃ¹ng khá»i cÃ¡c vÄƒn báº£n Ä‘ang Ä‘Æ°á»£c gÃ¡n (chuyá»ƒn AssignedTo vá» NULL)
-                // LÆ°u Ã½: ChÃºng ta lá»c theo ID ngÆ°á»i dÃ¹ng trong danh sÃ¡ch AssignedUserIds hoáº·c AssignedTo
+                // 1. Gá»¡ ngÆ°á» i dÃ¹ng khá» i cÃ¡c vÄƒn báº£n Ä‘ang Ä‘Æ°á»£c gÃ¡n (chuyá»ƒn AssignedTo vá»  NULL)
+                // LÆ°u Ã½: ChÃºng ta lá» c theo ID ngÆ°á» i dÃ¹ng trong danh sÃ¡ch AssignedUserIds hoáº·c AssignedTo
                 cmd.CommandText = "UPDATE Documents SET AssignedTo = NULL WHERE AssignedTo = (SELECT Username FROM Users WHERE Id = @id)";
                 cmd.Parameters.AddWithValue("@id", id);
                 cmd.ExecuteNonQuery();
 
-                // 2. XÃ³a ngÆ°á»i dÃ¹ng (khÃ´ng cho phÃ©p xÃ³a admin Ä‘á»ƒ báº£o máº­t há»‡ thá»‘ng)
+                // 2. XÃ³a ngÆ°á» i dÃ¹ng (khÃ´ng cho phÃ©p xÃ³a admin Ä‘á»ƒ báº£o máº­t há»‡ thÃ‘ng)
                 cmd.CommandText = "DELETE FROM Users WHERE Id = @id AND Username != 'admin'";
                 cmd.ExecuteNonQuery();
 
@@ -425,67 +448,93 @@ namespace ToolCalendar.Data
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            // BÆ°á»›c 1: Láº¥y user theo username (khÃ´ng so sÃ¡nh password trá»±c tiáº¿p trong SQL)
-            string sql = "SELECT Id, Username, PasswordHash, FullName, Role, DepartmentId, SessionId FROM Users WHERE Username=@u";
+            string sql = @"SELECT Id, Username, PasswordHash, FullName, Role, DepartmentId,
+                                  COALESCE(FailedLoginCount, 0) as FailedLoginCount, LockoutUntil
+                           FROM Users WHERE Username=@u";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@u", username);
             using var reader = cmd.ExecuteReader();
 
-            if (reader.Read())
+            if (!reader.Read()) return null;
+
+            int userId         = Convert.ToInt32(reader["Id"]);
+            var storedHash     = reader["PasswordHash"]?.ToString() ?? "";
+            string? lockoutRaw = reader["LockoutUntil"]?.ToString();
+
+            // ── Bước 1: Kiểm tra Account Lockout ──────────────────────────────
+            if (!string.IsNullOrEmpty(lockoutRaw) &&
+                DateTime.TryParse(lockoutRaw, out DateTime lockoutUntil) &&
+                lockoutUntil > DateTime.UtcNow)
             {
-                var storedHash = reader["PasswordHash"]?.ToString() ?? "";
-
-                // BÆ°á»›c 2: XÃ¡c minh máº­t kháº©u báº±ng BCrypt (timing-safe, chá»‘ng timing attack)
-                // TÆ°Æ¡ng thÃ­ch ngÆ°á»£c: náº¿u hash cÅ© lÃ  plain-text, váº«n cho Ä‘Äƒng nháº­p vÃ  tá»± Ä‘á»™ng migrate
-                bool isValid;
-                if (storedHash.StartsWith("$2a$") || storedHash.StartsWith("$2b$") || storedHash.StartsWith("$2y$"))
-                {
-                    // Máº­t kháº©u Ä‘Ã£ Ä‘Æ°á»£c hash BCrypt â€” verify Ä‘Ãºng chuáº©n
-                    isValid = BCrypt.Net.BCrypt.Verify(password, storedHash);
-                }
-                else
-                {
-                    // Máº­t kháº©u cÅ© plain-text â€” so sÃ¡nh táº¡m thá»i vÃ  tá»± Ä‘á»™ng migrate
-                    isValid = storedHash == password;
-                }
-
-                if (!isValid)
-                {
-                    return null;
-                }
-
-                var user = new User
-                {
-                    Id = Convert.ToInt32(reader["Id"]),
-                    Username = reader["Username"].ToString() ?? "",
-                    FullName = reader["FullName"]?.ToString() ?? "",
-                    Role = reader["Role"].ToString() ?? "Guest",
-                    DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"])
-                };
-
-                reader.Close(); // ÄÃ³ng reader trÆ°á»›c khi thá»±c thi update
-
-                // BÆ°á»›c 3: Náº¿u máº­t kháº©u cÅ© lÃ  plain-text -> tá»± Ä‘á»™ng migrate sang BCrypt
-                if (!storedHash.StartsWith("$2"))
-                {
-                    var newHash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
-                    using var migrateCmd = new SqliteCommand("UPDATE Users SET PasswordHash=@h WHERE Id=@id", connection);
-                    migrateCmd.Parameters.AddWithValue("@h", newHash);
-                    migrateCmd.Parameters.AddWithValue("@id", user.Id);
-                    migrateCmd.ExecuteNonQuery();
-                    Console.WriteLine($"[Security] ÄÃ£ tá»± Ä‘á»™ng migrate máº­t kháº©u plain-text sang BCrypt cho user: {user.Username}");
-                }
-
-                // BÆ°á»›c 4: Táº¡o Session ID má»›i
-                user.SessionId = Guid.NewGuid().ToString();
-                using var updateCmd = new SqliteCommand("UPDATE Users SET SessionId=@s WHERE Id=@id", connection);
-                updateCmd.Parameters.AddWithValue("@s", user.SessionId);
-                updateCmd.Parameters.AddWithValue("@id", user.Id);
-                updateCmd.ExecuteNonQuery();
-
-                return user;
+                return null; // Không tiết lộ lý do (chống user enumeration)
             }
-            return null;
+
+            var user = new User
+            {
+                Id           = userId,
+                Username     = reader["Username"].ToString() ?? "",
+                FullName     = reader["FullName"]?.ToString() ?? "",
+                Role         = reader["Role"].ToString() ?? "Guest",
+                DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"])
+            };
+            reader.Close();
+
+            // ── Bước 2: Xác minh mật khẩu (Timing-Safe) ──────────────────────
+            bool isValid;
+            if (storedHash.StartsWith("$2a$") || storedHash.StartsWith("$2b$") || storedHash.StartsWith("$2y$"))
+            {
+                isValid = BCrypt.Net.BCrypt.Verify(password, storedHash);
+            }
+            else
+            {
+                var storedBytes = System.Text.Encoding.UTF8.GetBytes(storedHash);
+                var inputBytes  = System.Text.Encoding.UTF8.GetBytes(password);
+                var paddedInput = inputBytes.Length == storedBytes.Length
+                    ? inputBytes
+                    : System.Text.Encoding.UTF8.GetBytes(password.PadRight(storedHash.Length));
+                isValid = System.Security.Cryptography.CryptographicOperations
+                              .FixedTimeEquals(storedBytes, paddedInput);
+            }
+
+            // ── Bước 3: Xử lý kết quả ─────────────────────────────────────────
+            if (!isValid)
+            {
+                using var incCmd = new SqliteCommand(@"
+                    UPDATE Users SET
+                        FailedLoginCount = COALESCE(FailedLoginCount, 0) + 1,
+                        LockoutUntil = CASE
+                            WHEN COALESCE(FailedLoginCount, 0) + 1 >= 5
+                            THEN datetime('now', '+15 minutes')
+                            ELSE LockoutUntil
+                        END
+                    WHERE Id = @id", connection);
+                incCmd.Parameters.AddWithValue("@id", userId);
+                incCmd.ExecuteNonQuery();
+                return null;
+            }
+
+            // ── Bước 4: Đăng nhập thành công ─────────────────────────────────
+            if (!storedHash.StartsWith("$2"))
+            {
+                var newHash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
+                using var migrateCmd = new SqliteCommand(
+                    "UPDATE Users SET PasswordHash=@h WHERE Id=@id", connection);
+                migrateCmd.Parameters.AddWithValue("@h", newHash);
+                migrateCmd.Parameters.AddWithValue("@id", userId);
+                migrateCmd.ExecuteNonQuery();
+                Console.WriteLine($"[Security] Đã tự động migrate mật khẩu plain-text sang BCrypt cho user: {user.Username}");
+            }
+
+            user.SessionId = Guid.NewGuid().ToString();
+            using var updateCmd = new SqliteCommand(@"
+                UPDATE Users
+                SET SessionId = @s, FailedLoginCount = 0, LockoutUntil = NULL
+                WHERE Id = @id", connection);
+            updateCmd.Parameters.AddWithValue("@s",  user.SessionId);
+            updateCmd.Parameters.AddWithValue("@id", userId);
+            updateCmd.ExecuteNonQuery();
+
+            return user;
         }
 
         public static User? GetUserById(int id)
@@ -659,6 +708,79 @@ namespace ToolCalendar.Data
             cmd.Parameters.AddWithValue("@u", (object?)userId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@a", action);
             cmd.ExecuteNonQuery();
+        }
+
+        /// <summary>Ghi log mỗi lần đăng nhập (thành công hoặc thất bại) kèm IP và User-Agent.</summary>
+        public static void InsertLoginAuditLog(
+            string username, int? userId,
+            string? ipAddress, string? userAgent,
+            bool isSuccess, string? failReason = null)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                using var cmd = new SqliteCommand(@"
+                    INSERT INTO LoginAuditLog (Username, UserId, IpAddress, UserAgent, IsSuccess, FailReason, CreatedAt)
+                    VALUES (@u, @uid, @ip, @ua, @ok, @reason, @now)", connection);
+                cmd.Parameters.AddWithValue("@u",      username);
+                cmd.Parameters.AddWithValue("@uid",    (object?)userId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@ip",     (object?)ipAddress ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@ua",     (object?)userAgent ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@ok",     isSuccess ? 1 : 0);
+                cmd.Parameters.AddWithValue("@reason", (object?)failReason ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@now",    DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                // Không để lỗi ghi log phá vỡ luồng đăng nhập chính
+                Console.WriteLine($"[LoginAudit] Lỗi ghi log: {ex.Message}");
+            }
+        }
+
+        /// <summary>Tăng FailedLoginCount. Nếu >= 5 thì set LockoutUntil = now + 15 phút.</summary>
+        public static void IncrementFailedLogin(int userId)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                // Tăng đếm và tự động khóa nếu đủ 5 lần sai
+                using var cmd = new SqliteCommand(@"
+                    UPDATE Users SET
+                        FailedLoginCount = COALESCE(FailedLoginCount, 0) + 1,
+                        LockoutUntil = CASE
+                            WHEN COALESCE(FailedLoginCount, 0) + 1 >= 5
+                            THEN datetime('now', '+15 minutes')
+                            ELSE LockoutUntil
+                        END
+                    WHERE Id = @id", connection);
+                cmd.Parameters.AddWithValue("@id", userId);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LoginLockout] Lỗi IncrementFailedLogin: {ex.Message}");
+            }
+        }
+
+        /// <summary>Reset FailedLoginCount và xóa LockoutUntil sau khi đăng nhập thành công.</summary>
+        public static void ResetFailedLogin(int userId)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                using var cmd = new SqliteCommand(
+                    "UPDATE Users SET FailedLoginCount = 0, LockoutUntil = NULL WHERE Id = @id", connection);
+                cmd.Parameters.AddWithValue("@id", userId);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LoginLockout] Lỗi ResetFailedLogin: {ex.Message}");
+            }
         }
 
         public static void ClearAuditLogs()
