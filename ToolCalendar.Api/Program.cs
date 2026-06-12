@@ -203,7 +203,8 @@ builder.Services.AddAuthentication(x =>
                         var cache    = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                     var cacheKey = $"UserSession_{userId}";
 
-                    if (!cache.TryGetValue(cacheKey, out string? cachedSecStamp))
+                    var cachedSecStamp = cache.Get<string>(cacheKey);
+                    if (string.IsNullOrEmpty(cachedSecStamp))
                     {
                         var userRepo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
                         var user     = userRepo.GetUserById(userId);
