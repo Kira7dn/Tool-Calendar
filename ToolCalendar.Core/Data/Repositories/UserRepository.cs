@@ -60,12 +60,20 @@ namespace ToolCalendar.Core.Data.Repositories
                 FailedLoginCount = reader["FailedLoginCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["FailedLoginCount"]),
                 LockoutUntil     = ParseNullableDateTime(reader["LockoutUntil"]?.ToString()),
 
-                // --- Identity columns mới (có thể NULL nếu user cũ chưa được backfill) ---
-                SecurityStamp       = reader["SecurityStamp"]?.ToString() ?? Guid.NewGuid().ToString(),
-                NormalizedUserName  = reader["NormalizedUserName"]?.ToString() ?? (reader["Username"]?.ToString() ?? "").ToUpperInvariant(),
-                LockoutEnabled      = reader["LockoutEnabled"] != DBNull.Value && Convert.ToInt32(reader["LockoutEnabled"]) == 1,
-                AccessFailedCount   = reader["AccessFailedCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["AccessFailedCount"]),
-                LockoutEnd          = ParseNullableDateTimeOffset(reader["LockoutEnd"]?.ToString()),
+                // --- Identity columns mới — dùng HasColumn() đề phòng migration chưa chạy ---
+                SecurityStamp       = HasColumn(reader, "SecurityStamp")
+                                        ? (reader["SecurityStamp"]?.ToString() ?? Guid.NewGuid().ToString())
+                                        : Guid.NewGuid().ToString(),
+                NormalizedUserName  = HasColumn(reader, "NormalizedUserName")
+                                        ? (reader["NormalizedUserName"]?.ToString() ?? (reader["Username"]?.ToString() ?? "").ToUpperInvariant())
+                                        : (reader["Username"]?.ToString() ?? "").ToUpperInvariant(),
+                LockoutEnabled      = HasColumn(reader, "LockoutEnabled")
+                                        && reader["LockoutEnabled"] != DBNull.Value
+                                        && Convert.ToInt32(reader["LockoutEnabled"]) == 1,
+                AccessFailedCount   = HasColumn(reader, "AccessFailedCount") && reader["AccessFailedCount"] != DBNull.Value
+                                        ? Convert.ToInt32(reader["AccessFailedCount"]) : 0,
+                LockoutEnd          = HasColumn(reader, "LockoutEnd")
+                                        ? ParseNullableDateTimeOffset(reader["LockoutEnd"]?.ToString()) : null,
             };
 
             if (includeSensitive)

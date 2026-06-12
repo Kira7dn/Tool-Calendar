@@ -182,6 +182,7 @@ namespace ToolCalendar.Api.Controllers
             record.Id = id;
 
             var existing = await _documentRepository.GetDocumentByIdAsync(id);
+            if (existing == null) return NotFound("Văn bản không tồn tại.");
             await _documentRepository.UpdateAsync(record);
 
             // Nếu có sự thay đổi về người được giao hoặc gán mới
@@ -244,21 +245,20 @@ namespace ToolCalendar.Api.Controllers
             if (doc == null) return NotFound();
 
             // 1. Tạo thư mục lưu bằng chứng cho văn bản này
-            // 1. Tạo thư mục lưu bằng chứng cho văn bản này
             var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
             Directory.CreateDirectory(evidenceDir);
 
             var savedPaths = new List<string>();
             foreach (var file in files)
             {
-                var fileName = $"{DateTime.Now:yyyyMMddHHmmss}_{file.FileName}";
-                var filePath = Path.Combine(evidenceDir, fileName);
+                // ✅ Security: Path.GetFileName() loại bỏ directory component, ngăn path traversal
+                var safeFileName = $"{DateTime.Now:yyyyMMddHHmmss}_{Path.GetFileName(file.FileName)}";
+                var filePath = Path.Combine(evidenceDir, safeFileName);
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
                 }
-                // Lưu đường dẫn tương đối để đảm bảo hoạt động trên mọi môi trường (Docker/Linux/Windows)
-                savedPaths.Add($"Uploads/Evidence/Doc_{id}/{fileName}");
+                savedPaths.Add($"Uploads/Evidence/Doc_{id}/{safeFileName}");
             }
 
             // 2. Cập nhật vào DB (Lưu danh sách path dưới dạng JSON)
@@ -368,7 +368,12 @@ namespace ToolCalendar.Api.Controllers
                 Response.Headers["X-Content-Type-Options"] = "nosniff";
                 return PhysicalFile(filePath, mimeType, fileName);
             }
-            catch (Exception ex) { return BadRequest(new { message = ex.Message, stack = ex.StackTrace }); }
+            catch (Exception ex)
+            {
+                // Chỉ log chi tiết trong Development, không lộ stack trace ra Production
+                _= ex;
+                return BadRequest(new { message = "Không thể đọc file bằng chứng. Vui lòng thử lại." });
+            }
         }
 
         [Authorize(Roles = "Admin")]
@@ -378,15 +383,17 @@ namespace ToolCalendar.Api.Controllers
             var doc = await _documentRepository.GetDocumentByIdAsync(id);
             if (doc != null)
             {
-                if (!string.IsNullOrEmpty(doc.FilePath) && System.IO.File.Exists(doc.FilePath))
+                // ✅ Fix: Normalize path trước khi xóa (giống BulkDelete) — trước đây dùng path thô nên File.Exists luôn false
+                if (!string.IsNullOrEmpty(doc.FilePath))
                 {
-                    System.IO.File.Delete(doc.FilePath);
+                    var normalizedDocPath = doc.FilePath.Replace('\\', '/').TrimStart('/');
+                    var fullDocPath = Path.Combine(_env.ContentRootPath, normalizedDocPath);
+                    if (System.IO.File.Exists(fullDocPath))
+                        System.IO.File.Delete(fullDocPath);
                 }
                 var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
                 if (Directory.Exists(evidenceDir))
-                {
                     Directory.Delete(evidenceDir, true);
-                }
             }
             await _documentRepository.DeleteAsync(id);
             return NoContent();
@@ -469,7 +476,9 @@ namespace ToolCalendar.Api.Controllers
             if (string.IsNullOrWhiteSpace(content) && (files == null || files.Count == 0))
                 return BadRequest("Bình luận phải có nội dung hoặc tệp đính kèm.");
 
-            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            // Parse userId an toàn — trả 401 nếu không có claim thay vì throw exception
+            if (!int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId))
+                return Unauthorized();
             var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Unknown";
 
             var savedPaths = new List<string>();
@@ -480,11 +489,10 @@ namespace ToolCalendar.Api.Controllers
 
                 foreach (var file in files)
                 {
-                    var fileName = $"{DateTime.Now:yyyyMMddHHmmss}_{file.FileName}";
-                    var filePath = Path.Combine(commentUploadDir, fileName);
-
-                    // THỐNG NHẤT: Lưu đường dẫn không có dấu gạch chéo ở đầu
-                    var relativePath = $"Uploads/Comments/Doc_{id}/{fileName}";
+                    // ✅ Security: Path.GetFileName() loại bỏ directory component, ngăn path traversal
+                    var safeFileName = $"{DateTime.Now:yyyyMMddHHmmss}_{Path.GetFileName(file.FileName)}";
+                    var filePath = Path.Combine(commentUploadDir, safeFileName);
+                    var relativePath = $"Uploads/Comments/Doc_{id}/{safeFileName}";
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
@@ -524,7 +532,9 @@ namespace ToolCalendar.Api.Controllers
         [HttpDelete("{docId}/comments/{commentId}")]
         public async Task<IActionResult> DeleteComment(int docId, int commentId)
         {
-            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            // Parse userId an toàn — trả 401 nếu không có claim
+            if (!int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId))
+                return Unauthorized();
             var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
             bool isAdmin = role == "Admin";
 
@@ -573,12 +583,15 @@ namespace ToolCalendar.Api.Controllers
             if (!validTypes.Contains(req.ReactionType.ToLower()))
                 return BadRequest("Reaction type phải là: like, love, hate, dislike.");
 
-            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            // Parse userId an toàn
+            if (!int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId))
+                return Unauthorized();
             var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Unknown";
 
             var result = await _documentRepository.ToggleReactionAsync(commentId, userId, username, req.ReactionType.ToLower());
 
-            var rxList = await _documentRepository.GetReactionsForCommentAsync(commentId); var updatedReactions = rxList.GroupBy(r => r.ReactionType)
+            var rxList = await _documentRepository.GetReactionsForCommentAsync(commentId);
+            var updatedReactions = rxList.GroupBy(r => r.ReactionType)
                 .ToDictionary(g => g.Key, g => new
                 {
                     Count = g.Count(),
@@ -721,12 +734,11 @@ namespace ToolCalendar.Api.Controllers
             if (!System.IO.File.Exists(filePath))
                 return NotFound("File vật lý không tìm thấy.");
 
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            // ✅ Bảo mật: Ngăn browser cache file PDF công vụ
+            // ✅ Perf: PhysicalFile stream trực tiếp, không load cả file vào RAM
             Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            return File(fileBytes, "application/pdf");
+            return PhysicalFile(filePath, "application/pdf");
         }
 
         private string GetDayLabel(DateTime date)
