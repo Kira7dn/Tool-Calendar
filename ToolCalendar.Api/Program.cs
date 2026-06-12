@@ -17,7 +17,7 @@ using System.Threading.RateLimiting;
 using ToolCalendar.Middleware;   // ✅ FileAccessSecurityMiddleware
 using ToolCalendar.Policies;    // ✅ AppPolicies (phân quyền tập trung)
 using ToolCalendar.Services.Security; // ✅ ClamAvService, BackupService
-
+using Microsoft.Extensions.Caching.Memory; // ✅ IMemoryCache extension methods
 
 var builder = WebApplication.CreateBuilder(args);
 
