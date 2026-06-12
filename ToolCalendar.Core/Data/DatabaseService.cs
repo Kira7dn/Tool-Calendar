@@ -271,6 +271,55 @@ namespace ToolCalendar.Data
             try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN FailedLoginCount INTEGER DEFAULT 0"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN LockoutUntil TEXT NULL"; cmd.ExecuteNonQuery(); } catch { }
 
+            // --- MIGRATION: ASP.NET Core Identity columns (không mất dữ liệu cũ) ---
+            // SecurityStamp: thay đổi mỗi khi đổi mật khẩu → vô hiệu hóa session cũ ngay lập tức
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN SecurityStamp TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            // NormalizedUserName: username dạng in hoa cho tìm kiếm không phân biệt chữ hoa/thường
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN NormalizedUserName TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            // LockoutEnabled: có cho phép khóa tài khoản không (mặc định true)
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN LockoutEnabled INTEGER DEFAULT 1"; cmd.ExecuteNonQuery(); } catch { }
+            // AccessFailedCount: đồng bộ với FailedLoginCount
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN AccessFailedCount INTEGER DEFAULT 0"; cmd.ExecuteNonQuery(); } catch { }
+            // LockoutEnd: thời gian hết lockout (ISO 8601 format, đồng bộ với LockoutUntil)
+            try { cmd.CommandText = "ALTER TABLE Users ADD COLUMN LockoutEnd TEXT NULL"; cmd.ExecuteNonQuery(); } catch { }
+
+            // --- BACKFILL: Cập nhật các user cũ chưa có SecurityStamp & NormalizedUserName ---
+            // Đảm bảo user cũ vẫn hoạt động bình thường, không bị mất quyền đăng nhập
+            try
+            {
+                cmd.CommandText = @"
+                    UPDATE Users 
+                    SET SecurityStamp = lower(hex(randomblob(16)))
+                    WHERE SecurityStamp IS NULL OR SecurityStamp = ''";
+                cmd.ExecuteNonQuery();
+
+                cmd.CommandText = @"
+                    UPDATE Users 
+                    SET NormalizedUserName = upper(Username)
+                    WHERE NormalizedUserName IS NULL OR NormalizedUserName = ''";
+                cmd.ExecuteNonQuery();
+
+                // Đồng bộ AccessFailedCount từ FailedLoginCount cũ
+                cmd.CommandText = @"
+                    UPDATE Users 
+                    SET AccessFailedCount = COALESCE(FailedLoginCount, 0)
+                    WHERE AccessFailedCount = 0 AND COALESCE(FailedLoginCount, 0) > 0";
+                cmd.ExecuteNonQuery();
+
+                // Đồng bộ LockoutEnd từ LockoutUntil cũ
+                cmd.CommandText = @"
+                    UPDATE Users 
+                    SET LockoutEnd = LockoutUntil
+                    WHERE LockoutEnd IS NULL AND LockoutUntil IS NOT NULL";
+                cmd.ExecuteNonQuery();
+
+                Console.WriteLine("[DB Migration] ✅ Identity columns migrated successfully. All existing users preserved.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DB Migration Warning] Backfill Identity columns: {ex.Message}");
+            }
+
             // --- MIGRATION: Documents Schema Update (All Columns) ---
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN SoVanBan TEXT"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN TenCongVan TEXT"; cmd.ExecuteNonQuery(); } catch { }

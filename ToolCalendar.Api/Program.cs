@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
+using ToolCalendar.Api.Security;          // ✅ CustomUserStore, HybridPasswordHasher
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Core.Data.Repositories;
 using ToolCalendar.Data;
 using ToolCalendar.Hubs;
+using ToolCalendar.Models;
 using ToolCalendar.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
@@ -67,6 +70,32 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<ToolCalendar.Data.Repositories.IDocumentRoutingRepository, ToolCalendar.Data.Repositories.DocumentRoutingRepository>();
+
+// ✅ ASP.NET Core Identity (Custom UserStore — không cần EF Core)
+// Toàn bộ dữ liệu vẫn lưu trong SQLite hiện có, không mất dữ liệu cũ
+builder.Services.AddIdentityCore<User>(options =>
+{
+    // --- Cấu hình mật khẩu (giữ nguyên quy tắc hiện tại) ---
+    options.Password.RequiredLength         = 8;
+    options.Password.RequireUppercase       = true;
+    options.Password.RequireLowercase       = true;
+    options.Password.RequireDigit           = true;
+    options.Password.RequireNonAlphanumeric = true;
+
+    // --- Account Lockout (Identity quản lý thay vì code thủ công) ---
+    options.Lockout.MaxFailedAccessAttempts = 5;               // Khóa sau 5 lần sai
+    options.Lockout.DefaultLockoutTimeSpan  = TimeSpan.FromMinutes(15); // Khóa 15 phút
+    options.Lockout.AllowedForNewUsers      = true;
+
+    // --- User ---
+    options.User.RequireUniqueEmail = false; // Không bắt buộc email duy nhất (hệ thống nội bộ)
+})
+.AddUserStore<CustomUserStore>()
+.AddDefaultTokenProviders(); // Cho phép generate token reset mật khẩu, xác thực email sau này
+
+// Thay thế IPasswordHasher mặc định bằng HybridPasswordHasher
+// → tương thích ngược hoàn toàn với mật khẩu BCrypt cũ trong database
+builder.Services.AddScoped<IPasswordHasher<User>, HybridPasswordHasher>();
 
 // Đăng ký Upload Service (tách logic upload ra khỏi Controller)
 builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
@@ -171,16 +200,33 @@ builder.Services.AddAuthentication(x =>
 
                 if (int.TryParse(userIdStr, out int userId))
                 {
-                    var userRepo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
-                    var user = userRepo.GetUserById(userId);
-                    if (user == null)
+                        var cache    = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                    var cacheKey = $"UserSession_{userId}";
+
+                    if (!cache.TryGetValue(cacheKey, out string? cachedSecStamp))
                     {
-                        Console.WriteLine($"[AuthError] Không tìm thấy User ID {userId} trong cơ sở dữ liệu.");
-                        context.Fail("Tài khoản không tồn tại.");
+                        var userRepo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+                        var user     = userRepo.GetUserById(userId);
+                        if (user == null)
+                        {
+                            Console.WriteLine($"[AuthError] Không tìm thấy User ID {userId} trong cơ sở dữ liệu.");
+                            context.Fail("Tài khoản không tồn tại.");
+                            return Task.CompletedTask;
+                        }
+
+                        // Ưu tiên kiểm tra SecurityStamp (Identity) trước, fallback về SessionId cũ
+                        cachedSecStamp = user.SecurityStamp ?? user.SessionId ?? string.Empty;
+                        // Cache 2 phút để giảm tải truy vấn DB
+                        cache.Set(cacheKey, cachedSecStamp, TimeSpan.FromMinutes(2));
                     }
-                    else if (!string.IsNullOrEmpty(sessionId) && user.SessionId != sessionId)
+
+                    // Kiểm tra security stamp từ token
+                    var tokenStamp = context.Principal?.FindFirst("sec_stamp")?.Value
+                                  ?? context.Principal?.FindFirst("sid")?.Value; // fallback token cũ
+
+                    if (!string.IsNullOrEmpty(tokenStamp) && cachedSecStamp != tokenStamp)
                     {
-                        Console.WriteLine($"[AuthError] SessionId không khớp. DB: {user.SessionId}, Token: {sessionId}");
+                        Console.WriteLine($"[AuthError] SecurityStamp không khớp → phiên đăng nhập bị vô hiệu hóa.");
                         context.Fail("Phiên đăng nhập đã hết hạn hoặc tài khoản đã đăng nhập ở nơi khác.");
                     }
                 }
@@ -241,8 +287,8 @@ builder.Services.AddCors(options =>
                     uri.Host.EndsWith(".loca.lt") ||    // localtunnel
                     uri.Host.EndsWith(".trycloudflare.com"); // cloudflare tunnel
             })
-            .AllowAnyMethod()
-            .AllowAnyHeader()
+            .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .WithHeaders("Authorization", "Content-Type", "Accept", "Origin", "User-Agent", "X-Requested-With", "x-hub-protocol", "x-signalr-user-agent")
             .AllowCredentials());
 });
 

@@ -34,6 +34,11 @@ export function MonthlyReport({ onTabChange }) {
   }, [month, year]);
 
   const handleCellClick = (departmentName, count, statusFilter, sortFilter = 'newest') => {
+    // Ignore click if user is selecting/highlighting text
+    if (window.getSelection && window.getSelection().toString().length > 0) {
+      return;
+    }
+
     if (count > 0 && onTabChange) {
       const pad = (n) => String(n).padStart(2, '0');
       const m = parseInt(month, 10);

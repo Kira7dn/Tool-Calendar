@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Models;
@@ -11,10 +12,12 @@ namespace ToolCalendar.Api.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly UserManager<User> _userManager;
 
-        public UsersController(IUserRepository userRepository)
+        public UsersController(IUserRepository userRepository, UserManager<User> userManager)
         {
             _userRepository = userRepository;
+            _userManager    = userManager;
         }
 
         // ─── Quy tắc mật khẩu (chuẩn NIST 800-63B + thực tiễn) ─────────────────
@@ -68,7 +71,7 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public IActionResult Create([FromBody] User user)
+        public async Task<IActionResult> Create([FromBody] User user)
         {
             if (string.IsNullOrWhiteSpace(user.Username))
                 return BadRequest(new { message = "Tên đăng nhập không được để trống." });
@@ -81,33 +84,54 @@ namespace ToolCalendar.Api.Controllers
             if (!isValid)
                 return BadRequest(new { message = errorMsg });
 
-            bool success = _userRepository.CreateUser(user);
-            if (success) return Ok(new { message = "Tạo người dùng thành công." });
-            return BadRequest(new { message = "Tên đăng nhập đã tồn tại hoặc dữ liệu không hợp lệ." });
+            // Tạo user qua UserManager → tự động hash mật khẩu + tạo SecurityStamp
+            var plainPassword = user.PasswordHash; // Lưu tạm mật khẩu dạng plain-text
+            user.PasswordHash = "";                // Xóa trước, UserManager sẽ hash lại
+
+            var result = await _userManager.CreateAsync(user, plainPassword ?? "");
+            if (result.Succeeded)
+                return Ok(new { message = "Tạo người dùng thành công." });
+
+            var error = result.Errors.FirstOrDefault()?.Description ?? "Tên đăng nhập đã tồn tại hoặc dữ liệu không hợp lệ.";
+            return BadRequest(new { message = error });
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] UserUpdateRequest request)
+        public async Task<IActionResult> Update(int id, [FromBody] UserUpdateRequest request)
         {
             var user = _userRepository.GetUserById(id);
             if (user == null) return NotFound();
 
-            // Nếu có đổi mật khẩu -> validate trước khi lưu
+            // Nếu có đổi mật khẩu → validate trước khi lưu
             if (!string.IsNullOrWhiteSpace(request.PasswordHash))
             {
                 var (isValid, errorMsg) = ValidatePassword(request.PasswordHash);
                 if (!isValid)
                     return BadRequest(new { message = errorMsg });
 
-                // Hash mật khẩu mới và lưu
-                _userRepository.UpdateUserPassword(id, request.PasswordHash);
+                // Đổi mật khẩu qua UserManager → tự động cập nhật SecurityStamp
+                var identityUser = await _userManager.FindByIdAsync(id.ToString());
+                if (identityUser != null)
+                {
+                    await _userManager.RemovePasswordAsync(identityUser);
+                    await _userManager.AddPasswordAsync(identityUser, request.PasswordHash);
+
+                    // Xóa cache để SecurityStamp mới có hiệu lực ngay
+                    var cache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                    cache?.Remove($"UserSession_{id}");
+                }
+                else
+                {
+                    // Fallback về UserRepository nếu Identity không tìm thấy
+                    _userRepository.UpdateUserPassword(id, request.PasswordHash);
+                }
             }
 
-            user.FullName = request.FullName;
-            user.Email = request.Email;
+            user.FullName    = request.FullName;
+            user.Email       = request.Email;
             user.PhoneNumber = request.PhoneNumber;
-            user.Role = request.Role;
+            user.Role        = request.Role;
             user.DepartmentId = request.DepartmentId;
 
             _userRepository.UpdateUser(user);

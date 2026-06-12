@@ -14,9 +14,21 @@ namespace ToolCalendar.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public string? SessionId { get; set; }
 
-        // --- Account Lockout ---
+        // --- Account Lockout (dữ liệu cũ, giữ nguyên) ---
         public int FailedLoginCount { get; set; } = 0;
         public DateTime? LockoutUntil { get; set; } // null = không bị khóa
+
+        // --- ASP.NET Core Identity Properties ---
+        // SecurityStamp: thay đổi mỗi khi đổi mật khẩu/role → vô hiệu hóa tất cả token cũ ngay lập tức
+        public string SecurityStamp { get; set; } = Guid.NewGuid().ToString();
+        // NormalizedUserName: username dạng in hoa, dùng để tìm kiếm không phân biệt chữ hoa/thường
+        public string NormalizedUserName { get; set; } = "";
+        // LockoutEnabled: cho phép Identity quản lý khóa tài khoản
+        public bool LockoutEnabled { get; set; } = true;
+        // AccessFailedCount: số lần đăng nhập sai (Identity quản lý, đồng bộ với FailedLoginCount)
+        public int AccessFailedCount { get; set; } = 0;
+        // LockoutEnd: thời điểm hết lockout (Identity format, đồng bộ với LockoutUntil)
+        public DateTimeOffset? LockoutEnd { get; set; }
     }
 
     public class LoginAuditLog
