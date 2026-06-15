@@ -14,8 +14,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - DB_PATH=/app/data/documents.db
-      - OcrSettings__TessDataPath=/usr/share/tesseract-ocr/5/tessdata
-      - TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
       - TZ=Asia/Ho_Chi_Minh
       - JWT_SECRET=${JWT_SECRET}
       - PUBLIC_ID_SECRET=${PUBLIC_ID_SECRET}
@@ -25,7 +23,7 @@ services:
       - ClamAv__Port=3310
       # --- OCR Performance Tuning ---
       - OcrSettings__RenderDpi=200
-      - OcrSettings__MaxParallelPages=4
+      - OcrSettings__MaxParallelPages=2
       - OcrSettings__MaxPagesToScan=7
       - OcrSettings__EnableOsd=false
       - OcrSettings__EnableDeskew=false

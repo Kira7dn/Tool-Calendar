@@ -764,7 +764,8 @@ namespace ToolCalendar.Services
                     var mapping = new (string Pattern, string TargetDept)[] {
                         ("Giáo dục|Y tế|Nội vụ|Văn hóa|Khoa học|Dân tộc|Tôn giáo|Xã hội|Lao động|Thương binh", "văn hóa xã hội"),
                         ("Tư pháp|Ngoại vụ|Thanh tra|UBND|HĐND|Ủy ban nhân dân|Hội đồng nhân dân|Văn phòng|Ủy ban", "Văn phòng HĐND"),
-                        ("Công thương|Nông nghiệp|Môi trường|Tài chính|Xây dựng|Kinh tế|Đô thị|Quản lý đô thị|Hạ tầng", "Kinh tế hạ tầng")
+                        ("Công thương|Tài chính|Kinh tế", "Kinh tế"),
+                        ("Nông nghiệp|Môi trường|Xây dựng|Đô thị|Quản lý đô thị|Hạ tầng", "Xây dựng, Nông nghiệp và môi trường")
                     };
 
                     foreach (var m in mapping)

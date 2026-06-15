@@ -13,10 +13,12 @@ DELETE FROM AuditLogs;
 DELETE FROM sqlite_sequence;
 
 -- SEED DEPARTMENTS --
-INSERT INTO Departments (Id, Name) VALUES 
-(1, 'Văn Phòng HĐND và UBND'),
-(2, 'Phòng Kinh tế hạ tầng và đô thị'),
-(3, 'Phòng Văn hóa xã hội');
+INSERT INTO Departments (Id, Name, IsActive) VALUES 
+(1, 'Văn Phòng HĐND và UBND', 1),
+(2, 'Phòng Kinh tế hạ tầng và đô thị', 0),
+(3, 'Phòng Văn hóa xã hội', 1),
+(4, 'Phòng Kinh tế', 1),
+(5, 'Phòng Xây dựng, Nông nghiệp và môi trường', 1);
 
 -- SEED USERS --
 -- Mật khẩu mặc định cho tất cả user seed: DEFAULT_PASSWORD_REDACTED

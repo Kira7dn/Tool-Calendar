@@ -48,7 +48,7 @@ export function Users() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const [pageSize, setPageSize] = useState(10);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -248,11 +248,28 @@ export function Users() {
     );
   };
 
-  const filteredUsers = users.filter(user =>
-    user.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-    user.username?.toLowerCase().includes(search.toLowerCase()) ||
-    user.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const removeVietnameseTones = (str) => {
+    if (!str) return '';
+    str = str.toLowerCase();
+    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+    str = str.replace(/đ/g, "d");
+    str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, "");
+    str = str.replace(/\u02C6|\u0306|\u031B/g, "");
+    return str.trim();
+  };
+
+  const searchTerm = removeVietnameseTones(search);
+  const filteredUsers = users.filter(user => {
+    const name = removeVietnameseTones(user.fullName);
+    const uname = removeVietnameseTones(user.username);
+    const mail = removeVietnameseTones(user.email);
+    return name.includes(searchTerm) || uname.includes(searchTerm) || mail.includes(searchTerm);
+  });
 
   const totalPages = Math.ceil(filteredUsers.length / pageSize);
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -273,7 +290,10 @@ export function Users() {
                 placeholder="Tìm theo tên, email..."
                 className="pl-9 h-11 bg-muted/50 focus:bg-card"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
                 autoComplete="off"
               />
             </div>
@@ -399,9 +419,27 @@ export function Users() {
           </div>
 
           <div className="p-4 border-t border-border flex items-center justify-between bg-card/50">
-            <p className="text-xs text-muted-foreground font-medium">
-              Trang <span className="text-foreground">{currentPage}</span> / <span className="text-foreground">{totalPages || 1}</span>
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="text-xs text-muted-foreground font-medium">
+                Trang <span className="text-foreground">{currentPage}</span> / <span className="text-foreground">{totalPages || 1}</span>
+              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground font-medium">Hiển thị:</p>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="text-xs bg-muted border border-border rounded px-2 py-1 focus:outline-none"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"

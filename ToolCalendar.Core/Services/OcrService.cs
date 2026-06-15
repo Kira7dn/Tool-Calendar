@@ -5,6 +5,11 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using ToolCalendar.Models;
+using OpenCvSharp;
+using Sdcb.PaddleOCR;
+using Sdcb.PaddleOCR.Models.Online;
+using Sdcb.PaddleOCR.Models;
+using Sdcb.PaddleInference;
 
 namespace ToolCalendar.Services
 {
@@ -12,6 +17,8 @@ namespace ToolCalendar.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<OcrService> _logger;
+        private static FullOcrModel? _paddleOcrModel;
+        private static readonly SemaphoreSlim _modelLock = new SemaphoreSlim(1, 1);
 
         public OcrService(IConfiguration configuration, ILogger<OcrService> logger)
         {
@@ -19,46 +26,26 @@ namespace ToolCalendar.Services
             _logger = logger;
         }
 
-        internal string GetTessDataPath()
+        private async Task<FullOcrModel> GetModelAsync()
         {
-            // 1. Ưu tiên đọc từ Config (Cả Local appsettings và Docker Env)
-            string? configPath = _configuration["OcrSettings:TessDataPath"];
-            if (!string.IsNullOrEmpty(configPath) && Directory.Exists(configPath))
+            if (_paddleOcrModel == null)
             {
-                return configPath;
-            }
-
-            // 2. Tự động nhận diện trên Linux (Docker System Path)
-            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
-            {
-                if (Directory.Exists("/usr/share/tesseract-ocr/5/tessdata"))
+                await _modelLock.WaitAsync();
+                try
                 {
-                    Environment.SetEnvironmentVariable("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/5/tessdata");
-                    return "/usr/share/tesseract-ocr/5/tessdata";
+                    if (_paddleOcrModel == null)
+                    {
+                        _logger.LogInformation("[OCR] Đang tải mô hình PaddleOCR tiếng Việt về máy...");
+                        _paddleOcrModel = await OnlineFullModels.VietnameseV4.DownloadAsync();
+                        _logger.LogInformation("[OCR] Tải mô hình PaddleOCR thành công.");
+                    }
                 }
-                if (Directory.Exists("/usr/share/tesseract-ocr/tessdata"))
+                finally
                 {
-                    Environment.SetEnvironmentVariable("TESSDATA_PREFIX", "/usr/share/tesseract-ocr/tessdata");
-                    return "/usr/share/tesseract-ocr/tessdata";
+                    _modelLock.Release();
                 }
             }
-
-            // 3. Tự động tìm thư mục ToolCalendar.Core/tessdata (Dành cho Dev Local khi không set config)
-            var currentDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
-            while (currentDir != null)
-            {
-                var potentialPath = Path.Combine(currentDir.FullName, "ToolCalendar.Core", "tessdata");
-                if (Directory.Exists(potentialPath)) return potentialPath;
-
-                // Trường hợp chạy ngay tại thư mục Core
-                var subPath = Path.Combine(currentDir.FullName, "tessdata");
-                if (currentDir.Name == "ToolCalendar.Core" && Directory.Exists(subPath)) return subPath;
-
-                currentDir = currentDir.Parent;
-            }
-
-            // 4. Fallback cuối cùng
-            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tessdata");
+            return _paddleOcrModel;
         }
 
         public async Task<string> ExtractTextFromPdfOcrAsync(string filePath)
@@ -71,8 +58,7 @@ namespace ToolCalendar.Services
         {
             var result = new OcrExtractionResult();
             var totalStopwatch = Stopwatch.StartNew();
-            string tessDataPath = GetTessDataPath();
-            string lang = _configuration["OcrSettings:Language"] ?? "vie+eng";
+            
             var resolvedOptions = OcrOptionsResolver.Resolve(_configuration, options);
 
             if (resolvedOptions.EnableDebug)
@@ -82,9 +68,11 @@ namespace ToolCalendar.Services
 
             try
             {
+                // Ensure model is downloaded first before spawning threads
+                var model = await GetModelAsync();
+
                 result.TotalPages = PdfPageRenderer.CountPdfPages(filePath);
 
-                // ── Idea 3: Đọc cấu hình số trang quét từ Database (mặc định 0 = scan hết)
                 string maxPagesConfig = Data.DatabaseService.GetAppSetting("OcrSettings_MaxPagesToScan", "0");
                 int maxPages = int.TryParse(maxPagesConfig, out int mp) ? mp : 0;
                 int pagesToProcess = maxPages > 0 ? Math.Min(result.TotalPages, maxPages) : result.TotalPages;
@@ -96,7 +84,7 @@ namespace ToolCalendar.Services
                     await concurrencyLimit.WaitAsync();
                     try
                     {
-                        return await ProcessPageAsync(filePath, pageIndex, tessDataPath, lang, resolvedOptions);
+                        return await ProcessPageAsync(filePath, pageIndex, model, resolvedOptions);
                     }
                     finally
                     {
@@ -105,8 +93,6 @@ namespace ToolCalendar.Services
                 }).ToList();
 
                 var pageResults = await Task.WhenAll(pageTasks);
-
-                // Giữ đúng thứ tự trang sau khi xử lý song song
                 result.Pages = pageResults.OrderBy(p => p.PageNumber).ToList();
             }
             catch (Exception ex)
@@ -127,7 +113,7 @@ namespace ToolCalendar.Services
             return await Task.FromResult(result);
         }
 
-        private async Task<OcrPageResult> ProcessPageAsync(string filePath, int pageIndex, string tessDataPath, string lang, ResolvedOcrOptions options)
+        private async Task<OcrPageResult> ProcessPageAsync(string filePath, int pageIndex, FullOcrModel model, ResolvedOcrOptions options)
         {
             var pageResult = new OcrPageResult { PageNumber = pageIndex + 1 };
             var pageStopwatch = Stopwatch.StartNew();
@@ -145,32 +131,17 @@ namespace ToolCalendar.Services
 
                 pageResult.Artifacts.RawImagePath = OcrDebugArtifactWriter.SaveBitmapDebug(rawBitmap, options, baseName, pageResult.PageNumber, "1_raw");
 
+                // Preprocess for PaddleOCR (Usually less required than Tesseract, but deskewing is good)
                 using var preprocessedBitmap = OcrImageProcessor.PreprocessBitmap(rawBitmap);
                 pageResult.Artifacts.PreprocessedImagePath = OcrDebugArtifactWriter.SaveBitmapDebug(preprocessedBitmap, options, baseName, pageResult.PageNumber, "2_preprocessed");
-
-                using var osdBitmap = options.EnableOsd ? OcrImageProcessor.BuildOsdBitmap(preprocessedBitmap) : null;
-                var osdResult = options.EnableOsd && osdBitmap != null
-                    ? await DetectOrientationAsync(osdBitmap, tessDataPath)
-                    : OcrOsdResult.None;
-
-                SKBitmap? orientedBitmap = null;
-                string osdInfo = "";
-                if (options.EnableOsd)
-                {
-                    (orientedBitmap, osdInfo) = ApplyOrientation(preprocessedBitmap, osdResult, options);
-                }
-
-                pageResult.OrientationDecision = string.IsNullOrWhiteSpace(osdInfo) ? "No orientation change" : osdInfo.Trim();
-                using var bitmapToDeskew = orientedBitmap ?? preprocessedBitmap.Copy();
-                pageResult.Artifacts.OsdResultImagePath = OcrDebugArtifactWriter.SaveBitmapDebug(bitmapToDeskew, options, baseName, pageResult.PageNumber, "3_osd_result");
 
                 SKBitmap? deskewedBitmap = null;
                 if (options.EnableDeskew)
                 {
-                    float? deskewAngle = OcrImageProcessor.EstimateDeskewAngle(bitmapToDeskew, options.DeskewMinAbsAngle);
+                    float? deskewAngle = OcrImageProcessor.EstimateDeskewAngle(preprocessedBitmap, options.DeskewMinAbsAngle);
                     if (deskewAngle.HasValue)
                     {
-                        deskewedBitmap = OcrImageProcessor.RotateBitmap(bitmapToDeskew, -deskewAngle.Value);
+                        deskewedBitmap = OcrImageProcessor.RotateBitmap(preprocessedBitmap, -deskewAngle.Value);
                         if (deskewedBitmap != null)
                         {
                             pageResult.DeskewApplied = true;
@@ -179,10 +150,27 @@ namespace ToolCalendar.Services
                     }
                 }
 
-                using var bitmapToProcess = deskewedBitmap ?? bitmapToDeskew.Copy();
+                using var bitmapToProcess = deskewedBitmap ?? preprocessedBitmap.Copy();
                 pageResult.Artifacts.FinalOcrImagePath = OcrDebugArtifactWriter.SaveFinalDebugBitmap(bitmapToProcess, options, baseName, pageResult.PageNumber);
-                pageResult.Text = await RunTesseractCliAsync(bitmapToProcess, tessDataPath, lang, 3);
-                pageResult.OcrHeader = $"--- Trang {pageResult.PageNumber}{osdInfo}{OcrImageProcessor.BuildDeskewInfo(pageResult)} ---";
+                
+                // Convert SKBitmap to MemoryStream for OpenCvSharp
+                using var ms = new MemoryStream();
+                bitmapToProcess.Encode(ms, SKEncodedImageFormat.Png, 100);
+                ms.Position = 0;
+
+                // Run PaddleOCR
+                using Mat mat = Mat.FromStream(ms, ImreadModes.Color);
+                using PaddleOcrAll ocr = new PaddleOcrAll(model)
+                {
+                    AllowRotateDetection = true,
+                    Enable180Classification = true
+                };
+
+                PaddleOcrResult ocrResult = ocr.Run(mat);
+                pageResult.Text = ocrResult.Text;
+                
+                string angleInfo = ocr.AllowRotateDetection ? " [Auto Orient]" : "";
+                pageResult.OcrHeader = $"--- Trang {pageResult.PageNumber}{angleInfo}{OcrImageProcessor.BuildDeskewInfo(pageResult)} ---";
             }
             catch (Exception pageEx)
             {
@@ -199,116 +187,6 @@ namespace ToolCalendar.Services
             return pageResult;
         }
 
-        private async Task<string> RunTesseractCliAsync(SKBitmap bitmap, string tessDataPath, string lang, int pageSegMode)
-        {
-            string tempDirectory = Path.Combine(Path.GetTempPath(), "toolcalendar-ocr");
-            Directory.CreateDirectory(tempDirectory);
-
-            string inputPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}.png");
-
-            try
-            {
-                using (var fs = File.Create(inputPath))
-                {
-                    bitmap.Encode(fs, SKEncodedImageFormat.Png, 100);
-                }
-
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "tesseract",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    RedirectStandardInput = false,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                startInfo.ArgumentList.Add(inputPath);
-                startInfo.ArgumentList.Add("stdout");
-                startInfo.ArgumentList.Add("--tessdata-dir");
-                startInfo.ArgumentList.Add(tessDataPath);
-                startInfo.ArgumentList.Add("-l");
-                startInfo.ArgumentList.Add(lang);
-                startInfo.ArgumentList.Add("--psm");
-                startInfo.ArgumentList.Add(pageSegMode.ToString(CultureInfo.InvariantCulture));
-                startInfo.ArgumentList.Add("-c");
-                startInfo.ArgumentList.Add("preserve_interword_spaces=1");
-
-                using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Không thể khởi tạo tiến trình tesseract.");
-                string stdout = await process.StandardOutput.ReadToEndAsync();
-                string stderr = await process.StandardError.ReadToEndAsync();
-                await process.WaitForExitAsync();
-
-                if (process.ExitCode != 0)
-                {
-                    throw new InvalidOperationException(string.IsNullOrWhiteSpace(stderr)
-                        ? $"tesseract CLI trả về exit code {process.ExitCode}."
-                        : stderr.Trim());
-                }
-
-                return stdout.Trim();
-            }
-            finally
-            {
-                TryDeleteFile(inputPath);
-            }
-        }
-
-        private async Task<OcrOsdResult> DetectOrientationAsync(SKBitmap bitmap, string tessDataPath)
-        {
-            string tempDirectory = Path.Combine(Path.GetTempPath(), "toolcalendar-ocr");
-            Directory.CreateDirectory(tempDirectory);
-            string inputPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}-osd.png");
-
-            try
-            {
-                using (var fs = File.Create(inputPath))
-                {
-                    bitmap.Encode(fs, SKEncodedImageFormat.Png, 100);
-                }
-
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "tesseract",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                startInfo.ArgumentList.Add(inputPath);
-                startInfo.ArgumentList.Add("stdout");
-                startInfo.ArgumentList.Add("--tessdata-dir");
-                startInfo.ArgumentList.Add(tessDataPath);
-                startInfo.ArgumentList.Add("-l");
-                startInfo.ArgumentList.Add("osd");
-                startInfo.ArgumentList.Add("--psm");
-                startInfo.ArgumentList.Add("0");
-
-                using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Không thể khởi tạo tiến trình tesseract OSD.");
-                string stdout = await process.StandardOutput.ReadToEndAsync();
-                string stderr = await process.StandardError.ReadToEndAsync();
-                await process.WaitForExitAsync();
-
-                string osdPayload = string.IsNullOrWhiteSpace(stdout) ? stderr : stdout;
-                if (process.ExitCode != 0 && string.IsNullOrWhiteSpace(osdPayload))
-                {
-                    return OcrOsdResult.None;
-                }
-
-                return ParseOsdResult(osdPayload);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "[OCR] OSD detection failed. Continuing without rotation.");
-                return OcrOsdResult.None;
-            }
-            finally
-            {
-                TryDeleteFile(inputPath);
-            }
-        }
-
         private int GetMaxParallelPages()
         {
             string? configured = _configuration["OcrSettings:MaxParallelPages"];
@@ -317,70 +195,7 @@ namespace ToolCalendar.Services
                 return value;
             }
 
-            return 2;
-        }
-
-        private static void TryDeleteFile(string path)
-        {
-            try
-            {
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        private (SKBitmap? bitmap, string osdInfo) ApplyOrientation(SKBitmap bitmap, OcrOsdResult osdResult, ResolvedOcrOptions options)
-        {
-            string baseInfo = osdResult.RotateDegrees == 0 ? "" : $" [OSD Detected: {osdResult.RotateDegrees}deg/Conf: {osdResult.Confidence:F1}]";
-
-            if (osdResult.RotateDegrees == 0 || osdResult.Confidence <= options.OsdMinConfidence)
-            {
-                return (null, baseInfo + (osdResult.RotateDegrees != 0 && osdResult.Confidence <= options.OsdMinConfidence ? " (Below Threshold)" : ""));
-            }
-
-            bool isPortrait = bitmap.Height > bitmap.Width;
-            bool isSideways = osdResult.RotateDegrees == 90 || osdResult.RotateDegrees == 270;
-            bool shouldRotate = osdResult.RotateDegrees == 180 || !isPortrait || !isSideways || osdResult.Confidence > options.OsdMinConfidence + 5.0f;
-
-            if (!shouldRotate)
-            {
-                return (null, $" [OSD Blocked: Portrait-Lock for Rotate {osdResult.RotateDegrees}deg/Conf: {osdResult.Confidence:F1}]");
-            }
-
-            var rotated = OcrImageProcessor.RotateBitmap(bitmap, osdResult.RotateDegrees);
-            return rotated == null
-                ? (null, "")
-                : (rotated, $" [OSD Fixed: Rotate {osdResult.RotateDegrees}deg/Conf: {osdResult.Confidence:F1}]");
-        }
-
-        private static OcrOsdResult ParseOsdResult(string text)
-        {
-            int rotateDegrees = 0;
-            float confidence = 0;
-
-            foreach (string rawLine in text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            {
-                if (rawLine.StartsWith("Rotate:", StringComparison.OrdinalIgnoreCase))
-                {
-                    int.TryParse(rawLine["Rotate:".Length..].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out rotateDegrees);
-                }
-                else if (rawLine.StartsWith("Orientation confidence:", StringComparison.OrdinalIgnoreCase))
-                {
-                    float.TryParse(rawLine["Orientation confidence:".Length..].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out confidence);
-                }
-            }
-
-            return new OcrOsdResult(rotateDegrees, confidence);
-        }
-
-        private readonly record struct OcrOsdResult(int RotateDegrees, float Confidence)
-        {
-            public static OcrOsdResult None => new(0, 0);
+            return 2; // Default lowered to 2 for PaddleOCR RAM safety
         }
 
         private string BuildFullText(IEnumerable<OcrPageResult> pages)

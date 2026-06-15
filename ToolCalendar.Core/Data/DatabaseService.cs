@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using ToolCalendar.Models;
 
 namespace ToolCalendar.Data
@@ -94,7 +94,8 @@ namespace ToolCalendar.Data
                 CREATE TABLE IF NOT EXISTS Departments (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Name TEXT,
-                    Description TEXT
+                    Description TEXT,
+                    IsActive INTEGER DEFAULT 1
                 )";
 
             string createLabelsTable = @"
@@ -345,6 +346,18 @@ namespace ToolCalendar.Data
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN UploadedByUserId INTEGER DEFAULT 1"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedUserIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedDepartmentIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
+
+            try { cmd.CommandText = "ALTER TABLE Departments ADD COLUMN IsActive INTEGER DEFAULT 1"; cmd.ExecuteNonQuery(); } catch { }
+
+            // Migration cho phòng ban mới
+            try { 
+                cmd.CommandText = "INSERT INTO Departments (Name, Description, IsActive) SELECT 'Phòng Kinh tế', 'Phòng ban Phòng Kinh tế', 1 WHERE NOT EXISTS (SELECT 1 FROM Departments WHERE Name = 'Phòng Kinh tế')"; 
+                cmd.ExecuteNonQuery(); 
+                cmd.CommandText = "INSERT INTO Departments (Name, Description, IsActive) SELECT 'Phòng Xây dựng, Nông nghiệp và môi trường', 'Phòng ban Phòng Xây dựng, Nông nghiệp và môi trường', 1 WHERE NOT EXISTS (SELECT 1 FROM Departments WHERE Name = 'Phòng Xây dựng, Nông nghiệp và môi trường')"; 
+                cmd.ExecuteNonQuery(); 
+                cmd.CommandText = "UPDATE Departments SET IsActive = 0 WHERE Name = 'Phòng Kinh tế hạ tầng và đô thị'"; 
+                cmd.ExecuteNonQuery(); 
+            } catch { }
 
             // Chỉ tạo admin lần đầu — KHÔNG BAO GIỜ reset password tự động
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username='admin'";
@@ -876,12 +889,13 @@ namespace ToolCalendar.Data
 
 
         // --- DEPARTMENT MANAGEMENT ---
-        public static List<Department> GetDepartments()
+        public static List<Department> GetDepartments(bool includeInactive = false)
         {
             var list = new List<Department>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("SELECT Id, Name, Description FROM Departments", connection);
+            string sql = includeInactive ? "SELECT Id, Name, Description, IsActive FROM Departments" : "SELECT Id, Name, Description, IsActive FROM Departments WHERE IsActive = 1";
+            using var cmd = new SqliteCommand(sql, connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -889,7 +903,8 @@ namespace ToolCalendar.Data
                 {
                     Id = Convert.ToInt32(reader["Id"]),
                     Name = reader["Name"].ToString() ?? "",
-                    Description = reader["Description"]?.ToString() ?? ""
+                    Description = reader["Description"]?.ToString() ?? "",
+                    IsActive = reader.HasColumn("IsActive") && reader["IsActive"] != DBNull.Value ? Convert.ToInt32(reader["IsActive"]) == 1 : true
                 });
             }
             return list;
@@ -899,9 +914,10 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("INSERT INTO Departments (Name, Description) VALUES (@n, @d); SELECT last_insert_rowid();", connection);
+            using var cmd = new SqliteCommand("INSERT INTO Departments (Name, Description, IsActive) VALUES (@n, @d, @ia); SELECT last_insert_rowid();", connection);
             cmd.Parameters.AddWithValue("@n", d.Name);
             cmd.Parameters.AddWithValue("@d", d.Description);
+            cmd.Parameters.AddWithValue("@ia", d.IsActive ? 1 : 0);
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
@@ -909,9 +925,10 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("UPDATE Departments SET Name = @n, Description = @d WHERE Id = @id", connection);
+            using var cmd = new SqliteCommand("UPDATE Departments SET Name = @n, Description = @d, IsActive = @ia WHERE Id = @id", connection);
             cmd.Parameters.AddWithValue("@n", d.Name);
             cmd.Parameters.AddWithValue("@d", d.Description);
+            cmd.Parameters.AddWithValue("@ia", d.IsActive ? 1 : 0);
             cmd.Parameters.AddWithValue("@id", d.Id);
             cmd.ExecuteNonQuery();
         }
@@ -920,32 +937,9 @@ namespace ToolCalendar.Data
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var transaction = connection.BeginTransaction();
-            try
-            {
-                using var cmd = connection.CreateCommand();
-                cmd.Transaction = transaction;
-
-                // 1. Gá»¡ phÃ²ng ban khá»i cÃ¡c vÄƒn báº£n liÃªn quan
-                cmd.CommandText = "UPDATE Documents SET DepartmentId = NULL WHERE DepartmentId = @id";
-                cmd.Parameters.AddWithValue("@id", id);
-                cmd.ExecuteNonQuery();
-
-                // 2. Gá»¡ phÃ²ng ban khá»i cÃ¡c nhÃ¢n sá»± liÃªn quan
-                cmd.CommandText = "UPDATE Users SET DepartmentId = NULL WHERE DepartmentId = @id";
-                cmd.ExecuteNonQuery();
-
-                // 3. XÃ³a phÃ²ng ban
-                cmd.CommandText = "DELETE FROM Departments WHERE Id = @id";
-                cmd.ExecuteNonQuery();
-
-                transaction.Commit();
-            }
-            catch
-            {
-                transaction.Rollback();
-                throw;
-            }
+            using var cmd = new SqliteCommand("UPDATE Departments SET IsActive = 0 WHERE Id = @id", connection);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.ExecuteNonQuery();
         }
 
         // --- LABEL MANAGEMENT ---
@@ -1016,7 +1010,7 @@ namespace ToolCalendar.Data
             var list = new List<AutoRule>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-            using var cmd = new SqliteCommand("SELECT Id, Keyword, LabelId, DepartmentId, DefaultDeadlineDays FROM AutoRules", connection);
+            using var cmd = new SqliteCommand("SELECT r.Id, r.Keyword, r.LabelId, r.DepartmentId, r.DefaultDeadlineDays, d.Name as DepartmentName FROM AutoRules r LEFT JOIN Departments d ON r.DepartmentId = d.Id", connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -1026,6 +1020,7 @@ namespace ToolCalendar.Data
                     Keyword = reader["Keyword"].ToString() ?? "",
                     LabelId = reader["LabelId"] == DBNull.Value ? null : Convert.ToInt32(reader["LabelId"]),
                     DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"]),
+                    DepartmentName = reader["DepartmentName"]?.ToString(),
                     DefaultDeadlineDays = Convert.ToInt32(reader["DefaultDeadlineDays"])
                 });
             }
@@ -1384,6 +1379,7 @@ namespace ToolCalendar.Data
                     SUM(CASE WHEN doc.Status != 'Đã hoàn thành' AND doc.ThoiHan IS NOT NULL AND doc.ThoiHan < date('now') THEN 1 ELSE 0 END) AS ProcessingOverdue
                 FROM Departments d
                 LEFT JOIN Documents doc ON d.Id = doc.DepartmentId AND doc.NgayThem LIKE @prefix
+                WHERE d.IsActive = 1
                 GROUP BY d.Id, d.Name
                 ORDER BY d.Id
             ";
@@ -1411,4 +1407,6 @@ namespace ToolCalendar.Data
         }
     }
 }
+
+
 

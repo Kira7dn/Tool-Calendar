@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
@@ -37,7 +37,7 @@ namespace ToolCalendar.Tests
             {
                 Keyword = "Kinh tế",
                 LabelId = 1,
-                DepartmentId = 2,
+                DepartmentId = 4,
                 DefaultDeadlineDays = 10
             });
 
@@ -65,7 +65,7 @@ namespace ToolCalendar.Tests
 
             // Assert
             result.LabelId.Should().Be(1);
-            result.DepartmentId.Should().Be(2);
+            result.DepartmentId.Should().Be(4);
             // Có NgayBanHanh 01/01 -> + 10 ngày = 11/01
             result.ThoiHan.Should().NotBeNull();
             result.ThoiHan?.Day.Should().Be(11);

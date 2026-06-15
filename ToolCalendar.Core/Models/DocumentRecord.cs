@@ -22,6 +22,7 @@ namespace ToolCalendar.Models
         public string Status { get; set; } = "Chưa xử lý"; // Chưa xử lý, Đang xử lý, Đã hoàn thành, Quá hạn
         public string Priority { get; set; } = "Thường"; // Thường, Khẩn, Hỏa tốc
         public int? DepartmentId { get; set; }
+        public string? DepartmentName { get; set; }
         public int? AssignedTo { get; set; }
         public string AssignedUserIds { get; set; } = "[]";
         public string AssignedDepartmentIds { get; set; } = "[]";
