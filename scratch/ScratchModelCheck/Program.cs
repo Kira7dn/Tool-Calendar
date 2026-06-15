@@ -1,0 +1,1 @@
+using Sdcb.PaddleOCR.Models.Online; class Program { static void Main() { foreach (var prop in typeof(OnlineFullModels).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)) System.Console.WriteLine(prop.Name); } }

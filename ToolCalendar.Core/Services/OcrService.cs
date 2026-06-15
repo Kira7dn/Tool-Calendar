@@ -36,7 +36,7 @@ namespace ToolCalendar.Services
                     if (_paddleOcrModel == null)
                     {
                         _logger.LogInformation("[OCR] Đang tải mô hình PaddleOCR tiếng Việt về máy...");
-                        _paddleOcrModel = await OnlineFullModels.VietnameseV4.DownloadAsync();
+                        _paddleOcrModel = await OnlineFullModels.EnglishV4.DownloadAsync();
                         _logger.LogInformation("[OCR] Tải mô hình PaddleOCR thành công.");
                     }
                 }
