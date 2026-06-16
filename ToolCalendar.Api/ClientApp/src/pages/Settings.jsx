@@ -125,7 +125,7 @@ export function Settings() {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row h-full bg-slate-50/50 -m-6 overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-full md:h-full bg-slate-50/50 -mx-4 -my-6 md:-m-6 overflow-y-auto overflow-x-hidden md:overflow-hidden">
       {/* Sidebar */}
       <aside className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col shrink-0 z-10 shadow-sm md:shadow-none">
         <div className="px-5 md:px-6 pt-5 md:pt-8 pb-3 md:pb-6 border-b border-slate-100 flex items-center justify-between md:block">
@@ -138,7 +138,7 @@ export function Settings() {
           </div>
         </div>
 
-        <nav className="flex flex-row md:flex-col gap-2 md:gap-1.5 p-3 md:p-4 overflow-x-auto md:flex-1 scrollbar-none snap-x">
+        <nav className="flex flex-col gap-2 p-3 md:p-4 md:flex-1">
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -179,8 +179,8 @@ export function Settings() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 overflow-hidden flex flex-col relative">
-        <ScrollArea className="flex-1 px-4 md:px-8 py-6 md:py-8">
+      <main className="flex-1 min-w-0 min-h-0 md:overflow-hidden flex flex-col relative">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-8 py-6 md:py-8">
           <div className="max-w-4xl mx-auto space-y-8 pb-12">
             <div key={activeTab} className="animate-in fade-in slide-in-from-right-8 duration-700 fill-mode-both">
               {activeTab === 'general' && (
@@ -199,7 +199,7 @@ export function Settings() {
               {activeTab === 'backup' && <BackupTab />}
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </main>
     </div>
   );

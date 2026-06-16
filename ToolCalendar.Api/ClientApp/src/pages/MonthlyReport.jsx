@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, Printer } from 'lucide-react';
+import { FileText, Printer, Maximize2, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exportToWord } from '@/lib/ReportExportLogic';
+import { cn } from '@/lib/utils';
 
 export function MonthlyReport({ onTabChange }) {
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -73,12 +75,13 @@ export function MonthlyReport({ onTabChange }) {
   return (
     <div className="flex flex-col h-full gap-4 relative">
       {/* ── Toolbar (Không in ra) ── */}
-      <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200 print:hidden shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm">Thống kê theo tháng:</span>
+      <div className="flex flex-col sm:flex-row items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200 print:hidden shrink-0 gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start">
+          <span className="font-semibold text-sm hidden sm:inline">Thống kê theo tháng:</span>
+          <span className="font-semibold text-[13px] sm:hidden">Thống kê:</span>
           <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Chọn tháng" />
+            <SelectTrigger className="w-[100px] sm:w-[120px]">
+              <SelectValue placeholder="Tháng" />
             </SelectTrigger>
             <SelectContent>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
@@ -87,8 +90,8 @@ export function MonthlyReport({ onTabChange }) {
             </SelectContent>
           </Select>
           <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Chọn năm" />
+            <SelectTrigger className="w-[90px] sm:w-[120px]">
+              <SelectValue placeholder="Năm" />
             </SelectTrigger>
             <SelectContent>
               {['2024', '2025', '2026'].map(y => (
@@ -98,43 +101,57 @@ export function MonthlyReport({ onTabChange }) {
           </Select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button onClick={handlePrint} variant="outline" className="gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <Button onClick={() => setIsFullscreen(true)} variant="outline" className="md:hidden flex-1 sm:flex-none gap-2 border-slate-300">
+            <Maximize2 className="size-4" />
+            <span>Toàn màn hình</span>
+          </Button>
+          <Button onClick={handlePrint} variant="outline" className="hidden md:flex gap-2">
             <Printer className="size-4" />
             <span>In PDF</span>
           </Button>
-          <Button onClick={handleExportWord} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+          <Button onClick={handleExportWord} className="flex-1 sm:flex-none gap-2 bg-blue-600 hover:bg-blue-700 text-white">
             <FileText className="size-4" />
-            <span>Xuất Word (.docx)</span>
+            <span className="hidden sm:inline">Xuất Word (.docx)</span>
+            <span className="sm:hidden">Tải Word</span>
           </Button>
         </div>
       </div>
 
       {/* ── Vùng chứa trang A4 ── */}
-      <div className="flex-1 overflow-auto bg-slate-100 p-4 sm:p-8 flex justify-center rounded-xl print:bg-white print:p-0 print:overflow-visible relative">
-        
+      <div className={cn(
+        isFullscreen 
+          ? "fixed inset-0 z-[100] bg-slate-900/95 flex justify-start md:justify-center overflow-auto p-0 sm:p-8 backdrop-blur-sm" 
+          : "flex-1 overflow-auto bg-slate-100 p-4 sm:p-8 flex justify-start md:justify-center rounded-xl print:bg-white print:p-0 print:overflow-visible relative"
+      )}>
+        {isFullscreen && (
+          <Button 
+            variant="destructive" 
+            size="icon" 
+            className="fixed top-4 right-4 z-[110] rounded-full shadow-2xl h-10 w-10"
+            onClick={() => setIsFullscreen(false)}
+          >
+            <X className="size-5" />
+          </Button>
+        )}
+
         {/* CSS cho lúc in */}
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
-            body * {
-              visibility: hidden;
-            }
-            .a4-print-area, .a4-print-area * {
-              visibility: visible;
-            }
-            .a4-print-area {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              box-shadow: none !important;
-              padding: 0 !important;
-            }
+            body * { visibility: hidden; }
+            .a4-print-area, .a4-print-area * { visibility: visible; }
+            .a4-print-area { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; padding: 0 !important; zoom: 1 !important; transform: none !important; }
+          }
+          @media (max-width: 768px) {
+            .mobile-zoom-wrapper { zoom: 0.45; }
           }
         `}} />
 
         {/* Tờ giấy A4 */}
-        <div className="a4-print-area bg-white shadow-xl max-w-[210mm] w-full min-h-[297mm] p-[3cm_2cm_2cm_3cm] flex flex-col font-serif text-[14px] leading-relaxed text-black print:shadow-none">
+        <div className={cn(
+          "a4-print-area bg-white shadow-xl w-[210mm] shrink-0 min-h-[297mm] p-[3cm_2cm_2cm_3cm] flex flex-col font-serif text-[14px] leading-relaxed text-black print:shadow-none",
+          !isFullscreen && "mobile-zoom-wrapper"
+        )}>
           
           {/* Header */}
           <div className="flex justify-between items-start mb-8">

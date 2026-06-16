@@ -104,7 +104,7 @@ export function GeneralTab({
             <Clock className="size-3.5 text-red-500" />
             Thời gian quét định kỳ
           </Label>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
             <Input
               type="time"
               value={config.notificationScanTime || ''}
@@ -112,9 +112,9 @@ export function GeneralTab({
               onBlur={onSave}
               className="w-36 h-11 px-4 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-red-300 focus:ring-red-50 shadow-none"
             />
-            <div className="flex items-start gap-2 max-w-[180px]">
-              <Info className="size-3 text-slate-300 mt-0.5 shrink-0" />
-              <p className="text-[10px] text-slate-400 font-medium leading-relaxed italic">
+            <div className="flex items-start gap-2 sm:max-w-[180px]">
+              <Info className="size-3 text-slate-400 mt-0.5 shrink-0" />
+              <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">
                 Hệ thống tự động thực hiện quét vào khung giờ này hàng ngày
               </p>
             </div>
@@ -199,7 +199,7 @@ export function GeneralTab({
         </div>
       </div>
 
-      <div className="mt-12 pt-8 border-t border-slate-100 flex items-center gap-4">
+      <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
         <Button
           onClick={onTriggerScan}
           disabled={isTesting}

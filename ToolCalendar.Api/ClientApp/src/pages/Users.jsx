@@ -520,7 +520,7 @@ export function Users() {
                 </div>
               </div>
 
-              <div className="space-y-2 col-span-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Họ và tên</Label>
                 <Input
                   placeholder="Nguyễn Văn A"

@@ -21,7 +21,7 @@ export function KpiCard({ title, description, value, icon: Icon, tone, isLoading
               onClick={onClick}
             >
               {/* Row 1: Title */}
-              <h3 className="truncate text-base font-black tracking-tight text-foreground">
+              <h3 className="truncate text-base font-black tracking-tight text-foreground" title={title}>
                 {title}
               </h3>
 

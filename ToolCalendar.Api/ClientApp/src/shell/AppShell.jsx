@@ -700,7 +700,7 @@ export function AppShell() {
             key={isReviewOpen ? 'review' : currentDocId ? 'detail' : activeTab}
             style={{ padding: 'var(--space-page)' }}
             className={cn(
-              "max-md:px-4 flex-1 flex flex-col min-h-0 density-compact xl:density-comfortable",
+              "max-md:px-4 flex-1 flex flex-col min-h-0 min-w-0 density-compact xl:density-comfortable",
               "animate-in fade-in duration-500 fill-mode-both"
             )}
           >

@@ -114,7 +114,7 @@ export function AuditTab() {
       title="Nhật ký hệ thống"
       subtitle="Theo dõi các hoạt động bảo mật và thao tác người dùng"
     >
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
         <div className="flex items-center gap-2">
           <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
@@ -144,7 +144,7 @@ export function AuditTab() {
       </div>
 
       <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-        <Table>
+        <Table className="min-w-[650px]">
           <TableHeader className="bg-slate-50/80">
             <TableRow className="hover:bg-transparent border-slate-100">
               <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-5 py-4 w-48">Thời gian</TableHead>
@@ -177,8 +177,8 @@ export function AuditTab() {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="px-5 py-4">
-                    <span className="text-xs font-medium text-slate-500 group-hover:text-slate-900 transition-colors">
+                  <TableCell className="px-5 py-4 whitespace-normal break-words min-w-[200px]">
+                    <span className="text-xs font-medium text-slate-500 group-hover:text-slate-900 transition-colors leading-relaxed">
                       {log.action}
                     </span>
                   </TableCell>
@@ -198,7 +198,7 @@ export function AuditTab() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between mt-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
         <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
           Trang {currentPage} / {totalPages || 1}
         </p>
