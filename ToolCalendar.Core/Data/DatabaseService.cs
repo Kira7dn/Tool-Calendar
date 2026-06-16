@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using ToolCalendar.Models;
 
 namespace ToolCalendar.Data
@@ -27,25 +27,20 @@ namespace ToolCalendar.Data
                 Directory.CreateDirectory(appData);
                 dbPath = Path.Combine(appData, "documents.db");
             }
-
             _connectionString = $"Data Source={dbPath};Pooling=True;Default Timeout=30;Cache=Shared";
 
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            // Sử dụng WAL (Write-Ahead Logging) để tăng cường khả năng xử lý song song (concurrency)
-            // Đây là cấu hình "Hardening" giúp tránh lỗi "Database is locked" khi Worker đang quét và User đang thao tác.
+            // Sử dụng DELETE thay vì WAL vì WAL bị lỗi "disk I/O error" trên Docker Desktop Windows
             try 
             {
-                using var walCmd = new SqliteCommand("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=5000;", connection);
+                using var walCmd = new SqliteCommand("PRAGMA journal_mode=DELETE; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=5000;", connection);
                 walCmd.ExecuteNonQuery();
             }
             catch (Exception ex)
             {
-                // Fallback về DELETE nếu môi trường (Docker Windows cũ) không hỗ trợ WAL
-                Console.WriteLine($"[DB Warning] Could not set WAL mode: {ex.Message}. Falling back to DELETE.");
-                using var fallbackCmd = new SqliteCommand("PRAGMA journal_mode=DELETE;", connection);
-                fallbackCmd.ExecuteNonQuery();
+                Console.WriteLine($"[DB Warning] Could not set DELETE mode: {ex.Message}");
             }
 
             string createDocumentsTable = @"
