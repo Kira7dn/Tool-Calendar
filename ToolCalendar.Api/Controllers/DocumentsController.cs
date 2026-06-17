@@ -105,22 +105,7 @@ namespace ToolCalendar.Api.Controllers
             if (!result.IsSuccess)
                 return BadRequest(new { error = result.ErrorMessage });
 
-            if (result.IsDuplicate)
-                // 409 Conflict: file này đã tồn tại trong hệ thống
-                return Conflict(new
-                {
-                    error = "File này đã được upload trước đó (nội dung trùng lặp).",
-                    hint = "Bạn có thể tìm tài liệu gốc theo ID bên dưới.",
-                    existingDocument = new
-                    {
-                        result.Document!.Id,
-                        result.Document.SoVanBan,
-                        result.Document.TenCongVan,
-                        result.Document.NgayThem,
-                        result.Document.FilePath,
-                        result.Document.Status
-                    }
-                });
+
 
             return Ok(result.Document);
         }

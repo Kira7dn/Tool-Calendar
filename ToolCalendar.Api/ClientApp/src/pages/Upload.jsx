@@ -192,9 +192,17 @@ export function Upload({ onTabChange }) {
             status: 'ready'
           } : b));
         } else {
+          try {
+            const errData = await response.json();
+            const errorMsg = errData?.error || "Lỗi tải lên";
+            toast.error(`Lỗi file ${item._tempFile?.name || "ẩn danh"}: ${errorMsg}`);
+          } catch {
+            toast.error(`Lỗi file ${item._tempFile?.name || "ẩn danh"}: Lỗi không xác định`);
+          }
           setBatchItems(prev => prev.map(b => b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b));
         }
-      } catch {
+      } catch (err) {
+        toast.error(`Lỗi kết nối khi tải file ${item._tempFile?.name || "ẩn danh"}`);
         setBatchItems(prev => prev.map(b => b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b));
       } finally {
         completedCount++;
@@ -639,16 +647,20 @@ export function Upload({ onTabChange }) {
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <button
-                                  onClick={() => {
-                                    setReviewItem({ ...row });
-                                    setIsReviewModalOpen(true);
-                                    setPdfPage(1);
-                                  }}
-                                  className="p-1 rounded text-blue-500 hover:bg-blue-50 transition-colors"
-                                >
-                                  <EyeIcon />
-                                </button>
+                                <div>
+                                  <button
+                                    onClick={() => {
+                                      if (typeof row.id !== 'number') return;
+                                      setReviewItem({ ...row });
+                                      setIsReviewModalOpen(true);
+                                      setPdfPage(1);
+                                    }}
+                                    disabled={typeof row.id !== 'number'}
+                                    className={cn("p-1 rounded transition-colors", typeof row.id === 'number' ? "text-blue-500 hover:bg-blue-50" : "text-slate-300 cursor-not-allowed")}
+                                  >
+                                    <EyeIcon />
+                                  </button>
+                                </div>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="bg-slate-900 text-white border-none font-bold text-[10px]">
                                 Đối soát PDF
@@ -728,7 +740,7 @@ export function Upload({ onTabChange }) {
               <div className="flex-1 relative overflow-hidden bg-slate-200 m-4 rounded-2xl shadow-inner border border-slate-200">
                 <iframe
                   key={`${reviewItem?.id}-${pdfPage}`}
-                  src={reviewItem?.id ? `/api/documents/${reviewItem.id}/file#page=${pdfPage}&view=FitH` : ""}
+                  src={typeof reviewItem?.id === 'number' ? `/api/documents/${reviewItem.id}/file#page=${pdfPage}&view=FitH` : ""}
                   className="w-full h-full border-none"
                   title="PDF Viewer"
                 />

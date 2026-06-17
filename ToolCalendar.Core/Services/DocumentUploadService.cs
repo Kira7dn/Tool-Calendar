@@ -69,23 +69,7 @@ public class DocumentUploadService : IDocumentUploadService
             await fileStream.CopyToAsync(fs);
         }
 
-        // ─── Tầng 3.1: Tính SHA-256 từ file trên ổ cứng ────────────────────
-        string contentHash;
-        using (var fs = new FileStream(quarantinePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true))
-        using (var sha256 = SHA256.Create())
-        {
-            var hashBytes = await sha256.ComputeHashAsync(fs);
-            contentHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
-        }
-
-        // ─── Tầng 3.2: Deduplication — tra cứu hash trong DB ────────────────
-        var existingDoc = await _documentRepository.GetByContentHashAsync(contentHash);
-        if (existingDoc != null)
-        {
-            // File đã tồn tại — xóa file tạm và trả về bản ghi cũ
-            if (File.Exists(quarantinePath)) File.Delete(quarantinePath);
-            return UploadResult.Duplicate(existingDoc);
-        }
+        // Đã bỏ tính SHA-256 và tra cứu trùng lặp (deduplication) để tiết kiệm tài nguyên CPU.
 
         // ─── Tầng 4: ClamAV Virus Scan ──────────────────────────────────────
         ClamAvScanResult scanResult;
@@ -130,7 +114,7 @@ public class DocumentUploadService : IDocumentUploadService
             NgayThem = DateTime.Now,
             FullText = "Đang trích xuất tự động...",
             UploadedByUserId = uploadedByUserId,
-            ContentHash = contentHash
+            ContentHash = string.Empty // Không còn dùng hash để tiết kiệm CPU
         };
 
         int id = 0;

@@ -11,13 +11,7 @@ public class UploadResult
     /// <summary>Upload thành công hay không.</summary>
     public bool IsSuccess { get; init; }
 
-    /// <summary>
-    /// Nếu true: file này đã tồn tại trong hệ thống (trùng nội dung).
-    /// Controller sẽ trả về 409 Conflict thay vì 200 OK.
-    /// </summary>
-    public bool IsDuplicate { get; init; }
-
-    /// <summary>Bản ghi document (mới hoặc bản ghi cũ nếu trùng lặp).</summary>
+    /// <summary>Bản ghi document.</summary>
     public DocumentRecord? Document { get; init; }
 
     /// <summary>Thông báo lỗi nếu IsSuccess = false.</summary>
@@ -26,9 +20,6 @@ public class UploadResult
     // --- Factory helpers ---
     public static UploadResult Success(DocumentRecord doc) =>
         new() { IsSuccess = true, Document = doc };
-
-    public static UploadResult Duplicate(DocumentRecord existingDoc) =>
-        new() { IsSuccess = true, IsDuplicate = true, Document = existingDoc };
 
     public static UploadResult Failure(string error) =>
         new() { IsSuccess = false, ErrorMessage = error };

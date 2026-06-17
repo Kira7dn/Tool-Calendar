@@ -330,7 +330,7 @@ namespace ToolCalendar.Services
             // Ví dụ khớp: 148/BC.UBND-VHXH | 2348-QĐ/TU | 1234/UBND-VX
             // Ví dụ KHÔNG khớp: 10/4/2026 (sau / là số, không phải chữ hoa)
             var candidatePattern = new Regex(
-                @"(?<!\d)(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪA-z\.0-9\-/]{1,30})",
+                @"(?<!\d)(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-Za-zĐđÀ-ỹ0-9\-/]{1,20})\b",
                 RegexOptions.IgnoreCase);
 
             // Danh sách các từ khóa chỉ văn bản căn cứ/trích dẫn (bỏ qua số của chúng)
@@ -378,7 +378,7 @@ namespace ToolCalendar.Services
             if (string.IsNullOrWhiteSpace(bestSo))
             {
                 var fullMatches = Regex.Matches(t,
-                    @"[Ss][ôóo60]\s*[:.]?\s*(?:\d{1,3}[:\s]+)?(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪA-z\.0-9\-/]{1,30})",
+                    @"[Ss][ôóo60]\s*[:.]?\s*(?:\d{1,3}[:\s]+)?(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-Za-zĐđÀ-ỹ0-9\-/]{1,20})\b",
                     RegexOptions.IgnoreCase);
                 foreach (Match m in fullMatches)
                 {
@@ -759,13 +759,11 @@ namespace ToolCalendar.Services
                 var allDepartments = Data.DatabaseService.GetDepartments();
                 
                 // 1. Kiểm tra Mapping theo Cơ quan ban hành (Quy tắc người dùng cung cấp)
-                if (!string.IsNullOrEmpty(record.CoQuanBanHanh))
-                {
                     var mapping = new (string Pattern, string TargetDept)[] {
-                        ("Giáo dục|Y tế|Nội vụ|Văn hóa|Khoa học|Dân tộc|Tôn giáo|Xã hội|Lao động|Thương binh", "văn hóa xã hội"),
-                        ("Tư pháp|Ngoại vụ|Thanh tra|UBND|HĐND|Ủy ban nhân dân|Hội đồng nhân dân|Văn phòng|Ủy ban", "Văn phòng HĐND"),
-                        ("Công thương|Tài chính|Kinh tế", "Kinh tế"),
-                        ("Nông nghiệp|Môi trường|Xây dựng|Đô thị|Quản lý đô thị|Hạ tầng", "Xây dựng, Nông nghiệp và môi trường")
+                        ("Giáo dục|Văn hóa|Y tế|Khoa học|Nội vụ|Dân tộc|Tôn giáo|Xã hội|Lao động|Thương binh", "Phòng văn hóa xã hội"),
+                        ("Tư pháp|Ngoại vụ|Thanh tra|Văn phòng", "Văn phòng HĐND và UBND"),
+                        ("Công thương|Tài chính", "Phòng Kinh tế"),
+                        ("Nông nghiệp|Môi trường|Xây dựng", "Phòng Xây dựng, Nông nghiệp và môi trường")
                     };
 
                     foreach (var m in mapping)
@@ -780,7 +778,6 @@ namespace ToolCalendar.Services
                             }
                         }
                     }
-                }
 
                 // 2. Bóc tách bổ sung từ nội dung văn bản (t)
                 var matchedDeptIds = new List<int>();
