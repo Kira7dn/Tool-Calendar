@@ -54,3 +54,10 @@ node_modules/
 .vite/
 ToolCalendar.Api/ClientApp/node_modules/
 ToolCalendar.Api/ClientApp/dist/
+
+# Local Caches and Models
+.nuget_cache/
+ToolCalendar.Core/Models/PaddleOCR/
+Models/PaddleOCR/
+scratch/
+

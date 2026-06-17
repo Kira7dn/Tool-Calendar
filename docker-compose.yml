@@ -37,6 +37,7 @@ services:
     volumes:
       - ./data_dump:/app/data
       - ./ToolCalendar.Api/Uploads:/app/Uploads
+      - ./ToolCalendar.Core/Models/PaddleOCR:/app/Models/PaddleOCR:ro
     restart: always
 
   rabbitmq:

@@ -7,3 +7,5 @@
 **/*.db
 **/*.zip
 **/node_modules
+**/.nuget_cache
+**/data_dump

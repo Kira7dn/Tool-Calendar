@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
+
 # Stage 2: Frontend Build
 FROM node:22-alpine AS client-build
 WORKDIR /src/ToolCalendar.Api/ClientApp
@@ -28,7 +29,7 @@ FROM base AS build
 WORKDIR /src
 COPY ["ToolCalendar.Api/ToolCalendar.Api.csproj", "ToolCalendar.Api/"]
 COPY ["ToolCalendar.Core/ToolCalendar.Core.csproj", "ToolCalendar.Core/"]
-RUN dotnet restore "ToolCalendar.Api/ToolCalendar.Api.csproj"
+RUN dotnet restore "ToolCalendar.Api/ToolCalendar.Api.csproj" --disable-parallel
 COPY . .
 COPY --from=client-build /src/ToolCalendar.Api/wwwroot ./ToolCalendar.Api/wwwroot
 WORKDIR "/src/ToolCalendar.Api"

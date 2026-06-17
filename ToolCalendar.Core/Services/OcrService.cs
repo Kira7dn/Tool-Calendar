@@ -35,9 +35,20 @@ namespace ToolCalendar.Services
                 {
                     if (_paddleOcrModel == null)
                     {
-                        _logger.LogInformation("[OCR] Đang tải mô hình PaddleOCR tiếng Việt về máy...");
-                        _paddleOcrModel = await OnlineFullModels.EnglishV4.DownloadAsync();
-                        _logger.LogInformation("[OCR] Tải mô hình PaddleOCR thành công.");
+                        string baseDir = "/app/Models/PaddleOCR";
+                        if (!Directory.Exists(baseDir)) 
+                        {
+                            // Fallback for local development
+                            baseDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models", "PaddleOCR");
+                        }
+
+                        _logger.LogInformation($"[OCR] Đang nạp mô hình PaddleOCR tiếng Việt từ thư mục: {baseDir} ...");
+                        _paddleOcrModel = new FullOcrModel(
+                            DetectionModel.FromDirectory(Path.Combine(baseDir, "det"), ModelVersion.V3),
+                            ClassificationModel.FromDirectory(Path.Combine(baseDir, "cls")),
+                            RecognizationModel.FromDirectory(Path.Combine(baseDir, "rec"), Path.Combine(baseDir, "rec", "latin_dict.txt"), ModelVersion.V3)
+                        );
+                        _logger.LogInformation("[OCR] Nạp mô hình PaddleOCR Local thành công.");
                     }
                 }
                 finally
