@@ -293,6 +293,9 @@ namespace ToolCalendar.Services
             // Sửa lỗi OCR phổ biến cho chữ số (đặc biệt với file scan có chữ nghiêng)
             t = FixOcrDigitErrors(t);
 
+            // Sửa lỗi OCR mất dấu tiếng Việt — bù lại dấu cho các từ khóa quan trọng
+            t = FixOcrVietnameseDiacritics(t);
+
             int vVIndex = t.IndexOf("V/v", StringComparison.OrdinalIgnoreCase);
             if (vVIndex < 0) vVIndex = t.IndexOf("Về việc", StringComparison.OrdinalIgnoreCase);
             string searchArea = vVIndex > 0 ? t.Substring(0, vVIndex) : (t.Length > 1500 ? t.Substring(0, 1500) : t);
@@ -411,16 +414,22 @@ namespace ToolCalendar.Services
 
             // Tìm ngày ban hành - hỗ trợ lỗi OCR "f0"->"10", "lO"->"10", "l"->"1"
             // Regex chấp nhận chữ cái thay cho số (do OCR nhận sai font nghiêng)
-            var mNgayBH = Regex.Match(t,
-                @"(?:ngày|ngay|ng[àa]y)\s*([0-9flOo]{1,2})\s*(?:tháng|thang|th[áa]ng)\s*(\d{1,2})\s*(?:năm|nam|n[ăa]m)\s*(\d{4})",
+            var mNgayBHMatches = Regex.Matches(t,
+                @"(?:ngày|ngay|ng[àa]y)\s*([0-9a-zA-Z]{1,2})\s*(?:tháng|thang|th[áa]ng)\s*([0-9a-zA-Z]{1,2})\s*(?:năm|nam|n[ăaàãä]m|n[ăaàãä]rn|n[ăaàãä]n)\s*(\d{4})",
                 RegexOptions.IgnoreCase);
 
-            if (mNgayBH.Success)
+            foreach (Match mNgayBH in mNgayBHMatches)
             {
-                // Chuẩn hóa giá trị ngày bị OCR đọc sai (f->1, l->1, O->0)
-                string rawDay = mNgayBH.Groups[1].Value;
-                string dayStr = Regex.Replace(rawDay, @"[flIi]", "1");
+                // Chuẩn hóa giá trị ngày bị OCR đọc sai
+                string dayStr = Regex.Replace(mNgayBH.Groups[1].Value, @"[flIi|]", "1");
                 dayStr = Regex.Replace(dayStr, @"[OoQqD]", "0");
+                dayStr = Regex.Replace(dayStr, @"[zZ]", "2");
+                dayStr = Regex.Replace(dayStr, @"[sS]", "5");
+
+                string monthStr = Regex.Replace(mNgayBH.Groups[2].Value, @"[flIi|]", "1");
+                monthStr = Regex.Replace(monthStr, @"[OoQqD]", "0");
+                monthStr = Regex.Replace(monthStr, @"[zZ]", "2");
+                monthStr = Regex.Replace(monthStr, @"[sS]", "5");
 
                 if (string.IsNullOrWhiteSpace(dayStr) || !dayStr.All(char.IsDigit))
                 {
@@ -429,10 +438,31 @@ namespace ToolCalendar.Services
                 }
 
                 if (int.TryParse(dayStr, out int d) &&
-                    int.TryParse(mNgayBH.Groups[2].Value, out int mo) &&
+                    int.TryParse(monthStr, out int mo) &&
                     int.TryParse(mNgayBH.Groups[3].Value, out int yr))
                 {
-                    try { record.NgayBanHanh = new DateTime(yr, mo, d); } catch { }
+                    try 
+                    { 
+                        record.NgayBanHanh = new DateTime(yr, mo, d); 
+                        break; // Get the first valid date
+                    } 
+                    catch { }
+                }
+            }
+
+            if (!record.NgayBanHanh.HasValue)
+            {
+                // Fallback: Tìm dd/MM/yyyy trong phần đầu văn bản
+                string headerZoneForDate = t.Length > 800 ? t.Substring(0, 800) : t;
+                var shortDateMatches = Regex.Matches(headerZoneForDate, @"\b(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})\b");
+                foreach (Match m in shortDateMatches)
+                {
+                    if (int.TryParse(m.Groups[1].Value, out int d) &&
+                        int.TryParse(m.Groups[2].Value, out int mo) &&
+                        int.TryParse(m.Groups[3].Value, out int yr))
+                    {
+                        try { record.NgayBanHanh = new DateTime(yr, mo, d); break; } catch { }
+                    }
                 }
             }
 
@@ -869,6 +899,68 @@ namespace ToolCalendar.Services
             res = Regex.Replace(res, @"\bPHÔNG\b", "PHÒNG", RegexOptions.IgnoreCase);
             
             return res.Trim();
+        }
+
+        /// <summary>
+        /// Sửa lỗi OCR mất dấu tiếng Việt bằng cách thay thế các từ không dấu phổ biến
+        /// trong văn bản hành chính về đúng dạng có dấu.
+        /// Chỉ áp dụng cho từ TOÀN CHỮ HOA hoặc các từ khóa cố định.
+        /// </summary>
+        private static string FixOcrVietnameseDiacritics(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return text;
+
+            // Bảng từ khóa hành chính viết hoa không dấu → có dấu
+            var replacements = new (string from, string to)[]{
+                // Cơ quan nhà nước
+                (@"\bUY\s+BAN\s+NHAN\s+DAN\b",      "ỦY BAN NHÂN DÂN"),
+                (@"\bUBND\b",                          "UBND"),
+                (@"\bHOI\s+DONG\s+NHAN\s+DAN\b",     "HỘI ĐỒNG NHÂN DÂN"),
+                (@"\bHDND\b",                          "HĐND"),
+                (@"\bCONG\s+HOA\s+XA\s+HOI\s+CHU\s+NGHIA\s+VIET\s+NAM\b", "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM"),
+                (@"\bDOC\s+LAP\s+-\s+TU\s+DO\s+-\s+HANH\s+PHUC\b",        "Độc lập - Tự do - Hạnh phúc"),
+                (@"\bDC\s+LP\b",                      "Độc lập"),
+                (@"\bHANH\s+PHUC\b",                  "Hạnh phúc"),
+                // Loại văn bản
+                (@"\bQUYET\s+DJNH\b",                 "QUYẾT ĐỊNH"),
+                (@"\bQUYET\s+DINH\b",                 "QUYẾT ĐỊNH"),
+                (@"\bBAO\s+CAO\b",                     "BÁO CÁO"),
+                (@"\bKE\s+HOACH\b",                    "KẾ HOẠCH"),
+                (@"\bCONG\s+VAN\b",                    "CÔNG VĂN"),
+                (@"\bTHONG\s+BAO\b",                   "THÔNG BÁO"),
+                (@"\bTO\s+TRINH\b",                    "TỜ TRÌNH"),
+                (@"\bCHI\s+THI\b",                     "CHỈ THỊ"),
+                (@"\bNGHI\s+QUYET\b",                  "NGHỊ QUYẾT"),
+                (@"\bHOP\s+DONG\b",                    "HỢP ĐỒNG"),
+                // Đơn vị tổ chức
+                (@"\bVAN\s+PHONG\b",                   "VĂN PHÒNG"),
+                (@"\bPHUONG\b",                         "PHƯỜNG"),
+                (@"\bQUAN\b(?=\s+[A-ZÀ-Ỹ])",           "QUẬN"),
+                (@"\bTHI\s+XA\b",                      "THỊ XÃ"),
+                (@"\bTHANH\s+PHO\b",                   "THÀNH PHỐ"),
+                (@"\bTINH\b",                           "TỈNH"),
+                (@"\bSO\s+(TAI\s+CHINH|GIAO\s+DUC|Y\s+TE|KE\s+HOACH|NOI\s+VU|TU\s+PHAP|XAY\s+DUNG|NONG\s+NGHIEP|CONG\s+THUONG|THONG\s+TIN|VAN\s+HOA)\b", m => "SỞ " + m.Value.Substring(3)),
+                // Từ thông dụng trong văn bản
+                (@"\bnguoi\b",                          "người"),
+                (@"\bthuc\s+hien\b",                   "thực hiện"),
+                (@"\bhoat\s+dong\b",                   "hoạt động"),
+                (@"\bthu\s+tuc\b",                     "thủ tục"),
+                (@"\bhanh\s+chinh\b",                  "hành chính"),
+                (@"\bNam\s+(\d{4})\b",                 "Năm $1"),
+                (@"\bnam\s+(\d{4})\b",                 "năm $1"),
+                // Ngày tháng hay bị mất dấu
+                (@"\bthang\b",                          "tháng"),
+                (@"\bnãrn\b",                           "năm"),
+                (@"\bnärn\b",                           "năm"),
+                (@"\bnàn\b",                            "năm"),
+            };
+
+            foreach (var (pattern, replacement) in replacements)
+            {
+                text = Regex.Replace(text, pattern, replacement, RegexOptions.IgnoreCase);
+            }
+
+            return text;
         }
 
         private void EvaluateConfidence(DocumentRecord record)

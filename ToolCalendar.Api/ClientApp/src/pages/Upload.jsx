@@ -189,8 +189,50 @@ export function Upload({ onTabChange }) {
             departmentIds: doc.departmentId ? [doc.departmentId] : [],
             assignedToIds: doc.assignedTo ? [doc.assignedTo] : [],
             filePath: doc.filePath || '',
-            status: 'ready'
+            status: (doc.status === 'Đang xử lý' || doc.status === 'Chưa xử lý') ? 'processing' : 'ready'
           } : b));
+
+          if (doc.status === 'Đang xử lý' || doc.status === 'Chưa xử lý') {
+            const startPolling = async (docId) => {
+              let attempts = 0;
+              while (attempts < 20) {
+                await new Promise(r => setTimeout(r, 2000));
+                try {
+                  const res = await fetch(`/api/documents/${docId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }});
+                  if (res.ok) {
+                    const updatedDoc = await res.json();
+                    if (updatedDoc.status !== 'Đang xử lý' && updatedDoc.status !== 'Chưa xử lý') {
+                      setBatchItems(prev => prev.map(b => b.id === docId ? {
+                        ...b,
+                        soVanBan: updatedDoc.soVanBan || '',
+                        trichYeu: updatedDoc.trichYeu || '',
+                        coQuanBanHanh: updatedDoc.coQuanBanHanh || '',
+                        coQuanChuQuan: updatedDoc.coQuanChuQuan || '',
+                        ngayBanHanh: updatedDoc.ngayBanHanh ? updatedDoc.ngayBanHanh.split('T')[0] : '',
+                        thoiHan: updatedDoc.thoiHan ? updatedDoc.thoiHan.split('T')[0] : '',
+                        departmentIds: updatedDoc.departmentId ? [updatedDoc.departmentId] : [],
+                        assignedToIds: updatedDoc.assignedTo ? [updatedDoc.assignedTo] : [],
+                        status: 'ready'
+                      } : b));
+                      
+                      setReviewItem(prevReview => prevReview && prevReview.id === docId ? {
+                        ...prevReview,
+                        soVanBan: updatedDoc.soVanBan || '',
+                        trichYeu: updatedDoc.trichYeu || '',
+                        coQuanBanHanh: updatedDoc.coQuanBanHanh || '',
+                        coQuanChuQuan: updatedDoc.coQuanChuQuan || '',
+                        ngayBanHanh: updatedDoc.ngayBanHanh ? updatedDoc.ngayBanHanh.split('T')[0] : '',
+                        thoiHan: updatedDoc.thoiHan ? updatedDoc.thoiHan.split('T')[0] : '',
+                      } : prevReview);
+                      break;
+                    }
+                  }
+                } catch (e) { console.error('Poll err:', e); }
+                attempts++;
+              }
+            };
+            startPolling(doc.id);
+          }
         } else {
           try {
             const errData = await response.json();
@@ -798,7 +840,7 @@ export function Upload({ onTabChange }) {
                     <FormField
                       label="Ngày ban hành"
                       type="date"
-                      value={reviewItem?.ngayBanHanh}
+                      value={reviewItem?.ngayBanHanh?.split('T')[0]}
                       onChange={(val) => setReviewItem({ ...reviewItem, ngayBanHanh: val })}
                       icon={Calendar}
                     />
