@@ -171,11 +171,14 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            // 1 query thay vì N queries — dùng IN clause
-            var inClause = string.Join(",", ids);
+            // 1 query thay vì N queries — parameterized IN clause (@p0, @p1, ...)
+            var paramNames = ids.Select((_, i) => $"@p{i}").ToList();
+            var inClause = string.Join(",", paramNames);
             using var cmd = new SqliteCommand(
                 $"SELECT Id, CommentId, UserId, Username, ReactionType, CreatedAt FROM CommentReactions WHERE CommentId IN ({inClause})",
                 connection);
+            for (int i = 0; i < ids.Count; i++)
+                cmd.Parameters.AddWithValue($"@p{i}", ids[i]);
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
@@ -233,10 +236,14 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            var inClause = string.Join(",", idList);
+            // Parameterized IN clause (@p0, @p1, ...)
+            var paramNames = idList.Select((_, i) => $"@p{i}").ToList();
+            var inClause = string.Join(",", paramNames);
             using var cmd = new SqliteCommand(
                 $"SELECT Id, FilePath FROM Documents WHERE Id IN ({inClause})",
                 connection);
+            for (int i = 0; i < idList.Count; i++)
+                cmd.Parameters.AddWithValue($"@p{i}", idList[i]);
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
@@ -626,13 +633,15 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            // Note: Since we are using SQLite and small batches, we can use IN clause with string join
-            // For production with massive IDs, we might use a temporary table or multiple commands
-            string idList = string.Join(",", ids);
-            string sql = $"UPDATE Documents SET Status=@s WHERE Id IN ({idList})";
+            // Parameterized IN clause (@p0, @p1, ...) — ADO.NET best practice
+            var paramNames = ids.Select((_, i) => $"@p{i}").ToList();
+            var inClause = string.Join(",", paramNames);
+            string sql = $"UPDATE Documents SET Status=@s WHERE Id IN ({inClause})";
 
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@s", status);
+            for (int i = 0; i < ids.Count; i++)
+                cmd.Parameters.AddWithValue($"@p{i}", ids[i]);
             await cmd.ExecuteNonQueryAsync();
         }
 
@@ -641,13 +650,18 @@ namespace ToolCalendar.Core.Data.Repositories
             if (ids == null || ids.Count == 0) return;
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            string idList = string.Join(",", ids);
+
+            // Parameterized IN clause (@p0, @p1, ...) — ADO.NET best practice
+            var paramNames = ids.Select((_, i) => $"@p{i}").ToList();
+            var inClause = string.Join(",", paramNames);
             string sql = $@"
-                DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({idList}));
-                DELETE FROM Comments WHERE DocumentId IN ({idList});
-                DELETE FROM Documents WHERE Id IN ({idList});
+                DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({inClause}));
+                DELETE FROM Comments WHERE DocumentId IN ({inClause});
+                DELETE FROM Documents WHERE Id IN ({inClause});
             ";
             using var cmd = new SqliteCommand(sql, connection);
+            for (int i = 0; i < ids.Count; i++)
+                cmd.Parameters.AddWithValue($"@p{i}", ids[i]);
             await cmd.ExecuteNonQueryAsync();
         }
 
