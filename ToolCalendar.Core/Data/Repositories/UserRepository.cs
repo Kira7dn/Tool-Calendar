@@ -129,7 +129,7 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             string sql = @"
-                SELECT u.Id, u.Username, u.FullName, u.Email, u.PhoneNumber, u.Role,
+                SELECT u.Id, u.Username, u.PasswordHash, u.FullName, u.Email, u.PhoneNumber, u.Role,
                        u.DepartmentId, d.Name as DepartmentName, u.SessionId, u.CreatedAt,
                        u.FailedLoginCount, u.LockoutUntil,
                        u.SecurityStamp, u.NormalizedUserName, u.LockoutEnabled, u.AccessFailedCount, u.LockoutEnd
@@ -139,7 +139,7 @@ namespace ToolCalendar.Core.Data.Repositories
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
             using var reader = cmd.ExecuteReader();
-            return reader.Read() ? MapUser(reader) : null;
+            return reader.Read() ? MapUser(reader, includeSensitive: true) : null;
         }
 
         /// <summary>
@@ -327,7 +327,8 @@ namespace ToolCalendar.Core.Data.Repositories
                     Role           = @r, 
                     DepartmentId   = @d,
                     SecurityStamp  = @stamp,
-                    NormalizedUserName = upper(Username)
+                    NormalizedUserName = upper(Username),
+                    PasswordHash   = @ph
                 WHERE Id = @id";
 
             using var cmd = new SqliteCommand(sql, connection);
@@ -338,6 +339,7 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@d",     (object?)user.DepartmentId ?? DBNull.Value);
             // Tạo SecurityStamp mới mỗi khi thông tin user thay đổi (invalidate token cũ)
             cmd.Parameters.AddWithValue("@stamp", Guid.NewGuid().ToString());
+            cmd.Parameters.AddWithValue("@ph",    user.PasswordHash ?? "");
             cmd.Parameters.AddWithValue("@id",    user.Id);
             cmd.ExecuteNonQuery();
         }

@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ToolCalendar.Core.Data.Interfaces;
+using ToolCalendar.Core.Models;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -28,7 +29,7 @@ namespace ToolCalendar.Api.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi xuất dữ liệu: {ex.Message}");
+                return StatusCode(500, ApiResponse.Fail($"Lỗi xuất dữ liệu: {ex.Message}"));
             }
         }
     }

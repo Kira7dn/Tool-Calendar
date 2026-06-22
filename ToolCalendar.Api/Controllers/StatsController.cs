@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using ToolCalendar.Core.Models;
 using ToolCalendar.Data;
 
 namespace ToolCalendar.Api.Controllers
@@ -36,12 +37,12 @@ namespace ToolCalendar.Api.Controllers
                         SlidingExpiration = TimeSpan.FromSeconds(20)
                     });
                 }
-                return Ok(stats);
+                return Ok(ApiResponse.Ok(stats));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[StatsError] {ex.Message}\n{ex.StackTrace}");
-                return StatusCode(500, new { message = $"Lỗi thống kê dữ liệu: {ex.Message}" });
+                return StatusCode(500, ApiResponse.Fail($"Lỗi thống kê dữ liệu: {ex.Message}"));
             }
         }
 
@@ -51,11 +52,11 @@ namespace ToolCalendar.Api.Controllers
             try
             {
                 var (logs, _) = DatabaseService.GetAuditLogs(1, 10, "CanBo");
-                return Ok(logs);
+                return Ok(ApiResponse.Ok(logs));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = $"Lỗi lấy hoạt động: {ex.Message}" });
+                return StatusCode(500, ApiResponse.Fail($"Lỗi lấy hoạt động: {ex.Message}"));
             }
         }
 
@@ -75,11 +76,11 @@ namespace ToolCalendar.Api.Controllers
                         SlidingExpiration = TimeSpan.FromSeconds(40)
                     });
                 }
-                return Ok(series);
+                return Ok(ApiResponse.Ok(series));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = $"Lỗi lấy biểu đồ thời hạn: {ex.Message}" });
+                return StatusCode(500, ApiResponse.Fail($"Lỗi lấy biểu đồ thời hạn: {ex.Message}"));
             }
         }
 
@@ -93,7 +94,7 @@ namespace ToolCalendar.Api.Controllers
             // Xóa cache timeline cho các giá trị days phổ biến
             foreach (var d in new[] { 7, 14, 30 })
                 _cache.Remove(string.Format(TIMELINE_KEY, d));
-            return Ok(new { message = "Cache cleared" });
+            return Ok(ApiResponse.Ok("Cache cleared"));
         }
 
         [HttpGet("monthly-report")]
@@ -102,11 +103,11 @@ namespace ToolCalendar.Api.Controllers
             try
             {
                 var data = DatabaseService.GetMonthlyDepartmentReport(month, year);
-                return Ok(data);
+                return Ok(ApiResponse.Ok(data));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = $"Lỗi lấy báo cáo tháng: {ex.Message}" });
+                return StatusCode(500, ApiResponse.Fail($"Lỗi lấy báo cáo tháng: {ex.Message}"));
             }
         }
 
@@ -119,14 +120,14 @@ namespace ToolCalendar.Api.Controllers
             var excludeKeywords = DatabaseService.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
             var minDays = DatabaseService.GetAppSetting("Document_MinDeadlineDays", "0");
 
-            return Ok(new
+            return Ok(ApiResponse.Ok(new
             {
                 maxPagesToScan = int.Parse(maxPages),
                 deadlineKeywords = keywords,
                 deadlineExcludeKeywords = excludeKeywords,
                 minDeadlineDays = int.Parse(minDays),
                 notificationScanTime = DatabaseService.GetAppSetting("Notification_ScanTime", "08:30")
-            });
+            }));
         }
 
         [HttpPost("settings")]
@@ -150,11 +151,11 @@ namespace ToolCalendar.Api.Controllers
                 // Reset chặn quét để cho phép quét lại vào giờ mới ngay trong ngày hôm nay
                 DatabaseService.SaveAppSetting("Notification_LastScanDate", "");
 
-                return Ok();
+                return Ok(ApiResponse.Ok("Lưu cài đặt thành công."));
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(ApiResponse.Fail(ex.Message));
             }
         }
     }

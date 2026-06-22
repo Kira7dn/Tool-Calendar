@@ -1,5 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+
+// ─── Global Fetch Interceptor for standardized ApiResponse ────────────────
+const originalFetch = window.fetch;
+window.fetch = async (...args) => {
+  const response = await originalFetch(...args);
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    const clone = response.clone();
+    try {
+      const json = await clone.json();
+      if (json && typeof json === 'object' && 'success' in json && ('data' in json || 'errors' in json)) {
+        let unwrappedData;
+        if (json.success) {
+          unwrappedData = json.data !== null ? json.data : { message: json.message };
+        } else {
+          unwrappedData = { 
+            message: json.message, 
+            error: json.message, 
+            errors: json.errors 
+          };
+        }
+        
+        const newResponse = new Response(JSON.stringify(unwrappedData), {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers
+        });
+        
+        Object.defineProperty(newResponse, 'url', { value: response.url });
+        return newResponse;
+      }
+    } catch (e) {
+      // Ignore parsing error
+    }
+  }
+  return response;
+};
 import { AppShell } from './shell/AppShell.jsx';
 import { LoginPage } from './pages/Login.jsx';
 import PublicSchedule from './pages/PublicSchedule.jsx';

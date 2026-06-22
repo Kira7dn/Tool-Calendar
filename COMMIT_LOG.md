@@ -4,6 +4,36 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## Lịch sử
 
+### [2026-06-22 23:45] Hoàn tất commit và chuẩn hóa cấu trúc
+- **Mô tả**: Commit toàn bộ các phần code đã chuẩn hóa ApiResponse, Global Exception Middleware, Global Fetch Interceptor, Git Hooks kiểm soát chất lượng (Quality Gates) cùng các tệp cấu hình liên quan.
+- **Tệp thay đổi**:
+  - `.agents/AGENTS.md`
+  - `.editorconfig`
+  - `.githooks/commit-msg`
+  - `.githooks/pre-commit`
+  - `.gitignore`
+  - `CODE_QUALITY.md`
+  - `Dockerfile`
+  - `SYSTEM_FEATURES.md`
+  - `ToolCalendar.Api/ClientApp/.prettierignore`
+  - `ToolCalendar.Api/ClientApp/.prettierrc`
+  - `ToolCalendar.Api/ClientApp/eslint.config.js`
+  - `ToolCalendar.Api/ClientApp/package.json`
+  - `ToolCalendar.Api/ClientApp/src/main.jsx`
+  - `ToolCalendar.Api/ClientApp/src/pages/Upload.jsx`
+  - `ToolCalendar.Api/Controllers/AdminController.cs`
+  - `ToolCalendar.Api/Controllers/AuthController.cs`
+  - `ToolCalendar.Api/Controllers/BackupController.cs`
+  - `ToolCalendar.Api/Controllers/DocumentRoutingsController.cs`
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs`
+  - `ToolCalendar.Api/Controllers/NotificationController.cs`
+  - `ToolCalendar.Api/Controllers/StatsController.cs`
+  - `ToolCalendar.Api/Controllers/UsersController.cs`
+  - `ToolCalendar.Api/Middleware/GlobalExceptionMiddleware.cs`
+  - `ToolCalendar.Core/Data/Repositories/UserRepository.cs`
+  - `ToolCalendar.Core/Models/ApiResponse.cs`
+- **Lệnh git commit**: `git commit -m "feat(api): standardize api response, exception handling and quality gates"`
+
 ### [2026-06-22 23:30] Tái cấu trúc DocumentExtractorService và thêm Unit Tests
 - **Mô tả**: Tái cấu trúc `DocumentExtractorService` thành Facade pattern. Tách logic xử lý Text OCR và Image OCR (Pdf/Word) sang 2 service riêng biệt `OcrTextProcessingService` và `OcrImageProcessingService` để tuân thủ nguyên lý SOLID, giúp code dễ đọc và dễ bảo trì hơn. Thêm dự án Unit Tests và tạo các bài test cho Ocr Text Regex và Password Hash.
 - **Tệp thay đổi**:

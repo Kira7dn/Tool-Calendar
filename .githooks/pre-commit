@@ -1,0 +1,198 @@
+#!/bin/sh
+# ═══════════════════════════════════════════════════════════════════════════════
+# PRE-COMMIT HOOK — Cổng kiểm duyệt chất lượng code bắt buộc
+# Tiêu chuẩn: SonarQube rules, OWASP, ESLint recommended, dotnet format
+# ═══════════════════════════════════════════════════════════════════════════════
+
+set -e
+
+PASS=true
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+print_header() {
+    echo ""
+    echo "${BOLD}═══════════════════════════════════════════════════════════${RESET}"
+    echo "${BOLD}  🛡️  CODE QUALITY GATE — PRE-COMMIT CHECK${RESET}"
+    echo "${BOLD}═══════════════════════════════════════════════════════════${RESET}"
+    echo ""
+}
+
+print_step() {
+    echo "${BOLD}▶ $1${RESET}"
+}
+
+print_pass() {
+    echo "${GREEN}  ✅ PASS: $1${RESET}"
+}
+
+print_fail() {
+    echo "${RED}  ❌ FAIL: $1${RESET}"
+    PASS=false
+}
+
+print_warn() {
+    echo "${YELLOW}  ⚠️  WARN: $1${RESET}"
+}
+
+# Lấy danh sách file được stage
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+STAGED_JS=$(echo "$STAGED_FILES" | grep -E '\.(js|jsx)$' || true)
+STAGED_CS=$(echo "$STAGED_FILES" | grep -E '\.cs$' || true)
+
+print_header
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CHỐT 1: BẮT BUỘC CẬP NHẬT COMMIT_LOG.md
+# ─────────────────────────────────────────────────────────────────────────────
+print_step "CHỐT 1/5 — Kiểm tra tệp COMMIT_LOG.md..."
+
+if echo "$STAGED_FILES" | grep -q "COMMIT_LOG.md"; then
+    print_pass "COMMIT_LOG.md đã được cập nhật."
+else
+    print_fail "Bạn CHƯA cập nhật COMMIT_LOG.md!"
+    echo "         👉 Hãy ghi lại thay đổi vào COMMIT_LOG.md và git add nó."
+    echo ""
+    exit 1
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CHỐT 2: PHÁT HIỆN BÍ MẬT/MẬT KHẨU CỨNG TRONG CODE (Secrets Scanner)
+# Tham chiếu: OWASP A02 — Cryptographic Failures, SonarQube S2068
+# ─────────────────────────────────────────────────────────────────────────────
+print_step "CHỐT 2/5 — Quét Secrets & Hardcoded Passwords (OWASP A02)..."
+
+SECRETS_PATTERN='(password|passwd|secret|api_key|apikey|token|private_key|access_key)\s*=\s*["\x27][^"\x27]{6,}'
+SECRETS_FOUND=false
+
+for file in $STAGED_FILES; do
+    if [ -f "$file" ]; then
+        # Loại trừ file test, fixture và lock file
+        case "$file" in
+            *.lock|*package-lock.json|*.min.js|COMMIT_LOG.md|SYSTEM_FEATURES.md) continue ;;
+        esac
+
+        if git show ":$file" | grep -iE "$SECRETS_PATTERN" > /dev/null 2>&1; then
+            print_fail "Phát hiện khả năng có mật khẩu/secret cứng trong: $file"
+            SECRETS_FOUND=true
+        fi
+    fi
+done
+
+if [ "$SECRETS_FOUND" = "false" ]; then
+    print_pass "Không phát hiện secrets/hardcoded passwords."
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CHỐT 3: ESLINT — Kiểm tra chất lượng JavaScript/React
+# Tham chiếu: ESLint Recommended, React Best Practices, no-secrets
+# ─────────────────────────────────────────────────────────────────────────────
+print_step "CHỐT 3/5 — ESLint (JavaScript/React Quality Check)..."
+
+if [ -z "$STAGED_JS" ]; then
+    print_pass "Không có file JS/JSX nào cần kiểm tra."
+else
+    CLIENT_APP="ToolCalendar.Api/ClientApp"
+    ESLINT_BIN="$CLIENT_APP/node_modules/.bin/eslint"
+
+    if [ -f "$ESLINT_BIN" ]; then
+        # Chỉ kiểm tra các file JS/JSX trong thư mục ClientApp
+        CLIENT_JS=$(echo "$STAGED_JS" | grep "^$CLIENT_APP" || true)
+
+        if [ -z "$CLIENT_JS" ]; then
+            print_pass "Không có file JS/JSX trong ClientApp cần kiểm tra."
+        else
+            # Chạy ESLint và chặn nếu có lỗi (ERROR level)
+            if echo "$CLIENT_JS" | xargs "$ESLINT_BIN" --max-warnings=0 2>&1; then
+                print_pass "ESLint: Tất cả file JS/JSX đạt chuẩn."
+            else
+                print_fail "ESLint phát hiện lỗi. Vui lòng sửa trước khi commit."
+            fi
+        fi
+    else
+        print_warn "ESLint chưa được cài. Chạy: cd $CLIENT_APP && npm install"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CHỐT 4: PRETTIER — Kiểm tra định dạng code JS/JSX
+# ─────────────────────────────────────────────────────────────────────────────
+print_step "CHỐT 4/5 — Prettier (Code Formatting Check)..."
+
+if [ -z "$STAGED_JS" ]; then
+    print_pass "Không có file JS/JSX nào cần kiểm tra định dạng."
+else
+    CLIENT_APP="ToolCalendar.Api/ClientApp"
+    PRETTIER_BIN="$CLIENT_APP/node_modules/.bin/prettier"
+
+    if [ -f "$PRETTIER_BIN" ]; then
+        CLIENT_JS=$(echo "$STAGED_JS" | grep "^$CLIENT_APP" || true)
+
+        if [ -z "$CLIENT_JS" ]; then
+            print_pass "Không có file JS/JSX trong ClientApp cần kiểm tra."
+        else
+            UNFORMATTED=""
+            for file in $CLIENT_JS; do
+                if [ -f "$file" ]; then
+                    if ! "$PRETTIER_BIN" --check "$file" > /dev/null 2>&1; then
+                        UNFORMATTED="$UNFORMATTED\n    - $file"
+                    fi
+                fi
+            done
+
+            if [ -z "$UNFORMATTED" ]; then
+                print_pass "Prettier: Tất cả file đã được định dạng đúng."
+            else
+                print_fail "Prettier phát hiện file chưa được format:"
+                printf "${RED}$UNFORMATTED${RESET}\n"
+                echo "         👉 Chạy lệnh: cd ToolCalendar.Api/ClientApp && npx prettier --write ."
+            fi
+        fi
+    else
+        print_warn "Prettier chưa được cài. Chạy: cd $CLIENT_APP && npm install"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CHỐT 5: DOTNET FORMAT — Kiểm tra chuẩn code C#
+# Tham chiếu: Microsoft C# Coding Conventions, Roslyn Analyzers
+# ─────────────────────────────────────────────────────────────────────────────
+print_step "CHỐT 5/5 — dotnet format (C# Code Style Check)..."
+
+if [ -z "$STAGED_CS" ]; then
+    print_pass "Không có file C# nào cần kiểm tra."
+else
+    if command -v dotnet > /dev/null 2>&1; then
+        # --verify-no-changes: Chỉ kiểm tra, không sửa — trả về lỗi nếu có vi phạm
+        if dotnet format --verify-no-changes --severity warn 2>&1 | grep -q "Formatted"; then
+            print_fail "dotnet format phát hiện vi phạm chuẩn code C#."
+            echo "         👉 Chạy lệnh: dotnet format để tự động sửa."
+        else
+            print_pass "dotnet format: Tất cả file C# đạt chuẩn."
+        fi
+    else
+        print_warn "dotnet SDK chưa được cài trong PATH. Bỏ qua kiểm tra C#."
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KẾT QUẢ TỔNG HỢP
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "${BOLD}═══════════════════════════════════════════════════════════${RESET}"
+
+if [ "$PASS" = "true" ]; then
+    echo "${GREEN}${BOLD}  ✅ TẤT CẢ CHỐT KIỂM DUYỆT ĐÃ PASS — COMMIT ĐƯỢC PHÉP!${RESET}"
+    echo "${BOLD}═══════════════════════════════════════════════════════════${RESET}"
+    echo ""
+    exit 0
+else
+    echo "${RED}${BOLD}  ❌ MỘT SỐ CHỐT KIỂM DUYỆT THẤT BẠI — COMMIT BỊ TỪ CHỐI!${RESET}"
+    echo "${BOLD}═══════════════════════════════════════════════════════════${RESET}"
+    echo "${YELLOW}  Vui lòng sửa các lỗi trên rồi thử commit lại.${RESET}"
+    echo ""
+    exit 1
+fi

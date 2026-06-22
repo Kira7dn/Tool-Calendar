@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ToolCalendar.Core.Data.Interfaces;
+using ToolCalendar.Core.Models;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
 
@@ -58,7 +59,7 @@ namespace ToolCalendar.Api.Controllers
                     isSuccess:  false,
                     failReason: "user_not_found"
                 );
-                return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa." });
+                return Unauthorized(ApiResponse.Fail("Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa."));
             }
 
             // ── Bước 2: Kiểm tra tài khoản bị khóa (Identity Lockout) ────────────
@@ -72,7 +73,7 @@ namespace ToolCalendar.Api.Controllers
                     isSuccess:  false,
                     failReason: "account_locked"
                 );
-                return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa." });
+                return Unauthorized(ApiResponse.Fail("Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa."));
             }
 
             // ── Bước 3: Xác minh mật khẩu qua UserManager (tự động xử lý BCrypt cũ + PBKDF2 mới) ──
@@ -91,7 +92,7 @@ namespace ToolCalendar.Api.Controllers
                     isSuccess:  false,
                     failReason: "wrong_password"
                 );
-                return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa." });
+                return Unauthorized(ApiResponse.Fail("Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa."));
             }
 
             // ── Bước 4: Đăng nhập thành công ─────────────────────────────────────
@@ -160,14 +161,14 @@ namespace ToolCalendar.Api.Controllers
                 isSuccess: true
             );
 
-            return Ok(new
+            return Ok(ApiResponse.Ok(new
             {
                 token    = tokenString,
                 username = user.Username,
                 fullName = user.FullName ?? user.Username,
                 role     = user.Role,
                 userId   = user.Id
-            });
+            }));
         }
 
         // ─── LOGOUT ──────────────────────────────────────────────────────────────
@@ -176,7 +177,7 @@ namespace ToolCalendar.Api.Controllers
         public IActionResult Logout()
         {
             Response.Cookies.Delete("jwt_cookie");
-            return Ok(new { message = "Đăng xuất thành công" });
+            return Ok(ApiResponse.Ok("Đăng xuất thành công"));
         }
 
         // ─── CHANGE PASSWORD ─────────────────────────────────────────────────────
@@ -186,30 +187,32 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+            if (!int.TryParse(userIdStr, out int userId)) 
+                return Unauthorized(ApiResponse.Fail("Không tìm thấy thông tin người dùng."));
 
             // Validation
             if (string.IsNullOrWhiteSpace(request.NewPassword))
-                return BadRequest(new { message = "Mật khẩu mới không được để trống." });
+                return BadRequest(ApiResponse.Fail("Mật khẩu mới không được để trống."));
             if (request.NewPassword.Length < 8)
-                return BadRequest(new { message = "Mật khẩu phải có ít nhất 8 ký tự." });
+                return BadRequest(ApiResponse.Fail("Mật khẩu phải có ít nhất 8 ký tự."));
             if (!request.NewPassword.Any(char.IsUpper))
-                return BadRequest(new { message = "Mật khẩu phải có ít nhất 1 chữ HOA (A-Z)." });
+                return BadRequest(ApiResponse.Fail("Mật khẩu phải có ít nhất 1 chữ HOA (A-Z)."));
             if (!request.NewPassword.Any(char.IsLower))
-                return BadRequest(new { message = "Mật khẩu phải có ít nhất 1 chữ thường (a-z)." });
+                return BadRequest(ApiResponse.Fail("Mật khẩu phải có ít nhất 1 chữ thường (a-z)."));
             if (!request.NewPassword.Any(char.IsDigit))
-                return BadRequest(new { message = "Mật khẩu phải có ít nhất 1 chữ số (0-9)." });
+                return BadRequest(ApiResponse.Fail("Mật khẩu phải có ít nhất 1 chữ số (0-9)."));
             if (!request.NewPassword.Any(c => "!@#$%^&*()_+-=[]{}|;':\",./<>?".Contains(c)))
-                return BadRequest(new { message = "Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%...)." });
+                return BadRequest(ApiResponse.Fail("Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%...)."));
 
             // Tìm user qua UserManager
             var user = await _userManager.FindByIdAsync(userId.ToString());
-            if (user == null) return NotFound(new { message = "Tài khoản không tồn tại." });
+            if (user == null) 
+                return NotFound(ApiResponse.Fail("Tài khoản không tồn tại."));
 
             // Đặt mật khẩu mới qua UserManager → tự động hash + cập nhật SecurityStamp
             var removeResult = await _userManager.RemovePasswordAsync(user);
             if (!removeResult.Succeeded)
-                return BadRequest(new { message = "Không thể đổi mật khẩu. Vui lòng thử lại." });
+                return BadRequest(ApiResponse.Fail("Không thể đổi mật khẩu. Vui lòng thử lại."));
 
             var addResult = await _userManager.AddPasswordAsync(user, request.NewPassword);
             if (addResult.Succeeded)
@@ -218,11 +221,11 @@ namespace ToolCalendar.Api.Controllers
                 var cache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                 cache?.Remove($"UserSession_{userId}");
 
-                return Ok(new { message = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại." });
+                return Ok(ApiResponse.Ok("Đổi mật khẩu thành công. Vui lòng đăng nhập lại."));
             }
 
-            var errors = string.Join(", ", addResult.Errors.Select(e => e.Description));
-            return BadRequest(new { message = $"Không thể đổi mật khẩu: {errors}" });
+            var errors = addResult.Errors.Select(e => e.Description).ToList();
+            return BadRequest(ApiResponse.Fail("Không thể đổi mật khẩu.", errors));
         }
     }
 

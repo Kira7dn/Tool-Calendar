@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ToolCalendar.Core.Models;
 using ToolCalendar.Data.Repositories;
 using ToolCalendar.Models;
 
@@ -21,7 +22,7 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> GetRoutings(int documentId)
         {
             var tree = await _routingRepo.GetTreeByDocumentIdAsync(documentId);
-            return Ok(tree);
+            return Ok(ApiResponse.Ok(tree));
         }
 
         [HttpPost("{documentId}/routings")]
@@ -37,14 +38,14 @@ namespace ToolCalendar.Api.Controllers
             routing.CreatedAt = DateTime.Now;
 
             int newId = await _routingRepo.CreateRoutingAsync(routing);
-            return Ok(new { id = newId });
+            return Ok(ApiResponse.Ok(new { id = newId }));
         }
 
         [HttpPut("/api/routings/{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] RoutingUpdateDto dto)
         {
             await _routingRepo.UpdateStatusAsync(id, dto.Status, dto.ProcessingContent);
-            return Ok();
+            return Ok(ApiResponse.Ok("Cập nhật trạng thái luân chuyển thành công."));
         }
     }
 

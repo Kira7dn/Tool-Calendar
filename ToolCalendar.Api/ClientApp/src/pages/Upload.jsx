@@ -192,7 +192,7 @@ export function Upload({ onTabChange }) {
             status: (doc.status === 'Đang xử lý' || doc.status === 'Chưa xử lý') ? 'processing' : 'ready'
           } : b));
 
-          if (doc.status === 'Đang xử lý' || doc.status === 'Chưa xử lý') {
+            if (doc.status === 'Đang xử lý') {
             const startPolling = async (docId) => {
               let attempts = 0;
               while (attempts < 20) {
@@ -201,7 +201,7 @@ export function Upload({ onTabChange }) {
                   const res = await fetch(`/api/documents/${docId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }});
                   if (res.ok) {
                     const updatedDoc = await res.json();
-                    if (updatedDoc.status !== 'Đang xử lý' && updatedDoc.status !== 'Chưa xử lý') {
+                    if (updatedDoc.status !== 'Đang xử lý') {
                       setBatchItems(prev => prev.map(b => b.id === docId ? {
                         ...b,
                         soVanBan: updatedDoc.soVanBan || '',

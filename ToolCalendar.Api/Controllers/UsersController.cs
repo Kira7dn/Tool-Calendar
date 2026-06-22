@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ToolCalendar.Core.Data.Interfaces;
+using ToolCalendar.Core.Models;
 using ToolCalendar.Models;
 
 namespace ToolCalendar.Api.Controllers
@@ -57,7 +58,7 @@ namespace ToolCalendar.Api.Controllers
                 users = users.Where(user => user.DepartmentId == departmentId.Value).ToList();
             }
 
-            return Ok(users);
+            return Ok(ApiResponse.Ok(users));
         }
 
         [Authorize(Roles = "Admin,VanThu")]
@@ -65,8 +66,9 @@ namespace ToolCalendar.Api.Controllers
         public IActionResult GetById(int id)
         {
             var user = _userRepository.GetUserById(id);
-            if (user == null) return NotFound();
-            return Ok(user);
+            if (user == null) 
+                return NotFound(ApiResponse.Fail("Không tìm thấy người dùng."));
+            return Ok(ApiResponse.Ok(user));
         }
 
         [Authorize(Roles = "Admin")]
@@ -74,15 +76,15 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> Create([FromBody] User user)
         {
             if (string.IsNullOrWhiteSpace(user.Username))
-                return BadRequest(new { message = "Tên đăng nhập không được để trống." });
+                return BadRequest(ApiResponse.Fail("Tên đăng nhập không được để trống."));
 
             if (user.Username.Length < 4)
-                return BadRequest(new { message = "Tên đăng nhập phải có ít nhất 4 ký tự." });
+                return BadRequest(ApiResponse.Fail("Tên đăng nhập phải có ít nhất 4 ký tự."));
 
             // Validate mật khẩu theo tiêu chuẩn bảo mật
             var (isValid, errorMsg) = ValidatePassword(user.PasswordHash ?? "");
             if (!isValid)
-                return BadRequest(new { message = errorMsg });
+                return BadRequest(ApiResponse.Fail(errorMsg));
 
             // Tạo user qua UserManager → tự động hash mật khẩu + tạo SecurityStamp
             var plainPassword = user.PasswordHash; // Lưu tạm mật khẩu dạng plain-text
@@ -90,10 +92,10 @@ namespace ToolCalendar.Api.Controllers
 
             var result = await _userManager.CreateAsync(user, plainPassword ?? "");
             if (result.Succeeded)
-                return Ok(new { message = "Tạo người dùng thành công." });
+                return Ok(ApiResponse.Ok("Tạo người dùng thành công."));
 
             var error = result.Errors.FirstOrDefault()?.Description ?? "Tên đăng nhập đã tồn tại hoặc dữ liệu không hợp lệ.";
-            return BadRequest(new { message = error });
+            return BadRequest(ApiResponse.Fail(error));
         }
 
         [Authorize(Roles = "Admin")]
@@ -101,14 +103,15 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] UserUpdateRequest request)
         {
             var user = _userRepository.GetUserById(id);
-            if (user == null) return NotFound();
+            if (user == null) 
+                return NotFound(ApiResponse.Fail("Không tìm thấy người dùng."));
 
             // Nếu có đổi mật khẩu → validate trước khi lưu
             if (!string.IsNullOrWhiteSpace(request.PasswordHash))
             {
                 var (isValid, errorMsg) = ValidatePassword(request.PasswordHash);
                 if (!isValid)
-                    return BadRequest(new { message = errorMsg });
+                    return BadRequest(ApiResponse.Fail(errorMsg));
 
                 // Đổi mật khẩu qua UserManager → tự động cập nhật SecurityStamp
                 var identityUser = await _userManager.FindByIdAsync(id.ToString());
@@ -116,6 +119,10 @@ namespace ToolCalendar.Api.Controllers
                 {
                     await _userManager.RemovePasswordAsync(identityUser);
                     await _userManager.AddPasswordAsync(identityUser, request.PasswordHash);
+
+                    // Đồng bộ sang biến user để không bị ghi đè lại mật khẩu cũ ở lệnh UpdateUser cuối hàm
+                    user.PasswordHash = identityUser.PasswordHash;
+                    user.SecurityStamp = identityUser.SecurityStamp;
 
                     // Xóa cache để SecurityStamp mới có hiệu lực ngay
                     var cache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
@@ -125,6 +132,12 @@ namespace ToolCalendar.Api.Controllers
                 {
                     // Fallback về UserRepository nếu Identity không tìm thấy
                     _userRepository.UpdateUserPassword(id, request.PasswordHash);
+                    var updatedUser = _userRepository.GetUserById(id);
+                    if (updatedUser != null)
+                    {
+                        user.PasswordHash = updatedUser.PasswordHash;
+                        user.SecurityStamp = updatedUser.SecurityStamp;
+                    }
                 }
             }
 
@@ -135,15 +148,19 @@ namespace ToolCalendar.Api.Controllers
             user.DepartmentId = request.DepartmentId;
 
             _userRepository.UpdateUser(user);
-            return Ok(new { message = "Cập nhật người dùng thành công." });
+            return Ok(ApiResponse.Ok("Cập nhật người dùng thành công."));
         }
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            var user = _userRepository.GetUserById(id);
+            if (user == null)
+                return NotFound(ApiResponse.Fail("Không tìm thấy người dùng."));
+
             _userRepository.DeleteUser(id);
-            return NoContent();
+            return Ok(ApiResponse.Ok("Xóa người dùng thành công."));
         }
     }
 

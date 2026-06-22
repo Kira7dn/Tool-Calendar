@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;  // HMACSHA256 - dùng cho webhook notifications
 using System.Text;                   // Encoding - dùng cho webhook notifications
 using ToolCalendar.Core.Data.Interfaces;
+using ToolCalendar.Core.Models;
 using ToolCalendar.Data;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
@@ -62,14 +63,14 @@ namespace ToolCalendar.Api.Controllers
             var (items, totalCount) = await _documentRepository.GetPagedAsync(page, size, search, status, sort, fromDate, toDate, addFromDate, addToDate);
             var totalPages = (int)Math.Ceiling((double)totalCount / size);
 
-            return Ok(new
+            return Ok(ApiResponse.Ok(new
             {
                 data = items,
                 page,
                 pageSize = size,
                 totalCount,
                 totalPages
-            });
+            }));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -77,7 +78,7 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> GetStatuses()
         {
             var statuses = await _documentRepository.GetUniqueStatusesAsync();
-            return Ok(statuses);
+            return Ok(ApiResponse.Ok(statuses));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -85,8 +86,8 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var data = await _documentRepository.GetDocumentByIdAsync(id);
-            if (data == null) return NotFound();
-            return Ok(data);
+            if (data == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
+            return Ok(ApiResponse.Ok(data));
         }
 
         [Authorize(Roles = "Admin,VanThu")]
@@ -103,30 +104,28 @@ namespace ToolCalendar.Api.Controllers
 
             // Xử lý kết quả trả về
             if (!result.IsSuccess)
-                return BadRequest(new { error = result.ErrorMessage });
+                return BadRequest(ApiResponse.Fail(result.ErrorMessage ?? "Lỗi tải tệp lên."));
 
-
-
-            return Ok(result.Document);
+            return Ok(ApiResponse.Ok(result.Document));
         }
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpPost("bulk-confirm")]
         public async Task<IActionResult> BulkConfirm([FromBody] List<int> ids)
         {
-            if (ids == null || ids.Count == 0) return BadRequest("Danh sách ID trống.");
+            if (ids == null || ids.Count == 0) return BadRequest(ApiResponse.Fail("Danh sách ID trống."));
 
             // Cập nhật trạng thái thành "Đã rà soát"
             await _documentRepository.BulkUpdateStatusAsync(ids, "Đã rà soát");
 
-            return Ok(new { message = $"Đã xác nhận thành công {ids.Count} văn bản." });
+            return Ok(ApiResponse.Ok($"Đã xác nhận thành công {ids.Count} văn bản."));
         }
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpDelete("bulk-delete")]
         public async Task<IActionResult> BulkDeleteBatch([FromBody] List<int> ids)
         {
-            if (ids == null || ids.Count == 0) return BadRequest("Danh sách ID trống.");
+            if (ids == null || ids.Count == 0) return BadRequest(ApiResponse.Fail("Danh sách ID trống."));
 
             // ✅ Perf: Query chỉ Id + FilePath thay vì GetAllAsync() toàn bộ bảng
             var filePaths = await _documentRepository.GetFilePathsByIdsAsync(ids);
@@ -146,28 +145,28 @@ namespace ToolCalendar.Api.Controllers
 
             await _documentRepository.BulkDeleteAsync(ids);
 
-            return Ok(new { message = $"Đã xóa thành công {ids.Count} văn bản cùng toàn bộ file đính kèm." });
+            return Ok(ApiResponse.Ok($"Đã xóa thành công {ids.Count} văn bản cùng toàn bộ file đính kèm."));
         }
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] DocumentRecord record)
         {
-            if (record == null) return BadRequest();
+            if (record == null) return BadRequest(ApiResponse.Fail("Dữ liệu văn bản không hợp lệ."));
             int id = await _documentRepository.InsertAsync(record);
             record.Id = id;
-            return CreatedAtAction(nameof(GetById), new { id = record.Id }, record);
+            return CreatedAtAction(nameof(GetById), new { id = record.Id }, ApiResponse.Ok(record));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] DocumentRecord record)
         {
-            if (record == null) return BadRequest();
+            if (record == null) return BadRequest(ApiResponse.Fail("Dữ liệu văn bản không hợp lệ."));
             record.Id = id;
 
             var existing = await _documentRepository.GetDocumentByIdAsync(id);
-            if (existing == null) return NotFound("Văn bản không tồn tại.");
+            if (existing == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
             await _documentRepository.UpdateAsync(record);
 
             // Nếu có sự thay đổi về người được giao hoặc gán mới
@@ -184,14 +183,14 @@ namespace ToolCalendar.Api.Controllers
             }
 
             _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = record.Status });
-            return NoContent();
+            return Ok(ApiResponse.Ok("Cập nhật văn bản thành công."));
         }
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpPost("{id}/assign")]
         public async Task<IActionResult> Assign(int id, [FromBody] AssignmentRequest request)
         {
-            if (request == null) return BadRequest();
+            if (request == null) return BadRequest(ApiResponse.Fail("Yêu cầu giao việc không hợp lệ."));
 
             var departmentIdsJson = System.Text.Json.JsonSerializer.Serialize(request.DepartmentIds ?? new List<int>());
             var userIdsJson = System.Text.Json.JsonSerializer.Serialize(request.UserIds ?? new List<int>());
@@ -217,17 +216,17 @@ namespace ToolCalendar.Api.Controllers
                 }
             }
 
-            return Ok(new { message = "Giao việc thành công." });
+            return Ok(ApiResponse.Ok("Giao việc thành công."));
         }
 
         [Authorize(Roles = "Admin,CanBo")]
         [HttpPost("{id}/submit-evidence")]
         public async Task<IActionResult> SubmitEvidence(int id, [FromForm] List<IFormFile> files, [FromForm] string notes)
         {
-            if (files == null || files.Count == 0) return BadRequest("Cần ít nhất một file bằng chứng.");
+            if (files == null || files.Count == 0) return BadRequest(ApiResponse.Fail("Cần ít nhất một file bằng chứng."));
 
             var doc = await _documentRepository.GetDocumentByIdAsync(id);
-            if (doc == null) return NotFound();
+            if (doc == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
 
             // 1. Tạo thư mục lưu bằng chứng cho văn bản này
             var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
@@ -275,7 +274,7 @@ namespace ToolCalendar.Api.Controllers
                 );
             } catch { }
 
-            return Ok(new { message = "Nộp bằng chứng hoàn thành thành công.", paths = savedPaths });
+            return Ok(ApiResponse.Ok(new { message = "Nộp bằng chứng hoàn thành thành công.", paths = savedPaths }));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -283,10 +282,11 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> GetMyTasks()
         {
             var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+            if (!int.TryParse(userIdStr, out int userId)) 
+                return Unauthorized(ApiResponse.Fail("Chưa đăng nhập hoặc phiên làm việc hết hạn."));
             // ✅ Perf: lọc tại DB thay vì GetAllAsync() + LINQ scan toàn bộ bảng
             var tasks = await _documentRepository.GetTasksByUserIdAsync(userId);
-            return Ok(tasks);
+            return Ok(ApiResponse.Ok(tasks));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -294,13 +294,13 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> GetFile(int id)
         {
             var doc = await _documentRepository.GetDocumentByIdAsync(id);
-            if (doc == null || string.IsNullOrEmpty(doc.FilePath)) return NotFound("File không tồn tại.");
+            if (doc == null || string.IsNullOrEmpty(doc.FilePath)) return NotFound(ApiResponse.Fail("File không tồn tại."));
             
             // Lấy đường dẫn từ DB và chuẩn hóa dấu gạch chéo cho Linux
             var normalizedPath = doc.FilePath.Replace('\\', '/').TrimStart('/');
             var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
             
-            if (!System.IO.File.Exists(filePath)) return NotFound($"File vật lý không tìm thấy tại: {normalizedPath}");
+            if (!System.IO.File.Exists(filePath)) return NotFound(ApiResponse.Fail($"File vật lý không tìm thấy tại: {normalizedPath}"));
 
             var ext = Path.GetExtension(doc.FilePath).ToLower();
             var mimeType = ext switch
@@ -323,17 +323,17 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> GetEvidenceFile(int id, int index)
         {
             var doc = await _documentRepository.GetDocumentByIdAsync(id);
-            if (doc == null || string.IsNullOrEmpty(doc.EvidencePaths)) return NotFound("Không tìm thấy bằng chứng.");
+            if (doc == null || string.IsNullOrEmpty(doc.EvidencePaths)) return NotFound(ApiResponse.Fail("Không tìm thấy bằng chứng."));
             try
             {
                 var paths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(doc.EvidencePaths);
-                if (paths == null || index < 0 || index >= paths.Count) return NotFound("Index file không hợp lệ.");
+                if (paths == null || index < 0 || index >= paths.Count) return NotFound(ApiResponse.Fail("Index file không hợp lệ."));
 
                 var relativePath = paths[index];
                 var normalizedPath = relativePath.Replace('\\', '/').TrimStart('/');
                 var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
                 
-                if (!System.IO.File.Exists(filePath)) return NotFound("Không tìm thấy file vật lý.");
+                if (!System.IO.File.Exists(filePath)) return NotFound(ApiResponse.Fail("Không tìm thấy file vật lý."));
                 
                 var fileName = Path.GetFileName(filePath);
                 var ext = Path.GetExtension(filePath).ToLower();
@@ -357,7 +357,7 @@ namespace ToolCalendar.Api.Controllers
             {
                 // Chỉ log chi tiết trong Development, không lộ stack trace ra Production
                 _= ex;
-                return BadRequest(new { message = "Không thể đọc file bằng chứng. Vui lòng thử lại." });
+                return BadRequest(ApiResponse.Fail("Không thể đọc file bằng chứng. Vui lòng thử lại."));
             }
         }
 
@@ -381,7 +381,7 @@ namespace ToolCalendar.Api.Controllers
                     Directory.Delete(evidenceDir, true);
             }
             await _documentRepository.DeleteAsync(id);
-            return NoContent();
+            return Ok(ApiResponse.Ok("Xóa văn bản thành công."));
         }
 
         // =============================================
@@ -420,7 +420,7 @@ namespace ToolCalendar.Api.Controllers
                 };
             }).ToList();
 
-            return Ok(result);
+            return Ok(ApiResponse.Ok(result));
         }
 
         // Bảo vệ bằng [Authorize] — chỉ người đã đăng nhập mới xem được file bình luận
@@ -428,15 +428,15 @@ namespace ToolCalendar.Api.Controllers
         [HttpGet("comment-attachment")]
         public IActionResult GetCommentAttachment([FromQuery] string path)
         {
-            if (string.IsNullOrEmpty(path)) return BadRequest("Đường dẫn không hợp lệ.");
+            if (string.IsNullOrEmpty(path)) return BadRequest(ApiResponse.Fail("Đường dẫn không hợp lệ."));
             
             // Chuẩn hóa và bảo mật đường dẫn (chỉ cho phép trong thư mục Uploads/Comments)
             var normalizedPath = path.Replace('\\', '/').TrimStart('/');
             if (!normalizedPath.Contains("Uploads/Comments", StringComparison.OrdinalIgnoreCase))
-                return BadRequest("Truy cập trái phép.");
+                return BadRequest(ApiResponse.Fail("Truy cập trái phép."));
 
             var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
-            if (!System.IO.File.Exists(filePath)) return NotFound("File đính kèm không tồn tại.");
+            if (!System.IO.File.Exists(filePath)) return NotFound(ApiResponse.Fail("File đính kèm không tồn tại."));
 
             var ext = Path.GetExtension(filePath).ToLower();
             var mimeType = ext switch
@@ -459,11 +459,11 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> AddComment(int id, [FromForm] string content, [FromForm] List<IFormFile> files)
         {
             if (string.IsNullOrWhiteSpace(content) && (files == null || files.Count == 0))
-                return BadRequest("Bình luận phải có nội dung hoặc tệp đính kèm.");
+                return BadRequest(ApiResponse.Fail("Bình luận phải có nội dung hoặc tệp đính kèm."));
 
             // Parse userId an toàn — trả 401 nếu không có claim thay vì throw exception
             if (!int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId))
-                return Unauthorized();
+                return Unauthorized(ApiResponse.Fail("Chưa đăng nhập hoặc phiên làm việc hết hạn."));
             var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Unknown";
 
             var savedPaths = new List<string>();
@@ -510,7 +510,7 @@ namespace ToolCalendar.Api.Controllers
                 }
             }
 
-            return Ok(new { message = "Đã thêm comment thành công.", attachments = savedPaths });
+            return Ok(ApiResponse.Ok(new { message = "Đã thêm comment thành công.", attachments = savedPaths }));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -519,7 +519,7 @@ namespace ToolCalendar.Api.Controllers
         {
             // Parse userId an toàn — trả 401 nếu không có claim
             if (!int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId))
-                return Unauthorized();
+                return Unauthorized(ApiResponse.Fail("Chưa đăng nhập hoặc phiên làm việc hết hạn."));
             var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
             bool isAdmin = role == "Admin";
 
@@ -550,7 +550,7 @@ namespace ToolCalendar.Api.Controllers
             // Realtime broadcast SignalR
             _ = _hubContext.Clients.All.SendAsync("DeleteComment", new { documentId = docId, commentId = commentId });
 
-            return Ok(new { message = "Đã xóa comment và các file đính kèm liên quan." });
+            return Ok(ApiResponse.Ok("Đã xóa comment và các file đính kèm liên quan."));
         }
 
         // =============================================
@@ -562,15 +562,15 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> ReactToComment(int docId, int commentId, [FromBody] ReactionRequest req)
         {
             if (req == null || string.IsNullOrWhiteSpace(req.ReactionType))
-                return BadRequest("Loại reaction không hợp lệ.");
+                return BadRequest(ApiResponse.Fail("Loại reaction không hợp lệ."));
 
             var validTypes = new[] { "like", "love", "hate", "dislike" };
             if (!validTypes.Contains(req.ReactionType.ToLower()))
-                return BadRequest("Reaction type phải là: like, love, hate, dislike.");
+                return BadRequest(ApiResponse.Fail("Reaction type phải là: like, love, hate, dislike."));
 
             // Parse userId an toàn
             if (!int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId))
-                return Unauthorized();
+                return Unauthorized(ApiResponse.Fail("Chưa đăng nhập hoặc phiên làm việc hết hạn."));
             var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Unknown";
 
             var result = await _documentRepository.ToggleReactionAsync(commentId, userId, username, req.ReactionType.ToLower());
@@ -590,23 +590,23 @@ namespace ToolCalendar.Api.Controllers
                 commentId = commentId,
                 reactions = updatedReactions
             });
-            return Ok(new { status = result, reactions = updatedReactions });
+            return Ok(ApiResponse.Ok(new { status = result, reactions = updatedReactions }));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("evidence-file")]
         public IActionResult GetEvidenceFile([FromQuery] string path)
         {
-            if (string.IsNullOrEmpty(path)) return BadRequest();
+            if (string.IsNullOrEmpty(path)) return BadRequest(ApiResponse.Fail("Đường dẫn không hợp lệ."));
             
             // Bảo mật: Chỉ cho phép truy cập file trong thư mục Evidence
             string normalizedPath = path.TrimStart('/').Replace("\\", "/");
             if (!normalizedPath.StartsWith("Uploads/Evidence/", StringComparison.OrdinalIgnoreCase)) 
-                return Forbid();
+                return StatusCode(403, ApiResponse.Fail("Truy cập bị cấm."));
 
             // Chuyển đổi đường dẫn tương đối thành đường dẫn tuyệt đối trên server
             var fullPath = Path.Combine(Directory.GetCurrentDirectory(), normalizedPath);
-            if (!System.IO.File.Exists(fullPath)) return NotFound();
+            if (!System.IO.File.Exists(fullPath)) return NotFound(ApiResponse.Fail("File không tồn tại."));
 
             var contentType = "application/octet-stream";
             var ext = Path.GetExtension(normalizedPath).ToLower();
@@ -696,7 +696,7 @@ namespace ToolCalendar.Api.Controllers
                 .OrderBy(x => DateTime.ParseExact(x.date, "dd/MM/yyyy", null))
                 .ToList();
 
-            return Ok(groups);
+            return Ok(ApiResponse.Ok(groups));
         }
 
         // ── Endpoint xem file PDF bằng token mã hóa (dùng cho trang /campha) ──
@@ -705,19 +705,19 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> GetPublicFile([FromQuery] string token)
         {
             if (string.IsNullOrEmpty(token))
-                return BadRequest("Token không hợp lệ.");
+                return BadRequest(ApiResponse.Fail("Token không hợp lệ."));
 
             if (!TryDecodePublicDocToken(token, out int docId))
-                return Unauthorized("Token không hợp lệ hoặc đã hết hạn. Vui lòng tải lại trang.");
+                return Unauthorized(ApiResponse.Fail("Token không hợp lệ hoặc đã hết hạn. Vui lòng tải lại trang."));
 
             var doc = await _documentRepository.GetDocumentByIdAsync(docId);
             if (doc == null || string.IsNullOrEmpty(doc.FilePath))
-                return NotFound("Văn bản không tồn tại.");
+                return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
 
             var normalizedPath = doc.FilePath.Replace('\\', '/').TrimStart('/');
             var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
             if (!System.IO.File.Exists(filePath))
-                return NotFound("File vật lý không tìm thấy.");
+                return NotFound(ApiResponse.Fail("File vật lý không tìm thấy."));
 
             // ✅ Perf: PhysicalFile stream trực tiếp, không load cả file vào RAM
             Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
