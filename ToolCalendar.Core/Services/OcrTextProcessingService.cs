@@ -820,6 +820,3 @@ private static string PostProcessExtractedText(string text)
         }
     }
 }
-    }
-}
-
