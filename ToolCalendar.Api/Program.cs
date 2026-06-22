@@ -102,6 +102,8 @@ builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 
 // Đăng ký OCR & Extraction Services
 builder.Services.AddSingleton<IOcrService, OcrService>();
+builder.Services.AddScoped<IOcrTextProcessingService, OcrTextProcessingService>();
+builder.Services.AddScoped<IOcrImageProcessingService, OcrImageProcessingService>();
 builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();
 // builder.Services.AddHostedService<OcrRuntimeValidationService>();
 
@@ -294,6 +296,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ToolCalendar.Api.Middleware.GlobalExceptionMiddleware>();
 
 // Cấu hình để nhận diện HTTPS từ Nginx/Ngrok Proxy (Quan trọng khi dùng ngrok)
 var forwardedOptions = new ForwardedHeadersOptions
