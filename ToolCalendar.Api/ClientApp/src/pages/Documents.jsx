@@ -41,14 +41,16 @@ export function Documents({ onTabChange, filters }) {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [status, setStatus] = useState(filters?.status || '');
   const [sort, setSort] = useState(filters?.sort || 'newest');
 
-  const searchTimeout = useRef(null);
-
   useEffect(() => {
     if (filters) {
-      if (filters.search !== undefined) setSearch(filters.search);
+      if (filters.search !== undefined) {
+        setSearch(filters.search);
+        setDebouncedSearch(filters.search);
+      }
       if (filters.status !== undefined) setStatus(filters.status);
       if (filters.sort !== undefined) setSort(filters.sort);
       setPage(1);
@@ -56,19 +58,29 @@ export function Documents({ onTabChange, filters }) {
   }, [filters]);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      if (search !== debouncedSearch) {
+        setDebouncedSearch(search);
+        setPage(1);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search, debouncedSearch]);
+
+  useEffect(() => {
     fetchDocuments();
 
     const handleUpdate = () => fetchDocuments();
     document.addEventListener('realtime:document_updated', handleUpdate);
     return () => document.removeEventListener('realtime:document_updated', handleUpdate);
-  }, [page, pageSize, status, sort]);
+  }, [page, pageSize, status, sort, debouncedSearch]);
 
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, doc: null });
 
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
-      const url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(search)}&status=${status}&sort=${sort}`;
+      const url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(debouncedSearch)}&status=${status}&sort=${sort}`;
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
@@ -88,14 +100,7 @@ export function Documents({ onTabChange, filters }) {
   };
 
   const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearch(value);
-
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => {
-      setPage(1);
-      fetchDocuments();
-    }, 500);
+    setSearch(e.target.value);
   };
 
   const getStatusBadge = (doc) => {

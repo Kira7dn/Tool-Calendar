@@ -83,14 +83,15 @@ services:
     restart: always
     environment:
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+      - NGROK_DOMAIN=${NGROK_DOMAIN}
     entrypoint: /bin/sh
     command:
       - "-c"
       - |
         if [ -n "$$NGROK_DOMAIN" ]; then
-          ngrok http nginx-proxy:80 --domain=$$NGROK_DOMAIN
+          ngrok http nginx-proxy:80 --url=$$NGROK_DOMAIN --log=stdout
         else
-          ngrok http nginx-proxy:80
+          ngrok http nginx-proxy:80 --log=stdout
         fi
     depends_on:
       - nginx
