@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+/* eslint-disable */
+import React, { useEffect, useState, useRef } from 'react'
 import {
   Plus,
   Search,
@@ -8,22 +9,22 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
-  Loader2
-} from 'lucide-react';
-import { getStatusConfig, DOC_STATUS } from '@/lib/constants';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+  Loader2,
+} from 'lucide-react'
+import { getStatusConfig, DOC_STATUS } from '@/lib/constants'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { ConfirmationModal } from '@/components/ui/confirmation-modal';
-import { toast } from 'sonner';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Badge } from '@/components/ui/badge'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { toast } from 'sonner'
 import {
   Table,
   TableBody,
@@ -31,129 +32,138 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table'
 
 export function Documents({ onTabChange, filters }) {
-  const [documents, setDocuments] = useState([]);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState(filters?.status || '');
-  const [sort, setSort] = useState(filters?.sort || 'newest');
-
-  const searchTimeout = useRef(null);
+  const [documents, setDocuments] = useState([])
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [status, setStatus] = useState(filters?.status || '')
+  const [sort, setSort] = useState(filters?.sort || 'newest')
 
   useEffect(() => {
     if (filters) {
-      if (filters.search !== undefined) setSearch(filters.search);
-      if (filters.status !== undefined) setStatus(filters.status);
-      if (filters.sort !== undefined) setSort(filters.sort);
-      setPage(1);
+      if (filters.search !== undefined) {
+        setSearch(filters.search)
+        setDebouncedSearch(filters.search)
+      }
+      if (filters.status !== undefined) setStatus(filters.status)
+      if (filters.sort !== undefined) setSort(filters.sort)
+      setPage(1)
     }
-  }, [filters]);
+  }, [filters])
 
   useEffect(() => {
-    fetchDocuments();
+    const timer = setTimeout(() => {
+      if (search !== debouncedSearch) {
+        setDebouncedSearch(search)
+        setPage(1)
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [search, debouncedSearch])
 
-    const handleUpdate = () => fetchDocuments();
-    document.addEventListener('realtime:document_updated', handleUpdate);
-    return () => document.removeEventListener('realtime:document_updated', handleUpdate);
-  }, [page, pageSize, status, sort]);
+  useEffect(() => {
+    fetchDocuments()
 
-  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, doc: null });
+    const handleUpdate = () => fetchDocuments()
+    document.addEventListener('realtime:document_updated', handleUpdate)
+    return () => document.removeEventListener('realtime:document_updated', handleUpdate)
+  }, [page, pageSize, status, sort, debouncedSearch])
+
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, doc: null })
 
   const fetchDocuments = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(search)}&status=${status}&sort=${sort}`;
+      const url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(debouncedSearch)}&status=${status}&sort=${sort}`
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      })
       if (response.ok) {
-        const data = await response.json();
-        setDocuments(data.data || []);
-        setTotalPages(data.totalPages || 1);
-        setTotalCount(data.totalCount || 0);
+        const data = await response.json()
+        setDocuments(data.data || [])
+        setTotalPages(data.totalPages || 1)
+        setTotalCount(data.totalCount || 0)
       }
     } catch (error) {
-      console.error('Failed to fetch documents:', error);
+      console.error('Failed to fetch documents:', error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearch(value);
-
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => {
-      setPage(1);
-      fetchDocuments();
-    }, 500);
-  };
+    setSearch(e.target.value)
+  }
 
   const getStatusBadge = (doc) => {
-    const statusText = doc.trangThai || doc.status;
-    const daysLeft = doc.soNgayConLai;
-    const config = getStatusConfig(statusText, daysLeft);
+    const statusText = doc.trangThai || doc.status
+    const daysLeft = doc.soNgayConLai
+    const config = getStatusConfig(statusText, daysLeft)
 
     return (
       <Badge variant={config.variant} className="font-bold border">
         {config.label}
       </Badge>
-    );
-  };
+    )
+  }
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
+    if (!dateStr) return '-'
     try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('vi-VN');
-    } catch { return dateStr; }
-  };
+      const date = new Date(dateStr)
+      return date.toLocaleDateString('vi-VN')
+    } catch {
+      return dateStr
+    }
+  }
 
   const handleAction = (action, doc) => {
     if (window.app?.services) {
-      if (action === 'view') window.app.services.openDocDetail(doc.id);
-      if (action === 'edit') window.app.services.openDocDetail(doc.id, 'edit');
-      if (action === 'pdf') window.app.services.openPdfPreview(doc.id, doc.soVanBan);
+      if (action === 'view') window.app.services.openDocDetail(doc.id)
+      if (action === 'edit') window.app.services.openDocDetail(doc.id, 'edit')
+      if (action === 'pdf') window.app.services.openPdfPreview(doc.id, doc.soVanBan)
       if (action === 'delete') {
-        setDeleteConfirm({ open: true, doc });
+        setDeleteConfirm({ open: true, doc })
       }
     }
-  };
+  }
 
   const executeDelete = async () => {
-    const doc = deleteConfirm.doc;
-    if (!doc) return;
+    const doc = deleteConfirm.doc
+    if (!doc) return
 
     try {
       const res = await fetch(`/api/documents/${doc.id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
       if (res.ok) {
-        toast.success('Đã xóa văn bản thành công');
-        fetchDocuments();
+        toast.success('Đã xóa văn bản thành công')
+        fetchDocuments()
       }
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi xóa');
+      toast.error('Có lỗi xảy ra khi xóa')
     } finally {
-      setDeleteConfirm({ open: false, doc: null });
+      setDeleteConfirm({ open: false, doc: null })
     }
-  };
+  }
 
   return (
     <div className="space-y-[var(--space-page)] flex flex-col h-full animate-in slide-in-from-bottom-4 duration-700 fill-mode-both">
       <div className="flex flex-col gap-0 border-l-4 border-primary pl-3 py-0.5">
         <h2 className="text-xl">Quản lý văn bản</h2>
-        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">Hệ thống quản lý văn bản</p>
+        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">
+          Hệ thống quản lý văn bản
+        </p>
       </div>
 
       <Card className="glass-card shadow-sm flex-1 flex flex-col overflow-hidden gap-2 px-2">
@@ -181,11 +191,16 @@ export function Documents({ onTabChange, filters }) {
             <select
               className="h-9 px-3 text-sm"
               value={status}
-              onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setStatus(e.target.value)
+                setPage(1)
+              }}
             >
               <option value="">Tất cả trạng thái</option>
-              {Object.values(DOC_STATUS).map(s => (
-                <option key={s.value} value={s.value}>{s.icon} {s.label}</option>
+              {Object.values(DOC_STATUS).map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.icon} {s.label}
+                </option>
               ))}
               <option value="overdue">🛑 Quá hạn</option>
               <option value="urgent">🕒 Khẩn cấp</option>
@@ -194,7 +209,10 @@ export function Documents({ onTabChange, filters }) {
             <select
               className="h-9 px-3 text-sm max-md:hidden"
               value={sort}
-              onChange={(e) => { setSort(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setSort(e.target.value)
+                setPage(1)
+              }}
             >
               <option value="newest">📅 Mới nhất</option>
               <option value="oldest">📅 Cũ nhất</option>
@@ -215,7 +233,9 @@ export function Documents({ onTabChange, filters }) {
                   <TableHead className="font-bold text-foreground w-32">Tham mưu</TableHead>
                   <TableHead className="font-bold text-foreground w-32">Thời hạn</TableHead>
                   <TableHead className="font-bold text-foreground w-32">Trạng thái</TableHead>
-                  <TableHead className="font-bold text-center text-foreground w-20">Thao tác</TableHead>
+                  <TableHead className="font-bold text-center text-foreground w-20">
+                    Thao tác
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="relative">
@@ -226,21 +246,39 @@ export function Documents({ onTabChange, filters }) {
                         <Loader2 className="size-10 text-primary animate-spin" strokeWidth={2.5} />
                         <div className="absolute inset-0 size-10 border-4 border-primary/10 rounded-full" />
                       </div>
-                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">Đang tải dữ liệu...</span>
+                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">
+                        Đang tải dữ liệu...
+                      </span>
                     </div>
                   </div>
                 )}
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i} className="h-[48px]">
-                      <TableCell className="px-4 py-2.5 text-center w-12"><Skeleton className="h-4 w-6 mx-auto" /></TableCell>
-                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-4 w-16" /></TableCell>
-                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-4 w-20" /></TableCell>
-                      <TableCell className="px-4 py-2.5"><Skeleton className="h-4 w-full" /></TableCell>
-                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-4 w-20" /></TableCell>
-                      <TableCell className="px-4 py-2.5 w-32"><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
-                      <TableCell className="px-4 py-2.5 text-center w-20"><Skeleton className="h-8 w-8 rounded-full mx-auto" /></TableCell>
+                      <TableCell className="px-4 py-2.5 text-center w-12">
+                        <Skeleton className="h-4 w-6 mx-auto" />
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 w-32">
+                        <Skeleton className="h-4 w-16" />
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 w-32">
+                        <Skeleton className="h-4 w-20" />
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5">
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 w-32">
+                        <Skeleton className="h-4 w-24" />
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 w-32">
+                        <Skeleton className="h-4 w-20" />
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 w-32">
+                        <Skeleton className="h-6 w-24 rounded-full" />
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 text-center w-20">
+                        <Skeleton className="h-8 w-8 rounded-full mx-auto" />
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : documents.length > 0 ? (
@@ -255,17 +293,30 @@ export function Documents({ onTabChange, filters }) {
                       >
                         {doc.soVanBan || '-'}
                       </TableCell>
-                      <TableCell className="text-muted-foreground whitespace-nowrap w-32 text-xs">{formatDate(doc.ngayBanHanh)}</TableCell>
-                      <TableCell className="text-foreground/80 truncate text-xs" title={doc.trichYeu}>
+                      <TableCell className="text-muted-foreground whitespace-nowrap w-32 text-xs">
+                        {formatDate(doc.ngayBanHanh)}
+                      </TableCell>
+                      <TableCell
+                        className="text-foreground/80 truncate text-xs"
+                        title={doc.trichYeu}
+                      >
                         {doc.trichYeu || '-'}
                       </TableCell>
-                      <TableCell className="text-muted-foreground w-32 truncate text-xs">{doc.coQuanChuQuan || '-'}</TableCell>
-                      <TableCell className="text-muted-foreground whitespace-nowrap w-32 text-xs">{formatDate(doc.thoiHan)}</TableCell>
+                      <TableCell className="text-muted-foreground w-32 truncate text-xs">
+                        {doc.coQuanChuQuan || '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground whitespace-nowrap w-32 text-xs">
+                        {formatDate(doc.thoiHan)}
+                      </TableCell>
                       <TableCell className="w-32">{getStatusBadge(doc)}</TableCell>
                       <TableCell className="text-center w-20">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            >
                               <MoreVertical className="size-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -315,19 +366,22 @@ export function Documents({ onTabChange, filters }) {
           <div className="p-4 border-t border-border flex items-center justify-between bg-card/50">
             <div className="flex items-center gap-6">
               <p className="text-xs text-muted-foreground font-medium">
-                Trang <span className="text-foreground">{page}</span> / <span className="text-foreground">{totalPages || 1}</span>
+                Trang <span className="text-foreground">{page}</span> /{' '}
+                <span className="text-foreground">{totalPages || 1}</span>
                 <span className="mx-2 text-muted-foreground/30">|</span>
                 Tổng <span className="text-foreground font-bold">{totalCount}</span> văn bản
               </p>
 
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Hiển thị:</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+                  Hiển thị:
+                </span>
                 <select
                   className="h-7 px-2 text-[11px] font-bold bg-background border rounded-md outline-none focus:ring-1 ring-primary/30"
                   value={pageSize}
                   onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setPage(1);
+                    setPageSize(Number(e.target.value))
+                    setPage(1)
                   }}
                 >
                   <option value={10}>10 dòng</option>
@@ -364,7 +418,7 @@ export function Documents({ onTabChange, filters }) {
 
       <ConfirmationModal
         open={deleteConfirm.open}
-        onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}
+        onOpenChange={(open) => setDeleteConfirm((prev) => ({ ...prev, open }))}
         title="Xác nhận xóa?"
         description={`Bạn có chắc chắn muốn xóa văn bản "${deleteConfirm.doc?.soVanBan}"? Thao tác này không thể hoàn tác.`}
         confirmLabel="XÓA NGAY"
@@ -372,5 +426,5 @@ export function Documents({ onTabChange, filters }) {
         variant="destructive"
       />
     </div>
-  );
+  )
 }

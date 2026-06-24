@@ -33,6 +33,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `.githooks/pre-commit` (Sửa đổi đường dẫn config của ESLint)
 - **Lệnh git commit**: `git commit -m "feat(cabinet): triển khai phân hệ phòng họp không giấy tờ theo kiến trúc modular monolith"`
 
+### [2026-06-23 16:00] Sửa lỗi Stale Closure ở chức năng Tìm kiếm
+- **Mô tả**: Khi người dùng paste dữ liệu vào ô tìm kiếm, hàm `fetchDocuments` lấy nhầm state cũ (chuỗi rỗng) do hiện tượng Stale Closure của `setTimeout`. Đã refactor lại theo chuẩn React: sử dụng state `debouncedSearch` và `useEffect` riêng biệt để đảm bảo gọi API với dữ liệu chính xác.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(frontend): sửa lỗi stale closure khi paste dữ liệu vào ô tìm kiếm"`
+
 ### [2026-06-23 00:18] Sửa lỗi cú pháp OcrTextProcessingService
 - **Mô tả**: Sửa lỗi dư dấu ngoặc nhọn ở cuối tệp `OcrTextProcessingService.cs` gây lỗi biên dịch khi build Docker.
 - **Tệp thay đổi**:
