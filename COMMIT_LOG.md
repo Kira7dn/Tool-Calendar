@@ -4,6 +4,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## Lịch sử
 
+### [2026-06-24 17:15] Cập nhật CSDL và định dạng mã nguồn (Cabinet)
+- **Mô tả**: Tự động tạo bảng CSDL cho phân hệ phòng họp (`Rooms`, `Meetings`, `MeetingParticipants`, `Questionnaires`) trong `DatabaseService.cs`. Fix lỗi duplicate import trong `vite.config.js` để vượt qua ESLint. Đồng thời áp dụng chuẩn định dạng code (Prettier) cho toàn bộ file frontend (`src/*`).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/vite.config.js` (Sửa đổi)
+  - Tất cả các file trong `ToolCalendar.Api/ClientApp/src/` (Sửa đổi định dạng)
+- **Lệnh git commit**: `git commit -m "style(cabinet): định dạng code frontend và khởi tạo bảng CSDL"`
+
 ### [2026-06-24 16:15] Triển khai phân hệ Phòng họp không giấy tờ (iCPV Cabinet)
 - **Mô tả**: Dựng khung giao diện và API cơ bản cho phân hệ Phòng họp không giấy tờ theo kiến trúc Modular Monolith. Đã cấu hình các model, repository (ADO.NET), controllers, tách biệt giao diện AppShell riêng nhưng chạy chung một ứng dụng và thêm menu điều hướng. Thư viện FullCalendar được dùng để làm chức năng Lịch họp.
 - **Tệp thay đổi**:

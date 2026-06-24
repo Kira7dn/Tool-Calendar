@@ -230,6 +230,59 @@ namespace ToolCalendar.Data
             cmd.CommandText = createDocumentRoutingsTable;
             cmd.ExecuteNonQuery();
 
+            // --- iCPV CABINET SCHEMA ---
+            string createRoomsTable = @"
+                CREATE TABLE IF NOT EXISTS Rooms (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT,
+                    DepartmentId INTEGER,
+                    Status INTEGER DEFAULT 1,
+                    CreatedAt TEXT
+                )";
+            cmd.CommandText = createRoomsTable;
+            cmd.ExecuteNonQuery();
+
+            string createMeetingsTable = @"
+                CREATE TABLE IF NOT EXISTS Meetings (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Title TEXT,
+                    StartTime TEXT,
+                    EndTime TEXT,
+                    RoomId INTEGER,
+                    Status TEXT DEFAULT 'Sắp diễn ra',
+                    CreatorId INTEGER,
+                    CreatedAt TEXT,
+                    FOREIGN KEY(RoomId) REFERENCES Rooms(Id)
+                )";
+            cmd.CommandText = createMeetingsTable;
+            cmd.ExecuteNonQuery();
+
+            string createMeetingParticipantsTable = @"
+                CREATE TABLE IF NOT EXISTS MeetingParticipants (
+                    MeetingId INTEGER,
+                    UserId INTEGER,
+                    AttendanceStatus TEXT DEFAULT 'Chưa xác nhận',
+                    PRIMARY KEY(MeetingId, UserId),
+                    FOREIGN KEY(MeetingId) REFERENCES Meetings(Id),
+                    FOREIGN KEY(UserId) REFERENCES Users(Id)
+                )";
+            cmd.CommandText = createMeetingParticipantsTable;
+            cmd.ExecuteNonQuery();
+
+            string createQuestionnairesTable = @"
+                CREATE TABLE IF NOT EXISTS Questionnaires (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    MeetingId INTEGER,
+                    Title TEXT,
+                    AssignedTo INTEGER,
+                    Deadline TEXT,
+                    Status TEXT DEFAULT 'Chưa trả lời',
+                    CreatedAt TEXT,
+                    FOREIGN KEY(MeetingId) REFERENCES Meetings(Id)
+                )";
+            cmd.CommandText = createQuestionnairesTable;
+            cmd.ExecuteNonQuery();
+
 
             // --- SEED SETTINGS ---
             cmd.CommandText = "SELECT COUNT(*) FROM AppSettings WHERE [Key] = 'Notification_ScanTime'";
