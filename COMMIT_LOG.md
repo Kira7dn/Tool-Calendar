@@ -4,6 +4,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## Lịch sử
 
+### [2026-06-24 17:25] Sửa lỗi thiếu package @fullcalendar/core
+- **Mô tả**: Bổ sung `@fullcalendar/core` vào `package.json` do frontend dùng tính năng Lịch nhưng thiếu package gốc gây lỗi build trên Docker.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/package.json` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(frontend): add missing @fullcalendar/core package"`
+
 ### [2026-06-24 17:15] Cập nhật CSDL và định dạng mã nguồn (Cabinet)
 - **Mô tả**: Tự động tạo bảng CSDL cho phân hệ phòng họp (`Rooms`, `Meetings`, `MeetingParticipants`, `Questionnaires`) trong `DatabaseService.cs`. Fix lỗi duplicate import trong `vite.config.js` để vượt qua ESLint. Đồng thời áp dụng chuẩn định dạng code (Prettier) cho toàn bộ file frontend (`src/*`).
 - **Tệp thay đổi**:
