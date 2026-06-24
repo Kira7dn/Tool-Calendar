@@ -114,6 +114,12 @@ export function CabinetAppShell() {
                 }}
                 events={meetings}
                 locale="vi"
+                buttonText={{
+                  today: 'Hôm nay',
+                  month: 'Tháng',
+                  week: 'Tuần',
+                  day: 'Ngày',
+                }}
                 height="100%"
                 eventContent={(arg) => {
                   return (
