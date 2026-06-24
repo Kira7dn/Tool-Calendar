@@ -106,7 +106,7 @@ else
             print_pass "Không có file JS/JSX trong ClientApp cần kiểm tra."
         else
             # Chạy ESLint và chặn nếu có lỗi (ERROR level)
-            if echo "$CLIENT_JS" | xargs "$ESLINT_BIN" --max-warnings=0 2>&1; then
+            if echo "$CLIENT_JS" | xargs "$ESLINT_BIN" -c "$CLIENT_APP/eslint.config.js" --max-warnings=0 2>&1; then
                 print_pass "ESLint: Tất cả file JS/JSX đạt chuẩn."
             else
                 print_fail "ESLint phát hiện lỗi. Vui lòng sửa trước khi commit."

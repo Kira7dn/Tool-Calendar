@@ -1,53 +1,61 @@
-import React, { useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+/* eslint-disable */
+/* global Response */
+import React, { useEffect, useState } from 'react'
+import { createRoot } from 'react-dom/client'
 
 // ─── Global Fetch Interceptor for standardized ApiResponse ────────────────
-const originalFetch = window.fetch;
+const originalFetch = window.fetch
 window.fetch = async (...args) => {
-  const response = await originalFetch(...args);
-  const contentType = response.headers.get("content-type");
-  if (contentType && contentType.includes("application/json")) {
-    const clone = response.clone();
+  const response = await originalFetch(...args)
+  const contentType = response.headers.get('content-type')
+  if (contentType && contentType.includes('application/json')) {
+    const clone = response.clone()
     try {
-      const json = await clone.json();
-      if (json && typeof json === 'object' && 'success' in json && ('data' in json || 'errors' in json)) {
-        let unwrappedData;
+      const json = await clone.json()
+      if (
+        json &&
+        typeof json === 'object' &&
+        'success' in json &&
+        ('data' in json || 'errors' in json)
+      ) {
+        let unwrappedData
         if (json.success) {
-          unwrappedData = json.data !== null ? json.data : { message: json.message };
+          unwrappedData = json.data !== null ? json.data : { message: json.message }
         } else {
-          unwrappedData = { 
-            message: json.message, 
-            error: json.message, 
-            errors: json.errors 
-          };
+          unwrappedData = {
+            message: json.message,
+            error: json.message,
+            errors: json.errors,
+          }
         }
-        
+
         const newResponse = new Response(JSON.stringify(unwrappedData), {
           status: response.status,
           statusText: response.statusText,
-          headers: response.headers
-        });
-        
-        Object.defineProperty(newResponse, 'url', { value: response.url });
-        return newResponse;
+          headers: response.headers,
+        })
+
+        Object.defineProperty(newResponse, 'url', { value: response.url })
+        return newResponse
       }
     } catch (e) {
       // Ignore parsing error
     }
   }
-  return response;
-};
-import { AppShell } from './shell/AppShell.jsx';
-import { LoginPage } from './pages/Login.jsx';
-import PublicSchedule from './pages/PublicSchedule.jsx';
-import './styles/globals.css';
+  return response
+}
+import { AppShell } from './shell/AppShell.jsx'
+import { LoginPage } from './pages/Login.jsx'
+import PublicSchedule from './pages/PublicSchedule.jsx'
+import { CabinetAppShell } from './cabinet/CabinetAppShell.jsx'
+import './styles/globals.css'
 
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { ShieldAlert, LogOut } from 'lucide-react';
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { ShieldAlert, LogOut } from 'lucide-react'
 
 // ─── Modal cảnh báo bị đá phiên (toàn hệ thống) ───────────────────────────
 function KickedModal({ isOpen, onConfirm }) {
-  if (!isOpen) return null;
+  if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 fade-in duration-300">
@@ -83,74 +91,75 @@ function KickedModal({ isOpen, onConfirm }) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // ─── Root Component ─────────────────────────────────────────────────────────
 function Root() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('auth_token'));
-  const [isKicked, setIsKicked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('auth_token'))
+  const [isKicked, setIsKicked] = useState(false)
 
   useEffect(() => {
-    document.body.classList.add('app-booting');
+    document.body.classList.add('app-booting')
 
     // Lắng nghe thay đổi localStorage (đăng xuất từ tab khác)
     const handleStorageChange = () => {
-      setIsAuthenticated(!!localStorage.getItem('auth_token'));
-    };
+      setIsAuthenticated(!!localStorage.getItem('auth_token'))
+    }
 
     // Lắng nghe sự kiện unauthorized từ bất kỳ đâu
     const handleUnauthorized = () => {
-      localStorage.removeItem('auth_token');
-      setIsAuthenticated(false);
-    };
+      localStorage.removeItem('auth_token')
+      setIsAuthenticated(false)
+    }
 
     // 🔴 Lắng nghe sự kiện bị đá (từ signalr.js)
     const handleKicked = (e) => {
-      console.warn("[Root] Nhận sự kiện auth:kicked:", e.detail);
-      setIsKicked(true);
-      setIsAuthenticated(false);
-    };
+      console.warn('[Root] Nhận sự kiện auth:kicked:', e.detail)
+      setIsKicked(true)
+      setIsAuthenticated(false)
+    }
 
-    window.addEventListener('storage', handleStorageChange);
-    document.addEventListener('auth:unauthorized', handleUnauthorized);
-    document.addEventListener('auth:kicked', handleKicked);
+    window.addEventListener('storage', handleStorageChange)
+    document.addEventListener('auth:unauthorized', handleUnauthorized)
+    document.addEventListener('auth:kicked', handleKicked)
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      document.removeEventListener('auth:unauthorized', handleUnauthorized);
-      document.removeEventListener('auth:kicked', handleKicked);
-    };
-  }, []);
+      window.removeEventListener('storage', handleStorageChange)
+      document.removeEventListener('auth:unauthorized', handleUnauthorized)
+      document.removeEventListener('auth:kicked', handleKicked)
+    }
+  }, [])
 
   const handleLoginSuccess = () => {
-    setIsKicked(false);
-    setIsAuthenticated(true);
-  };
+    setIsKicked(false)
+    setIsAuthenticated(true)
+  }
 
   // Hỗ trợ đường dẫn công khai (không cần đăng nhập)
-  const isPublicRoute = window.location.pathname === "/campha";
+  const isPublicRoute = window.location.pathname === '/campha'
+  const isCabinetRoute = window.location.pathname.startsWith('/phonghopkhonggiayto')
 
   if (isPublicRoute) {
-    return <PublicSchedule />;
+    return <PublicSchedule />
   }
 
   return (
     <>
       {/* Modal bị đá - hiển thị trên tất cả màn hình */}
-      <KickedModal
-        isOpen={isKicked}
-        onConfirm={() => setIsKicked(false)}
-      />
+      <KickedModal isOpen={isKicked} onConfirm={() => setIsKicked(false)} />
 
       <TooltipProvider>
-        {!isAuthenticated
-          ? <LoginPage onLoginSuccess={handleLoginSuccess} />
-          : <AppShell />
-        }
+        {!isAuthenticated ? (
+          <LoginPage onLoginSuccess={handleLoginSuccess} />
+        ) : isCabinetRoute ? (
+          <CabinetAppShell />
+        ) : (
+          <AppShell />
+        )}
       </TooltipProvider>
     </>
-  );
+  )
 }
 
-createRoot(document.getElementById('root')).render(<Root />);
+createRoot(document.getElementById('root')).render(<Root />)

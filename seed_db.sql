@@ -1,4 +1,8 @@
 -- Xóa toàn bộ dữ liệu hiện tại
+DELETE FROM Questionnaires;
+DELETE FROM MeetingParticipants;
+DELETE FROM Meetings;
+DELETE FROM Rooms;
 DELETE FROM CommentReactions;
 DELETE FROM Comments;
 DELETE FROM Documents;
@@ -61,4 +65,29 @@ INSERT INTO AuditLogs (Id, UserId, Action, Timestamp) VALUES
 (2, 3, 'Văn thư đã giao văn bản SEED-DASH-HN-002 cho Văn Phòng HĐND và UBND.', datetime('now', '+7 hours', '-30 minutes')),
 (3, 4, 'Cán bộ đã tiếp nhận văn bản SEED-DASH-SH-002.', datetime('now', '+7 hours', '-18 minutes')),
 (4, 3, 'Hệ thống ghi nhận tài liệu SEED-DASH-OCR-001 cần xử lý OCR thủ công.', datetime('now', '+7 hours', '-8 minutes'));
+
+-- SEED ROOMS --
+INSERT INTO Rooms (Id, Name, DepartmentId, Status, CreatedAt) VALUES 
+(1, 'Hội trường A, tầng 1, Trụ sở Liên cơ quan', 1, 1, datetime('now', '+7 hours')),
+(2, 'Hội trường Tầng 4 - Trụ sở Đảng ủy phường Cẩm Phả', 1, 1, datetime('now', '+7 hours')),
+(3, 'Phòng họp số 3, tầng 2, Trụ sở Tỉnh ủy', 1, 1, datetime('now', '+7 hours'));
+
+-- SEED MEETINGS --
+INSERT INTO Meetings (Id, Title, StartTime, EndTime, RoomId, Status, CreatorId, CreatedAt) VALUES 
+(1, 'Họp giao ban tuần', datetime('now', '+7 hours', '+1 days', 'start of day', '+8 hours'), datetime('now', '+7 hours', '+1 days', 'start of day', '+10 hours'), 1, 'Sắp diễn ra', 1, datetime('now', '+7 hours')),
+(2, 'Họp xử lý điểm ngập úng', datetime('now', '+7 hours', '+2 days', 'start of day', '+14 hours'), datetime('now', '+7 hours', '+2 days', 'start of day', '+16 hours'), 2, 'Sắp diễn ra', 1, datetime('now', '+7 hours'));
+
+-- SEED MEETING PARTICIPANTS --
+INSERT INTO MeetingParticipants (MeetingId, UserId, AttendanceStatus) VALUES 
+(1, 1, 'Có tham gia'),
+(1, 2, 'Có tham gia'),
+(1, 3, 'Chưa xác nhận'),
+(1, 4, 'Chưa xác nhận'),
+(2, 1, 'Có tham gia'),
+(2, 2, 'Chưa xác nhận');
+
+-- SEED QUESTIONNAIRES --
+INSERT INTO Questionnaires (Id, MeetingId, Title, AssignedTo, Deadline, Status, CreatedAt) VALUES 
+(1, 1, 'Phiếu lấy ý kiến về kế hoạch quý 3', 4, datetime('now', '+7 hours', '+3 days'), 'Chưa trả lời', datetime('now', '+7 hours'));
+
 

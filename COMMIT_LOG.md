@@ -4,6 +4,27 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## Lịch sử
 
+### [2026-06-24 16:15] Triển khai phân hệ Phòng họp không giấy tờ (iCPV Cabinet)
+- **Mô tả**: Dựng khung giao diện và API cơ bản cho phân hệ Phòng họp không giấy tờ theo kiến trúc Modular Monolith. Đã cấu hình các model, repository (ADO.NET), controllers, tách biệt giao diện AppShell riêng nhưng chạy chung một ứng dụng và thêm menu điều hướng. Thư viện FullCalendar được dùng để làm chức năng Lịch họp.
+- **Tệp thay đổi**:
+  - `seed_db.sql` (Sửa đổi)
+  - `ToolCalendar.Core/Models/Room.cs` (Mới)
+  - `ToolCalendar.Core/Models/Meeting.cs` (Mới)
+  - `ToolCalendar.Core/Models/Questionnaire.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/RoomRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/QuestionnaireRepository.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Cabinet/RoomsController.cs` (Mới)
+  - `ToolCalendar.Api/Controllers/Cabinet/MeetingsController.cs` (Mới)
+  - `ToolCalendar.Api/Controllers/Cabinet/QuestionnairesController.cs` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/package.json` (Sửa đổi)
+  - `.githooks/pre-commit` (Sửa đổi đường dẫn config của ESLint)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): triển khai phân hệ phòng họp không giấy tờ theo kiến trúc modular monolith"`
+
 ### [2026-06-23 00:18] Sửa lỗi cú pháp OcrTextProcessingService
 - **Mô tả**: Sửa lỗi dư dấu ngoặc nhọn ở cuối tệp `OcrTextProcessingService.cs` gây lỗi biên dịch khi build Docker.
 - **Tệp thay đổi**:
