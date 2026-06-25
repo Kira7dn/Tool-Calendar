@@ -120,11 +120,39 @@ function Root() {
       setIsAuthenticated(false)
     }
 
+    // 🟢 HỆ THỐNG IDLE TIMEOUT (Auto Logout)
+    let idleTimer = null
+    const IDLE_TIMEOUT_MS = 30 * 60 * 1000 // 30 phút
+
+    const resetIdleTimer = () => {
+      if (idleTimer) clearTimeout(idleTimer)
+      // Chỉ kích hoạt timeout nếu đang đăng nhập
+      if (localStorage.getItem('auth_token')) {
+        idleTimer = setTimeout(() => {
+          console.warn('[Root] Hết thời gian truy cập (Idle Timeout), tự động đăng xuất.')
+          localStorage.removeItem('auth_token')
+          setIsAuthenticated(false)
+          // Có thể thêm 1 state để hiển thị modal báo "Phiên đăng nhập hết hạn do không hoạt động" nếu cần
+          alert('Phiên làm việc đã hết hạn do bạn không hoạt động trong một thời gian dài. Vui lòng đăng nhập lại.')
+        }, IDLE_TIMEOUT_MS)
+      }
+    }
+
+    // Các sự kiện reset timer
+    const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
+    const handleUserActivity = () => resetIdleTimer()
+
+    activityEvents.forEach(evt => window.addEventListener(evt, handleUserActivity))
+    // Khởi tạo timer lần đầu
+    resetIdleTimer()
+
     window.addEventListener('storage', handleStorageChange)
     document.addEventListener('auth:unauthorized', handleUnauthorized)
     document.addEventListener('auth:kicked', handleKicked)
 
     return () => {
+      if (idleTimer) clearTimeout(idleTimer)
+      activityEvents.forEach(evt => window.removeEventListener(evt, handleUserActivity))
       window.removeEventListener('storage', handleStorageChange)
       document.removeEventListener('auth:unauthorized', handleUnauthorized)
       document.removeEventListener('auth:kicked', handleKicked)
