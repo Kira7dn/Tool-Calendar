@@ -25,7 +25,9 @@ namespace ToolCalendar.Tests
             }
 
             var ocrMock = new MockOcrService();
-            _extractorService = new DocumentExtractorService(ocrMock);
+            var imgService = new OcrImageProcessingService();
+            var txtService = new OcrTextProcessingService();
+            _extractorService = new DocumentExtractorService(ocrMock, imgService, txtService);
 
             SetupTestData();
         }

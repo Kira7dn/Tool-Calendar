@@ -120,39 +120,70 @@ function Root() {
       setIsAuthenticated(false)
     }
 
-    // 🟢 HỆ THỐNG IDLE TIMEOUT (Auto Logout)
-    let idleTimer = null
+    // 🟢 HỆ THỐNG IDLE TIMEOUT CHUẨN ENTERPRISE (Auto Logout)
     const IDLE_TIMEOUT_MS = 30 * 60 * 1000 // 30 phút
+    const LAST_ACTIVITY_KEY = 'last_activity_time'
 
-    const resetIdleTimer = () => {
-      if (idleTimer) clearTimeout(idleTimer)
-      // Chỉ kích hoạt timeout nếu đang đăng nhập
-      if (localStorage.getItem('auth_token')) {
-        idleTimer = setTimeout(() => {
-          console.warn('[Root] Hết thời gian truy cập (Idle Timeout), tự động đăng xuất.')
-          localStorage.removeItem('auth_token')
-          setIsAuthenticated(false)
-          // Có thể thêm 1 state để hiển thị modal báo "Phiên đăng nhập hết hạn do không hoạt động" nếu cần
-          alert('Phiên làm việc đã hết hạn do bạn không hoạt động trong một thời gian dài. Vui lòng đăng nhập lại.')
-        }, IDLE_TIMEOUT_MS)
+    // Hàm throttle để giới hạn số lần bắn sự kiện (giảm tải CPU)
+    const throttle = (func, limit) => {
+      let inThrottle
+      return function() {
+        const args = arguments
+        const context = this
+        if (!inThrottle) {
+          func.apply(context, args)
+          inThrottle = true
+          setTimeout(() => inThrottle = false, limit)
+        }
       }
     }
 
-    // Các sự kiện reset timer
-    const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
-    const handleUserActivity = () => resetIdleTimer()
+    // Cập nhật thời gian tương tác vào localStorage để đồng bộ đa Tab
+    const updateActivity = throttle(() => {
+      if (localStorage.getItem('auth_token')) {
+        localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
+      }
+    }, 2000) // Chỉ cập nhật tối đa 1 lần mỗi 2 giây
 
-    activityEvents.forEach(evt => window.addEventListener(evt, handleUserActivity))
-    // Khởi tạo timer lần đầu
-    resetIdleTimer()
+    // Heartbeat kiểm tra mỗi 10 giây xem đã quá hạn 30 phút chưa
+    const checkIdleInterval = setInterval(() => {
+      if (!localStorage.getItem('auth_token')) return
+
+      const lastActivityStr = localStorage.getItem(LAST_ACTIVITY_KEY)
+      if (!lastActivityStr) {
+        localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
+        return
+      }
+
+      const lastActivity = parseInt(lastActivityStr, 10)
+      if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) {
+        console.warn('[Root] Hết thời gian truy cập (Idle Timeout), tự động đăng xuất.')
+        
+        // Gọi API Logout để xóa Cookie HttpOnly trên Backend (chuẩn bảo mật)
+        fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` } }).catch(() => {})
+
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem(LAST_ACTIVITY_KEY)
+        setIsAuthenticated(false)
+        alert('Phiên làm việc đã hết hạn do bạn không hoạt động trong một thời gian dài. Vui lòng đăng nhập lại.')
+      }
+    }, 10000)
+
+    const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
+    activityEvents.forEach(evt => window.addEventListener(evt, updateActivity, { passive: true }))
+
+    // Khởi tạo thời gian lúc mới vào app
+    if (localStorage.getItem('auth_token')) {
+      localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
+    }
 
     window.addEventListener('storage', handleStorageChange)
     document.addEventListener('auth:unauthorized', handleUnauthorized)
     document.addEventListener('auth:kicked', handleKicked)
 
     return () => {
-      if (idleTimer) clearTimeout(idleTimer)
-      activityEvents.forEach(evt => window.removeEventListener(evt, handleUserActivity))
+      clearInterval(checkIdleInterval)
+      activityEvents.forEach(evt => window.removeEventListener(evt, updateActivity))
       window.removeEventListener('storage', handleStorageChange)
       document.removeEventListener('auth:unauthorized', handleUnauthorized)
       document.removeEventListener('auth:kicked', handleKicked)

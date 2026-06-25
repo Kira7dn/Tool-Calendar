@@ -148,7 +148,7 @@ namespace ToolCalendar.Api.Controllers
             {
                 HttpOnly = true,
                 Secure   = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.Strict, // Cập nhật bảo mật chống CSRF
                 Expires  = DateTime.UtcNow.AddHours(24)
             });
 
