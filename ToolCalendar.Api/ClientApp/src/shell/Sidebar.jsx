@@ -10,6 +10,7 @@ import {
   Search,
   BarChart3,
   MonitorPlay,
+  CalendarDays,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -44,6 +45,12 @@ const navItems = [
     url: '/phonghopkhonggiayto',
     label: 'Phòng họp không giấy tờ',
     icon: MonitorPlay,
+  },
+  {
+    isLink: true,
+    url: '/campha',
+    label: 'Lịch công tác',
+    icon: CalendarDays,
   },
 ]
 
