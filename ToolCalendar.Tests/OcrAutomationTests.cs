@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using ToolCalendar.Data;
@@ -37,7 +37,9 @@ namespace ToolCalendar.Tests
 
             _isLocalOcrRuntimeAvailable = OcrTestRuntimeHelper.IsTesseractCliAvailable();
             _ocrService = new OcrService(_configuration, NullLogger<OcrService>.Instance);
-            _extractorService = new DocumentExtractorService(_ocrService);
+            var imgService = new OcrImageProcessingService();
+            var txtService = new OcrTextProcessingService();
+            _extractorService = new DocumentExtractorService(_ocrService, imgService, txtService);
         }
 
         private static void ConfigureTestDatabase(string fileName)
