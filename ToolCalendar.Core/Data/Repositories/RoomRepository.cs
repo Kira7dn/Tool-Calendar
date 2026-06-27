@@ -9,7 +9,9 @@ namespace ToolCalendar.Core.Data.Repositories
         Task<List<Room>> GetAllAsync();
         Task<Room?> GetByIdAsync(int id);
         Task<int> CreateAsync(Room room);
+        Task<bool> UpdateAsync(int id, Room room);
         Task<bool> UpdateStatusAsync(int id, int status);
+        Task<bool> DeleteAsync(int id);
     }
 
     public class RoomRepository : IRoomRepository
@@ -104,6 +106,24 @@ namespace ToolCalendar.Core.Data.Repositories
             return Convert.ToInt32(result);
         }
 
+        public async Task<bool> UpdateAsync(int id, Room room)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            string sql = @"UPDATE Rooms 
+                SET Name = @name, DepartmentId = @depId, Status = @status 
+                WHERE Id = @id";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@name", room.Name);
+            cmd.Parameters.AddWithValue("@depId", (object?)room.DepartmentId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@status", room.Status);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            int rows = await cmd.ExecuteNonQueryAsync();
+            return rows > 0;
+        }
+
         public async Task<bool> UpdateStatusAsync(int id, int status)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -112,6 +132,27 @@ namespace ToolCalendar.Core.Data.Repositories
             string sql = "UPDATE Rooms SET Status = @status WHERE Id = @id";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@status", status);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            int rows = await cmd.ExecuteNonQueryAsync();
+            return rows > 0;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // Kiểm tra phòng họp không có lịch đặt trong tương lai
+            string checkSql = @"SELECT COUNT(*) FROM Meetings 
+                WHERE RoomId = @id AND EndTime > datetime('now') AND Status != 'Hủy'";
+            using var checkCmd = new SqliteCommand(checkSql, connection);
+            checkCmd.Parameters.AddWithValue("@id", id);
+            var count = Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
+            if (count > 0) return false; // Không xóa được vì đang có lịch họp
+
+            string sql = "DELETE FROM Rooms WHERE Id = @id";
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
 
             int rows = await cmd.ExecuteNonQueryAsync();
