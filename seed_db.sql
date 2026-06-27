@@ -29,11 +29,11 @@ INSERT INTO Departments (Id, Name, IsActive) VALUES
 -- (Thỏa mãn: >=8 ký tự, 1 HOA, 1 thường, 1 số, 1 đặc biệt, không nằm trong list cấm)
 -- Hash BCrypt (WorkFactor 12): $2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK
 
-INSERT INTO Users (Id, Username, PasswordHash, FullName, Email, PhoneNumber, Role, DepartmentId, CreatedAt) VALUES 
-(1, 'admin', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Quản trị viên', 'admin@campha.gov.vn', '0912345678', 'Admin', 1, datetime('now', '+7 hours')),
-(2, 'chanhvanphong', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Nguyễn Thị Nơ', 'nguyenthino@campha.gov.vn', '0901234455', 'LanhDao', 1, datetime('now', '+7 hours')),
-(3, 'vanthu', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Hoàng Thị Nhu', 'hoangthinhu@campha.gov.vn', '0902345566', 'VanThu', 1, datetime('now', '+7 hours')),
-(4, 'nguyenanhduc', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Nguyễn Anh Đức', 'anhduc@campha.gov.vn', '0902345566', 'CanBo', 1, datetime('now', '+7 hours'));
+INSERT INTO Users (Id, Username, NormalizedUserName, PasswordHash, FullName, Email, PhoneNumber, Role, DepartmentId, CreatedAt) VALUES 
+(1, 'admin', 'ADMIN', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Quản trị viên', 'admin@campha.gov.vn', '0912345678', 'Admin', 1, datetime('now', '+7 hours')),
+(2, 'chanhvanphong', 'CHANHVANPHONG', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Nguyễn Thị Nơ', 'nguyenthino@campha.gov.vn', '0901234455', 'LanhDao', 1, datetime('now', '+7 hours')),
+(3, 'vanthu', 'VANTHU', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Hoàng Thị Nhu', 'hoangthinhu@campha.gov.vn', '0902345566', 'VanThu', 1, datetime('now', '+7 hours')),
+(4, 'nguyenanhduc', 'NGUYENANHDUC', '$2a$12$rWRxcTCzNGVpmk.b1t.oxuIs1NqQfdIbTVz7r0cUGIRQPYsgi.4IK', 'Nguyễn Anh Đức', 'anhduc@campha.gov.vn', '0902345566', 'CanBo', 1, datetime('now', '+7 hours'));
 
 -- SEED DASHBOARD DOCUMENTS --
 -- Nhóm dữ liệu mẫu phục vụ dashboard: đang xử lý, quá hạn, đến hạn hôm nay, sắp hạn và lỗi OCR.

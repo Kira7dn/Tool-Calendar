@@ -174,3 +174,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Data/Repositories/UserRepository.cs`
   - `ToolCalendar.Api/Controllers/UsersController.cs`
 
+
+### [2026-06-27 22:20] Fix lỗi không đăng nhập được với dữ liệu mẫu
+- **Mô tả**: Khi nạp dữ liệu mẫu từ `seed_db.sql`, cột `NormalizedUserName` bị bỏ trống. Điều này khiến hàm `FindByNameAsync` trong Identity (so khớp theo `NormalizedUserName` in hoa) không tìm thấy tài khoản, gây ra lỗi đăng nhập (trả về 401). Đã bổ sung cột `NormalizedUserName` vào câu lệnh INSERT và chạy script cập nhật trực tiếp trên CSDL để fix lỗi.
+- **Tệp thay đổi**:
+  - `seed_db.sql` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(auth): bổ sung NormalizedUserName cho users trong seed data để fix lỗi login"`
