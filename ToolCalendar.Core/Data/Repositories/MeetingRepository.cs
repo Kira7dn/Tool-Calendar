@@ -7,7 +7,13 @@ namespace ToolCalendar.Core.Data.Repositories
     public interface IMeetingRepository
     {
         Task<List<Meeting>> GetAllAsync();
+        Task<Meeting?> GetByIdAsync(int id);
+        Task<List<Meeting>> GetByCreatorAsync(int creatorId);
         Task<List<MeetingParticipant>> GetParticipantsByMeetingIdAsync(int meetingId);
+        Task<int> CreateAsync(CreateMeetingRequest request, int creatorId);
+        Task<bool> UpdateAsync(int id, CreateMeetingRequest request);
+        Task<bool> CancelAsync(int id);
+        Task<bool> DeleteAsync(int id);
     }
 
     public class MeetingRepository : IMeetingRepository
@@ -16,10 +22,37 @@ namespace ToolCalendar.Core.Data.Repositories
 
         public MeetingRepository(IConfiguration configuration)
         {
-            var dbPath = Environment.GetEnvironmentVariable("DB_PATH") 
+            var dbPath = Environment.GetEnvironmentVariable("DB_PATH")
                 ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ToolCalendar", "documents.db");
             _connectionString = $"Data Source={dbPath};Pooling=True;Default Timeout=30;Cache=Shared";
         }
+
+        private static Meeting MapMeeting(SqliteDataReader r) => new()
+        {
+            Id = Convert.ToInt32(r["Id"]),
+            Title = r["Title"]?.ToString() ?? "",
+            StartTime = DateTime.Parse(r["StartTime"]?.ToString() ?? DateTime.UtcNow.ToString()),
+            EndTime = DateTime.Parse(r["EndTime"]?.ToString() ?? DateTime.UtcNow.ToString()),
+            RoomId = r["RoomId"] == DBNull.Value ? 0 : Convert.ToInt32(r["RoomId"]),
+            RoomName = r["RoomName"]?.ToString(),
+            Status = r["Status"]?.ToString() ?? "Sắp diễn ra",
+            CreatorId = r["CreatorId"] == DBNull.Value ? 0 : Convert.ToInt32(r["CreatorId"]),
+            CreatorName = r["CreatorName"]?.ToString(),
+            CreatedAt = DateTime.Parse(r["CreatedAt"]?.ToString() ?? DateTime.UtcNow.ToString()),
+            Location = r["Location"]?.ToString(),
+            Presider = r["Presider"]?.ToString(),
+            PreparingUnit = r["PreparingUnit"]?.ToString(),
+            Content = r["Content"]?.ToString(),
+            Notes = r["Notes"]?.ToString(),
+            OrganizingUnit = r["OrganizingUnit"]?.ToString(),
+            ExpectedAttendees = r["ExpectedAttendees"] == DBNull.Value ? 0 : Convert.ToInt32(r["ExpectedAttendees"]),
+        };
+
+        private const string BASE_SELECT = @"
+            SELECT m.*, r.Name as RoomName, u.FullName as CreatorName 
+            FROM Meetings m 
+            LEFT JOIN Rooms r ON m.RoomId = r.Id 
+            LEFT JOIN Users u ON m.CreatorId = u.Id";
 
         public async Task<List<Meeting>> GetAllAsync()
         {
@@ -27,42 +60,58 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            string sql = @"
-                SELECT m.*, r.Name as RoomName, u.FullName as CreatorName 
-                FROM Meetings m 
-                LEFT JOIN Rooms r ON m.RoomId = r.Id 
-                LEFT JOIN Users u ON m.CreatorId = u.Id 
-                ORDER BY m.StartTime ASC";
+            using var cmd = new SqliteCommand($"{BASE_SELECT} ORDER BY m.StartTime ASC", connection);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                list.Add(MapMeeting(reader));
 
-            using var cmd = new SqliteCommand(sql, connection);
+            return list;
+        }
+
+        public async Task<Meeting?> GetByIdAsync(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var cmd = new SqliteCommand($"{BASE_SELECT} WHERE m.Id = @id", connection);
+            cmd.Parameters.AddWithValue("@id", id);
             using var reader = await cmd.ExecuteReaderAsync();
 
-            while (await reader.ReadAsync())
+            if (await reader.ReadAsync())
             {
-                list.Add(new Meeting
-                {
-                    Id = Convert.ToInt32(reader["Id"]),
-                    Title = reader["Title"]?.ToString() ?? "",
-                    StartTime = DateTime.Parse(reader["StartTime"]?.ToString() ?? DateTime.UtcNow.ToString()),
-                    EndTime = DateTime.Parse(reader["EndTime"]?.ToString() ?? DateTime.UtcNow.ToString()),
-                    RoomId = Convert.ToInt32(reader["RoomId"]),
-                    RoomName = reader["RoomName"]?.ToString(),
-                    Status = reader["Status"]?.ToString() ?? "Sắp diễn ra",
-                    CreatorId = Convert.ToInt32(reader["CreatorId"]),
-                    CreatorName = reader["CreatorName"]?.ToString(),
-                    CreatedAt = DateTime.Parse(reader["CreatedAt"]?.ToString() ?? DateTime.UtcNow.ToString())
-                });
+                var meeting = MapMeeting(reader);
+                reader.Close();
+                meeting.Participants = await GetParticipantsByMeetingIdAsync(id, connection);
+                return meeting;
             }
+            return null;
+        }
+
+        public async Task<List<Meeting>> GetByCreatorAsync(int creatorId)
+        {
+            var list = new List<Meeting>();
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var cmd = new SqliteCommand($"{BASE_SELECT} WHERE m.CreatorId = @cid ORDER BY m.StartTime DESC", connection);
+            cmd.Parameters.AddWithValue("@cid", creatorId);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                list.Add(MapMeeting(reader));
 
             return list;
         }
 
         public async Task<List<MeetingParticipant>> GetParticipantsByMeetingIdAsync(int meetingId)
         {
-            var list = new List<MeetingParticipant>();
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
+            return await GetParticipantsByMeetingIdAsync(meetingId, connection);
+        }
 
+        private static async Task<List<MeetingParticipant>> GetParticipantsByMeetingIdAsync(int meetingId, SqliteConnection connection)
+        {
+            var list = new List<MeetingParticipant>();
             string sql = @"
                 SELECT mp.*, u.FullName as UserFullName, d.Name as DepartmentName 
                 FROM MeetingParticipants mp 
@@ -73,7 +122,6 @@ namespace ToolCalendar.Core.Data.Repositories
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@mId", meetingId);
             using var reader = await cmd.ExecuteReaderAsync();
-
             while (await reader.ReadAsync())
             {
                 list.Add(new MeetingParticipant
@@ -85,8 +133,133 @@ namespace ToolCalendar.Core.Data.Repositories
                     AttendanceStatus = reader["AttendanceStatus"]?.ToString() ?? "Chưa xác nhận"
                 });
             }
-
             return list;
+        }
+
+        public async Task<int> CreateAsync(CreateMeetingRequest req, int creatorId)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            using var tx = connection.BeginTransaction();
+
+            string sql = @"
+                INSERT INTO Meetings 
+                    (Title, StartTime, EndTime, RoomId, Status, CreatorId, CreatedAt,
+                     Location, Presider, PreparingUnit, Content, Notes, OrganizingUnit, ExpectedAttendees)
+                VALUES 
+                    (@title, @start, @end, @roomId, 'Sắp diễn ra', @creator, @now,
+                     @location, @presider, @preparingUnit, @content, @notes, @orgUnit, @expected);
+                SELECT last_insert_rowid();";
+
+            using var cmd = new SqliteCommand(sql, connection, tx);
+            cmd.Parameters.AddWithValue("@title", req.Title);
+            cmd.Parameters.AddWithValue("@start", req.StartTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@end", req.EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@roomId", req.RoomId);
+            cmd.Parameters.AddWithValue("@creator", creatorId);
+            cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@location", (object?)req.Location ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@presider", (object?)req.Presider ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@preparingUnit", (object?)req.PreparingUnit ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@content", (object?)req.Content ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@orgUnit", (object?)req.OrganizingUnit ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
+
+            var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+
+            // Thêm danh sách tham dự
+            foreach (var userId in req.ParticipantUserIds.Distinct())
+            {
+                using var pCmd = new SqliteCommand(
+                    "INSERT OR IGNORE INTO MeetingParticipants (MeetingId, UserId, AttendanceStatus) VALUES (@m, @u, 'Chưa xác nhận')",
+                    connection, tx);
+                pCmd.Parameters.AddWithValue("@m", newId);
+                pCmd.Parameters.AddWithValue("@u", userId);
+                await pCmd.ExecuteNonQueryAsync();
+            }
+
+            tx.Commit();
+            return newId;
+        }
+
+        public async Task<bool> UpdateAsync(int id, CreateMeetingRequest req)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            using var tx = connection.BeginTransaction();
+
+            string sql = @"
+                UPDATE Meetings SET
+                    Title = @title, StartTime = @start, EndTime = @end, RoomId = @roomId,
+                    Location = @location, Presider = @presider, PreparingUnit = @preparingUnit,
+                    Content = @content, Notes = @notes, OrganizingUnit = @orgUnit,
+                    ExpectedAttendees = @expected
+                WHERE Id = @id";
+
+            using var cmd = new SqliteCommand(sql, connection, tx);
+            cmd.Parameters.AddWithValue("@title", req.Title);
+            cmd.Parameters.AddWithValue("@start", req.StartTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@end", req.EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@roomId", req.RoomId);
+            cmd.Parameters.AddWithValue("@location", (object?)req.Location ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@presider", (object?)req.Presider ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@preparingUnit", (object?)req.PreparingUnit ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@content", (object?)req.Content ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@orgUnit", (object?)req.OrganizingUnit ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            int rows = await cmd.ExecuteNonQueryAsync();
+
+            // Cập nhật lại danh sách tham dự nếu có thay đổi
+            if (req.ParticipantUserIds.Count > 0)
+            {
+                using var delCmd = new SqliteCommand("DELETE FROM MeetingParticipants WHERE MeetingId = @m", connection, tx);
+                delCmd.Parameters.AddWithValue("@m", id);
+                await delCmd.ExecuteNonQueryAsync();
+
+                foreach (var userId in req.ParticipantUserIds.Distinct())
+                {
+                    using var pCmd = new SqliteCommand(
+                        "INSERT INTO MeetingParticipants (MeetingId, UserId, AttendanceStatus) VALUES (@m, @u, 'Chưa xác nhận')",
+                        connection, tx);
+                    pCmd.Parameters.AddWithValue("@m", id);
+                    pCmd.Parameters.AddWithValue("@u", userId);
+                    await pCmd.ExecuteNonQueryAsync();
+                }
+            }
+
+            tx.Commit();
+            return rows > 0;
+        }
+
+        public async Task<bool> CancelAsync(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            using var cmd = new SqliteCommand("UPDATE Meetings SET Status = 'Hủy' WHERE Id = @id", connection);
+            cmd.Parameters.AddWithValue("@id", id);
+            return await cmd.ExecuteNonQueryAsync() > 0;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            using var tx = connection.BeginTransaction();
+
+            using var delP = new SqliteCommand("DELETE FROM MeetingParticipants WHERE MeetingId = @id", connection, tx);
+            delP.Parameters.AddWithValue("@id", id);
+            await delP.ExecuteNonQueryAsync();
+
+            using var delM = new SqliteCommand("DELETE FROM Meetings WHERE Id = @id", connection, tx);
+            delM.Parameters.AddWithValue("@id", id);
+            int rows = await delM.ExecuteNonQueryAsync();
+
+            tx.Commit();
+            return rows > 0;
         }
     }
 }

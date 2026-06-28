@@ -1,19 +1,29 @@
 /* eslint-disable */
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { MeetingModal } from '../components/MeetingModal'
 
 const AUTH_HEADER = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
 })
 
-const SCHEDULE_ENDPOINTS = {
-  personal: '/api/phonghopkhonggiayto/meetings/schedule',
-  leader: '/api/phonghopkhonggiayto/meetings/leader-schedule',
-  unit: '/api/phonghopkhonggiayto/meetings/unit-schedule',
+const statusColor = (status) => {
+  switch (status) {
+    case 'Đang diễn ra':
+      return '#16a34a'
+    case 'Sắp diễn ra':
+      return '#2563eb'
+    case 'Hoàn thành':
+      return '#6b7280'
+    case 'Hủy':
+      return '#dc2626'
+    default:
+      return '#c8102e'
+  }
 }
 
 export function CabinetSchedule({ scheduleType = 'personal' }) {
@@ -21,15 +31,14 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
   const [viewMode, setViewMode] = useState('timeGridWeek')
   const [calendarTitle, setCalendarTitle] = useState('')
   const [loading, setLoading] = useState(true)
+  const [modal, setModal] = useState(null) // null | { mode: 'add' } | { mode: 'edit', meeting }
   const calendarRef = useRef(null)
 
-  useEffect(() => {
+  const fetchMeetings = useCallback(() => {
     setLoading(true)
-    const url = SCHEDULE_ENDPOINTS[scheduleType] || SCHEDULE_ENDPOINTS.personal
-    fetch(url, { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER() })
       .then((r) => r.json())
       .then((json) => {
-        // Handle both wrapped and unwrapped response
         const data = json.data || json
         if (Array.isArray(data)) {
           const events = data.map((m) => ({
@@ -39,29 +48,18 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
             end: m.endTime,
             backgroundColor: statusColor(m.status),
             borderColor: 'transparent',
-            extendedProps: { room: m.roomName, status: m.status },
+            extendedProps: { room: m.roomName, status: m.status, meeting: m },
           }))
           setMeetings(events)
         }
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [scheduleType])
+  }, [])
 
-  const statusColor = (status) => {
-    switch (status) {
-      case 'Đang diễn ra':
-        return '#16a34a'
-      case 'Sắp diễn ra':
-        return '#2563eb'
-      case 'Hoàn thành':
-        return '#6b7280'
-      case 'Hủy':
-        return '#dc2626'
-      default:
-        return '#c8102e'
-    }
-  }
+  useEffect(() => {
+    fetchMeetings()
+  }, [scheduleType, fetchMeetings])
 
   const calendarApi = () => calendarRef.current?.getApi()
 
@@ -89,6 +87,11 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
     }, 120)
   }, [])
 
+  const handleSaved = () => {
+    setModal(null)
+    fetchMeetings()
+  }
+
   const VIEW_BUTTONS = [
     { key: 'timeGridDay', label: 'Ngày' },
     { key: 'timeGridWeek', label: 'Tuần' },
@@ -97,10 +100,22 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Meeting modal */}
+      {modal && (
+        <MeetingModal
+          meeting={modal.mode === 'edit' ? modal.meeting : null}
+          onClose={() => setModal(null)}
+          onSaved={handleSaved}
+        />
+      )}
+
       {/* Sub-header */}
       <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0">
         <h1 className="text-xl font-bold text-gray-800">Lịch họp</h1>
-        <button className="flex items-center gap-2 bg-[#c8102e] hover:bg-[#a50e27] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+        <button
+          onClick={() => setModal({ mode: 'add' })}
+          className="flex items-center gap-2 bg-[#c8102e] hover:bg-[#a50e27] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"
+        >
           <Plus size={15} />
           Tạo phiên họp mới
         </button>
@@ -179,6 +194,9 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
               slotMaxTime="20:00:00"
               allDaySlot={false}
               nowIndicator={true}
+              eventClick={(info) => {
+                setModal({ mode: 'edit', meeting: info.event.extendedProps.meeting })
+              }}
               eventContent={(arg) => (
                 <div className="px-1.5 py-1 text-[11px] text-white h-full overflow-hidden rounded cursor-pointer hover:brightness-90 transition-all">
                   <div className="font-bold leading-tight truncate">{arg.event.title}</div>
