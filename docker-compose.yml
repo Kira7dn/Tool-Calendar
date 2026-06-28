@@ -66,6 +66,7 @@ services:
 
   nginx:
     image: nginx:alpine
+    platform: linux/amd64
     container_name: nginx-proxy
     ports:
       - "80:80"
@@ -79,6 +80,7 @@ services:
 
   ngrok:
     image: ngrok/ngrok:alpine
+    platform: linux/amd64
     container_name: doc-coordination-ngrok
     restart: always
     environment:

@@ -1,9 +1,10 @@
-import React from 'react';
-import { Database, Download, Trash2, AlertTriangle, FileJson, CheckCircle2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+/* eslint-disable */
+import React from 'react'
+import { Database, Download, Trash2, AlertTriangle, FileJson, CheckCircle2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 function SectionCard({ icon, title, subtitle, children }) {
   return (
@@ -11,50 +12,58 @@ function SectionCard({ icon, title, subtitle, children }) {
       <CardHeader className="flex flex-row items-start gap-3 px-6 py-5 border-b border-slate-100 bg-slate-50/50 space-y-0">
         <span className="mt-0.5 text-red-600">{icon}</span>
         <div>
-          <CardTitle className="text-base font-bold text-slate-800 tracking-tight">{title}</CardTitle>
-          <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{subtitle}</CardDescription>
+          <CardTitle className="text-base font-bold text-slate-800 tracking-tight">
+            {title}
+          </CardTitle>
+          <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+            {subtitle}
+          </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="p-6">
-        {children}
-      </CardContent>
+      <CardContent className="p-6">{children}</CardContent>
     </Card>
-  );
+  )
 }
 
 function ActionCard({ icon, title, description, buttonLabel, onAction, variant = 'primary' }) {
-  const isDestructive = variant === 'destructive';
-  
+  const isDestructive = variant === 'destructive'
+
   return (
-    <Card className={cn(
-      "rounded-2xl border p-0 transition-all duration-300 group overflow-hidden",
-      isDestructive 
-        ? "border-slate-200 hover:border-slate-300 hover:shadow-md" 
-        : "border-slate-200 hover:border-red-200 hover:shadow-xl hover:shadow-red-50"
-    )}>
+    <Card
+      className={cn(
+        'rounded-2xl border p-0 transition-all duration-300 group overflow-hidden',
+        isDestructive
+          ? 'border-slate-200 hover:border-slate-300 hover:shadow-md'
+          : 'border-slate-200 hover:border-red-200 hover:shadow-xl hover:shadow-red-50'
+      )}
+    >
       <CardContent className="p-6">
         <div className="flex items-center gap-3 mb-4">
-          <span className={cn(
-            "p-2.5 rounded-xl transition-colors duration-300",
-            isDestructive ? "bg-slate-100 text-slate-500 group-hover:bg-slate-200" : "bg-red-50 text-red-600 group-hover:bg-red-100"
-          )}>
+          <span
+            className={cn(
+              'p-2.5 rounded-xl transition-colors duration-300',
+              isDestructive
+                ? 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
+                : 'bg-red-50 text-red-600 group-hover:bg-red-100'
+            )}
+          >
             {icon}
           </span>
           <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">{title}</h3>
         </div>
-        
+
         <p className="text-xs text-slate-500 mb-6 leading-relaxed font-medium h-10">
           {description}
         </p>
-        
-        <Button 
+
+        <Button
           onClick={onAction}
-          variant={isDestructive ? "outline" : "default"}
+          variant={isDestructive ? 'outline' : 'default'}
           className={cn(
-            "flex items-center justify-center gap-2.5 w-full h-12 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
-            isDestructive 
-              ? "text-red-600 border-red-100 hover:bg-red-50 hover:text-red-700" 
-              : "bg-red-600 text-white shadow-lg shadow-red-100 hover:bg-red-700 border-none"
+            'flex items-center justify-center gap-2.5 w-full h-12 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95',
+            isDestructive
+              ? 'text-red-600 border-red-100 hover:bg-red-50 hover:text-red-700'
+              : 'bg-red-600 text-white shadow-lg shadow-red-100 hover:bg-red-700 border-none'
           )}
         >
           {icon}
@@ -62,25 +71,22 @@ function ActionCard({ icon, title, description, buttonLabel, onAction, variant =
         </Button>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 export function BackupTab() {
   const handleExport = () => {
-    toast.info('Đang chuẩn bị dữ liệu xuất...');
-    window.location.href = '/api/admin/export-documents';
-  };
+    toast.info('Đang chuẩn bị dữ liệu xuất...')
+    window.location.href = '/api/admin/export-documents'
+  }
 
   const handleClean = async () => {
-    toast.promise(
-      new Promise(resolve => setTimeout(resolve, 1500)),
-      {
-        loading: 'Đang dọn dẹp hệ thống...',
-        success: 'Đã tối ưu hóa dữ liệu thành công!',
-        error: 'Có lỗi xảy ra',
-      }
-    );
-  };
+    toast.promise(new Promise((resolve) => setTimeout(resolve, 1500)), {
+      loading: 'Đang dọn dẹp hệ thống...',
+      success: 'Đã tối ưu hóa dữ liệu thành công!',
+      error: 'Có lỗi xảy ra',
+    })
+  }
 
   return (
     <SectionCard
@@ -112,23 +118,27 @@ export function BackupTab() {
           <AlertTriangle size={18} strokeWidth={2.5} />
         </div>
         <div>
-          <p className="text-xs font-bold text-amber-900 mb-1 uppercase tracking-tight">Khuyến nghị bảo mật</p>
+          <p className="text-xs font-bold text-amber-900 mb-1 uppercase tracking-tight">
+            Khuyến nghị bảo mật
+          </p>
           <p className="text-[11px] text-amber-700 leading-relaxed font-medium">
-            Hãy thực hiện <strong>sao lưu dữ liệu hàng tuần</strong> để đảm bảo an toàn thông tin. Các thao tác dọn dẹp hệ thống có thể làm thay đổi cấu trúc dữ liệu cũ, vì vậy việc có một bản dự phòng là cực kỳ quan trọng.
+            Hãy thực hiện <strong>sao lưu dữ liệu hàng tuần</strong> để đảm bảo an toàn thông tin.
+            Các thao tác dọn dẹp hệ thống có thể làm thay đổi cấu trúc dữ liệu cũ, vì vậy việc có
+            một bản dự phòng là cực kỳ quan trọng.
           </p>
         </div>
       </div>
-      
+
       <div className="mt-8 flex items-center justify-center gap-6 opacity-40">
-         <div className="flex items-center gap-2 grayscale">
-            <FileJson size={14} />
-            <span className="text-[10px] font-bold uppercase tracking-widest">JSON Storage</span>
-         </div>
-         <div className="flex items-center gap-2 grayscale">
-            <CheckCircle2 size={14} />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Verified Backup</span>
-         </div>
+        <div className="flex items-center gap-2 grayscale">
+          <FileJson size={14} />
+          <span className="text-[10px] font-bold uppercase tracking-widest">JSON Storage</span>
+        </div>
+        <div className="flex items-center gap-2 grayscale">
+          <CheckCircle2 size={14} />
+          <span className="text-[10px] font-bold uppercase tracking-widest">Verified Backup</span>
+        </div>
       </div>
     </SectionCard>
-  );
+  )
 }

@@ -304,7 +304,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
                     type="text"
                     value={form.presider}
                     onChange={set('presider')}
-                    placeholder="VD: Đ/c Nguyễn Đức Dương - Phó Chủ tịch UBND (chủ trì)"
+                    placeholder="VD: Đ/c Hoàng Việt Dũng - Phó Bí thư Đảng uỷ, Chủ tịch UBND phường (chủ trì)"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8102e]/25 focus:border-[#c8102e] transition"
                   />
                 </div>

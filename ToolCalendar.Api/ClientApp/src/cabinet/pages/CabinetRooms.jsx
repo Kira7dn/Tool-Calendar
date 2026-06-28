@@ -105,11 +105,13 @@ function RoomModal({ mode, room, departments, onClose, onSaved }) {
         body: JSON.stringify(body),
       })
       const json = await res.json()
-      if (!res.ok || json.success === false) {
-        setError(json.message || 'Có lỗi xảy ra, vui lòng thử lại.')
+      // Global fetch interceptor trong main.jsx đã unwrap ApiResponse<T>
+      // nên json ở đây ĐÃ là data rồi, không phải json.data
+      if (!res.ok || json?.error || json?.success === false) {
+        setError(json?.message || json?.error || 'Có lỗi xảy ra, vui lòng thử lại.')
         return
       }
-      onSaved(json.data, isEdit ? 'updated' : 'created')
+      onSaved(json, isEdit ? 'updated' : 'created')
     } catch {
       setError('Không thể kết nối đến máy chủ.')
     } finally {
@@ -425,6 +427,15 @@ export function CabinetRooms() {
 
   // After save (create or update)
   const handleSaved = (savedRoom, action) => {
+    if (!savedRoom || typeof savedRoom !== 'object') {
+      // Nếu dữ liệu trả về không hợp lệ, tải lại danh sách từ server
+      fetchRooms()
+      showToast(
+        action === 'created' ? 'Thêm phòng họp thành công!' : 'Cập nhật phòng họp thành công!'
+      )
+      setModal(null)
+      return
+    }
     if (action === 'created') {
       setRooms((prev) => [savedRoom, ...prev])
       showToast('Thêm phòng họp thành công!')
@@ -446,8 +457,8 @@ export function CabinetRooms() {
   const filtered = rooms.filter(
     (r) =>
       !search ||
-      r.name?.toLowerCase().includes(search.toLowerCase()) ||
-      r.departmentName?.toLowerCase().includes(search.toLowerCase())
+      (r.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (r.departmentName || '').toLowerCase().includes(search.toLowerCase())
   )
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize)

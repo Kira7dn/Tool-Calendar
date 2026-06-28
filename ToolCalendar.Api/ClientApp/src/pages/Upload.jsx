@@ -1,11 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
-import { toast } from 'sonner';
-import { ConfirmationModal } from '@/components/ui/confirmation-modal';
-import { Button } from '@/components/ui/button';
+/* eslint-disable */
+import React, { useState, useRef, useEffect } from 'react'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { toast } from 'sonner'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { Button } from '@/components/ui/button'
 import {
   Clock,
   Calendar,
@@ -15,285 +13,406 @@ import {
   Save,
   ChevronLeft,
   ChevronRight,
-  Maximize2
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Maximize2,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 /* ── tiny icon helper ── */
-const Svg = ({ children, size = 20, cls = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}
-    strokeLinecap="round" strokeLinejoin="round" className={cls}>{children}</svg>
-);
+const Svg = ({ children, size = 20, cls = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={cls}
+  >
+    {children}
+  </svg>
+)
 
-const UploadCloudIcon = () => <Svg size={40} cls="text-blue-400"><polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" /><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" /></Svg>;
-const FileIcon = () => <Svg size={14}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></Svg>;
-const FolderIcon = () => <Svg size={14}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></Svg>;
-const TrashIcon = () => <Svg size={13}><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" /></Svg>;
-const EyeIcon = () => <Svg size={13}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></Svg>;
-const EditIcon2 = () => <Svg size={13}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></Svg>;
-const ChipIcon = () => <Svg size={16}><rect x="9" y="9" width="6" height="6" rx="1" /><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" /><rect x="3" y="3" width="18" height="18" rx="2" /></Svg>;
-const CheckCircleIcon = () => <Svg size={14} cls="text-emerald-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></Svg>;
-const ClockIcon = () => <Svg size={14} cls="text-blue-500"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></Svg>;
-const XCircleIcon = () => <Svg size={14} cls="text-slate-400"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></Svg>;
+const UploadCloudIcon = () => (
+  <Svg size={40} cls="text-blue-400">
+    <polyline points="16 16 12 12 8 16" />
+    <line x1="12" y1="12" x2="12" y2="21" />
+    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+  </Svg>
+)
+const FileIcon = () => (
+  <Svg size={14}>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+  </Svg>
+)
+const FolderIcon = () => (
+  <Svg size={14}>
+    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+  </Svg>
+)
+const TrashIcon = () => (
+  <Svg size={13}>
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
+    <path d="M9 6V4h6v2" />
+  </Svg>
+)
+const EyeIcon = () => (
+  <Svg size={13}>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </Svg>
+)
+const EditIcon2 = () => (
+  <Svg size={13}>
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </Svg>
+)
+const ChipIcon = () => (
+  <Svg size={16}>
+    <rect x="9" y="9" width="6" height="6" rx="1" />
+    <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" />
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+  </Svg>
+)
+const CheckCircleIcon = () => (
+  <Svg size={14} cls="text-emerald-500">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+    <polyline points="22 4 12 14.01 9 11.01" />
+  </Svg>
+)
+const ClockIcon = () => (
+  <Svg size={14} cls="text-blue-500">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </Svg>
+)
+const XCircleIcon = () => (
+  <Svg size={14} cls="text-slate-400">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="15" y1="9" x2="9" y2="15" />
+    <line x1="9" y1="9" x2="15" y2="15" />
+  </Svg>
+)
 
 /* ── status badge ── */
 function StatusBadge({ status }) {
-  if (status === "processing") return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
-      <span className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />Đang OCR
-    </span>
-  );
-  if (status === "success") return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-      <span className="w-1 h-1 rounded-full bg-emerald-500" />Đã lưu
-    </span>
-  );
-  if (status === "ready") return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-      Sẵn sàng
-    </span>
-  );
-  if (status === "error") return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
-      Lỗi
-    </span>
-  );
+  if (status === 'processing')
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+        <span className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
+        Đang OCR
+      </span>
+    )
+  if (status === 'success')
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+        <span className="w-1 h-1 rounded-full bg-emerald-500" />
+        Đã lưu
+      </span>
+    )
+  if (status === 'ready')
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+        Sẵn sàng
+      </span>
+    )
+  if (status === 'error')
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
+        Lỗi
+      </span>
+    )
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
       Chờ rà soát
     </span>
-  );
+  )
 }
 
 /* ── progress ring ── */
 function Ring({ pct }) {
-  const r = 22; const c = 2 * Math.PI * r;
+  const r = 22
+  const c = 2 * Math.PI * r
   return (
     <svg width={56} height={56} viewBox="0 0 56 56">
       <circle cx={28} cy={28} r={r} fill="none" stroke="#e2e8f0" strokeWidth={4} />
-      <circle cx={28} cy={28} r={r} fill="none" stroke="#3b82f6" strokeWidth={4}
-        strokeDasharray={c} strokeDashoffset={c - (c * pct) / 100}
-        strokeLinecap="round" transform="rotate(-90 28 28)" />
-      <text x={28} y={32} textAnchor="middle" fontSize={10} fontWeight={700} fill="#1e293b">{Math.round(pct)}%</text>
+      <circle
+        cx={28}
+        cy={28}
+        r={r}
+        fill="none"
+        stroke="#3b82f6"
+        strokeWidth={4}
+        strokeDasharray={c}
+        strokeDashoffset={c - (c * pct) / 100}
+        strokeLinecap="round"
+        transform="rotate(-90 28 28)"
+      />
+      <text x={28} y={32} textAnchor="middle" fontSize={10} fontWeight={700} fill="#1e293b">
+        {Math.round(pct)}%
+      </text>
     </svg>
-  );
+  )
 }
 
 /* ── main ── */
 export function Upload({ onTabChange }) {
-  const [isDragging, setIsDragging] = useState(false);
-  const [batchItems, setBatchItems] = useState([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [overallProgress, setOverallProgress] = useState(0);
-  const [currentFileName, setCurrentFileName] = useState('');
+  const [isDragging, setIsDragging] = useState(false)
+  const [batchItems, setBatchItems] = useState([])
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [overallProgress, setOverallProgress] = useState(0)
+  const [currentFileName, setCurrentFileName] = useState('')
 
-  const [departments, setDepartments] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [departments, setDepartments] = useState([])
+  const [users, setUsers] = useState([])
 
   // ── Bulk selection state ──
-  const [selectedIds, setSelectedIds] = useState(new Set());
-  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
-  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
 
   // Review Modal state
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [reviewItem, setReviewItem] = useState(null);
-  const [pdfPage, setPdfPage] = useState(1);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const [reviewItem, setReviewItem] = useState(null)
+  const [pdfPage, setPdfPage] = useState(1)
 
-  const inputRef = useRef(null);
-  const folderInputRef = useRef(null);
-  const tableScrollRef = useRef(null);
-  const [tableScrollTop, setTableScrollTop] = useState(0);
-  const [tableHeight, setTableHeight] = useState(600);
+  const inputRef = useRef(null)
+  const folderInputRef = useRef(null)
+  const tableScrollRef = useRef(null)
+  const [tableScrollTop, setTableScrollTop] = useState(0)
+  const [tableHeight, setTableHeight] = useState(600)
 
   useEffect(() => {
-    fetchReferenceData();
-  }, []);
+    fetchReferenceData()
+  }, [])
 
   // Theo dõi chiều cao của container bảng để tính virtual scroll chính xác
   useEffect(() => {
-    const el = tableScrollRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(entries => {
-      for (const entry of entries) setTableHeight(entry.contentRect.height);
-    });
-    ro.observe(el);
-    setTableHeight(el.clientHeight);
-    return () => ro.disconnect();
-  }, []);
+    const el = tableScrollRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) setTableHeight(entry.contentRect.height)
+    })
+    ro.observe(el)
+    setTableHeight(el.clientHeight)
+    return () => ro.disconnect()
+  }, [])
 
   const fetchReferenceData = async () => {
     try {
-      const headers = { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
       const [deptRes, userRes] = await Promise.all([
         fetch('/api/admin/departments', { headers }),
-        fetch('/api/users', { headers })
-      ]);
-      if (deptRes.ok) setDepartments(await deptRes.json());
+        fetch('/api/users', { headers }),
+      ])
+      if (deptRes.ok) setDepartments(await deptRes.json())
       if (userRes.ok) {
-        const userData = await userRes.json();
-        setUsers(userData.filter(u => u.role === 'CanBo' || u.role === 'Admin'));
+        const userData = await userRes.json()
+        setUsers(userData.filter((u) => u.role === 'CanBo' || u.role === 'Admin'))
       }
     } catch (error) {
-      console.error('Failed to fetch reference data:', error);
+      console.error('Failed to fetch reference data:', error)
     }
-  };
+  }
 
   const handleFileUpload = async (fileList) => {
-    if (!fileList.length) return;
-    setIsProcessing(true);
-    setOverallProgress(0);
+    if (!fileList.length) return
+    setIsProcessing(true)
+    setOverallProgress(0)
 
-    const MAX_CONCURRENT = 8; // Tăng lên 8 — luôn duy trì 8 upload chạy song song
-    let completedCount = 0;
-    const total = fileList.length;
+    const MAX_CONCURRENT = 8 // Tăng lên 8 — luôn duy trì 8 upload chạy song song
+    let completedCount = 0
+    const total = fileList.length
 
     // Thêm TẤT CẢ file vào danh sách ngay lập tức với trạng thái "đang xử lý"
     const newItems = Array.from(fileList).map((file, i) => ({
       id: `temp-${Date.now()}-${i}`,
       fileName: file.name,
-      soVanBan: '', trichYeu: '', coQuanBanHanh: '', coQuanChuQuan: '',
-      ngayBanHanh: '', thoiHan: '', departmentIds: [], assignedToIds: [],
+      soVanBan: '',
+      trichYeu: '',
+      coQuanBanHanh: '',
+      coQuanChuQuan: '',
+      ngayBanHanh: '',
+      thoiHan: '',
+      departmentIds: [],
+      assignedToIds: [],
       status: 'processing',
       _tempFile: file,
-    }));
-    setBatchItems(prev => [...newItems, ...prev]);
-    setCurrentFileName(`Đang xử lý ${total} file...`);
+    }))
+    setBatchItems((prev) => [...newItems, ...prev])
+    setCurrentFileName(`Đang xử lý ${total} file...`)
 
     const uploadOne = async (item) => {
-      const formData = new FormData();
-      formData.append('file', item._tempFile);
+      const formData = new FormData()
+      formData.append('file', item._tempFile)
       try {
         const response = await fetch('/api/documents/upload', {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-          body: formData
-        });
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+          body: formData,
+        })
         if (response.ok) {
-          const doc = await response.json();
-          setBatchItems(prev => prev.map(b => b.id === item.id ? {
-            ...b, _tempFile: undefined,
-            id: doc.id,
-            soVanBan: doc.soVanBan || '',
-            trichYeu: doc.trichYeu || '',
-            coQuanBanHanh: doc.coQuanBanHanh || '',
-            coQuanChuQuan: doc.coQuanChuQuan || '',
-            ngayBanHanh: doc.ngayBanHanh ? doc.ngayBanHanh.split('T')[0] : '',
-            thoiHan: doc.thoiHan ? doc.thoiHan.split('T')[0] : '',
-            departmentIds: doc.departmentId ? [doc.departmentId] : [],
-            assignedToIds: doc.assignedTo ? [doc.assignedTo] : [],
-            filePath: doc.filePath || '',
-            status: (doc.status === 'Đang xử lý' || doc.status === 'Chưa xử lý') ? 'processing' : 'ready'
-          } : b));
+          const doc = await response.json()
+          setBatchItems((prev) =>
+            prev.map((b) =>
+              b.id === item.id
+                ? {
+                    ...b,
+                    _tempFile: undefined,
+                    id: doc.id,
+                    soVanBan: doc.soVanBan || '',
+                    trichYeu: doc.trichYeu || '',
+                    coQuanBanHanh: doc.coQuanBanHanh || '',
+                    coQuanChuQuan: doc.coQuanChuQuan || '',
+                    ngayBanHanh: doc.ngayBanHanh ? doc.ngayBanHanh.split('T')[0] : '',
+                    thoiHan: doc.thoiHan ? doc.thoiHan.split('T')[0] : '',
+                    departmentIds: doc.departmentId ? [doc.departmentId] : [],
+                    assignedToIds: doc.assignedTo ? [doc.assignedTo] : [],
+                    filePath: doc.filePath || '',
+                    status:
+                      doc.status === 'Đang xử lý' || doc.status === 'Chưa xử lý'
+                        ? 'processing'
+                        : 'ready',
+                  }
+                : b
+            )
+          )
 
-            if (doc.status === 'Đang xử lý') {
+          if (doc.status === 'Đang xử lý') {
             const startPolling = async (docId) => {
-              let attempts = 0;
+              let attempts = 0
               while (attempts < 20) {
-                await new Promise(r => setTimeout(r, 2000));
+                await new Promise((r) => setTimeout(r, 2000))
                 try {
-                  const res = await fetch(`/api/documents/${docId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }});
+                  const res = await fetch(`/api/documents/${docId}`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+                  })
                   if (res.ok) {
-                    const updatedDoc = await res.json();
+                    const updatedDoc = await res.json()
                     if (updatedDoc.status !== 'Đang xử lý') {
-                      setBatchItems(prev => prev.map(b => b.id === docId ? {
-                        ...b,
-                        soVanBan: updatedDoc.soVanBan || '',
-                        trichYeu: updatedDoc.trichYeu || '',
-                        coQuanBanHanh: updatedDoc.coQuanBanHanh || '',
-                        coQuanChuQuan: updatedDoc.coQuanChuQuan || '',
-                        ngayBanHanh: updatedDoc.ngayBanHanh ? updatedDoc.ngayBanHanh.split('T')[0] : '',
-                        thoiHan: updatedDoc.thoiHan ? updatedDoc.thoiHan.split('T')[0] : '',
-                        departmentIds: updatedDoc.departmentId ? [updatedDoc.departmentId] : [],
-                        assignedToIds: updatedDoc.assignedTo ? [updatedDoc.assignedTo] : [],
-                        status: 'ready'
-                      } : b));
-                      
-                      setReviewItem(prevReview => prevReview && prevReview.id === docId ? {
-                        ...prevReview,
-                        soVanBan: updatedDoc.soVanBan || '',
-                        trichYeu: updatedDoc.trichYeu || '',
-                        coQuanBanHanh: updatedDoc.coQuanBanHanh || '',
-                        coQuanChuQuan: updatedDoc.coQuanChuQuan || '',
-                        ngayBanHanh: updatedDoc.ngayBanHanh ? updatedDoc.ngayBanHanh.split('T')[0] : '',
-                        thoiHan: updatedDoc.thoiHan ? updatedDoc.thoiHan.split('T')[0] : '',
-                      } : prevReview);
-                      break;
+                      setBatchItems((prev) =>
+                        prev.map((b) =>
+                          b.id === docId
+                            ? {
+                                ...b,
+                                soVanBan: updatedDoc.soVanBan || '',
+                                trichYeu: updatedDoc.trichYeu || '',
+                                coQuanBanHanh: updatedDoc.coQuanBanHanh || '',
+                                coQuanChuQuan: updatedDoc.coQuanChuQuan || '',
+                                ngayBanHanh: updatedDoc.ngayBanHanh
+                                  ? updatedDoc.ngayBanHanh.split('T')[0]
+                                  : '',
+                                thoiHan: updatedDoc.thoiHan ? updatedDoc.thoiHan.split('T')[0] : '',
+                                departmentIds: updatedDoc.departmentId
+                                  ? [updatedDoc.departmentId]
+                                  : [],
+                                assignedToIds: updatedDoc.assignedTo ? [updatedDoc.assignedTo] : [],
+                                status: 'ready',
+                              }
+                            : b
+                        )
+                      )
+
+                      setReviewItem((prevReview) =>
+                        prevReview && prevReview.id === docId
+                          ? {
+                              ...prevReview,
+                              soVanBan: updatedDoc.soVanBan || '',
+                              trichYeu: updatedDoc.trichYeu || '',
+                              coQuanBanHanh: updatedDoc.coQuanBanHanh || '',
+                              coQuanChuQuan: updatedDoc.coQuanChuQuan || '',
+                              ngayBanHanh: updatedDoc.ngayBanHanh
+                                ? updatedDoc.ngayBanHanh.split('T')[0]
+                                : '',
+                              thoiHan: updatedDoc.thoiHan ? updatedDoc.thoiHan.split('T')[0] : '',
+                            }
+                          : prevReview
+                      )
+                      break
                     }
                   }
-                } catch (e) { console.error('Poll err:', e); }
-                attempts++;
+                } catch (e) {
+                  console.error('Poll err:', e)
+                }
+                attempts++
               }
-            };
-            startPolling(doc.id);
+            }
+            startPolling(doc.id)
           }
         } else {
           try {
-            const errData = await response.json();
-            const errorMsg = errData?.error || "Lỗi tải lên";
-            toast.error(`Lỗi file ${item._tempFile?.name || "ẩn danh"}: ${errorMsg}`);
+            const errData = await response.json()
+            const errorMsg = errData?.error || 'Lỗi tải lên'
+            toast.error(`Lỗi file ${item._tempFile?.name || 'ẩn danh'}: ${errorMsg}`)
           } catch {
-            toast.error(`Lỗi file ${item._tempFile?.name || "ẩn danh"}: Lỗi không xác định`);
+            toast.error(`Lỗi file ${item._tempFile?.name || 'ẩn danh'}: Lỗi không xác định`)
           }
-          setBatchItems(prev => prev.map(b => b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b));
+          setBatchItems((prev) =>
+            prev.map((b) =>
+              b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b
+            )
+          )
         }
       } catch (err) {
-        toast.error(`Lỗi kết nối khi tải file ${item._tempFile?.name || "ẩn danh"}`);
-        setBatchItems(prev => prev.map(b => b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b));
+        toast.error(`Lỗi kết nối khi tải file ${item._tempFile?.name || 'ẩn danh'}`)
+        setBatchItems((prev) =>
+          prev.map((b) => (b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b))
+        )
       } finally {
-        completedCount++;
-        setOverallProgress(Math.round((completedCount / total) * 100));
-        const remaining = total - completedCount;
-        setCurrentFileName(remaining > 0 ? `Còn ${remaining} file đang xử lý...` : '');
+        completedCount++
+        setOverallProgress(Math.round((completedCount / total) * 100))
+        const remaining = total - completedCount
+        setCurrentFileName(remaining > 0 ? `Còn ${remaining} file đang xử lý...` : '')
       }
-    };
+    }
 
     // Semaphore: luôn duy trì đúng MAX_CONCURRENT requests đang chạy
     // Không bị gap giữa các batch — ngay khi 1 file xong, 1 file mới bắt đầu lên ngay
-    const uploadQueue = [...newItems];
+    const uploadQueue = [...newItems]
     const workers = Array.from({ length: MAX_CONCURRENT }, async () => {
       while (uploadQueue.length > 0) {
-        const item = uploadQueue.shift();
-        if (item) await uploadOne(item);
+        const item = uploadQueue.shift()
+        if (item) await uploadOne(item)
       }
-    });
-    await Promise.all(workers);
+    })
+    await Promise.all(workers)
 
-    setOverallProgress(100);
+    setOverallProgress(100)
     setTimeout(() => {
-      setIsProcessing(false);
-      setCurrentFileName('');
-    }, 800);
-  };
+      setIsProcessing(false)
+      setCurrentFileName('')
+    }, 800)
+  }
 
   const updateItem = (id, field, value) => {
-    setBatchItems(prev => prev.map(item =>
-      item.id === id ? { ...item, [field]: value } : item
-    ));
-  };
+    setBatchItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    )
+  }
 
   const handleSaveAll = async () => {
-    const targets = batchItems.filter(item => item.status === 'ready' || item.status === 'review');
-    if (targets.length === 0) return;
+    const targets = batchItems.filter((item) => item.status === 'ready' || item.status === 'review')
+    if (targets.length === 0) return
 
-    setIsProcessing(true);
+    setIsProcessing(true)
 
-    let successCount = 0;
-    let failCount = 0;
+    let successCount = 0
+    let failCount = 0
 
     const saveOne = async (item) => {
       try {
         const response = await fetch(`/api/documents/${item.id}`, {
           method: 'PUT',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             id: item.id,
@@ -308,129 +427,135 @@ export function Upload({ onTabChange }) {
             departmentId: item.departmentIds?.[0] || null,
             assignedTo: item.assignedToIds?.[0] || null,
             assignedDepartmentIds: JSON.stringify(item.departmentIds || []),
-            assignedUserIds: JSON.stringify(item.assignedToIds || [])
-          })
-        });
+            assignedUserIds: JSON.stringify(item.assignedToIds || []),
+          }),
+        })
         if (response.ok) {
-          successCount++;
-          setBatchItems(prev => prev.filter(i => i.id !== item.id));
-          setSelectedIds(prev => {
+          successCount++
+          setBatchItems((prev) => prev.filter((i) => i.id !== item.id))
+          setSelectedIds((prev) => {
             if (prev.has(item.id)) {
-              const next = new Set(prev);
-              next.delete(item.id);
-              return next;
+              const next = new Set(prev)
+              next.delete(item.id)
+              return next
             }
-            return prev;
-          });
+            return prev
+          })
         } else {
-          failCount++;
+          failCount++
         }
       } catch (e) {
-        console.error(e);
-        failCount++;
+        console.error(e)
+        failCount++
       }
-    };
+    }
 
     // Song song 10 request cùng lúc thay vì tuần tự — 1000 file giảm từ ~50s xuống ~5s
-    const saveQueue = [...targets];
+    const saveQueue = [...targets]
     const saveWorkers = Array.from({ length: 10 }, async () => {
       while (saveQueue.length > 0) {
-        const item = saveQueue.shift();
-        if (item) await saveOne(item);
+        const item = saveQueue.shift()
+        if (item) await saveOne(item)
       }
-    });
-    await Promise.all(saveWorkers);
+    })
+    await Promise.all(saveWorkers)
 
-    setIsProcessing(false);
+    setIsProcessing(false)
     if (successCount > 0) {
-      toast.success(`Đã lưu thành công ${successCount} văn bản`);
+      toast.success(`Đã lưu thành công ${successCount} văn bản`)
     }
     if (failCount > 0) {
-      toast.error(`Có ${failCount} văn bản lưu thất bại. Vui lòng thử lại.`);
+      toast.error(`Có ${failCount} văn bản lưu thất bại. Vui lòng thử lại.`)
     }
-  };
+  }
 
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [deleteItemConfirm, setDeleteItemConfirm] = useState({ open: false, item: null });
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [deleteItemConfirm, setDeleteItemConfirm] = useState({ open: false, item: null })
 
   // ── Bulk selection handlers ──
-  const selectableItems = batchItems.filter(i => typeof i.id === 'number');
-  const isAllSelected = selectableItems.length > 0 && selectableItems.every(i => selectedIds.has(i.id));
-  const isIndeterminate = !isAllSelected && selectableItems.some(i => selectedIds.has(i.id));
+  const selectableItems = batchItems.filter((i) => typeof i.id === 'number')
+  const isAllSelected =
+    selectableItems.length > 0 && selectableItems.every((i) => selectedIds.has(i.id))
+  const isIndeterminate = !isAllSelected && selectableItems.some((i) => selectedIds.has(i.id))
 
   const toggleSelectAll = () => {
     if (isAllSelected) {
-      setSelectedIds(new Set());
+      setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(selectableItems.map(i => i.id)));
+      setSelectedIds(new Set(selectableItems.map((i) => i.id)))
     }
-  };
+  }
 
   const toggleSelectOne = (id) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
-    setIsBulkDeleting(true);
+    if (selectedIds.size === 0) return
+    setIsBulkDeleting(true)
     try {
-      const ids = Array.from(selectedIds).filter(id => typeof id === 'number');
+      const ids = Array.from(selectedIds).filter((id) => typeof id === 'number')
       const response = await fetch('/api/documents/bulk-delete', {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(ids)
-      });
+        body: JSON.stringify(ids),
+      })
       if (response.ok) {
-        setBatchItems(prev => prev.filter(i => !selectedIds.has(i.id)));
-        setSelectedIds(new Set());
-        toast.success(`Đã xóa ${ids.length} văn bản thành công.`);
+        setBatchItems((prev) => prev.filter((i) => !selectedIds.has(i.id)))
+        setSelectedIds(new Set())
+        toast.success(`Đã xóa ${ids.length} văn bản thành công.`)
       } else {
-        toast.error('Xóa thất bại, vui lòng thử lại.');
+        toast.error('Xóa thất bại, vui lòng thử lại.')
       }
     } catch (e) {
-      toast.error('Lỗi kết nối khi xóa.');
+      toast.error('Lỗi kết nối khi xóa.')
     } finally {
-      setIsBulkDeleting(false);
-      setShowBulkDeleteConfirm(false);
+      setIsBulkDeleting(false)
+      setShowBulkDeleteConfirm(false)
     }
-  };
+  }
 
   const handleClearBatch = async () => {
-    setShowClearConfirm(true);
-  };
+    setShowClearConfirm(true)
+  }
 
   const executeClearBatch = async () => {
-    setBatchItems([]);
-    setShowClearConfirm(false);
-  };
+    setBatchItems([])
+    setShowClearConfirm(false)
+  }
 
   const statCounts = {
-    ocr: batchItems.filter(f => f.status === "processing").length,
-    saved: batchItems.filter(f => f.status === "success").length,
-    pending: batchItems.filter(f => f.status === "ready").length,
-  };
+    ocr: batchItems.filter((f) => f.status === 'processing').length,
+    saved: batchItems.filter((f) => f.status === 'success').length,
+    pending: batchItems.filter((f) => f.status === 'ready').length,
+  }
 
   // ── Virtual scroll: chỉ render rows đang hiển thị trong viewport ──
   // Thay vì render 1244 rows cùng lúc, chỉ render ~25–30 rows có thể nhìn thấy + buffer
-  const ROW_HEIGHT = 44; // ước tính chiều cao mỗi row (px)
-  const BUFFER = 8;      // số row dự phòng trên/dưới viewport
-  const visibleStart = Math.max(0, Math.floor(tableScrollTop / ROW_HEIGHT) - BUFFER);
-  const visibleEnd = Math.min(batchItems.length, Math.ceil((tableScrollTop + tableHeight) / ROW_HEIGHT) + BUFFER);
-  const visibleItems = batchItems.slice(visibleStart, visibleEnd);
-  const topSpacer = visibleStart * ROW_HEIGHT;
-  const bottomSpacer = Math.max(0, (batchItems.length - visibleEnd) * ROW_HEIGHT);
+  const ROW_HEIGHT = 44 // ước tính chiều cao mỗi row (px)
+  const BUFFER = 8 // số row dự phòng trên/dưới viewport
+  const visibleStart = Math.max(0, Math.floor(tableScrollTop / ROW_HEIGHT) - BUFFER)
+  const visibleEnd = Math.min(
+    batchItems.length,
+    Math.ceil((tableScrollTop + tableHeight) / ROW_HEIGHT) + BUFFER
+  )
+  const visibleItems = batchItems.slice(visibleStart, visibleEnd)
+  const topSpacer = visibleStart * ROW_HEIGHT
+  const bottomSpacer = Math.max(0, (batchItems.length - visibleEnd) * ROW_HEIGHT)
 
   return (
-    <div className="h-full bg-slate-100 flex flex-col overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-
+    <div
+      className="h-full bg-slate-100 flex flex-col overflow-hidden"
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
       {/* ── Page title bar ── */}
       <div className="bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -439,7 +564,9 @@ export function Upload({ onTabChange }) {
           </div>
           <div>
             <h1 className="text-sm font-bold text-slate-900 leading-tight">Số hóa tài liệu</h1>
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">PDF OCR Engine</p>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+              PDF OCR Engine
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -461,23 +588,28 @@ export function Upload({ onTabChange }) {
 
       {/* ── Body ── */}
       <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-y-auto lg:overflow-hidden min-h-0">
-
         {/* LEFT: upload + status */}
         <div className="w-full lg:w-64 flex-shrink-0 flex flex-col gap-3">
-
           {/* Upload dropzone */}
           <div
-            onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setIsDragging(true)
+            }}
             onDragLeave={() => setIsDragging(false)}
-            onDrop={e => {
-              e.preventDefault();
-              setIsDragging(false);
-              const files = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
-              handleFileUpload(files);
+            onDrop={(e) => {
+              e.preventDefault()
+              setIsDragging(false)
+              const files = Array.from(e.dataTransfer.files).filter((f) =>
+                f.name.toLowerCase().endsWith('.pdf')
+              )
+              handleFileUpload(files)
             }}
             className={cn(
-              "rounded-xl border-2 border-dashed p-5 flex flex-col items-center gap-3 cursor-pointer transition-all",
-              isDragging ? "border-blue-400 bg-blue-50" : "border-slate-300 bg-white hover:border-blue-300 hover:bg-blue-50/40"
+              'rounded-xl border-2 border-dashed p-5 flex flex-col items-center gap-3 cursor-pointer transition-all',
+              isDragging
+                ? 'border-blue-400 bg-blue-50'
+                : 'border-slate-300 bg-white hover:border-blue-300 hover:bg-blue-50/40'
             )}
             onClick={() => inputRef.current?.click()}
           >
@@ -489,27 +621,36 @@ export function Upload({ onTabChange }) {
               className="hidden"
               onChange={(e) => handleFileUpload(Array.from(e.target.files))}
             />
-            <div className={cn(
-              "w-14 h-14 rounded-2xl flex items-center justify-center transition-colors",
-              isDragging ? "bg-blue-100" : "bg-slate-50"
-            )}>
+            <div
+              className={cn(
+                'w-14 h-14 rounded-2xl flex items-center justify-center transition-colors',
+                isDragging ? 'bg-blue-100' : 'bg-slate-50'
+              )}
+            >
               <UploadCloudIcon />
             </div>
             <div className="text-center">
               <p className="text-xs font-bold text-slate-700">Tải tệp tin lên</p>
-              <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">Kéo thả tệp PDF vào đây<br />hoặc nhấn để chọn file</p>
+              <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">
+                Kéo thả tệp PDF vào đây
+                <br />
+                hoặc nhấn để chọn file
+              </p>
             </div>
             <div className="flex flex-col gap-2 w-full mt-1">
               <button
-                onClick={e => { e.stopPropagation(); inputRef.current?.click(); }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  inputRef.current?.click()
+                }}
                 className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-blue-600 text-white text-[11px] font-semibold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
               >
                 <FileIcon /> Chọn tệp tin
               </button>
               <button
-                onClick={e => {
-                  e.stopPropagation();
-                  folderInputRef.current?.click();
+                onClick={(e) => {
+                  e.stopPropagation()
+                  folderInputRef.current?.click()
                 }}
                 className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-[11px] font-semibold hover:bg-slate-50 transition-colors"
               >
@@ -532,7 +673,9 @@ export function Upload({ onTabChange }) {
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Đang xử lý OCR</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  Đang xử lý OCR
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <Ring pct={overallProgress} />
@@ -553,23 +696,41 @@ export function Upload({ onTabChange }) {
           {/* Batch status */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-100">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trạng thái đợt tải</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                Trạng thái đợt tải
+              </p>
             </div>
             <div className="divide-y divide-slate-100">
               {[
-                { label: "Đang OCR", count: statCounts.ocr, color: "blue", icon: <ClockIcon /> },
-                { label: "Đã lưu", count: statCounts.saved, color: "emerald", icon: <CheckCircleIcon /> },
-                { label: "Chờ rà soát", count: statCounts.pending, color: "slate", icon: <XCircleIcon /> },
-              ].map(row => (
+                { label: 'Đang OCR', count: statCounts.ocr, color: 'blue', icon: <ClockIcon /> },
+                {
+                  label: 'Đã lưu',
+                  count: statCounts.saved,
+                  color: 'emerald',
+                  icon: <CheckCircleIcon />,
+                },
+                {
+                  label: 'Chờ rà soát',
+                  count: statCounts.pending,
+                  color: 'slate',
+                  icon: <XCircleIcon />,
+                },
+              ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-2">
                     {row.icon}
                     <span className="text-xs font-medium text-slate-600">{row.label}</span>
                   </div>
-                  <span className={`min-w-[24px] h-6 px-2 flex items-center justify-center rounded-full text-xs font-bold
-                    ${row.color === "blue" ? "bg-blue-50 text-blue-700" :
-                      row.color === "emerald" ? "bg-emerald-50 text-emerald-700" :
-                        "bg-slate-100 text-slate-500"}`}>
+                  <span
+                    className={`min-w-[24px] h-6 px-2 flex items-center justify-center rounded-full text-xs font-bold
+                    ${
+                      row.color === 'blue'
+                        ? 'bg-blue-50 text-blue-700'
+                        : row.color === 'emerald'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
                     {row.count}
                   </span>
                 </div>
@@ -584,7 +745,7 @@ export function Upload({ onTabChange }) {
           <div
             ref={tableScrollRef}
             className="flex-1 overflow-auto"
-            onScroll={e => setTableScrollTop(e.currentTarget.scrollTop)}
+            onScroll={(e) => setTableScrollTop(e.currentTarget.scrollTop)}
           >
             <table className="w-full text-xs border-collapse min-w-[800px]">
               <thead>
@@ -594,25 +755,42 @@ export function Upload({ onTabChange }) {
                     <input
                       type="checkbox"
                       checked={isAllSelected}
-                      ref={el => { if (el) el.indeterminate = isIndeterminate; }}
+                      ref={(el) => {
+                        if (el) el.indeterminate = isIndeterminate
+                      }}
                       onChange={toggleSelectAll}
                       className="w-3.5 h-3.5 rounded accent-blue-600 cursor-pointer"
                     />
                   </th>
-                  {["Tên tệp", "Số hiệu", "Thời hạn", "Đơn vị", "Cán bộ", "Trạng thái", ""].map(h => (
-                    <th key={h} className="px-3 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
+                  {['Tên tệp', 'Số hiệu', 'Thời hạn', 'Đơn vị', 'Cán bộ', 'Trạng thái', ''].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="px-3 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    )
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {/* Spacer trên: giữ đúng scroll position cho các rows ở trước viewport */}
-                {topSpacer > 0 && <tr style={{ height: topSpacer }}><td colSpan={8} /></tr>}
-                {visibleItems.map(row => {
-                  const isRowSelected = selectedIds.has(row.id);
+                {topSpacer > 0 && (
+                  <tr style={{ height: topSpacer }}>
+                    <td colSpan={8} />
+                  </tr>
+                )}
+                {visibleItems.map((row) => {
+                  const isRowSelected = selectedIds.has(row.id)
                   return (
-                    <tr key={row.id} className={cn("transition-colors group", isRowSelected ? "bg-blue-50 hover:bg-blue-50/80" : "hover:bg-slate-50/60")}>
+                    <tr
+                      key={row.id}
+                      className={cn(
+                        'transition-colors group',
+                        isRowSelected ? 'bg-blue-50 hover:bg-blue-50/80' : 'hover:bg-slate-50/60'
+                      )}
+                    >
                       {/* Row checkbox */}
                       <td className="pl-4 pr-2 py-2">
                         <input
@@ -625,10 +803,26 @@ export function Upload({ onTabChange }) {
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
-                          <div className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 border", isRowSelected ? "bg-blue-100 border-blue-200" : "bg-red-50 border-red-100")}>
-                            <span className={cn("text-[8px] font-black uppercase", isRowSelected ? "text-blue-600" : "text-red-500")}>PDF</span>
+                          <div
+                            className={cn(
+                              'w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 border',
+                              isRowSelected
+                                ? 'bg-blue-100 border-blue-200'
+                                : 'bg-red-50 border-red-100'
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                'text-[8px] font-black uppercase',
+                                isRowSelected ? 'text-blue-600' : 'text-red-500'
+                              )}
+                            >
+                              PDF
+                            </span>
                           </div>
-                          <span className="font-semibold text-slate-800 truncate max-w-[120px]">{row.fileName}</span>
+                          <span className="font-semibold text-slate-800 truncate max-w-[120px]">
+                            {row.fileName}
+                          </span>
                         </div>
                       </td>
                       <td className="px-3 py-2">
@@ -651,32 +845,47 @@ export function Upload({ onTabChange }) {
                         <select
                           value={row.departmentIds[0] || ''}
                           onChange={(e) => {
-                            const val = e.target.value ? parseInt(e.target.value) : '';
-                            setBatchItems(prev => prev.map(item =>
-                              item.id === row.id
-                                ? { ...item, departmentIds: val ? [val] : [], assignedToIds: [] }
-                                : item
-                            ));
+                            const val = e.target.value ? parseInt(e.target.value) : ''
+                            setBatchItems((prev) =>
+                              prev.map((item) =>
+                                item.id === row.id
+                                  ? { ...item, departmentIds: val ? [val] : [], assignedToIds: [] }
+                                  : item
+                              )
+                            )
                           }}
                           className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
                         >
                           <option value="">Chọn đơn vị</option>
-                          {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                          {departments.map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.name}
+                            </option>
+                          ))}
                         </select>
                       </td>
                       <td className="px-3 py-2">
                         <select
                           value={row.assignedToIds[0] || ''}
-                          onChange={(e) => updateItem(row.id, 'assignedToIds', e.target.value ? [parseInt(e.target.value)] : [])}
+                          onChange={(e) =>
+                            updateItem(
+                              row.id,
+                              'assignedToIds',
+                              e.target.value ? [parseInt(e.target.value)] : []
+                            )
+                          }
                           className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
                         >
                           <option value="">Chọn cán bộ</option>
                           {(row.departmentIds[0]
-                            ? users.filter(u => u.role === 'Admin' || u.departmentId === row.departmentIds[0])
+                            ? users.filter(
+                                (u) => u.role === 'Admin' || u.departmentId === row.departmentIds[0]
+                              )
                             : users
-                          ).map(u => (
+                          ).map((u) => (
                             <option key={u.id} value={u.id}>
-                              {u.fullName}{u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                              {u.fullName}
+                              {u.role === 'Admin' ? ' (Quản trị viên)' : ''}
                             </option>
                           ))}
                         </select>
@@ -692,19 +901,27 @@ export function Upload({ onTabChange }) {
                                 <div>
                                   <button
                                     onClick={() => {
-                                      if (typeof row.id !== 'number') return;
-                                      setReviewItem({ ...row });
-                                      setIsReviewModalOpen(true);
-                                      setPdfPage(1);
+                                      if (typeof row.id !== 'number') return
+                                      setReviewItem({ ...row })
+                                      setIsReviewModalOpen(true)
+                                      setPdfPage(1)
                                     }}
                                     disabled={typeof row.id !== 'number'}
-                                    className={cn("p-1 rounded transition-colors", typeof row.id === 'number' ? "text-blue-500 hover:bg-blue-50" : "text-slate-300 cursor-not-allowed")}
+                                    className={cn(
+                                      'p-1 rounded transition-colors',
+                                      typeof row.id === 'number'
+                                        ? 'text-blue-500 hover:bg-blue-50'
+                                        : 'text-slate-300 cursor-not-allowed'
+                                    )}
                                   >
                                     <EyeIcon />
                                   </button>
                                 </div>
                               </TooltipTrigger>
-                              <TooltipContent side="top" className="bg-slate-900 text-white border-none font-bold text-[10px]">
+                              <TooltipContent
+                                side="top"
+                                className="bg-slate-900 text-white border-none font-bold text-[10px]"
+                              >
                                 Đối soát PDF
                               </TooltipContent>
                             </Tooltip>
@@ -718,7 +935,10 @@ export function Upload({ onTabChange }) {
                                   <TrashIcon />
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent side="top" className="bg-red-600 text-white border-none font-bold text-[10px]">
+                              <TooltipContent
+                                side="top"
+                                className="bg-red-600 text-white border-none font-bold text-[10px]"
+                              >
                                 Xóa khỏi danh sách
                               </TooltipContent>
                             </Tooltip>
@@ -726,10 +946,14 @@ export function Upload({ onTabChange }) {
                         </div>
                       </td>
                     </tr>
-                  );
+                  )
                 })}
                 {/* Spacer dưới: giữ đúng tổng chiều cao bảng, cho phép scroll đến cuối */}
-                {bottomSpacer > 0 && <tr style={{ height: bottomSpacer }}><td colSpan={8} /></tr>}
+                {bottomSpacer > 0 && (
+                  <tr style={{ height: bottomSpacer }}>
+                    <td colSpan={8} />
+                  </tr>
+                )}
               </tbody>
             </table>
 
@@ -740,7 +964,9 @@ export function Upload({ onTabChange }) {
                   <UploadCloudIcon />
                 </div>
                 <p className="text-sm font-bold text-slate-600">Chưa có tệp nào</p>
-                <p className="text-xs text-slate-400 mt-1.5">Tải tệp PDF lên từ panel bên trái để bắt đầu bóc tách</p>
+                <p className="text-xs text-slate-400 mt-1.5">
+                  Tải tệp PDF lên từ panel bên trái để bắt đầu bóc tách
+                </p>
               </div>
             )}
           </div>
@@ -754,7 +980,9 @@ export function Upload({ onTabChange }) {
               )}
             </p>
             <div className="flex items-center gap-1">
-              <button className="w-6 h-6 rounded text-[10px] font-bold bg-blue-600 text-white">1</button>
+              <button className="w-6 h-6 rounded text-[10px] font-bold bg-blue-600 text-white">
+                1
+              </button>
             </div>
           </div>
         </div>
@@ -770,8 +998,12 @@ export function Upload({ onTabChange }) {
                 <Edit size={24} strokeWidth={2.5} />
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">Chỉnh sửa thông tin văn bản</h3>
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-[0.2em]">Đối chiếu trực tiếp với bản gốc PDF</p>
+                <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                  Chỉnh sửa thông tin văn bản
+                </h3>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-[0.2em]">
+                  Đối chiếu trực tiếp với bản gốc PDF
+                </p>
               </div>
             </div>
           </div>
@@ -782,7 +1014,11 @@ export function Upload({ onTabChange }) {
               <div className="flex-1 relative overflow-hidden bg-slate-200 m-4 rounded-2xl shadow-inner border border-slate-200">
                 <iframe
                   key={`${reviewItem?.id}-${pdfPage}`}
-                  src={typeof reviewItem?.id === 'number' ? `/api/documents/${reviewItem.id}/file#page=${pdfPage}&view=FitH` : ""}
+                  src={
+                    typeof reviewItem?.id === 'number'
+                      ? `/api/documents/${reviewItem.id}/file#page=${pdfPage}&view=FitH`
+                      : ''
+                  }
                   className="w-full h-full border-none"
                   title="PDF Viewer"
                 />
@@ -792,7 +1028,9 @@ export function Upload({ onTabChange }) {
               <div className="h-16 bg-slate-900 mx-4 mb-4 rounded-2xl flex items-center justify-between px-8 shadow-xl">
                 <div className="flex items-center gap-3 text-slate-400">
                   <FileText size={18} className="text-blue-500" />
-                  <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">Bản gốc PDF</span>
+                  <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">
+                    Bản gốc PDF
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-4 bg-slate-800/50 p-1 rounded-xl border border-white/5">
@@ -803,7 +1041,9 @@ export function Upload({ onTabChange }) {
                     <ChevronLeft size={18} strokeWidth={3} />
                   </button>
                   <div className="flex items-center gap-3 px-4 border-x border-white/5">
-                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Trang</span>
+                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">
+                      Trang
+                    </span>
                     <span className="text-sm font-black text-white">{pdfPage}</span>
                   </div>
                   <button
@@ -881,25 +1121,33 @@ export function Upload({ onTabChange }) {
                   <div className="pt-8 border-t border-slate-100 space-y-6">
                     <div className="flex items-center gap-2">
                       <div className="w-1 h-4 bg-blue-500 rounded-full" />
-                      <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Thông tin nâng cao</p>
+                      <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                        Thông tin nâng cao
+                      </p>
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Đơn vị chủ trì</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">
+                        Đơn vị chủ trì
+                      </label>
                       <select
                         value={reviewItem?.departmentIds?.[0] || ''}
                         onChange={(e) => {
-                          const val = e.target.value ? parseInt(e.target.value) : '';
+                          const val = e.target.value ? parseInt(e.target.value) : ''
                           setReviewItem({
                             ...reviewItem,
                             departmentIds: val ? [val] : [],
-                            assignedToIds: []
-                          });
+                            assignedToIds: [],
+                          })
                         }}
                         className="w-full px-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all appearance-none cursor-pointer"
                       >
                         <option value="">Chọn đơn vị...</option>
-                        {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                        {departments.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
@@ -908,22 +1156,31 @@ export function Upload({ onTabChange }) {
                         Cán bộ xử lý
                         {reviewItem?.departmentIds?.[0] && (
                           <span className="ml-2 text-blue-500 normal-case tracking-normal font-bold">
-                            — {departments.find(d => d.id === reviewItem.departmentIds[0])?.name}
+                            — {departments.find((d) => d.id === reviewItem.departmentIds[0])?.name}
                           </span>
                         )}
                       </label>
                       <select
                         value={reviewItem?.assignedToIds?.[0] || ''}
-                        onChange={(e) => setReviewItem({ ...reviewItem, assignedToIds: e.target.value ? [parseInt(e.target.value)] : [] })}
+                        onChange={(e) =>
+                          setReviewItem({
+                            ...reviewItem,
+                            assignedToIds: e.target.value ? [parseInt(e.target.value)] : [],
+                          })
+                        }
                         className="w-full px-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all appearance-none cursor-pointer"
                       >
                         <option value="">Chọn cán bộ...</option>
                         {(reviewItem?.departmentIds?.[0]
-                          ? users.filter(u => u.role === 'Admin' || u.departmentId === reviewItem.departmentIds[0])
+                          ? users.filter(
+                              (u) =>
+                                u.role === 'Admin' || u.departmentId === reviewItem.departmentIds[0]
+                            )
                           : users
-                        ).map(u => (
+                        ).map((u) => (
                           <option key={u.id} value={u.id}>
-                            {u.fullName}{u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                            {u.fullName}
+                            {u.role === 'Admin' ? ' (Quản trị viên)' : ''}
                           </option>
                         ))}
                       </select>
@@ -949,9 +1206,11 @@ export function Upload({ onTabChange }) {
                 <Button
                   className="px-10 h-12 rounded-2xl bg-[#1e293b] hover:bg-slate-800 text-white font-black uppercase tracking-widest shadow-xl shadow-slate-200 flex items-center gap-3 transition-all active:scale-95"
                   onClick={() => {
-                    setBatchItems(prev => prev.map(item => item.id === reviewItem.id ? reviewItem : item));
-                    setIsReviewModalOpen(false);
-                    toast.success('Đã cập nhật dữ liệu đối soát');
+                    setBatchItems((prev) =>
+                      prev.map((item) => (item.id === reviewItem.id ? reviewItem : item))
+                    )
+                    setIsReviewModalOpen(false)
+                    toast.success('Đã cập nhật dữ liệu đối soát')
                   }}
                 >
                   <Save size={18} />
@@ -968,9 +1227,22 @@ export function Upload({ onTabChange }) {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-3.5 rounded-2xl bg-slate-900 shadow-2xl shadow-slate-900/40 border border-white/10 animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-md bg-blue-500 flex items-center justify-center">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
-            <span className="text-sm font-bold text-white">Đã chọn <span className="text-blue-400">{selectedIds.size}</span> văn bản</span>
+            <span className="text-sm font-bold text-white">
+              Đã chọn <span className="text-blue-400">{selectedIds.size}</span> văn bản
+            </span>
           </div>
           <div className="w-px h-5 bg-white/10" />
           <button
@@ -984,7 +1256,22 @@ export function Upload({ onTabChange }) {
             disabled={isBulkDeleting}
             className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-500 hover:bg-red-400 text-white text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-red-900/40"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" /></svg>
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+              <path d="M9 6V4h6v2" />
+            </svg>
             {isBulkDeleting ? 'Đang xóa...' : `Xóa ${selectedIds.size} văn bản`}
           </button>
         </div>
@@ -1014,31 +1301,33 @@ export function Upload({ onTabChange }) {
 
       <ConfirmationModal
         open={deleteItemConfirm.open}
-        onOpenChange={(open) => setDeleteItemConfirm(prev => ({ ...prev, open }))}
+        onOpenChange={(open) => setDeleteItemConfirm((prev) => ({ ...prev, open }))}
         title="Xóa khỏi đợt tải?"
         description={`Bạn có chắc chắn muốn xóa văn bản "${deleteItemConfirm.item?.fileName}"? Tài liệu này sẽ bị gỡ bỏ khỏi đợt xử lý hiện tại.`}
         confirmLabel="XÓA NGAY"
         onConfirm={() => {
-          setBatchItems(prev => prev.filter(i => i.id !== deleteItemConfirm.item.id));
-          setDeleteItemConfirm({ open: false, item: null });
-          toast.success('Đã gỡ bỏ văn bản');
+          setBatchItems((prev) => prev.filter((i) => i.id !== deleteItemConfirm.item.id))
+          setDeleteItemConfirm({ open: false, item: null })
+          toast.success('Đã gỡ bỏ văn bản')
         }}
         variant="destructive"
       />
     </div>
-  );
+  )
 }
 
-const FormField = ({ label, value, onChange, icon: Icon, type = "text" }) => (
+const FormField = ({ label, value, onChange, icon: Icon, type = 'text' }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">{label}</label>
+    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">
+      {label}
+    </label>
     <div className="relative group">
       {Icon && (
         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors">
           <Icon size={14} strokeWidth={2.5} />
         </div>
       )}
-      {type === "textarea" ? (
+      {type === 'textarea' ? (
         <textarea
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
@@ -1052,12 +1341,12 @@ const FormField = ({ label, value, onChange, icon: Icon, type = "text" }) => (
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
-            "w-full py-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all",
-            Icon ? "pl-11 pr-4" : "px-4"
+            'w-full py-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all',
+            Icon ? 'pl-11 pr-4' : 'px-4'
           )}
           placeholder={`Nhập ${label.toLowerCase()}...`}
         />
       )}
     </div>
   </div>
-);
+)

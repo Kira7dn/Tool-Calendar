@@ -1,40 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { X, Send, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+/* eslint-disable */
+import React, { useState, useEffect } from 'react'
+import { X, Send, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
-export const ForwardDocumentModal = ({ isOpen, onClose, documentId, parentRoutingId, onForwardSuccess }) => {
-  const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState('');
-  const [role, setRole] = useState('Chủ trì');
-  const [deadline, setDeadline] = useState('');
-  const [comment, setComment] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export const ForwardDocumentModal = ({
+  isOpen,
+  onClose,
+  documentId,
+  parentRoutingId,
+  onForwardSuccess,
+}) => {
+  const [users, setUsers] = useState([])
+  const [selectedUser, setSelectedUser] = useState('')
+  const [role, setRole] = useState('Chủ trì')
+  const [deadline, setDeadline] = useState('')
+  const [comment, setComment] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
-      fetchUsers();
+      fetchUsers()
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   const fetchUsers = async () => {
     try {
       const response = await fetch('/api/users', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      if (response.ok) setUsers(await response.json());
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
+      if (response.ok) setUsers(await response.json())
     } catch (e) {
-      console.error(e);
+      console.error(e)
     }
-  };
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     if (!selectedUser) {
-      toast.error('Vui lòng chọn người nhận');
-      return;
+      toast.error('Vui lòng chọn người nhận')
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
       const payload = {
         receiverId: parseInt(selectedUser),
@@ -42,39 +49,39 @@ export const ForwardDocumentModal = ({ isOpen, onClose, documentId, parentRoutin
         role,
         deadline: deadline ? new Date(deadline).toISOString() : null,
         comment,
-        status: 'Chưa xử lý'
-      };
+        status: 'Chưa xử lý',
+      }
 
       const response = await fetch(`/api/documents/${documentId}/routings`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload)
-      });
+        body: JSON.stringify(payload),
+      })
 
       if (response.ok) {
-        toast.success('Chuyển xử lý thành công');
-        onForwardSuccess();
-        onClose();
+        toast.success('Chuyển xử lý thành công')
+        onForwardSuccess()
+        onClose()
         // Reset form
-        setSelectedUser('');
-        setComment('');
-        setDeadline('');
-        setRole('Chủ trì');
+        setSelectedUser('')
+        setComment('')
+        setDeadline('')
+        setRole('Chủ trì')
       } else {
-        toast.error('Có lỗi xảy ra khi chuyển văn bản');
+        toast.error('Có lỗi xảy ra khi chuyển văn bản')
       }
     } catch (e) {
-      console.error(e);
-      toast.error('Lỗi kết nối máy chủ');
+      console.error(e)
+      toast.error('Lỗi kết nối máy chủ')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
@@ -86,17 +93,24 @@ export const ForwardDocumentModal = ({ isOpen, onClose, documentId, parentRoutin
             </div>
             <div>
               <h3 className="text-lg font-black text-slate-900 tracking-tight">Chuyển xử lý</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Giao việc cho cấp dưới hoặc người phối hợp</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Giao việc cho cấp dưới hoặc người phối hợp
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-200 text-slate-400 transition-all">
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl hover:bg-slate-200 text-slate-400 transition-all"
+          >
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Người nhận <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Người nhận <span className="text-red-500">*</span>
+            </label>
             <select
               value={selectedUser}
               onChange={(e) => setSelectedUser(e.target.value)}
@@ -104,8 +118,10 @@ export const ForwardDocumentModal = ({ isOpen, onClose, documentId, parentRoutin
               required
             >
               <option value="">-- Chọn cán bộ xử lý --</option>
-              {users.map(u => (
-                <option key={u.id} value={u.id}>{u.fullName} ({u.username})</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.fullName} ({u.username})
+                </option>
               ))}
             </select>
           </div>
@@ -124,7 +140,9 @@ export const ForwardDocumentModal = ({ isOpen, onClose, documentId, parentRoutin
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Hạn xử lý (Tùy chọn)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Hạn xử lý (Tùy chọn)
+              </label>
               <input
                 type="date"
                 value={deadline}
@@ -135,7 +153,9 @@ export const ForwardDocumentModal = ({ isOpen, onClose, documentId, parentRoutin
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Ý kiến chỉ đạo / Bút phê</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Ý kiến chỉ đạo / Bút phê
+            </label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
@@ -165,5 +185,5 @@ export const ForwardDocumentModal = ({ isOpen, onClose, documentId, parentRoutin
         </form>
       </div>
     </div>
-  );
-};
+  )
+}

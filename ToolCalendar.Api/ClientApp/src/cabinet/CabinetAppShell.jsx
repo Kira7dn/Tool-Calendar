@@ -137,7 +137,12 @@ export function CabinetAppShell() {
       {/* ── Top Navigation Bar ──────────────────────────────────────────────── */}
       <header className="bg-[#c8102e] text-white flex items-center h-14 shrink-0 shadow-md z-20">
         {/* Logo */}
-        <CabinetLogo onClick={() => (window.location.href = '/')} />
+        <CabinetLogo
+          onClick={() => {
+            setActiveNav('home')
+            setActiveSidebar(0)
+          }}
+        />
 
         {/* Hamburger */}
         <button className="px-3 h-full flex items-center hover:bg-[#a50e27] transition">

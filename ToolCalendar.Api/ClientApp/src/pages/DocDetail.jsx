@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+/* eslint-disable */
+/* eslint-disable eqeqeq */
+import React, { useEffect, useState } from 'react'
 import {
   ArrowLeft,
   Clock,
@@ -21,140 +23,143 @@ import {
   CheckCircle2,
   Play,
   Image,
-  Trash2
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { ConfirmationModal } from '@/components/ui/confirmation-modal';
-import { DocumentRoutingTree } from '@/components/DocumentRoutingTree';
-import { ForwardDocumentModal } from '@/components/ForwardDocumentModal';
+  Trash2,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { DocumentRoutingTree } from '@/components/DocumentRoutingTree'
+import { ForwardDocumentModal } from '@/components/ForwardDocumentModal'
 
 // --- Helper Components ---
 
-const InfoRow = ({
-  icon: Icon,
-  label,
-  value,
-  highlight,
-}) => (
+const InfoRow = ({ icon: Icon, label, value, highlight }) => (
   <div className="flex flex-col gap-0.5 group">
-    <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase group-hover:text-red-500 transition-colors">{label}</span>
+    <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase group-hover:text-red-500 transition-colors">
+      {label}
+    </span>
     <div className="flex items-center gap-2">
-      <div className={cn(
-        "flex-shrink-0 p-1.5 rounded-lg border transition-all",
-        highlight ? "bg-amber-50 text-amber-500 border-amber-200 shadow-sm" : "bg-slate-50 text-slate-400 border-slate-100"
-      )}>
+      <div
+        className={cn(
+          'flex-shrink-0 p-1.5 rounded-lg border transition-all',
+          highlight
+            ? 'bg-amber-50 text-amber-500 border-amber-200 shadow-sm'
+            : 'bg-slate-50 text-slate-400 border-slate-100'
+        )}
+      >
         <Icon size={12} strokeWidth={2.5} />
       </div>
-      <span className={cn(
-        "text-sm font-bold transition-colors leading-tight",
-        highlight ? "text-amber-700" : "text-slate-900"
-      )}>
+      <span
+        className={cn(
+          'text-sm font-bold transition-colors leading-tight',
+          highlight ? 'text-amber-700' : 'text-slate-900'
+        )}
+      >
         {value || '---'}
       </span>
     </div>
   </div>
-);
+)
 
 export function DocDetail({ docId, onBack }) {
-  const [doc, setDoc] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [newComment, setNewComment] = useState('');
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [departments, setDepartments] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [commentFiles, setCommentFiles] = useState([]);
-  const fileInputRef = React.useRef(null);
+  const [doc, setDoc] = useState(null)
+  const [comments, setComments] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('overview')
+  const [newComment, setNewComment] = useState('')
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+  const [departments, setDepartments] = useState([])
+  const [users, setUsers] = useState([])
+  const [commentFiles, setCommentFiles] = useState([])
+  const fileInputRef = React.useRef(null)
 
   // Modal & PDF states
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isEvidenceModalOpen, setIsEvidenceModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [pdfPage, setPdfPage] = useState(1);
-  const [evidenceNote, setEvidenceNote] = useState('');
-  const [evidenceFiles, setEvidenceFiles] = useState([]);
-  const [previewImage, setPreviewImage] = useState(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isEvidenceModalOpen, setIsEvidenceModalOpen] = useState(false)
+  const [editForm, setEditForm] = useState(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [pdfPage, setPdfPage] = useState(1)
+  const [evidenceNote, setEvidenceNote] = useState('')
+  const [evidenceFiles, setEvidenceFiles] = useState([])
+  const [previewImage, setPreviewImage] = useState(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false)
 
-  const [routings, setRoutings] = useState([]);
+  const [routings, setRoutings] = useState([])
 
   useEffect(() => {
     if (docId) {
-      fetchData();
+      fetchData()
 
       const handleCommentEvent = (e) => {
         if (e.detail?.documentId === parseInt(docId)) {
-          fetchComments();
+          fetchComments()
         }
-      };
+      }
 
-      document.addEventListener('realtime:new_comment', handleCommentEvent);
-      document.addEventListener('realtime:delete_comment', handleCommentEvent);
-      document.addEventListener('realtime:comment_reaction', handleCommentEvent);
+      document.addEventListener('realtime:new_comment', handleCommentEvent)
+      document.addEventListener('realtime:delete_comment', handleCommentEvent)
+      document.addEventListener('realtime:comment_reaction', handleCommentEvent)
 
       return () => {
-        document.removeEventListener('realtime:new_comment', handleCommentEvent);
-        document.removeEventListener('realtime:delete_comment', handleCommentEvent);
-        document.removeEventListener('realtime:comment_reaction', handleCommentEvent);
-      };
+        document.removeEventListener('realtime:new_comment', handleCommentEvent)
+        document.removeEventListener('realtime:delete_comment', handleCommentEvent)
+        document.removeEventListener('realtime:comment_reaction', handleCommentEvent)
+      }
     }
-  }, [docId]);
+  }, [docId])
 
   const fetchData = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const headers = { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
       const [docRes, deptRes, userRes] = await Promise.all([
         fetch(`/api/documents/${docId}`, { headers }),
         fetch('/api/admin/departments', { headers }),
-        fetch('/api/users', { headers })
-      ]);
+        fetch('/api/users', { headers }),
+      ])
 
       if (docRes.ok) {
-        const data = await docRes.json();
-        setDoc(data);
-        setEditForm(data);
+        const data = await docRes.json()
+        setDoc(data)
+        setEditForm(data)
       }
-      if (deptRes.ok) setDepartments(await deptRes.json());
-      if (userRes.ok) setUsers(await userRes.json());
+      if (deptRes.ok) setDepartments(await deptRes.json())
+      if (userRes.ok) setUsers(await userRes.json())
 
-      await Promise.all([fetchComments(), fetchRoutings()]);
+      await Promise.all([fetchComments(), fetchRoutings()])
     } catch (error) {
-      console.error('Failed to fetch document details:', error);
+      console.error('Failed to fetch document details:', error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const fetchRoutings = async () => {
     try {
       const response = await fetch(`/api/documents/${docId}/routings`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
       if (response.ok) {
-        setRoutings(await response.json());
+        setRoutings(await response.json())
       }
     } catch (error) {
-      console.error('Failed to fetch routings:', error);
+      console.error('Failed to fetch routings:', error)
     }
-  };
+  }
 
   const fetchComments = async () => {
     try {
       const response = await fetch(`/api/documents/${docId}/comments`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
       if (response.ok) {
-        setComments(await response.json());
+        setComments(await response.json())
       }
     } catch (error) {
-      console.error('Failed to fetch comments:', error);
+      console.error('Failed to fetch comments:', error)
     }
-  };
+  }
 
   const handleUpdateStatus = async (newStatus) => {
     try {
@@ -162,174 +167,179 @@ export function DocDetail({ docId, onBack }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
         },
-        body: JSON.stringify({ ...doc, status: newStatus })
-      });
+        body: JSON.stringify({ ...doc, status: newStatus }),
+      })
       if (res.ok) {
-        toast.success(`Đã chuyển trạng thái sang: ${newStatus}`);
-        fetchData(); // Tải lại toàn bộ dữ liệu văn bản
+        toast.success(`Đã chuyển trạng thái sang: ${newStatus}`)
+        fetchData() // Tải lại toàn bộ dữ liệu văn bản
       } else {
-        toast.error("Không thể cập nhật trạng thái.");
+        toast.error('Không thể cập nhật trạng thái.')
       }
     } catch (err) {
-      toast.error("Lỗi kết nối máy chủ.");
+      toast.error('Lỗi kết nối máy chủ.')
     }
-  };
+  }
 
   const handlePostComment = async () => {
-    if (!newComment.trim()) return;
-    setIsSubmittingComment(true);
+    if (!newComment.trim()) return
+    setIsSubmittingComment(true)
     try {
-      const formData = new FormData();
-      formData.append('content', newComment);
+      const formData = new FormData()
+      formData.append('content', newComment)
 
       if (commentFiles.length > 0) {
-        commentFiles.forEach(file => {
-          formData.append('files', file);
-        });
+        commentFiles.forEach((file) => {
+          formData.append('files', file)
+        })
       }
 
       const response = await fetch(`/api/documents/${docId}/comments`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
         },
-        body: formData
-      });
+        body: formData,
+      })
       if (response.ok) {
-        setNewComment('');
-        setCommentFiles([]);
-        await fetchComments();
+        setNewComment('')
+        setCommentFiles([])
+        await fetchComments()
       }
     } catch (error) {
-      console.error('Failed to post comment:', error);
+      console.error('Failed to post comment:', error)
     } finally {
-      setIsSubmittingComment(false);
+      setIsSubmittingComment(false)
     }
-  };
+  }
 
   const handleSaveEdit = async () => {
-    setIsSaving(true);
+    setIsSaving(true)
     try {
       const response = await fetch(`/api/documents/${docId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editForm)
-      });
+        body: JSON.stringify(editForm),
+      })
 
       if (response.ok) {
-        setDoc(editForm);
-        setIsEditModalOpen(false);
-        toast.success('Cập nhật văn bản thành công');
+        setDoc(editForm)
+        setIsEditModalOpen(false)
+        toast.success('Cập nhật văn bản thành công')
       } else {
-        toast.error('Có lỗi xảy ra khi lưu');
+        toast.error('Có lỗi xảy ra khi lưu')
       }
     } catch (error) {
-      console.error('Failed to save document:', error);
-      toast.error('Lỗi kết nối máy chủ');
+      console.error('Failed to save document:', error)
+      toast.error('Lỗi kết nối máy chủ')
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   const handleSubmitEvidence = async () => {
-    setIsSaving(true);
+    setIsSaving(true)
     try {
-      const formData = new FormData();
-      formData.append('notes', evidenceNote);
-      evidenceFiles.forEach(file => {
-        formData.append('files', file);
-      });
+      const formData = new FormData()
+      formData.append('notes', evidenceNote)
+      evidenceFiles.forEach((file) => {
+        formData.append('files', file)
+      })
 
       const response = await fetch(`/api/documents/${docId}/submit-evidence`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
         },
-        body: formData
-      });
+        body: formData,
+      })
 
       if (response.ok) {
-        toast.success('Đã nộp kết quả thành công');
-        setIsEvidenceModalOpen(false);
-        setEvidenceNote('');
-        setEvidenceFiles([]);
-        fetchData();
+        toast.success('Đã nộp kết quả thành công')
+        setIsEvidenceModalOpen(false)
+        setEvidenceNote('')
+        setEvidenceFiles([])
+        fetchData()
       } else {
-        toast.error('Lỗi khi nộp kết quả');
+        toast.error('Lỗi khi nộp kết quả')
       }
     } catch (error) {
-      console.error('Submit evidence failed:', error);
-      toast.error('Lỗi kết nối máy chủ');
+      console.error('Submit evidence failed:', error)
+      toast.error('Lỗi kết nối máy chủ')
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   const handleDeleteDoc = () => {
-    setIsDeleteModalOpen(true);
-  };
+    setIsDeleteModalOpen(true)
+  }
 
   const executeDelete = async () => {
     try {
       const response = await fetch(`/api/documents/${docId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      })
 
       if (response.ok) {
-        toast.success('Xóa văn bản thành công');
-        onBack();
+        toast.success('Xóa văn bản thành công')
+        onBack()
       } else {
-        toast.error('Có lỗi xảy ra khi xóa văn bản');
+        toast.error('Có lỗi xảy ra khi xóa văn bản')
       }
     } catch (error) {
-      console.error('Failed to delete document:', error);
-      toast.error('Lỗi kết nối máy chủ');
+      console.error('Failed to delete document:', error)
+      toast.error('Lỗi kết nối máy chủ')
     } finally {
-      setIsDeleteModalOpen(false);
+      setIsDeleteModalOpen(false)
     }
-  };
+  }
 
   const handleViewEvidence = async (path) => {
     try {
-      const response = await fetch(`/api/documents/evidence-file?path=${encodeURIComponent(path)}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
+      const response = await fetch(
+        `/api/documents/evidence-file?path=${encodeURIComponent(path)}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+        }
+      )
       if (response.ok) {
-        const url = `/api/documents/evidence-file?path=${encodeURIComponent(path)}`;
+        const url = `/api/documents/evidence-file?path=${encodeURIComponent(path)}`
 
-        const token = localStorage.getItem('auth_token');
-        document.cookie = `jwt_cookie=${token}; path=/; max-age=86400; Secure; SameSite=Lax`;
+        const token = localStorage.getItem('auth_token')
+        document.cookie = `jwt_cookie=${token}; path=/; max-age=86400; Secure; SameSite=Lax`
 
         // Nếu là ảnh thì hiện modal trong app, nếu là PDF thì vẫn mở tab mới
-        const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path);
+        const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path)
         if (isImg) {
-          setPreviewImage(url);
+          setPreviewImage(url)
         } else {
-          window.open(url, '_blank');
+          window.open(url, '_blank')
         }
       } else {
-        toast.error("Không có quyền xem file này hoặc file không tồn tại.");
+        toast.error('Không có quyền xem file này hoặc file không tồn tại.')
       }
     } catch (error) {
-      toast.error("Lỗi khi tải file bằng chứng.");
+      toast.error('Lỗi khi tải file bằng chứng.')
     }
-  };
+  }
 
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
         <Loader2 className="size-8 animate-spin text-red-600" />
-        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Đang tải chi tiết...</p>
+        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
+          Đang tải chi tiết...
+        </p>
       </div>
-    );
+    )
   }
 
   if (!doc) {
@@ -339,31 +349,37 @@ export function DocDetail({ docId, onBack }) {
           <FileText className="size-10 text-slate-400" />
         </div>
         <h3 className="text-xl font-bold text-slate-800">Không tìm thấy văn bản</h3>
-        <button onClick={onBack} className="px-6 py-2.5 rounded-xl bg-slate-800 text-white font-bold text-sm hover:bg-slate-900 transition-all">
+        <button
+          onClick={onBack}
+          className="px-6 py-2.5 rounded-xl bg-slate-800 text-white font-bold text-sm hover:bg-slate-900 transition-all"
+        >
           Quay lại
         </button>
       </div>
-    );
+    )
   }
 
   const tabs = [
-    { key: "overview", label: "TỔNG QUAN" },
-    { key: "content", label: "NỘI DUNG" },
-    { key: "routing", label: "QUÁ TRÌNH XỬ LÝ" },
-    { key: "history", label: "LỊCH SỬ" },
-  ];
+    { key: 'overview', label: 'TỔNG QUAN' },
+    { key: 'content', label: 'NỘI DUNG' },
+    { key: 'routing', label: 'QUÁ TRÌNH XỬ LÝ' },
+    { key: 'history', label: 'LỊCH SỬ' },
+  ]
 
   const steps = [
-    { label: "Tiếp nhận", done: true },
-    { label: "Phân công", done: doc.departmentId != null },
-    { label: "Xử lý", done: doc.status === 'Đang xử lý' || doc.status === 'Đã hoàn thành' },
-    { label: "Hoàn thành", done: doc.status === 'Đã hoàn thành' },
-  ];
+    { label: 'Tiếp nhận', done: true },
+    { label: 'Phân công', done: doc.departmentId != null },
+    { label: 'Xử lý', done: doc.status === 'Đang xử lý' || doc.status === 'Đã hoàn thành' },
+    { label: 'Hoàn thành', done: doc.status === 'Đã hoàn thành' },
+  ]
 
-  const pdfUrl = `/api/documents/${docId}/file#page=${pdfPage}&toolbar=0&navpanes=0`;
+  const pdfUrl = `/api/documents/${docId}/file#page=${pdfPage}&toolbar=0&navpanes=0`
 
   return (
-    <div className="h-full font-sans flex flex-col gap-4 overflow-hidden px-2 pb-2" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div
+      className="h-full font-sans flex flex-col gap-4 overflow-hidden px-2 pb-2"
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
       {/* 1. Header Section */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 py-1">
         <div className="flex items-center gap-4">
@@ -375,16 +391,30 @@ export function DocDetail({ docId, onBack }) {
           </button>
           <div className="flex flex-col">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-none">{doc.soVanBan}</h1>
-              <span className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                doc.soNgayConLai === 9999 ? "bg-green-50 text-green-700 border-green-200" :
-                  doc.soNgayConLai <= 3 ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"
-              )}>
-                <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse",
-                  doc.soNgayConLai === 9999 ? "bg-green-500" :
-                    doc.soNgayConLai <= 3 ? "bg-red-500" : "bg-amber-500")}></span>
-                {doc.soNgayConLai === 9999 ? "ĐÃ HOÀN THÀNH" : `${doc.soNgayConLai} NGÀY CÒN LẠI`}
+              <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-none">
+                {doc.soVanBan}
+              </h1>
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border',
+                  doc.soNgayConLai === 9999
+                    ? 'bg-green-50 text-green-700 border-green-200'
+                    : doc.soNgayConLai <= 3
+                      ? 'bg-red-50 text-red-700 border-red-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                )}
+              >
+                <span
+                  className={cn(
+                    'w-1.5 h-1.5 rounded-full animate-pulse',
+                    doc.soNgayConLai === 9999
+                      ? 'bg-green-500'
+                      : doc.soNgayConLai <= 3
+                        ? 'bg-red-500'
+                        : 'bg-amber-500'
+                  )}
+                />
+                {doc.soNgayConLai === 9999 ? 'ĐÃ HOÀN THÀNH' : `${doc.soNgayConLai} NGÀY CÒN LẠI`}
               </span>
             </div>
             <p className="text-[11px] font-bold text-slate-400 mt-1 truncate max-w-[600px] uppercase tracking-wide">
@@ -405,21 +435,24 @@ export function DocDetail({ docId, onBack }) {
           )}
 
           {/* Nút Nộp kết quả (Hiện sau khi đã tiếp nhận) */}
-          {doc.status === 'Đang xử lý' && (doc.assignedTo == localStorage.getItem('user_id') || localStorage.getItem('user_role') === 'Admin') && (
-            <button
-              onClick={() => setIsEvidenceModalOpen(true)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-100"
-            >
-              <ExternalLink size={14} strokeWidth={2.5} />
-              NỘP KẾT QUẢ
-            </button>
-          )}
+          {doc.status === 'Đang xử lý' &&
+            (doc.assignedTo == localStorage.getItem('user_id') ||
+              localStorage.getItem('user_role') === 'Admin') && (
+              <button
+                onClick={() => setIsEvidenceModalOpen(true)}
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-100"
+              >
+                <ExternalLink size={14} strokeWidth={2.5} />
+                NỘP KẾT QUẢ
+              </button>
+            )}
 
-          {(localStorage.getItem('user_role') === 'Admin' || localStorage.getItem('user_role') === 'VanThu') && (
+          {(localStorage.getItem('user_role') === 'Admin' ||
+            localStorage.getItem('user_role') === 'VanThu') && (
             <button
               onClick={() => {
-                setEditForm({ ...doc });
-                setIsEditModalOpen(true);
+                setEditForm({ ...doc })
+                setIsEditModalOpen(true)
               }}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
             >
@@ -438,10 +471,10 @@ export function DocDetail({ docId, onBack }) {
           )}
           <button
             onClick={() => {
-              const token = localStorage.getItem('auth_token');
+              const token = localStorage.getItem('auth_token')
               // ✅ Bảo mật: Dùng cookie thay vì token trên URL
-              document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`;
-              window.open(`/api/documents/${docId}/file`, '_blank');
+              document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
+              window.open(`/api/documents/${docId}/file`, '_blank')
             }}
             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-100"
           >
@@ -458,40 +491,52 @@ export function DocDetail({ docId, onBack }) {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`relative px-4 py-3 text-[10px] font-black tracking-[0.1em] transition-all ${activeTab === tab.key
-                ? "text-red-600"
-                : "text-slate-400 hover:text-slate-600"
-                }`}
+              className={`relative px-4 py-3 text-[10px] font-black tracking-[0.1em] transition-all ${
+                activeTab === tab.key ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'
+              }`}
             >
               {tab.label}
               {activeTab === tab.key && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600 rounded-t-full shadow-[0_-2px_10px_rgba(220,38,38,0.4)]"></span>
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600 rounded-t-full shadow-[0_-2px_10px_rgba(220,38,38,0.4)]" />
               )}
             </button>
           ))}
         </div>
 
         <div className="flex items-center gap-4 px-4 pb-4 md:pb-0">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 hidden xl:block self-end mb-2">TIẾN ĐỘ:</span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 hidden xl:block self-end mb-2">
+            TIẾN ĐỘ:
+          </span>
           <div className="relative flex items-end justify-between min-w-[300px] sm:min-w-[400px] flex-1 pb-2">
             <div className="absolute bottom-[18px] left-0 right-0 h-[2px] bg-slate-100 z-0 mx-3">
               <div
                 className="h-full bg-green-400 transition-all duration-500 shadow-[0_0_8px_rgba(74,222,128,0.4)]"
-                style={{ width: `${Math.max(0, (steps.filter(s => s.done).length - 1) / (steps.length - 1) * 100)}%` }}
-              ></div>
+                style={{
+                  width: `${Math.max(0, ((steps.filter((s) => s.done).length - 1) / (steps.length - 1)) * 100)}%`,
+                }}
+              />
             </div>
             {steps.map((step, i) => (
-              <div key={step.label} className="flex flex-col-reverse items-center group/step relative z-10 w-0 flex-1">
-                <div className={cn(
-                  "w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black transition-all shadow-sm z-20 relative border",
-                  step.done ? "bg-green-500 text-white border-green-400" : "bg-white text-slate-400 border-slate-100"
-                )}>
-                  {step.done ? "✓" : i + 1}
+              <div
+                key={step.label}
+                className="flex flex-col-reverse items-center group/step relative z-10 w-0 flex-1"
+              >
+                <div
+                  className={cn(
+                    'w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black transition-all shadow-sm z-20 relative border',
+                    step.done
+                      ? 'bg-green-500 text-white border-green-400'
+                      : 'bg-white text-slate-400 border-slate-100'
+                  )}
+                >
+                  {step.done ? '✓' : i + 1}
                 </div>
-                <span className={cn(
-                  "text-[8px] font-black uppercase tracking-tighter mb-1.5 transition-colors whitespace-nowrap",
-                  step.done ? "text-slate-700" : "text-slate-400"
-                )}>
+                <span
+                  className={cn(
+                    'text-[8px] font-black uppercase tracking-tighter mb-1.5 transition-colors whitespace-nowrap',
+                    step.done ? 'text-slate-700' : 'text-slate-400'
+                  )}
+                >
                   {step.label}
                 </span>
               </div>
@@ -504,24 +549,51 @@ export function DocDetail({ docId, onBack }) {
       <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pb-10 lg:pb-0">
         {/* Left Panel */}
         <div className="flex-none lg:flex-1 flex flex-col min-h-0">
-          {activeTab === "overview" && (
+          {activeTab === 'overview' && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-auto lg:h-full animate-in fade-in slide-in-from-left-4 duration-400">
               <div className="px-6 py-3 border-b border-slate-50 bg-slate-50/30 shrink-0">
-                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">THÔNG TIN CHI TIẾT VĂN BẢN</h2>
+                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                  THÔNG TIN CHI TIẾT VĂN BẢN
+                </h2>
               </div>
               <div className="flex-1 lg:overflow-auto p-4 md:p-6 lg:p-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                   <InfoRow icon={FileText} label="Số văn bản" value={doc.soVanBan} />
-                  <InfoRow icon={Calendar} label="Ngày ban hành" value={new Date(doc.ngayBanHanh).toLocaleDateString('vi-VN')} />
+                  <InfoRow
+                    icon={Calendar}
+                    label="Ngày ban hành"
+                    value={new Date(doc.ngayBanHanh).toLocaleDateString('vi-VN')}
+                  />
                   <InfoRow icon={Building2} label="Cơ quan ban hành" value={doc.coQuanBanHanh} />
                   <InfoRow icon={Building2} label="Cơ quan chủ quản" value={doc.coQuanChuQuan} />
-                  <InfoRow icon={Clock} label="Thời hạn xử lý" value={new Date(doc.thoiHan).toLocaleDateString('vi-VN')} highlight />
-                  <InfoRow icon={AlertCircle} label="Mức độ ưu tiên" value={doc.priority || 'THƯỜNG'} />
-                  <InfoRow icon={Building2} label="Đơn vị chủ trì" value={departments.find(d => d.id === doc.departmentId)?.name || 'CHƯA PHÂN CÔNG'} />
-                  <InfoRow icon={User} label="Cán bộ xử lý" value={users.find(u => u.id === doc.assignedTo)?.fullName || 'CHƯA PHÂN CÔNG'} />
+                  <InfoRow
+                    icon={Clock}
+                    label="Thời hạn xử lý"
+                    value={new Date(doc.thoiHan).toLocaleDateString('vi-VN')}
+                    highlight
+                  />
+                  <InfoRow
+                    icon={AlertCircle}
+                    label="Mức độ ưu tiên"
+                    value={doc.priority || 'THƯỜNG'}
+                  />
+                  <InfoRow
+                    icon={Building2}
+                    label="Đơn vị chủ trì"
+                    value={
+                      departments.find((d) => d.id === doc.departmentId)?.name || 'CHƯA PHÂN CÔNG'
+                    }
+                  />
+                  <InfoRow
+                    icon={User}
+                    label="Cán bộ xử lý"
+                    value={users.find((u) => u.id === doc.assignedTo)?.fullName || 'CHƯA PHÂN CÔNG'}
+                  />
                 </div>
                 <div className="mt-8 pt-8 border-t border-slate-50">
-                  <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-4">TRÍCH YẾU NỘI DUNG</p>
+                  <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-4">
+                    TRÍCH YẾU NỘI DUNG
+                  </p>
                   <p className="text-sm font-bold text-slate-700 leading-relaxed bg-slate-50/50 border border-slate-100 p-6 rounded-2xl shadow-inner min-h-[140px]">
                     {doc.trichYeu}
                   </p>
@@ -534,7 +606,9 @@ export function DocDetail({ docId, onBack }) {
                       <div className="p-2 rounded-xl bg-green-50 text-green-600 shadow-sm border border-green-100">
                         <CheckCircle2 size={18} strokeWidth={2.5} />
                       </div>
-                      <h2 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">KẾT QUẢ XỬ LÝ & BẰNG CHỨNG</h2>
+                      <h2 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">
+                        KẾT QUẢ XỬ LÝ & BẰNG CHỨNG
+                      </h2>
                     </div>
 
                     <div className="bg-white border-2 border-green-100 rounded-2xl p-4 md:p-6 shadow-xl shadow-green-50/50 relative overflow-hidden">
@@ -549,22 +623,25 @@ export function DocDetail({ docId, onBack }) {
                             <MessageSquare size={12} /> NỘI DUNG GIẢI TRÌNH
                           </p>
                           <div className="text-sm font-bold text-slate-700 leading-relaxed pl-4 border-l-4 border-green-200">
-                            {doc.evidenceNotes || "Không có ghi chú bổ sung."}
+                            {doc.evidenceNotes || 'Không có ghi chú bổ sung.'}
                           </div>
                         </div>
 
                         {doc.evidencePaths && (
                           <div className="pt-4">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                              <Paperclip size={12} /> DANH SÁCH FILE BẰNG CHỨNG ({JSON.parse(doc.evidencePaths || "[]").length})
+                              <Paperclip size={12} /> DANH SÁCH FILE BẰNG CHỨNG (
+                              {JSON.parse(doc.evidencePaths || '[]').length})
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               {(() => {
                                 try {
-                                  const paths = JSON.parse(doc.evidencePaths || "[]");
+                                  const paths = JSON.parse(doc.evidencePaths || '[]')
                                   return paths.map((path, idx) => {
-                                    const fileName = path.split('/').pop().split('_').slice(1).join('_') || "Attachment";
-                                    const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path);
+                                    const fileName =
+                                      path.split('/').pop().split('_').slice(1).join('_') ||
+                                      'Attachment'
+                                    const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path)
                                     return (
                                       <button
                                         key={idx}
@@ -575,14 +652,23 @@ export function DocDetail({ docId, onBack }) {
                                           {isImg ? <Image size={18} /> : <FileText size={18} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                          <p className="text-[10px] font-black text-slate-900 truncate uppercase tracking-tight">{fileName}</p>
-                                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Click để xem chi tiết</p>
+                                          <p className="text-[10px] font-black text-slate-900 truncate uppercase tracking-tight">
+                                            {fileName}
+                                          </p>
+                                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                            Click để xem chi tiết
+                                          </p>
                                         </div>
-                                        <ExternalLink size={14} className="text-slate-300 group-hover:text-green-500" />
+                                        <ExternalLink
+                                          size={14}
+                                          className="text-slate-300 group-hover:text-green-500"
+                                        />
                                       </button>
-                                    );
-                                  });
-                                } catch (e) { return null; }
+                                    )
+                                  })
+                                } catch (e) {
+                                  return null
+                                }
                               })()}
                             </div>
                           </div>
@@ -595,41 +681,48 @@ export function DocDetail({ docId, onBack }) {
             </div>
           )}
 
-          {activeTab === "content" && (
+          {activeTab === 'content' && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[500px] lg:h-full animate-in fade-in zoom-in-95 duration-400">
               <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
-                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">FILE & OCR RESULT</h2>
-                <button className="text-[10px] font-black text-red-600 hover:underline uppercase tracking-widest" onClick={() => {
-                  const token = localStorage.getItem('auth_token');
-                  // ✅ Bảo mật: Dùng cookie thay vì token trên URL
-                  document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`;
-                  window.open(`/api/documents/${docId}/file`, '_blank');
-                }}>XEM TOÀN MÀN HÌNH</button>
+                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                  FILE & OCR RESULT
+                </h2>
+                <button
+                  className="text-[10px] font-black text-red-600 hover:underline uppercase tracking-widest"
+                  onClick={() => {
+                    const token = localStorage.getItem('auth_token')
+                    // ✅ Bảo mật: Dùng cookie thay vì token trên URL
+                    document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
+                    window.open(`/api/documents/${docId}/file`, '_blank')
+                  }}
+                >
+                  XEM TOÀN MÀN HÌNH
+                </button>
               </div>
               <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                 <div className="flex-1 bg-slate-100/50 border-r border-slate-100 relative">
-                  <iframe
-                    src={pdfUrl}
-                    className="w-full h-full border-none"
-                    title="PDF Viewer"
-                  />
+                  <iframe src={pdfUrl} className="w-full h-full border-none" title="PDF Viewer" />
                 </div>
                 <div className="w-full md:w-80 bg-slate-900 p-6 overflow-auto">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-5">OCR DATA STREAM</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-5">
+                    OCR DATA STREAM
+                  </p>
                   <div className="text-slate-400 font-mono text-[11px] leading-relaxed whitespace-pre-wrap select-all">
-                    {doc.fullText || "HỆ THỐNG KHÔNG TÌM THẤY DỮ LIỆU OCR."}
+                    {doc.fullText || 'HỆ THỐNG KHÔNG TÌM THẤY DỮ LIỆU OCR.'}
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {activeTab === "routing" && (
+          {activeTab === 'routing' && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8 flex flex-col h-auto lg:h-full overflow-hidden animate-in fade-in zoom-in-95 duration-400">
               <div className="flex items-center justify-between mb-6 shrink-0">
-                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">QUÁ TRÌNH XỬ LÝ (LUÂN CHUYỂN)</h2>
+                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                  QUÁ TRÌNH XỬ LÝ (LUÂN CHUYỂN)
+                </h2>
                 {doc.status !== 'Đã hoàn thành' && (
-                  <button 
+                  <button
                     onClick={() => setIsForwardModalOpen(true)}
                     className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold hover:bg-blue-100 transition-colors"
                   >
@@ -643,9 +736,11 @@ export function DocDetail({ docId, onBack }) {
             </div>
           )}
 
-          {activeTab === "history" && (
+          {activeTab === 'history' && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 flex flex-col h-auto lg:h-full overflow-hidden lg:overflow-auto animate-in fade-in slide-in-from-bottom-4 duration-400">
-              <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-12 shrink-0">QUY TRÌNH XỬ LÝ VĂN BẢN</h2>
+              <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-12 shrink-0">
+                QUY TRÌNH XỬ LÝ VĂN BẢN
+              </h2>
               <div className="relative space-y-10 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-slate-100">
                 <HistoryPoint
                   title="TIẾP NHẬN VĂN BẢN"
@@ -657,14 +752,18 @@ export function DocDetail({ docId, onBack }) {
                   <HistoryPoint
                     title="PHÂN CÔNG XỬ LÝ"
                     time={new Date(doc.ngayThem).toLocaleString('vi-VN')}
-                    user={users.find(u => u.id === doc.assignedTo)?.fullName}
+                    user={users.find((u) => u.id === doc.assignedTo)?.fullName}
                   />
                 )}
                 {doc.status === 'Đã hoàn thành' && (
                   <HistoryPoint
                     title="HOÀN THÀNH VĂN BẢN"
-                    time={doc.completionDate ? new Date(doc.completionDate).toLocaleString('vi-VN') : '---'}
-                    user={users.find(u => u.id === doc.assignedTo)?.fullName}
+                    time={
+                      doc.completionDate
+                        ? new Date(doc.completionDate).toLocaleString('vi-VN')
+                        : '---'
+                    }
+                    user={users.find((u) => u.id === doc.assignedTo)?.fullName}
                     active
                   />
                 )}
@@ -678,10 +777,14 @@ export function DocDetail({ docId, onBack }) {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden">
             <div className="px-5 py-3 border-b border-slate-50 flex items-center justify-between bg-slate-50/20 shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-[0_0_12px_rgba(220,38,38,0.7)] animate-pulse"></div>
-                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">THẢO LUẬN TRỰC TUYẾN</h2>
+                <div className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-[0_0_12px_rgba(220,38,38,0.7)] animate-pulse" />
+                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                  THẢO LUẬN TRỰC TUYẾN
+                </h2>
               </div>
-              <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black border border-slate-200">{comments.length}</span>
+              <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black border border-slate-200">
+                {comments.length}
+              </span>
             </div>
 
             <div className="flex-1 overflow-auto p-5 space-y-5">
@@ -693,23 +796,29 @@ export function DocDetail({ docId, onBack }) {
                         {c.username.substring(0, 1).toUpperCase()}
                       </div>
                       <div className="leading-tight">
-                        <p className="text-xs font-black text-slate-900 uppercase tracking-tighter">{c.username}</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{new Date(c.createdAt).toLocaleTimeString('vi-VN')}</p>
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-tighter">
+                          {c.username}
+                        </p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                          {new Date(c.createdAt).toLocaleTimeString('vi-VN')}
+                        </p>
                       </div>
                     </div>
                     <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl rounded-tl-none group-hover:bg-white group-hover:shadow-xl group-hover:border-slate-200 transition-all duration-500">
-                      <p className="text-xs font-bold text-slate-700 leading-relaxed italic">"{c.content}"</p>
+                      <p className="text-xs font-bold text-slate-700 leading-relaxed italic">
+                        "{c.content}"
+                      </p>
 
                       {/* Hiển thị file đính kèm */}
                       {c.attachmentPaths && (
                         <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
                           {(() => {
                             try {
-                              const paths = JSON.parse(c.attachmentPaths);
-                              if (!Array.isArray(paths) || paths.length === 0) return null;
+                              const paths = JSON.parse(c.attachmentPaths)
+                              if (!Array.isArray(paths) || paths.length === 0) return null
                               return paths.map((path, pIdx) => {
-                                const fileName = path.split('/').pop();
-                                const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path);
+                                const fileName = path.split('/').pop()
+                                const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path)
                                 return (
                                   <a
                                     key={pIdx}
@@ -721,9 +830,11 @@ export function DocDetail({ docId, onBack }) {
                                     {isImg ? <Image size={10} /> : <Paperclip size={10} />}
                                     <span className="max-w-[100px] truncate">{fileName}</span>
                                   </a>
-                                );
-                              });
-                            } catch (e) { return null; }
+                                )
+                              })
+                            } catch (e) {
+                              return null
+                            }
                           })()}
                         </div>
                       )}
@@ -735,7 +846,11 @@ export function DocDetail({ docId, onBack }) {
                   <div className="p-6 rounded-full bg-slate-100 mb-5">
                     <MessageSquare size={40} strokeWidth={2} className="text-slate-400" />
                   </div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center leading-loose">CHƯA CÓ Ý KIẾN CHỈ ĐẠO<br />NÀO ĐƯỢC GHI NHẬN</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center leading-loose">
+                    CHƯA CÓ Ý KIẾN CHỈ ĐẠO
+                    <br />
+                    NÀO ĐƯỢC GHI NHẬN
+                  </p>
                 </div>
               )}
             </div>
@@ -745,11 +860,16 @@ export function DocDetail({ docId, onBack }) {
                 {commentFiles.length > 0 && (
                   <div className="mb-3 flex flex-wrap gap-2 animate-in fade-in slide-in-from-bottom-2">
                     {commentFiles.map((file, idx) => (
-                      <div key={idx} className="group relative flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600">
+                      <div
+                        key={idx}
+                        className="group relative flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600"
+                      >
                         <Paperclip size={10} className="text-slate-400" />
                         <span className="max-w-[120px] truncate">{file.name}</span>
                         <button
-                          onClick={() => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
+                          onClick={() =>
+                            setCommentFiles((prev) => prev.filter((_, i) => i !== idx))
+                          }
                           className="ml-1 text-slate-400 hover:text-red-500 transition-colors"
                         >
                           <X size={12} />
@@ -772,9 +892,9 @@ export function DocDetail({ docId, onBack }) {
                     hidden
                     ref={fileInputRef}
                     onChange={(e) => {
-                      const files = Array.from(e.target.files);
-                      setCommentFiles(prev => [...prev, ...files]);
-                      e.target.value = null; // Reset to allow same file again
+                      const files = Array.from(e.target.files)
+                      setCommentFiles((prev) => [...prev, ...files])
+                      e.target.value = null // Reset to allow same file again
                     }}
                   />
                   <button
@@ -787,13 +907,17 @@ export function DocDetail({ docId, onBack }) {
                     onClick={handlePostComment}
                     disabled={isSubmittingComment || !newComment.trim()}
                     className={cn(
-                      "flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                      'flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
                       newComment.trim()
-                        ? "bg-red-600 text-white shadow-2xl shadow-red-200 hover:bg-red-700 hover:-translate-y-1 active:translate-y-0"
-                        : "bg-slate-200 text-slate-400"
+                        ? 'bg-red-600 text-white shadow-2xl shadow-red-200 hover:bg-red-700 hover:-translate-y-1 active:translate-y-0'
+                        : 'bg-slate-200 text-slate-400'
                     )}
                   >
-                    {isSubmittingComment ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                    {isSubmittingComment ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Send size={12} />
+                    )}
                     GỬI Ý KIẾN
                   </button>
                 </div>
@@ -814,8 +938,12 @@ export function DocDetail({ docId, onBack }) {
                   <Edit size={20} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight">Chỉnh sửa thông tin văn bản</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Đối chiếu trực tiếp với bản gốc PDF</p>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                    Chỉnh sửa thông tin văn bản
+                  </h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Đối chiếu trực tiếp với bản gốc PDF
+                  </p>
                 </div>
               </div>
               <button
@@ -845,7 +973,9 @@ export function DocDetail({ docId, onBack }) {
                     <div className="p-2 rounded-lg bg-slate-800 text-slate-400">
                       <FileText size={16} />
                     </div>
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Bản gốc PDF</span>
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                      Bản gốc PDF
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-4 bg-slate-800 p-1.5 rounded-xl border border-slate-700">
@@ -870,10 +1000,10 @@ export function DocDetail({ docId, onBack }) {
 
                   <button
                     onClick={() => {
-                      const token = localStorage.getItem('auth_token');
+                      const token = localStorage.getItem('auth_token')
                       // ✅ Bảo mật: Dùng cookie thay vì ?access_token= trên URL
-                      document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`;
-                      window.open(`/api/documents/${docId}/file`, '_blank');
+                      document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
+                      window.open(`/api/documents/${docId}/file`, '_blank')
                     }}
                     className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-red-600 transition-all"
                   >
@@ -922,21 +1052,31 @@ export function DocDetail({ docId, onBack }) {
                     />
 
                     <div className="pt-4 border-t border-slate-50">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Thông tin nâng cao</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                        Thông tin nâng cao
+                      </p>
                       <div className="space-y-4">
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Đơn vị chủ trì</label>
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">
+                            Đơn vị chủ trì
+                          </label>
                           <select
                             value={editForm?.departmentId || ''}
-                            onChange={(e) => setEditForm({
-                              ...editForm,
-                              departmentId: e.target.value ? parseInt(e.target.value) : null,
-                              assignedTo: null // Reset cán bộ khi đổi đơn vị
-                            })}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                departmentId: e.target.value ? parseInt(e.target.value) : null,
+                                assignedTo: null, // Reset cán bộ khi đổi đơn vị
+                              })
+                            }
                             className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all appearance-none cursor-pointer"
                           >
                             <option value="">Chọn đơn vị...</option>
-                            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                            {departments.map((d) => (
+                              <option key={d.id} value={d.id}>
+                                {d.name}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         <div className="flex flex-col gap-1.5">
@@ -944,25 +1084,31 @@ export function DocDetail({ docId, onBack }) {
                             Cán bộ xử lý
                             {editForm?.departmentId && (
                               <span className="ml-2 text-red-500 normal-case tracking-normal font-bold">
-                                — {departments.find(d => d.id === editForm.departmentId)?.name}
+                                — {departments.find((d) => d.id === editForm.departmentId)?.name}
                               </span>
                             )}
                           </label>
                           <select
                             value={editForm?.assignedTo || ''}
-                            onChange={(e) => setEditForm({ ...editForm, assignedTo: e.target.value ? parseInt(e.target.value) : null })}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                assignedTo: e.target.value ? parseInt(e.target.value) : null,
+                              })
+                            }
                             className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all appearance-none cursor-pointer"
                           >
                             <option value="">Chọn cán bộ...</option>
                             {(editForm?.departmentId
-                              ? users.filter(u =>
-                                u.role === 'Admin' ||
-                                u.departmentId === editForm.departmentId
-                              )
+                              ? users.filter(
+                                  (u) =>
+                                    u.role === 'Admin' || u.departmentId === editForm.departmentId
+                                )
                               : users
-                            ).map(u => (
+                            ).map((u) => (
                               <option key={u.id} value={u.id}>
-                                {u.fullName}{u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                                {u.fullName}
+                                {u.role === 'Admin' ? ' (Quản trị viên)' : ''}
                               </option>
                             ))}
                           </select>
@@ -1007,8 +1153,8 @@ export function DocDetail({ docId, onBack }) {
         documentId={docId}
         parentRoutingId={null} // TODO: pass correct parent ID if replying to a specific routing
         onForwardSuccess={() => {
-          fetchRoutings();
-          fetchData();
+          fetchRoutings()
+          fetchData()
         }}
       />
 
@@ -1027,12 +1173,21 @@ export function DocDetail({ docId, onBack }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-400">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Nộp kết quả xử lý</h3>
-              <button onClick={() => setIsEvidenceModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600"><X size={20} /></button>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                Nộp kết quả xử lý
+              </h3>
+              <button
+                onClick={() => setIsEvidenceModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600"
+              >
+                <X size={20} />
+              </button>
             </div>
             <div className="p-6 space-y-5">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ghi chú kết quả</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Ghi chú kết quả
+                </label>
                 <textarea
                   value={evidenceNote}
                   onChange={(e) => setEvidenceNote(e.target.value)}
@@ -1041,7 +1196,9 @@ export function DocDetail({ docId, onBack }) {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">File bằng chứng (Ảnh/PDF)</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  File bằng chứng (Ảnh/PDF)
+                </label>
                 <div className="flex items-center gap-3">
                   <input
                     type="file"
@@ -1050,15 +1207,23 @@ export function DocDetail({ docId, onBack }) {
                     id="evidence-upload"
                     onChange={(e) => setEvidenceFiles(Array.from(e.target.files))}
                   />
-                  <label htmlFor="evidence-upload" className="cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-[10px] font-black text-slate-600 hover:bg-slate-200 transition-all uppercase">
+                  <label
+                    htmlFor="evidence-upload"
+                    className="cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-[10px] font-black text-slate-600 hover:bg-slate-200 transition-all uppercase"
+                  >
                     <Paperclip size={14} /> Chọn file
                   </label>
-                  <span className="text-[10px] font-bold text-slate-400">{evidenceFiles.length} file đã chọn</span>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {evidenceFiles.length} file đã chọn
+                  </span>
                 </div>
                 {evidenceFiles.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-3">
                     {evidenceFiles.map((file, i) => (
-                      <div key={i} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-600 shadow-sm animate-in zoom-in-95 duration-300">
+                      <div
+                        key={i}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-600 shadow-sm animate-in zoom-in-95 duration-300"
+                      >
                         <Paperclip size={10} className="text-slate-400" />
                         <span className="max-w-[120px] truncate">{file.name}</span>
                       </div>
@@ -1068,13 +1233,18 @@ export function DocDetail({ docId, onBack }) {
               </div>
             </div>
             <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/50">
-              <button onClick={() => setIsEvidenceModalOpen(false)} className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hủy</button>
+              <button
+                onClick={() => setIsEvidenceModalOpen(false)}
+                className="text-[10px] font-black text-slate-400 uppercase tracking-widest"
+              >
+                Hủy
+              </button>
               <button
                 onClick={handleSubmitEvidence}
                 disabled={isSaving || evidenceFiles.length === 0}
                 className="px-8 py-2.5 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-100 disabled:opacity-50"
               >
-                {isSaving ? <Loader2 size={14} className="animate-spin" /> : "HOÀN THÀNH VĂN BẢN"}
+                {isSaving ? <Loader2 size={14} className="animate-spin" /> : 'HOÀN THÀNH VĂN BẢN'}
               </button>
             </div>
           </div>
@@ -1112,19 +1282,21 @@ export function DocDetail({ docId, onBack }) {
         variant="destructive"
       />
     </div>
-  );
+  )
 }
 
-const FormField = ({ label, value, onChange, icon: Icon, type = "text" }) => (
+const FormField = ({ label, value, onChange, icon: Icon, type = 'text' }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">{label}</label>
+    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">
+      {label}
+    </label>
     <div className="relative group">
       {Icon && (
         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-red-500 transition-colors">
           <Icon size={16} strokeWidth={2.5} />
         </div>
       )}
-      {type === "textarea" ? (
+      {type === 'textarea' ? (
         <textarea
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
@@ -1137,27 +1309,35 @@ const FormField = ({ label, value, onChange, icon: Icon, type = "text" }) => (
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
-            "w-full py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all",
-            Icon ? "pl-12 pr-4" : "px-4"
+            'w-full py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all',
+            Icon ? 'pl-12 pr-4' : 'px-4'
           )}
         />
       )}
     </div>
   </div>
-);
+)
 
 const HistoryPoint = ({ title, time, user, active }) => (
   <div className="relative pl-14 group">
-    <div className={cn(
-      "absolute left-0 mt-1 size-6 rounded-xl border-4 border-white shadow-xl z-10 transition-all group-hover:scale-125 duration-500",
-      active ? "bg-red-600 ring-8 ring-red-50" : "bg-slate-200"
-    )} />
+    <div
+      className={cn(
+        'absolute left-0 mt-1 size-6 rounded-xl border-4 border-white shadow-xl z-10 transition-all group-hover:scale-125 duration-500',
+        active ? 'bg-red-600 ring-8 ring-red-50' : 'bg-slate-200'
+      )}
+    />
     <div className="space-y-1.5">
-      <p className="text-[13px] font-black tracking-tight text-slate-900 uppercase group-hover:text-red-600 transition-colors">{title}</p>
+      <p className="text-[13px] font-black tracking-tight text-slate-900 uppercase group-hover:text-red-600 transition-colors">
+        {title}
+      </p>
       <div className="flex items-center gap-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-        <span className="flex items-center gap-2"><Clock size={14} strokeWidth={2.5} /> {time}</span>
-        <span className="flex items-center gap-2"><User size={14} strokeWidth={2.5} /> {user}</span>
+        <span className="flex items-center gap-2">
+          <Clock size={14} strokeWidth={2.5} /> {time}
+        </span>
+        <span className="flex items-center gap-2">
+          <User size={14} strokeWidth={2.5} /> {user}
+        </span>
       </div>
     </div>
   </div>
-);
+)

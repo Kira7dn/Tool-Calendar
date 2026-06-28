@@ -1,4 +1,6 @@
-import React from 'react';
+/* eslint-disable */
+/* global Notification, CustomEvent */
+import React from 'react'
 import {
   Bell,
   CheckSquare,
@@ -10,101 +12,103 @@ import {
   LogOut,
   Settings as SettingsIcon,
   ChevronDown,
-  X
-} from 'lucide-react';
-import { AppSidebar } from './Sidebar.jsx';
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { cn } from '@/lib/utils';
-import { registerServiceWorker, subscribeUserToPush } from '@/lib/push-notifications';
-import { signalRService } from '@/lib/signalr';
-import { Dashboard } from '../pages/Dashboard.jsx';
-import { Documents } from '../pages/Documents.jsx';
-import { Upload } from '../pages/Upload.jsx';
-import { Users } from '../pages/Users.jsx';
-import { DocDetail } from '../pages/DocDetail.jsx';
-import { MyTasks } from '../pages/MyTasks.jsx';
-import { Review } from '../pages/Review.jsx';
-import { Settings as SettingsPage } from '../pages/Settings.jsx';
-import { Search as SearchPage } from '../pages/Search.jsx';
-import { MonthlyReport } from '../pages/MonthlyReport.jsx';
+  X,
+} from 'lucide-react'
+import { AppSidebar } from './Sidebar.jsx'
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { cn } from '@/lib/utils'
+import { registerServiceWorker, subscribeUserToPush } from '@/lib/push-notifications'
+import { signalRService } from '@/lib/signalr'
+import { Dashboard } from '../pages/Dashboard.jsx'
+import { Documents } from '../pages/Documents.jsx'
+import { Upload } from '../pages/Upload.jsx'
+import { Users } from '../pages/Users.jsx'
+import { DocDetail } from '../pages/DocDetail.jsx'
+import { MyTasks } from '../pages/MyTasks.jsx'
+import { Review } from '../pages/Review.jsx'
+import { Settings as SettingsPage } from '../pages/Settings.jsx'
+import { Search as SearchPage } from '../pages/Search.jsx'
+import { MonthlyReport } from '../pages/MonthlyReport.jsx'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Toaster, toast } from 'sonner';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Toaster, toast } from 'sonner'
 
 // ─── Helper: Relative Time ───────────────────────────────────────────────────
 function formatRelativeTime(dateStr) {
-  const now = new Date();
-  const date = new Date(dateStr);
-  const diffMs = now - date;
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHour = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHour / 24);
+  const now = new Date()
+  const date = new Date(dateStr)
+  const diffMs = now - date
+  const diffSec = Math.floor(diffMs / 1000)
+  const diffMin = Math.floor(diffSec / 60)
+  const diffHour = Math.floor(diffMin / 60)
+  const diffDay = Math.floor(diffHour / 24)
 
-  if (diffSec < 60) return 'Vừa xong';
-  if (diffMin < 60) return `${diffMin} phút trước`;
-  if (diffHour < 24) return `${diffHour} giờ trước`;
-  if (diffDay === 1) return 'Hôm qua';
-  if (diffDay < 7) return `${diffDay} ngày trước`;
-  return date.toLocaleDateString('vi-VN');
+  if (diffSec < 60) return 'Vừa xong'
+  if (diffMin < 60) return `${diffMin} phút trước`
+  if (diffHour < 24) return `${diffHour} giờ trước`
+  if (diffDay === 1) return 'Hôm qua'
+  if (diffDay < 7) return `${diffDay} ngày trước`
+  return date.toLocaleDateString('vi-VN')
 }
 
 // ─── Notification Icon Avatar ────────────────────────────────────────────────
 function NotifAvatar({ title, isRead }) {
   // Pick icon/color based on keyword in title
-  const isOverdue = /quá hạn/i.test(title);
-  const isNew = /mới|tiếp nhận|tải lên/i.test(title);
-  const isAssign = /phân công|giao/i.test(title);
-  const isComplete = /hoàn thành|xử lý xong/i.test(title);
+  const isOverdue = /quá hạn/i.test(title)
+  const isNew = /mới|tiếp nhận|tải lên/i.test(title)
+  const isAssign = /phân công|giao/i.test(title)
+  const isComplete = /hoàn thành|xử lý xong/i.test(title)
 
-  let bg = 'bg-info/15';
-  let icon = '📄';
-  if (isOverdue) { bg = 'bg-destructive/15'; icon = '⚠️'; }
-  else if (isNew) { bg = 'bg-success/15'; icon = '📥'; }
-  else if (isAssign) { bg = 'bg-warning/15'; icon = '📋'; }
-  else if (isComplete) { bg = 'bg-success/15'; icon = '✅'; }
+  let bg = 'bg-info/15'
+  let icon = '📄'
+  if (isOverdue) {
+    bg = 'bg-destructive/15'
+    icon = '⚠️'
+  } else if (isNew) {
+    bg = 'bg-success/15'
+    icon = '📥'
+  } else if (isAssign) {
+    bg = 'bg-warning/15'
+    icon = '📋'
+  } else if (isComplete) {
+    bg = 'bg-success/15'
+    icon = '✅'
+  }
 
   return (
-    <div className={`relative shrink-0 size-12 rounded-full ${bg} flex items-center justify-center text-xl`}>
+    <div
+      className={`relative shrink-0 size-12 rounded-full ${bg} flex items-center justify-center text-xl`}
+    >
       {icon}
       {!isRead && (
         <span className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-primary border-2 border-background" />
       )}
     </div>
-  );
+  )
 }
 
 // ─── Notification List (Facebook-style) ─────────────────────────────────────
 function NotificationList({ notifications, onClickItem }) {
   // Group into "Mới" (< 24h) and "Trước đó"
-  const now = new Date();
-  const newNotifs = notifications.filter(n => (now - new Date(n.createdAt)) < 86400000);
-  const oldNotifs = notifications.filter(n => (now - new Date(n.createdAt)) >= 86400000);
+  const now = new Date()
+  const newNotifs = notifications.filter((n) => now - new Date(n.createdAt) < 86400000)
+  const oldNotifs = notifications.filter((n) => now - new Date(n.createdAt) >= 86400000)
 
   const renderItem = (n) => (
     <button
@@ -119,10 +123,12 @@ function NotificationList({ notifications, onClickItem }) {
       <NotifAvatar title={n.title} isRead={n.isRead} />
 
       <div className="flex-1 min-w-0">
-        <p className={cn(
-          'text-[13px] leading-snug line-clamp-2 mb-0.5',
-          n.isRead ? 'text-muted-foreground font-medium' : 'text-foreground font-bold'
-        )}>
+        <p
+          className={cn(
+            'text-[13px] leading-snug line-clamp-2 mb-0.5',
+            n.isRead ? 'text-muted-foreground font-medium' : 'text-foreground font-bold'
+          )}
+        >
           {n.title}
         </p>
         {n.body && (
@@ -130,277 +136,290 @@ function NotificationList({ notifications, onClickItem }) {
             {n.body}
           </p>
         )}
-        <p className={cn(
-          'text-[11px] font-bold',
-          n.isRead ? 'text-muted-foreground/60' : 'text-primary'
-        )}>
+        <p
+          className={cn(
+            'text-[11px] font-bold',
+            n.isRead ? 'text-muted-foreground/60' : 'text-primary'
+          )}
+        >
           {formatRelativeTime(n.createdAt)}
         </p>
       </div>
 
       {/* Unread blue dot (right side) */}
-      {!n.isRead && (
-        <div className="shrink-0 size-2.5 rounded-full bg-primary mt-2" />
-      )}
+      {!n.isRead && <div className="shrink-0 size-2.5 rounded-full bg-primary mt-2" />}
     </button>
-  );
+  )
 
   return (
     <div className="py-2 px-1">
       {newNotifs.length > 0 && (
         <>
-          <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground px-4 py-1.5">Mới</p>
+          <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground px-4 py-1.5">
+            Mới
+          </p>
           {newNotifs.map(renderItem)}
         </>
       )}
       {oldNotifs.length > 0 && (
         <>
-          <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground px-4 py-1.5 mt-1">Trước đó</p>
+          <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground px-4 py-1.5 mt-1">
+            Trước đó
+          </p>
           {oldNotifs.map(renderItem)}
         </>
       )}
     </div>
-  );
+  )
 }
 
 export function AppShell() {
   const [activeTab, setActiveTab] = React.useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('tab') || 'dashboard';
-  });
-  const [tabFilters, setTabFilters] = React.useState({});
-  const [currentDocId, setCurrentDocId] = React.useState(null);
-  const [isReviewOpen, setIsReviewOpen] = React.useState(false);
-  const [isNotifOpen, setIsNotifOpen] = React.useState(false);
-  const [isNotifMobileOpen, setIsNotifMobileOpen] = React.useState(false);
-  const [pushPermission, setPushPermission] = React.useState('default');
-  const [isUserOpen, setIsUserOpen] = React.useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = React.useState(false);
+    const params = new URLSearchParams(window.location.search)
+    return params.get('tab') || 'dashboard'
+  })
+  const [tabFilters, setTabFilters] = React.useState({})
+  const [currentDocId, setCurrentDocId] = React.useState(null)
+  const [isReviewOpen, setIsReviewOpen] = React.useState(false)
+  const [isNotifOpen, setIsNotifOpen] = React.useState(false)
+  const [isNotifMobileOpen, setIsNotifMobileOpen] = React.useState(false)
+  const [pushPermission, setPushPermission] = React.useState('default')
+  const [isUserOpen, setIsUserOpen] = React.useState(false)
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = React.useState(false)
   const [user, setUser] = React.useState(() => {
     return {
       name: localStorage.getItem('user_full_name') || localStorage.getItem('user_name') || 'Cán bộ',
-      role: localStorage.getItem('user_role') || 'CanBo'
-    };
-  });
-  const [notifCount, setNotifCount] = React.useState(0);
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-  const [notifications, setNotifications] = React.useState([]);
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+      role: localStorage.getItem('user_role') || 'CanBo',
+    }
+  })
+  const [notifCount, setNotifCount] = React.useState(0)
+  const [showPassword, setShowPassword] = React.useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
+  const [notifications, setNotifications] = React.useState([])
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false)
 
   const fetchNotifications = async () => {
     try {
       const response = await fetch('/api/notification', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
       if (response.ok) {
-        const data = await response.json();
-        setNotifications(data);
-        const unreadCount = data.filter(n => !n.isRead).length;
-        setNotifCount(unreadCount);
+        const data = await response.json()
+        setNotifications(data)
+        const unreadCount = data.filter((n) => !n.isRead).length
+        setNotifCount(unreadCount)
 
         // Show toast for latest unread if it's new
         if (data.length > 0 && !data[0].isRead) {
-          const lastSeenId = localStorage.getItem('last_notif_id');
+          const lastSeenId = localStorage.getItem('last_notif_id')
           if (lastSeenId !== data[0].id.toString()) {
             toast.info(data[0].title, {
               description: data[0].body,
               action: {
                 label: 'Xem',
                 onClick: () => {
-                  if (data[0].docId) setCurrentDocId(data[0].docId);
-                  markRead(data[0].id);
-                }
-              }
-            });
-            localStorage.setItem('last_notif_id', data[0].id.toString());
+                  if (data[0].docId) setCurrentDocId(data[0].docId)
+                  markRead(data[0].id)
+                },
+              },
+            })
+            localStorage.setItem('last_notif_id', data[0].id.toString())
           }
         }
       }
     } catch (e) {
-      console.error('Failed to fetch notifications:', e);
+      console.error('Failed to fetch notifications:', e)
     }
-  };
+  }
 
   const markRead = async (id) => {
     try {
       await fetch(`/api/notification/mark-read/${id}`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      fetchNotifications();
-    } catch (e) { }
-  };
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
+      fetchNotifications()
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   const markAllRead = async () => {
     try {
       await fetch('/api/notification/mark-all-read', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      fetchNotifications();
-    } catch (e) { }
-  };
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
+      fetchNotifications()
+    } catch (e) {
+      console.error(e)
+    }
+  }
   React.useEffect(() => {
     // Auth Guard: Redirect if not authenticated (main.jsx handles this usually)
     if (!localStorage.getItem('auth_token')) {
-      window.location.href = '/';
-      return;
+      window.location.href = '/'
+      return
     }
 
     // Load user info from localStorage
-    const name = localStorage.getItem('user_name') || 'User';
-    const role = localStorage.getItem('user_role') || 'CanBo';
-    setUser({ name, role });
+    const name = localStorage.getItem('user_name') || 'User'
+    const role = localStorage.getItem('user_role') || 'CanBo'
+    setUser({ name, role })
 
     // Listen for notification updates
     const handleNotifUpdate = (e) => {
-      fetchNotifications();
-    };
-    document.addEventListener('realtime:notifications_updated', handleNotifUpdate);
-    fetchNotifications();
+      fetchNotifications()
+    }
+    document.addEventListener('realtime:notifications_updated', handleNotifUpdate)
+    fetchNotifications()
 
     // Warn if connection is not secure
-    const isSecure = typeof window !== 'undefined' && window.isSecureContext;
+    const isSecure = typeof window !== 'undefined' && window.isSecureContext
     if (!isSecure) {
-      toast.warning('Kết nối HTTP không bảo mật: Trình duyệt không hỗ trợ gửi thông báo đẩy trên các liên kết HTTP.', {
-        description: 'Vui lòng truy cập qua đường dẫn HTTPS hoặc dùng link Ngrok để có thể nhận được thông báo đẩy tức thời!',
-        duration: 10000
-      });
+      toast.warning(
+        'Kết nối HTTP không bảo mật: Trình duyệt không hỗ trợ gửi thông báo đẩy trên các liên kết HTTP.',
+        {
+          description:
+            'Vui lòng truy cập qua đường dẫn HTTPS hoặc dùng link Ngrok để có thể nhận được thông báo đẩy tức thời!',
+          duration: 10000,
+        }
+      )
     }
 
     // Register Service Worker and listen for push messages
     if ('Notification' in window) {
       registerServiceWorker().then(async (registration) => {
         if (registration) {
-          registration.update();
+          registration.update()
         }
         try {
-          const currentPermission = Notification.permission;
-          setPushPermission(currentPermission);
+          const currentPermission = Notification.permission
+          setPushPermission(currentPermission)
 
           if (currentPermission === 'granted') {
             // Luôn tự động đăng ký lại khi đã có quyền (Chế độ bắt buộc)
-            await subscribeUserToPush();
+            await subscribeUserToPush()
           } else if (currentPermission === 'default') {
             // Thử gọi tự động (có thể bị trình duyệt chặn nếu không có user gesture)
             try {
-              const result = await Notification.requestPermission();
-              setPushPermission(result);
-              if (result === 'granted') await subscribeUserToPush();
+              const result = await Notification.requestPermission()
+              setPushPermission(result)
+              if (result === 'granted') await subscribeUserToPush()
             } catch (e) {
-              console.warn('[Push] Tự động yêu cầu quyền bị chặn, chờ người dùng click.');
+              console.warn('[Push] Tự động yêu cầu quyền bị chặn, chờ người dùng click.')
             }
           }
         } catch (err) {
-          console.warn('[Push] Error checking notifications:', err);
+          console.warn('[Push] Error checking notifications:', err)
         }
-      });
+      })
     } else {
-      console.warn('[Push] Trình duyệt không hỗ trợ API thông báo.');
+      console.warn('[Push] Trình duyệt không hỗ trợ API thông báo.')
     }
     const handleSWMessage = (event) => {
       if (event.data && event.data.type === 'PUSH_RECEIVED') {
         // Trigger notification count refresh or show local toast
-        document.dispatchEvent(new CustomEvent('realtime:notifications_updated'));
+        document.dispatchEvent(new CustomEvent('realtime:notifications_updated'))
       }
-    };
+    }
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', handleSWMessage);
+      navigator.serviceWorker.addEventListener('message', handleSWMessage)
     }
 
     // Bridge for legacy calls
-    window.app = window.app || {};
-    window.app.services = window.app.services || {};
+    window.app = window.app || {}
+    window.app.services = window.app.services || {}
     window.app.services.openDocDetail = (id) => {
-      setCurrentDocId(id);
-    };
+      setCurrentDocId(id)
+    }
     window.app.services.openReview = () => {
-      setIsReviewOpen(true);
-    };
+      setIsReviewOpen(true)
+    }
     window.app.services.openPdfPreview = (id) => {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token')
       // ✅ Bảo mật: Dùng cookie thay vì ?access_token= trên URL
-      document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`;
-      window.open(`/api/documents/${id}/file`, '_blank');
-    };
+      document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
+      window.open(`/api/documents/${id}/file`, '_blank')
+    }
 
     // Listen for unauthorized event
-    const handleUnauthorized = () => handleLogout();
-    document.addEventListener('auth:unauthorized', handleUnauthorized);
+    const handleUnauthorized = () => handleLogout()
+    document.addEventListener('auth:unauthorized', handleUnauthorized)
 
     // 🔴 Listen for kicked event (ai đó login cùng tài khoản)
     const handleKicked = () => {
-      signalRService.stop(); // Ngắt kết nối SignalR ngay lập tức
+      signalRService.stop() // Ngắt kết nối SignalR ngay lập tức
       // main.jsx sẽ xử lý UI - AppShell chỉ cần cleanup
-    };
-    document.addEventListener('auth:kicked', handleKicked);
+    }
+    document.addEventListener('auth:kicked', handleKicked)
 
     // Global 401 Interceptor
-    const originalFetch = window.fetch;
+    const originalFetch = window.fetch
     window.fetch = async (...args) => {
       try {
-        const response = await originalFetch(...args);
+        const response = await originalFetch(...args)
         if (response.status === 401) {
-          const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+          const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || ''
           // Ignore 401s from specific endpoints that might be 403s in disguise due to .NET Core default challenge
-          const isRoleIssue = url.includes('/api/admin/') || url.includes('/api/users');
+          const isRoleIssue = url.includes('/api/admin/') || url.includes('/api/users')
 
           if (!isRoleIssue) {
-            document.dispatchEvent(new CustomEvent('auth:unauthorized'));
+            document.dispatchEvent(new CustomEvent('auth:unauthorized'))
           } else {
-            console.warn(`[Auth] Ignored 401 from ${url} (Likely a role/permission issue)`);
+            console.warn(`[Auth] Ignored 401 from ${url} (Likely a role/permission issue)`)
           }
         }
-        return response;
+        return response
       } catch (error) {
-        throw error;
+        console.error('Fetch error:', error)
+        throw error
       }
-    };
+    }
 
     // SignalR Connection
-    signalRService.start();
+    signalRService.start()
 
     return () => {
-      window.fetch = originalFetch;
-      document.removeEventListener('auth:unauthorized', handleUnauthorized);
-      document.removeEventListener('auth:kicked', handleKicked);
-      document.removeEventListener('realtime:notifications_updated', handleNotifUpdate);
+      window.fetch = originalFetch
+      document.removeEventListener('auth:unauthorized', handleUnauthorized)
+      document.removeEventListener('auth:kicked', handleKicked)
+      document.removeEventListener('realtime:notifications_updated', handleNotifUpdate)
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+        navigator.serviceWorker.removeEventListener('message', handleSWMessage)
       }
-      signalRService.stop();
-    };
-  }, []);
+      signalRService.stop()
+    }
+  }, [])
 
   const handleLogout = () => {
-    setIsLoggingOut(true);
-    signalRService.stop();
+    setIsLoggingOut(true)
+    signalRService.stop()
     // Chờ animation chạy xong mới redirect
     setTimeout(() => {
-      localStorage.clear();
-      window.location.href = '/';
-    }, 1500);
-  };
+      localStorage.clear()
+      window.location.href = '/'
+    }, 1500)
+  }
 
   const handleRequestPermission = async () => {
-    if (!('Notification' in window)) return;
+    if (!('Notification' in window)) return
     try {
-      const result = await Notification.requestPermission();
-      setPushPermission(result);
+      const result = await Notification.requestPermission()
+      setPushPermission(result)
       if (result === 'granted') {
-        await subscribeUserToPush();
+        await subscribeUserToPush()
       }
     } catch (error) {
-      console.error('Lỗi khi yêu cầu quyền thông báo:', error);
+      console.error('Lỗi khi yêu cầu quyền thông báo:', error)
     }
-  };
+  }
 
   // Notification Guard: Block access if permission is not granted
   // Bypass if the context is insecure (HTTP IP) or if the browser does not support Notification,
   // because the browser will never allow or support notifications in these cases.
-  const isSecureContext = typeof window !== 'undefined' && window.isSecureContext;
-  const isNotificationSupported = typeof window !== 'undefined' && 'Notification' in window;
+  const isSecureContext = typeof window !== 'undefined' && window.isSecureContext
+  const isNotificationSupported = typeof window !== 'undefined' && 'Notification' in window
   if (isSecureContext && isNotificationSupported && pushPermission !== 'granted') {
     return (
       <div className="fixed inset-0 z-[9999] flex flex-col bg-background/95 backdrop-blur-md overflow-y-auto p-4 sm:p-6">
@@ -410,9 +429,12 @@ export function AppShell() {
               <Bell className="size-7 md:size-10 text-primary animate-bounce" />
             </div>
 
-            <h2 className="text-xl md:text-2xl font-black tracking-tight text-foreground mb-2 md:mb-3">Yêu cầu bật thông báo</h2>
+            <h2 className="text-xl md:text-2xl font-black tracking-tight text-foreground mb-2 md:mb-3">
+              Yêu cầu bật thông báo
+            </h2>
             <p className="text-muted-foreground font-medium text-xs md:text-sm leading-relaxed mb-6 md:mb-8">
-              Để đảm bảo tính tức thời trong việc điều phối công văn, hệ thống yêu cầu bạn phải chấp nhận nhận thông báo từ trình duyệt để tiếp tục sử dụng.
+              Để đảm bảo tính tức thời trong việc điều phối công văn, hệ thống yêu cầu bạn phải chấp
+              nhận nhận thông báo từ trình duyệt để tiếp tục sử dụng.
             </p>
 
             {pushPermission === 'default' ? (
@@ -430,21 +452,39 @@ export function AppShell() {
                   </div>
                   <div>
                     <p className="font-black mb-0.5 md:mb-1">BẠN ĐÃ CHẶN THÔNG BÁO</p>
-                    <p className="opacity-80">Trình duyệt đã ghi nhớ lựa chọn chặn. Bạn cần mở thủ công theo các bước sau:</p>
+                    <p className="opacity-80">
+                      Trình duyệt đã ghi nhớ lựa chọn chặn. Bạn cần mở thủ công theo các bước sau:
+                    </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-2 md:gap-3 text-left">
                   <div className="flex items-center gap-2 md:gap-3 p-3 rounded-xl md:rounded-2xl bg-muted/50 border border-border/50 text-[10px] md:text-xs font-bold">
-                    <div className="size-5 md:size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 text-[10px]">1</div>
-                    <p>Nhấn vào biểu tượng <span className="px-1.5 py-0.5 bg-muted rounded border border-border shadow-sm">🔒 Khóa</span> ở thanh địa chỉ.</p>
+                    <div className="size-5 md:size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 text-[10px]">
+                      1
+                    </div>
+                    <p>
+                      Nhấn vào biểu tượng{' '}
+                      <span className="px-1.5 py-0.5 bg-muted rounded border border-border shadow-sm">
+                        🔒 Khóa
+                      </span>{' '}
+                      ở thanh địa chỉ.
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 md:gap-3 p-3 rounded-xl md:rounded-2xl bg-muted/50 border border-border/50 text-[10px] md:text-xs font-bold">
-                    <div className="size-5 md:size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 text-[10px]">2</div>
-                    <p>Tìm mục <span className="text-primary underline underline-offset-4">Thông báo</span> và chuyển sang <span className="text-success">Cho phép</span>.</p>
+                    <div className="size-5 md:size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 text-[10px]">
+                      2
+                    </div>
+                    <p>
+                      Tìm mục{' '}
+                      <span className="text-primary underline underline-offset-4">Thông báo</span>{' '}
+                      và chuyển sang <span className="text-success">Cho phép</span>.
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 md:gap-3 p-3 rounded-xl md:rounded-2xl bg-muted/50 border border-border/50 text-[10px] md:text-xs font-bold">
-                    <div className="size-5 md:size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 text-[10px]">3</div>
+                    <div className="size-5 md:size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 text-[10px]">
+                      3
+                    </div>
                     <p>Nhấn nút bên dưới để tải lại trang.</p>
                   </div>
                 </div>
@@ -464,7 +504,7 @@ export function AppShell() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -476,7 +516,10 @@ export function AppShell() {
           <div className="relative mb-8">
             <div className="size-24 rounded-3xl bg-white/10 border-2 border-white/20 flex items-center justify-center backdrop-blur-sm">
               <svg viewBox="0 0 100 100" className="w-12 h-12">
-                <polygon points="50,10 61,35 88,35 66,53 74,78 50,62 26,78 34,53 12,35 39,35" fill="#f5c518" />
+                <polygon
+                  points="50,10 61,35 88,35 66,53 74,78 50,62 26,78 34,53 12,35 39,35"
+                  fill="#f5c518"
+                />
               </svg>
             </div>
             {/* Spinning ring */}
@@ -484,8 +527,12 @@ export function AppShell() {
           </div>
 
           {/* Text */}
-          <p className="text-white font-black text-xl uppercase tracking-[0.3em] mb-2">Đang đăng xuất</p>
-          <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Hệ thống điều phối công văn</p>
+          <p className="text-white font-black text-xl uppercase tracking-[0.3em] mb-2">
+            Đang đăng xuất
+          </p>
+          <p className="text-white/40 text-xs font-bold uppercase tracking-widest">
+            Hệ thống điều phối công văn
+          </p>
 
           {/* Dots loading */}
           <div className="flex gap-2 mt-8">
@@ -525,14 +572,19 @@ export function AppShell() {
             <div className="flex items-center gap-2 min-w-0">
               <SidebarTrigger className="size-10 shrink-0 text-muted-foreground hover:bg-muted" />
               <div className="header-title min-w-0">
-                <h1 className="font-extrabold text-foreground tracking-tight leading-tight"
+                <h1
+                  className="font-extrabold text-foreground tracking-tight leading-tight"
                   style={{ fontSize: 'clamp(0.8rem, 3.5vw, 1.2rem)' }}
                 >
                   <span className="md:hidden">Hệ Thống</span>
-                  <span className="md:hidden block text-[0.7rem] font-bold text-muted-foreground uppercase tracking-widest">Điều Phối Công Văn</span>
+                  <span className="md:hidden block text-[0.7rem] font-bold text-muted-foreground uppercase tracking-widest">
+                    Điều Phối Công Văn
+                  </span>
                   <span className="hidden md:inline">Hệ Thống Điều Phối Công Văn</span>
                 </h1>
-                <p className="hidden md:block text-[0.7rem] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-0.5">Giám sát và đôn đốc thực thi công việc</p>
+                <p className="hidden md:block text-[0.7rem] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-0.5">
+                  Giám sát và đôn đốc thực thi công việc
+                </p>
               </div>
             </div>
 
@@ -541,7 +593,11 @@ export function AppShell() {
                 {/* Notifications - hidden visually on mobile but kept for popover anchor */}
                 <Popover open={isNotifOpen} onOpenChange={setIsNotifOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative rounded-full bg-muted/50 hover:bg-muted text-muted-foreground transition-all flex size-0 p-0 overflow-hidden border-none md:size-10 md:p-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="relative rounded-full bg-muted/50 hover:bg-muted text-muted-foreground transition-all size-10 p-2"
+                    >
                       <Bell className="size-5" />
                       {notifCount > 0 && (
                         <Badge className="absolute -top-1 -right-1 size-5 p-0 flex items-center justify-center bg-destructive border-2 border-background text-[10px] font-bold">
@@ -550,11 +606,20 @@ export function AppShell() {
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" sideOffset={8} className="w-[420px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl bg-card">
+                  <PopoverContent
+                    align="end"
+                    sideOffset={8}
+                    className="w-[420px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl bg-card"
+                  >
                     {/* Header */}
                     <div className="px-5 pt-5 pb-3 flex items-center justify-between">
                       <h3 className="text-xl font-black text-foreground">Thông báo</h3>
-                      <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:bg-primary/10 font-bold rounded-lg" onClick={markAllRead}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs text-primary hover:bg-primary/10 font-bold rounded-lg"
+                        onClick={markAllRead}
+                      >
                         Đánh dấu tất cả đã đọc
                       </Button>
                     </div>
@@ -563,13 +628,20 @@ export function AppShell() {
                     <Tabs defaultValue="all" className="w-full">
                       <div className="px-5">
                         <TabsList className="h-9 bg-muted/60 rounded-xl p-1 w-full grid grid-cols-2">
-                          <TabsTrigger value="all" className="text-xs font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                          <TabsTrigger
+                            value="all"
+                            className="text-xs font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                          >
                             Tất cả
                           </TabsTrigger>
-                          <TabsTrigger value="unread" className="text-xs font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                            Chưa đọc {notifications.filter(n => !n.isRead).length > 0 && (
+                          <TabsTrigger
+                            value="unread"
+                            className="text-xs font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                          >
+                            Chưa đọc{' '}
+                            {notifications.filter((n) => !n.isRead).length > 0 && (
                               <span className="ml-1.5 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center bg-destructive text-destructive-foreground text-[10px] font-black rounded-full">
-                                {notifications.filter(n => !n.isRead).length}
+                                {notifications.filter((n) => !n.isRead).length}
                               </span>
                             )}
                           </TabsTrigger>
@@ -583,9 +655,9 @@ export function AppShell() {
                             <NotificationList
                               notifications={notifications}
                               onClickItem={(n) => {
-                                if (n.docId) setCurrentDocId(n.docId);
-                                if (!n.isRead) markRead(n.id);
-                                setIsNotifOpen(false);
+                                if (n.docId) setCurrentDocId(n.docId)
+                                if (!n.isRead) markRead(n.id)
+                                setIsNotifOpen(false)
                               }}
                             />
                           ) : (
@@ -594,7 +666,9 @@ export function AppShell() {
                                 <Bell className="size-7 text-muted-foreground/30" />
                               </div>
                               <p className="text-sm font-bold">Không có thông báo nào</p>
-                              <p className="text-xs text-muted-foreground/60 mt-1">Mọi hoạt động trong hệ thống sẽ hiển thị ở đây</p>
+                              <p className="text-xs text-muted-foreground/60 mt-1">
+                                Mọi hoạt động trong hệ thống sẽ hiển thị ở đây
+                              </p>
                             </div>
                           )}
                         </ScrollArea>
@@ -603,13 +677,13 @@ export function AppShell() {
                       {/* Unread notifications */}
                       <TabsContent value="unread" className="m-0 mt-1">
                         <ScrollArea className="h-[420px]">
-                          {notifications.filter(n => !n.isRead).length > 0 ? (
+                          {notifications.filter((n) => !n.isRead).length > 0 ? (
                             <NotificationList
-                              notifications={notifications.filter(n => !n.isRead)}
+                              notifications={notifications.filter((n) => !n.isRead)}
                               onClickItem={(n) => {
-                                if (n.docId) setCurrentDocId(n.docId);
-                                markRead(n.id);
-                                setIsNotifOpen(false);
+                                if (n.docId) setCurrentDocId(n.docId)
+                                markRead(n.id)
+                                setIsNotifOpen(false)
                               }}
                             />
                           ) : (
@@ -626,7 +700,16 @@ export function AppShell() {
 
                     {/* Footer */}
                     <div className="border-t border-border/50 bg-muted/20 text-center flex justify-center py-1">
-                      <Button variant="link" className="text-xs font-bold text-primary w-full" onClick={() => { setActiveTab('documents'); setIsNotifOpen(false); }}>Xem tất cả văn bản</Button>
+                      <Button
+                        variant="link"
+                        className="text-xs font-bold text-primary w-full"
+                        onClick={() => {
+                          setActiveTab('documents')
+                          setIsNotifOpen(false)
+                        }}
+                      >
+                        Xem tất cả văn bản
+                      </Button>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -634,14 +717,19 @@ export function AppShell() {
                 {/* User Profile */}
                 <DropdownMenu open={isUserOpen} onOpenChange={setIsUserOpen}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="group px-2 hover:bg-primary/5 rounded-full h-10">
+                    <Button
+                      variant="ghost"
+                      className="group px-2 hover:bg-primary/5 rounded-full h-10"
+                    >
                       <Avatar className="size-8 border-2 border-background shadow-sm ring-2 ring-primary/10">
                         <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                           {user.name.substring(0, 1).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col items-start ml-2 max-md:hidden">
-                        <span className="text-xs font-bold text-foreground leading-tight">{user.name}</span>
+                        <span className="text-xs font-bold text-foreground leading-tight">
+                          {user.name}
+                        </span>
                         <span className="text-[0.65rem] text-muted-foreground uppercase tracking-tighter font-black">
                           {user.role === 'Admin' ? 'Quản trị' : 'Cán bộ'}
                         </span>
@@ -649,7 +737,10 @@ export function AppShell() {
                       <ChevronDown className="size-3.5 ml-1 text-muted-foreground group-data-[state=open]:rotate-180 transition-transform max-md:hidden" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64 p-2 border-none shadow-2xl glass-card rounded-2xl">
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-64 p-2 border-none shadow-2xl glass-card rounded-2xl"
+                  >
                     <DropdownMenuLabel className="px-3 py-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="size-10 border-2 border-primary/20">
@@ -700,8 +791,8 @@ export function AppShell() {
             key={isReviewOpen ? 'review' : currentDocId ? 'detail' : activeTab}
             style={{ padding: 'var(--space-page)' }}
             className={cn(
-              "max-md:px-4 flex-1 flex flex-col min-h-0 min-w-0 density-compact xl:density-comfortable",
-              "animate-in fade-in duration-500 fill-mode-both"
+              'max-md:px-4 flex-1 flex flex-col min-h-0 min-w-0 density-compact xl:density-comfortable',
+              'animate-in fade-in duration-500 fill-mode-both'
             )}
           >
             {isReviewOpen ? (
@@ -710,15 +801,62 @@ export function AppShell() {
               <DocDetail docId={currentDocId} onBack={() => setCurrentDocId(null)} />
             ) : (
               <>
-                {activeTab === 'dashboard' && <Dashboard onTabChange={(tab, filters) => { setActiveTab(tab); if (filters) setTabFilters(prev => ({ ...prev, [tab]: filters })); }} />}
-                {activeTab === 'documents' && <Documents filters={tabFilters['documents']} onTabChange={(tab, filters) => { setActiveTab(tab); if (filters) setTabFilters(prev => ({ ...prev, [tab]: filters })); }} />}
+                {activeTab === 'dashboard' && (
+                  <Dashboard
+                    onTabChange={(tab, filters) => {
+                      setActiveTab(tab)
+                      if (filters) setTabFilters((prev) => ({ ...prev, [tab]: filters }))
+                    }}
+                  />
+                )}
+                {activeTab === 'documents' && (
+                  <Documents
+                    filters={tabFilters['documents']}
+                    onTabChange={(tab, filters) => {
+                      setActiveTab(tab)
+                      if (filters) setTabFilters((prev) => ({ ...prev, [tab]: filters }))
+                    }}
+                  />
+                )}
                 {activeTab === 'upload' && <Upload />}
                 {activeTab === 'users' && <Users />}
-                {activeTab === 'my-tasks' && <MyTasks filters={tabFilters['my-tasks']} onTabChange={(tab, filters) => { setActiveTab(tab); if (filters) setTabFilters(prev => ({ ...prev, [tab]: filters })); }} />}
+                {activeTab === 'my-tasks' && (
+                  <MyTasks
+                    filters={tabFilters['my-tasks']}
+                    onTabChange={(tab, filters) => {
+                      setActiveTab(tab)
+                      if (filters) setTabFilters((prev) => ({ ...prev, [tab]: filters }))
+                    }}
+                  />
+                )}
                 {activeTab === 'settings' && <SettingsPage />}
-                {activeTab === 'search' && <SearchPage filters={tabFilters['search']} onTabChange={(tab, filters) => { setActiveTab(tab); if (filters) setTabFilters(prev => ({ ...prev, [tab]: filters })); }} />}
-                {activeTab === 'reports' && <MonthlyReport onTabChange={(tab, filters) => { setActiveTab(tab); if (filters) setTabFilters(prev => ({ ...prev, [tab]: filters })); }} />}
-                {!['dashboard', 'documents', 'upload', 'users', 'my-tasks', 'settings', 'search', 'reports'].includes(activeTab) && (
+                {activeTab === 'search' && (
+                  <SearchPage
+                    filters={tabFilters['search']}
+                    onTabChange={(tab, filters) => {
+                      setActiveTab(tab)
+                      if (filters) setTabFilters((prev) => ({ ...prev, [tab]: filters }))
+                    }}
+                  />
+                )}
+                {activeTab === 'reports' && (
+                  <MonthlyReport
+                    onTabChange={(tab, filters) => {
+                      setActiveTab(tab)
+                      if (filters) setTabFilters((prev) => ({ ...prev, [tab]: filters }))
+                    }}
+                  />
+                )}
+                {![
+                  'dashboard',
+                  'documents',
+                  'upload',
+                  'users',
+                  'my-tasks',
+                  'settings',
+                  'search',
+                  'reports',
+                ].includes(activeTab) && (
                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                     <LayoutDashboard className="size-16 mb-4 opacity-20" />
                     <h3 className="text-xl font-bold">Tính năng đang được phát triển</h3>
@@ -733,20 +871,61 @@ export function AppShell() {
 
       {/* Mobile Bottom Nav */}
       <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border flex items-center justify-around z-[500] md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'dashboard' && "text-primary border-primary bg-primary/5")} onClick={() => { setActiveTab('dashboard'); setCurrentDocId(null); setIsReviewOpen(false); }}>
+        <Button
+          variant="ghost"
+          className={cn(
+            'flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent',
+            activeTab === 'dashboard' && 'text-primary border-primary bg-primary/5'
+          )}
+          onClick={() => {
+            setActiveTab('dashboard')
+            setCurrentDocId(null)
+            setIsReviewOpen(false)
+          }}
+        >
           <LayoutDashboard className="size-5" />
           <span className="text-[10px] font-bold">Trang chủ</span>
         </Button>
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'documents' && "text-primary border-primary bg-primary/5")} onClick={() => { setActiveTab('documents'); setCurrentDocId(null); setIsReviewOpen(false); }}>
+        <Button
+          variant="ghost"
+          className={cn(
+            'flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent',
+            activeTab === 'documents' && 'text-primary border-primary bg-primary/5'
+          )}
+          onClick={() => {
+            setActiveTab('documents')
+            setCurrentDocId(null)
+            setIsReviewOpen(false)
+          }}
+        >
           <FileText className="size-5" />
           <span className="text-[10px] font-bold">Văn bản</span>
         </Button>
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent relative")} onClick={() => setIsNotifMobileOpen(true)}>
+        <Button
+          variant="ghost"
+          className={cn(
+            'flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent relative'
+          )}
+          onClick={() => setIsNotifMobileOpen(true)}
+        >
           <Bell className="size-5" />
-          <Badge className="absolute top-2 right-4 size-4 p-0 flex items-center justify-center bg-destructive border-2 border-background text-[8px] font-bold">{notifCount}</Badge>
+          <Badge className="absolute top-2 right-4 size-4 p-0 flex items-center justify-center bg-destructive border-2 border-background text-[8px] font-bold">
+            {notifCount}
+          </Badge>
           <span className="text-[10px] font-bold">Thông báo</span>
         </Button>
-        <Button variant="ghost" className={cn("flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent", activeTab === 'my-tasks' && "text-primary border-primary bg-primary/5")} onClick={() => { setActiveTab('my-tasks'); setCurrentDocId(null); setIsReviewOpen(false); }}>
+        <Button
+          variant="ghost"
+          className={cn(
+            'flex flex-col items-center gap-1 h-full px-4 rounded-none border-t-2 border-transparent',
+            activeTab === 'my-tasks' && 'text-primary border-primary bg-primary/5'
+          )}
+          onClick={() => {
+            setActiveTab('my-tasks')
+            setCurrentDocId(null)
+            setIsReviewOpen(false)
+          }}
+        >
           <CheckSquare className="size-5" />
           <span className="text-[10px] font-bold">Công việc</span>
         </Button>
@@ -759,10 +938,20 @@ export function AppShell() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-background">
             <h2 className="text-xl font-black text-foreground">Thông báo</h2>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:bg-primary/10 font-bold rounded-lg" onClick={markAllRead}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-primary hover:bg-primary/10 font-bold rounded-lg"
+                onClick={markAllRead}
+              >
                 Đánh dấu đã đọc
               </Button>
-              <Button variant="ghost" size="icon" className="size-9 rounded-full hover:bg-muted" onClick={() => setIsNotifMobileOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-9 rounded-full hover:bg-muted"
+                onClick={() => setIsNotifMobileOpen(false)}
+              >
                 <X className="size-5" />
               </Button>
             </div>
@@ -772,13 +961,20 @@ export function AppShell() {
           <Tabs defaultValue="all" className="flex flex-col flex-1 overflow-hidden">
             <div className="px-4 pt-3 shrink-0">
               <TabsList className="h-10 bg-muted/60 rounded-xl p-1 w-full grid grid-cols-2">
-                <TabsTrigger value="all" className="text-sm font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <TabsTrigger
+                  value="all"
+                  className="text-sm font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
                   Tất cả
                 </TabsTrigger>
-                <TabsTrigger value="unread" className="text-sm font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                  Chưa đọc {notifications.filter(n => !n.isRead).length > 0 && (
+                <TabsTrigger
+                  value="unread"
+                  className="text-sm font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
+                  Chưa đọc{' '}
+                  {notifications.filter((n) => !n.isRead).length > 0 && (
                     <span className="ml-1.5 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center bg-destructive text-destructive-foreground text-[10px] font-black rounded-full">
-                      {notifications.filter(n => !n.isRead).length}
+                      {notifications.filter((n) => !n.isRead).length}
                     </span>
                   )}
                 </TabsTrigger>
@@ -790,9 +986,9 @@ export function AppShell() {
                 <NotificationList
                   notifications={notifications}
                   onClickItem={(n) => {
-                    if (n.docId) setCurrentDocId(n.docId);
-                    if (!n.isRead) markRead(n.id);
-                    setIsNotifMobileOpen(false);
+                    if (n.docId) setCurrentDocId(n.docId)
+                    if (!n.isRead) markRead(n.id)
+                    setIsNotifMobileOpen(false)
                   }}
                 />
               ) : (
@@ -801,19 +997,21 @@ export function AppShell() {
                     <Bell className="size-9 text-muted-foreground/30" />
                   </div>
                   <p className="text-base font-bold">Không có thông báo nào</p>
-                  <p className="text-sm text-muted-foreground/60 mt-1">Mọi hoạt động sẽ hiển thị ở đây</p>
+                  <p className="text-sm text-muted-foreground/60 mt-1">
+                    Mọi hoạt động sẽ hiển thị ở đây
+                  </p>
                 </div>
               )}
             </TabsContent>
 
             <TabsContent value="unread" className="flex-1 overflow-y-auto m-0 mt-2 pb-20">
-              {notifications.filter(n => !n.isRead).length > 0 ? (
+              {notifications.filter((n) => !n.isRead).length > 0 ? (
                 <NotificationList
-                  notifications={notifications.filter(n => !n.isRead)}
+                  notifications={notifications.filter((n) => !n.isRead)}
                   onClickItem={(n) => {
-                    if (n.docId) setCurrentDocId(n.docId);
-                    markRead(n.id);
-                    setIsNotifMobileOpen(false);
+                    if (n.docId) setCurrentDocId(n.docId)
+                    markRead(n.id)
+                    setIsNotifMobileOpen(false)
                   }}
                 />
               ) : (
@@ -852,7 +1050,7 @@ export function AppShell() {
                 <div className="relative">
                   <Input
                     id="current-user-new-password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="Nhập mật khẩu mới..."
                     className="h-12 bg-muted/30 focus:bg-background transition-all pl-4 pr-10 font-medium"
                   />
@@ -877,7 +1075,7 @@ export function AppShell() {
                 <div className="relative">
                   <Input
                     id="current-user-confirm-password"
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Nhập lại mật khẩu..."
                     className="h-12 bg-muted/30 focus:bg-background transition-all pl-4 pr-10 font-medium"
                   />
@@ -887,7 +1085,11 @@ export function AppShell() {
                     className="absolute right-1 top-1 h-10 w-10 text-muted-foreground hover:text-primary hover:bg-transparent"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -905,40 +1107,40 @@ export function AppShell() {
                 className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-100 transition-all"
                 data-action="confirm-change-password"
                 onClick={async (e) => {
-                  const newPass = document.getElementById('current-user-new-password').value;
-                  const confirmPass = document.getElementById('current-user-confirm-password').value;
+                  const newPass = document.getElementById('current-user-new-password').value
+                  const confirmPass = document.getElementById('current-user-confirm-password').value
 
                   if (newPass.length < 4) {
-                    toast.error('Mật khẩu mới phải có ít nhất 4 ký tự!');
-                    return;
+                    toast.error('Mật khẩu mới phải có ít nhất 4 ký tự!')
+                    return
                   }
 
                   if (newPass !== confirmPass) {
-                    toast.error('Mật khẩu xác nhận không khớp!');
-                    return;
+                    toast.error('Mật khẩu xác nhận không khớp!')
+                    return
                   }
 
                   try {
                     const response = await fetch('/api/auth/change-password', {
                       method: 'POST',
                       headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-                        'Content-Type': 'application/json'
+                        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+                        'Content-Type': 'application/json',
                       },
-                      body: JSON.stringify({ newPassword: newPass })
-                    });
+                      body: JSON.stringify({ newPassword: newPass }),
+                    })
 
                     if (response.ok) {
-                      toast.success('Đổi mật khẩu thành công!');
-                      setIsPasswordModalOpen(false);
-                      document.getElementById('current-user-new-password').value = '';
-                      document.getElementById('current-user-confirm-password').value = '';
+                      toast.success('Đổi mật khẩu thành công!')
+                      setIsPasswordModalOpen(false)
+                      document.getElementById('current-user-new-password').value = ''
+                      document.getElementById('current-user-confirm-password').value = ''
                     } else {
-                      const err = await response.json();
-                      toast.error(err.message || 'Có lỗi xảy ra khi đổi mật khẩu!');
+                      const err = await response.json()
+                      toast.error(err.message || 'Có lỗi xảy ra khi đổi mật khẩu!')
                     }
                   } catch (error) {
-                    toast.error('Không thể kết nối đến máy chủ!');
+                    toast.error('Không thể kết nối đến máy chủ!')
                   }
                 }}
               >
@@ -949,5 +1151,5 @@ export function AppShell() {
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

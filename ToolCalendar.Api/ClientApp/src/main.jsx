@@ -51,7 +51,47 @@ import { CabinetAppShell } from './cabinet/CabinetAppShell.jsx'
 import './styles/globals.css'
 
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { ShieldAlert, LogOut } from 'lucide-react'
+import { ShieldAlert, LogOut, RefreshCw, AlertTriangle } from 'lucide-react'
+
+// ─── Error Boundary — bắt mọi crash render, hiện thông báo thay vì màn hình trắng ──
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error, info) {
+    console.error('[ErrorBoundary] Caught crash:', error, info)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={32} className="text-[#c8102e]" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 mb-2">Có lỗi xảy ra</h2>
+            <p className="text-sm text-gray-500 mb-1">
+              {this.state.error?.message || 'Lỗi không xác định'}
+            </p>
+            <p className="text-xs text-gray-400 mb-6">Vui lòng tải lại trang để tiếp tục.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-[#c8102e] hover:bg-[#a50e27] text-white rounded-lg text-sm font-semibold transition"
+            >
+              <RefreshCw size={14} />
+              Tải lại trang
+            </button>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 // ─── Modal cảnh báo bị đá phiên (toàn hệ thống) ───────────────────────────
 function KickedModal({ isOpen, onConfirm }) {
@@ -127,13 +167,13 @@ function Root() {
     // Hàm throttle để giới hạn số lần bắn sự kiện (giảm tải CPU)
     const throttle = (func, limit) => {
       let inThrottle
-      return function() {
+      return function () {
         const args = arguments
         const context = this
         if (!inThrottle) {
           func.apply(context, args)
           inThrottle = true
-          setTimeout(() => inThrottle = false, limit)
+          setTimeout(() => (inThrottle = false), limit)
         }
       }
     }
@@ -158,19 +198,24 @@ function Root() {
       const lastActivity = parseInt(lastActivityStr, 10)
       if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) {
         console.warn('[Root] Hết thời gian truy cập (Idle Timeout), tự động đăng xuất.')
-        
+
         // Gọi API Logout để xóa Cookie HttpOnly trên Backend (chuẩn bảo mật)
-        fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` } }).catch(() => {})
+        fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+        }).catch(() => {})
 
         localStorage.removeItem('auth_token')
         localStorage.removeItem(LAST_ACTIVITY_KEY)
         setIsAuthenticated(false)
-        alert('Phiên làm việc đã hết hạn do bạn không hoạt động trong một thời gian dài. Vui lòng đăng nhập lại.')
+        alert(
+          'Phiên làm việc đã hết hạn do bạn không hoạt động trong một thời gian dài. Vui lòng đăng nhập lại.'
+        )
       }
     }, 10000)
 
     const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
-    activityEvents.forEach(evt => window.addEventListener(evt, updateActivity, { passive: true }))
+    activityEvents.forEach((evt) => window.addEventListener(evt, updateActivity, { passive: true }))
 
     // Khởi tạo thời gian lúc mới vào app
     if (localStorage.getItem('auth_token')) {
@@ -183,7 +228,7 @@ function Root() {
 
     return () => {
       clearInterval(checkIdleInterval)
-      activityEvents.forEach(evt => window.removeEventListener(evt, updateActivity))
+      activityEvents.forEach((evt) => window.removeEventListener(evt, updateActivity))
       window.removeEventListener('storage', handleStorageChange)
       document.removeEventListener('auth:unauthorized', handleUnauthorized)
       document.removeEventListener('auth:kicked', handleKicked)
@@ -221,4 +266,8 @@ function Root() {
   )
 }
 
-createRoot(document.getElementById('root')).render(<Root />)
+createRoot(document.getElementById('root')).render(
+  <ErrorBoundary>
+    <Root />
+  </ErrorBoundary>
+)

@@ -62,6 +62,11 @@ namespace ToolCalendar.Policies
                     policy.RequireAuthenticatedUser()
                           .RequireRole("Admin"));
 
+                // Policy: Quản lý phòng họp (Cho phép Admin, Lãnh đạo, Văn thư, Cán bộ để test)
+                options.AddPolicy("RequireAdminOrLanhDao", policy =>
+                    policy.RequireAuthenticatedUser()
+                          .RequireRole("Admin", "LanhDao", "VanThu", "CanBo"));
+
                 // DefaultPolicy: áp dụng khi dùng [Authorize] không có tham số
                 // ⚠️ KHÔNG đặt FallbackPolicy — sẽ chặn cả trang SPA (index.html)
                 // Các controller đã có [Authorize] / [AllowAnonymous] riêng

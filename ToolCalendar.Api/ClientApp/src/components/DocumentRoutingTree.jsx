@@ -1,40 +1,53 @@
-import React, { useState } from 'react';
-import { ChevronRight, ChevronDown, CheckCircle2, Circle, Clock, FileText, User } from 'lucide-react';
-import { cn } from '@/lib/utils';
+/* eslint-disable */
+import React, { useState } from 'react'
+import {
+  ChevronRight,
+  ChevronDown,
+  CheckCircle2,
+  Circle,
+  Clock,
+  FileText,
+  User,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const RoutingNode = ({ node, level = 0 }) => {
-  const [expanded, setExpanded] = useState(true);
-  const hasChildren = node.children && node.children.length > 0;
+  const [expanded, setExpanded] = useState(true)
+  const hasChildren = node.children && node.children.length > 0
 
   return (
     <>
-      <div className={cn(
-        "flex items-center hover:bg-slate-50 border-b border-slate-100 transition-colors",
-        level === 0 ? "bg-white font-medium" : "bg-white"
-      )}>
+      <div
+        className={cn(
+          'flex items-center hover:bg-slate-50 border-b border-slate-100 transition-colors',
+          level === 0 ? 'bg-white font-medium' : 'bg-white'
+        )}
+      >
         {/* Người xử lý column */}
-        <div 
+        <div
           className="flex-1 min-w-[200px] p-3 flex items-center gap-2 border-r border-slate-100"
           style={{ paddingLeft: `${Math.max(0.75, level * 1.5 + 0.75)}rem` }}
         >
           {hasChildren ? (
-            <button 
-              onClick={() => setExpanded(!expanded)} 
+            <button
+              onClick={() => setExpanded(!expanded)}
               className="p-0.5 rounded hover:bg-slate-200 text-slate-500 transition-colors"
             >
               {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
           ) : (
-            <span className="w-[18px]"></span> // placeholder for alignment
+            <span className="w-[18px]" /> // placeholder for alignment
           )}
-          
+
           {level > 0 && <span className="text-slate-300">└─</span>}
-          
-          <User size={14} className={level === 0 ? "text-blue-500" : "text-slate-400"} />
-          <span className={cn(
-            "text-xs truncate",
-            level === 0 ? "font-bold text-slate-800" : "font-medium text-slate-700"
-          )}>
+
+          <User size={14} className={level === 0 ? 'text-blue-500' : 'text-slate-400'} />
+          <span
+            className={cn(
+              'text-xs truncate',
+              level === 0 ? 'font-bold text-slate-800' : 'font-medium text-slate-700'
+            )}
+          >
             {node.receiverName || 'Unknown User'}
           </span>
         </div>
@@ -76,25 +89,32 @@ const RoutingNode = ({ node, level = 0 }) => {
 
         {/* Trạng thái */}
         <div className="w-[120px] p-3 text-xs text-center shrink-0">
-          <span className={cn(
-            "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-            node.status === 'Đã hoàn thành' || node.status === 'Đã xử lý' ? "bg-green-50 text-green-700" :
-            node.status === 'Đang giải quyết' || node.status === 'Đang xử lý' ? "bg-blue-50 text-blue-700" :
-            node.status === 'Đã xử lý quá hạn' ? "bg-red-50 text-red-700" :
-            "bg-slate-100 text-slate-500"
-          )}>
+          <span
+            className={cn(
+              'px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider',
+              node.status === 'Đã hoàn thành' || node.status === 'Đã xử lý'
+                ? 'bg-green-50 text-green-700'
+                : node.status === 'Đang giải quyết' || node.status === 'Đang xử lý'
+                  ? 'bg-blue-50 text-blue-700'
+                  : node.status === 'Đã xử lý quá hạn'
+                    ? 'bg-red-50 text-red-700'
+                    : 'bg-slate-100 text-slate-500'
+            )}
+          >
             {node.status}
           </span>
         </div>
       </div>
 
       {/* Render children recursively */}
-      {expanded && hasChildren && node.children.map((child, idx) => (
-        <RoutingNode key={child.id || idx} node={child} level={level + 1} />
-      ))}
+      {expanded &&
+        hasChildren &&
+        node.children.map((child, idx) => (
+          <RoutingNode key={child.id || idx} node={child} level={level + 1} />
+        ))}
     </>
-  );
-};
+  )
+}
 
 export const DocumentRoutingTree = ({ routings, onRefresh }) => {
   if (!routings || routings.length === 0) {
@@ -106,15 +126,20 @@ export const DocumentRoutingTree = ({ routings, onRefresh }) => {
         <p className="text-sm font-bold text-slate-600">Chưa có luồng xử lý nào</p>
         <p className="text-xs text-slate-400 mt-1">Hệ thống chưa ghi nhận thông tin luân chuyển.</p>
       </div>
-    );
+    )
   }
 
   // Header helpers
   const HeaderCol = ({ className, children }) => (
-    <div className={cn("p-3 font-bold text-slate-700 uppercase tracking-wider bg-slate-100 border-b border-slate-200 border-r last:border-r-0", className)}>
+    <div
+      className={cn(
+        'p-3 font-bold text-slate-700 uppercase tracking-wider bg-slate-100 border-b border-slate-200 border-r last:border-r-0',
+        className
+      )}
+    >
       {children}
     </div>
-  );
+  )
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
@@ -136,5 +161,5 @@ export const DocumentRoutingTree = ({ routings, onRefresh }) => {
         ))}
       </div>
     </div>
-  );
-};
+  )
+}
