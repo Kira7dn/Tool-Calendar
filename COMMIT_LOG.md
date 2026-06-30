@@ -4,6 +4,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## Lịch sử
 
+### [2026-06-30 17:00] Sửa lỗi build do thiếu using directive ở DocumentsController.cs
+- **Mô tả**: Bổ sung `using ToolCalendar.Data.Repositories;` trong `DocumentsController.cs` để nhận diện interface `IDocumentRoutingRepository`, sửa lỗi biên dịch CS0246 khi build Docker.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(build): add missing namespace import to DocumentsController"`
+
 ### [2026-06-30 16:55] Cho phép người nhận chuyển xử lý tiếp nhận và nộp kết quả công văn
 - **Mô tả**:
   1. Khi công văn được chuyển xử lý (routing) sang cán bộ khác, cán bộ nhận không thấy nút "Tiếp nhận" hay "Nộp kết quả" trên trang chi tiết vì hệ thống chỉ check `doc.AssignedTo`.
