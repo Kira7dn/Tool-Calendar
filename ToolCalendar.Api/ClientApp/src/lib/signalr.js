@@ -43,6 +43,12 @@ class SignalRService {
       document.dispatchEvent(new CustomEvent('auth:kicked', { detail: { message } }))
     })
 
+    // 🔔 Lắng nghe khi có công văn mới được chuyển đến (NewTask)
+    this.connection.on('NewTask', (data) => {
+      console.log('[SignalR] Công văn mới được chuyển đến:', data)
+      document.dispatchEvent(new CustomEvent('realtime:new_task', { detail: data }))
+    })
+
     try {
       await this.connection.start()
       console.log('[SignalR] Connected successfully')

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Data.Repositories;
+using ToolCalendar.Hubs;
 using ToolCalendar.Models;
 
 namespace ToolCalendar.Api.Controllers
@@ -12,10 +14,14 @@ namespace ToolCalendar.Api.Controllers
     public class DocumentRoutingsController : ControllerBase
     {
         private readonly IDocumentRoutingRepository _routingRepo;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public DocumentRoutingsController(IDocumentRoutingRepository routingRepo)
+        public DocumentRoutingsController(
+            IDocumentRoutingRepository routingRepo,
+            IHubContext<NotificationHub> hubContext)
         {
             _routingRepo = routingRepo;
+            _hubContext  = hubContext;
         }
 
         [HttpGet("{documentId}/routings")]
@@ -38,6 +44,22 @@ namespace ToolCalendar.Api.Controllers
             routing.CreatedAt = DateTime.Now;
 
             int newId = await _routingRepo.CreateRoutingAsync(routing);
+
+            // ✅ Gửi SignalR notification đến người được chỉ định (chuyển xử lý)
+            if (routing.ReceiverId > 0)
+            {
+                _ = _hubContext.Clients
+                    .Group($"User_{routing.ReceiverId}")
+                    .SendAsync("NewTask", new
+                    {
+                        documentId  = documentId,
+                        routingId   = newId,
+                        message     = "Bạn có công văn mới cần xử lý",
+                        senderId    = routing.SenderId,
+                        assignedAt  = DateTime.Now
+                    });
+            }
+
             return Ok(ApiResponse.Ok(new { id = newId }));
         }
 

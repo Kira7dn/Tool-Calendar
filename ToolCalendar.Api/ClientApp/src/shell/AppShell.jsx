@@ -380,11 +380,34 @@ export function AppShell() {
     // SignalR Connection
     signalRService.start()
 
+    // 🔔 Lắng nghe khi có công văn mới được chuyển đến (NewTask từ SignalR)
+    const handleNewTask = (e) => {
+      const data = e.detail
+      // Refresh danh sách thông báo chuông
+      fetchNotifications()
+      // Hiển thị toast thông báo tức thời với link vào công văn
+      toast.info('📄 Bạn có công văn mới cần xử lý!', {
+        description: data?.message || 'Lãnh đạo vừa chuyển cho bạn một công văn.',
+        duration: 8000,
+        action: data?.documentId
+          ? {
+              label: 'Xem ngay',
+              onClick: () => {
+                setCurrentDocId(data.documentId)
+                setActiveTab('my-tasks')
+              },
+            }
+          : undefined,
+      })
+    }
+    document.addEventListener('realtime:new_task', handleNewTask)
+
     return () => {
       window.fetch = originalFetch
       document.removeEventListener('auth:unauthorized', handleUnauthorized)
       document.removeEventListener('auth:kicked', handleKicked)
       document.removeEventListener('realtime:notifications_updated', handleNotifUpdate)
+      document.removeEventListener('realtime:new_task', handleNewTask)
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', handleSWMessage)
       }

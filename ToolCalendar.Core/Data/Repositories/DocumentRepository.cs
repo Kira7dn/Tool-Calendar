@@ -202,7 +202,9 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            // LIKE '%"userId"%' bắt được cả AssignedUserIds dạng JSON array
+            // FIX: Dùng 4 pattern chính xác để khớp userId trong JSON array.
+            // Tránh false-positive: userId=31 LIKE '%31%' sẽ match nhầm 131, 310, 1310...
+            // JSON array có 4 dạng: [31], [31,x], [x,31], [x,31,y]
             string sql = @"
                 SELECT Id, SoVanBan, TenCongVan, TrichYeu, '' AS FullText, '[]' AS OcrPagesJson,
                        NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath,
@@ -212,13 +214,19 @@ namespace ToolCalendar.Core.Data.Repositories
                 WHERE Status != 'Đã hoàn thành'
                   AND (
                       AssignedTo = @userId
-                      OR AssignedUserIds LIKE @pattern
+                      OR AssignedUserIds = @exactSingle
+                      OR AssignedUserIds LIKE @patternStart
+                      OR AssignedUserIds LIKE @patternEnd
+                      OR AssignedUserIds LIKE @patternMiddle
                   )
                 ORDER BY ThoiHan ASC NULLS LAST";
 
             using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@userId", userId);
-            cmd.Parameters.AddWithValue("@pattern", $"%{userId}%");
+            cmd.Parameters.AddWithValue("@userId",       userId);
+            cmd.Parameters.AddWithValue("@exactSingle",   $"[{userId}]");
+            cmd.Parameters.AddWithValue("@patternStart",  $"[{userId},%");
+            cmd.Parameters.AddWithValue("@patternEnd",    $"%,{userId}]");
+            cmd.Parameters.AddWithValue("@patternMiddle", $"%,{userId},%");
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
                 records.Add(MapRecord(reader));
