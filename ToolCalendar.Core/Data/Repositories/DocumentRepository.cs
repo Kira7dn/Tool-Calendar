@@ -218,6 +218,11 @@ namespace ToolCalendar.Core.Data.Repositories
                       OR AssignedUserIds LIKE @patternStart
                       OR AssignedUserIds LIKE @patternEnd
                       OR AssignedUserIds LIKE @patternMiddle
+                      OR EXISTS (
+                          SELECT 1 FROM DocumentRoutings r 
+                          WHERE r.DocumentId = Documents.Id 
+                            AND r.ReceiverId = @userId
+                      )
                   )
                 ORDER BY ThoiHan ASC NULLS LAST";
 
