@@ -61,6 +61,15 @@ const InfoRow = ({ icon: Icon, label, value, highlight }) => (
   </div>
 )
 
+const isUserInRoutings = (routingList, userId) => {
+  if (!routingList) return false
+  for (const r of routingList) {
+    if (r.receiverId == userId) return true
+    if (r.children && isUserInRoutings(r.children, userId)) return true
+  }
+  return false
+}
+
 export function DocDetail({ docId, onBack }) {
   const [doc, setDoc] = useState(null)
   const [comments, setComments] = useState([])
@@ -424,7 +433,9 @@ export function DocDetail({ docId, onBack }) {
         </div>
         <div className="flex items-center gap-2.5 w-full md:w-auto flex-shrink-0">
           {/* Nút Tiếp nhận xử lý */}
-          {doc.status === 'Chưa xử lý' && doc.assignedTo == localStorage.getItem('user_id') && (
+          {doc.status === 'Chưa xử lý' &&
+            (doc.assignedTo == localStorage.getItem('user_id') ||
+              isUserInRoutings(routings, localStorage.getItem('user_id'))) && (
             <button
               onClick={() => handleUpdateStatus('Đang xử lý')}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
@@ -437,6 +448,7 @@ export function DocDetail({ docId, onBack }) {
           {/* Nút Nộp kết quả (Hiện sau khi đã tiếp nhận) */}
           {doc.status === 'Đang xử lý' &&
             (doc.assignedTo == localStorage.getItem('user_id') ||
+              isUserInRoutings(routings, localStorage.getItem('user_id')) ||
               localStorage.getItem('user_role') === 'Admin') && (
               <button
                 onClick={() => setIsEvidenceModalOpen(true)}

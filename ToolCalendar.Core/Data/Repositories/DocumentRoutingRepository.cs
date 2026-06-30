@@ -9,6 +9,7 @@ namespace ToolCalendar.Data.Repositories
         Task<List<DocumentRoutingRecord>> GetTreeByDocumentIdAsync(int documentId);
         Task<int> CreateRoutingAsync(DocumentRoutingRecord routing);
         Task UpdateStatusAsync(int id, string status, string processingContent);
+        Task UpdateStatusByDocumentAndReceiverAsync(int documentId, int receiverId, string status, string processingContent);
     }
 
     public class DocumentRoutingRepository : IDocumentRoutingRepository
@@ -134,6 +135,24 @@ namespace ToolCalendar.Data.Repositories
 
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@Id", id);
+            cmd.Parameters.AddWithValue("@Status", status);
+            cmd.Parameters.AddWithValue("@ProcessingContent", processingContent);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task UpdateStatusByDocumentAndReceiverAsync(int documentId, int receiverId, string status, string processingContent)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            
+            string sql = @"
+                UPDATE DocumentRoutings
+                SET Status = @Status, ProcessingContent = @ProcessingContent
+                WHERE DocumentId = @DocumentId AND ReceiverId = @ReceiverId AND Status != 'Đã xử lý' AND Status != 'Đã hoàn thành'";
+
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@DocumentId", documentId);
+            cmd.Parameters.AddWithValue("@ReceiverId", receiverId);
             cmd.Parameters.AddWithValue("@Status", status);
             cmd.Parameters.AddWithValue("@ProcessingContent", processingContent);
             await cmd.ExecuteNonQueryAsync();

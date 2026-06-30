@@ -25,6 +25,7 @@ namespace ToolCalendar.Api.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IDocumentRepository _documentRepository;
+        private readonly IDocumentRoutingRepository _routingRepo;
         private readonly IConfiguration _configuration;
         private readonly IDocumentUploadService _uploadService;
 
@@ -35,6 +36,7 @@ namespace ToolCalendar.Api.Controllers
             IWebHostEnvironment env,
             IHubContext<NotificationHub> hubContext,
             IDocumentRepository documentRepository,
+            IDocumentRoutingRepository routingRepo,
             IConfiguration configuration,
             IDocumentUploadService uploadService)
         {
@@ -44,6 +46,7 @@ namespace ToolCalendar.Api.Controllers
             _env = env;
             _hubContext = hubContext;
             _documentRepository = documentRepository;
+            _routingRepo = routingRepo;
             _configuration = configuration;
             _uploadService = uploadService;
         }
@@ -169,6 +172,20 @@ namespace ToolCalendar.Api.Controllers
             if (existing == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
             await _documentRepository.UpdateAsync(record);
 
+            // Cập nhật trạng thái của user trong bảng DocumentRoutings (nếu có)
+            if (record.Status == "Đang xử lý")
+            {
+                try
+                {
+                    var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    if (int.TryParse(currentUserIdStr, out int currentUserId))
+                    {
+                        await _routingRepo.UpdateStatusByDocumentAndReceiverAsync(id, currentUserId, "Đang xử lý", "Đã tiếp nhận công việc");
+                    }
+                }
+                catch { }
+            }
+
             // Nếu có sự thay đổi về người được giao hoặc gán mới
             if (record.AssignedTo.HasValue && record.AssignedTo != existing?.AssignedTo)
             {
@@ -248,6 +265,17 @@ namespace ToolCalendar.Api.Controllers
             // 2. Cập nhật vào DB (Lưu danh sách path dưới dạng JSON)
             var evidenceJson = System.Text.Json.JsonSerializer.Serialize(savedPaths);
             await _documentRepository.SubmitEvidenceAsync(id, evidenceJson, notes);
+
+            // 2.5 Cập nhật trạng thái của user hiện tại trong bảng DocumentRoutings (nếu có)
+            try
+            {
+                var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(currentUserIdStr, out int currentUserId))
+                {
+                    await _routingRepo.UpdateStatusByDocumentAndReceiverAsync(id, currentUserId, "Đã xử lý", notes);
+                }
+            }
+            catch { }
 
             // 3. Thông báo SignalR để các máy khác cập nhật giao diện (Dashboard, List)
             _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = "Đã hoàn thành" });
