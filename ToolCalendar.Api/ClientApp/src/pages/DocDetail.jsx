@@ -749,40 +749,83 @@ export function DocDetail({ docId, onBack }) {
             </div>
           )}
 
-          {activeTab === 'history' && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 flex flex-col h-auto lg:h-full overflow-hidden lg:overflow-auto animate-in fade-in slide-in-from-bottom-4 duration-400">
-              <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-12 shrink-0">
-                QUY TRÌNH XỬ LÝ VĂN BẢN
-              </h2>
-              <div className="relative space-y-10 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-slate-100">
-                <HistoryPoint
-                  title="TIẾP NHẬN VĂN BẢN"
-                  time={new Date(doc.ngayThem).toLocaleString('vi-VN')}
-                  user="HỆ THỐNG"
-                  active
-                />
-                {doc.assignedTo && (
-                  <HistoryPoint
-                    title="PHÂN CÔNG XỬ LÝ"
-                    time={new Date(doc.ngayThem).toLocaleString('vi-VN')}
-                    user={users.find((u) => u.id === doc.assignedTo)?.fullName}
-                  />
-                )}
-                {doc.status === 'Đã hoàn thành' && (
-                  <HistoryPoint
-                    title="HOÀN THÀNH VĂN BẢN"
-                    time={
-                      doc.completionDate
-                        ? new Date(doc.completionDate).toLocaleString('vi-VN')
-                        : '---'
-                    }
-                    user={users.find((u) => u.id === doc.assignedTo)?.fullName}
-                    active
-                  />
-                )}
+          {activeTab === 'history' && (() => {
+            const flattenRoutings = (list) => {
+              let result = []
+              if (!list || !Array.isArray(list)) return result
+              for (const r of list) {
+                result.push(r)
+                if (r.children && Array.isArray(r.children)) {
+                  result = result.concat(flattenRoutings(r.children))
+                }
+              }
+              return result
+            }
+
+            const historyEvents = []
+            if (doc?.ngayThem) {
+              historyEvents.push({
+                id: 'create',
+                title: 'TIẾP NHẬN VĂN BẢN',
+                time: new Date(doc.ngayThem),
+                user: 'HỆ THỐNG',
+                active: true
+              })
+            }
+            if (doc?.assignedTo && doc?.ngayThem) {
+              historyEvents.push({
+                id: 'assign',
+                title: 'PHÂN CÔNG XỬ LÝ',
+                time: new Date(doc.ngayThem),
+                user: users.find((u) => u.id === doc.assignedTo)?.fullName || 'Không xác định',
+                active: false
+              })
+            }
+            
+            const flatRoutings = flattenRoutings(routings)
+            flatRoutings.forEach(r => {
+              const sender = r.senderName || users.find(u => u.id == r.senderId)?.fullName || 'Hệ thống'
+              const receiver = r.receiverName || users.find(u => u.id == r.receiverId)?.fullName || 'Không xác định'
+              historyEvents.push({
+                id: `routing_${r.id}`,
+                title: `CHUYỂN XỬ LÝ - Vai trò: ${r.role}`,
+                time: new Date(r.createdAt),
+                user: `${sender} ➔ ${receiver}`,
+                active: false
+              })
+            })
+
+            if (doc?.status === 'Đã hoàn thành') {
+              historyEvents.push({
+                id: 'complete',
+                title: 'HOÀN THÀNH VĂN BẢN',
+                time: doc?.completionDate ? new Date(doc.completionDate) : new Date(),
+                user: doc?.assignedTo ? users.find((u) => u.id === doc.assignedTo)?.fullName : 'Hệ thống',
+                active: true
+              })
+            }
+
+            historyEvents.sort((a, b) => a.time - b.time)
+
+            return (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 flex flex-col h-auto lg:h-full overflow-hidden lg:overflow-auto animate-in fade-in slide-in-from-bottom-4 duration-400">
+                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-12 shrink-0">
+                  QUY TRÌNH XỬ LÝ VĂN BẢN
+                </h2>
+                <div className="relative space-y-10 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-slate-100">
+                  {historyEvents.map((evt, idx) => (
+                    <HistoryPoint
+                      key={evt.id || idx}
+                      title={evt.title}
+                      time={evt.time.toLocaleString('vi-VN')}
+                      user={evt.user}
+                      active={evt.active}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
         </div>
 
         {/* Right Panel (Discussion) */}
