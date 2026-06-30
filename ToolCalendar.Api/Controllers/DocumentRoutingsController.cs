@@ -35,8 +35,8 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> CreateRouting(int documentId, [FromBody] DocumentRoutingRecord routing)
         {
             routing.DocumentId = documentId;
-            // Get sender id from token
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            // Lấy ID người gửi (bản thân) từ token thay vì dùng "id"
+            var userIdClaim = User.FindFirst("uid")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdClaim, out int senderId))
             {
                 routing.SenderId = senderId;
@@ -45,9 +45,19 @@ namespace ToolCalendar.Api.Controllers
 
             int newId = await _routingRepo.CreateRoutingAsync(routing);
 
-            // ✅ Gửi SignalR notification đến người được chỉ định (chuyển xử lý)
             if (routing.ReceiverId > 0)
             {
+                // 1. Lưu thông báo vào DB để hiện ở biểu tượng cái chuông
+                ToolCalendar.Data.DatabaseService.InsertNotification(new Core.Models.NotificationRecord
+                {
+                    UserId = routing.ReceiverId,
+                    Title = "Công việc mới",
+                    Body = "Bạn có công văn mới cần xử lý.",
+                    Type = "system",
+                    DocId = documentId
+                });
+
+                // 2. Gửi realtime SignalR
                 _ = _hubContext.Clients
                     .Group($"User_{routing.ReceiverId}")
                     .SendAsync("NewTask", new
