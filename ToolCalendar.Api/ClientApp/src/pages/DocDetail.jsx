@@ -61,8 +61,9 @@ const InfoRow = ({ icon: Icon, label, value, highlight }) => (
   </div>
 )
 
+// Đệ quy kiểm tra xem user có trong luồng luân chuyển không
 const isUserInRoutings = (routingList, userId) => {
-  if (!routingList) return false
+  if (!routingList || !Array.isArray(routingList)) return false
   for (const r of routingList) {
     if (r.receiverId == userId) return true
     if (r.children && isUserInRoutings(r.children, userId)) return true

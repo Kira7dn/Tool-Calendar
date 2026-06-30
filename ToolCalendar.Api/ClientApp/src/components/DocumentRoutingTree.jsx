@@ -117,7 +117,7 @@ const RoutingNode = ({ node, level = 0 }) => {
 }
 
 export const DocumentRoutingTree = ({ routings, onRefresh }) => {
-  if (!routings || routings.length === 0) {
+  if (!routings || !Array.isArray(routings) || routings.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
         <div className="p-4 rounded-full bg-white shadow-sm mb-4">
