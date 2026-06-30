@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React, { useState, useEffect, useRef } from 'react'
-import { X, Send, Search, ChevronDown, Check, UserX } from 'lucide-react'
+import { X, Send, Search, ChevronDown, Check, UserX, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const ForwardDocumentModal = ({
