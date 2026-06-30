@@ -1,6 +1,6 @@
 /* eslint-disable */
-import React, { useState, useEffect } from 'react'
-import { X, Send, Loader2 } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { X, Send, Search, ChevronDown, Check, UserX } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const ForwardDocumentModal = ({
@@ -16,12 +16,30 @@ export const ForwardDocumentModal = ({
   const [deadline, setDeadline] = useState('')
   const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Custom dropdown states
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
 
   useEffect(() => {
     if (isOpen) {
       fetchUsers()
+      setIsDropdownOpen(false)
+      setSearchTerm('')
     }
   }, [isOpen])
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const fetchUsers = async () => {
     try {
@@ -33,6 +51,11 @@ export const ForwardDocumentModal = ({
       console.error(e)
     }
   }
+
+  const filteredUsers = users.filter(u => 
+    u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    u.username.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -107,23 +130,65 @@ export const ForwardDocumentModal = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
+          <div className="relative" ref={dropdownRef}>
             <label className="block text-xs font-bold text-slate-700 mb-1">
               Người nhận <span className="text-red-500">*</span>
             </label>
-            <select
-              value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-              required
+            <div 
+              className={`w-full px-4 py-2.5 rounded-xl border text-sm bg-white cursor-pointer flex justify-between items-center transition-all ${isDropdownOpen ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200 hover:border-slate-300'}`}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              <option value="">-- Chọn cán bộ xử lý --</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.fullName} ({u.username})
-                </option>
-              ))}
-            </select>
+              <span className={selectedUser ? "text-slate-900 font-semibold" : "text-slate-400"}>
+                {selectedUser 
+                  ? `${users.find(u => u.id == selectedUser)?.fullName} (${users.find(u => u.id == selectedUser)?.username})` 
+                  : "-- Chọn cán bộ xử lý --"}
+              </span>
+              <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </div>
+
+            {isDropdownOpen && (
+              <div className="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-64 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
+                  <Search size={16} className="text-slate-400 ml-2 shrink-0" />
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Tìm kiếm theo tên hoặc tài khoản..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400 py-1"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+                <div className="overflow-y-auto flex-1 p-1">
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.map((u) => (
+                      <div
+                        key={u.id}
+                        className={`px-3 py-2 text-sm rounded-lg cursor-pointer flex items-center justify-between hover:bg-blue-50 transition-colors ${selectedUser == u.id ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-700'}`}
+                        onClick={() => {
+                          setSelectedUser(u.id)
+                          setIsDropdownOpen(false)
+                          setSearchTerm('')
+                        }}
+                      >
+                        <div className="flex flex-col">
+                          <span>{u.fullName}</span>
+                          <span className={`text-[10px] font-normal ${selectedUser == u.id ? 'text-blue-500' : 'text-slate-400'}`}>{u.username}</span>
+                        </div>
+                        {selectedUser == u.id && <Check size={16} className="text-blue-600" />}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-6 text-center text-sm text-slate-400 flex flex-col items-center gap-2">
+                      <UserX size={24} className="text-slate-300" />
+                      Không tìm thấy cán bộ nào
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            <input type="text" className="absolute opacity-0 w-0 h-0 -z-10" required value={selectedUser} onChange={() => {}} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

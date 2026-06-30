@@ -4,6 +4,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## Lịch sử
 
+### [2026-06-30 17:35] Thêm tính năng tìm kiếm người nhận trong modal Chuyển xử lý
+- **Mô tả**: Thay thế thẻ `select` mặc định bằng một dropdown tùy chỉnh có tích hợp ô tìm kiếm. Giúp người dùng dễ dàng tìm kiếm cán bộ theo tên hoặc tài khoản (username) khi danh sách người dùng dài.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/ForwardDocumentModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): add searchable dropdown for recipient in ForwardDocumentModal"`
+
 ### [2026-06-30 17:00] Sửa lỗi build do thiếu using directive ở DocumentsController.cs
 - **Mô tả**: Bổ sung `using ToolCalendar.Data.Repositories;` trong `DocumentsController.cs` để nhận diện interface `IDocumentRoutingRepository`, sửa lỗi biên dịch CS0246 khi build Docker.
 - **Tệp thay đổi**:
