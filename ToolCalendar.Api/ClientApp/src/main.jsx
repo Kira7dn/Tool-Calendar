@@ -51,7 +51,7 @@ import { CabinetAppShell } from './cabinet/CabinetAppShell.jsx'
 import './styles/globals.css'
 
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { ShieldAlert, LogOut, RefreshCw, AlertTriangle } from 'lucide-react'
+import { ShieldAlert, LogOut, RefreshCw, AlertTriangle, Clock } from 'lucide-react'
 
 // ─── Error Boundary — bắt mọi crash render, hiện thông báo thay vì màn hình trắng ──
 class ErrorBoundary extends React.Component {
@@ -134,10 +134,44 @@ function KickedModal({ isOpen, onConfirm }) {
   )
 }
 
+// ─── Modal cảnh báo hết hạn phiên ───────────────────────────────────────────
+function SessionExpiredModal({ isOpen, onConfirm }) {
+  if (!isOpen) return null
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-8 text-center">
+          <div className="size-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
+            <Clock className="text-white" size={40} />
+          </div>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+            Hết hạn phiên
+          </h2>
+          <p className="text-white/80 text-sm font-semibold mt-3 leading-relaxed">
+            Bạn đã không hoạt động trong một thời gian dài.
+            <br />
+            Phiên đăng nhập đã tự động kết thúc để bảo mật.
+          </p>
+        </div>
+
+        <div className="p-6 space-y-3">
+          <button
+            onClick={onConfirm}
+            className="w-full py-4 bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
+          >
+            <LogOut size={16} /> Đăng nhập lại
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Root Component ─────────────────────────────────────────────────────────
 function Root() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('auth_token'))
   const [isKicked, setIsKicked] = useState(false)
+  const [isSessionExpired, setIsSessionExpired] = useState(false)
 
   useEffect(() => {
     document.body.classList.add('app-booting')
@@ -208,9 +242,7 @@ function Root() {
         localStorage.removeItem('auth_token')
         localStorage.removeItem(LAST_ACTIVITY_KEY)
         setIsAuthenticated(false)
-        alert(
-          'Phiên làm việc đã hết hạn do bạn không hoạt động trong một thời gian dài. Vui lòng đăng nhập lại.'
-        )
+        setIsSessionExpired(true)
       }
     }, 10000)
 
@@ -250,9 +282,6 @@ function Root() {
 
   return (
     <>
-      {/* Modal bị đá - hiển thị trên tất cả màn hình */}
-      <KickedModal isOpen={isKicked} onConfirm={() => setIsKicked(false)} />
-
       <TooltipProvider>
         {!isAuthenticated ? (
           <LoginPage onLoginSuccess={handleLoginSuccess} />
@@ -261,6 +290,10 @@ function Root() {
         ) : (
           <AppShell />
         )}
+
+        {/* Auth Modals */}
+        <KickedModal isOpen={isKicked} onConfirm={() => setIsKicked(false)} />
+        <SessionExpiredModal isOpen={isSessionExpired} onConfirm={() => setIsSessionExpired(false)} />
       </TooltipProvider>
     </>
   )
