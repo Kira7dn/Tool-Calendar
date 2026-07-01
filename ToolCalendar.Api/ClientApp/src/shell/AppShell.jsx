@@ -828,7 +828,7 @@ export function AppShell() {
                   <Dashboard
                     onTabChange={(tab, filters) => {
                       setActiveTab(tab)
-                      if (filters) setTabFilters((prev) => ({ ...prev, [tab]: filters }))
+                      if (filters) setTabFilters((prev) => ({ ...prev, [tab]: { ...filters, _ts: Date.now() } }))
                     }}
                   />
                 )}

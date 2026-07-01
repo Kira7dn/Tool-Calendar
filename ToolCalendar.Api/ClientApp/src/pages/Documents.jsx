@@ -52,7 +52,17 @@ export function Documents({ onTabChange, filters }) {
         setSearch(filters.search)
         setDebouncedSearch(filters.search)
       }
-      if (filters.status !== undefined) setStatus(filters.status)
+      if (filters.status !== undefined) {
+        setStatus(filters.status)
+        // Tự động sort deadline_asc cho quá hạn / hạn hôm nay, mặc định newest nếu không có status
+        if (!filters.sort) {
+          if (filters.status === 'overdue' || filters.status === 'today') {
+            setSort('deadline_asc')
+          } else {
+            setSort('newest')
+          }
+        }
+      }
       if (filters.sort !== undefined) setSort(filters.sort)
       setPage(1)
     }
