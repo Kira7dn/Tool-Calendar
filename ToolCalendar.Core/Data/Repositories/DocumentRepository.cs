@@ -271,7 +271,7 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             var sb = new System.Text.StringBuilder();
             sb.Append('\uFEFF');
-            sb.AppendLine("ID,Sá»‘ VÄƒn Báº£n,TÃªn CÃ´ng VÄƒn,TrÃ­ch Yáº¿u,NgÃ y Ban HÃ nh,CÆ¡ Quan Ban HÃ nh,Thá»i Háº¡n,Tráº¡ng ThÃ¡i,Äá»™ Kháº©n,NgÃ y ThÃªm");
+            sb.AppendLine("ID,Số Văn Bản,Tên Công Văn,Trích Yếu,Ngày Ban Hành,Cơ Quan Ban Hành,Thời Hạn,Trạng Thái,Độ Khẩn,Ngày Thêm");
 
             var docs = await GetAllAsync();
             foreach (var d in docs)

@@ -1,4 +1,4 @@
-﻿namespace ToolCalendar.Models
+namespace ToolCalendar.Models
 {
     public class OcrExtractionResult
     {

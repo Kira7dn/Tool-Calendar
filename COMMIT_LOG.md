@@ -4,6 +4,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## Lịch sử
 
+### [2026-07-03 16:27] Sửa lỗi phông chữ khi xuất file CSV
+- **Mô tả**: Sửa chuỗi tiêu đề CSV trong `DocumentRepository.cs` bị lỗi hiển thị phông chữ (mojibake) thành chuẩn tiếng Việt có dấu.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(data): correct mojibake font encoding issue in CSV export headers"`
+
 ### [2026-07-01 16:30] Sửa lỗi click vào thẻ KPI (Đang xử lý / Quá hạn / Hạn hôm nay) không filter đúng
 - **Mô tả**: Bug: khi chuyển tab hoặc click nhiều lần vào cùng một thẻ KPI, filters không cập nhật do React không phát hiện sự thay đổi (object reference không đổi). Fix: thêm `_ts: Date.now()` vào `tabFilters` để luôn tạo ra object mới. Bonus: thêm logic tự động sort `deadline_asc` khi lọc `overdue`/`today` thay vì `newest` mặc định để ưu tiên hiển thị công văn cần xử lý nhất.
 - **Tệp thay đổi**:
