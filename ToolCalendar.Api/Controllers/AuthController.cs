@@ -45,6 +45,14 @@ namespace ToolCalendar.Api.Controllers
                              ?? HttpContext.Connection.RemoteIpAddress?.ToString();
             string? userAgent = Request.Headers["User-Agent"].FirstOrDefault();
 
+            try
+            {
+                var logPath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "login_ips.txt");
+                var logLine = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] IP: {clientIp ?? "Unknown"} | Tải khoản: {request.Username}\n";
+                System.IO.File.AppendAllText(logPath, logLine);
+            }
+            catch { /* Bỏ qua nếu lỗi ghi file */ }
+
             // ── Bước 1: Tìm user qua Identity UserManager ────────────────────────
             var user = await _userManager.FindByNameAsync(request.Username);
 
