@@ -130,36 +130,53 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-
-            // Check existing
-            using var checkCmd = new SqliteCommand("SELECT ReactionType FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid", connection);
-            checkCmd.Parameters.AddWithValue("@cid", commentId);
-            checkCmd.Parameters.AddWithValue("@uid", userId);
-            var existing = checkCmd.ExecuteScalar()?.ToString();
-
-            if (existing == reactionType)
+            using var tx = connection.BeginTransaction();
+            try
             {
-                // Remove reaction (toggle off)
-                using var delCmd = new SqliteCommand("DELETE FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid", connection);
-                delCmd.Parameters.AddWithValue("@cid", commentId);
-                delCmd.Parameters.AddWithValue("@uid", userId);
-                await delCmd.ExecuteNonQueryAsync();
-                return "removed";
+                // Check existing — dùng await để không block thread
+                using var checkCmd = new SqliteCommand(
+                    "SELECT ReactionType FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid",
+                    connection, tx);
+                checkCmd.Parameters.AddWithValue("@cid", commentId);
+                checkCmd.Parameters.AddWithValue("@uid", userId);
+                var existing = (await checkCmd.ExecuteScalarAsync())?.ToString();
+
+                string result;
+                if (existing == reactionType)
+                {
+                    // Remove reaction (toggle off)
+                    using var delCmd = new SqliteCommand(
+                        "DELETE FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid",
+                        connection, tx);
+                    delCmd.Parameters.AddWithValue("@cid", commentId);
+                    delCmd.Parameters.AddWithValue("@uid", userId);
+                    await delCmd.ExecuteNonQueryAsync();
+                    result = "removed";
+                }
+                else
+                {
+                    // Upsert to new reaction type
+                    using var upsertCmd = new SqliteCommand(@"
+                        INSERT INTO CommentReactions (CommentId, UserId, Username, ReactionType, CreatedAt)
+                        VALUES (@cid, @uid, @uname, @type, @now)
+                        ON CONFLICT(CommentId, UserId) DO UPDATE SET ReactionType=@type, CreatedAt=@now",
+                        connection, tx);
+                    upsertCmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
+                    upsertCmd.Parameters.AddWithValue("@cid", commentId);
+                    upsertCmd.Parameters.AddWithValue("@uid", userId);
+                    upsertCmd.Parameters.AddWithValue("@uname", username);
+                    upsertCmd.Parameters.AddWithValue("@type", reactionType);
+                    await upsertCmd.ExecuteNonQueryAsync();
+                    result = reactionType;
+                }
+
+                tx.Commit();
+                return result;
             }
-            else
+            catch
             {
-                // Upsert to new reaction type
-                using var upsertCmd = new SqliteCommand(@"
-                    INSERT INTO CommentReactions (CommentId, UserId, Username, ReactionType, CreatedAt)
-                    VALUES (@cid, @uid, @uname, @type, @now)
-                    ON CONFLICT(CommentId, UserId) DO UPDATE SET ReactionType=@type, CreatedAt=@now", connection);
-                upsertCmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
-                upsertCmd.Parameters.AddWithValue("@cid", commentId);
-                upsertCmd.Parameters.AddWithValue("@uid", userId);
-                upsertCmd.Parameters.AddWithValue("@uname", username);
-                upsertCmd.Parameters.AddWithValue("@type", reactionType);
-                await upsertCmd.ExecuteNonQueryAsync();
-                return reactionType;
+                tx.Rollback();
+                throw;
             }
         }
         public async Task<List<CommentReaction>> GetReactionsForCommentsAsync(IEnumerable<int> commentIds)
