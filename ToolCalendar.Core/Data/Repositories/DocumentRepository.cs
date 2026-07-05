@@ -440,67 +440,60 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            try
-            {
-                // 1. Total count
-                string countSql = $"SELECT COUNT(*) FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id {searchFilter}";
-                using var countCmd = new SqliteCommand(countSql, connection);
-                if (hasSearch) {
-                    countCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
-                    countCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
-                }
-                if (hasStatus && status.ToLower() != "overdue")
-                {
-                    countCmd.Parameters.AddWithValue("@status", status.ToLower());
-                    countCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
-                }
-                if (fromDate.HasValue) countCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
-                if (toDate.HasValue) countCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
-                if (addFromDate.HasValue) countCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
-                if (addToDate.HasValue) countCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
-
-                // Dùng await để không block thread server
-                int totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
-
-                // 2. Paged data
-                int offset = (page - 1) * pageSize;
-                string dataSql = $@"
-                    SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, dep.Name AS DepartmentName
-                    FROM Documents doc
-                    LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id
-                    {searchFilter}
-                    ORDER BY {orderBy} 
-                    LIMIT @pageSize OFFSET @offset";
-
-                using var dataCmd = new SqliteCommand(dataSql, connection);
-                if (hasSearch) {
-                    dataCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
-                    dataCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
-                }
-                if (hasStatus && status.ToLower() != "overdue")
-                {
-                    dataCmd.Parameters.AddWithValue("@status", status.ToLower());
-                    dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
-                }
-                if (fromDate.HasValue) dataCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
-                if (toDate.HasValue) dataCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
-                if (addFromDate.HasValue) dataCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
-                if (addToDate.HasValue) dataCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
-
-                dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
-                dataCmd.Parameters.AddWithValue("@offset", offset);
-
-                using var reader = await dataCmd.ExecuteReaderAsync();
-                var items = new List<DocumentRecord>();
-                while (await reader.ReadAsync())
-                    items.Add(MapRecord(reader));
-
-                return (items, totalCount);
+            // 1. Total count
+            string countSql = $"SELECT COUNT(*) FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id {searchFilter}";
+            using var countCmd = new SqliteCommand(countSql, connection);
+            if (hasSearch) {
+                countCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
+                countCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
             }
-            catch
+            if (hasStatus && status.ToLower() != "overdue")
             {
-                throw;
+                countCmd.Parameters.AddWithValue("@status", status.ToLower());
+                countCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
             }
+            if (fromDate.HasValue) countCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
+            if (toDate.HasValue) countCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
+            if (addFromDate.HasValue) countCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
+            if (addToDate.HasValue) countCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
+
+            // Dùng await để không block thread server
+            int totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+            // 2. Paged data
+            int offset = (page - 1) * pageSize;
+            string dataSql = $@"
+                SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, dep.Name AS DepartmentName
+                FROM Documents doc
+                LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id
+                {searchFilter}
+                ORDER BY {orderBy} 
+                LIMIT @pageSize OFFSET @offset";
+
+            using var dataCmd = new SqliteCommand(dataSql, connection);
+            if (hasSearch) {
+                dataCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
+                dataCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
+            }
+            if (hasStatus && status.ToLower() != "overdue")
+            {
+                dataCmd.Parameters.AddWithValue("@status", status.ToLower());
+                dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⛔ ", "").ToLower());
+            }
+            if (fromDate.HasValue) dataCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
+            if (toDate.HasValue) dataCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
+            if (addFromDate.HasValue) dataCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
+            if (addToDate.HasValue) dataCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
+
+            dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+            dataCmd.Parameters.AddWithValue("@offset", offset);
+
+            using var reader = await dataCmd.ExecuteReaderAsync();
+            var items = new List<DocumentRecord>();
+            while (await reader.ReadAsync())
+                items.Add(MapRecord(reader));
+
+            return (items, totalCount);
         }
 
         public async Task<List<string>> GetUniqueStatusesAsync()
