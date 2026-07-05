@@ -32,7 +32,8 @@ namespace ToolCalendar.Core.Data.Repositories
             await connection.OpenAsync();
 
             string sql = @"
-                SELECT r.*, d.Name as DepartmentName 
+                SELECT r.Id, r.Name, r.DepartmentId, r.Status, r.CreatedAt, 
+                       d.Name as DepartmentName 
                 FROM Rooms r 
                 LEFT JOIN Departments d ON r.DepartmentId = d.Id 
                 ORDER BY r.Id DESC";
@@ -62,7 +63,8 @@ namespace ToolCalendar.Core.Data.Repositories
             await connection.OpenAsync();
 
             string sql = @"
-                SELECT r.*, d.Name as DepartmentName 
+                SELECT r.Id, r.Name, r.DepartmentId, r.Status, r.CreatedAt, 
+                       d.Name as DepartmentName 
                 FROM Rooms r 
                 LEFT JOIN Departments d ON r.DepartmentId = d.Id 
                 WHERE r.Id = @id";
