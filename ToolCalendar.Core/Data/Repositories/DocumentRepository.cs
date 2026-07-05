@@ -440,59 +440,67 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            // 1. Total count
-            string countSql = $"SELECT COUNT(*) FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id {searchFilter}";
-            using var countCmd = new SqliteCommand(countSql, connection);
-            if (hasSearch) {
-                countCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
-                countCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
-            }
-            if (hasStatus && status.ToLower() != "overdue")
+            try
             {
-                countCmd.Parameters.AddWithValue("@status", status.ToLower());
-                countCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
+                // 1. Total count
+                string countSql = $"SELECT COUNT(*) FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id {searchFilter}";
+                using var countCmd = new SqliteCommand(countSql, connection);
+                if (hasSearch) {
+                    countCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
+                    countCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
+                }
+                if (hasStatus && status.ToLower() != "overdue")
+                {
+                    countCmd.Parameters.AddWithValue("@status", status.ToLower());
+                    countCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
+                }
+                if (fromDate.HasValue) countCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
+                if (toDate.HasValue) countCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
+                if (addFromDate.HasValue) countCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
+                if (addToDate.HasValue) countCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
+
+                // Dùng await để không block thread server
+                int totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+                // 2. Paged data
+                int offset = (page - 1) * pageSize;
+                string dataSql = $@"
+                    SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, dep.Name AS DepartmentName
+                    FROM Documents doc
+                    LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id
+                    {searchFilter}
+                    ORDER BY {orderBy} 
+                    LIMIT @pageSize OFFSET @offset";
+
+                using var dataCmd = new SqliteCommand(dataSql, connection);
+                if (hasSearch) {
+                    dataCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
+                    dataCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
+                }
+                if (hasStatus && status.ToLower() != "overdue")
+                {
+                    dataCmd.Parameters.AddWithValue("@status", status.ToLower());
+                    dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
+                }
+                if (fromDate.HasValue) dataCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
+                if (toDate.HasValue) dataCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
+                if (addFromDate.HasValue) dataCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
+                if (addToDate.HasValue) dataCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
+
+                dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+                dataCmd.Parameters.AddWithValue("@offset", offset);
+
+                using var reader = await dataCmd.ExecuteReaderAsync();
+                var items = new List<DocumentRecord>();
+                while (await reader.ReadAsync())
+                    items.Add(MapRecord(reader));
+
+                return (items, totalCount);
             }
-            if (fromDate.HasValue) countCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
-            if (toDate.HasValue) countCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
-            if (addFromDate.HasValue) countCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
-            if (addToDate.HasValue) countCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
-
-            int totalCount = Convert.ToInt32(countCmd.ExecuteScalar());
-
-            // 2. Paged data
-            int offset = (page - 1) * pageSize;
-            string dataSql = $@"
-                SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, dep.Name AS DepartmentName
-                FROM Documents doc
-                LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id
-                {searchFilter}
-                ORDER BY {orderBy} 
-                LIMIT @pageSize OFFSET @offset";
-
-            using var dataCmd = new SqliteCommand(dataSql, connection);
-            if (hasSearch) {
-                dataCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
-                dataCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
-            }
-            if (hasStatus && status.ToLower() != "overdue")
+            catch
             {
-                dataCmd.Parameters.AddWithValue("@status", status.ToLower());
-                dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
+                throw;
             }
-            if (fromDate.HasValue) dataCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
-            if (toDate.HasValue) dataCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
-            if (addFromDate.HasValue) dataCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
-            if (addToDate.HasValue) dataCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
-
-            dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
-            dataCmd.Parameters.AddWithValue("@offset", offset);
-
-            using var reader = await dataCmd.ExecuteReaderAsync();
-            var items = new List<DocumentRecord>();
-            while (await reader.ReadAsync())
-                items.Add(MapRecord(reader));
-
-            return (items, totalCount);
         }
 
         public async Task<List<string>> GetUniqueStatusesAsync()
@@ -528,7 +536,8 @@ namespace ToolCalendar.Core.Data.Repositories
 
                 using var cmd = new SqliteCommand(sql, connection, transaction);
                 AddParams(cmd, record);
-                int id = Convert.ToInt32(cmd.ExecuteScalar());
+                // Dùng await để không block thread server
+                int id = Convert.ToInt32(await cmd.ExecuteScalarAsync());
                 transaction.Commit();
                 return id;
             }
@@ -680,19 +689,42 @@ namespace ToolCalendar.Core.Data.Repositories
             if (ids == null || ids.Count == 0) return;
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
+            using var tx = connection.BeginTransaction();
+            try
+            {
+                // Parameterized IN clause (@p0, @p1, ...) — ADO.NET best practice
+                var paramNames = ids.Select((_, i) => $"@p{i}").ToList();
+                var inClause = string.Join(",", paramNames);
 
-            // Parameterized IN clause (@p0, @p1, ...) — ADO.NET best practice
-            var paramNames = ids.Select((_, i) => $"@p{i}").ToList();
-            var inClause = string.Join(",", paramNames);
-            string sql = $@"
-                DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({inClause}));
-                DELETE FROM Comments WHERE DocumentId IN ({inClause});
-                DELETE FROM Documents WHERE Id IN ({inClause});
-            ";
-            using var cmd = new SqliteCommand(sql, connection);
-            for (int i = 0; i < ids.Count; i++)
-                cmd.Parameters.AddWithValue($"@p{i}", ids[i]);
-            await cmd.ExecuteNonQueryAsync();
+                // Xóa lần lượt từng bảng theo đúng thứ tự phụ thuộc
+                using var delReactions = new SqliteCommand(
+                    $"DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({inClause}))",
+                    connection, tx);
+                for (int i = 0; i < ids.Count; i++)
+                    delReactions.Parameters.AddWithValue($"@p{i}", ids[i]);
+                await delReactions.ExecuteNonQueryAsync();
+
+                using var delComments = new SqliteCommand(
+                    $"DELETE FROM Comments WHERE DocumentId IN ({inClause})",
+                    connection, tx);
+                for (int i = 0; i < ids.Count; i++)
+                    delComments.Parameters.AddWithValue($"@p{i}", ids[i]);
+                await delComments.ExecuteNonQueryAsync();
+
+                using var delDocs = new SqliteCommand(
+                    $"DELETE FROM Documents WHERE Id IN ({inClause})",
+                    connection, tx);
+                for (int i = 0; i < ids.Count; i++)
+                    delDocs.Parameters.AddWithValue($"@p{i}", ids[i]);
+                await delDocs.ExecuteNonQueryAsync();
+
+                tx.Commit();
+            }
+            catch
+            {
+                tx.Rollback(); // Hoàn tác toàn bộ nếu xóa bị gián đoạn
+                throw;
+            }
         }
 
         /// <summary>
