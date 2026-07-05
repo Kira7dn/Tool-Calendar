@@ -144,21 +144,30 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
+            using var tx = connection.BeginTransaction();
+            try
+            {
+                // Kiểm tra phòng họp không có lịch đặt trong tương lai
+                string checkSql = @"SELECT COUNT(*) FROM Meetings 
+                    WHERE RoomId = @id AND EndTime > datetime('now') AND Status != 'Hủy'";
+                using var checkCmd = new SqliteCommand(checkSql, connection, tx);
+                checkCmd.Parameters.AddWithValue("@id", id);
+                var count = Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
+                if (count > 0) return false; // Không xóa được vì đang có lịch họp
 
-            // Kiểm tra phòng họp không có lịch đặt trong tương lai
-            string checkSql = @"SELECT COUNT(*) FROM Meetings 
-                WHERE RoomId = @id AND EndTime > datetime('now') AND Status != 'Hủy'";
-            using var checkCmd = new SqliteCommand(checkSql, connection);
-            checkCmd.Parameters.AddWithValue("@id", id);
-            var count = Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
-            if (count > 0) return false; // Không xóa được vì đang có lịch họp
+                string sql = "DELETE FROM Rooms WHERE Id = @id";
+                using var cmd = new SqliteCommand(sql, connection, tx);
+                cmd.Parameters.AddWithValue("@id", id);
 
-            string sql = "DELETE FROM Rooms WHERE Id = @id";
-            using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@id", id);
-
-            int rows = await cmd.ExecuteNonQueryAsync();
-            return rows > 0;
+                int rows = await cmd.ExecuteNonQueryAsync();
+                tx.Commit();
+                return rows > 0;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
         }
     }
 }
