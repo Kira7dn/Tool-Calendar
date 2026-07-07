@@ -619,3 +619,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetSchedule.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi hiển thị mờ nhạt phần text sự kiện trong view tháng"`
+
+### [2026-07-07 16:00] fix(ui): add Tham gia button and handle 401 globally
+- **M� t?**: B? sung n�t 'V�o h?p' cho c�c phi�n h?p dang di?n ra t?i Dashboard. �?ng th?i, th�m x? l� m� l?i 401 Unauthorized t?i Global Fetch Interceptor (main.jsx) d? t? d?ng dang xu?t ngu?i d�ng n?u SecurityStamp kh�ng kh?p. L?i n�y khi?n API tr? v? d? li?u r?ng v� Dashboard hi?n th? 0 cu?c h?p, 0 danh s�ch tham d?.
+- **T?p thay d?i**:
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (S?a d?i)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetHome.jsx` (S?a d?i)
+- **L?nh git commit**: `git commit -m "fix(ui): add Tham gia button and handle 401 globally"`

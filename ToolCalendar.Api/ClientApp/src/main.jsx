@@ -42,6 +42,9 @@ window.fetch = async (...args) => {
       // Ignore parsing error
     }
   }
+  if (response.status === 401) {
+    document.dispatchEvent(new CustomEvent('auth:unauthorized'))
+  }
   return response
 }
 import { AppShell } from './shell/AppShell.jsx'

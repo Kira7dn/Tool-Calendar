@@ -74,11 +74,19 @@ function MeetingCard({ meeting, isOngoing }) {
           </span>
         </div>
       </div>
-      {isOngoing && (
-        <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full shrink-0">
-          ĐANG DIỄN RA
-        </span>
-      )}
+      <div className="flex flex-col items-end gap-2 shrink-0">
+        {isOngoing && (
+          <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+            ĐANG DIỄN RA
+          </span>
+        )}
+        <button
+          onClick={() => alert(`Tính năng phòng họp trực tuyến đang được phát triển. (Meeting ID: ${meeting.id})`)}
+          className="text-xs px-3 py-1.5 bg-[#c8102e] text-white rounded-md hover:bg-[#a50e27] transition shadow-sm font-medium"
+        >
+          {isOngoing ? 'Vào họp' : 'Chi tiết'}
+        </button>
+      </div>
     </div>
   )
 }
