@@ -197,6 +197,7 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
               slotMaxTime="20:00:00"
               allDaySlot={false}
               nowIndicator={true}
+              eventDisplay="block"
               eventClick={(info) => {
                 // Fetch full meeting details (including participants) before opening modal
                 fetch(`/api/phonghopkhonggiayto/meetings/${info.event.id}`, { headers: AUTH_HEADER() })
@@ -208,7 +209,10 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
                   .catch((err) => console.error('Failed to fetch meeting details', err))
               }}
               eventContent={(arg) => (
-                <div className="px-1.5 py-1 text-[11px] text-white h-full overflow-hidden rounded cursor-pointer hover:brightness-90 transition-all">
+                <div 
+                  className="px-1.5 py-1 text-[11px] text-white h-full w-full overflow-hidden rounded cursor-pointer hover:brightness-90 transition-all"
+                  style={{ backgroundColor: arg.event.backgroundColor || '#c8102e' }}
+                >
                   <div className="font-bold leading-tight truncate">{arg.event.title}</div>
                   <div className="opacity-90 mt-0.5">{arg.timeText}</div>
                   <div className="opacity-75 truncate">{arg.event.extendedProps.room}</div>

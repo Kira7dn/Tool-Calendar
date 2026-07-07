@@ -613,3 +613,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - ToolCalendar.Core/Data/Repositories/MeetingRepository.cs (S?a d?i)
 - **L?nh git commit**: git commit -m "fix(meeting): add missing ExternalParticipants column to BASE_SELECT"
 
+
+### [2026-07-07 15:37] fix(ui): Sửa lỗi hiển thị mờ nhạt phần text sự kiện trong view tháng
+- **Mô tả**: Gắn `eventDisplay="block"` và `backgroundColor` cho box sự kiện `eventContent` ở `CabinetSchedule.jsx`. Giúp FullCalendar áp dụng đúng màu và kích thước box sự kiện khi chuyển sang view tháng, giữ cho nền không bị trong suốt.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi hiển thị mờ nhạt phần text sự kiện trong view tháng"`
