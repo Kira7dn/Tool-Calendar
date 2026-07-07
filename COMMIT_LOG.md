@@ -607,3 +607,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "perf(all): loại bỏ triệt để SELECT * trong toàn bộ Repositories"`
 
+### [2026-07-07 14:55] fix(meeting): S?a l?i crash API khi load danh s�ch l?ch h?p
+- **M� t?**: B? sung m.ExternalParticipants v�o c�u truy v?n BASE_SELECT trong MeetingRepository.cs. Tru?c d� do lo?i b? SELECT * nhung s�t c?t n�y khi?n SqliteDataReader quang exception IndexOutOfRangeException d?n d?n trang L?ch h?p b? crash kh�ng hi?n th? d? li?u.
+- **T?p thay d?i**:
+  - ToolCalendar.Core/Data/Repositories/MeetingRepository.cs (S?a d?i)
+- **L?nh git commit**: git commit -m "fix(meeting): add missing ExternalParticipants column to BASE_SELECT"
+

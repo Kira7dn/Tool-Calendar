@@ -50,7 +50,7 @@ namespace ToolCalendar.Core.Data.Repositories
         };
 
         private const string BASE_SELECT = @"
-            SELECT m.Id, m.Title, m.StartTime, m.EndTime, m.RoomId, m.Status, m.CreatorId, m.CreatedAt, m.Location, m.Presider, m.PreparingUnit, m.Content, m.Notes, m.OrganizingUnit, m.ExpectedAttendees, r.Name as RoomName, u.FullName as CreatorName 
+            SELECT m.Id, m.Title, m.StartTime, m.EndTime, m.RoomId, m.Status, m.CreatorId, m.CreatedAt, m.Location, m.Presider, m.PreparingUnit, m.Content, m.Notes, m.OrganizingUnit, m.ExpectedAttendees, m.ExternalParticipants, r.Name as RoomName, u.FullName as CreatorName 
             FROM Meetings m 
             LEFT JOIN Rooms r ON m.RoomId = r.Id 
             LEFT JOIN Users u ON m.CreatorId = u.Id";
