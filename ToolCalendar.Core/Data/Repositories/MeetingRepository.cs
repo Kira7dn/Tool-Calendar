@@ -46,6 +46,7 @@ namespace ToolCalendar.Core.Data.Repositories
             Notes = r["Notes"]?.ToString(),
             OrganizingUnit = r["OrganizingUnit"]?.ToString(),
             ExpectedAttendees = r["ExpectedAttendees"] == DBNull.Value ? 0 : Convert.ToInt32(r["ExpectedAttendees"]),
+            ExternalParticipants = r["ExternalParticipants"]?.ToString(),
         };
 
         private const string BASE_SELECT = @"
@@ -145,10 +146,10 @@ namespace ToolCalendar.Core.Data.Repositories
             string sql = @"
                 INSERT INTO Meetings 
                     (Title, StartTime, EndTime, RoomId, Status, CreatorId, CreatedAt,
-                     Location, Presider, PreparingUnit, Content, Notes, OrganizingUnit, ExpectedAttendees)
+                     Location, Presider, PreparingUnit, Content, Notes, OrganizingUnit, ExpectedAttendees, ExternalParticipants)
                 VALUES 
                     (@title, @start, @end, @roomId, 'Sắp diễn ra', @creator, @now,
-                     @location, @presider, @preparingUnit, @content, @notes, @orgUnit, @expected);
+                     @location, @presider, @preparingUnit, @content, @notes, @orgUnit, @expected, @external);
                 SELECT last_insert_rowid();";
 
             using var cmd = new SqliteCommand(sql, connection, tx);
@@ -165,6 +166,7 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@orgUnit", (object?)req.OrganizingUnit ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
+            cmd.Parameters.AddWithValue("@external", (object?)req.ExternalParticipants ?? DBNull.Value);
 
             var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
 
@@ -194,7 +196,7 @@ namespace ToolCalendar.Core.Data.Repositories
                     Title = @title, StartTime = @start, EndTime = @end, RoomId = @roomId,
                     Location = @location, Presider = @presider, PreparingUnit = @preparingUnit,
                     Content = @content, Notes = @notes, OrganizingUnit = @orgUnit,
-                    ExpectedAttendees = @expected
+                    ExpectedAttendees = @expected, ExternalParticipants = @external
                 WHERE Id = @id";
 
             using var cmd = new SqliteCommand(sql, connection, tx);
@@ -209,6 +211,7 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@orgUnit", (object?)req.OrganizingUnit ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
+            cmd.Parameters.AddWithValue("@external", (object?)req.ExternalParticipants ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@id", id);
 
             int rows = await cmd.ExecuteNonQueryAsync();

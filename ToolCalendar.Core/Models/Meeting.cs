@@ -21,6 +21,7 @@ namespace ToolCalendar.Models
         public string? Notes { get; set; }             // Ghi chú thêm
         public string? OrganizingUnit { get; set; }    // Đơn vị tổ chức
         public int ExpectedAttendees { get; set; }     // Số lượng đại biểu dự kiến
+        public string? ExternalParticipants { get; set; } // Khách mời ngoài cơ quan
 
         public List<MeetingParticipant> Participants { get; set; } = new();
     }
@@ -48,6 +49,7 @@ namespace ToolCalendar.Models
         public string? Notes { get; set; }
         public string? OrganizingUnit { get; set; }
         public int ExpectedAttendees { get; set; }
+        public string? ExternalParticipants { get; set; }
         public List<int> ParticipantUserIds { get; set; } = new();
     }
 }

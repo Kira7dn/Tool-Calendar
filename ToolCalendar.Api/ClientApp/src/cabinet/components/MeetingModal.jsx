@@ -51,6 +51,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
     notes: meeting?.notes || '',
     organizingUnit: meeting?.organizingUnit || '',
     expectedAttendees: meeting?.expectedAttendees || 0,
+    externalParticipants: meeting?.externalParticipants || '',
     participantUserIds: meeting?.participants?.map((p) => p.userId) || [],
   })
 
@@ -117,6 +118,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
       notes: form.notes.trim() || null,
       organizingUnit: form.organizingUnit.trim() || null,
       expectedAttendees: parseInt(form.expectedAttendees) || 0,
+      externalParticipants: form.externalParticipants.trim() || null,
       participantUserIds: form.participantUserIds,
     }
 
@@ -373,6 +375,20 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
             {/* ── SECTION: Danh sách tham dự ── */}
             {activeSection === 'participants' && (
               <div className="flex flex-col h-[400px]">
+                {/* Khách mời ngoài cơ quan */}
+                <div className="mb-5 shrink-0">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Khách mời ngoài cơ quan
+                  </label>
+                  <textarea
+                    value={form.externalParticipants}
+                    onChange={set('externalParticipants')}
+                    rows={2}
+                    placeholder="VD: Đ/c Nguyễn Văn A (Công an phường); Đ/c Trần Văn B (Ban Chỉ huy Quân sự phường)..."
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8102e]/25 focus:border-[#c8102e] transition resize-none"
+                  />
+                </div>
+
                 <div className="flex items-center justify-between mb-3 shrink-0">
                   <p className="text-sm font-semibold text-gray-700">
                     Chọn thành viên tham dự

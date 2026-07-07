@@ -529,3 +529,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/cabinet/components/MeetingModal.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(cabinet-meetings): add search input for participants list and fix users api endpoint"`
+
+### [2026-07-07 11:15] Thêm tính năng lưu khách mời ngoài cơ quan cho phiên họp
+- **Mô tả**: Phiên họp ngoài cán bộ trong hệ thống thì thường có thêm các khách mời ngoài cơ quan (như Công an, Quân sự...). Đã cập nhật database schema thêm cột `ExternalParticipants`, cập nhật Model/Repository và giao diện `MeetingModal.jsx` thêm 1 ô nhập text (textarea) để người dùng có thể nhập tự do danh sách khách mời ngoài.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Models/Meeting.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/components/MeetingModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet-meetings): add external participants text field to meetings"`
