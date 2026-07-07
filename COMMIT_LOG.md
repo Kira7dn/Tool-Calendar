@@ -517,3 +517,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetRooms.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(cabinet-rooms): implement view mode for room details modal"`
+
+### [2026-07-07 10:48] Sửa lỗi hiển thị viền thừa ở bảng lịch họp
+- **Mô tả**: Giao diện Lịch họp có một khoảng trống/viền thừa màu xám ở lề phải và dưới do container bọc FullCalendar bị set class `p-2` (padding) cộng thêm border mặc định của FullCalendar. Đã loại bỏ class `p-2` và thêm style ẩn viền `.fc-scrollgrid` để bảng lịch hiển thị full không gian một cách liền mạch.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(cabinet-schedule): remove extra padding and borders from calendar grid"`

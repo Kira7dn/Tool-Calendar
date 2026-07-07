@@ -175,13 +175,16 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
           </div>
         ) : (
           <div
-            className="h-full w-full p-2"
+            className="h-full w-full"
             style={{
               '--fc-border-color': '#e5e7eb',
               '--fc-today-bg-color': 'rgba(200,16,46,0.04)',
               '--fc-now-indicator-color': '#c8102e',
             }}
           >
+            <style>{`
+              .fc-theme-standard .fc-scrollgrid { border: none !important; }
+            `}</style>
             <FullCalendar
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
