@@ -70,6 +70,7 @@ function StatusToggle({ active, loading, onChange }) {
 // ─── Room Form Modal ──────────────────────────────────────────────────────────
 function RoomModal({ mode, room, departments, onClose, onSaved }) {
   const isEdit = mode === 'edit'
+  const isView = mode === 'view'
   const [form, setForm] = useState({
     name: room?.name || '',
     departmentId: room?.departmentId || '',
@@ -131,7 +132,7 @@ function RoomModal({ mode, room, departments, onClose, onSaved }) {
           <div className="flex items-center gap-2 text-white">
             <Building2 size={18} />
             <h2 className="font-bold text-base">
-              {isEdit ? 'Chỉnh sửa phòng họp' : 'Thêm phòng họp mới'}
+              {isView ? 'Chi tiết phòng họp' : isEdit ? 'Chỉnh sửa phòng họp' : 'Thêm phòng họp mới'}
             </h2>
           </div>
           <button
@@ -154,8 +155,9 @@ function RoomModal({ mode, room, departments, onClose, onSaved }) {
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="VD: Hội trường A, tầng 1, Trụ sở Liên cơ quan"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8102e]/25 focus:border-[#c8102e] transition"
-              autoFocus
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8102e]/25 focus:border-[#c8102e] transition disabled:bg-gray-50 disabled:text-gray-500"
+              disabled={isView}
+              autoFocus={!isView}
             />
           </div>
 
@@ -167,7 +169,8 @@ function RoomModal({ mode, room, departments, onClose, onSaved }) {
             <select
               value={form.departmentId}
               onChange={(e) => setForm((f) => ({ ...f, departmentId: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8102e]/25 focus:border-[#c8102e] transition bg-white"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8102e]/25 focus:border-[#c8102e] transition bg-white disabled:bg-gray-50 disabled:text-gray-500"
+              disabled={isView}
             >
               <option value="">-- Không thuộc đơn vị cụ thể --</option>
               {departments.map((d) => (
@@ -184,10 +187,11 @@ function RoomModal({ mode, room, departments, onClose, onSaved }) {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setForm((f) => ({ ...f, status: f.status === 1 ? 0 : 1 }))}
+                onClick={() => !isView && setForm((f) => ({ ...f, status: f.status === 1 ? 0 : 1 }))}
+                disabled={isView}
                 className={`relative w-11 h-6 rounded-full transition-colors ${
                   form.status === 1 ? 'bg-green-500' : 'bg-gray-300'
-                }`}
+                } ${isView ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 <span
                   className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
@@ -218,24 +222,26 @@ function RoomModal({ mode, room, departments, onClose, onSaved }) {
               onClick={onClose}
               className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
             >
-              Hủy bỏ
+              {isView ? 'Đóng' : 'Hủy bỏ'}
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex items-center gap-2 px-5 py-2 text-sm bg-[#c8102e] hover:bg-[#a50e27] text-white rounded-lg font-semibold transition disabled:opacity-60"
-            >
-              {saving ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Đang lưu...
-                </>
-              ) : isEdit ? (
-                'Cập nhật'
-              ) : (
-                'Thêm phòng họp'
-              )}
-            </button>
+            {!isView && (
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center gap-2 px-5 py-2 text-sm bg-[#c8102e] hover:bg-[#a50e27] text-white rounded-lg font-semibold transition disabled:opacity-60"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Đang lưu...
+                  </>
+                ) : isEdit ? (
+                  'Cập nhật'
+                ) : (
+                  'Thêm phòng họp'
+                )}
+              </button>
+            )}
           </div>
         </form>
       </div>
@@ -575,6 +581,7 @@ export function CabinetRooms() {
                         <div className="flex items-center justify-center gap-1">
                           <button
                             title="Xem chi tiết"
+                            onClick={() => setModal({ mode: 'view', room })}
                             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 hover:text-[#c8102e] transition"
                           >
                             <Eye size={15} />
