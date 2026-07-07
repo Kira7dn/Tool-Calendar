@@ -4,6 +4,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## Lịch sử
 
+### [2026-07-03 16:27] Sửa lỗi phông chữ khi xuất file CSV
+- **Mô tả**: Sửa chuỗi tiêu đề CSV trong `DocumentRepository.cs` bị lỗi hiển thị phông chữ (mojibake) thành chuẩn tiếng Việt có dấu.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(data): correct mojibake font encoding issue in CSV export headers"`
+
 ### [2026-07-01 16:30] Sửa lỗi click vào thẻ KPI (Đang xử lý / Quá hạn / Hạn hôm nay) không filter đúng
 - **Mô tả**: Bug: khi chuyển tab hoặc click nhiều lần vào cùng một thẻ KPI, filters không cập nhật do React không phát hiện sự thay đổi (object reference không đổi). Fix: thêm `_ts: Date.now()` vào `tabFilters` để luôn tạo ra object mới. Bonus: thêm logic tự động sort `deadline_asc` khi lọc `overdue`/`today` thay vì `newest` mặc định để ưu tiên hiển thị công văn cần xử lý nhất.
 - **Tệp thay đổi**:
@@ -543,3 +549,61 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetSchedule.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(cabinet-schedule): fetch full meeting details on eventClick to properly load participant list"`
+### [2026-07-04 10:36] feat(auth): Thêm tính năng ghi log IP đăng nhập ra file txt
+- **Mô tả**: Bổ sung tính năng tự động trích xuất địa chỉ IP của client (thông qua `X-Forwarded-For` hoặc `RemoteIpAddress`) và ghi log vào file `login_ips.txt` kèm theo mốc thời gian và tên tài khoản mỗi khi có người dùng gọi API `/api/auth/login`. Tính năng được bọc trong khối `try-catch` để không làm gián đoạn luồng đăng nhập nếu gặp lỗi ghi file.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(auth): thêm tính năng ghi log IP đăng nhập ra file txt"`
+
+### [2026-07-05 13:42] fix(meeting): Thêm try-catch-rollback cho tất cả transaction trong MeetingRepository
+- **Mô tả**: Phát hiện 3 hàm `CreateAsync`, `UpdateAsync`, `DeleteAsync` trong `MeetingRepository` có dùng Transaction nhưng thiếu khối `try-catch` và `tx.Rollback()`. Trong tình huống mất kết nối giữa chừng hoặc xảy ra lỗi DB, transaction sẽ không được hoàn tác đúng cách dẫn đến dữ liệu bị không nhất quán (ví dụ: xóa MeetingParticipants thành công nhưng không xóa được Meetings). Đã bọc toàn bộ logic trong khối `try { ... tx.Commit(); } catch { tx.Rollback(); throw; }` để đảm bảo tính Atomicity.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(meeting): thêm try-catch-rollback cho transaction trong MeetingRepository"`
+
+### [2026-07-05 13:47] fix(document): Sửa 3 lỗi trong ToggleReactionAsync — thêm transaction, try-catch, đổi sang async
+- **Mô tả**: Phát hiện 3 lỗi trong hàm `ToggleReactionAsync` của `DocumentRepository`: (1) Thiếu `try-catch` xử lý lỗi DB. (2) `checkCmd.ExecuteScalar()` được gọi đồng bộ (blocking) trong một async function — phải dùng `await ExecuteScalarAsync()`. (3) Không có transaction bao bọc cặp Check+Write, dẫn đến nguy cơ Race Condition (2 request check cùng lúc cho cùng 1 user). Đã sửa bằng cách thêm `BeginTransaction()`, bọc toàn bộ trong `try { tx.Commit() } catch { tx.Rollback(); throw; }`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(document): sửa transaction, async và try-catch trong ToggleReactionAsync"`
+
+### [2026-07-05 13:51] fix(document): Sửa 3 lỗi trong DocumentRepository — blocking async, BulkDelete thiếu transaction, GetPaged thiếu try-catch
+- **Mô tả**: Quét toàn bộ các Repository và phát hiện 3 lỗi trong `DocumentRepository`: (1) `GetPagedAsync` gọi `countCmd.ExecuteScalar()` đồng bộ (blocking) trong async method — sửa thành `await ExecuteScalarAsync()`, bọc trong try-catch. (2) `InsertAsync` gọi `cmd.ExecuteScalar()` đồng bộ — sửa thành `await ExecuteScalarAsync()`. (3) `BulkDeleteAsync` thực hiện 3 câu DELETE trong 1 string SQL nhưng không có transaction riêng biệt — nếu xóa bị gián đoạn giữa chừng (mất điện, lỗi DB), dữ liệu sẽ bị không nhất quán. Đã tách thành 3 lệnh riêng gắn vào cùng 1 transaction với try-catch-rollback.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(document): sửa blocking async, thêm transaction cho BulkDelete và try-catch cho GetPaged"`
+
+### [2026-07-05 14:02] refactor(document): Xóa try-catch vô nghĩa (anti-pattern) trong GetPagedAsync
+- **Mô tả**: Phát hiện `catch { throw; }` trong `GetPagedAsync` là anti-pattern — bắt exception nhưng không xử lý gì, chỉ ném lại y chang. Hàm này không có transaction nên không cần rollback, tài nguyên đã được `using var` quản lý tự động. Đã xóa khối `try-catch` thừa để code sạch hơn và dễ đọc hơn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(document): xóa try-catch vô nghĩa trong GetPagedAsync — catch chỉ throw lại không xử lý gì"`
+
+### [2026-07-05 14:12] perf(questionnaire): Xóa `SELECT *` trong QuestionnaireRepository
+- **Mô tả**: Phát hiện hàm `GetAllAsync` dùng `SELECT q.*`, gây lãng phí bộ nhớ và ảnh hưởng tới hiệu năng khi dữ liệu lớn, cũng như tiềm ẩn lỗi mapping nếu cấu trúc bảng bị thay đổi. Đã sửa thành liệt kê rõ các cột cần thiết (`q.Id`, `q.MeetingId`, `q.Title`, `q.AssignedTo`, `q.Deadline`, `q.Status`, `q.CreatedAt`) để tối ưu và an toàn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/QuestionnaireRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(questionnaire): xóa SELECT * và liệt kê rõ cột trong GetAllAsync"`
+
+### [2026-07-05 14:13] perf(room): Loại bỏ `SELECT *` trong RoomRepository
+- **Mô tả**: Tương tự như `QuestionnaireRepository`, phát hiện hàm `GetAllAsync` và `GetByIdAsync` trong `RoomRepository` sử dụng câu truy vấn `SELECT r.*`. Đã sửa thành chỉ định rõ các cột cần thiết (`r.Id`, `r.Name`, `r.DepartmentId`, `r.Status`, `r.CreatedAt`) để tối ưu hiệu năng, giảm RAM server và bảo vệ code khỏi lỗi nếu schema thay đổi.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/RoomRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(room): xóa SELECT * và liệt kê rõ cột trong GetAllAsync và GetByIdAsync"`
+
+### [2026-07-05 14:14] fix(room): Bổ sung Transaction chống race condition khi xóa phòng họp
+- **Mô tả**: Hàm `DeleteAsync` trong `RoomRepository` thực hiện hai thao tác là kiểm tra (SELECT) xem phòng có đang được lên lịch không, sau đó mới xóa (DELETE). Để tránh tình trạng có người đặt lịch đúng vào khoảnh khắc giữa hai lệnh này (Race Condition), đã bổ sung `BeginTransaction` cùng block `try-catch-rollback` (đúng chuẩn).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/RoomRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(room): thêm transaction cho DeleteAsync để chống race condition"`
+
+### [2026-07-05 14:16] perf(all): Quét và loại bỏ toàn bộ `SELECT *` trong các Repositories
+- **Mô tả**: Đã quét toàn bộ mã nguồn tầng Data Access (Repositories) để tìm các câu lệnh chứa `SELECT *`, `SELECT m.*`, `SELECT mp.*`, `SELECT doc.*`. Đã thay thế thành việc liệt kê cụ thể các cột tương ứng với schema hiện tại ở:
+  - `MeetingRepository` (`BASE_SELECT` và `GetParticipantsByMeetingIdAsync`).
+  - `DocumentRepository` (`GetDocumentByIdAsync`).
+  Việc này giúp bảo vệ ứng dụng khỏi lỗi OOM, tối ưu memory footprint và tránh crash khi CSDL thay đổi schema.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(all): loại bỏ triệt để SELECT * trong toàn bộ Repositories"`
+

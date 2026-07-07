@@ -33,7 +33,8 @@ namespace ToolCalendar.Core.Data.Repositories
             }
 
             string sql = $@"
-                SELECT q.*, m.Title as MeetingTitle, u.FullName as AssignedToName 
+                SELECT q.Id, q.MeetingId, q.Title, q.AssignedTo, q.Deadline, q.Status, q.CreatedAt, 
+                       m.Title as MeetingTitle, u.FullName as AssignedToName 
                 FROM Questionnaires q 
                 LEFT JOIN Meetings m ON q.MeetingId = m.Id 
                 LEFT JOIN Users u ON q.AssignedTo = u.Id 

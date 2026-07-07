@@ -130,36 +130,53 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-
-            // Check existing
-            using var checkCmd = new SqliteCommand("SELECT ReactionType FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid", connection);
-            checkCmd.Parameters.AddWithValue("@cid", commentId);
-            checkCmd.Parameters.AddWithValue("@uid", userId);
-            var existing = checkCmd.ExecuteScalar()?.ToString();
-
-            if (existing == reactionType)
+            using var tx = connection.BeginTransaction();
+            try
             {
-                // Remove reaction (toggle off)
-                using var delCmd = new SqliteCommand("DELETE FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid", connection);
-                delCmd.Parameters.AddWithValue("@cid", commentId);
-                delCmd.Parameters.AddWithValue("@uid", userId);
-                await delCmd.ExecuteNonQueryAsync();
-                return "removed";
+                // Check existing — dùng await để không block thread
+                using var checkCmd = new SqliteCommand(
+                    "SELECT ReactionType FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid",
+                    connection, tx);
+                checkCmd.Parameters.AddWithValue("@cid", commentId);
+                checkCmd.Parameters.AddWithValue("@uid", userId);
+                var existing = (await checkCmd.ExecuteScalarAsync())?.ToString();
+
+                string result;
+                if (existing == reactionType)
+                {
+                    // Remove reaction (toggle off)
+                    using var delCmd = new SqliteCommand(
+                        "DELETE FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid",
+                        connection, tx);
+                    delCmd.Parameters.AddWithValue("@cid", commentId);
+                    delCmd.Parameters.AddWithValue("@uid", userId);
+                    await delCmd.ExecuteNonQueryAsync();
+                    result = "removed";
+                }
+                else
+                {
+                    // Upsert to new reaction type
+                    using var upsertCmd = new SqliteCommand(@"
+                        INSERT INTO CommentReactions (CommentId, UserId, Username, ReactionType, CreatedAt)
+                        VALUES (@cid, @uid, @uname, @type, @now)
+                        ON CONFLICT(CommentId, UserId) DO UPDATE SET ReactionType=@type, CreatedAt=@now",
+                        connection, tx);
+                    upsertCmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
+                    upsertCmd.Parameters.AddWithValue("@cid", commentId);
+                    upsertCmd.Parameters.AddWithValue("@uid", userId);
+                    upsertCmd.Parameters.AddWithValue("@uname", username);
+                    upsertCmd.Parameters.AddWithValue("@type", reactionType);
+                    await upsertCmd.ExecuteNonQueryAsync();
+                    result = reactionType;
+                }
+
+                tx.Commit();
+                return result;
             }
-            else
+            catch
             {
-                // Upsert to new reaction type
-                using var upsertCmd = new SqliteCommand(@"
-                    INSERT INTO CommentReactions (CommentId, UserId, Username, ReactionType, CreatedAt)
-                    VALUES (@cid, @uid, @uname, @type, @now)
-                    ON CONFLICT(CommentId, UserId) DO UPDATE SET ReactionType=@type, CreatedAt=@now", connection);
-                upsertCmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
-                upsertCmd.Parameters.AddWithValue("@cid", commentId);
-                upsertCmd.Parameters.AddWithValue("@uid", userId);
-                upsertCmd.Parameters.AddWithValue("@uname", username);
-                upsertCmd.Parameters.AddWithValue("@type", reactionType);
-                await upsertCmd.ExecuteNonQueryAsync();
-                return reactionType;
+                tx.Rollback();
+                throw;
             }
         }
         public async Task<List<CommentReaction>> GetReactionsForCommentsAsync(IEnumerable<int> commentIds)
@@ -271,7 +288,7 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             var sb = new System.Text.StringBuilder();
             sb.Append('\uFEFF');
-            sb.AppendLine("ID,Sá»‘ VÄƒn Báº£n,TÃªn CÃ´ng VÄƒn,TrÃ­ch Yáº¿u,NgÃ y Ban HÃ nh,CÆ¡ Quan Ban HÃ nh,Thá»i Háº¡n,Tráº¡ng ThÃ¡i,Äá»™ Kháº©n,NgÃ y ThÃªm");
+            sb.AppendLine("ID,Số Văn Bản,Tên Công Văn,Trích Yếu,Ngày Ban Hành,Cơ Quan Ban Hành,Thời Hạn,Trạng Thái,Độ Khẩn,Ngày Thêm");
 
             var docs = await GetAllAsync();
             foreach (var d in docs)
@@ -320,7 +337,7 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            string sql = "SELECT doc.*, dep.Name AS DepartmentName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id WHERE doc.Id = @id";
+            string sql = "SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, dep.Name AS DepartmentName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id WHERE doc.Id = @id";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -440,7 +457,8 @@ namespace ToolCalendar.Core.Data.Repositories
             if (addFromDate.HasValue) countCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
             if (addToDate.HasValue) countCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
 
-            int totalCount = Convert.ToInt32(countCmd.ExecuteScalar());
+            // Dùng await để không block thread server
+            int totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
             // 2. Paged data
             int offset = (page - 1) * pageSize;
@@ -460,7 +478,7 @@ namespace ToolCalendar.Core.Data.Repositories
             if (hasStatus && status.ToLower() != "overdue")
             {
                 dataCmd.Parameters.AddWithValue("@status", status.ToLower());
-                dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
+                dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⛔ ", "").ToLower());
             }
             if (fromDate.HasValue) dataCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
             if (toDate.HasValue) dataCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
@@ -511,7 +529,8 @@ namespace ToolCalendar.Core.Data.Repositories
 
                 using var cmd = new SqliteCommand(sql, connection, transaction);
                 AddParams(cmd, record);
-                int id = Convert.ToInt32(cmd.ExecuteScalar());
+                // Dùng await để không block thread server
+                int id = Convert.ToInt32(await cmd.ExecuteScalarAsync());
                 transaction.Commit();
                 return id;
             }
@@ -663,19 +682,42 @@ namespace ToolCalendar.Core.Data.Repositories
             if (ids == null || ids.Count == 0) return;
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
+            using var tx = connection.BeginTransaction();
+            try
+            {
+                // Parameterized IN clause (@p0, @p1, ...) — ADO.NET best practice
+                var paramNames = ids.Select((_, i) => $"@p{i}").ToList();
+                var inClause = string.Join(",", paramNames);
 
-            // Parameterized IN clause (@p0, @p1, ...) — ADO.NET best practice
-            var paramNames = ids.Select((_, i) => $"@p{i}").ToList();
-            var inClause = string.Join(",", paramNames);
-            string sql = $@"
-                DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({inClause}));
-                DELETE FROM Comments WHERE DocumentId IN ({inClause});
-                DELETE FROM Documents WHERE Id IN ({inClause});
-            ";
-            using var cmd = new SqliteCommand(sql, connection);
-            for (int i = 0; i < ids.Count; i++)
-                cmd.Parameters.AddWithValue($"@p{i}", ids[i]);
-            await cmd.ExecuteNonQueryAsync();
+                // Xóa lần lượt từng bảng theo đúng thứ tự phụ thuộc
+                using var delReactions = new SqliteCommand(
+                    $"DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({inClause}))",
+                    connection, tx);
+                for (int i = 0; i < ids.Count; i++)
+                    delReactions.Parameters.AddWithValue($"@p{i}", ids[i]);
+                await delReactions.ExecuteNonQueryAsync();
+
+                using var delComments = new SqliteCommand(
+                    $"DELETE FROM Comments WHERE DocumentId IN ({inClause})",
+                    connection, tx);
+                for (int i = 0; i < ids.Count; i++)
+                    delComments.Parameters.AddWithValue($"@p{i}", ids[i]);
+                await delComments.ExecuteNonQueryAsync();
+
+                using var delDocs = new SqliteCommand(
+                    $"DELETE FROM Documents WHERE Id IN ({inClause})",
+                    connection, tx);
+                for (int i = 0; i < ids.Count; i++)
+                    delDocs.Parameters.AddWithValue($"@p{i}", ids[i]);
+                await delDocs.ExecuteNonQueryAsync();
+
+                tx.Commit();
+            }
+            catch
+            {
+                tx.Rollback(); // Hoàn tác toàn bộ nếu xóa bị gián đoạn
+                throw;
+            }
         }
 
         /// <summary>

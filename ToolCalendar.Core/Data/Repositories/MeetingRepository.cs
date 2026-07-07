@@ -50,7 +50,7 @@ namespace ToolCalendar.Core.Data.Repositories
         };
 
         private const string BASE_SELECT = @"
-            SELECT m.*, r.Name as RoomName, u.FullName as CreatorName 
+            SELECT m.Id, m.Title, m.StartTime, m.EndTime, m.RoomId, m.Status, m.CreatorId, m.CreatedAt, m.Location, m.Presider, m.PreparingUnit, m.Content, m.Notes, m.OrganizingUnit, m.ExpectedAttendees, r.Name as RoomName, u.FullName as CreatorName 
             FROM Meetings m 
             LEFT JOIN Rooms r ON m.RoomId = r.Id 
             LEFT JOIN Users u ON m.CreatorId = u.Id";
@@ -114,7 +114,7 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             var list = new List<MeetingParticipant>();
             string sql = @"
-                SELECT mp.*, u.FullName as UserFullName, d.Name as DepartmentName 
+                SELECT mp.MeetingId, mp.UserId, mp.AttendanceStatus, u.FullName as UserFullName, d.Name as DepartmentName 
                 FROM MeetingParticipants mp 
                 JOIN Users u ON mp.UserId = u.Id 
                 LEFT JOIN Departments d ON u.DepartmentId = d.Id 
@@ -142,47 +142,54 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
             using var tx = connection.BeginTransaction();
-
-            string sql = @"
-                INSERT INTO Meetings 
-                    (Title, StartTime, EndTime, RoomId, Status, CreatorId, CreatedAt,
-                     Location, Presider, PreparingUnit, Content, Notes, OrganizingUnit, ExpectedAttendees, ExternalParticipants)
-                VALUES 
-                    (@title, @start, @end, @roomId, 'Sắp diễn ra', @creator, @now,
-                     @location, @presider, @preparingUnit, @content, @notes, @orgUnit, @expected, @external);
-                SELECT last_insert_rowid();";
-
-            using var cmd = new SqliteCommand(sql, connection, tx);
-            cmd.Parameters.AddWithValue("@title", req.Title);
-            cmd.Parameters.AddWithValue("@start", req.StartTime.ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@end", req.EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@roomId", req.RoomId);
-            cmd.Parameters.AddWithValue("@creator", creatorId);
-            cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@location", (object?)req.Location ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@presider", (object?)req.Presider ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@preparingUnit", (object?)req.PreparingUnit ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@content", (object?)req.Content ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@orgUnit", (object?)req.OrganizingUnit ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
-            cmd.Parameters.AddWithValue("@external", (object?)req.ExternalParticipants ?? DBNull.Value);
-
-            var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-
-            // Thêm danh sách tham dự
-            foreach (var userId in req.ParticipantUserIds.Distinct())
+            try
             {
-                using var pCmd = new SqliteCommand(
-                    "INSERT OR IGNORE INTO MeetingParticipants (MeetingId, UserId, AttendanceStatus) VALUES (@m, @u, 'Chưa xác nhận')",
-                    connection, tx);
-                pCmd.Parameters.AddWithValue("@m", newId);
-                pCmd.Parameters.AddWithValue("@u", userId);
-                await pCmd.ExecuteNonQueryAsync();
-            }
+                string sql = @"
+                    INSERT INTO Meetings 
+                        (Title, StartTime, EndTime, RoomId, Status, CreatorId, CreatedAt,
+                         Location, Presider, PreparingUnit, Content, Notes, OrganizingUnit, ExpectedAttendees, ExternalParticipants)
+                    VALUES 
+                        (@title, @start, @end, @roomId, 'Sắp diễn ra', @creator, @now,
+                         @location, @presider, @preparingUnit, @content, @notes, @orgUnit, @expected, @external);
+                    SELECT last_insert_rowid();";
 
-            tx.Commit();
-            return newId;
+                using var cmd = new SqliteCommand(sql, connection, tx);
+                cmd.Parameters.AddWithValue("@title", req.Title);
+                cmd.Parameters.AddWithValue("@start", req.StartTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@end", req.EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@roomId", req.RoomId);
+                cmd.Parameters.AddWithValue("@creator", creatorId);
+                cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@location", (object?)req.Location ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@presider", (object?)req.Presider ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@preparingUnit", (object?)req.PreparingUnit ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@content", (object?)req.Content ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@orgUnit", (object?)req.OrganizingUnit ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
+                cmd.Parameters.AddWithValue("@external", (object?)req.ExternalParticipants ?? DBNull.Value);
+
+                var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+
+                // Thêm danh sách tham dự
+                foreach (var userId in req.ParticipantUserIds.Distinct())
+                {
+                    using var pCmd = new SqliteCommand(
+                        "INSERT OR IGNORE INTO MeetingParticipants (MeetingId, UserId, AttendanceStatus) VALUES (@m, @u, 'Chưa xác nhận')",
+                        connection, tx);
+                    pCmd.Parameters.AddWithValue("@m", newId);
+                    pCmd.Parameters.AddWithValue("@u", userId);
+                    await pCmd.ExecuteNonQueryAsync();
+                }
+
+                tx.Commit();
+                return newId;
+            }
+            catch
+            {
+                tx.Rollback(); // Hoàn tác toàn bộ nếu có lỗi giữa chừng
+                throw;
+            }
         }
 
         public async Task<bool> UpdateAsync(int id, CreateMeetingRequest req)
@@ -190,52 +197,59 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
             using var tx = connection.BeginTransaction();
-
-            string sql = @"
-                UPDATE Meetings SET
-                    Title = @title, StartTime = @start, EndTime = @end, RoomId = @roomId,
-                    Location = @location, Presider = @presider, PreparingUnit = @preparingUnit,
-                    Content = @content, Notes = @notes, OrganizingUnit = @orgUnit,
-                    ExpectedAttendees = @expected, ExternalParticipants = @external
-                WHERE Id = @id";
-
-            using var cmd = new SqliteCommand(sql, connection, tx);
-            cmd.Parameters.AddWithValue("@title", req.Title);
-            cmd.Parameters.AddWithValue("@start", req.StartTime.ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@end", req.EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@roomId", req.RoomId);
-            cmd.Parameters.AddWithValue("@location", (object?)req.Location ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@presider", (object?)req.Presider ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@preparingUnit", (object?)req.PreparingUnit ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@content", (object?)req.Content ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@orgUnit", (object?)req.OrganizingUnit ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
-            cmd.Parameters.AddWithValue("@external", (object?)req.ExternalParticipants ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@id", id);
-
-            int rows = await cmd.ExecuteNonQueryAsync();
-
-            // Cập nhật lại danh sách tham dự nếu có thay đổi
-            if (req.ParticipantUserIds.Count > 0)
+            try
             {
-                using var delCmd = new SqliteCommand("DELETE FROM MeetingParticipants WHERE MeetingId = @m", connection, tx);
-                delCmd.Parameters.AddWithValue("@m", id);
-                await delCmd.ExecuteNonQueryAsync();
+                string sql = @"
+                    UPDATE Meetings SET
+                        Title = @title, StartTime = @start, EndTime = @end, RoomId = @roomId,
+                        Location = @location, Presider = @presider, PreparingUnit = @preparingUnit,
+                        Content = @content, Notes = @notes, OrganizingUnit = @orgUnit,
+                        ExpectedAttendees = @expected, ExternalParticipants = @external
+                    WHERE Id = @id";
 
-                foreach (var userId in req.ParticipantUserIds.Distinct())
+                using var cmd = new SqliteCommand(sql, connection, tx);
+                cmd.Parameters.AddWithValue("@title", req.Title);
+                cmd.Parameters.AddWithValue("@start", req.StartTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@end", req.EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@roomId", req.RoomId);
+                cmd.Parameters.AddWithValue("@location", (object?)req.Location ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@presider", (object?)req.Presider ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@preparingUnit", (object?)req.PreparingUnit ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@content", (object?)req.Content ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@orgUnit", (object?)req.OrganizingUnit ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
+                cmd.Parameters.AddWithValue("@external", (object?)req.ExternalParticipants ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                int rows = await cmd.ExecuteNonQueryAsync();
+
+                // Cập nhật lại danh sách tham dự nếu có thay đổi
+                if (req.ParticipantUserIds.Count > 0)
                 {
-                    using var pCmd = new SqliteCommand(
-                        "INSERT INTO MeetingParticipants (MeetingId, UserId, AttendanceStatus) VALUES (@m, @u, 'Chưa xác nhận')",
-                        connection, tx);
-                    pCmd.Parameters.AddWithValue("@m", id);
-                    pCmd.Parameters.AddWithValue("@u", userId);
-                    await pCmd.ExecuteNonQueryAsync();
-                }
-            }
+                    using var delCmd = new SqliteCommand("DELETE FROM MeetingParticipants WHERE MeetingId = @m", connection, tx);
+                    delCmd.Parameters.AddWithValue("@m", id);
+                    await delCmd.ExecuteNonQueryAsync();
 
-            tx.Commit();
-            return rows > 0;
+                    foreach (var userId in req.ParticipantUserIds.Distinct())
+                    {
+                        using var pCmd = new SqliteCommand(
+                            "INSERT INTO MeetingParticipants (MeetingId, UserId, AttendanceStatus) VALUES (@m, @u, 'Chưa xác nhận')",
+                            connection, tx);
+                        pCmd.Parameters.AddWithValue("@m", id);
+                        pCmd.Parameters.AddWithValue("@u", userId);
+                        await pCmd.ExecuteNonQueryAsync();
+                    }
+                }
+
+                tx.Commit();
+                return rows > 0;
+            }
+            catch
+            {
+                tx.Rollback(); // Hoàn tác toàn bộ nếu có lỗi giữa chừng
+                throw;
+            }
         }
 
         public async Task<bool> CancelAsync(int id)
@@ -252,17 +266,24 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
             using var tx = connection.BeginTransaction();
+            try
+            {
+                using var delP = new SqliteCommand("DELETE FROM MeetingParticipants WHERE MeetingId = @id", connection, tx);
+                delP.Parameters.AddWithValue("@id", id);
+                await delP.ExecuteNonQueryAsync();
 
-            using var delP = new SqliteCommand("DELETE FROM MeetingParticipants WHERE MeetingId = @id", connection, tx);
-            delP.Parameters.AddWithValue("@id", id);
-            await delP.ExecuteNonQueryAsync();
+                using var delM = new SqliteCommand("DELETE FROM Meetings WHERE Id = @id", connection, tx);
+                delM.Parameters.AddWithValue("@id", id);
+                int rows = await delM.ExecuteNonQueryAsync();
 
-            using var delM = new SqliteCommand("DELETE FROM Meetings WHERE Id = @id", connection, tx);
-            delM.Parameters.AddWithValue("@id", id);
-            int rows = await delM.ExecuteNonQueryAsync();
-
-            tx.Commit();
-            return rows > 0;
+                tx.Commit();
+                return rows > 0;
+            }
+            catch
+            {
+                tx.Rollback(); // Hoàn tác toàn bộ nếu có lỗi giữa chừng
+                throw;
+            }
         }
     }
 }
