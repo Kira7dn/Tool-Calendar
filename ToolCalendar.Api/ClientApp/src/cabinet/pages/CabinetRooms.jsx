@@ -314,59 +314,6 @@ function DeleteConfirm({ room, onClose, onDeleted }) {
   )
 }
 
-// ─── Dropdown action menu ─────────────────────────────────────────────────────
-function ActionMenu({ room, onEdit, onDelete }) {
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    if (!open) return
-    const close = () => setOpen(false)
-    document.addEventListener('click', close, { once: true })
-    return () => document.removeEventListener('click', close)
-  }, [open])
-
-  return (
-    <div className="relative">
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          setOpen((v) => !v)
-        }}
-        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 transition"
-        title="Thêm tuỳ chọn"
-      >
-        <MoreVertical size={15} />
-      </button>
-      {open && (
-        <div
-          className="absolute right-0 top-9 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-30 overflow-hidden py-1"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={() => {
-              setOpen(false)
-              onEdit(room)
-            }}
-            className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
-          >
-            <Pencil size={13} className="text-blue-500" />
-            Chỉnh sửa
-          </button>
-          <button
-            onClick={() => {
-              setOpen(false)
-              onDelete(room)
-            }}
-            className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition"
-          >
-            <Trash2 size={13} />
-            Xóa phòng họp
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export function CabinetRooms() {
@@ -632,11 +579,20 @@ export function CabinetRooms() {
                           >
                             <Eye size={15} />
                           </button>
-                          <ActionMenu
-                            room={room}
-                            onEdit={(r) => setModal({ mode: 'edit', room: r })}
-                            onDelete={(r) => setDeleteTarget(r)}
-                          />
+                          <button
+                            title="Chỉnh sửa"
+                            onClick={() => setModal({ mode: 'edit', room })}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 hover:text-blue-600 transition"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            title="Xóa phòng họp"
+                            onClick={() => setDeleteTarget(room)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 hover:text-red-600 transition"
+                          >
+                            <Trash2 size={15} />
+                          </button>
                         </div>
                       </td>
                     </tr>

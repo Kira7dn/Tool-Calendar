@@ -311,3 +311,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(core/ui): sửa 500 auth rooms, chống crash trắng màn hình, sửa UI chuông"`
 
+### [2026-07-07 09:45] Sửa lỗi menu thao tác phòng họp bị che khuất
+- **Mô tả**: Bỏ menu dropdown 3 chấm (ActionMenu) ở màn hình Quản lý phòng họp do bị cắt khuất bởi thuộc tính `overflow-x-auto` của table. Thay thế bằng các nút bấm inline (Sửa, Xóa) hiển thị trực tiếp trên dòng, giúp người dùng dễ dàng thao tác mà không bị lỗi hiển thị.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetRooms.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(cabinet/rooms): replace action menu with inline buttons to prevent overflow clipping"`
