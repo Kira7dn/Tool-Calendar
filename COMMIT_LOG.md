@@ -537,3 +537,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/cabinet/components/MeetingModal.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(cabinet-meetings): add external participants text field to meetings"`
+
+### [2026-07-07 14:07] Sửa lỗi mở modal chỉnh sửa phiên họp không hiển thị danh sách tham dự đã lưu
+- **Mô tả**: Khi gọi API lấy lịch (`/schedule`), backend không trả về `Participants` để tránh N+1 queries. Do đó khi click vào calendar event để mở `MeetingModal`, danh sách thành viên bị trống. Đã cập nhật sự kiện `eventClick` ở `CabinetSchedule.jsx` để fetch thông tin đầy đủ của meeting (qua `GET /{id}`) trước khi mở modal, đảm bảo state hiển thị chính xác các thành viên đã được chọn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(cabinet-schedule): fetch full meeting details on eventClick to properly load participant list"`

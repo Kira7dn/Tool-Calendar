@@ -198,7 +198,14 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
               allDaySlot={false}
               nowIndicator={true}
               eventClick={(info) => {
-                setModal({ mode: 'edit', meeting: info.event.extendedProps.meeting })
+                // Fetch full meeting details (including participants) before opening modal
+                fetch(`/api/phonghopkhonggiayto/meetings/${info.event.id}`, { headers: AUTH_HEADER() })
+                  .then((r) => r.json())
+                  .then((json) => {
+                    const fullMeeting = json.data || json
+                    setModal({ mode: 'edit', meeting: fullMeeting })
+                  })
+                  .catch((err) => console.error('Failed to fetch meeting details', err))
               }}
               eventContent={(arg) => (
                 <div className="px-1.5 py-1 text-[11px] text-white h-full overflow-hidden rounded cursor-pointer hover:brightness-90 transition-all">
