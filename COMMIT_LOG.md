@@ -523,3 +523,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetSchedule.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(cabinet-schedule): remove extra padding and borders from calendar grid"`
+
+### [2026-07-07 11:11] Thêm thanh tìm kiếm người tham dự vào form tạo phiên họp
+- **Mô tả**: Bổ sung ô input để tìm kiếm người tham dự (theo tên, username, tên phòng ban) giúp người dùng dễ dàng chọn thành viên khi danh sách quá dài. Đồng thời sửa URL API từ `/api/admin/users` sang `/api/users` để lấy được dữ liệu. Bổ sung sửa lỗi múi giờ khi chọn ngày trên trình duyệt, không convert sang UTC để tránh lệch khung giờ ở thư viện Lịch.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/components/MeetingModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet-meetings): add search input for participants list and fix users api endpoint"`

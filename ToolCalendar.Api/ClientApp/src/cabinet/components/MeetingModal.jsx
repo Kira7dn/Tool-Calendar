@@ -37,6 +37,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [activeSection, setActiveSection] = useState('basic')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const [form, setForm] = useState({
     title: meeting?.title || '',
@@ -61,7 +62,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
       fetch('/api/phonghopkhonggiayto/rooms', { headers: AUTH_HEADER() })
         .then((r) => r.json())
         .then((j) => setRooms(Array.isArray(j) ? j : j.data || [])),
-      fetch('/api/admin/users', { headers: AUTH_HEADER() })
+      fetch('/api/users', { headers: AUTH_HEADER() })
         .then((r) => r.json())
         .then((j) => setUsers(Array.isArray(j) ? j : j.data || [])),
     ])
@@ -106,8 +107,8 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
 
     const body = {
       title: form.title.trim(),
-      startTime: new Date(form.startTime).toISOString(),
-      endTime: new Date(form.endTime).toISOString(),
+      startTime: form.startTime.length === 16 ? form.startTime + ':00' : form.startTime,
+      endTime: form.endTime.length === 16 ? form.endTime + ':00' : form.endTime,
       roomId: parseInt(form.roomId),
       location: form.location.trim() || null,
       presider: form.presider.trim() || null,
@@ -371,8 +372,8 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
 
             {/* ── SECTION: Danh sách tham dự ── */}
             {activeSection === 'participants' && (
-              <div>
-                <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col h-[400px]">
+                <div className="flex items-center justify-between mb-3 shrink-0">
                   <p className="text-sm font-semibold text-gray-700">
                     Chọn thành viên tham dự
                     {form.participantUserIds.length > 0 && (
@@ -390,6 +391,16 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
                   </button>
                 </div>
 
+                <div className="mb-3 shrink-0">
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm người tham dự (tên, đơn vị...)"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8102e]/25 focus:border-[#c8102e] transition"
+                  />
+                </div>
+
                 {loadingOptions ? (
                   <div className="space-y-2">
                     {[1, 2, 3].map((i) => (
@@ -401,39 +412,49 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
                     Không có dữ liệu người dùng
                   </p>
                 ) : (
-                  <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
-                    {users.map((u) => {
-                      const selected = form.participantUserIds.includes(u.id)
-                      return (
-                        <button
-                          key={u.id}
-                          type="button"
-                          onClick={() => toggleParticipant(u.id)}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition text-left ${
-                            selected
-                              ? 'bg-red-50 border-[#c8102e] text-[#c8102e]'
-                              : 'border-gray-200 hover:bg-gray-50 text-gray-700'
-                          }`}
-                        >
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
-                              selected ? 'bg-[#c8102e] text-white' : 'bg-gray-200 text-gray-600'
+                  <div className="space-y-1.5 flex-1 overflow-y-auto pr-1">
+                    {users
+                      .filter((u) => {
+                        if (!searchQuery) return true
+                        const q = searchQuery.toLowerCase()
+                        return (
+                          (u.fullName || '').toLowerCase().includes(q) ||
+                          (u.username || '').toLowerCase().includes(q) ||
+                          (u.departmentName || '').toLowerCase().includes(q)
+                        )
+                      })
+                      .map((u) => {
+                        const selected = form.participantUserIds.includes(u.id)
+                        return (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => toggleParticipant(u.id)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition text-left ${
+                              selected
+                                ? 'bg-red-50 border-[#c8102e] text-[#c8102e]'
+                                : 'border-gray-200 hover:bg-gray-50 text-gray-700'
                             }`}
                           >
-                            {(u.fullName || u.username || '?')[0].toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">
-                              {u.fullName || u.username}
-                            </p>
-                            {u.departmentName && (
-                              <p className="text-xs text-gray-400 truncate">{u.departmentName}</p>
-                            )}
-                          </div>
-                          {selected && <CheckCircle2 size={15} className="shrink-0" />}
-                        </button>
-                      )
-                    })}
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
+                                selected ? 'bg-[#c8102e] text-white' : 'bg-gray-200 text-gray-600'
+                              }`}
+                            >
+                              {(u.fullName || u.username || '?')[0].toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">
+                                {u.fullName || u.username}
+                              </p>
+                              {u.departmentName && (
+                                <p className="text-xs text-gray-400 truncate">{u.departmentName}</p>
+                              )}
+                            </div>
+                            {selected && <CheckCircle2 size={15} className="shrink-0" />}
+                          </button>
+                        )
+                      })}
                   </div>
                 )}
               </div>
