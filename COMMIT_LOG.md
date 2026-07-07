@@ -1,8 +1,19 @@
-# Nhật ký Thay đổi Mã Nguồn (Commit Log)
+﻿# Nhật ký Thay đổi Mã Nguồn (Commit Log)
 
 Tệp này lưu trữ lịch sử các thay đổi và tính năng mới được thêm vào hệ thống để AI có thể nhanh chóng nắm bắt ngữ cảnh mà không cần quét lại toàn bộ mã nguồn.
 
 ## Lịch sử
+
+### [2026-07-08 01:30] Cập nhật và xuất dữ liệu DB mới nhất
+- **Mô tả**: Xóa các file .sql cũ (fix_data, recover, migrate_meetings_v2, schema) theo yêu cầu và xuất dữ liệu DB mới nhất (documents.db) ra file seed_db.sql để cập nhật dữ liệu trên source code.
+- **Tệp thay đổi**:
+  - `seed_db.sql` (Sửa đổi)
+  - `fix_data.sql` (Xóa)
+  - `data_dump/migrate_meetings_v2.sql` (Xóa)
+  - `data_dump/recover.sql` (Xóa)
+  - `data_dump/schema.sql` (Xóa)
+- **Lệnh git commit**: `git commit -m "chore(db): export latest database to seed_db.sql and remove obsolete sql scripts"`
+
 
 ### [2026-07-03 16:27] Sửa lỗi phông chữ khi xuất file CSV
 - **Mô tả**: Sửa chuỗi tiêu đề CSV trong `DocumentRepository.cs` bị lỗi hiển thị phông chữ (mojibake) thành chuẩn tiếng Việt có dấu.
@@ -607,8 +618,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "perf(all): loại bỏ triệt để SELECT * trong toàn bộ Repositories"`
 
-### [2026-07-07 14:55] fix(meeting): S?a l?i crash API khi load danh s�ch l?ch h?p
-- **M� t?**: B? sung m.ExternalParticipants v�o c�u truy v?n BASE_SELECT trong MeetingRepository.cs. Tru?c d� do lo?i b? SELECT * nhung s�t c?t n�y khi?n SqliteDataReader quang exception IndexOutOfRangeException d?n d?n trang L?ch h?p b? crash kh�ng hi?n th? d? li?u.
+### [2026-07-07 14:55] fix(meeting): S?a l?i crash API khi load danh s�ch l?ch h?p
+- **M� t?**: B? sung m.ExternalParticipants v�o c�u truy v?n BASE_SELECT trong MeetingRepository.cs. Tru?c d� do lo?i b? SELECT * nhung s�t c?t n�y khi?n SqliteDataReader quang exception IndexOutOfRangeException d?n d?n trang L?ch h?p b? crash kh�ng hi?n th? d? li?u.
 - **T?p thay d?i**:
   - ToolCalendar.Core/Data/Repositories/MeetingRepository.cs (S?a d?i)
 - **L?nh git commit**: git commit -m "fix(meeting): add missing ExternalParticipants column to BASE_SELECT"
@@ -621,8 +632,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi hiển thị mờ nhạt phần text sự kiện trong view tháng"`
 
 ### [2026-07-07 16:00] fix(ui): add Tham gia button and handle 401 globally
-- **M� t?**: B? sung n�t 'V�o h?p' cho c�c phi�n h?p dang di?n ra t?i Dashboard. �?ng th?i, th�m x? l� m� l?i 401 Unauthorized t?i Global Fetch Interceptor (main.jsx) d? t? d?ng dang xu?t ngu?i d�ng n?u SecurityStamp kh�ng kh?p. L?i n�y khi?n API tr? v? d? li?u r?ng v� Dashboard hi?n th? 0 cu?c h?p, 0 danh s�ch tham d?.
+- **M� t?**: B? sung n�t 'V�o h?p' cho c�c phi�n h?p dang di?n ra t?i Dashboard. �?ng th?i, th�m x? l� m� l?i 401 Unauthorized t?i Global Fetch Interceptor (main.jsx) d? t? d?ng dang xu?t ngu?i d�ng n?u SecurityStamp kh�ng kh?p. L?i n�y khi?n API tr? v? d? li?u r?ng v� Dashboard hi?n th? 0 cu?c h?p, 0 danh s�ch tham d?.
 - **T?p thay d?i**:
   - `ToolCalendar.Api/ClientApp/src/main.jsx` (S?a d?i)
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetHome.jsx` (S?a d?i)
 - **L?nh git commit**: `git commit -m "fix(ui): add Tham gia button and handle 401 globally"`
+
