@@ -4,6 +4,13 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## Lịch sử
 
+### [2026-07-08 09:40] Thêm chức năng Xóa phiên họp trong popup chỉnh sửa
+- **Mô tả**: Thêm nút Xóa (Delete) vào MeetingModal khi chỉnh sửa sự kiện đã có. Gọi API DELETE và làm mới danh sách cuộc họp khi xóa thành công.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/components/MeetingModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): add delete button and functionality to meeting edit modal"`
+
+
 ### [2026-07-08 01:30] Cập nhật và xuất dữ liệu DB mới nhất
 - **Mô tả**: Xóa các file .sql cũ (fix_data, recover, migrate_meetings_v2, schema) theo yêu cầu và xuất dữ liệu DB mới nhất (documents.db) ra file seed_db.sql để cập nhật dữ liệu trên source code.
 - **Tệp thay đổi**:
@@ -637,4 +644,5 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/main.jsx` (S?a d?i)
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetHome.jsx` (S?a d?i)
 - **L?nh git commit**: `git commit -m "fix(ui): add Tham gia button and handle 401 globally"`
+
 

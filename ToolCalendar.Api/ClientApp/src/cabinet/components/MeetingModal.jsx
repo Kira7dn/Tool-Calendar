@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Loader2,
   ChevronDown,
+  Trash2,
 } from 'lucide-react'
 
 const AUTH_HEADER = () => ({
@@ -35,6 +36,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
   const [users, setUsers] = useState([])
   const [loadingOptions, setLoadingOptions] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [activeSection, setActiveSection] = useState('basic')
   const [searchQuery, setSearchQuery] = useState('')
@@ -78,6 +80,30 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
         ? f.participantUserIds.filter((id) => id !== userId)
         : [...f.participantUserIds, userId],
     }))
+  }
+
+  const handleDelete = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa phiên họp này?')) return
+
+    setDeleting(true)
+    setError('')
+
+    try {
+      const res = await fetch(`/api/phonghopkhonggiayto/meetings/${meeting.id}`, {
+        method: 'DELETE',
+        headers: AUTH_HEADER(),
+      })
+      const json = await res.json()
+      if (!res.ok || json.success === false) {
+        setError(json.message || 'Không thể xóa phiên họp.')
+        setDeleting(false)
+        return
+      }
+      onSaved(null, 'deleted')
+    } catch {
+      setError('Không thể kết nối đến máy chủ.')
+      setDeleting(false)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -485,30 +511,49 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
                 {error}
               </div>
             )}
-            <div className="flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition font-medium"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex items-center gap-2 px-5 py-2 text-sm bg-[#c8102e] hover:bg-[#a50e27] text-white rounded-lg font-semibold transition disabled:opacity-60"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    Đang lưu...
-                  </>
-                ) : isEdit ? (
-                  'Lưu thay đổi'
-                ) : (
-                  'Tạo phiên họp'
+            <div className="flex items-center justify-between">
+              <div>
+                {isEdit && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting || saving}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg font-medium transition disabled:opacity-60"
+                  >
+                    {deleting ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
+                    Xóa
+                  </button>
                 )}
-              </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition font-medium"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving || deleting}
+                  className="flex items-center gap-2 px-5 py-2 text-sm bg-[#c8102e] hover:bg-[#a50e27] text-white rounded-lg font-semibold transition disabled:opacity-60"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Đang lưu...
+                    </>
+                  ) : isEdit ? (
+                    'Lưu thay đổi'
+                  ) : (
+                    'Tạo phiên họp'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </form>
