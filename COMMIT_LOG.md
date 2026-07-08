@@ -1,3 +1,10 @@
+### [2026-07-08 17:16] Thiết kế giao diện chi tiết Thông tin phiên họp
+- **Mô tả**: Xây dựng component `MeetingDetail.jsx` để hiển thị chi tiết Thông tin phiên họp khi click vào icon "Con mắt" ở bảng danh sách. Giao diện được thiết kế gồm các Accordion có thể đóng mở: Thông tin chi tiết, Nội dung họp (kèm danh sách tài liệu tải xuống), Danh sách biểu quyết, Đăng ký phát biểu, Tham gia góp ý. Tích hợp empty state illustration khi không có dữ liệu. Do backend chưa cung cấp đủ các trường, component hiện đang sử dụng mock data để khớp UI 100% với bản thiết kế.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingDetail.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): thêm màn hình chi tiết thông tin phiên họp và các accordion"`
+
 ### [2026-07-08 17:11] Cải thiện UI: Chuyển nút Về hệ thống chính lên header
 - **Mô tả**: Xóa nút "Về hệ thống chính" khỏi header với text cũ gây tốn diện tích, thay bằng icon ArrowLeft tinh gọn, luôn hiển thị và có tooltip "Về Hệ thống chính". Điều này giúp người dùng dễ dàng chuyển về hệ thống chính từ trang chủ mà không bị ẩn trong sidebar.
 - **Tệp thay đổi**:

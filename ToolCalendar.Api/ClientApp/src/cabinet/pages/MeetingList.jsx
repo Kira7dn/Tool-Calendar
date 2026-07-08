@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { MeetingDetail } from './MeetingDetail'
 
 const AUTH_HEADER = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
@@ -65,6 +66,7 @@ export function MeetingList() {
   const [meetings, setMeetings] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedMeeting, setSelectedMeeting] = useState(null)
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -103,6 +105,10 @@ export function MeetingList() {
   )
 
   const totalPages = Math.ceil(filteredMeetings.length / pageSize)
+
+  if (selectedMeeting) {
+    return <MeetingDetail meeting={selectedMeeting} onBack={() => setSelectedMeeting(null)} />
+  }
 
   return (
     <div className="flex-1 flex flex-col bg-gray-50 h-full overflow-hidden">
@@ -400,7 +406,10 @@ export function MeetingList() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <button className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition">
+                            <button
+                              onClick={() => setSelectedMeeting(m)}
+                              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition"
+                            >
                               <Eye size={16} />
                             </button>
                             <button className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition">
