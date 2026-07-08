@@ -1,3 +1,9 @@
+### [2026-07-08 17:35] Cập nhật layout Modal Giao diện & Phiên bản khớp với thiết kế
+- **Mô tả**: Sửa layout của modal Giao diện để phần mô tả và các lựa chọn màu sắc nằm trên các hàng riêng biệt, có vạch ngăn cách màu xanh nhạt. Cập nhật ngày phiên bản từ cứng "09.09.2024" sang "09.07.2026" (ngày mai) theo đúng nghiệp vụ yêu cầu, đồng thời điều chỉnh badge Fixed thành màu tím và cập nhật kích thước header.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(cabinet): điều chỉnh layout và dữ liệu hiển thị modal giao diện, phiên bản"`
+
 ### [2026-07-08 17:33] Thiết kế lại Dashboard (CabinetHome) theo giao diện mới
 - **Mô tả**: Tái cấu trúc lại trang chủ (Dashboard) để khớp với giao diện yêu cầu. Cột bên trái bổ sung thêm các widget "Phiên họp cần chuẩn bị tài liệu", "Tổng số phiếu lấy ý kiến". Cột bên phải bổ sung danh sách "Phiên họp chưa xác nhận", "Phiếu lấy ý kiến chưa trả lời". Xây dựng DatePicker Popover cho chức năng chọn tháng/năm ở widget Thống kê với tính năng hiển thị năm và lưới tháng. Cập nhật thiết kế doughnut chart và empty state (Không có dữ liệu).
 - **Tệp thay đổi**:

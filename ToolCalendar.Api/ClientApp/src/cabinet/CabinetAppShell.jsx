@@ -376,41 +376,48 @@ export function CabinetAppShell({ children }) {
       {/* Theme Modal */}
       <Dialog open={isThemeModalOpen} onOpenChange={setIsThemeModalOpen}>
         <DialogContent className="max-w-[600px] p-0 overflow-hidden border-0 rounded-xl">
-          <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-white">
+          <DialogHeader className="px-6 py-4 bg-white relative">
             <DialogTitle className="text-[#1a202c] text-xl font-bold">
               Thay đổi màu sắc giao diện
             </DialogTitle>
           </DialogHeader>
-          <div className="p-6 bg-white space-y-6">
-            <p className="text-sm text-gray-500 italic">
+          <div className="h-3 bg-[#f0f4f8]" />
+          <div className="p-6 bg-white">
+            <p className="text-sm text-gray-500 italic mb-8">
               Chọn màu bên dưới để thay đổi màu sắc giao diện.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <div className="w-6 h-6 rounded bg-[#c8102e] flex items-center justify-center border border-[#c8102e]">
+            <div className="flex flex-col sm:flex-row gap-12 items-start justify-center">
+              <label className="flex items-start gap-3 cursor-pointer group w-[140px]">
+                <div className="w-6 h-6 shrink-0 rounded bg-[#c8102e] flex items-center justify-center">
                   <Check size={14} className="text-white" />
                 </div>
-                <span className="text-[#c8102e] font-medium group-hover:text-[#a50e27] transition-colors">
-                  Đỏ Rouge Écarlate
+                <span className="text-[#c8102e] font-medium group-hover:text-[#a50e27] transition-colors leading-tight">
+                  Đỏ Rouge
+                  <br />
+                  Écarlate
                 </span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <div className="w-6 h-6 rounded bg-[#004282] border border-gray-200" />
-                <span className="text-[#004282] font-medium group-hover:text-[#002f5e] transition-colors">
-                  Xanh Dark Cerulean
+              <label className="flex items-start gap-3 cursor-pointer group w-[140px]">
+                <div className="w-6 h-6 shrink-0 rounded bg-[#004282] border border-gray-200" />
+                <span className="text-[#004282] font-medium group-hover:text-[#002f5e] transition-colors leading-tight">
+                  Xanh Dark
+                  <br />
+                  Cerulean
                 </span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <div className="w-6 h-6 rounded bg-[#0061ff] border border-gray-200" />
-                <span className="text-[#0061ff] font-medium group-hover:text-[#004bcc] transition-colors">
-                  Xanh Brandeis
+              <label className="flex items-start gap-3 cursor-pointer group w-[140px]">
+                <div className="w-6 h-6 shrink-0 rounded bg-[#0061ff] border border-gray-200" />
+                <span className="text-[#0061ff] font-medium group-hover:text-[#004bcc] transition-colors leading-tight">
+                  Xanh
+                  <br />
+                  Brandeis
                 </span>
               </label>
             </div>
-            <div className="flex justify-center pt-4">
+            <div className="flex justify-center pt-10">
               <Button
                 onClick={() => setIsThemeModalOpen(false)}
-                className="bg-[#c8102e] hover:bg-[#a50e27] text-white px-8 rounded-lg font-bold"
+                className="bg-[#c8102e] hover:bg-[#a50e27] text-white px-8 py-2 h-auto rounded-lg font-bold"
               >
                 Đóng
               </Button>
@@ -422,28 +429,29 @@ export function CabinetAppShell({ children }) {
       {/* Version Modal */}
       <Dialog open={isVersionModalOpen} onOpenChange={setIsVersionModalOpen}>
         <DialogContent className="max-w-[500px] p-0 overflow-hidden border-0 rounded-xl">
-          <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-white">
+          <DialogHeader className="px-6 py-4 bg-white relative">
             <DialogTitle className="text-[#1a202c] text-xl font-bold">Phiên bản</DialogTitle>
           </DialogHeader>
-          <div className="p-6 bg-white space-y-4">
-            <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-bold text-[#1a202c]">1.0</span>
-              <span className="text-gray-500 font-medium">09.09.2024</span>
+          <div className="h-3 bg-[#f0f4f8]" />
+          <div className="p-8 bg-white space-y-4">
+            <div className="flex items-end gap-3 mb-6">
+              <span className="text-[40px] leading-none font-bold text-[#1a202c]">1.0</span>
+              <span className="text-gray-500 font-medium mb-1">09.07.2026</span>
             </div>
 
-            <div className="space-y-3 pt-2">
-              <span className="inline-block px-3 py-1 bg-purple-700 text-white text-xs font-bold rounded-md">
+            <div className="space-y-4">
+              <span className="inline-block px-4 py-1.5 bg-[#9300d3] text-white text-xs font-bold rounded-lg">
                 Fixed
               </span>
-              <ul className="list-disc list-inside space-y-2 text-[#1a202c] font-medium pl-1">
+              <ul className="list-disc list-inside space-y-2 text-[#1a202c]">
                 <li className="marker:text-gray-400">Hoàn thiện giao diện theo chuẩn UI</li>
               </ul>
             </div>
 
-            <div className="flex justify-center pt-6 pb-2 border-t border-gray-100 mt-6">
+            <div className="flex justify-center pt-8 mt-6 border-t border-gray-100">
               <Button
                 onClick={() => setIsVersionModalOpen(false)}
-                className="bg-[#c8102e] hover:bg-[#a50e27] text-white px-8 rounded-lg font-bold"
+                className="bg-[#c8102e] hover:bg-[#a50e27] text-white px-10 py-2 h-auto rounded-lg font-bold"
               >
                 Đóng
               </Button>
