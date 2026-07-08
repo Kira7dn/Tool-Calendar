@@ -1,3 +1,9 @@
+### [2026-07-08 17:11] Cải thiện UI: Chuyển nút Về hệ thống chính lên header
+- **Mô tả**: Xóa nút "Về hệ thống chính" khỏi header với text cũ gây tốn diện tích, thay bằng icon ArrowLeft tinh gọn, luôn hiển thị và có tooltip "Về Hệ thống chính". Điều này giúp người dùng dễ dàng chuyển về hệ thống chính từ trang chủ mà không bị ẩn trong sidebar.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(cabinet): chuyển nút về hệ thống chính thành icon trên header"`
+
 ### [2026-07-08 17:02] Thiết kế giao diện Quản lý Danh sách phiên họp
 - **Mô tả**: Bổ sung tab "Quản lý họp" vào menu chính. Xây dựng trang "Danh sách phiên họp" với đầy đủ 2 tab nhỏ (Cá nhân được mời / Cần chuẩn bị tài liệu), thẻ thống kê trạng thái tham gia (xanh, cam, đỏ), bảng dữ liệu có phân trang, tính năng popover để mở bộ lọc nâng cao và bộ lọc thời gian. Giao diện được clone chính xác theo thiết kế với các thành phần từ thư viện Lucide, Tailwind và Shadcn (Select, Popover).
 - **Tệp thay đổi**:
