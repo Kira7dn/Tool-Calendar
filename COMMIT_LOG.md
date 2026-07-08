@@ -1,4 +1,10 @@
-﻿# Nhật ký Thay đổi Mã Nguồn (Commit Log)
+﻿### [2026-07-08 15:22] Xóa toàn bộ văn bản và xuất file CSDL mới
+- **Mô tả**: Xóa sạch toàn bộ dữ liệu mẫu về văn bản (bảng Documents, Comments, DocumentRoutings, Notifications, v.v.) trong CSDL để chuẩn bị cho dữ liệu mới, sau đó xuất lại file seed_db.sql.
+- **Tệp thay đổi**:
+  - seed_db.sql (Sửa đổi)
+- **Lệnh git commit**: git commit -m "chore(db): clear document data and export new seed_db.sql"
+
+# Nhật ký Thay đổi Mã Nguồn (Commit Log)
 
 Tệp này lưu trữ lịch sử các thay đổi và tính năng mới được thêm vào hệ thống để AI có thể nhanh chóng nắm bắt ngữ cảnh mà không cần quét lại toàn bộ mã nguồn.
 
@@ -644,5 +650,6 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/main.jsx` (S?a d?i)
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetHome.jsx` (S?a d?i)
 - **L?nh git commit**: `git commit -m "fix(ui): add Tham gia button and handle 401 globally"`
+
 
 
