@@ -16,6 +16,7 @@ import {
   ChevronDown,
   Trash2,
 } from 'lucide-react'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 
 const AUTH_HEADER = () => ({
   'Content-Type': 'application/json',
@@ -40,6 +41,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
   const [error, setError] = useState('')
   const [activeSection, setActiveSection] = useState('basic')
   const [searchQuery, setSearchQuery] = useState('')
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
   const [form, setForm] = useState({
     title: meeting?.title || '',
@@ -83,8 +85,6 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
   }
 
   const handleDelete = async () => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa phiên họp này?')) return
-
     setDeleting(true)
     setError('')
 
@@ -97,12 +97,15 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
       if (!res.ok || json.success === false) {
         setError(json.message || 'Không thể xóa phiên họp.')
         setDeleting(false)
+        setShowConfirmDelete(false)
         return
       }
+      setShowConfirmDelete(false)
       onSaved(null, 'deleted')
     } catch {
       setError('Không thể kết nối đến máy chủ.')
       setDeleting(false)
+      setShowConfirmDelete(false)
     }
   }
 
@@ -516,7 +519,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
                 {isEdit && (
                   <button
                     type="button"
-                    onClick={handleDelete}
+                    onClick={() => setShowConfirmDelete(true)}
                     disabled={deleting || saving}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg font-medium transition disabled:opacity-60"
                   >
@@ -558,6 +561,15 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
           </div>
         </form>
       </div>
+
+      <ConfirmationModal
+        open={showConfirmDelete}
+        onOpenChange={setShowConfirmDelete}
+        title="Xóa phiên họp"
+        description="Bạn có chắc chắn muốn xóa phiên họp này? Thao tác này không thể hoàn tác."
+        onConfirm={handleDelete}
+        isLoading={deleting}
+      />
     </div>
   )
 }

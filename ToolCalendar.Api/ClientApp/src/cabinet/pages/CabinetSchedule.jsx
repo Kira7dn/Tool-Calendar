@@ -6,6 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { MeetingModal } from '../components/MeetingModal'
+import { CabinetLeaderSchedule } from './CabinetLeaderSchedule'
 
 const AUTH_HEADER = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
@@ -97,6 +98,10 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
     { key: 'timeGridWeek', label: 'Tuần' },
     { key: 'dayGridMonth', label: 'Tháng' },
   ]
+
+  if (scheduleType === 'leader') {
+    return <CabinetLeaderSchedule />
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -200,7 +205,9 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
               eventDisplay="block"
               eventClick={(info) => {
                 // Fetch full meeting details (including participants) before opening modal
-                fetch(`/api/phonghopkhonggiayto/meetings/${info.event.id}`, { headers: AUTH_HEADER() })
+                fetch(`/api/phonghopkhonggiayto/meetings/${info.event.id}`, {
+                  headers: AUTH_HEADER(),
+                })
                   .then((r) => r.json())
                   .then((json) => {
                     const fullMeeting = json.data || json
@@ -209,7 +216,7 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
                   .catch((err) => console.error('Failed to fetch meeting details', err))
               }}
               eventContent={(arg) => (
-                <div 
+                <div
                   className="px-1.5 py-1 text-[11px] text-white h-full w-full overflow-hidden rounded cursor-pointer hover:brightness-90 transition-all"
                   style={{ backgroundColor: arg.event.backgroundColor || '#c8102e' }}
                 >

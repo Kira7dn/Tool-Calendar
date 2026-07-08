@@ -1,3 +1,11 @@
+### [2026-07-08 16:53] Thiết kế lại giao diện Lịch họp lãnh đạo theo thiết kế dạng danh sách Accordion
+- **Mô tả**: Thay thế component FullCalendar ở tab "Lịch họp lãnh đạo" bằng một giao diện danh sách tuần hoàn toàn mới, hỗ trợ nhóm các cuộc họp theo ngày bằng Accordion (đóng/mở), bổ sung chức năng tìm kiếm, chuyển tuần, filter theo đúng thiết kế được yêu cầu. Giao diện thay thế component ConfirmationModal đẹp mắt cho thao tác xóa thay vì dùng window.confirm mặc định.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/components/MeetingModal.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetLeaderSchedule.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): thiết kế giao diện danh sách Accordion cho lịch họp lãnh đạo và nâng cấp modal xác nhận xóa"`
+
 ### [2026-07-08 15:41] Thêm 3 AI Skills vào .agents/skills/ để tối ưu cấu trúc cho AI Agent
 - **Mô tả**: Học từ cấu trúc dự án OpenClaw (enterprise-grade AI-native platform), điền vào thư mục `.agents/skills/` vốn đang trống. Thêm 3 skill chuyên biệt: (1) `tc-skill-code-review.md` — checklist tự review code cho Backend/Frontend trước mỗi commit; (2) `tc-skill-db-migration.md` — quy trình thay đổi SQLite schema an toàn không dùng EF Migration; (3) `tc-skill-api-testing.md` — hướng dẫn test API bằng curl và viết C# unit test.
 - **Tệp thay đổi**:
