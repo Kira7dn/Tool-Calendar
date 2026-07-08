@@ -1,3 +1,11 @@
+### [2026-07-08 16:57] Thiết kế lại giao diện Lịch họp đơn vị theo thiết kế Calendar Grid tùy chỉnh
+- **Mô tả**: Tạo trang hiển thị riêng cho tab "Lịch họp đơn vị" sử dụng FullCalendar nhưng với cấu hình giao diện đặc biệt (dạng block theo cột thứ trong tuần, tô màu đỏ nhạt cột hôm nay, ẩn các mốc thời gian giờ) sát với bản thiết kế. Bổ sung các view Tuần, Tháng, Năm. Cài đặt thêm plugin `@fullcalendar/multimonth` để hỗ trợ chế độ xem Năm.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/package.json` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetUnitSchedule.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): thiết kế lưới lịch tùy chỉnh cho tab lịch họp đơn vị"`
+
 ### [2026-07-08 16:53] Thiết kế lại giao diện Lịch họp lãnh đạo theo thiết kế dạng danh sách Accordion
 - **Mô tả**: Thay thế component FullCalendar ở tab "Lịch họp lãnh đạo" bằng một giao diện danh sách tuần hoàn toàn mới, hỗ trợ nhóm các cuộc họp theo ngày bằng Accordion (đóng/mở), bổ sung chức năng tìm kiếm, chuyển tuần, filter theo đúng thiết kế được yêu cầu. Giao diện thay thế component ConfirmationModal đẹp mắt cho thao tác xóa thay vì dùng window.confirm mặc định.
 - **Tệp thay đổi**:

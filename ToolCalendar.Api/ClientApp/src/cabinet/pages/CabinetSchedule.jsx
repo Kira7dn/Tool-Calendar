@@ -7,6 +7,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { MeetingModal } from '../components/MeetingModal'
 import { CabinetLeaderSchedule } from './CabinetLeaderSchedule'
+import { CabinetUnitSchedule } from './CabinetUnitSchedule'
 
 const AUTH_HEADER = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
@@ -101,6 +102,10 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
 
   if (scheduleType === 'leader') {
     return <CabinetLeaderSchedule />
+  }
+
+  if (scheduleType === 'unit') {
+    return <CabinetUnitSchedule />
   }
 
   return (
