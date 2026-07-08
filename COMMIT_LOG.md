@@ -1,3 +1,11 @@
+### [2026-07-08 17:02] Thiết kế giao diện Quản lý Danh sách phiên họp
+- **Mô tả**: Bổ sung tab "Quản lý họp" vào menu chính. Xây dựng trang "Danh sách phiên họp" với đầy đủ 2 tab nhỏ (Cá nhân được mời / Cần chuẩn bị tài liệu), thẻ thống kê trạng thái tham gia (xanh, cam, đỏ), bảng dữ liệu có phân trang, tính năng popover để mở bộ lọc nâng cao và bộ lọc thời gian. Giao diện được clone chính xác theo thiết kế với các thành phần từ thư viện Lucide, Tailwind và Shadcn (Select, Popover).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetMeetings.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Mới)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): thiết kế màn hình quản lý danh sách phiên họp"`
+
 ### [2026-07-08 16:57] Thiết kế lại giao diện Lịch họp đơn vị theo thiết kế Calendar Grid tùy chỉnh
 - **Mô tả**: Tạo trang hiển thị riêng cho tab "Lịch họp đơn vị" sử dụng FullCalendar nhưng với cấu hình giao diện đặc biệt (dạng block theo cột thứ trong tuần, tô màu đỏ nhạt cột hôm nay, ẩn các mốc thời gian giờ) sát với bản thiết kế. Bổ sung các view Tuần, Tháng, Năm. Cài đặt thêm plugin `@fullcalendar/multimonth` để hỗ trợ chế độ xem Năm.
 - **Tệp thay đổi**:

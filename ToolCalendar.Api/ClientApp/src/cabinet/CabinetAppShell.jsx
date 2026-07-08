@@ -17,12 +17,16 @@ import {
   Settings,
   BookOpen,
   ShieldCheck,
+  MessageSquare,
+  List,
+  Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CabinetHome } from './pages/CabinetHome'
 import { CabinetSchedule } from './pages/CabinetSchedule'
 import { CabinetRooms } from './pages/CabinetRooms'
 import { CabinetQuestionnaire } from './pages/CabinetQuestionnaire'
+import { CabinetMeetings } from './pages/CabinetMeetings'
 
 // ─── Logo Block ────────────────────────────────────────────────────────────────
 function CabinetLogo({ onClick }) {
@@ -78,6 +82,7 @@ export function CabinetAppShell() {
   const NAV_ITEMS = [
     { id: 'home', icon: Home, label: 'Trang chủ' },
     { id: 'schedule', icon: Calendar, label: 'Lịch họp' },
+    { id: 'manage_meetings', icon: MessageSquare, label: 'Quản lý họp' },
     { id: 'rooms', icon: MapPin, label: 'Phòng họp' },
     { id: 'questionnaire', icon: ClipboardList, label: 'Phiếu lấy ý kiến' },
     { id: 'library', icon: BookOpen, label: 'Thư viện' },
@@ -99,8 +104,17 @@ export function CabinetAppShell() {
     { icon: Users, label: 'Quản lý yêu cầu đặt phòng' },
   ]
 
+  // ── Manage meetings sidebar ──────────────────────────────────────────────
+  const MEETINGS_SIDEBAR = [
+    { icon: List, label: 'Danh sách phiên họp' },
+    { icon: FileText, label: 'Kỷ yếu phiên họp' },
+    { icon: Search, label: 'Tra cứu kết luận phiên họp' },
+    { icon: BookOpen, label: 'Quản lý sổ tay' },
+  ]
+
   // Decide sidebar visibility
-  const hasSidebar = activeNav === 'schedule' || activeNav === 'rooms'
+  const hasSidebar =
+    activeNav === 'schedule' || activeNav === 'rooms' || activeNav === 'manage_meetings'
 
   // Current schedule type
   const currentScheduleType = SCHEDULE_SIDEBAR[activeSidebar]?.type || 'personal'
@@ -112,6 +126,8 @@ export function CabinetAppShell() {
         return <CabinetHome />
       case 'schedule':
         return <CabinetSchedule scheduleType={currentScheduleType} />
+      case 'manage_meetings':
+        return <CabinetMeetings activeTab={activeSidebar} />
       case 'rooms':
         return <CabinetRooms />
       case 'questionnaire':
@@ -220,6 +236,22 @@ export function CabinetAppShell() {
 
             {activeNav === 'rooms' &&
               ROOMS_SIDEBAR.map((item, i) => (
+                <button
+                  key={item.label}
+                  onClick={() => setActiveSidebar(i)}
+                  className={`flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-left border-b border-gray-100 transition-colors ${
+                    activeSidebar === i
+                      ? 'bg-[#c8102e] text-white'
+                      : 'text-gray-700 hover:bg-red-50 hover:text-[#c8102e]'
+                  }`}
+                >
+                  <item.icon size={16} className="shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+
+            {activeNav === 'manage_meetings' &&
+              MEETINGS_SIDEBAR.map((item, i) => (
                 <button
                   key={item.label}
                   onClick={() => setActiveSidebar(i)}
