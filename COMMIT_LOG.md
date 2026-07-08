@@ -1,3 +1,9 @@
+### [2026-07-08 17:28] Tích hợp Menu Tài khoản và Modal "Giao diện", "Phiên bản"
+- **Mô tả**: Phát triển tính năng Dropdown cho thông tin Tài khoản ở góc phải thanh Header. Menu chứa các tuỳ chọn: Hồ sơ cá nhân, Giao diện, Phiên bản và Đăng xuất. Bỏ mục "Tài liệu sử dụng" theo yêu cầu của user. Phát triển hai modal sử dụng component `Dialog`: (1) Modal thay đổi màu sắc giao diện với 3 tuỳ chọn màu sắc; (2) Modal thông tin Phiên bản (1.0 - 09.09.2024) kèm badge Fixed và nội dung. Đăng xuất được cấu hình để xóa token.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): thiết kế dropdown tài khoản và modal đổi giao diện, phiên bản"`
+
 ### [2026-07-08 17:25] Cập nhật giao diện Thông báo (Notification Popover) trên Header
 - **Mô tả**: Tích hợp component `Popover` của Shadcn UI vào icon cái chuông trên thanh Header. Khi click vào sẽ hiển thị danh sách các thông báo dưới dạng một menu dropdown có thiết kế bo góc, shadow và hover state sắc nét. Bổ sung thêm badge "99+" màu đỏ cạnh biểu tượng chuông.
 - **Tệp thay đổi**:

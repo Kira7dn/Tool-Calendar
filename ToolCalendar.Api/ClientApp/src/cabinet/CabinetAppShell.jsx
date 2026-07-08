@@ -21,8 +21,12 @@ import {
   List,
   Search,
   MoreVertical,
+  Tag,
+  LogOut,
+  Check,
 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { CabinetHome } from './pages/CabinetHome'
 import { CabinetSchedule } from './pages/CabinetSchedule'
@@ -55,13 +59,16 @@ function CabinetLogo({ onClick }) {
 }
 
 // ─── Main Shell ────────────────────────────────────────────────────────────────
-export function CabinetAppShell() {
+export function CabinetAppShell({ children }) {
   // Active nav tab (top bar)
   const [activeNav, setActiveNav] = useState('home')
   // Active sidebar item — for schedule tabs
   const [activeSidebar, setActiveSidebar] = useState(0)
   // User info from localStorage
   const [userName, setUserName] = useState('Người dùng')
+  // Modals state
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false)
+  const [isVersionModalOpen, setIsVersionModalOpen] = useState(false)
 
   useEffect(() => {
     try {
@@ -237,58 +244,59 @@ export function CabinetAppShell() {
                     <MoreVertical size={16} />
                   </button>
                 </div>
-
-                {/* Read item */}
-                <div className="flex gap-3 px-4 py-3 bg-white border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer relative">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm text-[#1a202c] leading-snug pr-4">
-                      Đồng chí đã được mời tham gia phiên họp{' '}
-                      <span className="font-bold">
-                        Hội nghị sơ kết đánh giá kết quả 6 tháng đầu năm về triển khai Nghị quyết số
-                        57-NQ/TW, ngày 22/12/2024 của Bộ Chính trị về đột phá phát triển khoa học,
-                        công nghệ, đổi mới sáng tạo và chuyển đổi số quốc gia và Quyết định số
-                        204-QĐ/TW, ngày 29/11/2024 của Ban Bí thư về phê duyệt Đề án Chuyển đổi số
-                        trong các cơ quan đảng rên địa bàn phường
-                      </span>{' '}
-                      Kính đề nghị đồng chí vào phần mềm iCPV - Cabinet để xác nhận tham gia. Trân
-                      trọng!
-                    </p>
-                    <p className="text-xs text-gray-500">16:15:45 05/07/2026</p>
-                  </div>
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition">
-                    <MoreVertical size={16} />
-                  </button>
-                </div>
-
-                {/* Read item */}
-                <div className="flex gap-3 px-4 py-3 bg-white border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer relative">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm text-[#1a202c] leading-snug pr-4">
-                      Đồng chí đã được mời tham gia phiên họp{' '}
-                      <span className="font-bold">
-                        Hội nghị Thường trực Đảng ủy, Ban Thường vụ Đảng ủy nghe và cho ý kiến về
-                        một số nội dung theo quy chế làm việc
-                      </span>{' '}
-                      Kính đề nghị đồng chí...
-                    </p>
-                    <p className="text-xs text-gray-500">09:12:00 03/07/2026</p>
-                  </div>
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition">
-                    <MoreVertical size={16} />
-                  </button>
-                </div>
               </div>
             </PopoverContent>
           </Popover>
 
           <div className="w-px h-7 bg-[#a50e27] mx-1" />
-          <button className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-[#a50e27] rounded text-sm transition">
-            <div className="w-6 h-6 rounded-full bg-[#a50e27] flex items-center justify-center border border-white/30">
-              <User size={13} />
-            </div>
-            <span className="max-w-[120px] truncate">{userName}</span>
-            <ChevronDown size={12} />
-          </button>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-[#a50e27] rounded text-sm transition outline-none">
+                <div className="w-6 h-6 rounded-full bg-[#a50e27] flex items-center justify-center border border-white/30">
+                  <User size={13} />
+                </div>
+                <span className="max-w-[120px] truncate">{userName}</span>
+                <ChevronDown size={12} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-56 p-0 mt-2 shadow-xl border-gray-100 rounded-xl"
+              align="end"
+            >
+              <div className="flex flex-col py-1">
+                <button className="flex items-center gap-3 px-4 py-3 bg-[#c8102e] text-white hover:bg-[#a50e27] transition-colors text-sm font-semibold">
+                  <User size={16} />
+                  <span>Hồ sơ cá nhân</span>
+                </button>
+                <button
+                  onClick={() => setIsThemeModalOpen(true)}
+                  className="flex items-center gap-3 px-4 py-3 text-[#1a202c] hover:bg-gray-50 transition-colors text-sm font-bold"
+                >
+                  <Settings size={16} />
+                  <span>Giao diện</span>
+                </button>
+                <button
+                  onClick={() => setIsVersionModalOpen(true)}
+                  className="flex items-center gap-3 px-4 py-3 text-[#1a202c] hover:bg-gray-50 transition-colors text-sm font-bold"
+                >
+                  <Tag size={16} />
+                  <span>Phiên bản</span>
+                </button>
+                <div className="h-px bg-gray-100 my-1" />
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('auth_token')
+                    window.location.href = '/login'
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 text-[#c8102e] hover:bg-red-50 transition-colors text-sm font-bold"
+                >
+                  <LogOut size={16} />
+                  <span>Đăng xuất</span>
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </header>
 
@@ -360,8 +368,89 @@ export function CabinetAppShell() {
         )}
 
         {/* ── Main content area ─────────────────────────────────────────────── */}
-        <main className="flex-1 flex flex-col overflow-hidden">{renderPage()}</main>
+        <main className="flex-1 bg-gray-50 overflow-hidden relative">
+          {children || renderPage()}
+        </main>
       </div>
+
+      {/* Theme Modal */}
+      <Dialog open={isThemeModalOpen} onOpenChange={setIsThemeModalOpen}>
+        <DialogContent className="max-w-[600px] p-0 overflow-hidden border-0 rounded-xl">
+          <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-white">
+            <DialogTitle className="text-[#1a202c] text-xl font-bold">
+              Thay đổi màu sắc giao diện
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-6 bg-white space-y-6">
+            <p className="text-sm text-gray-500 italic">
+              Chọn màu bên dưới để thay đổi màu sắc giao diện.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <div className="w-6 h-6 rounded bg-[#c8102e] flex items-center justify-center border border-[#c8102e]">
+                  <Check size={14} className="text-white" />
+                </div>
+                <span className="text-[#c8102e] font-medium group-hover:text-[#a50e27] transition-colors">
+                  Đỏ Rouge Écarlate
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <div className="w-6 h-6 rounded bg-[#004282] border border-gray-200" />
+                <span className="text-[#004282] font-medium group-hover:text-[#002f5e] transition-colors">
+                  Xanh Dark Cerulean
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <div className="w-6 h-6 rounded bg-[#0061ff] border border-gray-200" />
+                <span className="text-[#0061ff] font-medium group-hover:text-[#004bcc] transition-colors">
+                  Xanh Brandeis
+                </span>
+              </label>
+            </div>
+            <div className="flex justify-center pt-4">
+              <Button
+                onClick={() => setIsThemeModalOpen(false)}
+                className="bg-[#c8102e] hover:bg-[#a50e27] text-white px-8 rounded-lg font-bold"
+              >
+                Đóng
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Version Modal */}
+      <Dialog open={isVersionModalOpen} onOpenChange={setIsVersionModalOpen}>
+        <DialogContent className="max-w-[500px] p-0 overflow-hidden border-0 rounded-xl">
+          <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-white">
+            <DialogTitle className="text-[#1a202c] text-xl font-bold">Phiên bản</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 bg-white space-y-4">
+            <div className="flex items-baseline gap-3">
+              <span className="text-3xl font-bold text-[#1a202c]">1.0</span>
+              <span className="text-gray-500 font-medium">09.09.2024</span>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <span className="inline-block px-3 py-1 bg-purple-700 text-white text-xs font-bold rounded-md">
+                Fixed
+              </span>
+              <ul className="list-disc list-inside space-y-2 text-[#1a202c] font-medium pl-1">
+                <li className="marker:text-gray-400">Hoàn thiện giao diện theo chuẩn UI</li>
+              </ul>
+            </div>
+
+            <div className="flex justify-center pt-6 pb-2 border-t border-gray-100 mt-6">
+              <Button
+                onClick={() => setIsVersionModalOpen(false)}
+                className="bg-[#c8102e] hover:bg-[#a50e27] text-white px-8 rounded-lg font-bold"
+              >
+                Đóng
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
