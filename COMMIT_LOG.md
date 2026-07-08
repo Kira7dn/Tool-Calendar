@@ -1,4 +1,13 @@
-﻿### [2026-07-08 15:22] Xóa toàn bộ văn bản và xuất file CSDL mới
+### [2026-07-08 15:41] Thêm 3 AI Skills vào .agents/skills/ để tối ưu cấu trúc cho AI Agent
+- **Mô tả**: Học từ cấu trúc dự án OpenClaw (enterprise-grade AI-native platform), điền vào thư mục `.agents/skills/` vốn đang trống. Thêm 3 skill chuyên biệt: (1) `tc-skill-code-review.md` — checklist tự review code cho Backend/Frontend trước mỗi commit; (2) `tc-skill-db-migration.md` — quy trình thay đổi SQLite schema an toàn không dùng EF Migration; (3) `tc-skill-api-testing.md` — hướng dẫn test API bằng curl và viết C# unit test.
+- **Tệp thay đổi**:
+  - `.agents/skills/tc-skill-code-review.md` (Mới)
+  - `.agents/skills/tc-skill-db-migration.md` (Mới)
+  - `.agents/skills/tc-skill-api-testing.md` (Mới)
+  - `COMMIT_LOG.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "docs(agents): thêm 3 AI skills chuyên biệt vào .agents/skills/"`
+
+### [2026-07-08 15:22] Xóa toàn bộ văn bản và xuất file CSDL mới
 - **Mô tả**: Xóa sạch toàn bộ dữ liệu mẫu về văn bản (bảng Documents, Comments, DocumentRoutings, Notifications, v.v.) trong CSDL để chuẩn bị cho dữ liệu mới, sau đó xuất lại file seed_db.sql.
 - **Tệp thay đổi**:
   - seed_db.sql (Sửa đổi)
