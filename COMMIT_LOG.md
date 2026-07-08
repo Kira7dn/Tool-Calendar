@@ -1,3 +1,9 @@
+### [2026-07-08 17:25] Cập nhật giao diện Thông báo (Notification Popover) trên Header
+- **Mô tả**: Tích hợp component `Popover` của Shadcn UI vào icon cái chuông trên thanh Header. Khi click vào sẽ hiển thị danh sách các thông báo dưới dạng một menu dropdown có thiết kế bo góc, shadow và hover state sắc nét. Bổ sung thêm badge "99+" màu đỏ cạnh biểu tượng chuông.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): bổ sung popover danh sách thông báo và badge 99+ ở header"`
+
 ### [2026-07-08 17:21] Thiết kế tính năng Sổ tay (Notebook Modal) trong Chi tiết phiên họp
 - **Mô tả**: Bổ sung nút "Sổ tay" dính lề phải (floating button) tại màn hình Thông tin phiên họp. Khi click sẽ mở ra Modal "Sổ tay" chứa các thông tin tóm tắt của phiên họp, danh sách ghi chú, textarea để nhập ghi chú mới và khu vực upload tài liệu đính kèm (hỗ trợ kéo thả). Giao diện Modal sử dụng `Dialog` component từ Shadcn UI, bám sát hoàn toàn với thiết kế UX/UI.
 - **Tệp thay đổi**:

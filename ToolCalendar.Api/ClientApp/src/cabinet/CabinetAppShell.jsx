@@ -20,7 +20,9 @@ import {
   MessageSquare,
   List,
   Search,
+  MoreVertical,
 } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { CabinetHome } from './pages/CabinetHome'
 import { CabinetSchedule } from './pages/CabinetSchedule'
@@ -197,10 +199,88 @@ export function CabinetAppShell() {
             <ArrowLeft size={17} />
           </button>
           <div className="w-px h-7 bg-[#a50e27] mx-1" />
-          <button className="p-2 hover:bg-[#a50e27] rounded-full relative transition">
-            <Bell size={17} />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-yellow-400 rounded-full" />
-          </button>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="p-2 hover:bg-[#a50e27] rounded-full relative transition outline-none">
+                <Bell size={17} />
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full border border-white px-1 shadow-sm">
+                  99+
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-[400px] p-0 mr-4 mt-2 shadow-xl border-gray-100 rounded-xl"
+              align="end"
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white rounded-t-xl">
+                <h3 className="font-bold text-[#1a202c] text-lg">Thông báo</h3>
+                <button className="text-sm text-gray-500 hover:text-[#c8102e] transition-colors">
+                  Đánh dấu tất cả đã đọc
+                </button>
+              </div>
+              <div className="max-h-[60vh] overflow-y-auto flex flex-col">
+                {/* Unread item */}
+                <div className="flex gap-3 px-4 py-3 bg-[#f8fafc] border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer relative">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm text-[#1a202c] leading-snug pr-4">
+                      Phiếu lấy ý kiến{' '}
+                      <span className="font-bold">
+                        VP Đảng ủy phường xin ý kiến BCĐ về phát triển khoa học, công nghệ, đổi mới
+                        sáng tạo và chuyển đổi số phường về dự thảo nội dung một số văn bản
+                      </span>{' '}
+                      đã hết hạn trả lời.
+                    </p>
+                    <p className="text-xs text-gray-500">11:30:22 06/07/2026</p>
+                  </div>
+                  <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition">
+                    <MoreVertical size={16} />
+                  </button>
+                </div>
+
+                {/* Read item */}
+                <div className="flex gap-3 px-4 py-3 bg-white border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer relative">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm text-[#1a202c] leading-snug pr-4">
+                      Đồng chí đã được mời tham gia phiên họp{' '}
+                      <span className="font-bold">
+                        Hội nghị sơ kết đánh giá kết quả 6 tháng đầu năm về triển khai Nghị quyết số
+                        57-NQ/TW, ngày 22/12/2024 của Bộ Chính trị về đột phá phát triển khoa học,
+                        công nghệ, đổi mới sáng tạo và chuyển đổi số quốc gia và Quyết định số
+                        204-QĐ/TW, ngày 29/11/2024 của Ban Bí thư về phê duyệt Đề án Chuyển đổi số
+                        trong các cơ quan đảng rên địa bàn phường
+                      </span>{' '}
+                      Kính đề nghị đồng chí vào phần mềm iCPV - Cabinet để xác nhận tham gia. Trân
+                      trọng!
+                    </p>
+                    <p className="text-xs text-gray-500">16:15:45 05/07/2026</p>
+                  </div>
+                  <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition">
+                    <MoreVertical size={16} />
+                  </button>
+                </div>
+
+                {/* Read item */}
+                <div className="flex gap-3 px-4 py-3 bg-white border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer relative">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm text-[#1a202c] leading-snug pr-4">
+                      Đồng chí đã được mời tham gia phiên họp{' '}
+                      <span className="font-bold">
+                        Hội nghị Thường trực Đảng ủy, Ban Thường vụ Đảng ủy nghe và cho ý kiến về
+                        một số nội dung theo quy chế làm việc
+                      </span>{' '}
+                      Kính đề nghị đồng chí...
+                    </p>
+                    <p className="text-xs text-gray-500">09:12:00 03/07/2026</p>
+                  </div>
+                  <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition">
+                    <MoreVertical size={16} />
+                  </button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
           <div className="w-px h-7 bg-[#a50e27] mx-1" />
           <button className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-[#a50e27] rounded text-sm transition">
             <div className="w-6 h-6 rounded-full bg-[#a50e27] flex items-center justify-center border border-white/30">
