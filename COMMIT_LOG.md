@@ -1,3 +1,9 @@
+### [2026-07-09 11:36] Thêm Tooltip và Dropdown Menu cho nút thao tác trong danh sách phiên họp
+- **Mô tả**: Bổ sung tooltip "Thao tác khác" khi hover vào nút 3 chấm trong bảng Danh sách phiên họp. Khi click vào sẽ hiển thị ra 2 tuỳ chọn: "Xác nhận tham gia" và "Thêm tài liệu vào thư viện" như yêu cầu thiết kế.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): thêm dropdown thao tác khác cho danh sách phiên họp"`
+
 ### [2026-07-09 11:29] Sửa lỗi không hiển thị Lịch họp cá nhân & Cấu trúc lại layout chính
 - **Mô tả**: Khi chuyển thẻ `main` thành `overflow-y-auto` ở commit trước, các trang yêu cầu chiều cao tuyệt đối (như Lịch họp cá nhân sử dụng FullCalendar) bị vỡ layout (height = 0). Đã cập nhật lại `main` thành một Flexbox Container (`flex flex-col overflow-hidden`), đồng thời uỷ quyền việc quản lý scroll (`overflow-auto`) cho từng trang con cụ thể (Dashboard tự cuộn, Lịch họp tự giãn hết màn hình).
 - **Tệp thay đổi**:
