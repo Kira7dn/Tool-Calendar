@@ -1,3 +1,10 @@
+### [2026-07-09 11:29] Sửa lỗi không hiển thị Lịch họp cá nhân & Cấu trúc lại layout chính
+- **Mô tả**: Khi chuyển thẻ `main` thành `overflow-y-auto` ở commit trước, các trang yêu cầu chiều cao tuyệt đối (như Lịch họp cá nhân sử dụng FullCalendar) bị vỡ layout (height = 0). Đã cập nhật lại `main` thành một Flexbox Container (`flex flex-col overflow-hidden`), đồng thời uỷ quyền việc quản lý scroll (`overflow-auto`) cho từng trang con cụ thể (Dashboard tự cuộn, Lịch họp tự giãn hết màn hình).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(cabinet): sửa lỗi mất lịch họp cá nhân do vỡ layout flex"`
+
 ### [2026-07-09 11:27] Sửa lỗi không cuộn được trang chủ
 - **Mô tả**: Thay đổi CSS class của thẻ `main` trong `CabinetAppShell.jsx` từ `overflow-hidden` thành `overflow-y-auto` để cho phép người dùng cuộn xem toàn bộ nội dung của trang chủ (Dashboard) và các trang con khi nội dung bị tràn quá màn hình.
 - **Tệp thay đổi**:

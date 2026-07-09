@@ -368,7 +368,7 @@ export function CabinetAppShell({ children }) {
         )}
 
         {/* ── Main content area ─────────────────────────────────────────────── */}
-        <main className="flex-1 bg-gray-50 overflow-y-auto relative">
+        <main className="flex-1 bg-gray-50 overflow-hidden relative flex flex-col">
           {children || renderPage()}
         </main>
       </div>
