@@ -1,24 +1,42 @@
 <!doctype html>
 <html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hệ Thống Điều Phối Công Văn | Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/png" href="/assets/logo.png" />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hệ Thống Điều Phối Công Văn | Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script type="module" crossorigin src="/vite-assets/index-yoAyjvvQ.js"></script>
-  <link rel="stylesheet" crossorigin href="/vite-assets/index-Bym2Z0hd.css">
-</head>
-
-<body class="app-booting">
-  <div id="root"></div>
-</body>
-
+    <!-- Self-XSS Warning Console Script -->
+    <script>
+      Object.defineProperty(window, 'console', {
+        value: console,
+        writable: false,
+        configurable: false,
+      })
+      console.log(
+        '%cDừng lại!',
+        'color: red; font-family: sans-serif; font-size: 50px; font-weight: bold; text-shadow: 1px 1px 2px black;'
+      )
+      console.log(
+        '%cĐây là một tính năng của trình duyệt dành cho các nhà phát triển. Nếu ai đó bảo bạn sao chép rồi dán nội dung nào đó vào đây để bật một tính năng của hệ thống hoặc "hack" tài khoản của người khác, đó là hành vi lừa đảo và sẽ khiến họ có thể truy cập vào tài khoản của bạn.',
+        'font-family: sans-serif; font-size: 20px; font-weight: normal;'
+      )
+    </script>
+    <script type="module" crossorigin src="/vite-assets/index-7q30LTvC.js"></script>
+    <link rel="stylesheet" crossorigin href="/vite-assets/index-CWCJ_mwv.css">
+  </head>
+  <body class="app-booting">
+    <div id="root"></div>
+  </body>
 </html>

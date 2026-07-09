@@ -16,7 +16,7 @@ export const ForwardDocumentModal = ({
   const [deadline, setDeadline] = useState('')
   const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   // Custom dropdown states
   const [searchTerm, setSearchTerm] = useState('')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -52,9 +52,10 @@ export const ForwardDocumentModal = ({
     }
   }
 
-  const filteredUsers = users.filter(u => 
-    u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.username.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    (u) =>
+      u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.username.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleSubmit = async (e) => {
@@ -134,16 +135,19 @@ export const ForwardDocumentModal = ({
             <label className="block text-xs font-bold text-slate-700 mb-1">
               Người nhận <span className="text-red-500">*</span>
             </label>
-            <div 
+            <div
               className={`w-full px-4 py-2.5 rounded-xl border text-sm bg-white cursor-pointer flex justify-between items-center transition-all ${isDropdownOpen ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200 hover:border-slate-300'}`}
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              <span className={selectedUser ? "text-slate-900 font-semibold" : "text-slate-400"}>
-                {selectedUser 
-                  ? `${users.find(u => u.id == selectedUser)?.fullName} (${users.find(u => u.id == selectedUser)?.username})` 
-                  : "-- Chọn cán bộ xử lý --"}
+              <span className={selectedUser ? 'text-slate-900 font-semibold' : 'text-slate-400'}>
+                {selectedUser
+                  ? `${users.find((u) => u.id == selectedUser)?.fullName} (${users.find((u) => u.id == selectedUser)?.username})`
+                  : '-- Chọn cán bộ xử lý --'}
               </span>
-              <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                size={16}
+                className={`text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+              />
             </div>
 
             {isDropdownOpen && (
@@ -174,7 +178,11 @@ export const ForwardDocumentModal = ({
                       >
                         <div className="flex flex-col">
                           <span>{u.fullName}</span>
-                          <span className={`text-[10px] font-normal ${selectedUser == u.id ? 'text-blue-500' : 'text-slate-400'}`}>{u.username}</span>
+                          <span
+                            className={`text-[10px] font-normal ${selectedUser == u.id ? 'text-blue-500' : 'text-slate-400'}`}
+                          >
+                            {u.username}
+                          </span>
                         </div>
                         {selectedUser == u.id && <Check size={16} className="text-blue-600" />}
                       </div>
@@ -188,7 +196,13 @@ export const ForwardDocumentModal = ({
                 </div>
               </div>
             )}
-            <input type="text" className="absolute opacity-0 w-0 h-0 -z-10" required value={selectedUser} onChange={() => {}} />
+            <input
+              type="text"
+              className="absolute opacity-0 w-0 h-0 -z-10"
+              required
+              value={selectedUser}
+              onChange={() => {}}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

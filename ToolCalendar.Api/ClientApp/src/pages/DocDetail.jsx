@@ -437,14 +437,14 @@ export function DocDetail({ docId, onBack }) {
           {doc.status === 'Chưa xử lý' &&
             (doc.assignedTo == localStorage.getItem('user_id') ||
               isUserInRoutings(routings, localStorage.getItem('user_id'))) && (
-            <button
-              onClick={() => handleUpdateStatus('Đang xử lý')}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-            >
-              <Play size={14} strokeWidth={2.5} />
-              TIẾP NHẬN XỬ LÝ
-            </button>
-          )}
+              <button
+                onClick={() => handleUpdateStatus('Đang xử lý')}
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+              >
+                <Play size={14} strokeWidth={2.5} />
+                TIẾP NHẬN XỬ LÝ
+              </button>
+            )}
 
           {/* Nút Nộp kết quả (Hiện sau khi đã tiếp nhận) */}
           {doc.status === 'Đang xử lý' &&
@@ -749,83 +749,90 @@ export function DocDetail({ docId, onBack }) {
             </div>
           )}
 
-          {activeTab === 'history' && (() => {
-            const flattenRoutings = (list) => {
-              let result = []
-              if (!list || !Array.isArray(list)) return result
-              for (const r of list) {
-                result.push(r)
-                if (r.children && Array.isArray(r.children)) {
-                  result = result.concat(flattenRoutings(r.children))
+          {activeTab === 'history' &&
+            (() => {
+              const flattenRoutings = (list) => {
+                let result = []
+                if (!list || !Array.isArray(list)) return result
+                for (const r of list) {
+                  result.push(r)
+                  if (r.children && Array.isArray(r.children)) {
+                    result = result.concat(flattenRoutings(r.children))
+                  }
                 }
+                return result
               }
-              return result
-            }
 
-            const historyEvents = []
-            if (doc?.ngayThem) {
-              historyEvents.push({
-                id: 'create',
-                title: 'TIẾP NHẬN VĂN BẢN',
-                time: new Date(doc.ngayThem),
-                user: 'HỆ THỐNG',
-                active: true
-              })
-            }
-            if (doc?.assignedTo && doc?.ngayThem) {
-              historyEvents.push({
-                id: 'assign',
-                title: 'PHÂN CÔNG XỬ LÝ',
-                time: new Date(doc.ngayThem),
-                user: users.find((u) => u.id === doc.assignedTo)?.fullName || 'Không xác định',
-                active: false
-              })
-            }
-            
-            const flatRoutings = flattenRoutings(routings)
-            flatRoutings.forEach(r => {
-              const sender = r.senderName || users.find(u => u.id == r.senderId)?.fullName || 'Hệ thống'
-              const receiver = r.receiverName || users.find(u => u.id == r.receiverId)?.fullName || 'Không xác định'
-              historyEvents.push({
-                id: `routing_${r.id}`,
-                title: `CHUYỂN XỬ LÝ - Vai trò: ${r.role}`,
-                time: new Date(r.createdAt),
-                user: `${sender} ➔ ${receiver}`,
-                active: false
-              })
-            })
+              const historyEvents = []
+              if (doc?.ngayThem) {
+                historyEvents.push({
+                  id: 'create',
+                  title: 'TIẾP NHẬN VĂN BẢN',
+                  time: new Date(doc.ngayThem),
+                  user: 'HỆ THỐNG',
+                  active: true,
+                })
+              }
+              if (doc?.assignedTo && doc?.ngayThem) {
+                historyEvents.push({
+                  id: 'assign',
+                  title: 'PHÂN CÔNG XỬ LÝ',
+                  time: new Date(doc.ngayThem),
+                  user: users.find((u) => u.id === doc.assignedTo)?.fullName || 'Không xác định',
+                  active: false,
+                })
+              }
 
-            if (doc?.status === 'Đã hoàn thành') {
-              historyEvents.push({
-                id: 'complete',
-                title: 'HOÀN THÀNH VĂN BẢN',
-                time: doc?.completionDate ? new Date(doc.completionDate) : new Date(),
-                user: doc?.assignedTo ? users.find((u) => u.id === doc.assignedTo)?.fullName : 'Hệ thống',
-                active: true
+              const flatRoutings = flattenRoutings(routings)
+              flatRoutings.forEach((r) => {
+                const sender =
+                  r.senderName || users.find((u) => u.id == r.senderId)?.fullName || 'Hệ thống'
+                const receiver =
+                  r.receiverName ||
+                  users.find((u) => u.id == r.receiverId)?.fullName ||
+                  'Không xác định'
+                historyEvents.push({
+                  id: `routing_${r.id}`,
+                  title: `CHUYỂN XỬ LÝ - Vai trò: ${r.role}`,
+                  time: new Date(r.createdAt),
+                  user: `${sender} ➔ ${receiver}`,
+                  active: false,
+                })
               })
-            }
 
-            historyEvents.sort((a, b) => a.time - b.time)
+              if (doc?.status === 'Đã hoàn thành') {
+                historyEvents.push({
+                  id: 'complete',
+                  title: 'HOÀN THÀNH VĂN BẢN',
+                  time: doc?.completionDate ? new Date(doc.completionDate) : new Date(),
+                  user: doc?.assignedTo
+                    ? users.find((u) => u.id === doc.assignedTo)?.fullName
+                    : 'Hệ thống',
+                  active: true,
+                })
+              }
 
-            return (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 flex flex-col h-auto lg:h-full overflow-hidden lg:overflow-auto animate-in fade-in slide-in-from-bottom-4 duration-400">
-                <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-12 shrink-0">
-                  QUY TRÌNH XỬ LÝ VĂN BẢN
-                </h2>
-                <div className="relative space-y-10 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-slate-100">
-                  {historyEvents.map((evt, idx) => (
-                    <HistoryPoint
-                      key={evt.id || idx}
-                      title={evt.title}
-                      time={evt.time.toLocaleString('vi-VN')}
-                      user={evt.user}
-                      active={evt.active}
-                    />
-                  ))}
+              historyEvents.sort((a, b) => a.time - b.time)
+
+              return (
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 flex flex-col h-auto lg:h-full overflow-hidden lg:overflow-auto animate-in fade-in slide-in-from-bottom-4 duration-400">
+                  <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-12 shrink-0">
+                    QUY TRÌNH XỬ LÝ VĂN BẢN
+                  </h2>
+                  <div className="relative space-y-10 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-slate-100">
+                    {historyEvents.map((evt, idx) => (
+                      <HistoryPoint
+                        key={evt.id || idx}
+                        title={evt.title}
+                        time={evt.time.toLocaleString('vi-VN')}
+                        user={evt.user}
+                        active={evt.active}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )
-          })()}
+              )
+            })()}
         </div>
 
         {/* Right Panel (Discussion) */}

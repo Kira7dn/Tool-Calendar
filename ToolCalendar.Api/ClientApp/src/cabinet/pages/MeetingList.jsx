@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { MeetingDetail } from './MeetingDetail'
+import { MeetingProgress } from './MeetingProgress'
 
 const AUTH_HEADER = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
@@ -76,6 +77,7 @@ export function MeetingList() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMeeting, setSelectedMeeting] = useState(null)
+  const [showProgress, setShowProgress] = useState(false)
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -115,8 +117,24 @@ export function MeetingList() {
 
   const totalPages = Math.ceil(filteredMeetings.length / pageSize)
 
+  console.log('MeetingList render:', { selectedMeeting, showProgress })
+
   if (selectedMeeting) {
-    return <MeetingDetail meeting={selectedMeeting} onBack={() => setSelectedMeeting(null)} />
+    if (showProgress) {
+      console.log('Rendering MeetingProgress')
+      return <MeetingProgress meeting={selectedMeeting} onBack={() => setShowProgress(false)} />
+    }
+    console.log('Rendering MeetingDetail')
+    return (
+      <MeetingDetail
+        meeting={selectedMeeting}
+        onBack={() => setSelectedMeeting(null)}
+        onViewProgress={() => {
+          console.log('onViewProgress triggered!')
+          setShowProgress(true)
+        }}
+      />
+    )
   }
 
   return (

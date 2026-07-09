@@ -749,3 +749,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 
 
+
+### [2026-07-09 14:57] Thêm màn hình Diễn biến phiên họp
+- **Mô tả**: Thêm component mới `MeetingProgress` cho màn hình Diễn biến phiên họp và xử lý sự kiện click nút "Xem diễn biến" từ màn hình Thông tin phiên họp để chuyển hướng trang.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingProgress.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): thêm màn hình diễn biến phiên họp và xử lý chuyển trang từ thông tin phiên họp"`

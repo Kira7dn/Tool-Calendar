@@ -132,7 +132,11 @@ function RoomModal({ mode, room, departments, onClose, onSaved }) {
           <div className="flex items-center gap-2 text-white">
             <Building2 size={18} />
             <h2 className="font-bold text-base">
-              {isView ? 'Chi tiết phòng họp' : isEdit ? 'Chỉnh sửa phòng họp' : 'Thêm phòng họp mới'}
+              {isView
+                ? 'Chi tiết phòng họp'
+                : isEdit
+                  ? 'Chỉnh sửa phòng họp'
+                  : 'Thêm phòng họp mới'}
             </h2>
           </div>
           <button
@@ -187,7 +191,9 @@ function RoomModal({ mode, room, departments, onClose, onSaved }) {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => !isView && setForm((f) => ({ ...f, status: f.status === 1 ? 0 : 1 }))}
+                onClick={() =>
+                  !isView && setForm((f) => ({ ...f, status: f.status === 1 ? 0 : 1 }))
+                }
                 disabled={isView}
                 className={`relative w-11 h-6 rounded-full transition-colors ${
                   form.status === 1 ? 'bg-green-500' : 'bg-gray-300'
@@ -319,7 +325,6 @@ function DeleteConfirm({ room, onClose, onDeleted }) {
     </div>
   )
 }
-
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export function CabinetRooms() {

@@ -79,7 +79,7 @@ const EmptyState = () => (
   </div>
 )
 
-export function MeetingDetail({ meeting, onBack }) {
+export function MeetingDetail({ meeting, onBack, onViewProgress }) {
   const [isNotebookOpen, setIsNotebookOpen] = useState(false)
 
   if (!meeting) return null
@@ -94,10 +94,16 @@ export function MeetingDetail({ meeting, onBack }) {
           </button>
           <h1 className="text-xl font-bold text-[#1a202c]">Thông tin phiên họp</h1>
         </div>
-        <Button className="bg-[#c8102e] hover:bg-[#a50e27] text-white">
+        <button
+          className="bg-[#c8102e] hover:bg-[#a50e27] text-white px-4 py-2 rounded-md flex items-center text-sm font-medium transition-colors"
+          onClick={(e) => {
+            console.log('Xem diễn biến clicked!', onViewProgress)
+            if (onViewProgress) onViewProgress()
+          }}
+        >
           <ArrowLeft size={16} className="mr-2 rotate-180" />
           Xem diễn biến
-        </Button>
+        </button>
       </div>
 
       <div className="flex-1 overflow-auto p-6 relative">

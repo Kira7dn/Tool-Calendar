@@ -147,9 +147,7 @@ function SessionExpiredModal({ isOpen, onConfirm }) {
           <div className="size-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
             <Clock className="text-white" size={40} />
           </div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">
-            Hết hạn phiên
-          </h2>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Hết hạn phiên</h2>
           <p className="text-white/80 text-sm font-semibold mt-3 leading-relaxed">
             Bạn đã không hoạt động trong một thời gian dài.
             <br />
@@ -296,7 +294,10 @@ function Root() {
 
         {/* Auth Modals */}
         <KickedModal isOpen={isKicked} onConfirm={() => setIsKicked(false)} />
-        <SessionExpiredModal isOpen={isSessionExpired} onConfirm={() => setIsSessionExpired(false)} />
+        <SessionExpiredModal
+          isOpen={isSessionExpired}
+          onConfirm={() => setIsSessionExpired(false)}
+        />
       </TooltipProvider>
     </>
   )

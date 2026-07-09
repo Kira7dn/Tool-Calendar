@@ -55,6 +55,7 @@ services:
   # Container riêng biệt, cô lập hoàn toàn với backend
   clamav:
     image: clamav/clamav:latest
+    platform: linux/amd64
     container_name: doc-clamav
     environment:
       - CLAMAV_NO_FRESHCLAMD=false  # Cập nhật database virus tự động
