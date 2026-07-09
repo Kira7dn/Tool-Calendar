@@ -395,7 +395,68 @@ namespace ToolCalendar.Data
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedUserIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
             try { cmd.CommandText = "ALTER TABLE Documents ADD COLUMN AssignedDepartmentIds TEXT DEFAULT '[]'"; cmd.ExecuteNonQuery(); } catch { }
 
-            try { cmd.CommandText = "ALTER TABLE Departments ADD COLUMN IsActive INTEGER DEFAULT 1"; cmd.ExecuteNonQuery(); } catch { }
+            // --- MIGRATION: Meetings Schema Update (columns from migrate_meetings_v2.sql) ---
+            try { cmd.CommandText = "ALTER TABLE Meetings ADD COLUMN Location TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Meetings ADD COLUMN Presider TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Meetings ADD COLUMN PreparingUnit TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Meetings ADD COLUMN Content TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Meetings ADD COLUMN Notes TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Meetings ADD COLUMN OrganizingUnit TEXT"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Meetings ADD COLUMN ExpectedAttendees INTEGER DEFAULT 0"; cmd.ExecuteNonQuery(); } catch { }
+            try { cmd.CommandText = "ALTER TABLE Meetings ADD COLUMN ExternalParticipants TEXT"; cmd.ExecuteNonQuery(); } catch { }
+
+            // --- NEW TABLES: Cabinet - Kỷ yếu, Kết luận, Sổ tay ---
+            cmd.CommandText = @"
+                CREATE TABLE IF NOT EXISTS MeetingProceedings (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL,
+                    Description TEXT,
+                    CreatorId INTEGER,
+                    CreatedAt TEXT,
+                    FOREIGN KEY(CreatorId) REFERENCES Users(Id)
+                )";
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = @"
+                CREATE TABLE IF NOT EXISTS MeetingProceedingItems (
+                    ProceedingId INTEGER NOT NULL,
+                    MeetingId INTEGER NOT NULL,
+                    PRIMARY KEY (ProceedingId, MeetingId),
+                    FOREIGN KEY(ProceedingId) REFERENCES MeetingProceedings(Id),
+                    FOREIGN KEY(MeetingId) REFERENCES Meetings(Id)
+                )";
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = @"
+                CREATE TABLE IF NOT EXISTS MeetingConclusions (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    MeetingId INTEGER NOT NULL,
+                    FileName TEXT,
+                    Status TEXT DEFAULT 'Chưa xử lý',
+                    LastHandlerId INTEGER,
+                    Progress INTEGER DEFAULT 0,
+                    UpdatedAt TEXT,
+                    FOREIGN KEY(MeetingId) REFERENCES Meetings(Id),
+                    FOREIGN KEY(LastHandlerId) REFERENCES Users(Id)
+                )";
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = @"
+                CREATE TABLE IF NOT EXISTS MeetingNotes (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    MeetingId INTEGER NOT NULL,
+                    UserId INTEGER NOT NULL,
+                    Content TEXT,
+                    AttachmentPaths TEXT DEFAULT '[]',
+                    CreatedAt TEXT,
+                    FOREIGN KEY(MeetingId) REFERENCES Meetings(Id),
+                    FOREIGN KEY(UserId) REFERENCES Users(Id)
+                )";
+            cmd.ExecuteNonQuery();
+
+            Console.WriteLine("[DB Migration] ✅ Cabinet tables (Proceedings, Conclusions, Notes) initialized.");
+
+
 
             // Migration cho phòng ban mới
             try { 

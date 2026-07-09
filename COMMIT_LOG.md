@@ -1,3 +1,36 @@
+### [2026-07-09 16:24] Kết nối backend thực cho toàn bộ phân hệ Phòng họp không giấy tờ — Loại bỏ mọi hardcode
+- **Mô tả**: Triển khai đầy đủ backend data-driven cho phân hệ Cabinet. Xóa bỏ hoàn toàn mọi dữ liệu giả cứng (hardcode) trong tất cả các màn hình: tên chủ trì, trạng thái tham dự ngẫu nhiên, số liệu dashboard `Confirmed: 4, Unconfirmed: 2`, stats fallback `attended: 2, total: 2`. Tạo mới 3 bảng DB + 3 Models + 3 Repositories + 3 Controllers + đăng ký DI. Rewrite 5 frontend pages để gọi API thực. Bổ sung đầy đủ tài liệu kỹ thuật vào `SYSTEM_FEATURES.md`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi — thêm migration 8 cột Meetings + 4 bảng mới)
+  - `ToolCalendar.Core/Models/MeetingProceeding.cs` (Mới)
+  - `ToolCalendar.Core/Models/MeetingConclusion.cs` (Mới)
+  - `ToolCalendar.Core/Models/MeetingNote.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/MeetingProceedingRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/MeetingConclusionRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/MeetingNoteRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi — thêm `GetByParticipantAsync`, `UpdateAttendanceAsync`)
+  - `ToolCalendar.Api/Controllers/Cabinet/MeetingsController.cs` (Sửa đổi — fix dashboard stats thực, thêm `/my-meetings`, thêm `PUT /{id}/attendance`)
+  - `ToolCalendar.Api/Controllers/Cabinet/MeetingProceedingsController.cs` (Mới)
+  - `ToolCalendar.Api/Controllers/Cabinet/MeetingConclusionsController.cs` (Mới)
+  - `ToolCalendar.Api/Controllers/Cabinet/MeetingNotesController.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi — đăng ký 3 repo mới vào DI)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi — fetch `/my-meetings`, xóa hardcode tên chủ trì và trạng thái giả)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetHome.jsx` (Sửa đổi — xóa fallback hardcode stats)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetProceedings.jsx` (Sửa đổi — rewrite toàn bộ, fetch từ API)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetConclusions.jsx` (Sửa đổi — rewrite toàn bộ, fetch từ API, phân trang, search)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetNotebook.jsx` (Sửa đổi — rewrite toàn bộ, fetch từ API, upload file, delete)
+  - `SYSTEM_FEATURES.md` (Sửa đổi — bổ sung toàn bộ tài liệu phân hệ Cabinet)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): backend data-driven đầy đủ cho Kỷ yếu, Kết luận, Sổ tay — loại bỏ mọi hardcode"`
+
+### [2026-07-09 15:53] Triển khai giao diện Kỷ yếu, Kết luận và Sổ tay
+- **Mô tả**: Thiết kế và tích hợp 3 màn hình mới vào phân hệ Phòng họp không giấy tờ: Kỷ yếu phiên họp (`CabinetProceedings`), Tra cứu kết luận sau phiên họp (`CabinetConclusions`), và Quản lý sổ tay (`CabinetNotebook`). Các giao diện được triển khai bằng TailwindCSS và shadcn/ui dựa trên mockup, bao gồm layout chi tiết, empty states, modals "Thêm mới kỷ yếu" và "Thêm mới ghi chú" (hỗ trợ kéo thả tài liệu). Đã cấu hình tab router trong `CabinetMeetings` để điều hướng đến các màn hình này.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetProceedings.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetConclusions.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetNotebook.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetMeetings.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): triển khai UI màn hình Kỷ yếu, Kết luận, Sổ tay"`
+
 ### [2026-07-09 11:36] Thêm Tooltip và Dropdown Menu cho nút thao tác trong danh sách phiên họp
 - **Mô tả**: Bổ sung tooltip "Thao tác khác" khi hover vào nút 3 chấm trong bảng Danh sách phiên họp. Khi click vào sẽ hiển thị ra 2 tuỳ chọn: "Xác nhận tham gia" và "Thêm tài liệu vào thư viện" như yêu cầu thiết kế.
 - **Tệp thay đổi**:

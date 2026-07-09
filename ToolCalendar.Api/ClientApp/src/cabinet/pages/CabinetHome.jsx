@@ -283,10 +283,13 @@ export function CabinetHome() {
 
         const total = filtered.length
         setStats({
-          attended: total > 0 ? total : 2, // Mock 2 as per screenshot if empty
+          attended: filtered.filter((m) => {
+            const s = new Date(m.startTime)
+            return s <= now
+          }).length,
           pending: 0,
           absent: 0,
-          total: total > 0 ? total : 2,
+          total: total,
         })
       }
       setLoading(false)

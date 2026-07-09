@@ -73,6 +73,10 @@ builder.Services.AddScoped<ToolCalendar.Data.Repositories.IDocumentRoutingReposi
 builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IRoomRepository, ToolCalendar.Core.Data.Repositories.RoomRepository>();
 builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IMeetingRepository, ToolCalendar.Core.Data.Repositories.MeetingRepository>();
 builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IQuestionnaireRepository, ToolCalendar.Core.Data.Repositories.QuestionnaireRepository>();
+// Cabinet — Kỷ yếu, Kết luận, Sổ tay
+builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IMeetingProceedingRepository, ToolCalendar.Core.Data.Repositories.MeetingProceedingRepository>();
+builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IMeetingConclusionRepository, ToolCalendar.Core.Data.Repositories.MeetingConclusionRepository>();
+builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IMeetingNoteRepository, ToolCalendar.Core.Data.Repositories.MeetingNoteRepository>();
 
 // ✅ ASP.NET Core Identity (Custom UserStore — không cần EF Core)
 // Toàn bộ dữ liệu vẫn lưu trong SQLite hiện có, không mất dữ liệu cũ

@@ -85,15 +85,16 @@ export function MeetingList() {
 
   const fetchMeetings = () => {
     setLoading(true)
-    fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER() })
+    // Dùng /my-meetings để lấy phiên họp kèm trạng thái tham dự thực từ DB
+    fetch('/api/phonghopkhonggiayto/meetings/my-meetings', { headers: AUTH_HEADER() })
       .then((r) => r.json())
       .then((json) => {
-        const data = json.data || json
+        const data = json.data || []
         if (Array.isArray(data)) {
-          // Mock data for UI presentation purposes
-          const mappedData = data.map((m, index) => ({
+          const mappedData = data.map((m) => ({
             ...m,
-            attendanceStatus: index % 5 === 0 ? 'Chưa xác nhận' : 'Tham gia', // Mock status
+            // Lấy trạng thái tham dự thực từ participants[0] trả về bởi backend
+            attendanceStatus: m.participants?.[0]?.attendanceStatus ?? 'Chưa xác nhận',
           }))
           setMeetings(mappedData)
         }
@@ -436,7 +437,7 @@ export function MeetingList() {
                           </td>
                           <td className="px-4 py-3 text-gray-600">{m.roomName}</td>
                           <td className="px-4 py-3 font-semibold text-gray-800">
-                            Đồng chí Phạm Lê...
+                            {m.presider || 'Chưa xác định'}
                           </td>
                           <td className="px-4 py-3 text-center">
                             {getStatusBadge(m.attendanceStatus)}

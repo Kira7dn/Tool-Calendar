@@ -9,9 +9,11 @@ namespace ToolCalendar.Core.Data.Repositories
         Task<List<Meeting>> GetAllAsync();
         Task<Meeting?> GetByIdAsync(int id);
         Task<List<Meeting>> GetByCreatorAsync(int creatorId);
+        Task<List<Meeting>> GetByParticipantAsync(int userId);
         Task<List<MeetingParticipant>> GetParticipantsByMeetingIdAsync(int meetingId);
         Task<int> CreateAsync(CreateMeetingRequest request, int creatorId);
         Task<bool> UpdateAsync(int id, CreateMeetingRequest request);
+        Task<bool> UpdateAttendanceAsync(int meetingId, int userId, string status);
         Task<bool> CancelAsync(int id);
         Task<bool> DeleteAsync(int id);
     }
@@ -101,6 +103,61 @@ namespace ToolCalendar.Core.Data.Repositories
                 list.Add(MapMeeting(reader));
 
             return list;
+        }
+
+        public async Task<List<Meeting>> GetByParticipantAsync(int userId)
+        {
+            var list = new List<Meeting>();
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // Lấy phiên họp mà user được mời tham dự + lấy kèm trạng thái tham dự của user đó
+            var sql = $@"
+                SELECT m.Id, m.Title, m.StartTime, m.EndTime, m.RoomId, m.Status, m.CreatorId, m.CreatedAt,
+                       m.Location, m.Presider, m.PreparingUnit, m.Content, m.Notes, m.OrganizingUnit,
+                       COALESCE(m.ExpectedAttendees, 0) as ExpectedAttendees,
+                       m.ExternalParticipants,
+                       r.Name as RoomName, u.FullName as CreatorName,
+                       mp.AttendanceStatus as MyAttendanceStatus
+                FROM MeetingParticipants mp
+                JOIN Meetings m ON mp.MeetingId = m.Id
+                LEFT JOIN Rooms r ON m.RoomId = r.Id
+                LEFT JOIN Users u ON m.CreatorId = u.Id
+                WHERE mp.UserId = @userId
+                ORDER BY m.StartTime DESC";
+
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@userId", userId);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var meeting = MapMeeting(reader);
+                // Gắn thêm trạng thái tham dự riêng của user hiện tại vào Participants
+                meeting.Participants = new List<MeetingParticipant>
+                {
+                    new()
+                    {
+                        MeetingId = meeting.Id,
+                        UserId = userId,
+                        AttendanceStatus = reader["MyAttendanceStatus"]?.ToString() ?? "Chưa xác nhận"
+                    }
+                };
+                list.Add(meeting);
+            }
+            return list;
+        }
+
+        public async Task<bool> UpdateAttendanceAsync(int meetingId, int userId, string status)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            using var cmd = new SqliteCommand(
+                "UPDATE MeetingParticipants SET AttendanceStatus = @status WHERE MeetingId = @m AND UserId = @u",
+                connection);
+            cmd.Parameters.AddWithValue("@status", status);
+            cmd.Parameters.AddWithValue("@m", meetingId);
+            cmd.Parameters.AddWithValue("@u", userId);
+            return await cmd.ExecuteNonQueryAsync() > 0;
         }
 
         public async Task<List<MeetingParticipant>> GetParticipantsByMeetingIdAsync(int meetingId)
