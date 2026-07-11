@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text.Json;
 using ToolCalendar.Core.Models;
-using ToolCalendar.Data;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
+using ToolCalendar.Core.Data.Interfaces;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -16,11 +16,13 @@ namespace ToolCalendar.Api.Controllers
     {
         private readonly IVapidService _vapidService;
         private readonly DeadlineWorker _deadlineWorker;
+        private readonly INotificationRepository _notificationRepo;
 
-        public NotificationController(IVapidService vapidService, DeadlineWorker deadlineWorker)
+        public NotificationController(IVapidService vapidService, DeadlineWorker deadlineWorker, INotificationRepository notificationRepo)
         {
             _vapidService = vapidService;
             _deadlineWorker = deadlineWorker;
+            _notificationRepo = notificationRepo;
         }
 
         [Authorize(Roles = "Admin,VanThu")]
@@ -53,7 +55,7 @@ namespace ToolCalendar.Api.Controllers
                 Auth = request.Auth
             };
 
-            DatabaseService.InsertPushSubscription(subscription);
+            _notificationRepo.InsertPushSubscription(subscription);
             return Ok(ApiResponse.Ok("Subscribed successfully"));
         }
 
@@ -64,7 +66,7 @@ namespace ToolCalendar.Api.Controllers
             if (!int.TryParse(userIdStr, out int userId)) 
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy người dùng."));
 
-            var subscriptions = DatabaseService.GetPushSubscriptions(userId);
+            var subscriptions = _notificationRepo.GetPushSubscriptions(userId);
             if (!subscriptions.Any()) 
                 return BadRequest(ApiResponse.Fail("Không tìm thấy đăng ký thông báo đẩy cho người dùng này."));
 
@@ -90,14 +92,14 @@ namespace ToolCalendar.Api.Controllers
             if (!int.TryParse(userIdStr, out int userId)) 
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy người dùng."));
 
-            var list = DatabaseService.GetNotifications(userId);
+            var list = _notificationRepo.GetNotifications(userId);
             return Ok(ApiResponse.Ok(list));
         }
 
         [HttpPost("mark-read/{id}")]
         public IActionResult MarkRead(int id)
         {
-            DatabaseService.MarkNotificationAsRead(id);
+            _notificationRepo.MarkNotificationAsRead(id);
             return Ok(ApiResponse.Ok("Đã đánh dấu đã đọc."));
         }
 
@@ -108,7 +110,7 @@ namespace ToolCalendar.Api.Controllers
             if (!int.TryParse(userIdStr, out int userId)) 
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy người dùng."));
 
-            DatabaseService.MarkAllNotificationsAsRead(userId);
+            _notificationRepo.MarkAllNotificationsAsRead(userId);
             return Ok(ApiResponse.Ok("Đã đánh dấu đã đọc toàn bộ thông báo."));
         }
     }

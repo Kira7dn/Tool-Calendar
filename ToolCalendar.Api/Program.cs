@@ -78,6 +78,13 @@ builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IMeetingProceedin
 builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IMeetingConclusionRepository, ToolCalendar.Core.Data.Repositories.MeetingConclusionRepository>();
 builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IMeetingNoteRepository, ToolCalendar.Core.Data.Repositories.MeetingNoteRepository>();
 
+// Refactored Repositories
+builder.Services.AddScoped<IStatsRepository, StatsRepository>();
+builder.Services.AddScoped<ISettingRepository, SettingRepository>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+
 // ✅ ASP.NET Core Identity (Custom UserStore — không cần EF Core)
 // Toàn bộ dữ liệu vẫn lưu trong SQLite hiện có, không mất dữ liệu cũ
 builder.Services.AddIdentityCore<User>(options =>

@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using ToolCalendar.Core.Models;
-using ToolCalendar.Data;
+using ToolCalendar.Core.Data.Interfaces;
+using System;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -12,14 +13,20 @@ namespace ToolCalendar.Api.Controllers
     public class StatsController : ControllerBase
     {
         private readonly IMemoryCache _cache;
+        private readonly IStatsRepository _statsRepo;
+        private readonly IAuditLogRepository _auditLogRepo;
+        private readonly ISettingRepository _settingRepo;
 
         // Cache keys
         private const string STATS_KEY    = "dashboard_stats";
         private const string TIMELINE_KEY = "dashboard_timeline_{0}"; // {0} = days
 
-        public StatsController(IMemoryCache cache)
+        public StatsController(IMemoryCache cache, IStatsRepository statsRepo, IAuditLogRepository auditLogRepo, ISettingRepository settingRepo)
         {
             _cache = cache;
+            _statsRepo = statsRepo;
+            _auditLogRepo = auditLogRepo;
+            _settingRepo = settingRepo;
         }
 
         [HttpGet]
@@ -30,7 +37,7 @@ namespace ToolCalendar.Api.Controllers
                 // ✅ Cache 30 giây — đủ fresh cho dashboard, tránh 8 DB queries mỗi refresh
                 if (!_cache.TryGetValue(STATS_KEY, out object? stats))
                 {
-                    stats = DatabaseService.GetDashboardStats();
+                    stats = _statsRepo.GetDashboardStats();
                     _cache.Set(STATS_KEY, stats, new MemoryCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30),
@@ -51,7 +58,7 @@ namespace ToolCalendar.Api.Controllers
         {
             try
             {
-                var (logs, _) = DatabaseService.GetAuditLogs(1, 10, "CanBo");
+                var (logs, _) = _auditLogRepo.GetAuditLogs(1, 10, "CanBo");
                 return Ok(ApiResponse.Ok(logs));
             }
             catch (Exception ex)
@@ -69,7 +76,7 @@ namespace ToolCalendar.Api.Controllers
                 string cacheKey = string.Format(TIMELINE_KEY, days);
                 if (!_cache.TryGetValue(cacheKey, out object? series))
                 {
-                    series = DatabaseService.GetDashboardDeadlineSeries(days);
+                    series = _statsRepo.GetDashboardDeadlineSeries(days);
                     _cache.Set(cacheKey, series, new MemoryCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60),
@@ -102,7 +109,7 @@ namespace ToolCalendar.Api.Controllers
         {
             try
             {
-                var data = DatabaseService.GetMonthlyDepartmentReport(month, year);
+                var data = _statsRepo.GetMonthlyDepartmentReport(month, year);
                 return Ok(ApiResponse.Ok(data));
             }
             catch (Exception ex)
@@ -115,10 +122,10 @@ namespace ToolCalendar.Api.Controllers
         [Authorize(Roles = "Admin,VanThu")]
         public IActionResult GetSettings()
         {
-            var maxPages = DatabaseService.GetAppSetting("OcrSettings_MaxPagesToScan", "0");
-            var keywords = DatabaseService.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
-            var excludeKeywords = DatabaseService.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
-            var minDays = DatabaseService.GetAppSetting("Document_MinDeadlineDays", "0");
+            var maxPages = _settingRepo.GetAppSetting("OcrSettings_MaxPagesToScan", "0");
+            var keywords = _settingRepo.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
+            var excludeKeywords = _settingRepo.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
+            var minDays = _settingRepo.GetAppSetting("Document_MinDeadlineDays", "0");
 
             return Ok(ApiResponse.Ok(new
             {
@@ -126,7 +133,7 @@ namespace ToolCalendar.Api.Controllers
                 deadlineKeywords = keywords,
                 deadlineExcludeKeywords = excludeKeywords,
                 minDeadlineDays = int.Parse(minDays),
-                notificationScanTime = DatabaseService.GetAppSetting("Notification_ScanTime", "08:30")
+                notificationScanTime = _settingRepo.GetAppSetting("Notification_ScanTime", "08:30")
             }));
         }
 
@@ -142,14 +149,14 @@ namespace ToolCalendar.Api.Controllers
                 string minDays = data.TryGetProperty("minDeadlineDays", out var mnd) ? mnd.ToString() : "0";
                 string scanTime = data.TryGetProperty("notificationScanTime", out var st) ? st.ToString() : "08:30";
 
-                DatabaseService.SaveAppSetting("OcrSettings_MaxPagesToScan", maxPages);
-                DatabaseService.SaveAppSetting("Document_DeadlineKeywords", keywords);
-                DatabaseService.SaveAppSetting("Document_DeadlineExcludeKeywords", excludeKeywords);
-                DatabaseService.SaveAppSetting("Document_MinDeadlineDays", minDays);
-                DatabaseService.SaveAppSetting("Notification_ScanTime", scanTime);
+                _settingRepo.SaveAppSetting("OcrSettings_MaxPagesToScan", maxPages);
+                _settingRepo.SaveAppSetting("Document_DeadlineKeywords", keywords);
+                _settingRepo.SaveAppSetting("Document_DeadlineExcludeKeywords", excludeKeywords);
+                _settingRepo.SaveAppSetting("Document_MinDeadlineDays", minDays);
+                _settingRepo.SaveAppSetting("Notification_ScanTime", scanTime);
 
                 // Reset chặn quét để cho phép quét lại vào giờ mới ngay trong ngày hôm nay
-                DatabaseService.SaveAppSetting("Notification_LastScanDate", "");
+                _settingRepo.SaveAppSetting("Notification_LastScanDate", "");
 
                 return Ok(ApiResponse.Ok("Lưu cài đặt thành công."));
             }

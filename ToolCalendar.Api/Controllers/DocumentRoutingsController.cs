@@ -5,6 +5,7 @@ using ToolCalendar.Core.Models;
 using ToolCalendar.Data.Repositories;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
+using ToolCalendar.Core.Data.Interfaces;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -15,13 +16,16 @@ namespace ToolCalendar.Api.Controllers
     {
         private readonly IDocumentRoutingRepository _routingRepo;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly INotificationRepository _notificationRepo;
 
         public DocumentRoutingsController(
             IDocumentRoutingRepository routingRepo,
-            IHubContext<NotificationHub> hubContext)
+            IHubContext<NotificationHub> hubContext,
+            INotificationRepository notificationRepo)
         {
             _routingRepo = routingRepo;
             _hubContext  = hubContext;
+            _notificationRepo = notificationRepo;
         }
 
         [HttpGet("{documentId}/routings")]
@@ -48,7 +52,7 @@ namespace ToolCalendar.Api.Controllers
             if (routing.ReceiverId > 0)
             {
                 // 1. Lưu thông báo vào DB để hiện ở biểu tượng cái chuông
-                ToolCalendar.Data.DatabaseService.InsertNotification(new Core.Models.NotificationRecord
+                _notificationRepo.InsertNotification(new Core.Models.NotificationRecord
                 {
                     UserId = routing.ReceiverId,
                     Title = "Công việc mới",

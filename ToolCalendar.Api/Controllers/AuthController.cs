@@ -22,17 +22,20 @@ namespace ToolCalendar.Api.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IUserRepository _userRepository;
         private readonly UserManager<User> _userManager;
+        private readonly IAuditLogRepository _auditLogRepo;
 
         public AuthController(
             IConfiguration configuration,
             IHubContext<NotificationHub> hubContext,
             IUserRepository userRepository,
-            UserManager<User> userManager)
+            UserManager<User> userManager,
+            IAuditLogRepository auditLogRepo)
         {
             _configuration  = configuration;
             _hubContext     = hubContext;
             _userRepository = userRepository;
             _userManager    = userManager;
+            _auditLogRepo   = auditLogRepo;
         }
 
         // ─── LOGIN ───────────────────────────────────────────────────────────────
@@ -59,7 +62,7 @@ namespace ToolCalendar.Api.Controllers
             if (user == null)
             {
                 // Ghi audit log thất bại
-                ToolCalendar.Data.DatabaseService.InsertLoginAuditLog(
+                _auditLogRepo.InsertLoginAuditLog(
                     username:   request.Username,
                     userId:     null,
                     ipAddress:  clientIp,
@@ -73,7 +76,7 @@ namespace ToolCalendar.Api.Controllers
             // ── Bước 2: Kiểm tra tài khoản bị khóa (Identity Lockout) ────────────
             if (await _userManager.IsLockedOutAsync(user))
             {
-                ToolCalendar.Data.DatabaseService.InsertLoginAuditLog(
+                _auditLogRepo.InsertLoginAuditLog(
                     username:   request.Username,
                     userId:     user.Id,
                     ipAddress:  clientIp,
@@ -92,7 +95,7 @@ namespace ToolCalendar.Api.Controllers
                 // Identity tự động tăng AccessFailedCount và khóa tài khoản nếu đủ số lần
                 await _userManager.AccessFailedAsync(user);
 
-                ToolCalendar.Data.DatabaseService.InsertLoginAuditLog(
+                _auditLogRepo.InsertLoginAuditLog(
                     username:   request.Username,
                     userId:     user.Id,
                     ipAddress:  clientIp,
@@ -161,7 +164,7 @@ namespace ToolCalendar.Api.Controllers
             });
 
             // Ghi audit log thành công
-            ToolCalendar.Data.DatabaseService.InsertLoginAuditLog(
+            _auditLogRepo.InsertLoginAuditLog(
                 username:  user.Username,
                 userId:    user.Id,
                 ipAddress: clientIp,
@@ -247,4 +250,4 @@ namespace ToolCalendar.Api.Controllers
     {
         public string NewPassword { get; set; } = "";
     }
-}
+

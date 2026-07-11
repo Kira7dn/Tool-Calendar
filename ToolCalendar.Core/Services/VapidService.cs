@@ -1,4 +1,5 @@
-using ToolCalendar.Data;
+using Microsoft.Extensions.DependencyInjection;
+using ToolCalendar.Core.Data.Interfaces;
 using WebPush;
 
 namespace ToolCalendar.Services
@@ -11,18 +12,23 @@ namespace ToolCalendar.Services
 
     public class VapidService : IVapidService
     {
+        private readonly IServiceScopeFactory _scopeFactory;
         private string? _publicKey;
         private string? _privateKey;
 
-        public VapidService()
+        public VapidService(IServiceScopeFactory scopeFactory)
         {
+            _scopeFactory = scopeFactory;
             InitializeKeys();
         }
 
         private void InitializeKeys()
         {
-            _publicKey = DatabaseService.GetAppSetting("Vapid_PublicKey");
-            _privateKey = DatabaseService.GetAppSetting("Vapid_PrivateKey");
+            using var scope = _scopeFactory.CreateScope();
+            var settingRepo = scope.ServiceProvider.GetRequiredService<ISettingRepository>();
+
+            _publicKey = settingRepo.GetAppSetting("Vapid_PublicKey");
+            _privateKey = settingRepo.GetAppSetting("Vapid_PrivateKey");
 
             if (string.IsNullOrEmpty(_publicKey) || string.IsNullOrEmpty(_privateKey))
             {
@@ -31,8 +37,8 @@ namespace ToolCalendar.Services
                 _publicKey = keys.PublicKey;
                 _privateKey = keys.PrivateKey;
 
-                DatabaseService.SaveAppSetting("Vapid_PublicKey", _publicKey);
-                DatabaseService.SaveAppSetting("Vapid_PrivateKey", _privateKey);
+                settingRepo.SaveAppSetting("Vapid_PublicKey", _publicKey);
+                settingRepo.SaveAppSetting("Vapid_PrivateKey", _privateKey);
             }
         }
 
@@ -56,7 +62,9 @@ namespace ToolCalendar.Services
                 // If the subscription is no longer valid, we should probably delete it
                 if (ex.StatusCode == System.Net.HttpStatusCode.Gone || ex.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    DatabaseService.DeletePushSubscription(endpoint);
+                    using var scope = _scopeFactory.CreateScope();
+                    var notificationRepo = scope.ServiceProvider.GetRequiredService<INotificationRepository>();
+                    notificationRepo.DeletePushSubscription(endpoint);
                 }
             }
             catch (Exception)

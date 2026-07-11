@@ -2,11 +2,21 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ToolCalendar.Models;
 
+using Microsoft.Extensions.DependencyInjection;
+using ToolCalendar.Core.Data.Interfaces;
+
 namespace ToolCalendar.Services
 {
     public class OcrTextProcessingService : IOcrTextProcessingService
     {
-private static string PostProcessExtractedText(string text)
+        private readonly IServiceScopeFactory _scopeFactory;
+
+        public OcrTextProcessingService(IServiceScopeFactory scopeFactory)
+        {
+            _scopeFactory = scopeFactory;
+        }
+
+        private static string PostProcessExtractedText(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
@@ -292,19 +302,22 @@ private static string PostProcessExtractedText(string text)
                 }
             }
 
+            using var scope = _scopeFactory.CreateScope();
+            var settingRepo = scope.ServiceProvider.GetRequiredService<ISettingRepository>();
+
             // Lấy cấu hình từ khóa từ DB
-            string kwSource = Data.DatabaseService.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành, đến hạn, thực hiện trước, báo cáo trước, kết thúc, thời hạn, hạn cuối");
+            string kwSource = settingRepo.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành, đến hạn, thực hiện trước, báo cáo trước, kết thúc, thời hạn, hạn cuối");
             var kwList = kwSource.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
             string kwPattern = string.Join("|", kwList.Select(x => Regex.Escape(x)));
 
             // Từ khóa LOẠI TRỪ: ngày gần các từ này không phải hạn xử lý
-            string excSource = Data.DatabaseService.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
+            string excSource = settingRepo.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
             var excList = excSource.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
             string excPattern = excList.Count > 0 ? string.Join("|", excList.Select(x => Regex.Escape(x))) : null;
 
             // Số ngày tối thiểu từ ngày ban hành (để loại ngày trước hoặc bằng ngày ban hành)
             int minDeadlineDays = 0;
-            if (int.TryParse(Data.DatabaseService.GetAppSetting("Document_MinDeadlineDays", "0"), out int minDaysCfg))
+            if (int.TryParse(settingRepo.GetAppSetting("Document_MinDeadlineDays", "0"), out int minDaysCfg))
                 minDeadlineDays = minDaysCfg;
 
             var deadlinePatterns = new List<string> {
@@ -582,7 +595,9 @@ private static string PostProcessExtractedText(string text)
             }
 
             // --- TÍCH HỢP LUẬT TỰ ĐỘNG (AUTO RULES) ---
-            var rules = Data.DatabaseService.GetAutoRules();
+            using var adminScope = _scopeFactory.CreateScope();
+            var adminRepo = adminScope.ServiceProvider.GetRequiredService<IAdminRepository>();
+            var rules = adminRepo.GetAutoRules();
             foreach (var rule in rules)
             {
                 if (!string.IsNullOrEmpty(rule.Keyword) &&
@@ -612,7 +627,9 @@ private static string PostProcessExtractedText(string text)
             // --- BÓC TÁCH PHÒNG BAN TỰ ĐỘNG (DEPARTMENT AUTO-DETECTION & MAPPING) ---
             try
             {
-                var allDepartments = Data.DatabaseService.GetDepartments();
+                using var deptScope = _scopeFactory.CreateScope();
+                var adminRepoDept = deptScope.ServiceProvider.GetRequiredService<IAdminRepository>();
+                var allDepartments = adminRepoDept.GetDepartments();
                 
                 // 1. Kiểm tra Mapping theo Cơ quan ban hành (Quy tắc người dùng cung cấp)
                     var mapping = new (string Pattern, string TargetDept)[] {
@@ -659,7 +676,8 @@ private static string PostProcessExtractedText(string text)
                     record.AssignedDepartmentIds = System.Text.Json.JsonSerializer.Serialize(matchedDeptIds);
                     if (!record.DepartmentId.HasValue) record.DepartmentId = matchedDeptIds[0];
                     
-                    var allUsers = Data.DatabaseService.GetUsers();
+                    var userRepo = deptScope.ServiceProvider.GetRequiredService<IUserRepository>();
+                    var allUsers = await userRepo.GetAllAsync();
                     var matchedUserIds = allUsers
                         .Where(u => u.DepartmentId.HasValue && matchedDeptIds.Contains(u.DepartmentId.Value) && u.Role == "CanBo")
                         .Select(u => u.Id).ToList();

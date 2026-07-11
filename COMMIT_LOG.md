@@ -790,3 +790,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingDetail.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(cabinet): thêm màn hình diễn biến phiên họp và xử lý chuyển trang từ thông tin phiên họp"`
+
+### [2026-07-11 09:21] Refactor DatabaseService to Repository Pattern
+- **Mô tả**: Hoàn tất quá trình refactor hệ thống sang sử dụng Repository Pattern. Chuyển tất cả các phương thức truy xuất database tĩnh từ `DatabaseService` vào các Repositories tương ứng (`ISettingRepository`, `IAdminRepository`, `IUserRepository`, `INotificationRepository`, `IAuditLogRepository`, `IStatsRepository`). Tiêm các repositories này vào Controllers và Services (`DocumentsController`, `OcrTextProcessingService`) thông qua Dependency Injection. Dọn dẹp hoàn toàn `DatabaseService.cs` chỉ còn lại phương thức `Initialize()`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(data): remove static methods from DatabaseService and finish injecting repositories"`

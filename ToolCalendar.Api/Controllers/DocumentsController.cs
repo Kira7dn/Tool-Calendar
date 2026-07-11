@@ -29,6 +29,7 @@ namespace ToolCalendar.Api.Controllers
         private readonly IDocumentRoutingRepository _routingRepo;
         private readonly IConfiguration _configuration;
         private readonly IDocumentUploadService _uploadService;
+        private readonly IAuditLogRepository _auditRepo;
 
         public DocumentsController(
             IDocumentExtractorService extractor,
@@ -39,7 +40,8 @@ namespace ToolCalendar.Api.Controllers
             IDocumentRepository documentRepository,
             IDocumentRoutingRepository routingRepo,
             IConfiguration configuration,
-            IDocumentUploadService uploadService)
+            IDocumentUploadService uploadService,
+            IAuditLogRepository auditRepo)
         {
             _extractor = extractor;
             _ocrQueue = ocrQueue;
@@ -50,6 +52,7 @@ namespace ToolCalendar.Api.Controllers
             _routingRepo = routingRepo;
             _configuration = configuration;
             _uploadService = uploadService;
+            _auditRepo = auditRepo;
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
@@ -287,7 +290,7 @@ namespace ToolCalendar.Api.Controllers
                 var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (int.TryParse(currentUserIdStr, out int currentUserId))
                 {
-                    DatabaseService.InsertAuditLog(currentUserId, $"Đã nộp bằng chứng hoàn thành văn bản {doc.SoVanBan}.");
+                    _auditRepo.InsertAuditLog(currentUserId, $"Đã nộp bằng chứng hoàn thành văn bản {doc.SoVanBan}.");
                 }
             }
             catch { }

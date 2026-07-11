@@ -17,13 +17,15 @@ namespace ToolCalendar.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<OcrService> _logger;
+        private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
         private static FullOcrModel? _paddleOcrModel;
         private static readonly SemaphoreSlim _modelLock = new SemaphoreSlim(1, 1);
 
-        public OcrService(IConfiguration configuration, ILogger<OcrService> logger)
+        public OcrService(IConfiguration configuration, ILogger<OcrService> logger, Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory)
         {
             _configuration = configuration;
             _logger = logger;
+            _scopeFactory = scopeFactory;
         }
 
         private async Task<FullOcrModel> GetModelAsync()
@@ -84,7 +86,9 @@ namespace ToolCalendar.Services
 
                 result.TotalPages = PdfPageRenderer.CountPdfPages(filePath);
 
-                string maxPagesConfig = Data.DatabaseService.GetAppSetting("OcrSettings_MaxPagesToScan", "0");
+                using var scope = _scopeFactory.CreateScope();
+                var settingRepo = scope.ServiceProvider.GetRequiredService<ToolCalendar.Core.Data.Interfaces.ISettingRepository>();
+                string maxPagesConfig = settingRepo.GetAppSetting("OcrSettings_MaxPagesToScan", "0");
                 int maxPages = int.TryParse(maxPagesConfig, out int mp) ? mp : 0;
                 int pagesToProcess = maxPages > 0 ? Math.Min(result.TotalPages, maxPages) : result.TotalPages;
 
