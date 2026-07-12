@@ -139,6 +139,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## Lịch sử
 
+### [2026-07-12 22:03] Sửa định dạng mã nguồn (format) trong AppShell.jsx
+- **Mô tả**: Chạy prettier và định dạng lại (fix indentation) code trong `AppShell.jsx` để chuẩn hóa code style theo cấu hình của dự án.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style: định dạng mã nguồn AppShell.jsx"`
+
 ### [2026-07-08 09:40] Thêm chức năng Xóa phiên họp trong popup chỉnh sửa
 - **Mô tả**: Thêm nút Xóa (Delete) vào MeetingModal khi chỉnh sửa sự kiện đã có. Gọi API DELETE và làm mới danh sách cuộc họp khi xóa thành công.
 - **Tệp thay đổi**:
