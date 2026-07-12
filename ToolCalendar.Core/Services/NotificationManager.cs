@@ -42,7 +42,7 @@ namespace ToolCalendar.Services
 
         public async Task SendToUserAsync(int userId, string title, string body, object? data = null)
         {
-            var user = await _userRepo.GetByIdAsync(userId);
+            var user = _userRepo.GetUserById(userId);
             if (user == null)
             {
                 _logger.LogWarning($"[NotificationManager] Không tìm thấy user ID {userId} để gửi thông báo.");

@@ -10,8 +10,8 @@ namespace ToolCalendar.Core.Data.Interfaces
         void UpdateDepartment(Department dept);
         void DeleteDepartment(int id);
         
-        List<Label> GetLabels();
-        int InsertLabel(Label label);
+        List<DocumentLabel> GetLabels();
+        int InsertLabel(DocumentLabel label);
         void DeleteLabel(int id);
         
         List<AutoRule> GetAutoRules();

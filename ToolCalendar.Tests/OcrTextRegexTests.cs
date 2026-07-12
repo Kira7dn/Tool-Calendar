@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using FluentAssertions;
 using ToolCalendar.Services;
@@ -6,15 +7,14 @@ using ToolCalendar.Data;
 
 namespace ToolCalendar.Tests
 {
-    public class OcrTextRegexTests
+    public class OcrTextRegexTests : IntegrationTestBase
     {
         private readonly OcrTextProcessingService _service;
 
-        public OcrTextRegexTests()
+        public OcrTextRegexTests() : base()
         {
-            // Initialize test database if needed
-            DatabaseService.Initialize();
-            _service = new OcrTextProcessingService();
+            var scopeFactory = Factory.Services.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>();
+            _service = new OcrTextProcessingService(scopeFactory);
         }
 
         [Fact]

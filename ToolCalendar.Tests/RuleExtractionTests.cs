@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using FluentAssertions;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
@@ -26,7 +27,8 @@ namespace ToolCalendar.Tests
 
             var ocrMock = new MockOcrService();
             var imgService = new OcrImageProcessingService();
-            var txtService = new OcrTextProcessingService();
+            var scopeFactory = Factory.Services.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>();
+            var txtService = new OcrTextProcessingService(scopeFactory);
             _extractorService = new DocumentExtractorService(ocrMock, imgService, txtService);
 
             SetupTestData();
@@ -34,8 +36,12 @@ namespace ToolCalendar.Tests
 
         private void SetupTestData()
         {
+            using var scope = Factory.Services.CreateScope();
+            var adminRepo = scope.ServiceProvider.GetRequiredService<ToolCalendar.Core.Data.Interfaces.IAdminRepository>();
+            var settingRepo = scope.ServiceProvider.GetRequiredService<ToolCalendar.Core.Data.Interfaces.ISettingRepository>();
+
             // 1. Setup Auto Rules
-            DatabaseService.InsertAutoRule(new AutoRule
+            adminRepo.InsertAutoRule(new AutoRule
             {
                 Keyword = "Kinh tế",
                 LabelId = 1,
@@ -43,7 +49,7 @@ namespace ToolCalendar.Tests
                 DefaultDeadlineDays = 10
             });
 
-            DatabaseService.InsertAutoRule(new AutoRule
+            adminRepo.InsertAutoRule(new AutoRule
             {
                 Keyword = "Tư pháp",
                 LabelId = 3,
@@ -52,7 +58,7 @@ namespace ToolCalendar.Tests
             });
 
             // 2. Setup AppSettings for Deadline Keywords
-            DatabaseService.SaveAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, due date");
+            settingRepo.SaveAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, due date");
         }
 
         [Fact]

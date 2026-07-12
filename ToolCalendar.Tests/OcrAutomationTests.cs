@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -9,7 +10,7 @@ using Xunit;
 
 namespace ToolCalendar.Tests
 {
-    public class OcrAutomationTests
+    public class OcrAutomationTests : IntegrationTestBase
     {
         private static bool _debugReset;
         private static readonly object DebugResetLock = new();
@@ -18,11 +19,12 @@ namespace ToolCalendar.Tests
         private readonly IDocumentExtractorService _extractorService;
         private readonly bool _isLocalOcrRuntimeAvailable;
 
-        public OcrAutomationTests()
+        public OcrAutomationTests() : base()
         {
             string debugPath = Path.Combine(TestPathHelper.GetTestResultsRoot(), "unit_test", "debug_images", "automation");
             ResetDirectoryOnce(debugPath);
-            ConfigureTestDatabase($"ocr-automation-tests-{Guid.NewGuid():N}.db");
+            // IntegrationTestBase already initializes the DB
+            // ConfigureTestDatabase($"ocr-automation-tests-{Guid.NewGuid():N}.db");
 
             var configData = new Dictionary<string, string?> {
                 {"OcrSettings:TessDataPath", TestPathHelper.GetCoreTessdataPath()},
@@ -35,10 +37,11 @@ namespace ToolCalendar.Tests
                 .AddInMemoryCollection(configData)
                 .Build();
 
+            var scopeFactory = Factory.Services.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>();
             _isLocalOcrRuntimeAvailable = OcrTestRuntimeHelper.IsTesseractCliAvailable();
-            _ocrService = new OcrService(_configuration, NullLogger<OcrService>.Instance);
+            _ocrService = new OcrService(_configuration, NullLogger<OcrService>.Instance, scopeFactory);
             var imgService = new OcrImageProcessingService();
-            var txtService = new OcrTextProcessingService();
+            var txtService = new OcrTextProcessingService(scopeFactory);
             _extractorService = new DocumentExtractorService(_ocrService, imgService, txtService);
         }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -55,7 +56,9 @@ namespace ToolCalendar.Tests
 
         protected void CreateUser(string username, string password, string role)
         {
-            DatabaseService.Register(username, password, role);
+            using var scope = Factory.Services.CreateScope();
+            var userRepo = scope.ServiceProvider.GetRequiredService<ToolCalendar.Core.Data.Interfaces.IUserRepository>();
+            userRepo.Register(username, password, role);
         }
 
         public virtual void Dispose()

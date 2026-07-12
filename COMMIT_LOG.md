@@ -1,5 +1,28 @@
+### [2026-07-12 15:24] Fix Unit/Integration Test build errors
+- **Mô tả**: Cập nhật lại các test case (`BusinessFlowTests`, `RuleExtractionTests`, `OcrAutomationTests`, `OcrStressTests`, `RealDocumentTests`, `OcrTextRegexTests`) để tương thích với các thay đổi DI gần đây: thêm tham số `IServiceScopeFactory` cho `OcrService` và `OcrTextProcessingService`, đồng thời thay thế các lệnh gọi tĩnh trên `DatabaseService` (đã bị xóa/di dời) bằng các Repository tương ứng thông qua DI (`IUserRepository`, `IAdminRepository`, `ISettingRepository`, `IAuditLogRepository`). Kế thừa `IntegrationTestBase` cho các class test cần sử dụng DI từ Host.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Tests/IntegrationTestBase.cs` (Sửa đổi)
+  - `ToolCalendar.Tests/BusinessFlowTests.cs` (Sửa đổi)
+  - `ToolCalendar.Tests/RuleExtractionTests.cs` (Sửa đổi)
+  - `ToolCalendar.Tests/OcrTextRegexTests.cs` (Sửa đổi)
+  - `ToolCalendar.Tests/OcrStressTests.cs` (Sửa đổi)
+  - `ToolCalendar.Tests/OcrAutomationTests.cs` (Sửa đổi)
+  - `ToolCalendar.Tests/RealDocumentTests.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(tests): resolve missing DI dependencies and update deprecated DatabaseService calls"`
+
+### [2026-07-12 15:15] Fix build error Label and related issues
+- **Mô tả**: Sửa lỗi build "The type or namespace name 'Label' could not be found" do AdminRepository/Controller dùng sai kiểu `Label` thay vì `DocumentLabel`. Đồng thời sửa lỗi thiếu hàm đồng bộ trên IUserRepository, thêm thiếu using DependencyInjection, và sửa lỗi syntax do thiếu đóng ngoặc nhọn ở AuthController.cs.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IAdminRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/AdminRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/AdminController.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/NotificationManager.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(core,api): resolve build errors related to DocumentLabel, missing using and unclosed bracket"`
+
 ### [2026-07-09 16:24] Kết nối backend thực cho toàn bộ phân hệ Phòng họp không giấy tờ — Loại bỏ mọi hardcode
-- **Mô tả**: Triển khai đầy đủ backend data-driven cho phân hệ Cabinet. Xóa bỏ hoàn toàn mọi dữ liệu giả cứng (hardcode) trong tất cả các màn hình: tên chủ trì, trạng thái tham dự ngẫu nhiên, số liệu dashboard `Confirmed: 4, Unconfirmed: 2`, stats fallback `attended: 2, total: 2`. Tạo mới 3 bảng DB + 3 Models + 3 Repositories + 3 Controllers + đăng ký DI. Rewrite 5 frontend pages để gọi API thực. Bổ sung đầy đủ tài liệu kỹ thuật vào `SYSTEM_FEATURES.md`.
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi — thêm migration 8 cột Meetings + 4 bảng mới)
   - `ToolCalendar.Core/Models/MeetingProceeding.cs` (Mới)

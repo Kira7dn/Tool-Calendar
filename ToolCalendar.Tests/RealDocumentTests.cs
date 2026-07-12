@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using ToolCalendar.Data;
 using ToolCalendar.Models;
@@ -8,7 +9,7 @@ using Xunit;
 
 namespace ToolCalendar.Tests
 {
-    public class RealDocumentTests
+    public class RealDocumentTests : IntegrationTestBase
     {
         private static bool _debugReset;
         private static readonly object DebugResetLock = new();
@@ -16,12 +17,13 @@ namespace ToolCalendar.Tests
         private readonly IOcrService _ocrService;
         private readonly bool _isLocalOcrRuntimeAvailable;
 
-        public RealDocumentTests()
+        public RealDocumentTests() : base()
         {
             var resultsPath = Path.Combine(TestPathHelper.GetTestResultsRoot(), "actual_test");
             var debugPath = Path.Combine(resultsPath, "debug_images");
             ResetDirectoryOnce(debugPath);
-            ConfigureTestDatabase($"real-document-tests-{Guid.NewGuid():N}.db");
+            // IntegrationTestBase already initializes the DB
+            // ConfigureTestDatabase($"real-document-tests-{Guid.NewGuid():N}.db");
 
             var configData = new Dictionary<string, string?> {
                 {"OcrSettings:TessDataPath", TestPathHelper.GetCoreTessdataPath()},
@@ -35,7 +37,8 @@ namespace ToolCalendar.Tests
                 .Build();
 
             _isLocalOcrRuntimeAvailable = OcrTestRuntimeHelper.IsTesseractCliAvailable();
-            _ocrService = new OcrService(_configuration, NullLogger<OcrService>.Instance);
+            var scopeFactory = Factory.Services.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>();
+            _ocrService = new OcrService(_configuration, NullLogger<OcrService>.Instance, scopeFactory);
         }
 
         private static void ConfigureTestDatabase(string fileName)

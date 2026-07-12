@@ -250,4 +250,5 @@ namespace ToolCalendar.Api.Controllers
     {
         public string NewPassword { get; set; } = "";
     }
+}
 

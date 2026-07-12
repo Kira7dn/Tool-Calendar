@@ -59,7 +59,7 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPost("labels")]
-        public IActionResult AddLabel([FromBody] Label label)
+        public IActionResult AddLabel([FromBody] DocumentLabel label)
         {
             if (label == null) return BadRequest(ApiResponse.Fail("Dữ liệu nhãn không hợp lệ."));
             int id = _adminRepo.InsertLabel(label);

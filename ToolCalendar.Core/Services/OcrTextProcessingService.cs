@@ -677,7 +677,7 @@ namespace ToolCalendar.Services
                     if (!record.DepartmentId.HasValue) record.DepartmentId = matchedDeptIds[0];
                     
                     var userRepo = deptScope.ServiceProvider.GetRequiredService<IUserRepository>();
-                    var allUsers = await userRepo.GetAllAsync();
+                    var allUsers = userRepo.GetUsers();
                     var matchedUserIds = allUsers
                         .Where(u => u.DepartmentId.HasValue && matchedDeptIds.Contains(u.DepartmentId.Value) && u.Role == "CanBo")
                         .Select(u => u.Id).ToList();

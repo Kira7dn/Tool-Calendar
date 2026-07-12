@@ -81,16 +81,16 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.ExecuteNonQuery();
         }
 
-        public List<Label> GetLabels()
+        public List<DocumentLabel> GetLabels()
         {
-            var list = new List<Label>();
+            var list = new List<DocumentLabel>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             using var cmd = new SqliteCommand("SELECT Id, Name, Color FROM Labels", connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                list.Add(new Label
+                list.Add(new DocumentLabel
                 {
                     Id = Convert.ToInt32(reader["Id"]),
                     Name = reader["Name"].ToString() ?? "",
@@ -100,7 +100,7 @@ namespace ToolCalendar.Core.Data.Repositories
             return list;
         }
 
-        public int InsertLabel(Label l)
+        public int InsertLabel(DocumentLabel l)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();

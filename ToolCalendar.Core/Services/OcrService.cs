@@ -10,6 +10,7 @@ using Sdcb.PaddleOCR;
 using Sdcb.PaddleOCR.Models.Online;
 using Sdcb.PaddleOCR.Models;
 using Sdcb.PaddleInference;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ToolCalendar.Services
 {
