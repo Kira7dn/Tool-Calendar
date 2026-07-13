@@ -827,3 +827,15 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(data): remove static methods from DatabaseService and finish injecting repositories"`
+
+### [2026-07-13 04:10] Fix bug API v� Unit Test Cabinet
+- **M� t?**: B? sung b?ng MeetingConclusions, MeetingNotes v�o seed_db.sql d? tr�nh l?i DB. Fix c�c test li�n quan d?n Cabinet b? thi?u thu?c t�nh, sai d?nh d?ng response v� b? test call API /api/auth/me kh�ng t?n t?i.
+- **T?p thay d?i**:
+  - \seed_db.sql\ (S?a d?i)
+  - \ToolCalendar.Tests/IntegrationTestBase.cs\ (S?a d?i)
+  - \ToolCalendar.Tests/Cabinet/CabinetConclusionsTests.cs\ (S?a d?i)
+  - \ToolCalendar.Tests/Cabinet/CabinetMeetingsTests.cs\ (S?a d?i)
+  - \ToolCalendar.Tests/Cabinet/CabinetNotesTests.cs\ (S?a d?i)
+  - \ToolCalendar.Tests/Cabinet/CabinetRoomsTests.cs\ (S?a d?i)
+- **L?nh git commit**: \git commit -m "test(cabinet): fix test failures and missing tables"\
+
