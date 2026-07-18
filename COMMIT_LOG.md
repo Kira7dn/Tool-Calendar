@@ -1,3 +1,9 @@
+### [2026-07-18 15:44] Refactor Rate Limiting for Global Application
+- **Mô tả**: Tái cấu trúc cấu hình Rate Limiting trong Program.cs: dùng RateLimitPartition (theo IP/User) thay cho pool chung toàn server. Áp dụng policy fixed làm mặc định cho toàn bộ Controllers và SignalR Hub bằng .RequireRateLimiting("fixed") nhằm bảo vệ toàn hệ thống khỏi DoS.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(api): apply partitioned global rate limiting for all endpoints"`
+
 ### [2026-07-12 15:24] Fix Unit/Integration Test build errors
 - **Mô tả**: Cập nhật lại các test case (`BusinessFlowTests`, `RuleExtractionTests`, `OcrAutomationTests`, `OcrStressTests`, `RealDocumentTests`, `OcrTextRegexTests`) để tương thích với các thay đổi DI gần đây: thêm tham số `IServiceScopeFactory` cho `OcrService` và `OcrTextProcessingService`, đồng thời thay thế các lệnh gọi tĩnh trên `DatabaseService` (đã bị xóa/di dời) bằng các Repository tương ứng thông qua DI (`IUserRepository`, `IAdminRepository`, `ISettingRepository`, `IAuditLogRepository`). Kế thừa `IntegrationTestBase` cho các class test cần sử dụng DI từ Host.
 - **Tệp thay đổi**:
@@ -828,8 +834,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(data): remove static methods from DatabaseService and finish injecting repositories"`
 
-### [2026-07-13 04:10] Fix bug API v� Unit Test Cabinet
-- **M� t?**: B? sung b?ng MeetingConclusions, MeetingNotes v�o seed_db.sql d? tr�nh l?i DB. Fix c�c test li�n quan d?n Cabinet b? thi?u thu?c t�nh, sai d?nh d?ng response v� b? test call API /api/auth/me kh�ng t?n t?i.
+### [2026-07-13 04:10] Fix bug API v Unit Test Cabinet
+- **M t?**: B? sung b?ng MeetingConclusions, MeetingNotes vo seed_db.sql d? trnh l?i DB. Fix cc test lin quan d?n Cabinet b? thi?u thu?c tnh, sai d?nh d?ng response v b? test call API /api/auth/me khng t?n t?i.
 - **T?p thay d?i**:
   - \seed_db.sql\ (S?a d?i)
   - \ToolCalendar.Tests/IntegrationTestBase.cs\ (S?a d?i)

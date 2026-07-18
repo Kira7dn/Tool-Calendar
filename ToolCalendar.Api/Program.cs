@@ -37,33 +37,43 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    // Policy chung toàn hệ thống: 50 request / 10 giây
-    options.AddFixedWindowLimiter("fixed", opt =>
-    {
-        opt.Window = TimeSpan.FromSeconds(10);
-        opt.PermitLimit = 50;
-        opt.QueueLimit = 0;
-    });
+    // Policy chung toàn hệ thống: 50 request / 10 giây / IP
+    options.AddPolicy("fixed", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 50,
+                QueueLimit = 0,
+                Window = TimeSpan.FromSeconds(10)
+            }));
 
     // Policy STRICT cho Login: tối đa 5 lần thử / 60 giây / mỗi IP → chống Brute Force
-    options.AddSlidingWindowLimiter("login-policy", opt =>
-    {
-        opt.Window = TimeSpan.FromSeconds(60);
-        opt.PermitLimit = 5;
-        opt.SegmentsPerWindow = 6;
-        opt.QueueLimit = 0;
-        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-    });
+    options.AddPolicy("login-policy", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: partition => new SlidingWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 5,
+                SegmentsPerWindow = 6,
+                QueueLimit = 0,
+                Window = TimeSpan.FromSeconds(60)
+            }));
 
-    // Policy cho Upload: tối đa 200 file / 60 giây / mỗi user
-    // Tăng từ 10 → 200 để hỗ trợ tải hàng loạt (batch upload 1000+ file)
-    options.AddFixedWindowLimiter("upload-limit", opt =>
-    {
-        opt.Window = TimeSpan.FromSeconds(60);
-        opt.PermitLimit = 1000;
-        opt.QueueLimit = 100; // Cho phép chờ thêm 100 request trong queue
-        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-    });
+    // Policy cho Upload: tối đa 1000 request / 60 giây / mỗi user (Dựa vào User Claim, nếu không có fallback về IP)
+    options.AddPolicy("upload-limit", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 1000,
+                QueueLimit = 100, // Cho phép chờ thêm 100 request trong queue
+                Window = TimeSpan.FromSeconds(60),
+                QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst
+            }));
 });
 
 // Đăng ký Repositories (Clean Architecture)
@@ -353,8 +363,9 @@ if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
-app.MapHub<NotificationHub>("/notificationHub");
+// Áp dụng Rate Limiter "fixed" làm mặc định cho tất cả Controllers và Hub
+app.MapControllers().RequireRateLimiting("fixed");
+app.MapHub<NotificationHub>("/notificationHub").RequireRateLimiting("fixed");
 app.MapFallbackToFile("index.html");
 
 
