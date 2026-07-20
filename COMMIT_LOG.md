@@ -885,3 +885,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/pages/Settings.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/components/settings/GeneralTab.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(settings): sửa lỗi không lưu được từ khóa thời hạn mới"`
+
+### [2026-07-21 01:09] fix(upload): thực sự xóa văn bản khỏi DB khi hủy đợt tải hoặc gỡ bỏ một văn bản
+- **Mô tả**: Sửa lỗi logic trên giao diện Upload, khi ấn "Xóa" hoặc "Hủy đợt tải" chỉ xóa khỏi State (UI) mà không gọi API xóa tài liệu (nháp) dưới Database, dẫn đến rác dữ liệu tồn đọng trong Quản lý văn bản.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/Upload.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(upload): thực sự xóa văn bản khỏi DB khi hủy đợt tải hoặc gỡ bỏ"`

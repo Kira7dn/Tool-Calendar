@@ -528,8 +528,24 @@ export function Upload({ onTabChange }) {
   }
 
   const executeClearBatch = async () => {
+    const ids = batchItems.filter((i) => typeof i.id === 'number').map((i) => i.id)
+    if (ids.length > 0) {
+      try {
+        await fetch('/api/documents/bulk-delete', {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(ids),
+        })
+      } catch (e) {
+        console.error(e)
+      }
+    }
     setBatchItems([])
     setShowClearConfirm(false)
+    toast.success('Đã hủy đợt tải và xóa các tài liệu nháp')
   }
 
   const statCounts = {
@@ -1305,8 +1321,19 @@ export function Upload({ onTabChange }) {
         title="Xóa khỏi đợt tải?"
         description={`Bạn có chắc chắn muốn xóa văn bản "${deleteItemConfirm.item?.fileName}"? Tài liệu này sẽ bị gỡ bỏ khỏi đợt xử lý hiện tại.`}
         confirmLabel="XÓA NGAY"
-        onConfirm={() => {
-          setBatchItems((prev) => prev.filter((i) => i.id !== deleteItemConfirm.item.id))
+        onConfirm={async () => {
+          const item = deleteItemConfirm.item
+          if (item && typeof item.id === 'number') {
+            try {
+              await fetch(`/api/documents/${item.id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+              })
+            } catch (e) {
+              console.error(e)
+            }
+          }
+          setBatchItems((prev) => prev.filter((i) => i.id !== item.id))
           setDeleteItemConfirm({ open: false, item: null })
           toast.success('Đã gỡ bỏ văn bản')
         }}
