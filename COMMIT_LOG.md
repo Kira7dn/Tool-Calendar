@@ -891,3 +891,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/pages/Upload.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(upload): thực sự xóa văn bản khỏi DB khi hủy đợt tải hoặc gỡ bỏ"`
+
+### [2026-07-21 01:16] feat(ocr): nâng cấp Regex nhận diện thời hạn để hỗ trợ bỏ qua cụm thời gian (giờ/phút)
+- **Mô tả**: Cập nhật logic OCR Regex trong `OcrTextProcessingService.cs`. Cho phép tùy chọn bỏ qua các cụm từ chỉ thời gian (VD: "16h", "16 giờ", "16h30") nằm giữa từ khóa thời hạn và ngày tháng, giúp nhận diện chính xác các văn bản có cấu trúc như "trước 16h ngày 22/7/2026" chỉ bằng từ khóa "trước".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): nâng cấp Regex nhận diện thời hạn hỗ trợ thời gian (giờ/phút)"`
