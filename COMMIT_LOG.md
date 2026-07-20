@@ -1,3 +1,9 @@
+### [2026-07-21 01:39] Thêm platform: linux/amd64 cho official-doc-backend
+- **Mô tả**: Hệ thống sử dụng PaddleOCR và OpenCvSharp yêu cầu thư viện native `libOpenCvSharpExtern.so`. Tuy nhiên thư viện này chỉ có sẵn bản build cho x64, trong khi Docker trên máy Mac của Developer chạy kiến trúc ARM64 (Apple Silicon), gây ra lỗi `DllNotFoundException` và làm OCR sập hoàn toàn. Đã thêm `platform: linux/amd64` vào `docker-compose.yml` để ép Docker Desktop giả lập x86_64, giúp load được thư viện native thành công.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): ép docker backend chạy amd64 để sửa lỗi opencv trên mac arm64"`
+
 ### [2026-07-21 01:34] Cập nhật ParseTextAsync để sử dụng Regex lấy Thời hạn khi có Gemini
 - **Mô tả**: Khi có API Key Gemini, hệ thống luôn ưu tiên parse bằng Gemini nhưng prompt của Gemini không yêu cầu lấy `ThoiHan`. Do đó `ThoiHan` luôn rỗng và không áp dụng các cấu hình từ khóa của hệ thống (trong DB). Đã sửa code để luôn gọi `ParseTextWithRegexAsync` để lấy `ThoiHan` và gán vào kết quả cuối cùng.
 - **Tệp thay đổi**:
