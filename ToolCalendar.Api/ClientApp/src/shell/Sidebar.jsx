@@ -49,7 +49,7 @@ const navItems = [
   {
     isLink: true,
     url: '/campha',
-    label: 'Lịch công tác',
+    label: 'Văn bản đến hạn',
     icon: CalendarDays,
   },
 ]

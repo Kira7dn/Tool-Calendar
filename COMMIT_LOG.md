@@ -865,3 +865,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): chuyển mô hình Gemini sang flash-lite để fix lỗi quota"`
+
+### [2026-07-21 00:22] style(ui): đổi tên mục menu Lịch công tác thành Văn bản đến hạn
+- **Mô tả**: Sửa tên mục sidebar từ Lịch công tác thành Văn bản đến hạn để ngắn gọn và phản ánh đúng nội dung.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): đổi tên mục menu Lịch công tác thành Văn bản đến hạn"`
