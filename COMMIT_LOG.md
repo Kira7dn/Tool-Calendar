@@ -878,3 +878,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/pages/Settings.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/components/settings/GeneralTab.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(settings): sửa lỗi từ khóa không lưu do stale state khi gọi api"`
+
+### [2026-07-21 00:59] fix(settings): sửa lỗi không lưu được từ khóa thời hạn mới
+- **Mô tả**: Sửa lỗi logic `isEvent` trong `Settings.jsx` nhận diện nhầm `overrideConfig` thành event, dẫn đến việc fallback về config cũ khi lưu, làm mất từ khóa mới thêm. Cập nhật `onBlur` trong `GeneralTab.jsx` để tránh rò rỉ event object.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/Settings.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/components/settings/GeneralTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(settings): sửa lỗi không lưu được từ khóa thời hạn mới"`

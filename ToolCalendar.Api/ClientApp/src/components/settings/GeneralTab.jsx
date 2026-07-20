@@ -111,7 +111,7 @@ export function GeneralTab({
               type="time"
               value={config.notificationScanTime || ''}
               onChange={(e) => setConfig({ ...config, notificationScanTime: e.target.value })}
-              onBlur={onSave}
+              onBlur={() => onSave()}
               className="w-36 h-11 px-4 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-red-300 focus:ring-red-50 shadow-none"
             />
             <div className="flex items-start gap-2 sm:max-w-[180px]">

@@ -50,9 +50,10 @@ export function Settings() {
 
   const handleSaveSettings = async (overrideConfig) => {
     setIsSaving(true)
-    const isEvent =
-      overrideConfig && (overrideConfig.nativeEvent || overrideConfig.target || overrideConfig.type)
-    const payload = overrideConfig && !isEvent ? overrideConfig : config
+    const payload =
+      overrideConfig && !overrideConfig.nativeEvent && !overrideConfig.target
+        ? overrideConfig
+        : config
     try {
       const response = await fetch('/api/stats/settings', {
         method: 'POST',
