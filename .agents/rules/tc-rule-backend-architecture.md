@@ -1,5 +1,5 @@
 ---
-trigger: on_demand
+trigger: always_on
 description: "Kiến trúc bắt buộc cho Backend ASP.NET Core — ADO.NET, ApiResponse, Middleware."
 ---
 

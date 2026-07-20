@@ -1,5 +1,5 @@
 ---
-trigger: on_demand
+trigger: always_on
 description: "Chuẩn Conventional Commits cho dự án Tool-Calendar — bắt buộc khi tạo commit."
 ---
 

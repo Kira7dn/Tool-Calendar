@@ -124,6 +124,9 @@ builder.Services.AddScoped<IPasswordHasher<User>, HybridPasswordHasher>();
 // Đăng ký Upload Service (tách logic upload ra khỏi Controller)
 builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 
+// Cấu hình HTTP Client cho các gọi API bên ngoài (như Gemini)
+builder.Services.AddHttpClient();
+
 // Đăng ký OCR & Extraction Services
 builder.Services.AddSingleton<IOcrService, OcrService>();
 builder.Services.AddScoped<IOcrTextProcessingService, OcrTextProcessingService>();

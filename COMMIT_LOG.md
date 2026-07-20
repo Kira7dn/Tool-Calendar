@@ -1,3 +1,9 @@
+### [2026-07-20 23:32] Cập nhật Regex OCR cho Số văn bản
+- **Mô tả**: Bổ sung hỗ trợ ký tự `&` và `_` trong phần cơ quan ban hành (VD: SNN&MT) để tránh OCR nhận diện sai số hiệu công văn và kéo dài ký tự tối đa.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): thêm hỗ trợ ký tự & và _ trong regex bắt số văn bản"`
+
 ### [2026-07-18 15:44] Refactor Rate Limiting for Global Application
 - **Mô tả**: Tái cấu trúc cấu hình Rate Limiting trong Program.cs: dùng RateLimitPartition (theo IP/User) thay cho pool chung toàn server. Áp dụng policy fixed làm mặc định cho toàn bộ Controllers và SignalR Hub bằng .RequireRateLimiting("fixed") nhằm bảo vệ toàn hệ thống khỏi DoS.
 - **Tệp thay đổi**:
@@ -845,3 +851,17 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - \ToolCalendar.Tests/Cabinet/CabinetRoomsTests.cs\ (S?a d?i)
 - **L?nh git commit**: \git commit -m "test(cabinet): fix test failures and missing tables"\
 
+### [2026-07-20 23:50] feat(ocr): tích hợp Gemini API làm phương pháp bóc tách chính
+- **Mô tả**: Thay thế luồng trích xuất dữ liệu dựa trên Regex kém hiệu quả bằng Google Gemini 1.5 Flash. Khi có `GEMINI_API_KEY`, hệ thống sẽ gọi Gemini xử lý văn bản bị lộn xộn. Trả về fallback Regex nếu Gemini thất bại hoặc thiếu Key.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+  - `.env.example` (Sửa đổi)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): tích hợp Gemini API làm phương pháp bóc tách chính"`
+
+### [2026-07-21 00:16] fix(ocr): chuyển mô hình Gemini sang flash-lite để fix lỗi quota
+- **Mô tả**: Thay thế gemini-1.5-flash (bị deprecate) và gemma-4 (quá chậm) bằng gemini-flash-lite-latest để xử lý lỗi 429 Quota Exceeded trên free tier.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): chuyển mô hình Gemini sang flash-lite để fix lỗi quota"`

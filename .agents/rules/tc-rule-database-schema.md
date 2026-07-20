@@ -1,5 +1,5 @@
 ---
-trigger: on_demand
+trigger: always_on
 description: "Quy tắc DB Schema — cấu trúc bảng SQLite và quy định thay đổi schema."
 ---
 

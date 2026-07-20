@@ -1,5 +1,5 @@
 ---
-trigger: on_demand
+trigger: always_on
 description: "Tiêu chí chấp nhận kỹ thuật (Quality Gate) trước khi commit hoặc deploy."
 ---
 

@@ -18,6 +18,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - PUBLIC_ID_SECRET=${PUBLIC_ID_SECRET}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
       # --- ClamAV Config ---
       - ClamAv__Host=clamav
       - ClamAv__Port=3310

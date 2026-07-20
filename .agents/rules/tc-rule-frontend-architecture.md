@@ -1,5 +1,5 @@
 ---
-trigger: on_demand
+trigger: always_on
 description: "Quy tắc kiến trúc Frontend React — Global Fetch Interceptor, Tailwind v4, shadcn/ui."
 ---
 

@@ -1,6 +1,9 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using ToolCalendar.Models;
+using System.Net.Http;
+using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 
 using Microsoft.Extensions.DependencyInjection;
 using ToolCalendar.Core.Data.Interfaces;
@@ -10,10 +13,17 @@ namespace ToolCalendar.Services
     public class OcrTextProcessingService : IOcrTextProcessingService
     {
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IConfiguration _configuration;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public OcrTextProcessingService(IServiceScopeFactory scopeFactory)
+        public OcrTextProcessingService(
+            IServiceScopeFactory scopeFactory,
+            IConfiguration configuration,
+            IHttpClientFactory httpClientFactory)
         {
             _scopeFactory = scopeFactory;
+            _configuration = configuration;
+            _httpClientFactory = httpClientFactory;
         }
 
         private static string PostProcessExtractedText(string text)
@@ -106,8 +116,108 @@ namespace ToolCalendar.Services
             return current.Length >= 40 && !Regex.IsMatch(current, @"[.!?]$");
         }
 
-        // ------- Phân tích văn bản -------
+        // ------- Phân tích văn bản bằng Gemini -------
+        private async Task<DocumentRecord?> ParseTextWithGeminiAsync(string text, string filePath, string ocrPagesJson)
+        {
+            var apiKey = _configuration["GEMINI_API_KEY"];
+            if (string.IsNullOrWhiteSpace(apiKey)) return null;
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.Timeout = TimeSpan.FromSeconds(15); // Flash-lite cực kỳ nhanh nên để 15s
+                // Dùng gemini-flash-lite-latest vì gemma-4 bị chậm và gemini-flash-lite-latest thành công trên key này
+                var requestUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key={apiKey}";
+                
+                string cleanedText = PostProcessExtractedText(text);
+
+                var prompt = @"Bạn là chuyên gia bóc tách dữ liệu công văn. Hãy đọc nội dung thô (có thể lộn xộn hoặc sai trật tự) dưới đây và trả về JSON chuẩn với các trường:
+- SoVanBan: Số và ký hiệu văn bản (vd: 9679/SNN&MT-QLĐĐ).
+- TenCongVan: Tên loại công văn (vd: CÔNG VĂN, QUYẾT ĐỊNH, BÁO CÁO).
+- TrichYeu: Trích yếu nội dung công văn.
+- NgayBanHanh: Ngày ban hành định dạng YYYY-MM-DD.
+- CoQuanBanHanh: Tên cơ quan ban hành.
+- CoQuanChuQuan: Tên cơ quan chủ quản (nếu có).
+Bắt buộc trả về ĐÚNG định dạng JSON, không kèm markdown hay text nào khác.
+Nội dung:
+" + cleanedText;
+
+                var requestBody = new
+                {
+                    contents = new[]
+                    {
+                        new { parts = new[] { new { text = prompt } } }
+                    },
+                    generationConfig = new
+                    {
+                        response_mime_type = "application/json",
+                        temperature = 0.1
+                    }
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+                var response = await client.PostAsync(requestUrl, content);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[Gemini API Error] {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                    return null;
+                }
+
+                var responseString = await response.Content.ReadAsStringAsync();
+                
+                using var jsonDoc = JsonDocument.Parse(responseString);
+                var candidates = jsonDoc.RootElement.GetProperty("candidates");
+                if (candidates.GetArrayLength() == 0) return null;
+                
+                var contentText = candidates[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
+                if (string.IsNullOrWhiteSpace(contentText)) return null;
+
+                var result = JsonSerializer.Deserialize<JsonElement>(contentText);
+                
+                var record = new DocumentRecord
+                {
+                    FilePath = filePath,
+                    FullText = text,
+                    OcrPagesJson = string.IsNullOrWhiteSpace(ocrPagesJson) ? "[]" : ocrPagesJson,
+                    NgayThem = DateTime.Now,
+                    Status = "Chưa xử lý"
+                };
+
+                if (result.TryGetProperty("SoVanBan", out var soVanBan)) record.SoVanBan = soVanBan.GetString();
+                if (result.TryGetProperty("TenCongVan", out var tenCongVan)) record.TenCongVan = tenCongVan.GetString();
+                if (result.TryGetProperty("TrichYeu", out var trichYeu)) record.TrichYeu = trichYeu.GetString();
+                
+                if (result.TryGetProperty("NgayBanHanh", out var ngayBanHanhStr) && DateTime.TryParse(ngayBanHanhStr.GetString(), out var ngayBanHanh))
+                {
+                    record.NgayBanHanh = ngayBanHanh;
+                }
+                
+                if (result.TryGetProperty("CoQuanBanHanh", out var coQuanBanHanh)) record.CoQuanBanHanh = coQuanBanHanh.GetString();
+                if (result.TryGetProperty("CoQuanChuQuan", out var coQuanChuQuan)) record.CoQuanChuQuan = coQuanChuQuan.GetString();
+                
+                return record;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Gemini Parsing Error]: {ex.Message}");
+                return null;
+            }
+        }
+
+        // ------- Phân tích văn bản Controller -------
         public async Task<DocumentRecord> ParseTextAsync(string text, string filePath, string ocrPagesJson = "[]")
+        {
+            var geminiResult = await ParseTextWithGeminiAsync(text, filePath, ocrPagesJson);
+            if (geminiResult != null)
+            {
+                return geminiResult;
+            }
+            return await ParseTextWithRegexAsync(text, filePath, ocrPagesJson);
+        }
+
+        // ------- Phân tích văn bản cũ -------
+        private async Task<DocumentRecord> ParseTextWithRegexAsync(string text, string filePath, string ocrPagesJson = "[]")
         {
             string cleanedText = PostProcessExtractedText(text);
             var record = new DocumentRecord
@@ -170,7 +280,7 @@ namespace ToolCalendar.Services
             // Ví dụ khớp: 148/BC.UBND-VHXH | 2348-QĐ/TU | 1234/UBND-VX | 425/VP.UBND-XDMT
             // Ví dụ KHÔNG khớp: 10/4/2026 (sau / là số, không phải chữ hoa)
             var candidatePattern = new Regex(
-                @"(?<!\d)(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-Za-zĐđÀ-ỹ0-9\-/\.]{1,25})\b",
+                @"(?<!\d)(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-Za-zĐđÀ-ỹ0-9\-/\.&_]{1,30})\b",
                 RegexOptions.IgnoreCase);
 
             // Danh sách các từ khóa chỉ văn bản căn cứ/trích dẫn (bỏ qua số của chúng)
@@ -218,7 +328,7 @@ namespace ToolCalendar.Services
             if (string.IsNullOrWhiteSpace(bestSo))
             {
                 var fullMatches = Regex.Matches(t,
-                    @"[Ss][ôóo60]\s*[:.]?\s*(?:\d{1,3}[:\s]+)?(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-Za-zĐđÀ-ỹ0-9\-/\.]{1,25})\b",
+                    @"[Ss][ôóo60]\s*[:.]?\s*(?:\d{1,3}[:\s]+)?(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-Za-zĐđÀ-ỹ0-9\-/\.&_]{1,30})\b",
                     RegexOptions.IgnoreCase);
                 foreach (Match m in fullMatches)
                 {
@@ -240,7 +350,7 @@ namespace ToolCalendar.Services
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
                 var fparts = fileName.Split('_');
                 string realFileName = fparts.Length > 1 ? fparts[^1] : fileName;
-                var mFn = Regex.Match(realFileName, @"(\d{1,6}\s*[/\-]\s*[A-Z0-9\.]{2,})", RegexOptions.IgnoreCase);
+                var mFn = Regex.Match(realFileName, @"(\d{1,6}\s*[/\-]\s*[A-Z0-9\.&_]{2,})", RegexOptions.IgnoreCase);
                 if (mFn.Success)
                 {
                     record.SoVanBan = mFn.Value.Replace(" ", "");
