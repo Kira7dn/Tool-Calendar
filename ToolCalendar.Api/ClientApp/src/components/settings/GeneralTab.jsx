@@ -73,8 +73,9 @@ export function GeneralTab({
 
     if (!tags.includes(value.trim())) {
       const newTags = [...tags, value.trim()].join(', ')
-      setConfig((prev) => ({ ...prev, [field]: newTags }))
-      setTimeout(() => onSave(), 0)
+      const newConfig = { ...config, [field]: newTags }
+      setConfig(newConfig)
+      setTimeout(() => onSave(newConfig), 0)
     }
     setter('')
   }
@@ -86,8 +87,9 @@ export function GeneralTab({
       .map((t) => t.trim())
       .filter(Boolean)
     const newTags = tags.filter((t) => t !== tagToRemove).join(', ')
-    setConfig((prev) => ({ ...prev, [field]: newTags }))
-    setTimeout(() => onSave(), 0)
+    const newConfig = { ...config, [field]: newTags }
+    setConfig(newConfig)
+    setTimeout(() => onSave(newConfig), 0)
   }
 
   return (

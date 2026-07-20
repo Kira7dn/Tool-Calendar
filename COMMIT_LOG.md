@@ -871,3 +871,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): đổi tên mục menu Lịch công tác thành Văn bản đến hạn"`
+
+### [2026-07-21 00:29] fix(settings): sửa lỗi từ khóa không lưu do bất đồng bộ state
+- **Mô tả**: Khi thêm hoặc xóa từ khóa thời hạn (Deadline), component lưu state bằng setConfig rồi gọi onSave() ngay lập tức, dẫn đến việc closure của hàm onSave sử dụng biến state config cũ (stale state) và gửi mảng chưa cập nhật lên API. Thay vì thế, truyền trực tiếp biến newConfig vào onSave để request gửi state mới nhất.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/Settings.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/components/settings/GeneralTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(settings): sửa lỗi từ khóa không lưu do stale state khi gọi api"`

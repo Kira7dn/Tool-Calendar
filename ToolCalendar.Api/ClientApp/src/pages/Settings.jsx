@@ -48,8 +48,11 @@ export function Settings() {
     }
   }
 
-  const handleSaveSettings = async () => {
+  const handleSaveSettings = async (overrideConfig) => {
     setIsSaving(true)
+    const isEvent =
+      overrideConfig && (overrideConfig.nativeEvent || overrideConfig.target || overrideConfig.type)
+    const payload = overrideConfig && !isEvent ? overrideConfig : config
     try {
       const response = await fetch('/api/stats/settings', {
         method: 'POST',
@@ -57,7 +60,7 @@ export function Settings() {
           Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(config),
+        body: JSON.stringify(payload),
       })
       if (response.ok) toast.success('Đã lưu cấu hình hệ thống thành công!')
     } catch (error) {
