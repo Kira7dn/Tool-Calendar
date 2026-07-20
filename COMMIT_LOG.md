@@ -1,3 +1,9 @@
+### [2026-07-21 01:34] Cập nhật ParseTextAsync để sử dụng Regex lấy Thời hạn khi có Gemini
+- **Mô tả**: Khi có API Key Gemini, hệ thống luôn ưu tiên parse bằng Gemini nhưng prompt của Gemini không yêu cầu lấy `ThoiHan`. Do đó `ThoiHan` luôn rỗng và không áp dụng các cấu hình từ khóa của hệ thống (trong DB). Đã sửa code để luôn gọi `ParseTextWithRegexAsync` để lấy `ThoiHan` và gán vào kết quả cuối cùng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): luôn trích xuất thời hạn bằng regex kể cả khi dùng gemini"`
+
 ### [2026-07-20 23:32] Cập nhật Regex OCR cho Số văn bản
 - **Mô tả**: Bổ sung hỗ trợ ký tự `&` và `_` trong phần cơ quan ban hành (VD: SNN&MT) để tránh OCR nhận diện sai số hiệu công văn và kéo dài ký tự tối đa.
 - **Tệp thay đổi**:

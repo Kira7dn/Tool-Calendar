@@ -209,11 +209,14 @@ Nội dung:
         public async Task<DocumentRecord> ParseTextAsync(string text, string filePath, string ocrPagesJson = "[]")
         {
             var geminiResult = await ParseTextWithGeminiAsync(text, filePath, ocrPagesJson);
+            var regexResult = await ParseTextWithRegexAsync(text, filePath, ocrPagesJson);
+
             if (geminiResult != null)
             {
+                geminiResult.ThoiHan = regexResult.ThoiHan;
                 return geminiResult;
             }
-            return await ParseTextWithRegexAsync(text, filePath, ocrPagesJson);
+            return regexResult;
         }
 
         // ------- Phân tích văn bản cũ -------
