@@ -430,15 +430,17 @@ Nội dung:
             if (int.TryParse(settingRepo.GetAppSetting("Document_MinDeadlineDays", "0"), out int minDaysCfg))
                 minDeadlineDays = minDaysCfg;
 
+            // Regex cho phép tùy chọn bỏ qua các cụm giờ (VD: "16h", "16h30", "17 giờ")
+            string timeSkip = @"(?:\d{1,2}h\d{0,2}\s*|\d{1,2}\s*giờ\s*)?";
             var deadlinePatterns = new List<string> {
-                // 1. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [Ngày/Tháng/Năm]
-                $@"(?:{kwPattern})\s+[^0-9\n]{{0,20}}?\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})",
-                // 2. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [ngày... tháng... năm...]
-                $@"(?:{kwPattern})\s+[^0-9\n]{{0,20}}?\s*(?:ngày|này|ngay)?\s*(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})",
-                // 3. Mẫu: [Ngày/Tháng/Năm] + [Từ đệm linh hoạt] + [Từ khóa]
-                $@"(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})\s+[^0-9\n]{{0,20}}?\s*(?:{kwPattern})",
-                // 4. Mẫu: [ngày... tháng... năm...] + [Từ đệm linh hoạt] + [Từ khóa]
-                $@"(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})\s+[^0-9\n]{{0,20}}?\s*(?:{kwPattern})"
+                // 1. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [Thời gian (tùy chọn)] + [Ngày/Tháng/Năm]
+                $@"(?:{kwPattern})\s+[^0-9\n]{{0,30}}?\s*{timeSkip}(?:ngày|này|ngay)?\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})",
+                // 2. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [Thời gian (tùy chọn)] + [ngày... tháng... năm...]
+                $@"(?:{kwPattern})\s+[^0-9\n]{{0,30}}?\s*{timeSkip}(?:ngày|này|ngay)?\s*(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})",
+                // 3. Mẫu: [Ngày/Tháng/Năm] + [Thời gian (tùy chọn)] + [Từ đệm] + [Từ khóa]
+                $@"(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})\s+{timeSkip}[^0-9\n]{{0,30}}?\s*(?:{kwPattern})",
+                // 4. Mẫu: [ngày... tháng... năm...] + [Thời gian (tùy chọn)] + [Từ đệm] + [Từ khóa]
+                $@"(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})\s+{timeSkip}[^0-9\n]{{0,30}}?\s*(?:{kwPattern})"
             };
 
             DateTime? bestMatchDate = null;
