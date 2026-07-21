@@ -960,3 +960,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/pages/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): hiển thị đúng người tiếp nhận và sửa logic lịch sử phân công"`
+
+### [2026-07-21 09:37] fix(api): giữ nguyên tên file gốc khi tải xuống
+- **Mô tả**: Sửa lỗi endpoint tải file (/api/documents/{id}/file và /api/documents/evidence-file) trả về file trắng không có đuôi (như 'evidence-file' hoặc 'file') bằng cách thêm tham số thứ 3 vào hàm PhysicalFile để buộc trình duyệt lấy tên file vật lý.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): giữ nguyên tên file gốc khi tải xuống"`

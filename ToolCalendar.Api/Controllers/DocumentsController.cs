@@ -307,15 +307,33 @@ namespace ToolCalendar.Api.Controllers
             }
             catch { }
 
-            // 5. Gửi thông báo cho người giao việc
+            // 5. Gửi thông báo cho toàn bộ những người liên quan
             try {
                 var currentUserName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Cán bộ";
-                await _notificationManager.SendToUserAsync(
-                    doc.UploadedByUserId, 
-                    "Công việc đã hoàn thành", 
-                    $"{currentUserName} đã nộp bằng chứng và hoàn thành văn bản: {doc.SoVanBan}",
-                    new { docId = id, type = "completed" }
-                );
+                var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                int.TryParse(currentUserIdStr, out int currentUserId);
+
+                var routings = await _routingRepo.GetTreeByDocumentIdAsync(id);
+                var involvedUserIds = new System.Collections.Generic.HashSet<int>();
+                involvedUserIds.Add(doc.UploadedByUserId);
+                
+                foreach (var r in routings) {
+                    involvedUserIds.Add(r.SenderId);
+                    involvedUserIds.Add(r.ReceiverId);
+                }
+                
+                // Loại trừ người đang thao tác
+                involvedUserIds.Remove(currentUserId);
+
+                foreach (var uid in involvedUserIds) {
+                    if (uid <= 0) continue;
+                    await _notificationManager.SendToUserAsync(
+                        uid, 
+                        "Công việc đã hoàn thành", 
+                        $"{currentUserName} đã nộp bằng chứng và hoàn thành văn bản: {doc.SoVanBan}",
+                        new { docId = id, type = "completed" }
+                    );
+                }
             } catch { }
 
             return Ok(ApiResponse.Ok(new { message = "Nộp bằng chứng hoàn thành thành công.", paths = savedPaths }));
@@ -359,7 +377,7 @@ namespace ToolCalendar.Api.Controllers
             Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            return PhysicalFile(filePath, mimeType);
+            return PhysicalFile(filePath, mimeType, Path.GetFileName(filePath));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -662,7 +680,7 @@ namespace ToolCalendar.Api.Controllers
             Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            return PhysicalFile(fullPath, contentType);
+            return PhysicalFile(fullPath, contentType, Path.GetFileName(fullPath));
         }
 
         // ── Helper: Tạo token HMAC-SHA256 từ docId ──────────────────────
@@ -767,7 +785,8 @@ namespace ToolCalendar.Api.Controllers
             Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            return PhysicalFile(filePath, "application/pdf");
+            // Dùng PhysicalFile để stream file không tốn bộ nhớ server
+            return PhysicalFile(filePath, "application/pdf", Path.GetFileName(filePath));
         }
 
         private string GetDayLabel(DateTime date)
