@@ -966,3 +966,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): giữ nguyên tên file gốc khi tải xuống"`
+
+### [2026-07-21 09:45] fix(api): khôi phục tính năng xem trước inline cho PDF và file ảnh
+- **Mô tả**: Thay vì truyền tham số fileDownloadName vào hàm PhysicalFile (khiến trình duyệt ép tải file về và phá vỡ iframe preview), sử dụng System.Net.Mime.ContentDisposition với Inline = true để vừa hỗ trợ xem trước inline, vừa giữ được tên file khi người dùng nhấn Tải Xuống từ trình xem PDF.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): khôi phục tính năng xem trước inline cho file đính kèm"`

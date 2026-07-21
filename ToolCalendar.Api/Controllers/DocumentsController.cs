@@ -377,7 +377,9 @@ namespace ToolCalendar.Api.Controllers
             Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            return PhysicalFile(filePath, mimeType, Path.GetFileName(filePath));
+            var cd = new System.Net.Mime.ContentDisposition { FileName = Path.GetFileName(filePath), Inline = true };
+            Response.Headers["Content-Disposition"] = cd.ToString();
+            return PhysicalFile(filePath, mimeType);
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -413,7 +415,9 @@ namespace ToolCalendar.Api.Controllers
                 Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
                 Response.Headers["Pragma"] = "no-cache";
                 Response.Headers["X-Content-Type-Options"] = "nosniff";
-                return PhysicalFile(filePath, mimeType, fileName);
+                var cd = new System.Net.Mime.ContentDisposition { FileName = fileName, Inline = true };
+                Response.Headers["Content-Disposition"] = cd.ToString();
+                return PhysicalFile(filePath, mimeType);
             }
             catch (Exception ex)
             {
@@ -513,7 +517,9 @@ namespace ToolCalendar.Api.Controllers
             Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            return PhysicalFile(filePath, mimeType, Path.GetFileName(filePath));
+            var cd = new System.Net.Mime.ContentDisposition { FileName = Path.GetFileName(filePath), Inline = true };
+            Response.Headers["Content-Disposition"] = cd.ToString();
+            return PhysicalFile(filePath, mimeType);
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -680,7 +686,9 @@ namespace ToolCalendar.Api.Controllers
             Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            return PhysicalFile(fullPath, contentType, Path.GetFileName(fullPath));
+            var cd = new System.Net.Mime.ContentDisposition { FileName = Path.GetFileName(fullPath), Inline = true };
+            Response.Headers["Content-Disposition"] = cd.ToString();
+            return PhysicalFile(fullPath, contentType);
         }
 
         // ── Helper: Tạo token HMAC-SHA256 từ docId ──────────────────────
@@ -786,7 +794,9 @@ namespace ToolCalendar.Api.Controllers
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
             // Dùng PhysicalFile để stream file không tốn bộ nhớ server
-            return PhysicalFile(filePath, "application/pdf", Path.GetFileName(filePath));
+            var cd = new System.Net.Mime.ContentDisposition { FileName = Path.GetFileName(filePath), Inline = true };
+            Response.Headers["Content-Disposition"] = cd.ToString();
+            return PhysicalFile(filePath, "application/pdf");
         }
 
         private string GetDayLabel(DateTime date)
