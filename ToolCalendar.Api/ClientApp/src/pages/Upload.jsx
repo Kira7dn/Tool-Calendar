@@ -277,9 +277,11 @@ export function Upload({ onTabChange }) {
                     assignedToIds: doc.assignedTo ? [doc.assignedTo] : [],
                     filePath: doc.filePath || '',
                     status:
-                      doc.status === 'Đang xử lý' || doc.status === 'Chưa xử lý'
+                      doc.status === 'Đang xử lý'
                         ? 'processing'
-                        : 'ready',
+                        : doc.status === 'Lỗi OCR'
+                          ? 'error'
+                          : 'ready',
                   }
                 : b
             )
@@ -288,7 +290,7 @@ export function Upload({ onTabChange }) {
           if (doc.status === 'Đang xử lý') {
             const startPolling = async (docId) => {
               let attempts = 0
-              while (attempts < 20) {
+              while (attempts < 150) {
                 await new Promise((r) => setTimeout(r, 2000))
                 try {
                   const res = await fetch(`/api/documents/${docId}`, {
@@ -314,7 +316,7 @@ export function Upload({ onTabChange }) {
                                   ? [updatedDoc.departmentId]
                                   : [],
                                 assignedToIds: updatedDoc.assignedTo ? [updatedDoc.assignedTo] : [],
-                                status: 'ready',
+                                status: updatedDoc.status === 'Lỗi OCR' ? 'error' : 'ready',
                               }
                             : b
                         )
