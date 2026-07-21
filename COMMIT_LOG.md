@@ -1,3 +1,12 @@
+### [2026-07-21 08:35] Fix lưu thiếu user tạo văn bản & cập nhật luồng gửi thông báo hoàn thành
+- **Mô tả**: 
+  - Sửa bug `DocumentRepository.InsertAsync` không gán `UploadedByUserId`, khiến toàn bộ văn bản mặc định do Admin tạo.
+  - Sửa logic gửi thông báo khi "Hoàn thành văn bản": Từ nay không chỉ gửi cho người upload mà còn tự động gửi cho toàn bộ những cán bộ, văn thư đã từng xử lý/luân chuyển văn bản này (trừ người vừa bấm).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(core): sửa lỗi lưu UploadedByUserId và cải tiến luồng thông báo hoàn thành văn bản"`
+
 ### [2026-07-21 08:24] Fix lỗi giao diện kẹt ở "Đang OCR" dù backend đã xử lý xong
 - **Mô tả**: Giao diện `Upload.jsx` có cơ chế polling (hỏi server) mỗi 2 giây để cập nhật trạng thái OCR. Tuy nhiên giới hạn số lần hỏi chỉ là 20 lần (tương đương 40 giây). Với server ARM64, quá trình giải mã PDF và gọi Gemini tốn nhiều hơn 40s, dẫn đến frontend ngừng hỏi và kẹt vĩnh viễn ở trạng thái "Đang OCR" dù backend đã xử lý thành công. Đã tăng giới hạn lên 150 lần (5 phút) và sửa logic map trạng thái `Chưa xử lý` thành `ready` thay vì `processing`.
 - **Tệp thay đổi**:
@@ -944,3 +953,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ocr): nâng cấp Regex nhận diện thời hạn hỗ trợ thời gian (giờ/phút)"`
+
+### [2026-07-21 01:46] fix(docs): hiển thị đúng người tiếp nhận và sửa logic lịch sử phân công
+- **Mô tả**: Sửa lỗi giao diện hiển thị người "Tiếp nhận văn bản" là "HỆ THỐNG" và "PHÂN CÔNG XỬ LÝ" sai thời điểm trong lịch sử văn bản. Thêm trường `UploadedByUserId` vào tất cả các câu truy vấn SELECT trong `DocumentRepository.cs` để frontend nhận được id thật của người tải lên. Cập nhật frontend `DocDetail.jsx` chỉ hiển thị event "PHÂN CÔNG XỬ LÝ" ảo khi văn bản chưa qua bước luân chuyển nào (chưa có DocumentRoutings) và được phân công cho người khác người tải lên.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/pages/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): hiển thị đúng người tiếp nhận và sửa logic lịch sử phân công"`

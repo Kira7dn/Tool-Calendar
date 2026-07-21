@@ -810,11 +810,23 @@ export function DocDetail({ docId, onBack }) {
                   id: 'create',
                   title: 'TIẾP NHẬN VĂN BẢN',
                   time: new Date(doc.ngayThem),
-                  user: 'HỆ THỐNG',
+                  user: doc?.uploadedByUserId
+                    ? users.find((u) => u.id === doc.uploadedByUserId)?.fullName || 'HỆ THỐNG'
+                    : 'HỆ THỐNG',
                   active: true,
                 })
               }
-              if (doc?.assignedTo && doc?.ngayThem) {
+
+              const flatRoutings = flattenRoutings(routings)
+
+              // Chỉ hiển thị "PHÂN CÔNG XỬ LÝ" nếu văn bản chưa từng được luân chuyển (routings trống).
+              // Vì nếu đã luân chuyển, người đang xử lý hiện tại (doc.assignedTo) không phải là người được phân công ban đầu.
+              if (
+                doc?.assignedTo &&
+                doc?.ngayThem &&
+                flatRoutings.length === 0 &&
+                doc.assignedTo !== doc.uploadedByUserId
+              ) {
                 historyEvents.push({
                   id: 'assign',
                   title: 'PHÂN CÔNG XỬ LÝ',
@@ -824,7 +836,6 @@ export function DocDetail({ docId, onBack }) {
                 })
               }
 
-              const flatRoutings = flattenRoutings(routings)
               flatRoutings.forEach((r) => {
                 const sender =
                   r.senderName || users.find((u) => u.id == r.senderId)?.fullName || 'Hệ thống'
