@@ -165,6 +165,18 @@ namespace ToolCalendar.Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = record.Id }, ApiResponse.Ok(record));
         }
 
+        [Authorize]
+        [HttpPost("{id}/reprocess-ocr")]
+        public async Task<IActionResult> ReprocessOcr(int id)
+        {
+            var doc = await _documentRepository.GetDocumentByIdAsync(id);
+            if (doc == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
+            if (string.IsNullOrEmpty(doc.FilePath) || !System.IO.File.Exists(doc.FilePath))
+                return BadRequest(ApiResponse.Fail("File gốc không tồn tại trên server."));
+            await _ocrQueue.EnqueueAsync(id);
+            return Ok(ApiResponse.Ok("Đã đưa vào hàng đợi xử lý lại OCR."));
+        }
+
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] DocumentRecord record)

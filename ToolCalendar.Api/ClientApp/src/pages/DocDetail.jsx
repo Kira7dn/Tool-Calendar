@@ -716,10 +716,51 @@ export function DocDetail({ docId, onBack }) {
                 <div className="flex-1 bg-slate-100/50 border-r border-slate-100 relative">
                   <iframe src={pdfUrl} className="w-full h-full border-none" title="PDF Viewer" />
                 </div>
-                <div className="w-full md:w-80 bg-slate-900 p-6 overflow-auto">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-5">
-                    OCR DATA STREAM
-                  </p>
+                <div className="w-full md:w-80 bg-slate-900 p-6 overflow-auto flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                      OCR DATA STREAM
+                    </p>
+                    <button
+                      id="btn-reprocess-ocr"
+                      onClick={async () => {
+                        const btn = document.getElementById('btn-reprocess-ocr')
+                        btn.disabled = true
+                        btn.textContent = 'Đang xử lý...'
+                        try {
+                          const token = localStorage.getItem('auth_token')
+                          await fetch(`/api/documents/${docId}/reprocess-ocr`, {
+                            method: 'POST',
+                            headers: { Authorization: `Bearer ${token}` },
+                          })
+                          btn.textContent = 'Đang chờ kết quả...'
+                          // Poll mỗi 4s, tối đa 10 lần
+                          let tries = 0
+                          const poll = setInterval(async () => {
+                            tries++
+                            const r = await fetch(`/api/documents/${docId}`, {
+                              headers: { Authorization: `Bearer ${token}` },
+                            })
+                            const json = await r.json()
+                            if (json.data?.fullText) {
+                              clearInterval(poll)
+                              window.location.reload()
+                            } else if (tries >= 10) {
+                              clearInterval(poll)
+                              btn.disabled = false
+                              btn.textContent = 'Xử lý lại OCR'
+                            }
+                          }, 4000)
+                        } catch {
+                          btn.disabled = false
+                          btn.textContent = 'Xử lý lại OCR'
+                        }
+                      }}
+                      className="text-[9px] font-bold px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded uppercase tracking-widest transition-colors disabled:opacity-50"
+                    >
+                      Xử lý lại OCR
+                    </button>
+                  </div>
                   <div className="text-slate-400 font-mono text-[11px] leading-relaxed whitespace-pre-wrap select-all">
                     {doc.fullText || 'HỆ THỐNG KHÔNG TÌM THẤY DỮ LIỆU OCR.'}
                   </div>

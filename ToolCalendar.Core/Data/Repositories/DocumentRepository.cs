@@ -337,7 +337,7 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            string sql = "SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, dep.Name AS DepartmentName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id WHERE doc.Id = @id";
+            string sql = "SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, doc.FullText, doc.OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, dep.Name AS DepartmentName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id WHERE doc.Id = @id";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -608,6 +608,18 @@ namespace ToolCalendar.Core.Data.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        public async Task UpdateHandlerAsync(int docId, int receiverId, int? departmentId)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            string sql = "UPDATE Documents SET AssignedTo=@receiverId, DepartmentId=@deptId WHERE Id=@docId";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@receiverId", receiverId);
+            cmd.Parameters.AddWithValue("@deptId", (object?)departmentId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@docId", docId);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
         public async Task SubmitEvidenceAsync(int docId, string evidenceJson, string notes)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -646,7 +658,15 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.CommandText = "DELETE FROM Comments WHERE DocumentId=@Id";
                 await cmd.ExecuteNonQueryAsync();
 
-                // 3. Xóa chính văn bản đó
+                // 3. Xóa các bản ghi luân chuyển
+                cmd.CommandText = "DELETE FROM DocumentRoutings WHERE DocumentId=@Id";
+                await cmd.ExecuteNonQueryAsync();
+
+                // 4. Xóa các thông báo liên quan đến văn bản
+                cmd.CommandText = "DELETE FROM Notifications WHERE DocId=@Id";
+                await cmd.ExecuteNonQueryAsync();
+
+                // 5. Xóa chính văn bản đó
                 cmd.CommandText = "DELETE FROM Documents WHERE Id=@Id";
                 await cmd.ExecuteNonQueryAsync();
 
@@ -703,6 +723,20 @@ namespace ToolCalendar.Core.Data.Repositories
                 for (int i = 0; i < ids.Count; i++)
                     delComments.Parameters.AddWithValue($"@p{i}", ids[i]);
                 await delComments.ExecuteNonQueryAsync();
+
+                using var delRoutings = new SqliteCommand(
+                    $"DELETE FROM DocumentRoutings WHERE DocumentId IN ({inClause})",
+                    connection, tx);
+                for (int i = 0; i < ids.Count; i++)
+                    delRoutings.Parameters.AddWithValue($"@p{i}", ids[i]);
+                await delRoutings.ExecuteNonQueryAsync();
+
+                using var delNotifications = new SqliteCommand(
+                    $"DELETE FROM Notifications WHERE DocId IN ({inClause})",
+                    connection, tx);
+                for (int i = 0; i < ids.Count; i++)
+                    delNotifications.Parameters.AddWithValue($"@p{i}", ids[i]);
+                await delNotifications.ExecuteNonQueryAsync();
 
                 using var delDocs = new SqliteCommand(
                     $"DELETE FROM Documents WHERE Id IN ({inClause})",

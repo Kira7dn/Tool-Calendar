@@ -17,15 +17,21 @@ namespace ToolCalendar.Api.Controllers
         private readonly IDocumentRoutingRepository _routingRepo;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly INotificationRepository _notificationRepo;
+        private readonly IDocumentRepository _documentRepo;
+        private readonly IUserRepository _userRepo;
 
         public DocumentRoutingsController(
             IDocumentRoutingRepository routingRepo,
             IHubContext<NotificationHub> hubContext,
-            INotificationRepository notificationRepo)
+            INotificationRepository notificationRepo,
+            IDocumentRepository documentRepo,
+            IUserRepository userRepo)
         {
-            _routingRepo = routingRepo;
-            _hubContext  = hubContext;
+            _routingRepo    = routingRepo;
+            _hubContext      = hubContext;
             _notificationRepo = notificationRepo;
+            _documentRepo   = documentRepo;
+            _userRepo        = userRepo;
         }
 
         [HttpGet("{documentId}/routings")]
@@ -39,7 +45,6 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> CreateRouting(int documentId, [FromBody] DocumentRoutingRecord routing)
         {
             routing.DocumentId = documentId;
-            // Lấy ID người gửi (bản thân) từ token thay vì dùng "id"
             var userIdClaim = User.FindFirst("uid")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdClaim, out int senderId))
             {
@@ -49,8 +54,12 @@ namespace ToolCalendar.Api.Controllers
 
             int newId = await _routingRepo.CreateRoutingAsync(routing);
 
+            // ✅ Cập nhật Cán bộ xử lý và Đơn vị chủ trì dựa trên người nhận
             if (routing.ReceiverId > 0)
             {
+                var receiver = _userRepo.GetUserById(routing.ReceiverId);
+                await _documentRepo.UpdateHandlerAsync(documentId, routing.ReceiverId, receiver?.DepartmentId);
+
                 // 1. Lưu thông báo vào DB để hiện ở biểu tượng cái chuông
                 _notificationRepo.InsertNotification(new Core.Models.NotificationRecord
                 {

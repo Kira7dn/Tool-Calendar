@@ -1,3 +1,32 @@
+### [2026-07-21 08:07] Fix lỗi 500 khi xóa văn bản do dính Foreign Key constraint
+- **Mô tả**: Khi người dùng nhấn xóa văn bản (ID: 4820), hệ thống báo lỗi 500. Kiểm tra log Docker cho thấy lỗi `SQLite Error 19: FOREIGN KEY constraint failed`. Nguyên nhân là `DeleteAsync` trong `DocumentRepository.cs` mới chỉ xóa dữ liệu ở bảng `Comments` và `CommentReactions`, nhưng bỏ sót dữ liệu ở bảng `DocumentRoutings` (Luân chuyển) và `Notifications` (Thông báo). Đã thêm lệnh `DELETE FROM DocumentRoutings` và `DELETE FROM Notifications` trước khi xóa văn bản chính để giải quyết xung đột khóa ngoại. Đã áp dụng cho cả hàm `DeleteAsync` và `BulkDeleteAsync`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi — dòng 661 và 727)
+- **Lệnh git commit**: `git commit -m "fix(db): xử lý lỗi foreign key constraint khi xóa document do còn tồn đọng routing và notification"`
+
+### [2026-07-21 08:02] Fix luân chuyển công văn không cập nhật Đơn vị chủ trì và Cán bộ xử lý
+- **Mô tả**: Khi VanThu forward công văn cho cán bộ (hoặc cán bộ forward tiếp), endpoint `POST /api/documents/{id}/routings` chỉ tạo record trong bảng `DocumentRoutings` mà không cập nhật `Documents.AssignedTo` và `Documents.DepartmentId`. Do đó UI luôn hiển thị "CHƯA PHÂN CÔNG" dù đã luân chuyển. Đã thêm method `UpdateHandlerAsync` và gọi ngay sau khi tạo routing để cập nhật đúng cán bộ xử lý và đơn vị của họ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IDocumentRepository.cs` (Sửa đổi — thêm `UpdateHandlerAsync`)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi — implement `UpdateHandlerAsync`)
+  - `ToolCalendar.Api/Controllers/DocumentRoutingsController.cs` (Sửa đổi — inject repos + gọi `UpdateHandlerAsync`)
+- **Lệnh git commit**: `git commit -m "fix(routing): cập nhật AssignedTo và DepartmentId trên document khi tạo routing mới"`
+
+### [2026-07-21 02:20] Fix query GetDocumentByIdAsync trả về FullText rỗng
+- **Mô tả**: `GetDocumentByIdAsync` trong `DocumentRepository.cs` đang hardcode `'' AS FullText` và `'[]' AS OcrPagesJson` trong câu SELECT, khiến dù OCR lưu dữ liệu thành công vào DB thì mỗi lần đọc lên vẫn trả về rỗng. Đây là nguyên nhân gốc rễ khiến OCR DATA STREAM luôn hiển thị "HỆ THỐNG KHÔNG TÌM THẤY DỮ LIỆU OCR." Đã sửa thành `doc.FullText` và `doc.OcrPagesJson`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi — dòng 340)
+- **Lệnh git commit**: `git commit -m "fix(db): sửa GetDocumentByIdAsync trả về fullText rỗng do hardcode trong SQL SELECT"`
+
+### [2026-07-21 02:14] Fix ARM64 native libs + thêm tính năng Xử lý lại OCR
+- **Mô tả**: OCR liên tục báo "Không tìm thấy dữ liệu OCR" do `ToolCalendar.Core.csproj` khai báo package native `linux-x64` nhưng Docker container chạy trên Apple Silicon ARM64. Đã thay thế bằng các package ARM64 native chính thức từ `sdcb`. Đồng thời bổ sung endpoint `POST /api/documents/{id}/reprocess-ocr` và nút **"Xử lý lại OCR"** trong panel OCR để cho phép kích hoạt lại OCR cho tài liệu cũ mà không cần xóa và upload lại. Nút có logic tự polling và reload trang khi kết quả về.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/ToolCalendar.Core.csproj` (Sửa đổi — thay linux-x64 bằng linux-arm64)
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi — thêm endpoint reprocess-ocr)
+  - `ToolCalendar.Api/ClientApp/src/pages/DocDetail.jsx` (Sửa đổi — thêm nút Xử lý lại OCR)
+  - `Dockerfile` (Sửa đổi — bỏ --platform để build native ARM64)
+- **Lệnh git commit**: `git commit -m "fix(ocr): thay thư viện native linux-x64 bằng arm64 và thêm endpoint reprocess-ocr"`
+
 ### [2026-07-21 01:39] Thêm platform: linux/amd64 cho official-doc-backend
 - **Mô tả**: Hệ thống sử dụng PaddleOCR và OpenCvSharp yêu cầu thư viện native `libOpenCvSharpExtern.so`. Tuy nhiên thư viện này chỉ có sẵn bản build cho x64, trong khi Docker trên máy Mac của Developer chạy kiến trúc ARM64 (Apple Silicon), gây ra lỗi `DllNotFoundException` và làm OCR sập hoàn toàn. Đã thêm `platform: linux/amd64` vào `docker-compose.yml` để ép Docker Desktop giả lập x86_64, giúp load được thư viện native thành công.
 - **Tệp thay đổi**:
