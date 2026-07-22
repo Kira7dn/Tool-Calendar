@@ -966,3 +966,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): giữ nguyên tên file gốc khi tải xuống"`
+
+### [2026-07-22 16:32] Fix OcrTextProcessingService constructor errors
+- **Mô tả**: Sửa lỗi constructor của OcrTextProcessingService trong các file test do thiếu tham số IConfiguration và IHttpClientFactory
+- **Tệp thay đổi**:
+  - `ToolCalendar.Tests\OcrAutomationTests.cs` (Sửa đổi)
+  - `ToolCalendar.Tests\OcrTextRegexTests.cs` (Sửa đổi)
+  - `ToolCalendar.Tests\RuleExtractionTests.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "test(ocr): thêm tham số cấu hình cho OcrTextProcessingService trong các file test"`

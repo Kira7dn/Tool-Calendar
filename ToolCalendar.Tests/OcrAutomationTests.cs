@@ -38,10 +38,11 @@ namespace ToolCalendar.Tests
                 .Build();
 
             var scopeFactory = Factory.Services.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>();
+            var httpClientFactory = Factory.Services.GetRequiredService<System.Net.Http.IHttpClientFactory>();
             _isLocalOcrRuntimeAvailable = OcrTestRuntimeHelper.IsTesseractCliAvailable();
             _ocrService = new OcrService(_configuration, NullLogger<OcrService>.Instance, scopeFactory);
             var imgService = new OcrImageProcessingService();
-            var txtService = new OcrTextProcessingService(scopeFactory);
+            var txtService = new OcrTextProcessingService(scopeFactory, _configuration, httpClientFactory);
             _extractorService = new DocumentExtractorService(_ocrService, imgService, txtService);
         }
 
