@@ -226,7 +226,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
                 cmd.Parameters.AddWithValue("@external", (object?)req.ExternalParticipants ?? DBNull.Value);
 
-                var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+                var newId = Convert.ToInt32(cmd.ExecuteScalar());
 
                 // Thêm danh sách tham dự
                 foreach (var userId in req.ParticipantUserIds.Distinct())
@@ -236,7 +236,7 @@ namespace ToolCalendar.Core.Data.Repositories
                         connection, tx);
                     pCmd.Parameters.AddWithValue("@m", newId);
                     pCmd.Parameters.AddWithValue("@u", userId);
-                    await pCmd.ExecuteNonQueryAsync();
+                    pCmd.ExecuteNonQuery();
                 }
 
                 tx.Commit();
@@ -279,14 +279,14 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@external", (object?)req.ExternalParticipants ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@id", id);
 
-                int rows = await cmd.ExecuteNonQueryAsync();
+                int rows = cmd.ExecuteNonQuery();
 
                 // Cập nhật lại danh sách tham dự nếu có thay đổi
                 if (req.ParticipantUserIds.Count > 0)
                 {
                     using var delCmd = new SqliteCommand("DELETE FROM MeetingParticipants WHERE MeetingId = @m", connection, tx);
                     delCmd.Parameters.AddWithValue("@m", id);
-                    await delCmd.ExecuteNonQueryAsync();
+                    delCmd.ExecuteNonQuery();
 
                     foreach (var userId in req.ParticipantUserIds.Distinct())
                     {
@@ -295,7 +295,7 @@ namespace ToolCalendar.Core.Data.Repositories
                             connection, tx);
                         pCmd.Parameters.AddWithValue("@m", id);
                         pCmd.Parameters.AddWithValue("@u", userId);
-                        await pCmd.ExecuteNonQueryAsync();
+                        pCmd.ExecuteNonQuery();
                     }
                 }
 
@@ -327,11 +327,11 @@ namespace ToolCalendar.Core.Data.Repositories
             {
                 using var delP = new SqliteCommand("DELETE FROM MeetingParticipants WHERE MeetingId = @id", connection, tx);
                 delP.Parameters.AddWithValue("@id", id);
-                await delP.ExecuteNonQueryAsync();
+                delP.ExecuteNonQuery();
 
                 using var delM = new SqliteCommand("DELETE FROM Meetings WHERE Id = @id", connection, tx);
                 delM.Parameters.AddWithValue("@id", id);
-                int rows = await delM.ExecuteNonQueryAsync();
+                int rows = delM.ExecuteNonQuery();
 
                 tx.Commit();
                 return rows > 0;

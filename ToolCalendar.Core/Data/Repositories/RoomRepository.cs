@@ -152,14 +152,14 @@ namespace ToolCalendar.Core.Data.Repositories
                     WHERE RoomId = @id AND EndTime > datetime('now') AND Status != 'Hủy'";
                 using var checkCmd = new SqliteCommand(checkSql, connection, tx);
                 checkCmd.Parameters.AddWithValue("@id", id);
-                var count = Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
+                var count = Convert.ToInt32(checkCmd.ExecuteScalar());
                 if (count > 0) return false; // Không xóa được vì đang có lịch họp
 
                 string sql = "DELETE FROM Rooms WHERE Id = @id";
                 using var cmd = new SqliteCommand(sql, connection, tx);
                 cmd.Parameters.AddWithValue("@id", id);
 
-                int rows = await cmd.ExecuteNonQueryAsync();
+                int rows = cmd.ExecuteNonQuery();
                 tx.Commit();
                 return rows > 0;
             }

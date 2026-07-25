@@ -131,7 +131,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@creator", creatorId);
                 cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
 
-                var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+                var newId = Convert.ToInt32(cmd.ExecuteScalar());
 
                 foreach (var meetingId in req.MeetingIds.Distinct())
                 {
@@ -140,7 +140,7 @@ namespace ToolCalendar.Core.Data.Repositories
                         connection, tx);
                     iCmd.Parameters.AddWithValue("@p", newId);
                     iCmd.Parameters.AddWithValue("@m", meetingId);
-                    await iCmd.ExecuteNonQueryAsync();
+                    iCmd.ExecuteNonQuery();
                 }
 
                 tx.Commit();
@@ -187,12 +187,12 @@ namespace ToolCalendar.Core.Data.Repositories
                 using var delItems = new SqliteCommand(
                     "DELETE FROM MeetingProceedingItems WHERE ProceedingId = @id", connection, tx);
                 delItems.Parameters.AddWithValue("@id", id);
-                await delItems.ExecuteNonQueryAsync();
+                delItems.ExecuteNonQuery();
 
                 using var delP = new SqliteCommand(
                     "DELETE FROM MeetingProceedings WHERE Id = @id", connection, tx);
                 delP.Parameters.AddWithValue("@id", id);
-                var rows = await delP.ExecuteNonQueryAsync();
+                var rows = delP.ExecuteNonQuery();
 
                 tx.Commit();
                 return rows > 0;

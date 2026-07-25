@@ -1,3 +1,13 @@
+### [2026-07-25 09:23] Refactor giao dịch (transactions) sang đồng bộ để tránh lỗi khóa tệp SQLite
+- **Mô tả**: Theo Best Practice của SQLite, giao dịch nên được thực thi một cách đồng bộ để tối ưu hiệu suất đọc/ghi đa luồng và tránh lỗi `SQLITE_BUSY`. Đã refactor các phương thức có sử dụng `BeginTransaction` bằng cách xóa các từ khóa `await` trong khối giao dịch và thay thế các phương thức bất đồng bộ (như `ExecuteNonQueryAsync`) thành đồng bộ (như `ExecuteNonQuery`). Các repo bị ảnh hưởng bao gồm: DocumentRepository, RoomRepository, MeetingProceedingRepository, MeetingRepository. Đã thêm ràng buộc này vào `tc-rule-backend-architecture.md`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/RoomRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/MeetingProceedingRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi)
+  - `.agents/rules/tc-rule-backend-architecture.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(db): chuyển các lệnh thực thi giao dịch sang đồng bộ để tránh lỗi sqlite_busy"`
+
 ### [2026-07-22 17:16] Fix lỗi thiếu nút đóng màn hình xem PDF toàn màn hình trên Mobile
 - **Mô tả**: Thêm trạng thái `isFullscreenPdf` cho màn hình `DocDetail.jsx`. Thay vì dùng `window.open` (không có nút quay lại rõ ràng trên một số trình duyệt di động), ứng dụng sẽ hiển thị một modal toàn màn hình có chứa thẻ `iframe` hiển thị PDF cùng với nút `X` để đóng, cải thiện trải nghiệm trên thiết bị di động (kích thước màn hình < 768px).
 - **Tệp thay đổi**:
