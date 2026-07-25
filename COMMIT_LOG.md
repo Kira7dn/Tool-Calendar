@@ -1,3 +1,10 @@
+### [2026-07-25 09:43] Bổ sung luật hành vi AI cấp độ Enterprise (Học từ OpenClaw)
+- **Mô tả**: Dựa trên tư duy của dự án OpenClaw, hệ thống đã được nâng cấp "hiến pháp" AI Agent lên phiên bản 2.1. Đã bổ sung file luật mới quy định chặt chẽ về cách AI xử lý mã nguồn: yêu cầu phải kiểm tra hàm gọi (callers/callees) trước khi review (Evidence-based), tối ưu hóa dòng code (LOC ROI), tuyệt đối không viết code tương thích ngược kiểu chắp vá (No silent compat), và giao tiếp súc tích (Telegraph style).
+- **Tệp thay đổi**:
+  - `.agents/rules/tc-rule-ai-behavior.md` (Mới)
+  - `.agents/AGENTS.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "docs(agents): bổ sung luật tc-rule-ai-behavior.md để nâng cao chất lượng ai agent"`
+
 ### [2026-07-25 09:23] Refactor giao dịch (transactions) sang đồng bộ để tránh lỗi khóa tệp SQLite
 - **Mô tả**: Theo Best Practice của SQLite, giao dịch nên được thực thi một cách đồng bộ để tối ưu hiệu suất đọc/ghi đa luồng và tránh lỗi `SQLITE_BUSY`. Đã refactor các phương thức có sử dụng `BeginTransaction` bằng cách xóa các từ khóa `await` trong khối giao dịch và thay thế các phương thức bất đồng bộ (như `ExecuteNonQueryAsync`) thành đồng bộ (như `ExecuteNonQuery`). Các repo bị ảnh hưởng bao gồm: DocumentRepository, RoomRepository, MeetingProceedingRepository, MeetingRepository. Đã thêm ràng buộc này vào `tc-rule-backend-architecture.md`.
 - **Tệp thay đổi**:
