@@ -373,7 +373,7 @@ namespace ToolCalendar.Core.Data.Repositories
 
             if (hasStatus)
             {
-                var s = status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower();
+                var s = status.ToLower();
                 if (s == "overdue")
                 {
                     // Công thức chuẩn từ Dashboard Overdue
@@ -403,7 +403,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 }
                 else
                 {
-                    filters.Add("(LOWER(doc.Status) = @status OR LOWER(doc.Status) = @statusClean)");
+                    filters.Add("LOWER(doc.Status) = @status");
                 }
             }
 
@@ -450,7 +450,6 @@ namespace ToolCalendar.Core.Data.Repositories
             if (hasStatus && status.ToLower() != "overdue")
             {
                 countCmd.Parameters.AddWithValue("@status", status.ToLower());
-                countCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
             }
             if (fromDate.HasValue) countCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
             if (toDate.HasValue) countCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
@@ -478,7 +477,6 @@ namespace ToolCalendar.Core.Data.Repositories
             if (hasStatus && status.ToLower() != "overdue")
             {
                 dataCmd.Parameters.AddWithValue("@status", status.ToLower());
-                dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⛔ ", "").ToLower());
             }
             if (fromDate.HasValue) dataCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
             if (toDate.HasValue) dataCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
@@ -710,40 +708,22 @@ namespace ToolCalendar.Core.Data.Repositories
                 var inClause = string.Join(",", paramNames);
 
                 // Xóa lần lượt từng bảng theo đúng thứ tự phụ thuộc
-                using var delReactions = new SqliteCommand(
+                string[] deleteQueries = 
+                [
                     $"DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({inClause}))",
-                    connection, tx);
-                for (int i = 0; i < ids.Count; i++)
-                    delReactions.Parameters.AddWithValue($"@p{i}", ids[i]);
-                delReactions.ExecuteNonQuery();
-
-                using var delComments = new SqliteCommand(
                     $"DELETE FROM Comments WHERE DocumentId IN ({inClause})",
-                    connection, tx);
-                for (int i = 0; i < ids.Count; i++)
-                    delComments.Parameters.AddWithValue($"@p{i}", ids[i]);
-                delComments.ExecuteNonQuery();
-
-                using var delRoutings = new SqliteCommand(
                     $"DELETE FROM DocumentRoutings WHERE DocumentId IN ({inClause})",
-                    connection, tx);
-                for (int i = 0; i < ids.Count; i++)
-                    delRoutings.Parameters.AddWithValue($"@p{i}", ids[i]);
-                delRoutings.ExecuteNonQuery();
-
-                using var delNotifications = new SqliteCommand(
                     $"DELETE FROM Notifications WHERE DocId IN ({inClause})",
-                    connection, tx);
-                for (int i = 0; i < ids.Count; i++)
-                    delNotifications.Parameters.AddWithValue($"@p{i}", ids[i]);
-                delNotifications.ExecuteNonQuery();
+                    $"DELETE FROM Documents WHERE Id IN ({inClause})"
+                ];
 
-                using var delDocs = new SqliteCommand(
-                    $"DELETE FROM Documents WHERE Id IN ({inClause})",
-                    connection, tx);
-                for (int i = 0; i < ids.Count; i++)
-                    delDocs.Parameters.AddWithValue($"@p{i}", ids[i]);
-                delDocs.ExecuteNonQuery();
+                foreach (var query in deleteQueries)
+                {
+                    using var cmd = new SqliteCommand(query, connection, tx);
+                    for (int i = 0; i < ids.Count; i++)
+                        cmd.Parameters.AddWithValue($"@p{i}", ids[i]);
+                    cmd.ExecuteNonQuery();
+                }
 
                 tx.Commit();
             }

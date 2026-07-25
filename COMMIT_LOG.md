@@ -1,3 +1,13 @@
+### [2026-07-25 16:51] Refactor loại bỏ Silent Compat và tối ưu hóa LOC
+- **Mô tả**: Tối ưu hóa code backend theo luật AI Behavior mới:
+  1. Loại bỏ logic dọn dẹp emoji của trạng thái công văn cũ (Silent Compat) để bắt buộc luồng dữ liệu chuẩn từ Frontend.
+  2. Gom logic tải file từ các endpoints trong Controller về chung một hàm helper `ServePhysicalFileSecured`.
+  3. Gọn gàng hóa `BulkDeleteAsync` trong Repository bằng vòng lặp mảng truy vấn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(docs): tối ưu loc và loại bỏ silent compat cho status"`
+
 ### [2026-07-25 09:43] Bổ sung luật hành vi AI cấp độ Enterprise (Học từ OpenClaw)
 - **Mô tả**: Dựa trên tư duy của dự án OpenClaw, hệ thống đã được nâng cấp "hiến pháp" AI Agent lên phiên bản 2.1. Đã bổ sung file luật mới quy định chặt chẽ về cách AI xử lý mã nguồn: yêu cầu phải kiểm tra hàm gọi (callers/callees) trước khi review (Evidence-based), tối ưu hóa dòng code (LOC ROI), tuyệt đối không viết code tương thích ngược kiểu chắp vá (No silent compat), và giao tiếp súc tích (Telegraph style).
 - **Tệp thay đổi**:

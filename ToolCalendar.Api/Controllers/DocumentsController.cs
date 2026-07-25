@@ -374,12 +374,7 @@ namespace ToolCalendar.Api.Controllers
             };
             // ✅ Bảo mật: Ngăn browser cache file nhạy cảm
             // ✅ Perf: PhysicalFile stream trực tiếp từ disk, không load vào RAM trước
-            Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
-            Response.Headers["Pragma"] = "no-cache";
-            Response.Headers["X-Content-Type-Options"] = "nosniff";
-            var cd = new System.Net.Mime.ContentDisposition { FileName = Path.GetFileName(filePath), Inline = true };
-            Response.Headers["Content-Disposition"] = cd.ToString();
-            return PhysicalFile(filePath, mimeType);
+            return ServePhysicalFileSecured(filePath, mimeType);
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -412,12 +407,7 @@ namespace ToolCalendar.Api.Controllers
                 };
                 // ✅ Bảo mật: Ngăn browser cache file bằng chứng
                 // ✅ Perf: PhysicalFile stream trực tiếp, không load vào RAM
-                Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
-                Response.Headers["Pragma"] = "no-cache";
-                Response.Headers["X-Content-Type-Options"] = "nosniff";
-                var cd = new System.Net.Mime.ContentDisposition { FileName = fileName, Inline = true };
-                Response.Headers["Content-Disposition"] = cd.ToString();
-                return PhysicalFile(filePath, mimeType);
+                return ServePhysicalFileSecured(filePath, mimeType);
             }
             catch (Exception ex)
             {
@@ -514,12 +504,7 @@ namespace ToolCalendar.Api.Controllers
             };
             // ✅ Bảo mật: Ngăn browser cache file đính kèm bình luận
             // ✅ Perf: PhysicalFile stream trực tiếp, không ReadAllBytes
-            Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
-            Response.Headers["Pragma"] = "no-cache";
-            Response.Headers["X-Content-Type-Options"] = "nosniff";
-            var cd = new System.Net.Mime.ContentDisposition { FileName = Path.GetFileName(filePath), Inline = true };
-            Response.Headers["Content-Disposition"] = cd.ToString();
-            return PhysicalFile(filePath, mimeType);
+            return ServePhysicalFileSecured(filePath, mimeType);
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
@@ -683,12 +668,7 @@ namespace ToolCalendar.Api.Controllers
             else if (ext == ".png") contentType = "image/png";
 
             // ✅ Bảo mật: Ngăn browser cache file bằng chứng
-            Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
-            Response.Headers["Pragma"] = "no-cache";
-            Response.Headers["X-Content-Type-Options"] = "nosniff";
-            var cd = new System.Net.Mime.ContentDisposition { FileName = Path.GetFileName(fullPath), Inline = true };
-            Response.Headers["Content-Disposition"] = cd.ToString();
-            return PhysicalFile(fullPath, contentType);
+            return ServePhysicalFileSecured(fullPath, contentType);
         }
 
         // ── Helper: Tạo token HMAC-SHA256 từ docId ──────────────────────
@@ -790,13 +770,7 @@ namespace ToolCalendar.Api.Controllers
                 return NotFound(ApiResponse.Fail("File vật lý không tìm thấy."));
 
             // ✅ Perf: PhysicalFile stream trực tiếp, không load cả file vào RAM
-            Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
-            Response.Headers["Pragma"] = "no-cache";
-            Response.Headers["X-Content-Type-Options"] = "nosniff";
-            // Dùng PhysicalFile để stream file không tốn bộ nhớ server
-            var cd = new System.Net.Mime.ContentDisposition { FileName = Path.GetFileName(filePath), Inline = true };
-            Response.Headers["Content-Disposition"] = cd.ToString();
-            return PhysicalFile(filePath, "application/pdf");
+            return ServePhysicalFileSecured(filePath, "application/pdf");
         }
 
         private string GetDayLabel(DateTime date)
@@ -804,6 +778,16 @@ namespace ToolCalendar.Api.Controllers
             var days = new[] { "Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy" };
             if (date.Date == DateTime.Now.Date) return "Hôm nay (" + days[(int)date.DayOfWeek] + ")";
             return days[(int)date.DayOfWeek];
+        }
+
+        private PhysicalFileResult ServePhysicalFileSecured(string filePath, string mimeType)
+        {
+            Response.Headers["Cache-Control"] = "no-store, private, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+            var cd = new System.Net.Mime.ContentDisposition { FileName = Path.GetFileName(filePath), Inline = true };
+            Response.Headers["Content-Disposition"] = cd.ToString();
+            return PhysicalFile(filePath, mimeType);
         }
     }
 
