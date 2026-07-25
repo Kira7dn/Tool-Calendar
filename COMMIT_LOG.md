@@ -1,3 +1,9 @@
+### [2026-07-22 17:16] Fix lỗi thiếu nút đóng màn hình xem PDF toàn màn hình trên Mobile
+- **Mô tả**: Thêm trạng thái `isFullscreenPdf` cho màn hình `DocDetail.jsx`. Thay vì dùng `window.open` (không có nút quay lại rõ ràng trên một số trình duyệt di động), ứng dụng sẽ hiển thị một modal toàn màn hình có chứa thẻ `iframe` hiển thị PDF cùng với nút `X` để đóng, cải thiện trải nghiệm trên thiết bị di động (kích thước màn hình < 768px).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): thêm modal xem pdf toàn màn hình có nút đóng cho mobile"`
+
 ### [2026-07-21 08:35] Fix lưu thiếu user tạo văn bản & cập nhật luồng gửi thông báo hoàn thành
 - **Mô tả**: 
   - Sửa bug `DocumentRepository.InsertAsync` không gán `UploadedByUserId`, khiến toàn bộ văn bản mặc định do Admin tạo.
@@ -967,8 +973,18 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): giữ nguyên tên file gốc khi tải xuống"`
 
+<<<<<<< HEAD
 ### [2026-07-21 09:45] fix(api): khôi phục tính năng xem trước inline cho PDF và file ảnh
 - **Mô tả**: Thay vì truyền tham số fileDownloadName vào hàm PhysicalFile (khiến trình duyệt ép tải file về và phá vỡ iframe preview), sử dụng System.Net.Mime.ContentDisposition với Inline = true để vừa hỗ trợ xem trước inline, vừa giữ được tên file khi người dùng nhấn Tải Xuống từ trình xem PDF.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): khôi phục tính năng xem trước inline cho file đính kèm"`
+=======
+### [2026-07-22 16:32] Fix OcrTextProcessingService constructor errors
+- **Mô tả**: Sửa lỗi constructor của OcrTextProcessingService trong các file test do thiếu tham số IConfiguration và IHttpClientFactory
+- **Tệp thay đổi**:
+  - `ToolCalendar.Tests\OcrAutomationTests.cs` (Sửa đổi)
+  - `ToolCalendar.Tests\OcrTextRegexTests.cs` (Sửa đổi)
+  - `ToolCalendar.Tests\RuleExtractionTests.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "test(ocr): thêm tham số cấu hình cho OcrTextProcessingService trong các file test"`
+>>>>>>> 69b23d8f4ab7e9af79161311e46c7f18d2155804

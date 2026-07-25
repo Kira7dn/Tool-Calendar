@@ -14,7 +14,9 @@ namespace ToolCalendar.Tests
         public OcrTextRegexTests() : base()
         {
             var scopeFactory = Factory.Services.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>();
-            _service = new OcrTextProcessingService(scopeFactory);
+            var configuration = Factory.Services.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+            var httpClientFactory = Factory.Services.GetRequiredService<System.Net.Http.IHttpClientFactory>();
+            _service = new OcrTextProcessingService(scopeFactory, configuration, httpClientFactory);
         }
 
         [Fact]

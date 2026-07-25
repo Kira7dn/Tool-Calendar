@@ -28,7 +28,9 @@ namespace ToolCalendar.Tests
             var ocrMock = new MockOcrService();
             var imgService = new OcrImageProcessingService();
             var scopeFactory = Factory.Services.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>();
-            var txtService = new OcrTextProcessingService(scopeFactory);
+            var configuration = Factory.Services.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+            var httpClientFactory = Factory.Services.GetRequiredService<System.Net.Http.IHttpClientFactory>();
+            var txtService = new OcrTextProcessingService(scopeFactory, configuration, httpClientFactory);
             _extractorService = new DocumentExtractorService(ocrMock, imgService, txtService);
 
             SetupTestData();

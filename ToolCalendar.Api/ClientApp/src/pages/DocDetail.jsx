@@ -94,6 +94,7 @@ export function DocDetail({ docId, onBack }) {
   const [previewImage, setPreviewImage] = useState(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false)
+  const [isFullscreenPdf, setIsFullscreenPdf] = useState(false)
 
   const [routings, setRoutings] = useState([])
 
@@ -706,7 +707,11 @@ export function DocDetail({ docId, onBack }) {
                     const token = localStorage.getItem('auth_token')
                     // ✅ Bảo mật: Dùng cookie thay vì token trên URL
                     document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
-                    window.open(`/api/documents/${docId}/file`, '_blank')
+                    if (window.innerWidth < 768) {
+                      setIsFullscreenPdf(true)
+                    } else {
+                      window.open(`/api/documents/${docId}/file`, '_blank')
+                    }
                   }}
                 >
                   XEM TOÀN MÀN HÌNH
@@ -1396,6 +1401,30 @@ export function DocDetail({ docId, onBack }) {
         onConfirm={executeDelete}
         variant="destructive"
       />
+
+      {/* --- Fullscreen PDF Modal (Mobile) --- */}
+      {isFullscreenPdf && (
+        <div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col animate-in fade-in zoom-in-95 duration-300">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-slate-950">
+            <h3 className="text-xs font-black text-white uppercase tracking-widest">
+              XEM TOÀN MÀN HÌNH
+            </h3>
+            <button
+              onClick={() => setIsFullscreenPdf(false)}
+              className="p-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-hidden bg-slate-100">
+            <iframe
+              src={pdfUrl}
+              className="w-full h-full border-none"
+              title="Fullscreen PDF Viewer"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
