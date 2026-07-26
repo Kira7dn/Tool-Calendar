@@ -1027,3 +1027,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetHome.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(cabinet): tính toán thống kê phiên họp động dựa trên dữ liệu thực tế thay vì fix cứng"`
+### [2026-07-26 16:59] Thêm nút điểm danh khi vào họp trên trang chủ
+- **Mô tả**: Khi người dùng nhấn nút "Vào họp" ở trang chủ (CabinetHome), thay vì hiển thị thông báo alert như trước, hệ thống sẽ mở một Dialog "Xác nhận điểm danh". Sau khi nhấn "Điểm danh & Vào họp", hệ thống sẽ gọi API PUT `/api/phonghopkhonggiayto/meetings/{id}/attendance` để tự động cập nhật trạng thái "Có tham gia" cho người dùng, sau đó đóng modal và làm mới lại thống kê trên Dashboard.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetHome.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(routing): thêm modal xác nhận điểm danh trước khi vào họp"`

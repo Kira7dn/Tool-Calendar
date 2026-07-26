@@ -11,6 +11,14 @@ import {
   X,
 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 const AUTH_HEADER = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
@@ -31,7 +39,7 @@ function StatRow({ color, label, value, percent }) {
   )
 }
 
-function MeetingCard({ meeting, isOngoing }) {
+function MeetingCard({ meeting, isOngoing, onJoin }) {
   return (
     <div
       className={`flex items-start gap-3 p-3 rounded-lg border mb-2 last:mb-0 transition-all hover:shadow-sm ${
@@ -80,11 +88,7 @@ function MeetingCard({ meeting, isOngoing }) {
           </span>
         )}
         <button
-          onClick={() =>
-            alert(
-              `Tính năng phòng họp trực tuyến đang được phát triển. (Meeting ID: ${meeting.id})`
-            )
-          }
+          onClick={() => onJoin(meeting)}
           className="text-xs px-3 py-1.5 bg-[#c8102e] text-white rounded-md hover:bg-[#a50e27] transition shadow-sm font-medium"
         >
           {isOngoing ? 'Vào họp' : 'Chi tiết'}
@@ -233,18 +237,16 @@ export function CabinetHome() {
   const [unansweredQuestions, setUnansweredQuestions] = useState([])
 
   const [stats, setStats] = useState({
-    attended: 2,
+    attended: 0,
     pending: 0,
     absent: 0,
-    total: 2,
+    total: 0,
   })
 
-  const [docPrepStats, setDocPrepStats] = useState({ prepared: 0, unprepared: 0 })
-  const [questionStats, setQuestionStats] = useState({ answered: 0, unanswered: 0 })
-
   const [loading, setLoading] = useState(true)
+  const [confirmMeeting, setConfirmMeeting] = useState(null)
 
-  useEffect(() => {
+  const fetchDashboardData = () => {
     setLoading(true)
     const promises = [
       fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER() })
@@ -258,8 +260,6 @@ export function CabinetHome() {
       if (scheduleData && scheduleData.data) {
         const now = new Date()
         const all = scheduleData.data
-
-        // Let's filter by selected month/year if not null
         let filtered = all
         if (selectedMonth && selectedYear) {
           filtered = all.filter((m) => {
@@ -267,7 +267,6 @@ export function CabinetHome() {
             return date.getMonth() + 1 === selectedMonth && date.getFullYear() === selectedYear
           })
         }
-
         setOngoingMeetings(
           filtered.filter((m) => {
             const s = new Date(m.startTime)
@@ -281,8 +280,6 @@ export function CabinetHome() {
             .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
             .slice(0, 5)
         )
-        setUnconfirmedMeetings([])
-        setUnansweredQuestions([])
       }
 
       if (myMeetingsData && myMeetingsData.data) {
@@ -293,32 +290,50 @@ export function CabinetHome() {
             return date.getMonth() + 1 === selectedMonth && date.getFullYear() === selectedYear
           })
         }
-
         const attended = myMeetings.filter((m) => {
           const status = m.participants?.[0]?.attendanceStatus
-          return status === 'Tham gia'
+          return status === 'Có tham gia' || status === 'Tham gia'
         }).length
-
         const pending = myMeetings.filter((m) => {
           const status = m.participants?.[0]?.attendanceStatus
           return status === 'Chưa xác nhận' || !status
         }).length
-
         const absent = myMeetings.filter((m) => {
           const status = m.participants?.[0]?.attendanceStatus
           return status === 'Vắng mặt'
         }).length
-
-        setStats({
-          attended,
-          pending,
-          absent,
-          total: myMeetings.length,
-        })
+        setStats({ attended, pending, absent, total: myMeetings.length })
       }
       setLoading(false)
     })
+  }
+
+  useEffect(() => {
+    fetchDashboardData()
   }, [selectedMonth, selectedYear])
+
+  const handleJoinMeeting = (meeting) => {
+    setConfirmMeeting(meeting)
+  }
+
+  const handleConfirmAttendance = async () => {
+    if (!confirmMeeting) return
+    try {
+      await fetch(`/api/phonghopkhonggiayto/meetings/${confirmMeeting.id}/attendance`, {
+        method: 'PUT',
+        headers: {
+          ...AUTH_HEADER(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'Có tham gia' }),
+      })
+      setConfirmMeeting(null)
+      fetchDashboardData()
+    } catch (error) {
+      console.error(error)
+      setConfirmMeeting(null)
+    }
+  }
 
   const attended = stats.total > 0 ? (stats.attended / stats.total) * 100 : 0
   const pending = stats.total > 0 ? (stats.pending / stats.total) * 100 : 0
@@ -465,6 +480,36 @@ export function CabinetHome() {
             {unansweredQuestions.length === 0 ? <EmptyState /> : <div>Data here</div>}
           </SectionCard>
         </div>
+
+        {/* Điểm danh Modal */}
+        <Dialog open={!!confirmMeeting} onOpenChange={() => setConfirmMeeting(null)}>
+          <DialogContent className="max-w-md bg-white p-0 overflow-hidden border-0 rounded-xl shadow-2xl">
+            <DialogHeader className="bg-[#c8102e] px-6 py-4">
+              <DialogTitle className="text-white text-lg font-bold">Xác nhận điểm danh</DialogTitle>
+            </DialogHeader>
+            <div className="p-6">
+              <p className="text-gray-700 text-sm mb-4">
+                Bạn có chắc chắn muốn xác nhận điểm danh và tham gia phiên họp{' '}
+                <strong>{confirmMeeting?.title}</strong> không?
+              </p>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  className="text-gray-600 border-gray-300 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => setConfirmMeeting(null)}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  className="bg-[#c8102e] text-white hover:bg-[#a50e27] cursor-pointer"
+                  onClick={handleConfirmAttendance}
+                >
+                  Điểm danh & Vào họp
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
