@@ -1,3 +1,12 @@
+### [2026-07-26 17:35] Add Meeting Check-in Modal & Fix Meeting Visibility
+- **Mô tả**: 
+  1. Bổ sung modal Điểm danh (Check-in) khi người dùng bấm "Vào họp" ở `CabinetHome.jsx`.
+  2. Sửa lỗi người tạo cuộc họp không thấy cuộc họp ở trang Quản lý bằng cách thay đổi câu SQL trong `GetByParticipantAsync` ở `MeetingRepository.cs`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetHome.jsx` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): add check-in modal and fix creator meeting visibility"`
+
 ### [2026-07-26 16:05] Fix fake notifications (99+) in iCPV Cabinet
 - **Mô tả**: Thay thế mục thông báo bị hardcode (luôn hiển thị 99+ và dữ liệu giả về Phiếu lấy ý kiến) trong `CabinetAppShell.jsx` bằng dữ liệu thật. Tích hợp API `/api/notification` để lấy danh sách thông báo và số lượng chưa đọc thực tế, tương tự như `AppShell.jsx`.
 - **Tệp thay đổi**:

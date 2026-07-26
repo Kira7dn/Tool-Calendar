@@ -119,11 +119,11 @@ namespace ToolCalendar.Core.Data.Repositories
                        m.ExternalParticipants,
                        r.Name as RoomName, u.FullName as CreatorName,
                        mp.AttendanceStatus as MyAttendanceStatus
-                FROM MeetingParticipants mp
-                JOIN Meetings m ON mp.MeetingId = m.Id
+                FROM Meetings m
+                LEFT JOIN MeetingParticipants mp ON m.Id = mp.MeetingId AND mp.UserId = @userId
                 LEFT JOIN Rooms r ON m.RoomId = r.Id
                 LEFT JOIN Users u ON m.CreatorId = u.Id
-                WHERE mp.UserId = @userId
+                WHERE mp.UserId = @userId OR m.CreatorId = @userId
                 ORDER BY m.StartTime DESC";
 
             using var cmd = new SqliteCommand(sql, connection);
@@ -139,7 +139,9 @@ namespace ToolCalendar.Core.Data.Repositories
                     {
                         MeetingId = meeting.Id,
                         UserId = userId,
-                        AttendanceStatus = reader["MyAttendanceStatus"]?.ToString() ?? "Chưa xác nhận"
+                        AttendanceStatus = reader["MyAttendanceStatus"] == DBNull.Value || string.IsNullOrWhiteSpace(reader["MyAttendanceStatus"].ToString()) 
+                            ? "Chưa xác nhận" 
+                            : reader["MyAttendanceStatus"].ToString()
                     }
                 };
                 list.Add(meeting);
