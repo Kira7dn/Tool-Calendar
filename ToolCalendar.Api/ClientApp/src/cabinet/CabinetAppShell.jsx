@@ -87,6 +87,60 @@ export function CabinetAppShell({ children }) {
     }
   }, [])
 
+  // ── Notifications state ───────────────────────────────────────────────────
+  const [notifications, setNotifications] = useState([])
+  const [notifCount, setNotifCount] = useState(0)
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch('/api/notification', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setNotifications(data)
+        setNotifCount(data.filter((n) => !n.isRead).length)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const markAllRead = async () => {
+    try {
+      await fetch('/api/notification/mark-all-read', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
+      fetchNotifications()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const markRead = async (id) => {
+    try {
+      await fetch(`/api/notification/mark-read/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
+      fetchNotifications()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  useEffect(() => {
+    fetchNotifications()
+
+    // Listen for realtime updates if needed
+    const handleNotifUpdate = () => fetchNotifications()
+    document.addEventListener('realtime:notifications_updated', handleNotifUpdate)
+    return () => {
+      document.removeEventListener('realtime:notifications_updated', handleNotifUpdate)
+    }
+  }, [])
+
   // ── Top navigation items ────────────────────────────────────────────────────
   const NAV_ITEMS = [
     { id: 'home', icon: Home, label: 'Trang chủ' },
@@ -211,9 +265,11 @@ export function CabinetAppShell({ children }) {
             <PopoverTrigger asChild>
               <button className="p-2 hover:bg-[#a50e27] rounded-full relative transition outline-none">
                 <Bell size={17} />
-                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full border border-white px-1 shadow-sm">
-                  99+
-                </span>
+                {notifCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full border border-white px-1 shadow-sm">
+                    {notifCount > 99 ? '99+' : notifCount}
+                  </span>
+                )}
               </button>
             </PopoverTrigger>
             <PopoverContent
@@ -222,28 +278,44 @@ export function CabinetAppShell({ children }) {
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white rounded-t-xl">
                 <h3 className="font-bold text-[#1a202c] text-lg">Thông báo</h3>
-                <button className="text-sm text-gray-500 hover:text-[#c8102e] transition-colors">
+                <button
+                  onClick={markAllRead}
+                  className="text-sm text-gray-500 hover:text-[#c8102e] transition-colors"
+                >
                   Đánh dấu tất cả đã đọc
                 </button>
               </div>
               <div className="max-h-[60vh] overflow-y-auto flex flex-col">
-                {/* Unread item */}
-                <div className="flex gap-3 px-4 py-3 bg-[#f8fafc] border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer relative">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm text-[#1a202c] leading-snug pr-4">
-                      Phiếu lấy ý kiến{' '}
-                      <span className="font-bold">
-                        VP Đảng ủy phường xin ý kiến BCĐ về phát triển khoa học, công nghệ, đổi mới
-                        sáng tạo và chuyển đổi số phường về dự thảo nội dung một số văn bản
-                      </span>{' '}
-                      đã hết hạn trả lời.
-                    </p>
-                    <p className="text-xs text-gray-500">11:30:22 06/07/2026</p>
+                {notifications.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500 text-sm">
+                    Không có thông báo nào.
                   </div>
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition">
-                    <MoreVertical size={16} />
-                  </button>
-                </div>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      onClick={() => markRead(n.id)}
+                      className={`flex gap-3 px-4 py-3 border-b border-gray-100 transition cursor-pointer relative ${
+                        n.isRead ? 'bg-white hover:bg-gray-50' : 'bg-[#eff6ff] hover:bg-[#e0f2fe]'
+                      }`}
+                    >
+                      <div className="flex-1 space-y-1">
+                        <p
+                          className={`text-sm leading-snug pr-4 ${n.isRead ? 'text-gray-600' : 'text-[#1a202c] font-medium'}`}
+                        >
+                          {n.title && <span className="font-bold mr-1 block">{n.title}</span>}
+                          {n.body}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(n.createdAt).toLocaleString('vi-VN')}
+                        </p>
+                      </div>
+                      {!n.isRead && (
+                        <div className="w-2.5 h-2.5 rounded-full bg-blue-600 absolute right-4 top-1/2 -translate-y-1/2" />
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </PopoverContent>
           </Popover>
