@@ -250,8 +250,11 @@ export function CabinetHome() {
       fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER() })
         .then((r) => r.json())
         .catch(() => null),
+      fetch('/api/phonghopkhonggiayto/meetings/my-meetings', { headers: AUTH_HEADER() })
+        .then((r) => r.json())
+        .catch(() => null),
     ]
-    Promise.all(promises).then(([scheduleData]) => {
+    Promise.all(promises).then(([scheduleData, myMeetingsData]) => {
       if (scheduleData && scheduleData.data) {
         const now = new Date()
         const all = scheduleData.data
@@ -280,16 +283,37 @@ export function CabinetHome() {
         )
         setUnconfirmedMeetings([])
         setUnansweredQuestions([])
+      }
 
-        const total = filtered.length
+      if (myMeetingsData && myMeetingsData.data) {
+        let myMeetings = myMeetingsData.data
+        if (selectedMonth && selectedYear) {
+          myMeetings = myMeetings.filter((m) => {
+            const date = new Date(m.startTime)
+            return date.getMonth() + 1 === selectedMonth && date.getFullYear() === selectedYear
+          })
+        }
+
+        const attended = myMeetings.filter((m) => {
+          const status = m.participants?.[0]?.attendanceStatus
+          return status === 'Tham gia'
+        }).length
+
+        const pending = myMeetings.filter((m) => {
+          const status = m.participants?.[0]?.attendanceStatus
+          return status === 'Chưa xác nhận' || !status
+        }).length
+
+        const absent = myMeetings.filter((m) => {
+          const status = m.participants?.[0]?.attendanceStatus
+          return status === 'Vắng mặt'
+        }).length
+
         setStats({
-          attended: filtered.filter((m) => {
-            const s = new Date(m.startTime)
-            return s <= now
-          }).length,
-          pending: 0,
-          absent: 0,
-          total: total,
+          attended,
+          pending,
+          absent,
+          total: myMeetings.length,
         })
       }
       setLoading(false)

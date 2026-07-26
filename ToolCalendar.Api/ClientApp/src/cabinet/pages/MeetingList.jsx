@@ -186,7 +186,9 @@ export function MeetingList() {
                     </div>
                     <div>
                       <div className="text-gray-600 font-medium text-sm mb-1">Tham gia</div>
-                      <div className="text-2xl font-bold text-gray-900">31</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {meetings.filter((m) => m.attendanceStatus === 'Tham gia').length}
+                      </div>
                     </div>
                   </div>
                   <div className="bg-[#fff7ed] border border-[#fed7aa] rounded-xl p-4 flex items-center gap-4">
@@ -195,7 +197,13 @@ export function MeetingList() {
                     </div>
                     <div>
                       <div className="text-gray-600 font-medium text-sm mb-1">Chưa xác nhận</div>
-                      <div className="text-2xl font-bold text-gray-900">1</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {
+                          meetings.filter(
+                            (m) => m.attendanceStatus === 'Chưa xác nhận' || !m.attendanceStatus
+                          ).length
+                        }
+                      </div>
                     </div>
                   </div>
                   <div className="bg-[#fff1f2] border border-[#fecdd3] rounded-xl p-4 flex items-center gap-4">
@@ -204,7 +212,9 @@ export function MeetingList() {
                     </div>
                     <div>
                       <div className="text-gray-600 font-medium text-sm mb-1">Vắng mặt</div>
-                      <div className="text-2xl font-bold text-gray-900">0</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {meetings.filter((m) => m.attendanceStatus === 'Vắng mặt').length}
+                      </div>
                     </div>
                   </div>
                 </>
@@ -216,7 +226,9 @@ export function MeetingList() {
                     </div>
                     <div>
                       <div className="text-gray-600 font-medium text-sm mb-1">Đã xử lý</div>
-                      <div className="text-2xl font-bold text-gray-900">0</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {meetings.filter((m) => m.attendanceStatus === 'Đã xử lý').length}
+                      </div>
                     </div>
                   </div>
                   <div className="bg-[#fff7ed] border border-[#fed7aa] rounded-xl p-4 flex items-center gap-4">
@@ -225,7 +237,9 @@ export function MeetingList() {
                     </div>
                     <div>
                       <div className="text-gray-600 font-medium text-sm mb-1">Chưa xử lý</div>
-                      <div className="text-2xl font-bold text-gray-900">0</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {meetings.filter((m) => m.attendanceStatus === 'Chưa xử lý').length}
+                      </div>
                     </div>
                   </div>
                 </>

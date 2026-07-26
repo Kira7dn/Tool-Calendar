@@ -1021,3 +1021,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Tests\RuleExtractionTests.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "test(ocr): thêm tham số cấu hình cho OcrTextProcessingService trong các file test"`
 >>>>>>> 69b23d8f4ab7e9af79161311e46c7f18d2155804
+### [2026-07-26 16:30] Tính toán thống kê động cho Danh sách phiên họp và Trang chủ
+- **Mô tả**: Thay thế các con số fix cứng (Tham gia 31, Chưa xác nhận 1, Vắng mặt 0...) bằng cách tính toán số lượng thực tế từ dữ liệu trả về qua endpoint `/api/phonghopkhonggiayto/meetings/my-meetings` tại trang `MeetingList` và `CabinetHome`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetHome.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): tính toán thống kê phiên họp động dựa trên dữ liệu thực tế thay vì fix cứng"`
