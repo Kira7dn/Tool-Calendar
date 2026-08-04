@@ -47,7 +47,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
     title: meeting?.title || '',
     startTime: meeting?.startTime ? toDatetimeLocal(meeting.startTime) : '',
     endTime: meeting?.endTime ? toDatetimeLocal(meeting.endTime) : '',
-    roomId: meeting?.roomId || '',
+    roomId: meeting?.roomId ? meeting.roomId : meeting?.location ? 'other' : '',
     location: meeting?.location || '',
     presider: meeting?.presider || '',
     preparingUnit: meeting?.preparingUnit || '',
@@ -131,6 +131,10 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
       setError('Vui lòng chọn phòng họp.')
       return
     }
+    if (form.roomId === 'other' && !form.location.trim()) {
+      setError('Vui lòng nhập địa điểm phòng họp khác.')
+      return
+    }
 
     setSaving(true)
     setError('')
@@ -139,7 +143,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
       title: form.title.trim(),
       startTime: form.startTime.length === 16 ? form.startTime + ':00' : form.startTime,
       endTime: form.endTime.length === 16 ? form.endTime + ':00' : form.endTime,
-      roomId: parseInt(form.roomId),
+      roomId: form.roomId === 'other' ? null : parseInt(form.roomId),
       location: form.location.trim() || null,
       presider: form.presider.trim() || null,
       preparingUnit: form.preparingUnit.trim() || null,
@@ -288,24 +292,27 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
                             {r.name}
                           </option>
                         ))}
+                      <option value="other">Phòng họp khác</option>
                     </select>
                   )}
                 </div>
 
-                {/* Địa điểm chi tiết */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    <MapPin size={13} className="inline mr-1" />
-                    Địa điểm chi tiết
-                  </label>
-                  <input
-                    type="text"
-                    value={form.location}
-                    onChange={set('location')}
-                    placeholder="VD: Tại Phòng họp tầng 4, Trụ sở HĐND - UBND phường"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8102e]/25 focus:border-[#c8102e] transition"
-                  />
-                </div>
+                {/* Phòng họp khác / Địa điểm chi tiết */}
+                {form.roomId === 'other' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      <MapPin size={13} className="inline mr-1" />
+                      Tên/Địa điểm phòng họp khác <span className="text-[#c8102e]">*</span>
+                    </label>
+                    <textarea
+                      value={form.location}
+                      onChange={set('location')}
+                      placeholder="VD: Tại Hội trường Huyện ủy..."
+                      rows={2}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8102e]/25 focus:border-[#c8102e] transition"
+                    />
+                  </div>
+                )}
 
                 {/* Đơn vị tổ chức */}
                 <div>

@@ -131,6 +131,9 @@ namespace ToolCalendar.Api.Controllers
                             ?? throw new InvalidOperationException("[SECURITY] JWT_SECRET chưa được cấu hình.");
             var key = Encoding.ASCII.GetBytes(jwtSecret);
 
+            // Fetch previous login time before inserting the new one
+            var lastLoginTime = _auditLogRepo.GetLastLoginTime(user.Id) ?? "Lần đầu đăng nhập";
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
@@ -144,6 +147,7 @@ namespace ToolCalendar.Api.Controllers
                     new Claim("sec_stamp",                  user.SecurityStamp),
                     // Giữ claim "sid" để tương thích với token cũ còn tồn tại
                     new Claim("sid",                        user.SessionId ?? user.SecurityStamp),
+                    new Claim("LastLogin",                  lastLoginTime),
                 }),
                 Expires           = DateTime.UtcNow.AddHours(24),
                 SigningCredentials = new SigningCredentials(

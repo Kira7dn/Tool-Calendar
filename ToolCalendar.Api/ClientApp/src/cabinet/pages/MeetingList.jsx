@@ -15,6 +15,8 @@ import {
   Inbox,
   CheckCircle2,
   FolderPlus,
+  Plus,
+  Trash2,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -35,6 +37,7 @@ import {
 } from '@/components/ui/select'
 import { MeetingDetail } from './MeetingDetail'
 import { MeetingProgress } from './MeetingProgress'
+import { MeetingModal } from '../components/MeetingModal'
 
 const AUTH_HEADER = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
@@ -82,14 +85,33 @@ export function MeetingList() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
-  const fetchMeetings = () => {
+  const fetchMeetings = (tab = activeTab) => {
     setLoading(true)
-    // Dùng /my-meetings để lấy phiên họp kèm trạng thái tham dự thực từ DB
-    fetch('/api/phonghopkhonggiayto/meetings/my-meetings', { headers: AUTH_HEADER() })
+    let isAdminUser = false
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        const role =
+          payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+          payload.role ||
+          payload.Role
+        if (role === 'Admin' || role === 'LanhDao') isAdminUser = true
+      }
+    } catch {}
+
+    const url =
+      isAdminUser && tab === 'all'
+        ? '/api/phonghopkhonggiayto/meetings/schedule'
+        : '/api/phonghopkhonggiayto/meetings/my-meetings'
+
+    fetch(url, { headers: AUTH_HEADER() })
       .then((r) => r.json())
       .then((json) => {
-        const data = json.data || []
+        const data = Array.isArray(json) ? json : json.data || []
         if (Array.isArray(data)) {
           const mappedData = data.map((m) => ({
             ...m,
@@ -103,9 +125,48 @@ export function MeetingList() {
       .finally(() => setLoading(false))
   }
 
+  const handleDeleteMeeting = (id) => {
+    if (
+      !window.confirm(
+        'Bạn có chắc chắn muốn xóa phiên họp này không? Hành động này không thể hoàn tác.'
+      )
+    ) {
+      return
+    }
+
+    fetch(`/api/phonghopkhonggiayto/meetings/${id}`, {
+      method: 'DELETE',
+      headers: AUTH_HEADER(),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success) {
+          fetchMeetings(activeTab)
+        } else {
+          alert('Có lỗi xảy ra: ' + (res.message || 'Không thể xóa phiên họp.'))
+        }
+      })
+      .catch((err) => {
+        alert('Lỗi kết nối máy chủ.')
+      })
+  }
+
   useEffect(() => {
-    fetchMeetings()
-  }, [])
+    fetchMeetings(activeTab)
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        const role =
+          payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+          payload.role ||
+          payload.Role
+        if (role === 'Admin' || role === 'LanhDao') {
+          setIsAdmin(true)
+        }
+      }
+    } catch {}
+  }, [activeTab])
 
   const filteredMeetings = meetings.filter((m) =>
     m.title?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -144,10 +205,21 @@ export function MeetingList() {
         {/* Header */}
         <div className="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-200 shrink-0">
           <h1 className="text-xl font-bold text-[#1a202c]">Quản lý phiên họp</h1>
-          <Button variant="outline" className="text-[#c8102e] border-[#c8102e] hover:bg-red-50">
-            <Download className="w-4 h-4 mr-2" />
-            Xuất file
-          </Button>
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Button
+                onClick={() => setIsAddModalOpen(true)}
+                className="bg-[#c8102e] hover:bg-[#a50e27] text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Tạo phiên họp
+              </Button>
+            )}
+            <Button variant="outline" className="text-[#c8102e] border-[#c8102e] hover:bg-red-50">
+              <Download className="w-4 h-4 mr-2" />
+              Xuất file
+            </Button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-auto p-6">
@@ -174,77 +246,91 @@ export function MeetingList() {
               >
                 Phiên họp cần chuẩn bị tài liệu
               </button>
+              {isAdmin && (
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={`flex-1 pb-3 text-center font-semibold text-sm transition-colors border-b-2 ${
+                    activeTab === 'all'
+                      ? 'border-[#c8102e] text-[#c8102e]'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Tất cả phiên họp
+                </button>
+              )}
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {activeTab === 'invited' ? (
-                <>
-                  <div className="bg-[#e6fcf5] border border-[#a7f3d0] rounded-xl p-4 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#10b981] flex items-center justify-center text-white shrink-0">
-                      <UserCheck size={24} />
-                    </div>
-                    <div>
-                      <div className="text-gray-600 font-medium text-sm mb-1">Tham gia</div>
-                      <div className="text-2xl font-bold text-gray-900">
-                        {meetings.filter((m) => m.attendanceStatus === 'Tham gia').length}
+            {activeTab !== 'all' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {activeTab === 'invited' ? (
+                  <>
+                    <div className="bg-[#e6fcf5] border border-[#a7f3d0] rounded-xl p-4 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-[#10b981] flex items-center justify-center text-white shrink-0">
+                        <UserCheck size={24} />
+                      </div>
+                      <div>
+                        <div className="text-gray-600 font-medium text-sm mb-1">Tham gia</div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {meetings.filter((m) => m.attendanceStatus === 'Tham gia').length}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="bg-[#fff7ed] border border-[#fed7aa] rounded-xl p-4 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#f59e0b] flex items-center justify-center text-white shrink-0">
-                      <User size={24} />
-                    </div>
-                    <div>
-                      <div className="text-gray-600 font-medium text-sm mb-1">Chưa xác nhận</div>
-                      <div className="text-2xl font-bold text-gray-900">
-                        {
-                          meetings.filter(
-                            (m) => m.attendanceStatus === 'Chưa xác nhận' || !m.attendanceStatus
-                          ).length
-                        }
+                    <div className="bg-[#fff7ed] border border-[#fed7aa] rounded-xl p-4 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-[#f59e0b] flex items-center justify-center text-white shrink-0">
+                        <User size={24} />
+                      </div>
+                      <div>
+                        <div className="text-gray-600 font-medium text-sm mb-1">Chưa xác nhận</div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {
+                            meetings.filter(
+                              (m) => m.attendanceStatus === 'Chưa xác nhận' || !m.attendanceStatus
+                            ).length
+                          }
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="bg-[#fff1f2] border border-[#fecdd3] rounded-xl p-4 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#e11d48] flex items-center justify-center text-white shrink-0">
-                      <UserX size={24} />
-                    </div>
-                    <div>
-                      <div className="text-gray-600 font-medium text-sm mb-1">Vắng mặt</div>
-                      <div className="text-2xl font-bold text-gray-900">
-                        {meetings.filter((m) => m.attendanceStatus === 'Vắng mặt').length}
+                    <div className="bg-[#fff1f2] border border-[#fecdd3] rounded-xl p-4 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-[#e11d48] flex items-center justify-center text-white shrink-0">
+                        <UserX size={24} />
+                      </div>
+                      <div>
+                        <div className="text-gray-600 font-medium text-sm mb-1">Vắng mặt</div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {meetings.filter((m) => m.attendanceStatus === 'Vắng mặt').length}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="bg-[#e6fcf5] border border-[#a7f3d0] rounded-xl p-4 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#10b981] flex items-center justify-center text-white shrink-0">
-                      <FileText size={24} />
-                    </div>
-                    <div>
-                      <div className="text-gray-600 font-medium text-sm mb-1">Đã xử lý</div>
-                      <div className="text-2xl font-bold text-gray-900">
-                        {meetings.filter((m) => m.attendanceStatus === 'Đã xử lý').length}
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-[#e6fcf5] border border-[#a7f3d0] rounded-xl p-4 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-[#10b981] flex items-center justify-center text-white shrink-0">
+                        <FileText size={24} />
+                      </div>
+                      <div>
+                        <div className="text-gray-600 font-medium text-sm mb-1">Đã xử lý</div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {meetings.filter((m) => m.attendanceStatus === 'Đã xử lý').length}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="bg-[#fff7ed] border border-[#fed7aa] rounded-xl p-4 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#f59e0b] flex items-center justify-center text-white shrink-0">
-                      <FileText size={24} />
-                    </div>
-                    <div>
-                      <div className="text-gray-600 font-medium text-sm mb-1">Chưa xử lý</div>
-                      <div className="text-2xl font-bold text-gray-900">
-                        {meetings.filter((m) => m.attendanceStatus === 'Chưa xử lý').length}
+                    <div className="bg-[#fff7ed] border border-[#fed7aa] rounded-xl p-4 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-[#f59e0b] flex items-center justify-center text-white shrink-0">
+                        <FileText size={24} />
+                      </div>
+                      <div>
+                        <div className="text-gray-600 font-medium text-sm mb-1">Chưa xử lý</div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {meetings.filter((m) => m.attendanceStatus === 'Chưa xử lý').length}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* List Header & Filters */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -492,6 +578,15 @@ export function MeetingList() {
                                     <FolderPlus size={16} />
                                     <span>Thêm tài liệu vào thư viện</span>
                                   </DropdownMenuItem>
+                                  {isAdmin && (
+                                    <DropdownMenuItem
+                                      className="gap-2 cursor-pointer rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 py-2 outline-none"
+                                      onClick={() => handleDeleteMeeting(m.id)}
+                                    >
+                                      <Trash2 size={16} />
+                                      <span>Xóa phiên họp</span>
+                                    </DropdownMenuItem>
+                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
@@ -589,6 +684,17 @@ export function MeetingList() {
           </div>
         </div>
       </div>
+
+      {/* Create Meeting Modal */}
+      {isAddModalOpen && (
+        <MeetingModal
+          onClose={() => setIsAddModalOpen(false)}
+          onSaved={() => {
+            setIsAddModalOpen(false)
+            fetchMeetings()
+          }}
+        />
+      )}
     </TooltipProvider>
   )
 }

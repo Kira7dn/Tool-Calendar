@@ -6,7 +6,7 @@ namespace ToolCalendar.Models
         public string Title { get; set; } = string.Empty;
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public int RoomId { get; set; }
+        public int? RoomId { get; set; }
         public string? RoomName { get; set; } // Join
         public string Status { get; set; } = "Sắp diễn ra"; // Sắp diễn ra, Đang diễn ra, Hoàn thành, Hủy
         public int CreatorId { get; set; }
@@ -41,7 +41,7 @@ namespace ToolCalendar.Models
         public string Title { get; set; } = string.Empty;
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public int RoomId { get; set; }
+        public int? RoomId { get; set; }
         public string? Location { get; set; }
         public string? Presider { get; set; }
         public string? PreparingUnit { get; set; }

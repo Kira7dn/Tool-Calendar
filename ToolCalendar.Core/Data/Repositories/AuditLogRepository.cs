@@ -110,6 +110,37 @@ namespace ToolCalendar.Core.Data.Repositories
             }
         }
 
+        public string? GetLastLoginTime(int userId)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                using var cmd = new SqliteCommand(@"
+                    SELECT CreatedAt 
+                    FROM LoginAuditLog 
+                    WHERE UserId = @uid AND IsSuccess = 1 
+                    ORDER BY CreatedAt DESC 
+                    LIMIT 1", connection);
+                cmd.Parameters.AddWithValue("@uid", userId);
+                var result = cmd.ExecuteScalar();
+                
+                if (result != null && result != DBNull.Value)
+                {
+                    if (DateTime.TryParse(result.ToString(), out DateTime dt))
+                    {
+                        return dt.ToString("dd/MM/yyyy HH:mm:ss");
+                    }
+                    return result.ToString(); // fallback
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LoginAudit] Lỗi đọc log: {ex.Message}");
+            }
+            return null;
+        }
+
         public void ClearAuditLogs()
         {
             using var connection = new SqliteConnection(_connectionString);

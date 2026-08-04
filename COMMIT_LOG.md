@@ -1056,3 +1056,72 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetHome.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(routing): thêm modal xác nhận điểm danh trước khi vào họp"`
+
+### [2026-08-04 16:44] style(ui): đổi tên mục menu Phân quyền và quản trị thành Phân quyền để không bị cắt chữ
+- **Mô tả**: Rút gọn text hiển thị trên navbar của CabinetAppShell để tránh bị cắt chữ trên màn hình nhỏ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): rút gọn text navbar Phân quyền để không bị cắt chữ"`
+
+
+### [2026-08-04 16:49] feat(ui): thiết kế lại modal Hồ sơ cá nhân và thêm hiệu ứng đăng xuất
+- **Mô tả**: Thiết kế lại giao diện Hồ sơ cá nhân theo yêu cầu mới (Header đỏ, form thông tin gọn gàng chỉ giữ lại Tên đăng nhập và Tên đại biểu). Đồng thời thêm màn hình overlay loading khi nhấn Đăng xuất.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): thiết kế lại modal Hồ sơ cá nhân và thêm hiệu ứng đăng xuất"`
+
+
+### [2026-08-04 16:54] feat(auth): thêm thông tin lần đăng nhập gần nhất vào JWT
+- **Mô tả**: Truy xuất bản ghi đăng nhập thành công gần nhất từ bảng `LoginAuditLog` và đưa vào JWT claim `LastLogin` để frontend hiển thị trong màn hình Hồ sơ cá nhân.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IAuditLogRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/AuditLogRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(auth): thêm thông tin lần đăng nhập gần nhất vào JWT"`
+
+
+### [2026-08-04 16:58] feat(ui): thêm nút Tạo phiên họp cho Admin
+- **Mô tả**: Tích hợp luồng tạo cuộc họp (thông qua `MeetingModal`) vào trang Quản lý phiên họp. Nút "Tạo phiên họp" chỉ hiển thị đối với tài khoản có quyền `Admin` hoặc `LanhDao`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): thêm nút Tạo phiên họp cho Admin"`
+
+
+### [2026-08-04 17:05] feat(ui): thêm tuỳ chọn "Phòng họp khác" cho Admin
+- **Mô tả**: Hỗ trợ nhập "Phòng họp khác" nếu phòng họp không có trong danh sách. Cho phép RoomId có thể nhận giá trị `null` và lưu chuỗi văn bản tự do vào trường `Location`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Models/Meeting.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Cabinet/MeetingsController.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/components/MeetingModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): thêm tuỳ chọn Phòng họp khác trong MeetingModal"`
+
+
+### [2026-08-04 17:14] feat(ui): thêm tab Tất cả phiên họp cho Admin
+- **Mô tả**: Khi Admin tạo phiên họp nhưng không mời chính mình thì phiên họp không hiển thị ở tab "Phiên họp cá nhân được mời". Vì vậy, bổ sung thêm tab "Tất cả phiên họp" (chỉ hiển thị với quyền Admin/Lãnh đạo) gọi API `/schedule` để lấy toàn bộ danh sách phiên họp.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): thêm tab Tất cả phiên họp cho Admin"`
+
+
+### [2026-08-04 17:20] feat(ui): thêm tính năng Xóa phiên họp cho Admin
+- **Mô tả**: Bổ sung nút "Xóa phiên họp" trong menu thao tác của mỗi phiên họp (chỉ hiển thị cho Admin/Lãnh đạo). Khi ấn, người dùng xác nhận và gọi API DELETE để xóa.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): thêm tính năng xóa phiên họp cho admin"`
+
+
+### [2026-08-04 17:22] fix(api): sửa lỗi truy vấn danh sách phiên họp được mời
+- **Mô tả**: Sửa lỗi API `GetByParticipantAsync` trả về cả những phiên họp do người dùng tạo nhưng họ không tham gia. Đã loại bỏ điều kiện `OR m.CreatorId = @userId` trong câu lệnh SQL `WHERE`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): sửa truy vấn lấy danh sách phiên họp cá nhân"`
+
+
+### [2026-08-04 18:14] refactor(ui): hiển thị thông tin thực tế trong trang Chi tiết phiên họp thay vì dữ liệu mẫu
+- **Mô tả**: Thay thế các dữ liệu hardcode (như tên cuộc họp, thời gian, chủ trì, danh sách tài liệu) trong `MeetingDetail.jsx` bằng dữ liệu thực được truyền vào từ biến `meeting`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(ui): hien thi du lieu that cho trang chi tiet phien hop"`
+

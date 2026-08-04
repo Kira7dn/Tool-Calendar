@@ -24,6 +24,10 @@ import {
   Tag,
   LogOut,
   Check,
+  X,
+  Edit,
+  Image as ImageIcon,
+  Loader2,
 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -69,6 +73,10 @@ export function CabinetAppShell({ children }) {
   // Modals state
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false)
   const [isVersionModalOpen, setIsVersionModalOpen] = useState(false)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [userLoginName, setUserLoginName] = useState('022182002686')
+  const [userLastLogin, setUserLastLogin] = useState('Lần đầu đăng nhập')
 
   useEffect(() => {
     try {
@@ -81,6 +89,12 @@ export function CabinetAppShell({ children }) {
             payload.sub ||
             'Người dùng'
         )
+        setUserLoginName(
+          payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ||
+            payload.unique_name ||
+            '022182002686'
+        )
+        setUserLastLogin(payload.LastLogin || 'Lần đầu đăng nhập')
       }
     } catch {
       /* silent */
@@ -149,7 +163,7 @@ export function CabinetAppShell({ children }) {
     { id: 'rooms', icon: MapPin, label: 'Phòng họp' },
     { id: 'questionnaire', icon: ClipboardList, label: 'Phiếu lấy ý kiến' },
     { id: 'library', icon: BookOpen, label: 'Thư viện' },
-    { id: 'admin', icon: ShieldCheck, label: 'Phân quyền và quản trị' },
+    { id: 'admin', icon: ShieldCheck, label: 'Phân quyền' },
   ]
 
   // ── Sidebar items — only visible when on "schedule" tab ────────────────────
@@ -338,7 +352,13 @@ export function CabinetAppShell({ children }) {
               align="end"
             >
               <div className="flex flex-col py-1">
-                <button className="flex items-center gap-3 px-4 py-3 bg-[#c8102e] text-white hover:bg-[#a50e27] transition-colors text-sm font-semibold">
+                <button
+                  onClick={() => {
+                    document.body.click() // close popover
+                    setIsProfileModalOpen(true)
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 bg-[#c8102e] text-white hover:bg-[#a50e27] transition-colors text-sm font-semibold"
+                >
                   <User size={16} />
                   <span>Hồ sơ cá nhân</span>
                 </button>
@@ -446,6 +466,89 @@ export function CabinetAppShell({ children }) {
         </main>
       </div>
 
+      {/* Profile Modal */}
+      <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
+        <DialogContent className="max-w-[450px] p-0 overflow-hidden border-0 rounded-xl bg-white">
+          {/* Header */}
+          <div className="bg-[#c8102e] text-white pt-10 pb-6 px-6 relative flex flex-col items-center">
+            <button
+              onClick={() => setIsProfileModalOpen(false)}
+              className="absolute top-4 right-4 text-white hover:opacity-80 outline-none"
+            >
+              <X size={20} />
+            </button>
+            <h2 className="absolute top-4 left-6 font-bold text-lg">Hồ sơ cá nhân</h2>
+
+            <div className="w-24 h-24 rounded-full bg-gray-200 border-4 border-white mb-3 mt-4 overflow-hidden flex items-center justify-center">
+              <User size={48} className="text-gray-400" />
+            </div>
+            <h3 className="font-bold text-xl mb-1">{userName}</h3>
+            <p className="text-sm opacity-90">
+              {userLastLogin === 'Lần đầu đăng nhập'
+                ? userLastLogin
+                : `Lần đăng nhập gần nhất ${userLastLogin}`}
+            </p>
+          </div>
+
+          {/* Body */}
+          <div className="p-6">
+            <h4 className="font-bold text-[#1a202c] text-base mb-4">Hồ sơ cá nhân</h4>
+            <div className="space-y-4 mb-6">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 text-sm">Tên đăng nhập</span>
+                <span className="font-semibold text-[#1a202c]">{userLoginName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 text-sm">Tên đại biểu</span>
+                <span className="font-semibold text-[#1a202c]">{userName}</span>
+              </div>
+            </div>
+
+            <div className="h-px bg-gray-100 my-6" />
+
+            <h4 className="font-bold text-[#1a202c] text-base mb-4">Cài đặt</h4>
+            <div className="space-y-1">
+              <button className="w-full flex items-center justify-between px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors group">
+                <div className="flex items-center gap-3">
+                  <Edit size={18} className="text-gray-500" />
+                  <span className="font-medium text-[#1a202c]">Chỉnh sửa hồ sơ</span>
+                </div>
+                <ChevronDown
+                  size={18}
+                  className="text-gray-400 -rotate-90 group-hover:text-gray-600"
+                />
+              </button>
+              <button className="w-full flex items-center justify-between px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors group">
+                <div className="flex items-center gap-3">
+                  <ImageIcon size={18} className="text-gray-500" />
+                  <span className="font-medium text-[#1a202c]">Đổi ảnh đại diện</span>
+                </div>
+                <ChevronDown
+                  size={18}
+                  className="text-gray-400 -rotate-90 group-hover:text-gray-600"
+                />
+              </button>
+              <button
+                onClick={() => {
+                  setIsProfileModalOpen(false)
+                  setIsLoggingOut(true)
+                  setTimeout(() => {
+                    localStorage.removeItem('auth_token')
+                    window.location.href = '/login.html'
+                  }, 1500)
+                }}
+                className="w-full flex items-center justify-between px-2 py-3 hover:bg-red-50 rounded-lg transition-colors mt-2"
+              >
+                <div className="flex items-center gap-3">
+                  <LogOut size={18} className="text-[#c8102e]" />
+                  <span className="font-medium text-[#c8102e]">Đăng xuất</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Theme Modal */}
       <Dialog open={isThemeModalOpen} onOpenChange={setIsThemeModalOpen}>
         <DialogContent className="max-w-[600px] p-0 overflow-hidden border-0 rounded-xl">
@@ -532,6 +635,15 @@ export function CabinetAppShell({ children }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Logout Overlay */}
+      {isLoggingOut && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex flex-col items-center justify-center backdrop-blur-sm animate-in fade-in duration-300">
+          <Loader2 className="w-12 h-12 text-white animate-spin mb-4" />
+          <h2 className="text-white text-xl font-bold">Đang đăng xuất...</h2>
+          <p className="text-gray-200 mt-2">Vui lòng chờ trong giây lát</p>
+        </div>
+      )}
     </div>
   )
 }

@@ -127,13 +127,21 @@ namespace ToolCalendar.Api.Controllers.Cabinet
             if (request.EndTime <= request.StartTime)
                 return BadRequest(ApiResponse.Fail("Thời gian kết thúc phải sau thời gian bắt đầu."));
 
-            // Kiểm tra phòng có tồn tại không
-            var room = await _roomRepo.GetByIdAsync(request.RoomId);
-            if (room == null)
-                return BadRequest(ApiResponse.Fail("Phòng họp không tồn tại."));
+            // Nếu có chọn phòng họp trong hệ thống, kiểm tra xem phòng có tồn tại không
+            if (request.RoomId.HasValue)
+            {
+                var room = await _roomRepo.GetByIdAsync(request.RoomId.Value);
+                if (room == null)
+                    return BadRequest(ApiResponse.Fail("Phòng họp không tồn tại."));
 
-            if (room.Status == 0)
-                return BadRequest(ApiResponse.Fail("Phòng họp đang không hoạt động."));
+                if (room.Status == 0)
+                    return BadRequest(ApiResponse.Fail("Phòng họp đang không hoạt động."));
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(request.Location))
+                    return BadRequest(ApiResponse.Fail("Vui lòng nhập tên/địa điểm phòng họp khác."));
+            }
 
             var creatorId = GetCurrentUserId();
             var newId = await _meetingRepo.CreateAsync(request, creatorId);

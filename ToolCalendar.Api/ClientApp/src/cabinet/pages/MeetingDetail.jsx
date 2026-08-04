@@ -82,6 +82,24 @@ const EmptyState = () => (
 export function MeetingDetail({ meeting, onBack, onViewProgress }) {
   const [isNotebookOpen, setIsNotebookOpen] = useState(false)
 
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return '-'
+    const d = new Date(dateStr)
+    return d.toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  const formatTimeOnly = (dateStr) => {
+    if (!dateStr) return ''
+    const d = new Date(dateStr)
+    return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  }
+
   if (!meeting) return null
 
   return (
@@ -111,13 +129,14 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
           {/* Main Title Area */}
           <div className="text-center mb-8 relative">
             <h2 className="text-xl md:text-2xl font-bold text-[#1a202c] leading-snug uppercase mb-4 px-12">
-              {meeting.title ||
-                'HỘI NGHỊ SƠ KẾT ĐÁNH GIÁ KẾT QUẢ 6 THÁNG ĐẦU NĂM VỀ TRIỂN KHAI NGHỊ QUYẾT SỐ 57-NQ/TW, NGÀY 22/12/2024 CỦA BỘ CHÍNH TRỊ VỀ ĐỘT PHÁ PHÁT TRIỂN KHOA HỌC, CÔNG NGHỆ, ĐỔI MỚI SÁNG TẠO VÀ CHUYỂN ĐỔI SỐ QUỐC GIA VÀ QUYẾT ĐỊNH SỐ 204-QĐ/TW, NGÀY 29/11/2024 CỦA BAN BÍ THƯ VỀ PHÊ DUYỆT ĐỀ ÁN CHUYỂN ĐỔI SỐ TRONG CÁC CƠ QUAN ĐẢNG TRÊN ĐỊA BÀN PHƯỜNG'}
+              {meeting.title || 'KHÔNG CÓ TIÊU ĐỀ'}
             </h2>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm font-medium text-gray-700">
-              <span className="flex items-center gap-2">Thời gian: 06/07/2026 08:00 - 11:30</span>
               <span className="flex items-center gap-2">
-                Phòng họp: Phòng Họp Tầng 2 - Trụ sở Đảng ủy phường Cẩm Phả
+                Thời gian: {formatDateTime(meeting.startTime)} - {formatTimeOnly(meeting.endTime)}
+              </span>
+              <span className="flex items-center gap-2">
+                Phòng họp: {meeting.roomName || meeting.location || 'Chưa cập nhật'}
               </span>
             </div>
           </div>
@@ -129,18 +148,20 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500 w-[140px] shrink-0">Chủ trì:</span>
                   <span className="font-semibold text-gray-900">
-                    Đồng chí Phạm Lê Hưng - Chủ tịch HĐND, Bí thư Đảng ủy phường Cẩm Phả
+                    {meeting.presider || 'Chưa cập nhật'}
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500 w-[140px] shrink-0">Thời gian còn lại:</span>
-                  <span className="font-semibold text-gray-900">Hết thời gian!</span>
+                  <span className="font-semibold text-gray-900">
+                    {new Date(meeting.endTime) < new Date() ? 'Hết thời gian!' : 'Đang diễn ra'}
+                  </span>
                 </div>
 
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500 w-[140px] shrink-0">Địa điểm họp:</span>
                   <span className="font-semibold text-[#c8102e]">
-                    Phòng Họp Tầng 2 - Trụ sở Đảng ủy phường Cẩm Phả
+                    {meeting.roomName || meeting.location || 'Chưa cập nhật'}
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
@@ -171,7 +192,7 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500 w-[140px] shrink-0">Trạng thái phiên họp:</span>
                   <span className="px-2.5 py-0.5 bg-[#e6fcf5] text-[#059669] text-xs font-semibold rounded-md border border-[#a7f3d0]">
-                    Đang diễn ra
+                    {meeting.status}
                   </span>
                 </div>
 
@@ -183,18 +204,13 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
             </AccordionSection>
 
             {/* 2. Nội dung họp */}
-            <AccordionSection title="Nội dung họp" count={2} defaultOpen={true}>
+            <AccordionSection title="Nội dung họp" count={1} defaultOpen={true}>
               <div className="space-y-4">
                 {/* Meeting Item 1 */}
                 <div className="border border-gray-200 rounded-lg p-5">
                   <div className="flex justify-between items-start gap-4 mb-4">
                     <h4 className="text-[15px] font-bold text-[#1a202c] leading-snug flex-1">
-                      Hội nghị đánh giá kết quả 6 tháng đầu năm về triển khai Nghị quyết số
-                      57-NQ/TW, ngày 22/12/2024 của Bộ Chính trị về đột phá phát triển khoa học,
-                      công nghệ, đổi mới sáng tạo và chuyển đổi số quốc gia và Quyết định số
-                      204-QĐ/TW, ngày 29/11/2024 của Ban Bí thư về phê duyệt Đề án Chuyển đổi số
-                      trong các cơ quan đảng theo giấy mời số 52-GM/VPTU ngày 02/7/2026 của Văn
-                      phòng Tỉnh ủy Quảng Ninh (bằng hình thức trực tuyến từ Tỉnh)
+                      {meeting.content || meeting.title || 'Chưa cập nhật nội dung'}
                     </h4>
                     <div className="flex items-center gap-2 shrink-0">
                       <Button className="bg-[#c8102e] hover:bg-[#a50e27] text-white h-8 text-xs font-semibold px-4 rounded-md">
@@ -209,11 +225,15 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 text-[13px] mb-5">
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 w-[130px]">Người chuẩn bị tài liệu:</span>
-                      <span className="font-semibold text-gray-900">-</span>
+                      <span className="font-semibold text-gray-900">
+                        {meeting.preparingUnit || '-'}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 w-[130px]">Thời gian:</span>
-                      <span className="font-semibold text-gray-900">-</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatDateTime(meeting.startTime)}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -234,7 +254,7 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 w-[130px]">Trạng thái:</span>
                       <span className="px-2.5 py-0.5 bg-[#e6fcf5] text-[#059669] text-xs font-semibold rounded-md border border-[#a7f3d0]">
-                        Đang họp
+                        {meeting.status}
                       </span>
                     </div>
                   </div>
@@ -244,26 +264,23 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                     <h5 className="text-[13px] font-bold text-[#1a202c] mb-2">
                       Danh sách tài liệu:
                     </h5>
-                    <ul className="space-y-2">
-                      <li className="flex items-center gap-2 text-[13px]">
-                        <FileText size={16} className="text-red-500 shrink-0" />
-                        <span className="font-medium text-[#1a202c] truncate">
-                          1. Báo_cáo_6 tháng 2026-3.7 VH_daky.pdf
-                        </span>
-                        <button className="text-gray-400 hover:text-[#c8102e] ml-1">
-                          <Download size={14} />
-                        </button>
-                      </li>
-                      <li className="flex items-center gap-2 text-[13px]">
-                        <FileIcon size={16} className="text-blue-500 shrink-0" />
-                        <span className="font-medium text-[#1a202c] truncate">
-                          2. Phu luc kem theo Bao cao 6 thang.docx
-                        </span>
-                        <button className="text-gray-400 hover:text-[#c8102e] ml-1">
-                          <Download size={14} />
-                        </button>
-                      </li>
-                    </ul>
+                    {meeting.documents && meeting.documents.length > 0 ? (
+                      <ul className="space-y-2">
+                        {meeting.documents.map((doc, idx) => (
+                          <li key={idx} className="flex items-center gap-2 text-[13px]">
+                            <FileText size={16} className="text-red-500 shrink-0" />
+                            <span className="font-medium text-[#1a202c] truncate">
+                              {idx + 1}. {doc.name || 'Tài liệu'}
+                            </span>
+                            <button className="text-gray-400 hover:text-[#c8102e] ml-1">
+                              <Download size={14} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-[13px] text-gray-500 italic">Chưa có tài liệu</div>
+                    )}
                   </div>
 
                   {/* Audio list accordion (simulated) */}
@@ -383,8 +400,7 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                   Phiên họp <span className="text-red-500">*</span>
                 </label>
                 <div className="text-[13px] font-bold text-[#1a202c] leading-snug">
-                  {meeting.title ||
-                    'Hội nghị sơ kết đánh giá kết quả 6 tháng đầu năm về triển khai Nghị quyết số 57-NQ/TW, ngày 22/12/2024 của Bộ Chính trị về đột phá phát triển khoa học, công nghệ, đổi mới sáng tạo và chuyển đổi số quốc gia và Quyết định số 204-QĐ/TW, ngày 29/11/2024 của Ban Bí thư về phê duyệt Đề án Chuyển đổi số trong các cơ quan đảng rên địa bàn phường'}
+                  {meeting.title || 'KHÔNG CÓ TIÊU ĐỀ'}
                 </div>
               </div>
 
@@ -392,7 +408,9 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                 <label className="text-sm font-semibold text-gray-500">
                   Thời gian <span className="text-red-500">*</span>
                 </label>
-                <div className="text-[13px] font-bold text-[#1a202c]">06/07/2026 08:00 - 11:30</div>
+                <div className="text-[13px] font-bold text-[#1a202c]">
+                  {formatDateTime(meeting.startTime)} - {formatTimeOnly(meeting.endTime)}
+                </div>
               </div>
 
               <div className="space-y-1.5">
@@ -400,7 +418,7 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                   Phòng họp <span className="text-red-500">*</span>
                 </label>
                 <div className="text-[13px] font-bold text-[#1a202c]">
-                  Phòng Họp Tầng 2 - Trụ sở Đảng ủy phường Cẩm Phả
+                  {meeting.roomName || meeting.location || 'Chưa cập nhật'}
                 </div>
               </div>
 
@@ -409,7 +427,7 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                   Chủ trì <span className="text-red-500">*</span>
                 </label>
                 <div className="text-[13px] font-bold text-[#1a202c] leading-snug">
-                  Đồng chí Phạm Lê Hưng - Chủ tịch HĐND, Bí thư Đảng ủy phường Cẩm Phả
+                  {meeting.presider || 'Chưa cập nhật'}
                 </div>
               </div>
 

@@ -35,7 +35,7 @@ namespace ToolCalendar.Core.Data.Repositories
             Title = r["Title"]?.ToString() ?? "",
             StartTime = DateTime.Parse(r["StartTime"]?.ToString() ?? DateTime.UtcNow.ToString()),
             EndTime = DateTime.Parse(r["EndTime"]?.ToString() ?? DateTime.UtcNow.ToString()),
-            RoomId = r["RoomId"] == DBNull.Value ? 0 : Convert.ToInt32(r["RoomId"]),
+            RoomId = r["RoomId"] == DBNull.Value ? null : Convert.ToInt32(r["RoomId"]),
             RoomName = r["RoomName"]?.ToString(),
             Status = r["Status"]?.ToString() ?? "Sắp diễn ra",
             CreatorId = r["CreatorId"] == DBNull.Value ? 0 : Convert.ToInt32(r["CreatorId"]),
@@ -123,7 +123,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 LEFT JOIN MeetingParticipants mp ON m.Id = mp.MeetingId AND mp.UserId = @userId
                 LEFT JOIN Rooms r ON m.RoomId = r.Id
                 LEFT JOIN Users u ON m.CreatorId = u.Id
-                WHERE mp.UserId = @userId OR m.CreatorId = @userId
+                WHERE mp.UserId = @userId
                 ORDER BY m.StartTime DESC";
 
             using var cmd = new SqliteCommand(sql, connection);
@@ -216,7 +216,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@title", req.Title);
                 cmd.Parameters.AddWithValue("@start", req.StartTime.ToString("yyyy-MM-dd HH:mm:ss"));
                 cmd.Parameters.AddWithValue("@end", req.EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                cmd.Parameters.AddWithValue("@roomId", req.RoomId);
+                cmd.Parameters.AddWithValue("@roomId", req.RoomId ?? (object)DBNull.Value);
                 cmd.Parameters.AddWithValue("@creator", creatorId);
                 cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
                 cmd.Parameters.AddWithValue("@location", (object?)req.Location ?? DBNull.Value);
@@ -270,7 +270,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@title", req.Title);
                 cmd.Parameters.AddWithValue("@start", req.StartTime.ToString("yyyy-MM-dd HH:mm:ss"));
                 cmd.Parameters.AddWithValue("@end", req.EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                cmd.Parameters.AddWithValue("@roomId", req.RoomId);
+                cmd.Parameters.AddWithValue("@roomId", req.RoomId ?? (object)DBNull.Value);
                 cmd.Parameters.AddWithValue("@location", (object?)req.Location ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@presider", (object?)req.Presider ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@preparingUnit", (object?)req.PreparingUnit ?? DBNull.Value);
