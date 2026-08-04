@@ -1,3 +1,12 @@
+### [2026-08-04 16:03] Thêm runtime packages cho linux x64 và resolve merge conflict
+- **Mô tả**: Sửa merge conflict tại `DocumentsController.cs`. Cập nhật `docker-compose.yml` thêm network host và thêm package NuGet Sdcb cho Linux x64 để phục vụ OCR trên Docker. Định dạng lại `DocDetail.jsx`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Core/ToolCalendar.Core.csproj` (Sửa đổi)
+  - `docker-compose.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): thêm runtime packages cho linux x64 và resolve merge conflict"`
+
 ### [2026-07-26 17:35] Add Meeting Check-in Modal & Fix Meeting Visibility
 - **Mô tả**: 
   1. Bổ sung modal Điểm danh (Check-in) khi người dùng bấm "Vào họp" ở `CabinetHome.jsx`.

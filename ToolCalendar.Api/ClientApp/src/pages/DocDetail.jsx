@@ -463,17 +463,17 @@ export function DocDetail({ docId, onBack }) {
 
           {(localStorage.getItem('user_role') === 'Admin' ||
             localStorage.getItem('user_role') === 'VanThu') && (
-            <button
-              onClick={() => {
-                setEditForm({ ...doc })
-                setIsEditModalOpen(true)
-              }}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
-            >
-              <Edit size={14} strokeWidth={2.5} />
-              SỬA
-            </button>
-          )}
+              <button
+                onClick={() => {
+                  setEditForm({ ...doc })
+                  setIsEditModalOpen(true)
+                }}
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
+              >
+                <Edit size={14} strokeWidth={2.5} />
+                SỬA
+              </button>
+            )}
           {localStorage.getItem('user_role') === 'Admin' && (
             <button
               onClick={handleDeleteDoc}
@@ -505,9 +505,8 @@ export function DocDetail({ docId, onBack }) {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`relative px-4 py-3 text-[10px] font-black tracking-[0.1em] transition-all ${
-                activeTab === tab.key ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'
-              }`}
+              className={`relative px-4 py-3 text-[10px] font-black tracking-[0.1em] transition-all ${activeTab === tab.key ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'
+                }`}
             >
               {tab.label}
               {activeTab === tab.key && (
@@ -1221,9 +1220,9 @@ export function DocDetail({ docId, onBack }) {
                             <option value="">Chọn cán bộ...</option>
                             {(editForm?.departmentId
                               ? users.filter(
-                                  (u) =>
-                                    u.role === 'Admin' || u.departmentId === editForm.departmentId
-                                )
+                                (u) =>
+                                  u.role === 'Admin' || u.departmentId === editForm.departmentId
+                              )
                               : users
                             ).map((u) => (
                               <option key={u.id} value={u.id}>
