@@ -16,6 +16,12 @@
   - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(cabinet): add check-in modal and fix creator meeting visibility"`
 
+### [2026-08-04 16:25] Cập nhật giao diện nút quay lại hệ thống chính
+- **Mô tả**: Thay đổi UI nút mũi tên quay lại thành nút có chứa text "Quay lại hệ thống chính" trong thanh điều hướng trên cùng của CabinetAppShell để người dùng dễ dàng nhận diện chức năng hơn (chỉ hiện text trên màn hình tablet/desktop).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/CabinetAppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(cabinet): thêm text cho nút quay lại hệ thống chính trong header"`
+
 ### [2026-07-26 16:05] Fix fake notifications (99+) in iCPV Cabinet
 - **Mô tả**: Thay thế mục thông báo bị hardcode (luôn hiển thị 99+ và dữ liệu giả về Phiếu lấy ý kiến) trong `CabinetAppShell.jsx` bằng dữ liệu thật. Tích hợp API `/api/notification` để lấy danh sách thông báo và số lượng chưa đọc thực tế, tương tự như `AppShell.jsx`.
 - **Tệp thay đổi**:

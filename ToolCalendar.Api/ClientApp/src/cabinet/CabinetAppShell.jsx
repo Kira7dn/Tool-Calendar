@@ -251,13 +251,14 @@ export function CabinetAppShell({ children }) {
 
         {/* Right icons */}
         <div className="flex items-center gap-0.5 px-3 shrink-0">
-          {/* Về hệ thống chính — icon only, luôn hiển thị */}
+          {/* Về hệ thống chính */}
           <button
             onClick={() => (window.location.href = '/')}
-            className="p-2 hover:bg-[#a50e27] rounded-full transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-[#a50e27] rounded-full transition text-sm font-medium mr-1"
             title="Về Hệ thống chính"
           >
-            <ArrowLeft size={17} />
+            <ArrowLeft size={16} />
+            <span className="hidden md:inline">Quay lại hệ thống chính</span>
           </button>
           <div className="w-px h-7 bg-[#a50e27] mx-1" />
 
