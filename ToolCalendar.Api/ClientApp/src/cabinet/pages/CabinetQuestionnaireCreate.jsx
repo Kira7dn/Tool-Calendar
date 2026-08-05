@@ -78,9 +78,6 @@ export function CabinetQuestionnaireCreate({ onBack, onSaved }) {
     try {
       const res = await fetch('/api/phonghopkhonggiayto/questionnaires', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
         body: fd,
       })
       const json = await res.json()

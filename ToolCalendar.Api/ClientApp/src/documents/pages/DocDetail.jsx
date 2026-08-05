@@ -123,7 +123,7 @@ export function DocDetail({ docId, onBack }) {
   const fetchData = async () => {
     setIsLoading(true)
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+      const headers = {}
       const [docRes, deptRes, userRes] = await Promise.all([
         fetch(`/api/documents/${docId}`, { headers }),
         fetch('/api/admin/departments', { headers }),
@@ -148,9 +148,7 @@ export function DocDetail({ docId, onBack }) {
 
   const fetchRoutings = async () => {
     try {
-      const response = await fetch(`/api/documents/${docId}/routings`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-      })
+      const response = await fetch(`/api/documents/${docId}/routings`)
       if (response.ok) {
         setRoutings(await response.json())
       }
@@ -161,9 +159,7 @@ export function DocDetail({ docId, onBack }) {
 
   const fetchComments = async () => {
     try {
-      const response = await fetch(`/api/documents/${docId}/comments`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-      })
+      const response = await fetch(`/api/documents/${docId}/comments`)
       if (response.ok) {
         setComments(await response.json())
       }
@@ -178,7 +174,6 @@ export function DocDetail({ docId, onBack }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify({ ...doc, status: newStatus }),
       })
@@ -208,9 +203,6 @@ export function DocDetail({ docId, onBack }) {
 
       const response = await fetch(`/api/documents/${docId}/comments`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
         body: formData,
       })
       if (response.ok) {
@@ -230,10 +222,7 @@ export function DocDetail({ docId, onBack }) {
     try {
       const response = await fetch(`/api/documents/${docId}`, {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editForm),
       })
 
@@ -263,9 +252,6 @@ export function DocDetail({ docId, onBack }) {
 
       const response = await fetch(`/api/documents/${docId}/submit-evidence`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
         body: formData,
       })
 
@@ -294,9 +280,6 @@ export function DocDetail({ docId, onBack }) {
     try {
       const response = await fetch(`/api/documents/${docId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
       })
 
       if (response.ok) {
@@ -315,12 +298,7 @@ export function DocDetail({ docId, onBack }) {
 
   const handleViewEvidence = async (path) => {
     try {
-      const response = await fetch(
-        `/api/documents/evidence-file?path=${encodeURIComponent(path)}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-        }
-      )
+      const response = await fetch(`/api/documents/evidence-file?path=${encodeURIComponent(path)}`)
       if (response.ok) {
         const url = `/api/documents/evidence-file?path=${encodeURIComponent(path)}`
 

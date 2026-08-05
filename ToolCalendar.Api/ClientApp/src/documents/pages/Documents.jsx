@@ -92,11 +92,7 @@ export function Documents({ onTabChange, filters }) {
     setIsLoading(true)
     try {
       const url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(debouncedSearch)}&status=${status}&sort=${sort}`
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-      })
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         setDocuments(data.data || [])
@@ -154,7 +150,6 @@ export function Documents({ onTabChange, filters }) {
     try {
       const res = await fetch(`/api/documents/${doc.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
       })
       if (res.ok) {
         toast.success('Đã xóa văn bản thành công')

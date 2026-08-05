@@ -107,9 +107,7 @@ export function CabinetAppShell({ children }) {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('/api/notification', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-      })
+      const response = await fetch('/api/notification')
       if (response.ok) {
         const data = await response.json()
         setNotifications(data)
@@ -124,7 +122,6 @@ export function CabinetAppShell({ children }) {
     try {
       await fetch('/api/notification/mark-all-read', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
       })
       fetchNotifications()
     } catch (e) {
@@ -136,7 +133,6 @@ export function CabinetAppShell({ children }) {
     try {
       await fetch(`/api/notification/mark-read/${id}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
       })
       fetchNotifications()
     } catch (e) {

@@ -64,9 +64,7 @@ export function MyTasks({ onTabChange }) {
   const fetchTasks = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/documents/my-tasks', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-      })
+      const response = await fetch('/api/documents/my-tasks')
       if (response.ok) {
         const data = await response.json()
         setTasks(data)
@@ -113,7 +111,6 @@ export function MyTasks({ onTabChange }) {
 
       const response = await fetch(`/api/documents/${selectedDocId}/submit-evidence`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
         body: formData,
       })
 
@@ -384,7 +381,6 @@ export function MyTasks({ onTabChange }) {
                                     method: 'PUT',
                                     headers: {
                                       'Content-Type': 'application/json',
-                                      Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
                                     },
                                     body: JSON.stringify({ ...task, status: 'Đang xử lý' }),
                                   })
@@ -489,7 +485,6 @@ export function MyTasks({ onTabChange }) {
                                   method: 'PUT',
                                   headers: {
                                     'Content-Type': 'application/json',
-                                    Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
                                   },
                                   body: JSON.stringify({ ...task, status: 'Đang xử lý' }),
                                 })

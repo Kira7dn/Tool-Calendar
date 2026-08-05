@@ -34,7 +34,7 @@ export function Dashboard({ onTabChange }) {
   const fetchData = async () => {
     setIsLoading(true)
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+      const headers = {}
       const [statsRes, activitiesRes, deadlineSeriesRes, processingRes, overdueRes, todayRes] =
         await Promise.all([
           fetch('/api/stats', { headers }),

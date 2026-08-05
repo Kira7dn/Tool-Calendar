@@ -207,7 +207,7 @@ export function Upload({ onTabChange }) {
 
   const fetchReferenceData = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+      const headers = {}
       const [deptRes, userRes] = await Promise.all([
         fetch('/api/admin/departments', { headers }),
         fetch('/api/users', { headers }),
@@ -255,7 +255,6 @@ export function Upload({ onTabChange }) {
       try {
         const response = await fetch('/api/documents/upload', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
           body: formData,
         })
         if (response.ok) {
@@ -293,9 +292,7 @@ export function Upload({ onTabChange }) {
               while (attempts < 150) {
                 await new Promise((r) => setTimeout(r, 2000))
                 try {
-                  const res = await fetch(`/api/documents/${docId}`, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-                  })
+                  const res = await fetch(`/api/documents/${docId}`)
                   if (res.ok) {
                     const updatedDoc = await res.json()
                     if (updatedDoc.status !== 'Đang xử lý') {
@@ -412,10 +409,7 @@ export function Upload({ onTabChange }) {
       try {
         const response = await fetch(`/api/documents/${item.id}`, {
           method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             id: item.id,
             soVanBan: item.soVanBan,
@@ -504,10 +498,7 @@ export function Upload({ onTabChange }) {
       const ids = Array.from(selectedIds).filter((id) => typeof id === 'number')
       const response = await fetch('/api/documents/bulk-delete', {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ids),
       })
       if (response.ok) {
@@ -535,10 +526,7 @@ export function Upload({ onTabChange }) {
       try {
         await fetch('/api/documents/bulk-delete', {
           method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(ids),
         })
       } catch (e) {
@@ -1329,7 +1317,6 @@ export function Upload({ onTabChange }) {
             try {
               await fetch(`/api/documents/${item.id}`, {
                 method: 'DELETE',
-                headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
               })
             } catch (e) {
               console.error(e)

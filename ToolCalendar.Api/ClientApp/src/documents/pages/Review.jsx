@@ -50,7 +50,7 @@ export function Review({ onBack }) {
 
   const fetchReferenceData = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+      const headers = {}
       const [deptRes, userRes] = await Promise.all([
         fetch('/api/admin/departments', { headers }),
         fetch('/api/users', { headers }),
@@ -80,11 +80,7 @@ export function Review({ onBack }) {
   const fetchReviewDocs = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/documents?status=Chưa xử lý&size=50', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-      })
+      const response = await fetch('/api/documents?status=Chưa xử lý&size=50')
       if (response.ok) {
         const data = await response.json()
         setDocs(data.data || [])
@@ -100,10 +96,7 @@ export function Review({ onBack }) {
     const doc = docs[currentIndex]
     setIsSaving(true)
     try {
-      const headers = {
-        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        'Content-Type': 'application/json',
-      }
+      const headers = { 'Content-Type': 'application/json' }
 
       const response = await fetch(`/api/documents/${doc.id}`, {
         method: 'PUT',
@@ -149,10 +142,7 @@ export function Review({ onBack }) {
     try {
       const response = await fetch(`/api/documents/bulk-delete`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify([doc.id]),
       })
       if (response.ok) {

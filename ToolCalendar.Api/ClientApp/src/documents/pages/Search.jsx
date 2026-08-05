@@ -66,7 +66,7 @@ export function Search({ filters, onTabChange }) {
       if (newAddFrom) url += `&addFromDate=${newAddFrom}`
       if (newAddTo) url += `&addToDate=${newAddTo}`
 
-      fetch(url, { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` } })
+      fetch(url)
         .then((res) => res.json())
         .then((data) => {
           setDocuments(data.data || [])
@@ -91,11 +91,7 @@ export function Search({ filters, onTabChange }) {
       if (addFromDate) url += `&addFromDate=${addFromDate}`
       if (addToDate) url += `&addToDate=${addToDate}`
 
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-      })
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         setDocuments(data.data || [])

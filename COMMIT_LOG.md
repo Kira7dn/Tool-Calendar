@@ -1253,3 +1253,17 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/constants/document.js` (Mới)
   - Các file thuộc `ToolCalendar.Api/ClientApp/src/cabinet/` (Sửa đổi: xóa AUTH_HEADER)
 - **Lệnh git commit**: `git commit -m "refactor(api): chuẩn hóa constants và loại bỏ AUTH_HEADER dư thừa"`
+
+### [2026-08-05 23:38] Refactor Giai đoạn 2: Xóa bỏ truyền Auth Token thủ công (Documents & Cabinet)
+- **Mô tả**: Loại bỏ hoàn toàn việc lấy auth_token từ localStorage và truyền vào header cho fetch API ở các module Documents và Cabinet, tận dụng triệt để Global Fetch Interceptor nhằm đơn giản hóa code và tăng tính bảo mật.
+- **Tệp thay đổi**:
+  - Các file thuộc  (Sửa đổi)
+  - Các file thuộc  (Sửa đổi)
+- **Lệnh git commit**: 
+
+### [2026-08-05 23:38] Refactor Giai đoạn 2: Xóa bỏ truyền Auth Token thủ công (Documents & Cabinet)
+- **Mô tả**: Loại bỏ hoàn toàn việc lấy auth_token từ localStorage và truyền vào header cho fetch API ở các module Documents và Cabinet, tận dụng triệt để Global Fetch Interceptor nhằm đơn giản hóa code và tăng tính bảo mật.
+- **Tệp thay đổi**:
+  - Các file thuộc `ToolCalendar.Api/ClientApp/src/documents/` (Sửa đổi)
+  - Các file thuộc `ToolCalendar.Api/ClientApp/src/cabinet/` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(api): xóa bỏ truyền auth token thủ công trong requests"`
