@@ -37,6 +37,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { DOCUMENT_STATUS, TASK_FILTER } from '../../constants/document'
 import { toast } from 'sonner'
 
 export function MyTasks({ onTabChange }) {
@@ -50,7 +51,7 @@ export function MyTasks({ onTabChange }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState(TASK_FILTER.ALL)
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 5
 
@@ -86,10 +87,12 @@ export function MyTasks({ onTabChange }) {
     taskList.forEach((task) => {
       const deadline = task.hanXuLy ? new Date(task.hanXuLy) : null
       const isOverdue =
-        deadline && deadline < now && (task.status || '').toLowerCase().indexOf('hoàn thành') === -1
+        deadline &&
+        deadline < now &&
+        (task.status || '').toLowerCase().indexOf(DOCUMENT_STATUS.HOAN_THANH) === -1
       const status = (task.status || '').toLowerCase()
 
-      if (status.includes('hoàn thành')) c++
+      if (status.includes(DOCUMENT_STATUS.HOAN_THANH)) c++
       else if (isOverdue) o++
       else if (status.includes('đang xử lý')) d++
       else n++
@@ -156,21 +159,24 @@ export function MyTasks({ onTabChange }) {
     const now = new Date()
     const deadline = task.hanXuLy ? new Date(task.hanXuLy) : null
     const isOverdue =
-      deadline && deadline < now && (task.status || '').toLowerCase().indexOf('hoàn thành') === -1
+      deadline &&
+      deadline < now &&
+      (task.status || '').toLowerCase().indexOf(DOCUMENT_STATUS.HOAN_THANH) === -1
     const status = (task.status || '').toLowerCase()
 
-    if (statusFilter === 'all') return matchesSearch
-    if (statusFilter === 'new')
+    if (statusFilter === TASK_FILTER.ALL) return matchesSearch
+    if (statusFilter === TASK_FILTER.NEW)
       return (
         matchesSearch &&
         !status.includes('đang xử lý') &&
-        !status.includes('hoàn thành') &&
+        !status.includes(DOCUMENT_STATUS.HOAN_THANH) &&
         !isOverdue
       )
-    if (statusFilter === 'doing')
+    if (statusFilter === TASK_FILTER.DOING)
       return matchesSearch && status.includes('đang xử lý') && !isOverdue
-    if (statusFilter === 'overdue') return matchesSearch && isOverdue
-    if (statusFilter === 'completed') return matchesSearch && status.includes('hoàn thành')
+    if (statusFilter === TASK_FILTER.OVERDUE) return matchesSearch && isOverdue
+    if (statusFilter === TASK_FILTER.COMPLETED)
+      return matchesSearch && status.includes(DOCUMENT_STATUS.HOAN_THANH)
 
     return matchesSearch
   })
@@ -200,9 +206,9 @@ export function MyTasks({ onTabChange }) {
                 count={stats.new}
                 color="info"
                 isLoading={isLoading}
-                isActive={statusFilter === 'new'}
+                isActive={statusFilter === TASK_FILTER.NEW}
                 onClick={() => {
-                  setStatusFilter('new')
+                  setStatusFilter(TASK_FILTER.NEW)
                   setCurrentPage(1)
                 }}
               />
@@ -211,9 +217,9 @@ export function MyTasks({ onTabChange }) {
                 count={stats.doing}
                 color="warning"
                 isLoading={isLoading}
-                isActive={statusFilter === 'doing'}
+                isActive={statusFilter === TASK_FILTER.DOING}
                 onClick={() => {
-                  setStatusFilter('doing')
+                  setStatusFilter(TASK_FILTER.DOING)
                   setCurrentPage(1)
                 }}
               />
@@ -222,9 +228,9 @@ export function MyTasks({ onTabChange }) {
                 count={stats.overdue}
                 color="destructive"
                 isLoading={isLoading}
-                isActive={statusFilter === 'overdue'}
+                isActive={statusFilter === TASK_FILTER.OVERDUE}
                 onClick={() => {
-                  setStatusFilter('overdue')
+                  setStatusFilter(TASK_FILTER.OVERDUE)
                   setCurrentPage(1)
                 }}
               />
@@ -233,9 +239,9 @@ export function MyTasks({ onTabChange }) {
                 count={stats.completed}
                 color="success"
                 isLoading={isLoading}
-                isActive={statusFilter === 'completed'}
+                isActive={statusFilter === TASK_FILTER.COMPLETED}
                 onClick={() => {
-                  setStatusFilter('completed')
+                  setStatusFilter(TASK_FILTER.COMPLETED)
                   setCurrentPage(1)
                 }}
               />
@@ -244,23 +250,23 @@ export function MyTasks({ onTabChange }) {
 
           <div className="flex items-center gap-2">
             <div className="h-8 flex items-center">
-              {statusFilter !== 'all' && (
+              {statusFilter !== TASK_FILTER.ALL && (
                 <Button
                   variant="default"
                   size="sm"
                   onClick={() => {
-                    setStatusFilter('all')
+                    setStatusFilter(TASK_FILTER.ALL)
                     setCurrentPage(1)
                   }}
                   className="bg-muted/50 text-muted-foreground rounded-full font-bold px-3 h-8 gap-2 border-none hover:bg-muted transition-all group"
                   title="Nhấn để bỏ lọc"
                 >
                   <span className="text-[10px] uppercase">
-                    {statusFilter === 'new'
+                    {statusFilter === TASK_FILTER.NEW
                       ? 'Mới'
-                      : statusFilter === 'doing'
+                      : statusFilter === TASK_FILTER.DOING
                         ? 'Đang làm'
-                        : statusFilter === 'overdue'
+                        : statusFilter === TASK_FILTER.OVERDUE
                           ? 'Quá hạn'
                           : 'Đã xong'}
                   </span>
@@ -371,7 +377,7 @@ export function MyTasks({ onTabChange }) {
                             Chi tiết
                           </Button>
 
-                          {!task.status || task.status === 'Chưa xử lý' ? (
+                          {!task.status || task.status === DOCUMENT_STATUS.CHUA_XU_LY ? (
                             <Button
                               size="sm"
                               className="h-8 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold text-[11px] shadow-sm text-white"
@@ -382,7 +388,10 @@ export function MyTasks({ onTabChange }) {
                                     headers: {
                                       'Content-Type': 'application/json',
                                     },
-                                    body: JSON.stringify({ ...task, status: 'Đang xử lý' }),
+                                    body: JSON.stringify({
+                                      ...task,
+                                      status: DOCUMENT_STATUS.DANG_XU_LY,
+                                    }),
                                   })
                                   if (res.ok) {
                                     toast.success('Đã tiếp nhận văn bản')
@@ -396,7 +405,7 @@ export function MyTasks({ onTabChange }) {
                               Tiếp nhận
                             </Button>
                           ) : (
-                            task.status === 'Đang xử lý' && (
+                            task.status === DOCUMENT_STATUS.DANG_XU_LY && (
                               <Button
                                 size="sm"
                                 className="h-8 px-3 rounded-lg bg-red-600 hover:bg-red-700 font-bold text-[11px] shadow-sm text-white"
@@ -475,7 +484,7 @@ export function MyTasks({ onTabChange }) {
                         >
                           Chi tiết
                         </Button>
-                        {!task.status || task.status === 'Chưa xử lý' ? (
+                        {!task.status || task.status === DOCUMENT_STATUS.CHUA_XU_LY ? (
                           <Button
                             size="sm"
                             className="h-7 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold text-[11px] text-white"
@@ -486,7 +495,10 @@ export function MyTasks({ onTabChange }) {
                                   headers: {
                                     'Content-Type': 'application/json',
                                   },
-                                  body: JSON.stringify({ ...task, status: 'Đang xử lý' }),
+                                  body: JSON.stringify({
+                                    ...task,
+                                    status: DOCUMENT_STATUS.DANG_XU_LY,
+                                  }),
                                 })
                                 if (res.ok) {
                                   toast.success('Đã tiếp nhận văn bản')
@@ -500,7 +512,7 @@ export function MyTasks({ onTabChange }) {
                             Tiếp nhận
                           </Button>
                         ) : (
-                          task.status === 'Đang xử lý' && (
+                          task.status === DOCUMENT_STATUS.DANG_XU_LY && (
                             <Button
                               size="sm"
                               className="h-7 px-2.5 rounded-lg bg-red-600 hover:bg-red-700 font-bold text-[11px] text-white"

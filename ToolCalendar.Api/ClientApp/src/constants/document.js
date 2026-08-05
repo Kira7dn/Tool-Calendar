@@ -1,12 +1,14 @@
 export const DOCUMENT_STATUS = {
-  UNPROCESSED: 'Chưa xử lý',
-  PROCESSING: 'Đang xử lý',
-  FINISHED: 'Đã hoàn thành',
-  OCR_ERROR: 'Lỗi OCR',
+  CHUA_XU_LY: 'Chưa xử lý',
+  DANG_XU_LY: 'Đang xử lý',
+  DA_HOAN_THANH: 'Đã hoàn thành',
+  HOAN_THANH: 'hoàn thành',
 }
 
-export const DOCUMENT_PRIORITY = {
-  NORMAL: 'Thường',
-  URGENT: 'Khẩn',
-  FLASH: 'Hỏa tốc',
+export const TASK_FILTER = {
+  ALL: 'all',
+  NEW: 'new',
+  DOING: 'doing',
+  OVERDUE: 'overdue',
+  COMPLETED: 'completed',
 }

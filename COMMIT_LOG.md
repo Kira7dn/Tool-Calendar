@@ -1306,3 +1306,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocContentTab.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocHistoryTab.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): khôi phục toàn bộ nội dung các tab Overview, Content và History bị ẩn"`
+
+### [2026-08-06 00:11] Tái cấu trúc loại bỏ Magic Strings trong MyTasks.jsx và thiết lập quy tắc mới
+- **Mô tả**: Đã tạo file `constants/document.js` chứa các hằng số (constants) cho trạng thái văn bản và bộ lọc thay cho việc hardcode chuỗi trực tiếp. Áp dụng rule này vào file `MyTasks.jsx` để code sạch, dễ bảo trì và hạn chế sai lỗi chính tả. Đồng thời đã định nghĩa và thêm quy tắc `tc-rule-magic-strings.md` vào thư mục `.agents/rules` để AI luôn tuân thủ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/constants/document.js` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/MyTasks.jsx` (Sửa đổi)
+  - `.agents/rules/tc-rule-magic-strings.md` (Mới)
+  - `.agents/AGENTS.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor: loại bỏ magic strings trong MyTasks và cập nhật rule AI"`

@@ -122,3 +122,4 @@ Tool-Calendar/
 **Version:** 2.1 (Nâng cấp chuẩn OpenClaw)  
 **Last Updated:** 2026-07-25  
 **See also:** [SYSTEM_FEATURES.md](../SYSTEM_FEATURES.md) | [COMMIT_LOG.md](../COMMIT_LOG.md) | [CODE_QUALITY.md](../CODE_QUALITY.md) | [tc-rule-ai-behavior.md](rules/tc-rule-ai-behavior.md)
+ | [tc-rule-magic-strings.md](rules/tc-rule-magic-strings.md)
