@@ -1285,3 +1285,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocModals.jsx` (Mới)
 - **Lệnh git commit**: `git commit -m "fix(docs): khôi phục các modal bị mất trong quá trình refactor DocDetail"`
+
+### [2026-08-05 23:59] Sửa logic hiển thị trạng thái phiên họp
+- **Mô tả**: Sửa lỗi trạng thái phiên họp hiển thị 'Sắp diễn ra' (lấy từ database) trong khi thời gian thực tế đã hết ('Hết thời gian!'). Thay đổi để sử dụng hàm `getDynamicStatus` đồng bộ với logic tính toán thời gian.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(cabinet): sửa lỗi hiển thị trạng thái phiên họp không đồng bộ với thời gian thực"`

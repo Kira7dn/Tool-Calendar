@@ -302,8 +302,10 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 w-[130px]">Trạng thái:</span>
-                      <span className="px-2.5 py-0.5 bg-[#e6fcf5] text-[#059669] text-xs font-semibold rounded-md border border-[#a7f3d0]">
-                        {meeting.status}
+                      <span
+                        className={`px-2.5 py-0.5 text-xs font-semibold rounded-md border ${getStatusColor(getDynamicStatus(meeting))}`}
+                      >
+                        {getDynamicStatus(meeting)}
                       </span>
                     </div>
                   </div>
