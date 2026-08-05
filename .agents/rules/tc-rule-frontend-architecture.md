@@ -123,5 +123,43 @@ npm run build
 ```
 
 ---
+
+## 7. Component Size & Refactoring Strategy
+
+Để đảm bảo mã nguồn Frontend dễ bảo trì, dễ đọc và tuân thủ Single Responsibility Principle (SRP):
+
+### Quy tắc số dòng code (Lines of Code Rule)
+- **Lý tưởng:** Một component nên từ **100 đến 250 dòng code**.
+- **Ngưỡng cảnh báo:** Cần cân nhắc tách file nếu vượt quá **300 - 400 dòng**.
+- **Quá tải:** Không chấp nhận component lớn hơn **500 dòng** (trừ trường hợp đặc biệt đã được review).
+
+### Chiến lược Refactor (Container - Presentational Pattern)
+1. **Tách Logic (Custom Hooks):** Di chuyển toàn bộ state management, side effects (useEffect), và API calls vào các Custom Hooks riêng (ví dụ: `useDocDetail.js`).
+2. **Chia nhỏ UI (Sub-components):** Tách các khối UI độc lập (Header, Tabs, Modals) thành các components con trong một thư mục dùng chung hoặc thư mục theo feature (ví dụ: `DocDetail/components/DocComments.jsx`).
+
+---
+
+## 8. Coding Convention: Magic Strings & Constants
+
+Để tránh lỗi sai chính tả (typo) và dễ dàng thay đổi giá trị trong tương lai, tuân thủ nguyên tắc sau:
+- **KHÔNG dùng "Magic Strings" (chuỗi hardcode)** trực tiếp trong logic (như lệnh `switch/case`, `if/else`).
+- **Phải định nghĩa hằng số (Constants):** Tạo object gom nhóm các trạng thái và xuất (export) từ một file dùng chung (ví dụ: `constants/meeting.js` hoặc ngay đầu file nếu chỉ dùng cục bộ).
+
+```js
+// ✅ ĐÚNG: Dùng Object như một Enum
+export const ATTENDANCE_STATUS = {
+  JOINED: 'Tham gia',
+  PENDING: 'Chưa xác nhận',
+  ABSENT: 'Vắng mặt',
+};
+
+// Khi sử dụng:
+switch (status) {
+  case ATTENDANCE_STATUS.JOINED:
+    return <Badge>Tham gia</Badge>;
+}
+```
+
+---
 **Status:** ACTIVE  
 **Priority:** LEVEL 1 — Ràng buộc kiến trúc cứng

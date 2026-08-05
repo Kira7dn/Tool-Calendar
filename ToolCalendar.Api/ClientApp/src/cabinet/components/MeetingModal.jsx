@@ -18,11 +18,6 @@ import {
 } from 'lucide-react'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 
-const AUTH_HEADER = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
-
 // Format datetime-local value
 function toDatetimeLocal(dt) {
   if (!dt) return ''
@@ -64,10 +59,10 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
   useEffect(() => {
     setLoadingOptions(true)
     Promise.all([
-      fetch('/api/phonghopkhonggiayto/rooms', { headers: AUTH_HEADER() })
+      fetch('/api/phonghopkhonggiayto/rooms')
         .then((r) => r.json())
         .then((j) => setRooms(Array.isArray(j) ? j : j.data || [])),
-      fetch('/api/users', { headers: AUTH_HEADER() })
+      fetch('/api/users')
         .then((r) => r.json())
         .then((j) => setUsers(Array.isArray(j) ? j : j.data || [])),
     ])
@@ -91,7 +86,6 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
     try {
       const res = await fetch(`/api/phonghopkhonggiayto/meetings/${meeting.id}`, {
         method: 'DELETE',
-        headers: AUTH_HEADER(),
       })
       const json = await res.json()
       if (!res.ok || json.success === false) {
@@ -161,7 +155,7 @@ export function MeetingModal({ meeting, onClose, onSaved }) {
     const method = isEdit ? 'PUT' : 'POST'
 
     try {
-      const res = await fetch(url, { method, headers: AUTH_HEADER(), body: JSON.stringify(body) })
+      const res = await fetch(url, { method, body: JSON.stringify(body) })
       const json = await res.json()
       if (!res.ok || json.success === false) {
         setError(json.message || 'Có lỗi xảy ra, vui lòng thử lại.')

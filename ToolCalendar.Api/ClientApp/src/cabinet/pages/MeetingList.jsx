@@ -40,27 +40,25 @@ import { MeetingProgress } from './MeetingProgress'
 import { MeetingModal } from '../components/MeetingModal'
 import { CabinetMeetingCreate } from './CabinetMeetingCreate'
 
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
+import { ATTENDANCE_STATUS } from '../../constants/meeting'
 
 const getStatusBadge = (status) => {
   switch (status) {
-    case 'Tham gia':
-    case 'Đã xử lý':
+    case ATTENDANCE_STATUS.JOINED:
+    case ATTENDANCE_STATUS.PROCESSED:
       return (
         <span className="px-3 py-1 bg-green-100 text-green-700 font-semibold rounded-full text-xs">
           Tham gia
         </span>
       )
-    case 'Chưa xác nhận':
-    case 'Chưa xử lý':
+    case ATTENDANCE_STATUS.PENDING:
+    case ATTENDANCE_STATUS.UNPROCESSED:
       return (
         <span className="px-3 py-1 bg-orange-100 text-orange-700 font-semibold rounded-full text-xs">
           Chưa xác nhận
         </span>
       )
-    case 'Vắng mặt':
+    case ATTENDANCE_STATUS.ABSENT:
       return (
         <span className="px-3 py-1 bg-red-100 text-red-700 font-semibold rounded-full text-xs">
           Vắng mặt
@@ -110,7 +108,7 @@ export function MeetingList() {
         ? '/api/phonghopkhonggiayto/meetings/schedule'
         : '/api/phonghopkhonggiayto/meetings/my-meetings'
 
-    fetch(url, { headers: AUTH_HEADER() })
+    fetch(url)
       .then((r) => r.json())
       .then((json) => {
         const data = Array.isArray(json) ? json : json.data || []
@@ -138,7 +136,6 @@ export function MeetingList() {
 
     fetch(`/api/phonghopkhonggiayto/meetings/${id}`, {
       method: 'DELETE',
-      headers: AUTH_HEADER(),
     })
       .then((r) => r.json())
       .then((res) => {
@@ -297,7 +294,10 @@ export function MeetingList() {
                       <div>
                         <div className="text-gray-600 font-medium text-sm mb-1">Tham gia</div>
                         <div className="text-2xl font-bold text-gray-900">
-                          {meetings.filter((m) => m.attendanceStatus === 'Tham gia').length}
+                          {
+                            meetings.filter((m) => m.attendanceStatus === ATTENDANCE_STATUS.JOINED)
+                              .length
+                          }
                         </div>
                       </div>
                     </div>
@@ -310,7 +310,9 @@ export function MeetingList() {
                         <div className="text-2xl font-bold text-gray-900">
                           {
                             meetings.filter(
-                              (m) => m.attendanceStatus === 'Chưa xác nhận' || !m.attendanceStatus
+                              (m) =>
+                                m.attendanceStatus === ATTENDANCE_STATUS.PENDING ||
+                                !m.attendanceStatus
                             ).length
                           }
                         </div>
@@ -323,7 +325,10 @@ export function MeetingList() {
                       <div>
                         <div className="text-gray-600 font-medium text-sm mb-1">Vắng mặt</div>
                         <div className="text-2xl font-bold text-gray-900">
-                          {meetings.filter((m) => m.attendanceStatus === 'Vắng mặt').length}
+                          {
+                            meetings.filter((m) => m.attendanceStatus === ATTENDANCE_STATUS.ABSENT)
+                              .length
+                          }
                         </div>
                       </div>
                     </div>
@@ -337,7 +342,11 @@ export function MeetingList() {
                       <div>
                         <div className="text-gray-600 font-medium text-sm mb-1">Đã xử lý</div>
                         <div className="text-2xl font-bold text-gray-900">
-                          {meetings.filter((m) => m.attendanceStatus === 'Đã xử lý').length}
+                          {
+                            meetings.filter(
+                              (m) => m.attendanceStatus === ATTENDANCE_STATUS.PROCESSED
+                            ).length
+                          }
                         </div>
                       </div>
                     </div>
@@ -348,7 +357,11 @@ export function MeetingList() {
                       <div>
                         <div className="text-gray-600 font-medium text-sm mb-1">Chưa xử lý</div>
                         <div className="text-2xl font-bold text-gray-900">
-                          {meetings.filter((m) => m.attendanceStatus === 'Chưa xử lý').length}
+                          {
+                            meetings.filter(
+                              (m) => m.attendanceStatus === ATTENDANCE_STATUS.UNPROCESSED
+                            ).length
+                          }
                         </div>
                       </div>
                     </div>

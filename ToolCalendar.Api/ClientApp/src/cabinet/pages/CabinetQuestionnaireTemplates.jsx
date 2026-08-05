@@ -23,11 +23,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-  'Content-Type': 'application/json',
-})
-
 export function CabinetQuestionnaireTemplates() {
   const [templates, setTemplates] = useState([])
   const [loading, setLoading] = useState(true)
@@ -43,7 +38,7 @@ export function CabinetQuestionnaireTemplates() {
 
   const fetchTemplates = () => {
     setLoading(true)
-    fetch('/api/phonghopkhonggiayto/questionnaire-templates', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/questionnaire-templates')
       .then((r) => r.json())
       .then((json) => {
         const data = Array.isArray(json) ? json : json.data || []
@@ -88,7 +83,6 @@ export function CabinetQuestionnaireTemplates() {
 
       await fetch(url, {
         method,
-        headers: AUTH_HEADER(),
         body: JSON.stringify({ name: templateName }),
       })
 
@@ -107,7 +101,6 @@ export function CabinetQuestionnaireTemplates() {
     try {
       await fetch(`/api/phonghopkhonggiayto/questionnaire-templates/${id}`, {
         method: 'DELETE',
-        headers: AUTH_HEADER(),
       })
       fetchTemplates()
     } catch (e) {

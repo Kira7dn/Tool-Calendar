@@ -2,10 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { ArrowLeft, UploadCloud, X, Check, Search, Plus } from 'lucide-react'
 
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
-
 export function CabinetQuestionnaireCreate({ onBack, onSaved }) {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -27,7 +23,7 @@ export function CabinetQuestionnaireCreate({ onBack, onSaved }) {
 
   useEffect(() => {
     // Fetch Templates
-    fetch('/api/phonghopkhonggiayto/questionnaire-templates', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/questionnaire-templates')
       .then((res) => res.json())
       .then((json) => {
         if (json.success) setTemplates(json.data)
@@ -35,7 +31,7 @@ export function CabinetQuestionnaireCreate({ onBack, onSaved }) {
       .catch(() => {})
 
     // Fetch Users
-    fetch('/api/users', { headers: AUTH_HEADER() })
+    fetch('/api/users')
       .then((res) => res.json())
       .then((json) => {
         if (json.success) setUsers(json.data)

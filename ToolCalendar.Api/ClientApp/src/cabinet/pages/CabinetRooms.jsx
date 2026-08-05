@@ -16,11 +16,6 @@ import {
   Loader2,
 } from 'lucide-react'
 
-const AUTH_HEADER = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
-
 // ─── Toast notification ───────────────────────────────────────────────────────
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -102,7 +97,6 @@ function RoomModal({ mode, room, departments, onClose, onSaved }) {
     try {
       const res = await fetch(url, {
         method,
-        headers: AUTH_HEADER(),
         body: JSON.stringify(body),
       })
       const json = await res.json()
@@ -266,7 +260,6 @@ function DeleteConfirm({ room, onClose, onDeleted }) {
     try {
       const res = await fetch(`/api/phonghopkhonggiayto/rooms/${room.id}`, {
         method: 'DELETE',
-        headers: AUTH_HEADER(),
       })
       const json = await res.json()
       if (!res.ok || json.success === false) {
@@ -344,7 +337,7 @@ export function CabinetRooms() {
   // Fetch rooms & departments
   const fetchRooms = useCallback(() => {
     setLoading(true)
-    fetch('/api/phonghopkhonggiayto/rooms', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/rooms')
       .then((r) => r.json())
       .then((json) => setRooms(Array.isArray(json) ? json : json.data || []))
       .catch(() => setRooms([]))
@@ -353,7 +346,7 @@ export function CabinetRooms() {
 
   useEffect(() => {
     fetchRooms()
-    fetch('/api/phonghopkhonggiayto/rooms/departments', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/rooms/departments')
       .then((r) => r.json())
       .then((json) => setDepartments(Array.isArray(json) ? json : json.data || []))
       .catch(() => setDepartments([]))
@@ -366,7 +359,6 @@ export function CabinetRooms() {
     try {
       const res = await fetch(`/api/phonghopkhonggiayto/rooms/${room.id}/status`, {
         method: 'PUT',
-        headers: AUTH_HEADER(),
         body: JSON.stringify({ status: newStatus }),
       })
       const json = await res.json()

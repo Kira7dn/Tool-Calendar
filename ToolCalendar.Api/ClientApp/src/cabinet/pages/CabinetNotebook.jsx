@@ -22,10 +22,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-const AUTH_HEADER_BARE = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
-
 const fmt = (dt) => {
   if (!dt) return ''
   const d = new Date(dt)
@@ -49,7 +45,7 @@ export function CabinetNotebook() {
   const fetchNotes = (currentSearch = '') => {
     setLoading(true)
     const params = currentSearch ? `?search=${encodeURIComponent(currentSearch)}` : ''
-    fetch(`/api/phonghopkhonggiayto/notes${params}`, { headers: AUTH_HEADER_BARE() })
+    fetch(`/api/phonghopkhonggiayto/notes${params}`)
       .then((r) => r.json())
       .then((json) => setData(json.data || []))
       .catch(() => {})
@@ -57,7 +53,7 @@ export function CabinetNotebook() {
   }
 
   const fetchMeetings = () => {
-    fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER_BARE() })
+    fetch('/api/phonghopkhonggiayto/meetings/schedule')
       .then((r) => r.json())
       .then((json) => setMeetings(json.data || []))
       .catch(() => {})
@@ -94,7 +90,6 @@ export function CabinetNotebook() {
 
       const resp = await fetch('/api/phonghopkhonggiayto/notes', {
         method: 'POST',
-        headers: AUTH_HEADER_BARE(),
         body: formData,
       })
       const json = await resp.json()
@@ -115,7 +110,6 @@ export function CabinetNotebook() {
     if (!window.confirm('Bạn có chắc muốn xóa ghi chú này?')) return
     await fetch(`/api/phonghopkhonggiayto/notes/${id}`, {
       method: 'DELETE',
-      headers: AUTH_HEADER_BARE(),
     })
     fetchNotes(search)
   }

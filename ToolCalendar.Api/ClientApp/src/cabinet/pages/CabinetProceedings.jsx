@@ -25,11 +25,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-  'Content-Type': 'application/json',
-})
-
 const fmt = (dt) => {
   if (!dt) return ''
   const d = new Date(dt)
@@ -56,7 +51,7 @@ export function CabinetProceedings() {
 
   const fetchProceedings = () => {
     setLoadingList(true)
-    fetch('/api/phonghopkhonggiayto/proceedings', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/proceedings')
       .then((r) => r.json())
       .then((json) => setProceedings(json.data || []))
       .catch(() => {})
@@ -65,7 +60,7 @@ export function CabinetProceedings() {
 
   const fetchDetail = (id) => {
     setLoadingDetail(true)
-    fetch(`/api/phonghopkhonggiayto/proceedings/${id}`, { headers: AUTH_HEADER() })
+    fetch(`/api/phonghopkhonggiayto/proceedings/${id}`)
       .then((r) => r.json())
       .then((json) => {
         setSelectedProceeding(json.data)
@@ -76,7 +71,7 @@ export function CabinetProceedings() {
   }
 
   const fetchAllMeetings = () => {
-    fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/meetings/schedule')
       .then((r) => r.json())
       .then((json) => setAllMeetings(json.data || []))
       .catch(() => {})
@@ -103,7 +98,6 @@ export function CabinetProceedings() {
       }
       const resp = await fetch('/api/phonghopkhonggiayto/proceedings', {
         method: 'POST',
-        headers: AUTH_HEADER(),
         body: JSON.stringify(body),
       })
       const json = await resp.json()

@@ -7,10 +7,6 @@ import multiMonthPlugin from '@fullcalendar/multimonth'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { MeetingModal } from '../components/MeetingModal'
 
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
-
 const statusColor = (status) => {
   switch (status) {
     case 'Đang diễn ra':
@@ -41,7 +37,7 @@ export function CabinetUnitSchedule() {
 
   const fetchMeetings = useCallback(() => {
     setLoading(true)
-    fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/meetings/schedule')
       .then((r) => r.json())
       .then((json) => {
         const data = json.data || json
@@ -212,9 +208,7 @@ export function CabinetUnitSchedule() {
               height="100%"
               dayHeaderContent={renderDayHeader}
               eventClick={(info) => {
-                fetch(`/api/phonghopkhonggiayto/meetings/${info.event.id}`, {
-                  headers: AUTH_HEADER(),
-                })
+                fetch(`/api/phonghopkhonggiayto/meetings/${info.event.id}`)
                   .then((r) => r.json())
                   .then((json) => {
                     const fullMeeting = json.data || json

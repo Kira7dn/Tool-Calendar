@@ -21,11 +21,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-  'Content-Type': 'application/json',
-})
-
 const STATUS_STYLES = {
   'Đã xử lý': 'bg-green-100 text-green-700',
   'Đang xử lý': 'bg-blue-100 text-blue-700',
@@ -57,7 +52,7 @@ export function CabinetConclusions() {
     })
     if (currentSearch) params.append('search', currentSearch)
 
-    fetch(`/api/phonghopkhonggiayto/conclusions?${params}`, { headers: AUTH_HEADER() })
+    fetch(`/api/phonghopkhonggiayto/conclusions?${params}`)
       .then((r) => r.json())
       .then((json) => {
         if (json.data) {
@@ -70,7 +65,7 @@ export function CabinetConclusions() {
   }
 
   const fetchMeetings = () => {
-    fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/meetings/schedule')
       .then((r) => r.json())
       .then((json) => setMeetings(json.data || []))
       .catch(() => {})
@@ -101,7 +96,6 @@ export function CabinetConclusions() {
       }
       const resp = await fetch('/api/phonghopkhonggiayto/conclusions', {
         method: 'POST',
-        headers: AUTH_HEADER(),
         body: JSON.stringify(body),
       })
       const json = await resp.json()

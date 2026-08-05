@@ -24,10 +24,6 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
-
 export function CabinetMeetingCreate({ onBack, onSaved }) {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -71,7 +67,7 @@ export function CabinetMeetingCreate({ onBack, onSaved }) {
 
   useEffect(() => {
     // Fetch Rooms
-    fetch('/api/phonghopkhonggiayto/rooms', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/rooms')
       .then((res) => res.json())
       .then((json) => {
         if (json.success) setRooms(json.data || [])
@@ -79,7 +75,7 @@ export function CabinetMeetingCreate({ onBack, onSaved }) {
       .catch(() => {})
 
     // Fetch Proceedings
-    fetch('/api/phonghopkhonggiayto/proceedings', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/proceedings')
       .then((res) => res.json())
       .then((json) => {
         if (json.success) setProceedings(json.data || [])
@@ -87,7 +83,7 @@ export function CabinetMeetingCreate({ onBack, onSaved }) {
       .catch(() => {})
 
     // Fetch Users
-    fetch('/api/users', { headers: AUTH_HEADER() })
+    fetch('/api/users')
       .then((res) => res.json())
       .then((json) => {
         if (json.success) setUsers(json.data || [])
@@ -139,7 +135,6 @@ export function CabinetMeetingCreate({ onBack, onSaved }) {
     try {
       const res = await fetch('/api/phonghopkhonggiayto/meetings', {
         method: 'POST',
-        headers: AUTH_HEADER(),
         body: fd,
       })
       const json = await res.json()

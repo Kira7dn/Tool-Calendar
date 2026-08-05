@@ -1244,3 +1244,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/pages/Login.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "security(auth): nâng cấp bảo mật refresh token dùng httponly cookie và thu hồi token"`
+
+### [2026-08-05 23:36] Refactor Giai đoạn 1: Chuẩn hóa Constants & Loại bỏ AUTH_HEADER
+- **Mô tả**: Thay thế chuỗi cứng (magic strings) về trạng thái điểm danh bằng `ATTENDANCE_STATUS`. Xóa bỏ khai báo và truyền `AUTH_HEADER` dư thừa ở tất cả các file fetch của phân hệ Cabinet do hệ thống đã dùng Global Fetch Interceptor kèm HttpOnly Cookies cho xác thực.
+- **Tệp thay đổi**:
+  - `.agents/rules/tc-rule-frontend-architecture.md` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/constants/meeting.js` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/constants/document.js` (Mới)
+  - Các file thuộc `ToolCalendar.Api/ClientApp/src/cabinet/` (Sửa đổi: xóa AUTH_HEADER)
+- **Lệnh git commit**: `git commit -m "refactor(api): chuẩn hóa constants và loại bỏ AUTH_HEADER dư thừa"`

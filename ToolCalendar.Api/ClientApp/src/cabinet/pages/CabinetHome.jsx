@@ -19,10 +19,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
+import { ATTENDANCE_STATUS } from '../../constants/meeting'
 
 function StatRow({ color, label, value, percent }) {
   return (
@@ -249,10 +246,10 @@ export function CabinetHome() {
   const fetchDashboardData = () => {
     setLoading(true)
     const promises = [
-      fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER() })
+      fetch('/api/phonghopkhonggiayto/meetings/schedule')
         .then((r) => r.json())
         .catch(() => null),
-      fetch('/api/phonghopkhonggiayto/meetings/my-meetings', { headers: AUTH_HEADER() })
+      fetch('/api/phonghopkhonggiayto/meetings/my-meetings')
         .then((r) => r.json())
         .catch(() => null),
     ]
@@ -292,7 +289,7 @@ export function CabinetHome() {
         }
         const attended = myMeetings.filter((m) => {
           const status = m.participants?.[0]?.attendanceStatus
-          return status === 'Có tham gia' || status === 'Tham gia'
+          return status === ATTENDANCE_STATUS.JOINED
         }).length
         const pending = myMeetings.filter((m) => {
           const status = m.participants?.[0]?.attendanceStatus
@@ -319,14 +316,16 @@ export function CabinetHome() {
   const handleConfirmAttendance = async () => {
     if (!confirmMeeting) return
     try {
-      await fetch(`/api/phonghopkhonggiayto/meetings/${confirmMeeting.id}/attendance`, {
-        method: 'PUT',
-        headers: {
-          ...AUTH_HEADER(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: 'Có tham gia' }),
-      })
+      const response = await fetch(
+        `/api/phonghopkhonggiayto/meetings/${confirmMeeting.id}/attendance`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: ATTENDANCE_STATUS.JOINED }),
+        }
+      )
       setConfirmMeeting(null)
       fetchDashboardData()
     } catch (error) {

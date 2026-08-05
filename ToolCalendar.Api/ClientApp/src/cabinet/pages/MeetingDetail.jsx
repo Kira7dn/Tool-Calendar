@@ -82,6 +82,53 @@ const EmptyState = () => (
 export function MeetingDetail({ meeting, onBack, onViewProgress }) {
   const [isNotebookOpen, setIsNotebookOpen] = useState(false)
 
+  const getDynamicStatus = (meeting) => {
+    if (!meeting) return ''
+    if (meeting.status === 'Hủy' || meeting.status === 'Hoãn') return meeting.status
+    const now = new Date()
+    const start = new Date(meeting.startTime)
+    const end = new Date(meeting.endTime)
+    if (now < start) return 'Sắp diễn ra'
+    if (now >= start && now <= end) return 'Đang diễn ra'
+    return 'Đã kết thúc'
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Sắp diễn ra':
+        return 'bg-[#e6fcf5] text-[#059669] border-[#a7f3d0]'
+      case 'Đang diễn ra':
+        return 'bg-blue-50 text-blue-600 border-blue-200'
+      case 'Đã kết thúc':
+        return 'bg-gray-100 text-gray-600 border-gray-200'
+      case 'Hủy':
+        return 'bg-red-50 text-red-600 border-red-200'
+      case 'Hoãn':
+        return 'bg-orange-50 text-orange-600 border-orange-200'
+      default:
+        return 'bg-[#e6fcf5] text-[#059669] border-[#a7f3d0]'
+    }
+  }
+
+  const getRemainingTimeText = (meeting) => {
+    if (!meeting) return ''
+    const now = new Date()
+    const start = new Date(meeting.startTime)
+    const end = new Date(meeting.endTime)
+
+    if (now < start) {
+      const diffMs = start - now
+      const diffDays = Math.floor(diffMs / 86400000)
+      const diffHrs = Math.floor((diffMs % 86400000) / 3600000)
+      if (diffDays > 0) return `Còn ${diffDays} ngày ${diffHrs} giờ`
+      const diffMins = Math.floor((diffMs % 3600000) / 60000)
+      if (diffHrs > 0) return `Còn ${diffHrs} giờ ${diffMins} phút`
+      return `Còn ${diffMins} phút`
+    }
+    if (now >= start && now <= end) return 'Đang diễn ra'
+    return 'Hết thời gian!'
+  }
+
   const formatDateTime = (dateStr) => {
     if (!dateStr) return '-'
     const d = new Date(dateStr)
@@ -154,7 +201,7 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500 w-[140px] shrink-0">Thời gian còn lại:</span>
                   <span className="font-semibold text-gray-900">
-                    {new Date(meeting.endTime) < new Date() ? 'Hết thời gian!' : 'Đang diễn ra'}
+                    {getRemainingTimeText(meeting)}
                   </span>
                 </div>
 
@@ -191,8 +238,10 @@ export function MeetingDetail({ meeting, onBack, onViewProgress }) {
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500 w-[140px] shrink-0">Trạng thái phiên họp:</span>
-                  <span className="px-2.5 py-0.5 bg-[#e6fcf5] text-[#059669] text-xs font-semibold rounded-md border border-[#a7f3d0]">
-                    {meeting.status}
+                  <span
+                    className={`px-2.5 py-0.5 text-xs font-semibold rounded-md border ${getStatusColor(getDynamicStatus(meeting))}`}
+                  >
+                    {getDynamicStatus(meeting)}
                   </span>
                 </div>
 

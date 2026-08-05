@@ -3,10 +3,6 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { ChevronLeft, ChevronRight, Search, Filter, ChevronDown, ChevronUp } from 'lucide-react'
 import { MeetingModal } from '../components/MeetingModal'
 
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
-
 const getStartOfWeek = (date) => {
   const d = new Date(date)
   const day = d.getDay()
@@ -44,7 +40,7 @@ export function CabinetLeaderSchedule() {
 
   const fetchMeetings = () => {
     setLoading(true)
-    fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/meetings/schedule')
       .then((r) => r.json())
       .then((json) => {
         const data = json.data || json
@@ -200,9 +196,7 @@ export function CabinetLeaderSchedule() {
                               key={m.id}
                               className="hover:bg-red-50/50 transition cursor-pointer"
                               onClick={() => {
-                                fetch(`/api/phonghopkhonggiayto/meetings/${m.id}`, {
-                                  headers: AUTH_HEADER(),
-                                })
+                                fetch(`/api/phonghopkhonggiayto/meetings/${m.id}`)
                                   .then((r) => r.json())
                                   .then((json) => {
                                     const fullMeeting = json.data || json

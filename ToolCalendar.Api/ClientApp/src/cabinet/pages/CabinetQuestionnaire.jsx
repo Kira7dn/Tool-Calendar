@@ -13,10 +13,6 @@ import {
   ChevronRight,
 } from 'lucide-react'
 
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
-
 const TABS = [
   { id: 'pending', label: 'Phiếu chưa trả lời' },
   { id: 'answered', label: 'Phiếu đã trả lời' },
@@ -60,7 +56,7 @@ export function CabinetQuestionnaire() {
   const fetchQuestionnaires = () => {
     setLoading(true)
     setPage(1)
-    fetch('/api/phonghopkhonggiayto/questionnaires', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/questionnaires')
       .then((res) => res.json())
       .then((json) => {
         if (json.success) {

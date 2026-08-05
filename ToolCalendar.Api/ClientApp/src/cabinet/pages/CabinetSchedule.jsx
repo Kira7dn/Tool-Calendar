@@ -9,10 +9,6 @@ import { MeetingModal } from '../components/MeetingModal'
 import { CabinetLeaderSchedule } from './CabinetLeaderSchedule'
 import { CabinetUnitSchedule } from './CabinetUnitSchedule'
 
-const AUTH_HEADER = () => ({
-  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-})
-
 const statusColor = (status) => {
   switch (status) {
     case 'Đang diễn ra':
@@ -38,7 +34,7 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
 
   const fetchMeetings = useCallback(() => {
     setLoading(true)
-    fetch('/api/phonghopkhonggiayto/meetings/schedule', { headers: AUTH_HEADER() })
+    fetch('/api/phonghopkhonggiayto/meetings/schedule')
       .then((r) => r.json())
       .then((json) => {
         const data = json.data || json
@@ -210,9 +206,7 @@ export function CabinetSchedule({ scheduleType = 'personal' }) {
               eventDisplay="block"
               eventClick={(info) => {
                 // Fetch full meeting details (including participants) before opening modal
-                fetch(`/api/phonghopkhonggiayto/meetings/${info.event.id}`, {
-                  headers: AUTH_HEADER(),
-                })
+                fetch(`/api/phonghopkhonggiayto/meetings/${info.event.id}`)
                   .then((r) => r.json())
                   .then((json) => {
                     const fullMeeting = json.data || json
