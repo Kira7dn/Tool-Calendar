@@ -1291,3 +1291,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(cabinet): sửa lỗi hiển thị trạng thái phiên họp không đồng bộ với thời gian thực"`
+
+### [2026-08-06 00:04] Khôi phục code bị mất trong DocRoutingTab và DocComments
+- **Mô tả**: Khi thực hiện bóc tách (refactor) các component con của DocDetail bằng script tự động, hai file DocRoutingTab.jsx và DocComments.jsx chưa được đổ dữ liệu vào (return null). Đã trích xuất mã nguồn gốc từ file backup và ghi vào lại hai file này.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocRoutingTab.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocComments.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): khôi phục nội dung tab luân chuyển và khung bình luận bị sót khi refactor"`
