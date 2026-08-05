@@ -149,7 +149,7 @@ namespace ToolCalendar.Api.Controllers
                     new Claim("sid",                        user.SessionId ?? user.SecurityStamp),
                     new Claim("LastLogin",                  lastLoginTime),
                 }),
-                Expires           = DateTime.UtcNow.AddHours(24),
+                Expires           = DateTime.UtcNow.AddMinutes(15),
                 SigningCredentials = new SigningCredentials(
                     new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256Signature)
@@ -158,13 +158,26 @@ namespace ToolCalendar.Api.Controllers
             var token       = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            // Gắn token vào HttpOnly Cookie để trình duyệt tự động gửi khi tải PDF
+            // Generate Refresh Token
+            var refreshToken = GenerateRefreshToken();
+            var refreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            _userRepository.UpdateRefreshToken(user.Id, refreshToken, refreshTokenExpiryTime);
+
+            // Gắn token vào HttpOnly Cookie
             Response.Cookies.Append("jwt_cookie", tokenString, new CookieOptions
             {
                 HttpOnly = true,
                 Secure   = true,
-                SameSite = SameSiteMode.Strict, // Cập nhật bảo mật chống CSRF
-                Expires  = DateTime.UtcNow.AddHours(24)
+                SameSite = SameSiteMode.Strict,
+                Expires  = DateTime.UtcNow.AddMinutes(15)
+            });
+
+            Response.Cookies.Append("refresh_cookie", refreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure   = true,
+                SameSite = SameSiteMode.Strict,
+                Expires  = refreshTokenExpiryTime
             });
 
             // Ghi audit log thành công
@@ -186,12 +199,120 @@ namespace ToolCalendar.Api.Controllers
             }));
         }
 
+        // ─── REFRESH TOKEN ───────────────────────────────────────────────────────
+
+        [HttpPost("refresh")]
+        public IActionResult RefreshToken()
+        {
+            if (!Request.Cookies.TryGetValue("refresh_cookie", out var refreshToken))
+                return Unauthorized(ApiResponse.Fail("Không tìm thấy Refresh Token."));
+
+            var user = _userRepository.GetUserByRefreshToken(refreshToken);
+
+            if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                return Unauthorized(ApiResponse.Fail("Refresh token đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại."));
+
+            var jwtSecret = _configuration["JWT_SECRET"]
+                            ?? Environment.GetEnvironmentVariable("JWT_SECRET");
+            
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+                return StatusCode(500, ApiResponse.Fail("JWT_SECRET không được cấu hình"));
+
+            // Generate new tokens
+            var newAccessTokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name,              user.Username),
+                    new Claim(ClaimTypes.Role,              user.Role),
+                    new Claim(ClaimTypes.NameIdentifier,    user.Id.ToString()),
+                    new Claim("uid",                        user.Id.ToString()),
+                    new Claim("UserId",                     user.Id.ToString()),
+                    new Claim("sec_stamp",                  user.SecurityStamp),
+                    new Claim("sid",                        user.SessionId ?? user.SecurityStamp),
+                    new Claim("LastLogin",                  DateTime.UtcNow.ToString("O")),
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(15),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var newAccessToken = tokenHandler.CreateToken(newAccessTokenDescriptor);
+            var newAccessTokenString = tokenHandler.WriteToken(newAccessToken);
+
+            var newRefreshToken = GenerateRefreshToken();
+            var newExpiryTime = DateTime.UtcNow.AddDays(7);
+            _userRepository.UpdateRefreshToken(user.Id, newRefreshToken, newExpiryTime);
+            
+            // Cập nhật cookie
+            Response.Cookies.Append("jwt_cookie", newAccessTokenString, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure   = true,
+                SameSite = SameSiteMode.Strict,
+                Expires  = DateTime.UtcNow.AddMinutes(15)
+            });
+
+            Response.Cookies.Append("refresh_cookie", newRefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure   = true,
+                SameSite = SameSiteMode.Strict,
+                Expires  = newExpiryTime
+            });
+
+            return Ok(ApiResponse.Ok(new
+            {
+                token = newAccessTokenString
+            }));
+        }
+
+        private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token, string secret)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secret)),
+                ValidateLifetime = false // Here we are saying that we don't care about the token's expiration date
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+
+            var jwtSecurityToken = securityToken as JwtSecurityToken;
+            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                throw new SecurityTokenException("Invalid token");
+
+            return principal;
+        }
+
+        private static string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[64];
+            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+
         // ─── LOGOUT ──────────────────────────────────────────────────────────────
 
         [HttpPost("logout")]
         public IActionResult Logout()
         {
+            if (Request.Cookies.TryGetValue("refresh_cookie", out var refreshToken))
+            {
+                var user = _userRepository.GetUserByRefreshToken(refreshToken);
+                if (user != null)
+                {
+                    _userRepository.UpdateRefreshToken(user.Id, null, null); // Thu hồi token
+                }
+            }
             Response.Cookies.Delete("jwt_cookie");
+            Response.Cookies.Delete("refresh_cookie");
             return Ok(ApiResponse.Ok("Đăng xuất thành công"));
         }
 
@@ -236,6 +357,9 @@ namespace ToolCalendar.Api.Controllers
                 var cache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                 cache?.Remove($"UserSession_{userId}");
 
+                // Thu hồi mọi Refresh Token cũ
+                _userRepository.UpdateRefreshToken(userId, null, null);
+
                 return Ok(ApiResponse.Ok("Đổi mật khẩu thành công. Vui lòng đăng nhập lại."));
             }
 
@@ -255,4 +379,3 @@ namespace ToolCalendar.Api.Controllers
         public string NewPassword { get; set; } = "";
     }
 }
-

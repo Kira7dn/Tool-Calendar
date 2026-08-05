@@ -11,6 +11,7 @@ import {
   MapPin,
   AlignLeft,
   Info,
+  Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,6 +50,21 @@ export function CabinetMeetingCreate({ onBack, onSaved }) {
   const [selectedUsers, setSelectedUsers] = useState([])
   const [programFiles, setProgramFiles] = useState([])
   const [invitationFiles, setInvitationFiles] = useState([])
+
+  const [participantTab, setParticipantTab] = useState('NhomThanhVien')
+  const [groupType, setGroupType] = useState(
+    'Ban Thường vụ Đảng ủy phường Cẩm Phả, Tỉnh Quảng Ninh'
+  )
+  const [participantSearch, setParticipantSearch] = useState('')
+  const [presidingUsers, setPresidingUsers] = useState([])
+
+  const [contentTabs, setContentTabs] = useState([
+    { id: 1, title: 'Nội dung 1' },
+    { id: 2, title: 'Nội dung 2' },
+    { id: 3, title: 'Nội dung 3' },
+    { id: 4, title: 'Nội dung 4' },
+  ])
+  const [activeContentTab, setActiveContentTab] = useState(4)
 
   const programInputRef = useRef(null)
   const invitationInputRef = useRef(null)
@@ -358,45 +374,355 @@ export function CabinetMeetingCreate({ onBack, onSaved }) {
     </div>
   )
 
-  const renderStep2 = () => (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-semibold text-gray-800">Chọn người tham gia</h3>
-        <Button variant="outline" size="sm">
-          Chọn tất cả
-        </Button>
-      </div>
-      <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto">
-        {users.map((u) => (
-          <div
-            key={u.id}
-            onClick={() => {
-              const isSelected = selectedUsers.includes(u.id)
-              setSelectedUsers((prev) =>
-                isSelected ? prev.filter((id) => id !== u.id) : [...prev, u.id]
-              )
-            }}
-            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition ${
-              selectedUsers.includes(u.id)
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            <div
-              className={`w-5 h-5 rounded-md border flex items-center justify-center ${
-                selectedUsers.includes(u.id)
-                  ? 'bg-blue-500 border-blue-500 text-white'
-                  : 'border-gray-300'
+  const participantTabs = [
+    { id: 'DonVi', label: 'Đơn vị' },
+    { id: 'CaNhan', label: 'Cá nhân' },
+    { id: 'NhomThanhVien', label: 'Nhóm thành viên' },
+    { id: 'KhachMoi', label: 'Khách mời' },
+  ]
+
+  const mockGroups = [
+    'Ban Giám đốc',
+    'Ban Thường vụ Đảng ủy các cơ quan Đảng tỉnh Quảng Ninh',
+    'Ban Thường vụ Đảng ủy phường Cẩm Phả, Tỉnh Quảng Ninh',
+    'Ban Thường vụ Đảng ủy UBND tỉnh Quảng Ninh',
+    'Ban Thường vụ Tỉnh ủy',
+    'BCĐ phát triển khoa học, công nghệ, đổi mới và sáng tạo phường Cẩm Phả',
+  ]
+
+  const renderStep2 = () => {
+    const filteredUsers = users.filter(
+      (u) =>
+        (u.fullName || '').toLowerCase().includes(participantSearch.toLowerCase()) ||
+        (u.username || '').toLowerCase().includes(participantSearch.toLowerCase())
+    )
+
+    return (
+      <div className="space-y-6">
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200">
+          {participantTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setParticipantTab(tab.id)}
+              className={`flex-1 pb-3 text-center font-semibold text-sm transition-colors border-b-2 ${
+                participantTab === tab.id
+                  ? 'border-[#c8102e] text-[#c8102e]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              {selectedUsers.includes(u.id) && <Check size={14} />}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {participantTab === 'NhomThanhVien' && (
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Loại nhóm</label>
+                <Select value={groupType} onValueChange={setGroupType}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Chọn loại nhóm" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockGroups.map((g, idx) => (
+                      <SelectItem key={idx} value={g}>
+                        {g}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Tìm thành viên
+                </label>
+                <div className="relative">
+                  <Search
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={16}
+                  />
+                  <Input
+                    className="pl-9"
+                    placeholder="Tìm kiếm thành viên"
+                    value={participantSearch}
+                    onChange={(e) => setParticipantSearch(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
+
             <div>
-              <p className="text-sm font-semibold text-gray-800">{u.fullName}</p>
-              <p className="text-xs text-gray-500">{u.email}</p>
+              <h4 className="text-sm font-semibold text-gray-800 mb-3">
+                Danh sách thành viên trong nhóm
+              </h4>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
+                    <tr>
+                      <th className="px-4 py-3 text-center">STT</th>
+                      <th className="px-4 py-3">Tên thành viên</th>
+                      <th className="px-4 py-3">Tên đăng nhập</th>
+                      <th className="px-4 py-3">Vai trò</th>
+                      <th className="px-4 py-3 text-center">Chủ trì</th>
+                      <th className="px-4 py-3 text-center">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {filteredUsers.map((row, index) => {
+                      const isPresiding = presidingUsers.includes(row.id)
+                      return (
+                        <tr
+                          key={row.id}
+                          className={`hover:bg-gray-50 transition-colors ${
+                            isPresiding ? 'bg-red-50 hover:bg-red-50' : ''
+                          }`}
+                        >
+                          <td className="px-4 py-3 text-center text-gray-500">{index + 1}</td>
+                          <td className="px-4 py-3 font-medium text-gray-900">{row.fullName}</td>
+                          <td className="px-4 py-3 text-gray-600">{row.username}</td>
+                          <td className="px-4 py-3 text-gray-500">{row.role}</td>
+                          <td className="px-4 py-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isPresiding}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setPresidingUsers((prev) => [...prev, row.id])
+                                } else {
+                                  setPresidingUsers((prev) => prev.filter((id) => id !== row.id))
+                                }
+                              }}
+                              className="rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer w-4 h-4"
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button className="p-1 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                              <X size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
+        )}
+
+        {participantTab !== 'NhomThanhVien' && (
+          <div className="text-center text-gray-500 py-10">Chưa hỗ trợ ({participantTab})</div>
+        )}
+      </div>
+    )
+  }
+
+  const renderStep3 = () => (
+    <div className="space-y-6">
+      <div className="flex border-b border-gray-200">
+        {contentTabs.map((tab) => (
+          <div
+            key={tab.id}
+            className={`flex items-center px-4 py-2 border-b-2 cursor-pointer transition-colors ${
+              activeContentTab === tab.id
+                ? 'border-[#c8102e] text-[#c8102e] font-semibold'
+                : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'
+            }`}
+            onClick={() => setActiveContentTab(tab.id)}
+          >
+            <span>{tab.title}</span>
+            <X size={14} className="ml-2 text-gray-400 hover:text-red-500" />
+          </div>
         ))}
+        <button
+          className="px-4 py-2 text-gray-500 hover:bg-gray-50 flex items-center justify-center border-b-2 border-transparent"
+          onClick={() => {
+            const newId = contentTabs.length > 0 ? Math.max(...contentTabs.map((t) => t.id)) + 1 : 1
+            setContentTabs([...contentTabs, { id: newId, title: `Nội dung ${newId}` }])
+            setActiveContentTab(newId)
+          }}
+        >
+          <Plus size={16} />
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Nội dung chi tiết <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            className="w-full h-32 border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="Nhập nội dung chi tiết..."
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Thời gian bắt đầu
+            </label>
+            <Input type="datetime-local" className="text-gray-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Thời gian kết thúc
+            </label>
+            <Input type="datetime-local" className="text-gray-500" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Người chuẩn bị tài liệu
+            </label>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn người chuẩn bị" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id.toString()}>
+                    {u.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Người duyệt tài liệu
+            </label>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn người duyệt" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id.toString()}>
+                    {u.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-sm font-semibold text-gray-700">
+              Danh sách tài liệu đính kèm
+            </label>
+            <button className="text-sm text-gray-500 hover:text-blue-600 flex items-center">
+              <Plus size={14} className="mr-1" /> Tạo thư mục
+            </button>
+          </div>
+          <div className="border-2 border-dashed border-red-200 bg-red-50/30 rounded-lg p-6 text-center">
+            <UploadCloud size={32} className="mx-auto text-red-400 mb-2" />
+            <p className="text-sm text-gray-600">
+              <span className="font-semibold text-red-500 cursor-pointer">Chọn file</span> hoặc Kéo
+              thả từ máy tính
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Tối đa 50MB, định dạng .doc, .docx, .xls, .xlsx, .ppt, .pptx, .pdf, .msg, .mpp, .txt,
+              .jpeg, .png, .tiff, .gif, .jpg, .bmp, .mp3, .mp4, .wmv, .flv, .avi
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <label className="text-sm font-semibold text-gray-700">
+              Danh sách vấn đề cần biểu quyết
+            </label>
+            <button className="text-sm text-gray-500 hover:text-blue-600 flex items-center">
+              <Plus size={14} className="mr-1" /> Thêm vấn đề mới
+            </button>
+          </div>
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-100 text-gray-600 font-semibold border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-center w-20">STT</th>
+                  <th className="px-4 py-3">Vấn đề</th>
+                  <th className="px-4 py-3 text-center">Phương thức biểu quyết</th>
+                  <th className="px-4 py-3 text-center w-24">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan="4" className="py-12 text-center text-gray-400 bg-gray-50/50">
+                    <div className="flex justify-center mb-2">
+                      <Info size={32} className="text-gray-300" />
+                    </div>
+                    Không có dữ liệu
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            Thành phần tham dự
+          </label>
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Đơn vị</label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Đơn vị 1</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Cá nhân</label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn cá nhân" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      {u.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Khách mời</label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Khách 1</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                Nhóm thành viên
+              </label>
+              <Select defaultValue="1">
+                <SelectTrigger>
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Ban Chấp hành...</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -467,9 +793,7 @@ export function CabinetMeetingCreate({ onBack, onSaved }) {
           <div className="flex-1 p-8 overflow-y-auto">
             {step === 1 && renderStep1()}
             {step === 2 && renderStep2()}
-            {step === 3 && (
-              <div className="text-center text-gray-500 py-10">Chưa hỗ trợ (Nội dung họp)</div>
-            )}
+            {step === 3 && renderStep3()}
             {step === 4 && (
               <div className="text-center text-gray-500 py-10">Chưa hỗ trợ (Sơ đồ vị trí)</div>
             )}
@@ -479,22 +803,17 @@ export function CabinetMeetingCreate({ onBack, onSaved }) {
           <div className="px-8 py-4 border-t border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
             <div>
               <Button variant="outline" onClick={onBack} className="text-gray-600">
-                Hủy bỏ
+                Quay lại
               </Button>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" className="text-blue-600 border-blue-600">
+              <Button variant="outline" className="text-[#c8102e] border-[#c8102e] hover:bg-red-50">
                 Lưu nháp
               </Button>
-              {step > 1 && (
-                <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
-                  Quay lại
-                </Button>
-              )}
               {step < steps.length ? (
                 <Button
                   onClick={() => setStep((s) => s + 1)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-[#c8102e] hover:bg-red-700 text-white min-w-[120px]"
                 >
                   Tiếp tục
                 </Button>

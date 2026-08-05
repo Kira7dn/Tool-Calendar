@@ -7,6 +7,8 @@ using System.IO;
 using Microsoft.AspNetCore.Http;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Models;
+using Microsoft.AspNetCore.SignalR;
+using ToolCalendar.Hubs;
 
 namespace ToolCalendar.Api.Controllers.Cabinet
 {
@@ -19,11 +21,13 @@ namespace ToolCalendar.Api.Controllers.Cabinet
     {
         private readonly IMeetingRepository _meetingRepo;
         private readonly IRoomRepository _roomRepo;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public MeetingsController(IMeetingRepository meetingRepo, IRoomRepository roomRepo)
+        public MeetingsController(IMeetingRepository meetingRepo, IRoomRepository roomRepo, IHubContext<NotificationHub> hubContext)
         {
             _meetingRepo = meetingRepo;
             _roomRepo = roomRepo;
+            _hubContext = hubContext;
         }
 
         private int GetCurrentUserId()
@@ -173,6 +177,8 @@ namespace ToolCalendar.Api.Controllers.Cabinet
             var newId = await _meetingRepo.CreateAsync(request, creatorId);
             var created = await _meetingRepo.GetByIdAsync(newId);
 
+            await _hubContext.Clients.All.SendAsync("MeetingUpdated");
+
             return Ok(ApiResponse.Ok(created, "Tạo phiên họp thành công."));
         }
 
@@ -216,6 +222,8 @@ namespace ToolCalendar.Api.Controllers.Cabinet
                 return NotFound(ApiResponse.Fail("Không tìm thấy phiên họp."));
 
             var updated = await _meetingRepo.GetByIdAsync(id);
+            await _hubContext.Clients.All.SendAsync("MeetingUpdated");
+            
             return Ok(ApiResponse.Ok(updated, "Cập nhật phiên họp thành công."));
         }
 
@@ -249,6 +257,8 @@ namespace ToolCalendar.Api.Controllers.Cabinet
             var success = await _meetingRepo.CancelAsync(id);
             if (!success)
                 return NotFound(ApiResponse.Fail("Không tìm thấy phiên họp."));
+                
+            await _hubContext.Clients.All.SendAsync("MeetingUpdated");
             return Ok(ApiResponse.Ok(null, "Đã hủy phiên họp."));
         }
 
@@ -260,6 +270,8 @@ namespace ToolCalendar.Api.Controllers.Cabinet
             var success = await _meetingRepo.DeleteAsync(id);
             if (!success)
                 return NotFound(ApiResponse.Fail("Không tìm thấy phiên họp."));
+                
+            await _hubContext.Clients.All.SendAsync("MeetingUpdated");
             return Ok(ApiResponse.Ok(null, "Đã xóa phiên họp."));
         }
     }

@@ -43,6 +43,40 @@ window.fetch = async (...args) => {
     }
   }
   if (response.status === 401) {
+    // Tránh vòng lặp vô hạn nếu chính API refresh bị 401
+    if (args[0] && typeof args[0] === 'string' && args[0].includes('/api/auth/refresh')) {
+      document.dispatchEvent(new CustomEvent('auth:unauthorized'))
+      return response
+    }
+
+    // Không cần check refresh_token ở localStorage vì nó đã nằm trong HttpOnly Cookie
+    // Chỉ cần gọi /api/auth/refresh, trình duyệt sẽ tự đính kèm cookie
+    try {
+      const refreshResponse = await originalFetch('/api/auth/refresh', {
+        method: 'POST',
+        // Không truyền body, cookies (jwt_cookie, refresh_cookie) sẽ tự động gửi đi
+      })
+
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json()
+        if (refreshData.data && refreshData.data.token) {
+          localStorage.setItem('auth_token', refreshData.data.token)
+        }
+
+        // Gửi lại request ban đầu với token mới (nếu gửi qua Header)
+        const newOptions = args[1] || {}
+        if (newOptions.headers && newOptions.headers['Authorization']) {
+          newOptions.headers['Authorization'] = `Bearer ${refreshData.data.token}`
+        }
+        args[1] = newOptions
+
+        return window.fetch(...args) // GỌi lại qua interceptor để unwrap data
+      }
+    } catch (err) {
+      console.error('[Auth] Silent refresh failed', err)
+    }
+
+    // Nếu không có refresh token hoặc refresh thất bại
     document.dispatchEvent(new CustomEvent('auth:unauthorized'))
   }
   return response
@@ -229,6 +263,17 @@ function Root() {
         localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
         return
       }
+
+      // --- Context-Aware Heartbeat Bypass ---
+      // Nếu đang trong phòng họp và tab đang mở -> Tự động thả tim cập nhật Activity
+      if (
+        window.location.pathname.startsWith('/phonghopkhonggiayto') &&
+        document.visibilityState === 'visible'
+      ) {
+        localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
+        return
+      }
+      // --------------------------------------
 
       const lastActivity = parseInt(lastActivityStr, 10)
       if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) {

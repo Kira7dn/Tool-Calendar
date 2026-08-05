@@ -1,3 +1,67 @@
+### [2026-08-05 22:50] Nâng cấp bảo mật Session lên chuẩn Enterprise (Refresh Token & Heartbeat)
+- **Mô tả**:
+  - Chuyển đổi từ Access Token 24h sang kiến trúc bảo mật chuẩn: Access Token 15 phút + Refresh Token 7 ngày.
+  - Sửa đổi Database schema thủ công, thêm cột `RefreshToken` và `RefreshTokenExpiryTime` cho bảng `Users`. Cập nhật `UserRepository` và `UserModels` để làm việc với Refresh Token.
+  - Cập nhật `/api/auth/login` cấp cả hai token. Thêm endpoint mới `/api/auth/refresh` để refresh JWT token.
+  - Cập nhật Fetch Interceptor ở Frontend (`main.jsx`) để bắt lỗi `401 Unauthorized` và tự động thực hiện tiến trình "silent refresh", tự động replay lại request bị lỗi.
+  - Bổ sung logic "Heartbeat" theo ngữ cảnh vào Frontend để chống văng (kicked out) cho người dùng trong Phân hệ Cabinet (Phòng họp không giấy tờ): tự động làm mới `lastActivity` khi người dùng ở trong `/phonghopkhonggiayto` và màn hình đang active (tránh 30 phút idle timeout).
+- **Tệp thay đổi**:
+  - `data_dump/documents.db` (Sửa đổi schema DB)
+  - `ToolCalendar.Core/Models/UserModels.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Interfaces/IUserRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/UserRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/pages/Login.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(auth): nâng cấp chuẩn Enterprise với refresh token và cabinet heartbeat"`
+
+### [2026-08-05 20:45] Tích hợp PWA và Realtime cho Công văn
+- **Mô tả**:
+  - Cấu hình PWA (Progressive Web App) sử dụng `vite-plugin-pwa` để hỗ trợ cài đặt ứng dụng vào điện thoại/desktop, đồng thời thêm thẻ meta `theme-color` và `apple-touch-icon`.
+  - Tích hợp SignalR Realtime cho chức năng quản lý Công văn: `DocumentsController.cs` phát sự kiện `DocumentUpdated` khi Upload, BulkConfirm, BulkDeleteBatch, Create, Delete, Assign. `signalr.js` bắt sự kiện và phát tín hiệu cho DOM. `Documents.jsx` gọi lại `fetchDocuments()` để cập nhật trang ngay lập tức.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/vite.config.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/package.json` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/index.html` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/lib/signalr.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(documents): thêm PWA và realtime cập nhật danh sách công văn"`
+
+### [2026-08-05 20:39] Tích hợp SignalR Realtime cập nhật danh sách phiên họp
+- **Mô tả**: Sử dụng SignalR để phát sự kiện `MeetingUpdated` khi Admin (hoặc người dùng khác) tạo, sửa, xóa hoặc hủy phiên họp ở `MeetingsController.cs`. Trên Frontend, thêm event listener vào `signalr.js` để phát sự kiện `realtime:meeting_updated` ra DOM, và `MeetingList.jsx` sẽ lắng nghe để gọi lại `fetchMeetings()` tự động mà không cần tải lại trang.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Cabinet/MeetingsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/lib/signalr.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): realtime cập nhật danh sách phiên họp qua SignalR"`
+
+### [2026-08-05 17:45] Cập nhật giao diện Nội dung họp (Bước 3)
+- **Mô tả**: Bổ sung giao diện chức năng "Nội dung họp" ở Bước 3 của Wizard tạo phiên họp mới. Giao diện hỗ trợ thêm nhiều nội dung (tabs Nội dung 1, 2...), thông tin thời gian, người chuẩn bị/duyệt, tài liệu đính kèm (Upload zone), và bảng danh sách vấn đề cần biểu quyết.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetMeetingCreate.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): cập nhật giao diện nội dung họp bước 3"`
+
+### [2026-08-05 17:59] Thay thế dữ liệu mẫu bằng dữ liệu thật từ bảng Users
+- **Mô tả**: Xóa `mockTableData` ở Tab Nhóm thành viên trong Bước 2 tạo phiên họp, thay bằng danh sách `users` từ API và đơn giản hóa các cột hiển thị (Tên, Username, Vai trò).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetMeetingCreate.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): tích hợp dữ liệu người dùng thật vào danh sách thành viên"`
+
+### [2026-08-05 17:52] Cấu trúc lại mã nguồn theo hướng Modular Monolith
+- **Mô tả**: Tách riêng thư mục của hai phân hệ Phòng họp (Cabinet) và Điều phối công văn (Documents) ở cả Backend (API) và Frontend (React) để dễ dàng quản lý code.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Chuyển vào `Controllers/Documents/`)
+  - `ToolCalendar.Api/Controllers/DocumentRoutingsController.cs` (Chuyển vào `Controllers/Documents/`)
+  - Các tệp UI của điều phối công văn (Chuyển vào `ClientApp/src/documents/pages/`)
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa lại đường dẫn import)
+- **Lệnh git commit**: `git commit -m "refactor(api,docs): cấu trúc lại thư mục tách biệt phân hệ Cabinet và Documents"`
+
+### [2026-08-05 17:41] Cập nhật giao diện Thành phần tham dự phiên họp
+- **Mô tả**: Bổ sung giao diện chức năng "Thành phần tham dự" ở Bước 2 của Wizard tạo phiên họp mới. Giao diện bao gồm tabs đơn vị/cá nhân/nhóm/khách mời, bộ lọc tìm kiếm và bảng danh sách đại biểu.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetMeetingCreate.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): cập nhật giao diện chọn thành phần tham dự phiên họp"`
+
 ### [2026-08-05 17:35] Cập nhật giao diện Tạo Phiên Họp mới (Wizard) và Schema DB
 - **Mô tả**: Bổ sung giao diện Wizard đa bước để tạo phiên họp mới dựa trên mockup. Thêm các trường dữ liệu `MeetingType`, `OnlineMeetingUrl`, `ProgramFilePaths`, `InvitationFilePaths` vào bảng `Meetings`. Cập nhật `MeetingsController` hỗ trợ upload file qua `[FromForm]`.
 - **Tệp thay đổi**:
@@ -1170,3 +1234,13 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(ui): hien thi du lieu that cho trang chi tiet phien hop"`
 
+
+### [2026-08-05 15:58] Nâng cấp Bảo mật Session (Chuẩn Enterprise)
+- **Mô tả**: Vá lỗ hổng bảo mật liên quan đến Refresh Token bằng cách lưu Token vào HttpOnly Cookie (chống XSS) và thu hồi Refresh Token trong DB khi người dùng đăng xuất hoặc đổi mật khẩu.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IUserRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/UserRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/pages/Login.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "security(auth): nâng cấp bảo mật refresh token dùng httponly cookie và thu hồi token"`

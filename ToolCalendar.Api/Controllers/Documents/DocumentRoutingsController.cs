@@ -7,7 +7,7 @@ using ToolCalendar.Hubs;
 using ToolCalendar.Models;
 using ToolCalendar.Core.Data.Interfaces;
 
-namespace ToolCalendar.Api.Controllers
+namespace ToolCalendar.Api.Controllers.Documents
 {
     [ApiController]
     [Route("api/documents")]

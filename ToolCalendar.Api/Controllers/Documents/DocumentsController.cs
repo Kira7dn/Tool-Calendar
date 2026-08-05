@@ -13,7 +13,7 @@ using ToolCalendar.Hubs;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
 
-namespace ToolCalendar.Api.Controllers
+namespace ToolCalendar.Api.Controllers.Documents
 {
     [Authorize]
     [ApiController]
@@ -113,6 +113,7 @@ namespace ToolCalendar.Api.Controllers
             if (!result.IsSuccess)
                 return BadRequest(ApiResponse.Fail(result.ErrorMessage ?? "Lỗi tải tệp lên."));
 
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated");
             return Ok(ApiResponse.Ok(result.Document));
         }
 
@@ -125,6 +126,7 @@ namespace ToolCalendar.Api.Controllers
             // Cập nhật trạng thái thành "Đã rà soát"
             await _documentRepository.BulkUpdateStatusAsync(ids, "Đã rà soát");
 
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated");
             return Ok(ApiResponse.Ok($"Đã xác nhận thành công {ids.Count} văn bản."));
         }
 
@@ -152,6 +154,7 @@ namespace ToolCalendar.Api.Controllers
 
             await _documentRepository.BulkDeleteAsync(ids);
 
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated");
             return Ok(ApiResponse.Ok($"Đã xóa thành công {ids.Count} văn bản cùng toàn bộ file đính kèm."));
         }
 
@@ -162,6 +165,7 @@ namespace ToolCalendar.Api.Controllers
             if (record == null) return BadRequest(ApiResponse.Fail("Dữ liệu văn bản không hợp lệ."));
             int id = await _documentRepository.InsertAsync(record);
             record.Id = id;
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated");
             return CreatedAtAction(nameof(GetById), new { id = record.Id }, ApiResponse.Ok(record));
         }
 
@@ -249,6 +253,7 @@ namespace ToolCalendar.Api.Controllers
                 }
             }
 
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated");
             return Ok(ApiResponse.Ok("Giao việc thành công."));
         }
 
@@ -437,6 +442,7 @@ namespace ToolCalendar.Api.Controllers
                     Directory.Delete(evidenceDir, true);
             }
             await _documentRepository.DeleteAsync(id);
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated");
             return Ok(ApiResponse.Ok("Xóa văn bản thành công."));
         }
 

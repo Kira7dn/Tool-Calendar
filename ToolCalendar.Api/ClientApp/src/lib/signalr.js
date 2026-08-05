@@ -49,6 +49,18 @@ class SignalRService {
       document.dispatchEvent(new CustomEvent('realtime:new_task', { detail: data }))
     })
 
+    // 🔔 Lắng nghe khi có thay đổi phiên họp
+    this.connection.on('MeetingUpdated', () => {
+      console.log('[SignalR] Danh sách phiên họp đã thay đổi')
+      document.dispatchEvent(new CustomEvent('realtime:meeting_updated'))
+    })
+
+    // 🔔 Lắng nghe khi có thay đổi công văn
+    this.connection.on('DocumentUpdated', () => {
+      console.log('[SignalR] Danh sách công văn đã thay đổi')
+      document.dispatchEvent(new CustomEvent('realtime:document_updated'))
+    })
+
     try {
       await this.connection.start()
       console.log('[SignalR] Connected successfully')

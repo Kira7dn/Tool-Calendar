@@ -168,6 +168,17 @@ export function MeetingList() {
         }
       }
     } catch {}
+
+    const handleRealtimeUpdate = () => {
+      console.log('Realtime event received, fetching meetings...')
+      fetchMeetings(activeTab)
+    }
+
+    document.addEventListener('realtime:meeting_updated', handleRealtimeUpdate)
+
+    return () => {
+      document.removeEventListener('realtime:meeting_updated', handleRealtimeUpdate)
+    }
   }, [activeTab])
 
   const filteredMeetings = meetings.filter((m) =>
