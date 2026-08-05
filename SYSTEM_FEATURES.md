@@ -136,6 +136,10 @@ Hệ thống giám sát hạn chót (`ThoiHan`) của công văn và phân loạ
   - `OrganizingUnit` — Đơn vị tổ chức
   - `ExpectedAttendees` — Số lượng đại biểu dự kiến (INTEGER)
   - `ExternalParticipants` — Khách mời ngoài cơ quan
+  - `MeetingType` — Loại phiên họp (Thường kỳ, Chuyên đề...)
+  - `OnlineMeetingUrl` — Link họp trực tuyến
+  - `ProgramFilePaths` — File nội dung chương trình họp (JSON array)
+  - `InvitationFilePaths` — File giấy mời/phiếu mời (JSON array)
 
 #### `MeetingParticipants` (Thành phần tham dự)
 - `MeetingId`, `UserId` (PRIMARY KEY kép)

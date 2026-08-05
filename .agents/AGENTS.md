@@ -1,6 +1,6 @@
 # TOOL-CALENDAR — AGENT CONSTITUTION (AGENTS.md)
 
-Bạn là **AI Agent** đang làm việc trong dự án **Tool-Calendar** — Hệ thống Điều phối Công văn Nội bộ. Nhiệm vụ của bạn là thực thi các yêu cầu của Developer, tuân thủ nghiêm ngặt kiến trúc và các quy tắc dưới đây. Đọc tài liệu này **TRƯỚC KHI** thực hiện bất kỳ thay đổi nào.
+Bạn là **AI Agent** đang làm việc trong dự án **Tool-Calendar** — Hệ thống Điều phối Công văn Nội bộ & Phòng họp không giấy tờ (Cabinet). Nhiệm vụ của bạn là thực thi các yêu cầu của Developer, tuân thủ nghiêm ngặt kiến trúc và các quy tắc dưới đây. Đọc tài liệu này **TRƯỚC KHI** thực hiện bất kỳ thay đổi nào.
 
 ---
 
@@ -41,11 +41,12 @@ Tool-Calendar/
 │   └── workflows/                ← Quy trình chuẩn
 ├── ToolCalendar.Api/
 │   ├── Controllers/              ← API endpoints, dùng ApiResponse<T>
+│   │   └── Cabinet/              ← Phân hệ Phòng họp không giấy tờ
 │   ├── Middleware/               ← GlobalExceptionMiddleware
 │   ├── ClientApp/                ← React frontend
 │   │   └── src/
 │   │       ├── main.jsx          ← Global Fetch Interceptor ở đây
-│   │       └── ...
+│   │       └── cabinet/          ← Giao diện Phòng họp không giấy tờ
 │   └── Program.cs                ← DI registration, middleware pipeline
 ├── ToolCalendar.Core/
 │   ├── Models/ApiResponse.cs     ← Response contract bắt buộc
@@ -62,8 +63,8 @@ Tool-Calendar/
 ## IV. Ma trận Quyền Hạn (Governance Matrix)
 
 ### ✅ Vùng Tự do (Có thể sửa đổi tự do)
-- `ToolCalendar.Api/Controllers/` — Thêm/sửa API endpoint
-- `ToolCalendar.Api/ClientApp/src/` — React components, pages, hooks
+- `ToolCalendar.Api/Controllers/` — Thêm/sửa API endpoint (bao gồm `Cabinet/`)
+- `ToolCalendar.Api/ClientApp/src/` — React components, pages, hooks (bao gồm `cabinet/`)
 - `ToolCalendar.Core/Services/` — Business logic, services
 - `ToolCalendar.Core/Data/Repositories/` — ADO.NET queries
 - `ToolCalendar.Tests/` — Unit tests

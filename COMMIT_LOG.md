@@ -1,3 +1,48 @@
+### [2026-08-05 17:35] Cập nhật giao diện Tạo Phiên Họp mới (Wizard) và Schema DB
+- **Mô tả**: Bổ sung giao diện Wizard đa bước để tạo phiên họp mới dựa trên mockup. Thêm các trường dữ liệu `MeetingType`, `OnlineMeetingUrl`, `ProgramFilePaths`, `InvitationFilePaths` vào bảng `Meetings`. Cập nhật `MeetingsController` hỗ trợ upload file qua `[FromForm]`.
+- **Tệp thay đổi**:
+  - `.agents/rules/tc-rule-database-schema.md` (Sửa đổi)
+  - `SYSTEM_FEATURES.md` (Sửa đổi)
+  - `migrate_db_meetings.py` (Mới)
+  - `ToolCalendar.Core/Models/Meeting.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Cabinet/MeetingsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetMeetingCreate.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/MeetingList.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): cập nhật giao diện tạo phiên họp mới dạng wizard và bổ sung trường db"`
+
+
+- **Mô tả**: Tách biệt thư mục lưu trữ file của hệ thống Điều phối công văn và Phòng họp không giấy tờ thành 2 nhánh: `Uploads/Documents` và `Uploads/Cabinet`. Đã chạy script migration để di chuyển các file vật lý cũ và cập nhật đường dẫn tương ứng trong Database (`Documents`, `Comments`, `Questionnaires`, `MeetingNotes`).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/DocumentUploadService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Cabinet/QuestionnairesController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Cabinet/MeetingNotesController.cs` (Sửa đổi)
+  - `migrate_uploads.py` (Mới - script di chuyển file)
+- **Lệnh git commit**: `git commit -m "refactor(api): tái cấu trúc thư mục lưu trữ uploads tách biệt 2 hệ thống"`
+
+### [2026-08-05 16:55] Thêm tính năng Thêm mới Phiếu lấy ý kiến và Upload PDF
+- **Mô tả**: Bổ sung tính năng tạo mới Phiếu lấy ý kiến thông qua giao diện đa bước (wizard). Cập nhật model và DB schema để hỗ trợ lưu file đính kèm (pdf, doc, v.v.), parse nội dung json và phân công chuyên viên. Backend lưu các file vào thư mục `/Uploads/questionnaires`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Models/Questionnaire.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/QuestionnaireRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Cabinet/QuestionnairesController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetQuestionnaireCreate.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetQuestionnaire.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): thêm tính năng thêm mới phiếu lấy ý kiến và upload pdf"`
+
+### [2026-08-05 16:35] Thêm tính năng Quản lý mẫu phiếu lấy ý kiến
+- **Mô tả**: Bổ sung tính năng quản lý Mẫu phiếu lấy ý kiến không hard-code cho module Cabinet. Bao gồm việc tạo mới bảng `QuestionnaireTemplates`, viết các backend repo/controller tương ứng và tích hợp UI vào trang `CabinetQuestionnaire`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Models/QuestionnaireTemplate.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/QuestionnaireTemplateRepository.cs` (Mới)
+  - `ToolCalendar.Api/Controllers/Cabinet/QuestionnaireTemplatesController.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetQuestionnaireTemplates.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/cabinet/pages/CabinetQuestionnaire.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(cabinet): thêm tính năng quản lý mẫu phiếu lấy ý kiến"`
+
 ### [2026-08-04 16:03] Thêm runtime packages cho linux x64 và resolve merge conflict
 - **Mô tả**: Sửa merge conflict tại `DocumentsController.cs`. Cập nhật `docker-compose.yml` thêm network host và thêm package NuGet Sdcb cho Linux x64 để phục vụ OCR trên Docker. Định dạng lại `DocDetail.jsx`.
 - **Tệp thay đổi**:

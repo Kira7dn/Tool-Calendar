@@ -194,6 +194,14 @@ namespace ToolCalendar.Data
                     CreatedAt TEXT
                 )";
 
+            string createQuestionnaireTemplatesTable = @"
+                CREATE TABLE IF NOT EXISTS QuestionnaireTemplates (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL,
+                    CreatedAt TEXT DEFAULT (datetime('now', 'localtime')),
+                    UpdatedAt TEXT
+                )";
+
             new SqliteCommand(createDocumentsTable, connection).ExecuteNonQuery();
             new SqliteCommand(createUsersTable, connection).ExecuteNonQuery();
             new SqliteCommand(createDepartmentsTable, connection).ExecuteNonQuery();
@@ -206,6 +214,7 @@ namespace ToolCalendar.Data
             new SqliteCommand(createCommentReactionsTable, connection).ExecuteNonQuery();
             new SqliteCommand(createDocumentRoutingsTable, connection).ExecuteNonQuery();
             new SqliteCommand(createPushSubscriptionsTable, connection).ExecuteNonQuery();
+            new SqliteCommand(createQuestionnaireTemplatesTable, connection).ExecuteNonQuery();
 
             // Insert default admin if not exists
             using var checkCmd = new SqliteCommand("SELECT COUNT(*) FROM Users WHERE Role='Admin'", connection);

@@ -52,7 +52,7 @@ namespace ToolCalendar.Api.Controllers.Cabinet
             // Xử lý upload file đính kèm (lưu vào subfolder notes/)
             if (files != null && files.Count > 0)
             {
-                var uploadDir = Path.Combine(_env.ContentRootPath, "Uploads", "notes");
+                var uploadDir = Path.Combine(_env.ContentRootPath, "Uploads", "Cabinet", "Notes");
                 Directory.CreateDirectory(uploadDir);
 
                 foreach (var file in files)
@@ -63,7 +63,7 @@ namespace ToolCalendar.Api.Controllers.Cabinet
                         var filePath = Path.Combine(uploadDir, safeFileName);
                         using var stream = new FileStream(filePath, FileMode.Create);
                         await file.CopyToAsync(stream);
-                        savedPaths.Add($"Uploads/notes/{safeFileName}");
+                        savedPaths.Add($"Uploads/Cabinet/Notes/{safeFileName}");
                     }
                 }
             }

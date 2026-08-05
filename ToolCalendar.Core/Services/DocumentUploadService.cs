@@ -98,7 +98,7 @@ public class DocumentUploadService : IDocumentUploadService
         }
 
         // ─── File đã qua kiểm tra → chuyển vào Uploads chính thức ──────────
-        var uploadsDir = Path.Combine(_env.ContentRootPath, "Uploads");
+        var uploadsDir = Path.Combine(_env.ContentRootPath, "Uploads", "Documents");
         Directory.CreateDirectory(uploadsDir);
 
         var finalFileName = $"{Guid.NewGuid()}_{safeFileName}";
@@ -109,7 +109,7 @@ public class DocumentUploadService : IDocumentUploadService
         var record = new DocumentRecord
         {
             SoVanBan = Path.GetFileNameWithoutExtension(safeFileName),
-            FilePath = $"Uploads/{finalFileName}",
+            FilePath = $"Uploads/Documents/{finalFileName}",
             Status = "Đang xử lý",
             NgayThem = DateTime.Now,
             FullText = "Đang trích xuất tự động...",

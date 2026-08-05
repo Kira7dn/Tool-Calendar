@@ -145,7 +145,7 @@ namespace ToolCalendar.Api.Controllers
                     if (System.IO.File.Exists(fullPath))
                         System.IO.File.Delete(fullPath);
                 }
-                var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
+                var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Documents", "Evidence", $"Doc_{id}");
                 if (Directory.Exists(evidenceDir))
                     Directory.Delete(evidenceDir, true);
             }
@@ -262,7 +262,7 @@ namespace ToolCalendar.Api.Controllers
             if (doc == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
 
             // 1. Tạo thư mục lưu bằng chứng cho văn bản này
-            var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
+            var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Documents", "Evidence", $"Doc_{id}");
             Directory.CreateDirectory(evidenceDir);
 
             var savedPaths = new List<string>();
@@ -275,7 +275,7 @@ namespace ToolCalendar.Api.Controllers
                 {
                     await file.CopyToAsync(stream);
                 }
-                savedPaths.Add($"Uploads/Evidence/Doc_{id}/{safeFileName}");
+                savedPaths.Add($"Uploads/Documents/Evidence/Doc_{id}/{safeFileName}");
             }
 
             // 2. Cập nhật vào DB (Lưu danh sách path dưới dạng JSON)
@@ -432,7 +432,7 @@ namespace ToolCalendar.Api.Controllers
                     if (System.IO.File.Exists(fullDocPath))
                         System.IO.File.Delete(fullDocPath);
                 }
-                var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Evidence", $"Doc_{id}");
+                var evidenceDir = Path.Combine(_env.ContentRootPath, "Uploads", "Documents", "Evidence", $"Doc_{id}");
                 if (Directory.Exists(evidenceDir))
                     Directory.Delete(evidenceDir, true);
             }
@@ -488,7 +488,7 @@ namespace ToolCalendar.Api.Controllers
             
             // Chuẩn hóa và bảo mật đường dẫn (chỉ cho phép trong thư mục Uploads/Comments)
             var normalizedPath = path.Replace('\\', '/').TrimStart('/');
-            if (!normalizedPath.Contains("Uploads/Comments", StringComparison.OrdinalIgnoreCase))
+            if (!normalizedPath.Contains("Uploads/Documents/Comments", StringComparison.OrdinalIgnoreCase))
                 return BadRequest(ApiResponse.Fail("Truy cập trái phép."));
 
             var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
@@ -522,7 +522,7 @@ namespace ToolCalendar.Api.Controllers
             var savedPaths = new List<string>();
             if (files != null && files.Count > 0)
             {
-                var commentUploadDir = Path.Combine(_env.ContentRootPath, "Uploads", "Comments", $"Doc_{id}");
+                var commentUploadDir = Path.Combine(_env.ContentRootPath, "Uploads", "Documents", "Comments", $"Doc_{id}");
                 Directory.CreateDirectory(commentUploadDir);
 
                 foreach (var file in files)
@@ -530,7 +530,7 @@ namespace ToolCalendar.Api.Controllers
                     // ✅ Security: Path.GetFileName() loại bỏ directory component, ngăn path traversal
                     var safeFileName = $"{DateTime.Now:yyyyMMddHHmmss}_{Path.GetFileName(file.FileName)}";
                     var filePath = Path.Combine(commentUploadDir, safeFileName);
-                    var relativePath = $"Uploads/Comments/Doc_{id}/{safeFileName}";
+                    var relativePath = $"Uploads/Documents/Comments/Doc_{id}/{safeFileName}";
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
@@ -654,7 +654,7 @@ namespace ToolCalendar.Api.Controllers
             
             // Bảo mật: Chỉ cho phép truy cập file trong thư mục Evidence
             string normalizedPath = path.TrimStart('/').Replace("\\", "/");
-            if (!normalizedPath.StartsWith("Uploads/Evidence/", StringComparison.OrdinalIgnoreCase)) 
+            if (!normalizedPath.StartsWith("Uploads/Documents/Evidence/", StringComparison.OrdinalIgnoreCase)) 
                 return StatusCode(403, ApiResponse.Fail("Truy cập bị cấm."));
 
             // Chuyển đổi đường dẫn tương đối thành đường dẫn tuyệt đối trên server

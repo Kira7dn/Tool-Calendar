@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 using ToolCalendar.Models;
 
 namespace ToolCalendar.Core.Data.Repositories
@@ -49,10 +50,14 @@ namespace ToolCalendar.Core.Data.Repositories
             OrganizingUnit = r["OrganizingUnit"]?.ToString(),
             ExpectedAttendees = r["ExpectedAttendees"] == DBNull.Value ? 0 : Convert.ToInt32(r["ExpectedAttendees"]),
             ExternalParticipants = r["ExternalParticipants"]?.ToString(),
+            MeetingType = r["MeetingType"]?.ToString(),
+            OnlineMeetingUrl = r["OnlineMeetingUrl"]?.ToString(),
+            ProgramFilePaths = r["ProgramFilePaths"]?.ToString(),
+            InvitationFilePaths = r["InvitationFilePaths"]?.ToString(),
         };
 
         private const string BASE_SELECT = @"
-            SELECT m.Id, m.Title, m.StartTime, m.EndTime, m.RoomId, m.Status, m.CreatorId, m.CreatedAt, m.Location, m.Presider, m.PreparingUnit, m.Content, m.Notes, m.OrganizingUnit, m.ExpectedAttendees, m.ExternalParticipants, r.Name as RoomName, u.FullName as CreatorName 
+            SELECT m.Id, m.Title, m.StartTime, m.EndTime, m.RoomId, m.Status, m.CreatorId, m.CreatedAt, m.Location, m.Presider, m.PreparingUnit, m.Content, m.Notes, m.OrganizingUnit, m.ExpectedAttendees, m.ExternalParticipants, m.MeetingType, m.OnlineMeetingUrl, m.ProgramFilePaths, m.InvitationFilePaths, r.Name as RoomName, u.FullName as CreatorName 
             FROM Meetings m 
             LEFT JOIN Rooms r ON m.RoomId = r.Id 
             LEFT JOIN Users u ON m.CreatorId = u.Id";
@@ -116,7 +121,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 SELECT m.Id, m.Title, m.StartTime, m.EndTime, m.RoomId, m.Status, m.CreatorId, m.CreatedAt,
                        m.Location, m.Presider, m.PreparingUnit, m.Content, m.Notes, m.OrganizingUnit,
                        COALESCE(m.ExpectedAttendees, 0) as ExpectedAttendees,
-                       m.ExternalParticipants,
+                       m.ExternalParticipants, m.MeetingType, m.OnlineMeetingUrl, m.ProgramFilePaths, m.InvitationFilePaths,
                        r.Name as RoomName, u.FullName as CreatorName,
                        mp.AttendanceStatus as MyAttendanceStatus
                 FROM Meetings m
@@ -206,10 +211,12 @@ namespace ToolCalendar.Core.Data.Repositories
                 string sql = @"
                     INSERT INTO Meetings 
                         (Title, StartTime, EndTime, RoomId, Status, CreatorId, CreatedAt,
-                         Location, Presider, PreparingUnit, Content, Notes, OrganizingUnit, ExpectedAttendees, ExternalParticipants)
+                         Location, Presider, PreparingUnit, Content, Notes, OrganizingUnit, ExpectedAttendees, ExternalParticipants,
+                         MeetingType, OnlineMeetingUrl, ProgramFilePaths, InvitationFilePaths)
                     VALUES 
                         (@title, @start, @end, @roomId, 'Sắp diễn ra', @creator, @now,
-                         @location, @presider, @preparingUnit, @content, @notes, @orgUnit, @expected, @external);
+                         @location, @presider, @preparingUnit, @content, @notes, @orgUnit, @expected, @external,
+                         @meetingType, @onlineMeetingUrl, @programFilePaths, @invitationFilePaths);
                     SELECT last_insert_rowid();";
 
                 using var cmd = new SqliteCommand(sql, connection, tx);
@@ -227,8 +234,24 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@orgUnit", (object?)req.OrganizingUnit ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
                 cmd.Parameters.AddWithValue("@external", (object?)req.ExternalParticipants ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@meetingType", (object?)req.MeetingType ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@onlineMeetingUrl", (object?)req.OnlineMeetingUrl ?? DBNull.Value);
+                
+                string programPathsJson = JsonSerializer.Serialize(req.ProgramFilePaths ?? new List<string>());
+                cmd.Parameters.AddWithValue("@programFilePaths", programPathsJson);
+                
+                string invPathsJson = JsonSerializer.Serialize(req.InvitationFilePaths ?? new List<string>());
+                cmd.Parameters.AddWithValue("@invitationFilePaths", invPathsJson);
 
                 var newId = Convert.ToInt32(cmd.ExecuteScalar());
+
+                if (req.ProceedingId.HasValue)
+                {
+                    using var procCmd = new SqliteCommand("INSERT INTO MeetingProceedingItems (ProceedingId, MeetingId) VALUES (@pid, @mid)", connection, tx);
+                    procCmd.Parameters.AddWithValue("@pid", req.ProceedingId.Value);
+                    procCmd.Parameters.AddWithValue("@mid", newId);
+                    procCmd.ExecuteNonQuery();
+                }
 
                 // Thêm danh sách tham dự
                 foreach (var userId in req.ParticipantUserIds.Distinct())
@@ -263,7 +286,9 @@ namespace ToolCalendar.Core.Data.Repositories
                         Title = @title, StartTime = @start, EndTime = @end, RoomId = @roomId,
                         Location = @location, Presider = @presider, PreparingUnit = @preparingUnit,
                         Content = @content, Notes = @notes, OrganizingUnit = @orgUnit,
-                        ExpectedAttendees = @expected, ExternalParticipants = @external
+                        ExpectedAttendees = @expected, ExternalParticipants = @external,
+                        MeetingType = @meetingType, OnlineMeetingUrl = @onlineMeetingUrl,
+                        ProgramFilePaths = @programFilePaths, InvitationFilePaths = @invitationFilePaths
                     WHERE Id = @id";
 
                 using var cmd = new SqliteCommand(sql, connection, tx);
@@ -279,9 +304,29 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@orgUnit", (object?)req.OrganizingUnit ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@expected", req.ExpectedAttendees);
                 cmd.Parameters.AddWithValue("@external", (object?)req.ExternalParticipants ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@meetingType", (object?)req.MeetingType ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@onlineMeetingUrl", (object?)req.OnlineMeetingUrl ?? DBNull.Value);
+                
+                string programPathsJson = JsonSerializer.Serialize(req.ProgramFilePaths ?? new List<string>());
+                cmd.Parameters.AddWithValue("@programFilePaths", programPathsJson);
+                
+                string invPathsJson = JsonSerializer.Serialize(req.InvitationFilePaths ?? new List<string>());
+                cmd.Parameters.AddWithValue("@invitationFilePaths", invPathsJson);
                 cmd.Parameters.AddWithValue("@id", id);
 
                 int rows = cmd.ExecuteNonQuery();
+
+                if (req.ProceedingId.HasValue)
+                {
+                    using var dProcCmd = new SqliteCommand("DELETE FROM MeetingProceedingItems WHERE MeetingId = @mid", connection, tx);
+                    dProcCmd.Parameters.AddWithValue("@mid", id);
+                    dProcCmd.ExecuteNonQuery();
+
+                    using var procCmd = new SqliteCommand("INSERT INTO MeetingProceedingItems (ProceedingId, MeetingId) VALUES (@pid, @mid)", connection, tx);
+                    procCmd.Parameters.AddWithValue("@pid", req.ProceedingId.Value);
+                    procCmd.Parameters.AddWithValue("@mid", id);
+                    procCmd.ExecuteNonQuery();
+                }
 
                 // Cập nhật lại danh sách tham dự nếu có thay đổi
                 if (req.ParticipantUserIds.Count > 0)

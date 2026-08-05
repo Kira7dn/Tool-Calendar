@@ -83,6 +83,7 @@ builder.Services.AddScoped<ToolCalendar.Data.Repositories.IDocumentRoutingReposi
 builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IRoomRepository, ToolCalendar.Core.Data.Repositories.RoomRepository>();
 builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IMeetingRepository, ToolCalendar.Core.Data.Repositories.MeetingRepository>();
 builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IQuestionnaireRepository, ToolCalendar.Core.Data.Repositories.QuestionnaireRepository>();
+builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IQuestionnaireTemplateRepository, ToolCalendar.Core.Data.Repositories.QuestionnaireTemplateRepository>();
 // Cabinet — Kỷ yếu, Kết luận, Sổ tay
 builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IMeetingProceedingRepository, ToolCalendar.Core.Data.Repositories.MeetingProceedingRepository>();
 builder.Services.AddScoped<ToolCalendar.Core.Data.Repositories.IMeetingConclusionRepository, ToolCalendar.Core.Data.Repositories.MeetingConclusionRepository>();

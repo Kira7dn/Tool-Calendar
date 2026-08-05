@@ -38,6 +38,7 @@ import {
 import { MeetingDetail } from './MeetingDetail'
 import { MeetingProgress } from './MeetingProgress'
 import { MeetingModal } from '../components/MeetingModal'
+import { CabinetMeetingCreate } from './CabinetMeetingCreate'
 
 const AUTH_HEADER = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
@@ -87,6 +88,7 @@ export function MeetingList() {
   const [pageSize, setPageSize] = useState(10)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
 
   const fetchMeetings = (tab = activeTab) => {
     setLoading(true)
@@ -181,6 +183,18 @@ export function MeetingList() {
 
   console.log('MeetingList render:', { selectedMeeting, showProgress })
 
+  if (isCreating) {
+    return (
+      <CabinetMeetingCreate
+        onBack={() => setIsCreating(false)}
+        onSaved={() => {
+          setIsCreating(false)
+          fetchMeetings(activeTab)
+        }}
+      />
+    )
+  }
+
   if (selectedMeeting) {
     if (showProgress) {
       console.log('Rendering MeetingProgress')
@@ -208,7 +222,7 @@ export function MeetingList() {
           <div className="flex items-center gap-3">
             {isAdmin && (
               <Button
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={() => setIsCreating(true)}
                 className="bg-[#c8102e] hover:bg-[#a50e27] text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />

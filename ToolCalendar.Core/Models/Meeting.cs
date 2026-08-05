@@ -22,6 +22,11 @@ namespace ToolCalendar.Models
         public string? OrganizingUnit { get; set; }    // Đơn vị tổ chức
         public int ExpectedAttendees { get; set; }     // Số lượng đại biểu dự kiến
         public string? ExternalParticipants { get; set; } // Khách mời ngoài cơ quan
+        
+        public string? MeetingType { get; set; } // Loại phiên họp
+        public string? OnlineMeetingUrl { get; set; } // Link họp trực tuyến
+        public string? ProgramFilePaths { get; set; } // JSON array of paths
+        public string? InvitationFilePaths { get; set; } // JSON array of paths
 
         public List<MeetingParticipant> Participants { get; set; } = new();
     }
@@ -51,5 +56,12 @@ namespace ToolCalendar.Models
         public int ExpectedAttendees { get; set; }
         public string? ExternalParticipants { get; set; }
         public List<int> ParticipantUserIds { get; set; } = new();
+
+        public int? ProceedingId { get; set; }
+        public string? MeetingType { get; set; }
+        public string? OnlineMeetingUrl { get; set; }
+        // The files will be sent via multipart/form-data, but we keep properties in case they are sent as JSON
+        public List<string> ProgramFilePaths { get; set; } = new();
+        public List<string> InvitationFilePaths { get; set; } = new();
     }
 }

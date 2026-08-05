@@ -2,6 +2,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ToolCalendar.Core.Data.Repositories;
+using System.Text.Json;
+using System.IO;
+using Microsoft.AspNetCore.Http;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Models;
 
@@ -119,21 +122,30 @@ namespace ToolCalendar.Api.Controllers.Cabinet
 
         // POST /api/phonghopkhonggiayto/meetings
         [HttpPost]
-        public async Task<IActionResult> CreateMeeting([FromBody] CreateMeetingRequest request)
+        public async Task<IActionResult> CreateMeeting([FromForm] string requestJson, [FromForm] List<IFormFile>? programFiles, [FromForm] List<IFormFile>? invitationFiles)
         {
+            CreateMeetingRequest? request;
+            try
+            {
+                request = JsonSerializer.Deserialize<CreateMeetingRequest>(requestJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (request == null) return BadRequest(ApiResponse.Fail("Dữ liệu không hợp lệ."));
+            }
+            catch
+            {
+                return BadRequest(ApiResponse.Fail("Dữ liệu không hợp lệ."));
+            }
+
             if (string.IsNullOrWhiteSpace(request.Title))
                 return BadRequest(ApiResponse.Fail("Tên phiên họp không được để trống."));
 
             if (request.EndTime <= request.StartTime)
                 return BadRequest(ApiResponse.Fail("Thời gian kết thúc phải sau thời gian bắt đầu."));
 
-            // Nếu có chọn phòng họp trong hệ thống, kiểm tra xem phòng có tồn tại không
             if (request.RoomId.HasValue)
             {
                 var room = await _roomRepo.GetByIdAsync(request.RoomId.Value);
                 if (room == null)
                     return BadRequest(ApiResponse.Fail("Phòng họp không tồn tại."));
-
                 if (room.Status == 0)
                     return BadRequest(ApiResponse.Fail("Phòng họp đang không hoạt động."));
             }
@@ -141,6 +153,20 @@ namespace ToolCalendar.Api.Controllers.Cabinet
             {
                 if (string.IsNullOrWhiteSpace(request.Location))
                     return BadRequest(ApiResponse.Fail("Vui lòng nhập tên/địa điểm phòng họp khác."));
+            }
+
+            var newProgramFiles = await HandleFileUploads(programFiles);
+            if (newProgramFiles.Count > 0)
+            {
+                request.ProgramFilePaths ??= new List<string>();
+                request.ProgramFilePaths.AddRange(newProgramFiles);
+            }
+
+            var newInvitationFiles = await HandleFileUploads(invitationFiles);
+            if (newInvitationFiles.Count > 0)
+            {
+                request.InvitationFilePaths ??= new List<string>();
+                request.InvitationFilePaths.AddRange(newInvitationFiles);
             }
 
             var creatorId = GetCurrentUserId();
@@ -152,13 +178,38 @@ namespace ToolCalendar.Api.Controllers.Cabinet
 
         // PUT /api/phonghopkhonggiayto/meetings/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateMeeting(int id, [FromBody] CreateMeetingRequest request)
+        public async Task<IActionResult> UpdateMeeting(int id, [FromForm] string requestJson, [FromForm] List<IFormFile>? programFiles, [FromForm] List<IFormFile>? invitationFiles)
         {
+            CreateMeetingRequest? request;
+            try
+            {
+                request = JsonSerializer.Deserialize<CreateMeetingRequest>(requestJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (request == null) return BadRequest(ApiResponse.Fail("Dữ liệu không hợp lệ."));
+            }
+            catch
+            {
+                return BadRequest(ApiResponse.Fail("Dữ liệu không hợp lệ."));
+            }
+
             if (string.IsNullOrWhiteSpace(request.Title))
                 return BadRequest(ApiResponse.Fail("Tên phiên họp không được để trống."));
 
             if (request.EndTime <= request.StartTime)
                 return BadRequest(ApiResponse.Fail("Thời gian kết thúc phải sau thời gian bắt đầu."));
+
+            var newProgramFiles = await HandleFileUploads(programFiles);
+            if (newProgramFiles.Count > 0)
+            {
+                request.ProgramFilePaths ??= new List<string>();
+                request.ProgramFilePaths.AddRange(newProgramFiles);
+            }
+
+            var newInvitationFiles = await HandleFileUploads(invitationFiles);
+            if (newInvitationFiles.Count > 0)
+            {
+                request.InvitationFilePaths ??= new List<string>();
+                request.InvitationFilePaths.AddRange(newInvitationFiles);
+            }
 
             var success = await _meetingRepo.UpdateAsync(id, request);
             if (!success)
@@ -166,6 +217,29 @@ namespace ToolCalendar.Api.Controllers.Cabinet
 
             var updated = await _meetingRepo.GetByIdAsync(id);
             return Ok(ApiResponse.Ok(updated, "Cập nhật phiên họp thành công."));
+        }
+
+        private async Task<List<string>> HandleFileUploads(List<IFormFile>? files)
+        {
+            var savedPaths = new List<string>();
+            if (files != null && files.Count > 0)
+            {
+                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Cabinet", "Meetings");
+                Directory.CreateDirectory(uploadDir);
+
+                foreach (var file in files)
+                {
+                    if (file.Length > 0)
+                    {
+                        var safeFileName = $"{Guid.NewGuid():N}_{Path.GetFileName(file.FileName)}";
+                        var filePath = Path.Combine(uploadDir, safeFileName);
+                        using var stream = new FileStream(filePath, FileMode.Create);
+                        await file.CopyToAsync(stream);
+                        savedPaths.Add($"Uploads/Cabinet/Meetings/{safeFileName}");
+                    }
+                }
+            }
+            return savedPaths;
         }
 
         // PUT /api/phonghopkhonggiayto/meetings/{id}/cancel

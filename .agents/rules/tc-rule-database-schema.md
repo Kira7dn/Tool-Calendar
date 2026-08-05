@@ -86,6 +86,17 @@ CREATE TABLE DocumentRoutings (
 - `Notifications` — Thông báo in-app
 - `AuditLogs`, `LoginAuditLog` — Nhật ký hệ thống
 
+### Phân hệ Phòng họp không giấy tờ (Cabinet)
+- `Rooms`: Phòng họp (`Id`, `Name`, `Capacity`, `Location`, `Description`, `CreatedAt`)
+- `Meetings`: Phiên họp (`Id`, `Title`, `StartTime`, `EndTime`, `RoomId`, `Status`, `CreatorId`, `Location`, `Presider`, `PreparingUnit`, `Content`, `Notes`, `OrganizingUnit`, `ExpectedAttendees`, `ExternalParticipants`, `MeetingType`, `OnlineMeetingUrl`, `ProgramFilePaths`, `InvitationFilePaths`)
+- `MeetingParticipants`: Thành phần tham dự (`MeetingId`, `UserId`, `AttendanceStatus`)
+- `Questionnaires`: Phiếu lấy ý kiến (`Id`, `MeetingId`, `Title`, `AssignedTo`, `Deadline`, `Status`, `CreatedAt`)
+- `QuestionnaireTemplates`: Mẫu phiếu lấy ý kiến (`Id`, `Name`, `Description`, `CreatedAt`, `UpdatedAt`)
+- `MeetingProceedings`: Kỷ yếu phiên họp (`Id`, `Name`, `Description`, `CreatorId`, `CreatedAt`)
+- `MeetingProceedingItems`: Liên kết Kỷ yếu ↔ Phiên họp (`ProceedingId`, `MeetingId`)
+- `MeetingConclusions`: Kết luận phiên họp (`Id`, `MeetingId`, `FileName`, `Status`, `LastHandlerId`, `Progress`, `UpdatedAt`)
+- `MeetingNotes`: Sổ tay ghi chú (`Id`, `MeetingId`, `UserId`, `Content`, `AttachmentPaths`, `CreatedAt`)
+
 ## 2. Quy trình Thay đổi Schema
 
 > [!WARNING]
