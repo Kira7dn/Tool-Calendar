@@ -1267,3 +1267,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - Các file thuộc `ToolCalendar.Api/ClientApp/src/documents/` (Sửa đổi)
   - Các file thuộc `ToolCalendar.Api/ClientApp/src/cabinet/` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(api): xóa bỏ truyền auth token thủ công trong requests"`
+
+### [2026-08-05 23:49] Giai đoạn 2 - Bóc tách component DocDetail.jsx
+- **Mô tả**: Refactor chia nhỏ component `DocDetail.jsx` (dài hơn 1400 dòng) thành các sub-components độc lập để dễ bảo trì, tuân thủ nguyên tắc SRP. Các sub-components được đặt trong thư mục `src/documents/pages/DocDetail/components`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocOverviewTab.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocContentTab.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocRoutingTab.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocHistoryTab.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocComments.jsx` (Mới)
+- **Lệnh git commit**: `git commit -m "refactor(docs): bóc tách giao diện DocDetail thành các sub-components"`

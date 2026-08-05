@@ -1,0 +1,185 @@
+/* eslint-disable */
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+
+export function useDocDetail(docId, onBack) {
+  const [doc, setDoc] = useState(null)
+  const [comments, setComments] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('overview')
+  const [departments, setDepartments] = useState([])
+  const [users, setUsers] = useState([])
+  const [routings, setRoutings] = useState([])
+  const [previewImage, setPreviewImage] = useState(null)
+
+  // Modals state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isEvidenceModalOpen, setIsEvidenceModalOpen] = useState(false)
+  const [editForm, setEditForm] = useState(null)
+
+  // PDF state
+  const [pdfPage, setPdfPage] = useState(1)
+  const [isFullscreenPdf, setIsFullscreenPdf] = useState(false)
+
+  const fetchData = async () => {
+    setIsLoading(true)
+    try {
+      const [docRes, deptRes, userRes] = await Promise.all([
+        fetch(`/api/documents/${docId}`),
+        fetch('/api/admin/departments'),
+        fetch('/api/users'),
+      ])
+
+      if (docRes.ok) {
+        const data = await docRes.json()
+        setDoc(data)
+        setEditForm(data)
+      }
+      if (deptRes.ok) setDepartments(await deptRes.json())
+      if (userRes.ok) setUsers(await userRes.json())
+
+      await Promise.all([fetchComments(), fetchRoutings()])
+    } catch (error) {
+      console.error('Failed to fetch document details:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchRoutings = async () => {
+    try {
+      const response = await fetch(`/api/documents/${docId}/routings`)
+      if (response.ok) {
+        setRoutings(await response.json())
+      }
+    } catch (error) {
+      console.error('Failed to fetch routings:', error)
+    }
+  }
+
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(`/api/documents/${docId}/comments`)
+      if (response.ok) {
+        setComments(await response.json())
+      }
+    } catch (error) {
+      console.error('Failed to fetch comments:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (docId) {
+      fetchData()
+
+      const handleCommentEvent = (e) => {
+        if (e.detail?.documentId === parseInt(docId)) {
+          fetchComments()
+        }
+      }
+
+      document.addEventListener('realtime:new_comment', handleCommentEvent)
+      document.addEventListener('realtime:delete_comment', handleCommentEvent)
+      document.addEventListener('realtime:comment_reaction', handleCommentEvent)
+
+      return () => {
+        document.removeEventListener('realtime:new_comment', handleCommentEvent)
+        document.removeEventListener('realtime:delete_comment', handleCommentEvent)
+        document.removeEventListener('realtime:comment_reaction', handleCommentEvent)
+      }
+    }
+  }, [docId])
+
+  const handleUpdateStatus = async (newStatus) => {
+    try {
+      const res = await fetch(`/api/documents/${docId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...doc, status: newStatus }),
+      })
+      if (res.ok) {
+        toast.success(`Đã chuyển trạng thái sang: ${newStatus}`)
+        fetchData()
+      } else {
+        toast.error('Không thể cập nhật trạng thái.')
+      }
+    } catch (err) {
+      toast.error('Lỗi kết nối máy chủ.')
+    }
+  }
+
+  const executeDelete = async () => {
+    try {
+      const response = await fetch(`/api/documents/${docId}`, {
+        method: 'DELETE',
+      })
+      if (response.ok) {
+        toast.success('Xóa văn bản thành công')
+        onBack()
+      } else {
+        toast.error('Có lỗi xảy ra khi xóa văn bản')
+      }
+    } catch (error) {
+      console.error('Failed to delete document:', error)
+      toast.error('Lỗi kết nối máy chủ')
+    } finally {
+      setIsDeleteModalOpen(false)
+    }
+  }
+
+  const handleViewEvidence = async (path) => {
+    try {
+      const response = await fetch(`/api/documents/evidence-file?path=${encodeURIComponent(path)}`)
+      if (response.ok) {
+        const url = `/api/documents/evidence-file?path=${encodeURIComponent(path)}`
+        const isImg = /\.(jpg|jpeg|png|gif)$/i.test(path)
+        if (isImg) {
+          setPreviewImage(url)
+        } else {
+          window.open(url, '_blank')
+        }
+      } else {
+        toast.error('Không có quyền xem file này hoặc file không tồn tại.')
+      }
+    } catch (error) {
+      toast.error('Lỗi khi tải file bằng chứng.')
+    }
+  }
+
+  return {
+    doc,
+    setDoc,
+    comments,
+    setComments,
+    isLoading,
+    activeTab,
+    setActiveTab,
+    departments,
+    users,
+    routings,
+    previewImage,
+    setPreviewImage,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    isForwardModalOpen,
+    setIsForwardModalOpen,
+    isEditModalOpen,
+    setIsEditModalOpen,
+    isEvidenceModalOpen,
+    setIsEvidenceModalOpen,
+    editForm,
+    setEditForm,
+    pdfPage,
+    setPdfPage,
+    isFullscreenPdf,
+    setIsFullscreenPdf,
+    fetchData,
+    fetchRoutings,
+    fetchComments,
+    handleUpdateStatus,
+    executeDelete,
+    handleViewEvidence,
+  }
+}
