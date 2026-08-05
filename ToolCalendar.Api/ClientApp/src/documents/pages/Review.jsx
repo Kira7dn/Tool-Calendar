@@ -1,3 +1,4 @@
+import { ROLES } from '../../constants/roles'
 /* eslint-disable */
 /* eslint-disable no-empty */
 import React, { useEffect, useState } from 'react'
@@ -58,7 +59,7 @@ export function Review({ onBack }) {
       if (deptRes.ok) setDepartments(await deptRes.json())
       if (userRes.ok) {
         const userData = await userRes.json()
-        setUsers(userData.filter((u) => u.role === 'CanBo' || u.role === 'Admin'))
+        setUsers(userData.filter((u) => u.role === ROLES.CAN_BO || u.role === ROLES.ADMIN))
       }
     } catch (e) {}
   }
@@ -357,13 +358,14 @@ export function Review({ onBack }) {
                         <option value="">Chọn cán bộ...</option>
                         {(formData.departmentId
                           ? users.filter(
-                              (u) => u.role === 'Admin' || u.departmentId === formData.departmentId
+                              (u) =>
+                                u.role === ROLES.ADMIN || u.departmentId === formData.departmentId
                             )
                           : users
                         ).map((u) => (
                           <option key={u.id} value={u.id}>
                             {u.fullName}
-                            {u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                            {u.role === ROLES.ADMIN ? ' (Quản trị viên)' : ''}
                           </option>
                         ))}
                       </select>

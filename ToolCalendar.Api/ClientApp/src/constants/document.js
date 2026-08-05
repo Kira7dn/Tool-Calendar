@@ -3,6 +3,15 @@ export const DOCUMENT_STATUS = {
   DANG_XU_LY: 'Đang xử lý',
   DA_HOAN_THANH: 'Đã hoàn thành',
   HOAN_THANH: 'hoàn thành',
+  DA_RA_SOAT: 'Đã rà soát',
+  LOI_OCR: 'Lỗi OCR',
+}
+
+export const DOCUMENT_PRIORITY = {
+  THUONG: 'Thường',
+  KHAN: 'Khẩn',
+  HOA_TOC: 'Hỏa tốc',
+  THUONG_KHAN: 'Thượng khẩn',
 }
 
 export const TASK_FILTER = {

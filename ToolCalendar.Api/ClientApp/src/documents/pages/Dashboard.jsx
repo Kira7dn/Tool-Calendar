@@ -1,3 +1,4 @@
+import { ROLES } from '../../constants/roles'
 /* eslint-disable */
 import React, { useEffect, useState } from 'react'
 import { AlertTriangle, Clock, FileText } from 'lucide-react'
@@ -78,8 +79,8 @@ export function Dashboard({ onTabChange }) {
     }
   }
 
-  const role = localStorage.getItem('user_role') || 'CanBo'
-  const canUpload = role === 'Admin' || role === 'VanThu'
+  const role = localStorage.getItem('user_role') || ROLES.CAN_BO
+  const canUpload = role === ROLES.ADMIN || role === ROLES.VAN_THU
   const handleSearch = () => {
     const query = searchQuery.trim()
     if (query) onTabChange('documents', { search: query })
@@ -97,7 +98,7 @@ export function Dashboard({ onTabChange }) {
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-3 shrink-0">
         <KpiCard
-          title="Đang xử lý"
+          title={DOCUMENT_STATUS.DANG_XU_LY}
           description="Chưa hoàn thành"
           value={stats.total}
           icon={FileText}

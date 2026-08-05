@@ -113,11 +113,11 @@ export default function DocDetail({ docId, onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-          {doc.status === 'Chưa xử lý' &&
+          {doc.status === DOCUMENT_STATUS.CHUA_XU_LY &&
             (doc.assignedTo === localStorage.getItem('user_id') ||
               isUserInRoutings(routings, localStorage.getItem('user_id'))) && (
               <button
-                onClick={() => handleUpdateStatus('Đang xử lý')}
+                onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DANG_XU_LY)}
                 className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black rounded-xl"
               >
                 TIẾP NHẬN XỬ LÝ

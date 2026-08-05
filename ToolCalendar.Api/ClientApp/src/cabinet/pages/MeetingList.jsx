@@ -1,3 +1,4 @@
+import { ROLES } from '../../constants/roles'
 /* eslint-disable */
 import React, { useState, useEffect } from 'react'
 import {
@@ -99,7 +100,7 @@ export function MeetingList() {
           payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
           payload.role ||
           payload.Role
-        if (role === 'Admin' || role === 'LanhDao') isAdminUser = true
+        if (role === ROLES.ADMIN || role === ROLES.LANH_DAO) isAdminUser = true
       }
     } catch {}
 
@@ -160,7 +161,7 @@ export function MeetingList() {
           payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
           payload.role ||
           payload.Role
-        if (role === 'Admin' || role === 'LanhDao') {
+        if (role === ROLES.ADMIN || role === ROLES.LANH_DAO) {
           setIsAdmin(true)
         }
       }

@@ -1,3 +1,4 @@
+import { ROLES } from '../constants/roles'
 /* eslint-disable */
 /* global Notification, CustomEvent */
 import React from 'react'
@@ -189,7 +190,7 @@ export function AppShell() {
   const [user, setUser] = React.useState(() => {
     return {
       name: localStorage.getItem('user_full_name') || localStorage.getItem('user_name') || 'Cán bộ',
-      role: localStorage.getItem('user_role') || 'CanBo',
+      role: localStorage.getItem('user_role') || ROLES.CAN_BO,
     }
   })
   const [notifCount, setNotifCount] = React.useState(0)
@@ -264,7 +265,7 @@ export function AppShell() {
 
     // Load user info from localStorage
     const name = localStorage.getItem('user_name') || 'User'
-    const role = localStorage.getItem('user_role') || 'CanBo'
+    const role = localStorage.getItem('user_role') || ROLES.CAN_BO
     setUser({ name, role })
 
     // Listen for notification updates
@@ -754,7 +755,7 @@ export function AppShell() {
                           {user.name}
                         </span>
                         <span className="text-[0.65rem] text-muted-foreground uppercase tracking-tighter font-black">
-                          {user.role === 'Admin' ? 'Quản trị' : 'Cán bộ'}
+                          {user.role === ROLES.ADMIN ? 'Quản trị' : 'Cán bộ'}
                         </span>
                       </div>
                       <ChevronDown className="size-3.5 ml-1 text-muted-foreground group-data-[state=open]:rotate-180 transition-transform max-md:hidden" />
@@ -774,7 +775,7 @@ export function AppShell() {
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-foreground">{user.name}</span>
                           <span className="text-[0.65rem] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-1">
-                            {user.role === 'Admin' ? 'Quản trị viên hệ thống' : 'Cán bộ xử lý'}
+                            {user.role === ROLES.ADMIN ? 'Quản trị viên hệ thống' : 'Cán bộ xử lý'}
                           </span>
                         </div>
                       </div>

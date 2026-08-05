@@ -1,3 +1,4 @@
+import { ROLES } from '../../constants/roles'
 /* eslint-disable */
 import React, { useEffect, useState } from 'react'
 import {
@@ -51,7 +52,7 @@ function Avatar({ name, role }) {
     )
   }
   const initials = name.slice(0, 1).toUpperCase()
-  const isAdmin = role === 'Admin'
+  const isAdmin = role === ROLES.ADMIN
 
   return (
     <span

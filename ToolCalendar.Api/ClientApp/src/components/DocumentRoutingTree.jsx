@@ -92,9 +92,10 @@ const RoutingNode = ({ node, level = 0 }) => {
           <span
             className={cn(
               'px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider',
-              node.status === 'Đã hoàn thành' || node.status === 'Đã xử lý'
+              node.status === DOCUMENT_STATUS.DA_HOAN_THANH ||
+                node.status === DOCUMENT_STATUS.DA_HOAN_THANH
                 ? 'bg-green-50 text-green-700'
-                : node.status === 'Đang giải quyết' || node.status === 'Đang xử lý'
+                : node.status === 'Đang giải quyết' || node.status === DOCUMENT_STATUS.DANG_XU_LY
                   ? 'bg-blue-50 text-blue-700'
                   : node.status === 'Đã xử lý quá hạn'
                     ? 'bg-red-50 text-red-700'

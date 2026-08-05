@@ -1,3 +1,4 @@
+import { ROLES } from '../../../../constants/roles'
 /* eslint-disable react/prop-types, no-unused-vars, react/no-array-index-key */
 import React, { useState } from 'react'
 import {
@@ -310,13 +311,14 @@ export function DocModals({
                             {(editForm?.departmentId
                               ? users.filter(
                                   (u) =>
-                                    u.role === 'Admin' || u.departmentId === editForm.departmentId
+                                    u.role === ROLES.ADMIN ||
+                                    u.departmentId === editForm.departmentId
                                 )
                               : users
                             ).map((u) => (
                               <option key={u.id} value={u.id}>
                                 {u.fullName}
-                                {u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                                {u.role === ROLES.ADMIN ? ' (Quản trị viên)' : ''}
                               </option>
                             ))}
                           </select>

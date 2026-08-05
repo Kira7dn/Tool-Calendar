@@ -1315,3 +1315,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `.agents/rules/tc-rule-magic-strings.md` (Mới)
   - `.agents/AGENTS.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor: loại bỏ magic strings trong MyTasks và cập nhật rule AI"`
+
+### [2026-08-06 00:15] Tái cấu trúc loại bỏ Magic Strings toàn dự án (Frontend)
+- **Mô tả**: Tiếp nối chiến dịch loại bỏ Magic Strings, đã quét và thay thế tất cả chuỗi hardcode liên quan đến `Roles` (Admin, CanBo, VanThu, LanhDao), `Trạng thái văn bản` (Chưa xử lý, Đang xử lý, v.v.), và `Độ ưu tiên` sang sử dụng các constants dùng chung. Đã thêm `constants/roles.js`.
+- **Tệp thay đổi**:
+  - `src/constants/roles.js` (Mới)
+  - `src/constants/document.js` (Sửa đổi)
+  - 14 file components và pages (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor: loại bỏ magic strings toàn bộ frontend (roles, status, priority)"`

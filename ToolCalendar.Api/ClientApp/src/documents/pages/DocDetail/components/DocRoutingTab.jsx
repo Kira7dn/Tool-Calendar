@@ -10,7 +10,7 @@ export function DocRoutingTab({ doc, routings, fetchRoutings, setIsForwardModalO
         <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
           QUÁ TRÌNH XỬ LÝ (LUÂN CHUYỂN)
         </h2>
-        {doc.status !== 'Đã hoàn thành' && (
+        {doc.status !== DOCUMENT_STATUS.DA_HOAN_THANH && (
           <button
             onClick={() => setIsForwardModalOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold hover:bg-blue-100 transition-colors"

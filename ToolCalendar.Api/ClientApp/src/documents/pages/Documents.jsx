@@ -1,3 +1,4 @@
+import { ROLES } from '../../constants/roles'
 /* eslint-disable */
 import React, { useEffect, useState, useRef } from 'react'
 import {
@@ -340,7 +341,7 @@ export function Documents({ onTabChange, filters }) {
                               <FileText className="size-4 text-blue-500" />
                               <span>Xem PDF</span>
                             </DropdownMenuItem>
-                            {localStorage.getItem('user_role') === 'Admin' && (
+                            {localStorage.getItem('user_role') === ROLES.ADMIN && (
                               <DropdownMenuItem
                                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-destructive hover:bg-destructive/10 cursor-pointer transition-all font-bold text-xs"
                                 onClick={() => handleAction('delete', doc)}

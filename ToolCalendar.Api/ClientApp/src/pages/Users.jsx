@@ -1,3 +1,4 @@
+import { ROLES } from '../constants/roles'
 /* eslint-disable */
 /* eslint-disable no-empty */
 import React, { useEffect, useState } from 'react'
@@ -63,7 +64,7 @@ export function Users() {
     fullName: '',
     email: '',
     phoneNumber: '',
-    role: 'CanBo',
+    role: ROLES.CAN_BO,
     departmentId: '',
   })
   const [errors, setErrors] = useState({
@@ -124,7 +125,7 @@ export function Users() {
         fullName: user.fullName || '',
         email: user.email || '',
         phoneNumber: user.phoneNumber || '',
-        role: user.role || 'CanBo',
+        role: user.role || ROLES.CAN_BO,
         departmentId: user.departmentId ? user.departmentId.toString() : '0',
       })
       setErrors({ email: '', phoneNumber: '' })
@@ -136,7 +137,7 @@ export function Users() {
         fullName: '',
         email: '',
         phoneNumber: '',
-        role: 'CanBo',
+        role: ROLES.CAN_BO,
         departmentId: '0',
       })
       setErrors({ email: '', phoneNumber: '' })
@@ -243,21 +244,21 @@ export function Users() {
 
   const getRoleBadge = (role) => {
     let color = 'bg-muted/50 text-muted-foreground'
-    if (role === 'Admin') color = 'bg-info/15 text-info border-info/30'
-    else if (role === 'LanhDao') color = 'bg-primary/15 text-primary border-primary/30'
-    else if (role === 'VanThu') color = 'bg-warning/15 text-warning border-warning/30'
-    else if (role === 'CanBo') color = 'bg-success/15 text-success border-success/30'
+    if (role === ROLES.ADMIN) color = 'bg-info/15 text-info border-info/30'
+    else if (role === ROLES.LANH_DAO) color = 'bg-primary/15 text-primary border-primary/30'
+    else if (role === ROLES.VAN_THU) color = 'bg-warning/15 text-warning border-warning/30'
+    else if (role === ROLES.CAN_BO) color = 'bg-success/15 text-success border-success/30'
 
     return (
       <Badge
         variant="outline"
         className={cn('font-bold text-[10px] uppercase tracking-tighter', color)}
       >
-        {role === 'Admin'
+        {role === ROLES.ADMIN
           ? 'Quản trị viên'
-          : role === 'LanhDao'
+          : role === ROLES.LANH_DAO
             ? 'Lãnh đạo'
-            : role === 'VanThu'
+            : role === ROLES.VAN_THU
               ? 'Văn thư'
               : 'Cán bộ'}
       </Badge>
@@ -689,10 +690,10 @@ export function Users() {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="w-full px-4 h-11 rounded-xl bg-muted/50 border-none text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
                 >
-                  <option value="CanBo">Cán bộ xử lý</option>
-                  <option value="VanThu">Văn thư</option>
-                  <option value="LanhDao">Lãnh đạo</option>
-                  <option value="Admin">Quản trị viên</option>
+                  <option value={ROLES.CAN_BO}>Cán bộ xử lý</option>
+                  <option value={ROLES.VAN_THU}>Văn thư</option>
+                  <option value={ROLES.LANH_DAO}>Lãnh đạo</option>
+                  <option value={ROLES.ADMIN}>Quản trị viên</option>
                 </select>
               </div>
             </div>

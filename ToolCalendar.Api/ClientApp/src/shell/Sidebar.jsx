@@ -1,3 +1,4 @@
+import { ROLES } from '../constants/roles'
 /* eslint-disable */
 import React from 'react'
 import {
@@ -91,10 +92,12 @@ export function AppSidebar({ activeTab, setActiveTab, setCurrentDocId, setIsRevi
                 const isActive = activeTab === item.tab
 
                 // Role-based filtering
-                const role = localStorage.getItem('user_role') || 'CanBo'
-                if (item.tab === 'users' && role !== 'Admin') return null
-                if (item.tab === 'my-tasks' && role !== 'CanBo' && role !== 'VanThu') return null
-                if (item.tab === 'upload' && role !== 'Admin' && role !== 'VanThu') return null
+                const role = localStorage.getItem('user_role') || ROLES.CAN_BO
+                if (item.tab === 'users' && role !== ROLES.ADMIN) return null
+                if (item.tab === 'my-tasks' && role !== ROLES.CAN_BO && role !== ROLES.VAN_THU)
+                  return null
+                if (item.tab === 'upload' && role !== ROLES.ADMIN && role !== ROLES.VAN_THU)
+                  return null
 
                 if (item.hidden) return null
 

@@ -1,3 +1,4 @@
+import { ROLES } from '../../constants/roles'
 /* eslint-disable */
 import React, { useState, useRef, useEffect } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
@@ -215,7 +216,7 @@ export function Upload({ onTabChange }) {
       if (deptRes.ok) setDepartments(await deptRes.json())
       if (userRes.ok) {
         const userData = await userRes.json()
-        setUsers(userData.filter((u) => u.role === 'CanBo' || u.role === 'Admin'))
+        setUsers(userData.filter((u) => u.role === ROLES.CAN_BO || u.role === ROLES.ADMIN))
       }
     } catch (error) {
       console.error('Failed to fetch reference data:', error)
@@ -276,9 +277,9 @@ export function Upload({ onTabChange }) {
                     assignedToIds: doc.assignedTo ? [doc.assignedTo] : [],
                     filePath: doc.filePath || '',
                     status:
-                      doc.status === 'Đang xử lý'
+                      doc.status === DOCUMENT_STATUS.DANG_XU_LY
                         ? 'processing'
-                        : doc.status === 'Lỗi OCR'
+                        : doc.status === DOCUMENT_STATUS.LOI_OCR
                           ? 'error'
                           : 'ready',
                   }
@@ -286,7 +287,7 @@ export function Upload({ onTabChange }) {
             )
           )
 
-          if (doc.status === 'Đang xử lý') {
+          if (doc.status === DOCUMENT_STATUS.DANG_XU_LY) {
             const startPolling = async (docId) => {
               let attempts = 0
               while (attempts < 150) {
@@ -295,7 +296,7 @@ export function Upload({ onTabChange }) {
                   const res = await fetch(`/api/documents/${docId}`)
                   if (res.ok) {
                     const updatedDoc = await res.json()
-                    if (updatedDoc.status !== 'Đang xử lý') {
+                    if (updatedDoc.status !== DOCUMENT_STATUS.DANG_XU_LY) {
                       setBatchItems((prev) =>
                         prev.map((b) =>
                           b.id === docId
@@ -313,7 +314,8 @@ export function Upload({ onTabChange }) {
                                   ? [updatedDoc.departmentId]
                                   : [],
                                 assignedToIds: updatedDoc.assignedTo ? [updatedDoc.assignedTo] : [],
-                                status: updatedDoc.status === 'Lỗi OCR' ? 'error' : 'ready',
+                                status:
+                                  updatedDoc.status === DOCUMENT_STATUS.LOI_OCR ? 'error' : 'ready',
                               }
                             : b
                         )
@@ -419,7 +421,7 @@ export function Upload({ onTabChange }) {
             ngayBanHanh: item.ngayBanHanh ? `${item.ngayBanHanh}T00:00:00` : null,
             thoiHan: item.thoiHan ? `${item.thoiHan}T00:00:00` : null,
             filePath: item.filePath,
-            status: 'Chưa xử lý',
+            status: DOCUMENT_STATUS.CHUA_XU_LY,
             departmentId: item.departmentIds?.[0] || null,
             assignedTo: item.assignedToIds?.[0] || null,
             assignedDepartmentIds: JSON.stringify(item.departmentIds || []),
@@ -885,13 +887,14 @@ export function Upload({ onTabChange }) {
                           <option value="">Chọn cán bộ</option>
                           {(row.departmentIds[0]
                             ? users.filter(
-                                (u) => u.role === 'Admin' || u.departmentId === row.departmentIds[0]
+                                (u) =>
+                                  u.role === ROLES.ADMIN || u.departmentId === row.departmentIds[0]
                               )
                             : users
                           ).map((u) => (
                             <option key={u.id} value={u.id}>
                               {u.fullName}
-                              {u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                              {u.role === ROLES.ADMIN ? ' (Quản trị viên)' : ''}
                             </option>
                           ))}
                         </select>
@@ -1180,13 +1183,14 @@ export function Upload({ onTabChange }) {
                         {(reviewItem?.departmentIds?.[0]
                           ? users.filter(
                               (u) =>
-                                u.role === 'Admin' || u.departmentId === reviewItem.departmentIds[0]
+                                u.role === ROLES.ADMIN ||
+                                u.departmentId === reviewItem.departmentIds[0]
                             )
                           : users
                         ).map((u) => (
                           <option key={u.id} value={u.id}>
                             {u.fullName}
-                            {u.role === 'Admin' ? ' (Quản trị viên)' : ''}
+                            {u.role === ROLES.ADMIN ? ' (Quản trị viên)' : ''}
                           </option>
                         ))}
                       </select>
