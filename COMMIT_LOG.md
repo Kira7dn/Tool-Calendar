@@ -1298,3 +1298,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocRoutingTab.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocComments.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): khôi phục nội dung tab luân chuyển và khung bình luận bị sót khi refactor"`
+
+### [2026-08-06 00:05] Khôi phục mã JSX của các tab còn lại bị mất do script tách component
+- **Mô tả**: Tương tự như DocRoutingTab, các tab DocOverviewTab, DocContentTab và DocHistoryTab cũng bị trả về `null` do lỗi trong kịch bản tự động khi bóc tách code. Đã khôi phục nguyên trạng toàn bộ 100% nội dung JSX từ file sao lưu cũ vào các file tương ứng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocOverviewTab.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocContentTab.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocHistoryTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): khôi phục toàn bộ nội dung các tab Overview, Content và History bị ẩn"`

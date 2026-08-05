@@ -97,5 +97,22 @@ export function DocHistoryTab({ doc, users, routings }) {
 
   historyEvents.sort((a, b) => a.time - b.time)
 
-  return null
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 flex flex-col h-auto lg:h-full overflow-hidden lg:overflow-auto animate-in fade-in slide-in-from-bottom-4 duration-400">
+      <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-12 shrink-0">
+        QUY TRÌNH XỬ LÝ VĂN BẢN
+      </h2>
+      <div className="relative space-y-10 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-slate-100">
+        {historyEvents.map((evt, idx) => (
+          <HistoryPoint
+            key={evt.id || idx}
+            title={evt.title}
+            time={evt.time.toLocaleString('vi-VN')}
+            user={evt.user}
+            active={evt.active}
+          />
+        ))}
+      </div>
+    </div>
+  )
 }
