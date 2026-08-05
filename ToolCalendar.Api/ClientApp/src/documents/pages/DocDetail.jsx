@@ -8,7 +8,7 @@ import { DocContentTab } from './components/DocContentTab'
 import { DocRoutingTab } from './components/DocRoutingTab'
 import { DocHistoryTab } from './components/DocHistoryTab'
 import { DocComments } from './components/DocComments'
-import { ForwardDocumentModal } from '@/components/ForwardDocumentModal'
+import { DocModals } from './components/DocModals'
 
 const isUserInRoutings = (routingList, userId) => {
   if (!routingList || !Array.isArray(routingList)) return false
@@ -22,6 +22,7 @@ const isUserInRoutings = (routingList, userId) => {
 export default function DocDetail({ docId, onBack }) {
   const {
     doc,
+    setDoc,
     comments,
     isLoading,
     activeTab,
@@ -39,10 +40,14 @@ export default function DocDetail({ docId, onBack }) {
     setIsEditModalOpen,
     isEvidenceModalOpen,
     setIsEvidenceModalOpen,
+    editForm,
+    setEditForm,
     pdfPage,
+    setPdfPage,
     isFullscreenPdf,
     setIsFullscreenPdf,
     fetchRoutings,
+    fetchData,
     handleUpdateStatus,
     executeDelete,
     handleViewEvidence,
@@ -51,6 +56,8 @@ export default function DocDetail({ docId, onBack }) {
     isSubmittingComment,
     handlePostComment,
     fileInputRef,
+    previewImage,
+    setPreviewImage,
   } = useDocDetail(docId, onBack)
 
   if (isLoading) {
@@ -187,14 +194,33 @@ export default function DocDetail({ docId, onBack }) {
         </div>
       </div>
 
-      {isForwardModalOpen && (
-        <ForwardDocumentModal
-          isOpen={isForwardModalOpen}
-          onClose={() => setIsForwardModalOpen(false)}
-          documentId={docId}
-          onSuccess={fetchRoutings}
-        />
-      )}
+      <DocModals
+        docId={docId}
+        doc={doc}
+        setDoc={setDoc}
+        isEditModalOpen={isEditModalOpen}
+        setIsEditModalOpen={setIsEditModalOpen}
+        editForm={editForm}
+        setEditForm={setEditForm}
+        departments={departments}
+        users={users}
+        isDeleteModalOpen={isDeleteModalOpen}
+        setIsDeleteModalOpen={setIsDeleteModalOpen}
+        executeDelete={executeDelete}
+        isEvidenceModalOpen={isEvidenceModalOpen}
+        setIsEvidenceModalOpen={setIsEvidenceModalOpen}
+        fetchData={fetchData}
+        previewImage={previewImage}
+        setPreviewImage={setPreviewImage}
+        isFullscreenPdf={isFullscreenPdf}
+        setIsFullscreenPdf={setIsFullscreenPdf}
+        pdfUrl={pdfUrl}
+        isForwardModalOpen={isForwardModalOpen}
+        setIsForwardModalOpen={setIsForwardModalOpen}
+        fetchRoutings={fetchRoutings}
+        pdfPage={pdfPage}
+        setPdfPage={setPdfPage}
+      />
     </div>
   )
 }

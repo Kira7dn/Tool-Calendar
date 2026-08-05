@@ -1278,3 +1278,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocHistoryTab.jsx` (Mới)
   - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocComments.jsx` (Mới)
 - **Lệnh git commit**: `git commit -m "refactor(docs): bóc tách giao diện DocDetail thành các sub-components"`
+
+### [2026-08-05 23:56] Khôi phục các Modal trong DocDetail
+- **Mô tả**: Sửa lỗi mất code của các Modal (Edit, Delete, Evidence, Forward, Fullscreen PDF) trong quá trình bóc tách DocDetail.jsx, chuyển chúng vào DocModals.jsx.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocModals.jsx` (Mới)
+- **Lệnh git commit**: `git commit -m "fix(docs): khôi phục các modal bị mất trong quá trình refactor DocDetail"`
