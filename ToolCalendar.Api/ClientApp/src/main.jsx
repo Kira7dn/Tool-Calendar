@@ -84,7 +84,7 @@ window.fetch = async (...args) => {
 import { AppShell } from './shell/AppShell.jsx'
 import { LoginPage } from './pages/Login.jsx'
 import PublicSchedule from './pages/PublicSchedule.jsx'
-import { CabinetAppShell } from './cabinet/CabinetAppShell.jsx'
+
 import './styles/globals.css'
 
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -320,7 +320,6 @@ function Root() {
 
   // Hỗ trợ đường dẫn công khai (không cần đăng nhập)
   const isPublicRoute = window.location.pathname === '/campha'
-  const isCabinetRoute = window.location.pathname.startsWith('/phonghopkhonggiayto')
 
   if (isPublicRoute) {
     return <PublicSchedule />
@@ -329,13 +328,7 @@ function Root() {
   return (
     <>
       <TooltipProvider>
-        {!isAuthenticated ? (
-          <LoginPage onLoginSuccess={handleLoginSuccess} />
-        ) : isCabinetRoute ? (
-          <CabinetAppShell />
-        ) : (
-          <AppShell />
-        )}
+        {!isAuthenticated ? <LoginPage onLoginSuccess={handleLoginSuccess} /> : <AppShell />}
 
         {/* Auth Modals */}
         <KickedModal isOpen={isKicked} onConfirm={() => setIsKicked(false)} />

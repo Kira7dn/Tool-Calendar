@@ -1332,3 +1332,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `.agents/rules/tc-rule-database-schema.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(db): loại bỏ phân hệ cabinet khỏi csdl và tài liệu"`
 
+
+### [2026-08-07 00:00] Loại bỏ mã nguồn phân hệ Cabinet
+- **Mô tả**: Xóa bỏ toàn bộ mã nguồn của phân hệ Cabinet (Controllers, Components, Pages) khỏi dự án Tool-Calendar để tối ưu hóa và làm gọn dự án, phục vụ mục đích duy nhất là hệ thống Điều phối công văn nội bộ.
+- **Tệp thay đổi**:
+  - Các file thuộc `ToolCalendar.Api/ClientApp/src/cabinet/` (Xóa)
+  - Các file thuộc `ToolCalendar.Api/Controllers/Cabinet/` (Xóa)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(code): loại bỏ hoàn toàn mã nguồn phân hệ cabinet"`
+

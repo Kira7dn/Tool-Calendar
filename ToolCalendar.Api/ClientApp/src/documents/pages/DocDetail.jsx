@@ -2,13 +2,13 @@
 import React from 'react'
 import { ArrowLeft, Loader2, FileText, ExternalLink, Edit, Trash2, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useDocDetail } from './hooks/useDocDetail'
-import { DocOverviewTab } from './components/DocOverviewTab'
-import { DocContentTab } from './components/DocContentTab'
-import { DocRoutingTab } from './components/DocRoutingTab'
-import { DocHistoryTab } from './components/DocHistoryTab'
-import { DocComments } from './components/DocComments'
-import { DocModals } from './components/DocModals'
+import { useDocDetail } from './DocDetail/hooks/useDocDetail'
+import { DocOverviewTab } from './DocDetail/components/DocOverviewTab'
+import { DocContentTab } from './DocDetail/components/DocContentTab'
+import { DocRoutingTab } from './DocDetail/components/DocRoutingTab'
+import { DocHistoryTab } from './DocDetail/components/DocHistoryTab'
+import { DocComments } from './DocDetail/components/DocComments'
+import { DocModals } from './DocDetail/components/DocModals'
 
 const isUserInRoutings = (routingList, userId) => {
   if (!routingList || !Array.isArray(routingList)) return false

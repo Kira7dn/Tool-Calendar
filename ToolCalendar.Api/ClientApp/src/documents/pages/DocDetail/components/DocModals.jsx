@@ -15,9 +15,9 @@ import {
   Loader2,
   Paperclip,
 } from 'lucide-react'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import ConfirmationModal from '@/components/ConfirmationModal'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { ForwardDocumentModal } from '@/components/ForwardDocumentModal'
 
 const FormField = ({ label, value, onChange, icon: Icon, type = 'text' }) => (
