@@ -1,6 +1,7 @@
 import { ROLES } from '../../constants/roles'
 /* eslint-disable */
 import React, { useEffect, useState } from 'react'
+import { DOCUMENT_STATUS } from '@/constants/document'
 import { AlertTriangle, Clock, FileText } from 'lucide-react'
 import { DashboardToolbar, KpiCard, DeadlineBarChart, EventLogCard } from '@/components/dashboard'
 

@@ -1343,3 +1343,16 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(code): loại bỏ hoàn toàn mã nguồn phân hệ cabinet"`
 
+
+### [2026-08-07 00:05] Fix missing DOCUMENT_STATUS imports
+- **Mô tả**: Bổ sung các lệnh import biến `DOCUMENT_STATUS` từ `constants/document.js` vào các file bị thiếu (Dashboard, DocDetail, DocRoutingTab, DocOverviewTab, DocHistoryTab, Upload, DocumentRoutingTree) để sửa lỗi crash giao diện `DOCUMENT_STATUS is not defined` trên môi trường deploy.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/Dashboard.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocRoutingTab.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocOverviewTab.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocHistoryTab.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/Upload.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): add missing DOCUMENT_STATUS imports"`
+

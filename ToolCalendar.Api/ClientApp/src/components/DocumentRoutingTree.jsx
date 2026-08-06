@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React, { useState } from 'react'
+import { DOCUMENT_STATUS } from '@/constants/document'
 import {
   ChevronRight,
   ChevronDown,

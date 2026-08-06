@@ -1,6 +1,7 @@
 import { ROLES } from '../../constants/roles'
 /* eslint-disable */
 import React, { useState, useRef, useEffect } from 'react'
+import { DOCUMENT_STATUS } from '@/constants/document'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
