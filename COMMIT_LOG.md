@@ -1,3 +1,9 @@
+### [2026-08-07 01:53] Xoá menu Phòng họp không giấy tờ
+- **Mô tả**: Xoá mục điều hướng "Phòng họp không giấy tờ" khỏi thanh Sidebar do không còn sử dụng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): xoá menu phòng họp không giấy tờ khỏi sidebar"`
+
 ### [2026-08-07 01:51] Fix lỗi "Cannot read properties of undefined (reading 'length')" khi mở văn bản
 - **Mô tả**: Khi mở trang chi tiết văn bản, API trả về dữ liệu không đúng format (không phải array) trong một số trường hợp, khiến `users`, `comments`, `routings` bị set thành object thay vì array, dẫn đến crash khi gọi `.length`. Thêm `Array.isArray()` guard cho tất cả các hàm fetch trong `useDocDetail.js`.
 - **Tệp thay đổi**:

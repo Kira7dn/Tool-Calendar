@@ -10,7 +10,6 @@ import {
   Settings,
   Search,
   BarChart3,
-  MonitorPlay,
   CalendarDays,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -41,12 +40,7 @@ const navItems = [
     icon: CheckSquare,
   },
   { tab: 'settings', labelKey: 'settings', label: 'Cấu hình', icon: Settings },
-  {
-    isLink: true,
-    url: '/phonghopkhonggiayto',
-    label: 'Phòng họp không giấy tờ',
-    icon: MonitorPlay,
-  },
+
   {
     isLink: true,
     url: '/campha',
