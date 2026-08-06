@@ -65,9 +65,9 @@ export function AppSidebar({ activeTab, setActiveTab, setCurrentDocId, setIsRevi
         <div className="flex gap-2 h-full w-full items-center overflow-hidden">
           <div className="flex w-12 shrink-0 items-center justify-center">
             <img
-              src="/assets/logo.png"
+              src="/assets/logo_campha.jpg"
               alt="Logo"
-              className="size-9 rounded-lg border-[1.5px] border-white/25 shadow-lg object-contain bg-white"
+              className="size-10 rounded-full object-cover shadow-md"
             />
           </div>
           <div className="flex min-w-0 flex-col justify-center text-white font-extrabold tracking-tight leading-[1.1] whitespace-nowrap group-data-[collapsible=icon]:hidden">

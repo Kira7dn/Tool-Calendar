@@ -1,3 +1,10 @@
+### [2026-08-07 01:59] Thay đổi logo Cẩm Phả và làm đẹp Sidebar
+- **Mô tả**: Thay thế icon cờ mặc định bằng `logo_campha.jpg`, điều chỉnh lại kích thước, xoá viền và nền thừa để hiển thị logo tràn viền, cân xứng với phần text "UBND phường Cẩm Phả".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/wwwroot/assets/logo_campha.jpg` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): thay đổi logo Cẩm Phả và làm đẹp sidebar"`
+
 ### [2026-08-07 01:53] Xoá menu Phòng họp không giấy tờ
 - **Mô tả**: Xoá mục điều hướng "Phòng họp không giấy tờ" khỏi thanh Sidebar do không còn sử dụng.
 - **Tệp thay đổi**:
