@@ -24,10 +24,10 @@ services:
       - ClamAv__Host=clamav
       - ClamAv__Port=3310
       # --- OCR Performance Tuning ---
-      - OcrSettings__RenderDpi=300
+      - OcrSettings__RenderDpi=400
       - OcrSettings__MaxParallelPages=2
       - OcrSettings__MaxPagesToScan=7
-      - OcrSettings__EnableOsd=false
+      - OcrSettings__EnableOsd=true
       - OcrSettings__EnableDeskew=true
       # --- RabbitMQ Settings ---
       - RabbitMQ__HostName=rabbitmq

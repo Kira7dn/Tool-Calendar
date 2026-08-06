@@ -1,3 +1,13 @@
+### [2026-08-07 01:45] Tối ưu cấu hình OCR tiếng Việt
+- **Mô tả**:
+  - Tăng `RenderDpi` từ 300 → 400 (ảnh PDF render sắc nét hơn 33%, cải thiện nhận diện chữ nhỏ).
+  - Bật `EnableOsd=true` (phát hiện và xoay đúng hướng văn bản bị nghiêng/lộn ngược).
+  - Mở rộng từ điển `latin_dict.txt` từ 185 → ~270 ký tự, bổ sung toàn bộ bộ chữ tiếng Việt có dấu (ắ, ặ, ẳ, ẵ, ằ, ấ, ậ, ẩ, ẫ, ầ, ế, ệ, ể, ễ, ề, ố, ộ, ổ, ỗ, ồ, ớ, ợ, ở, ỡ, ờ, ứ, ự, ử, ữ, ừ,...) giúp recognition module nhận ra chính xác hơn.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi — RenderDpi=400, EnableOsd=true)
+  - `ToolCalendar.Core/Models/PaddleOCR/rec/latin_dict.txt` (Sửa đổi — mở rộng ký tự tiếng Việt)
+- **Lệnh git commit**: `git commit -m "perf(ocr): tăng dpi 400 và mở rộng dict tiếng Việt để cải thiện nhận diện"`
+
 ### [2026-08-07 01:38] Cập nhật hạ tầng Nginx và quy tắc AI Agent
 - **Mô tả**: 
   - Cấu hình Nginx proxy cho hệ thống Lịch công tác và Cabinet thông qua port 443 (phân giải theo tên miền).
