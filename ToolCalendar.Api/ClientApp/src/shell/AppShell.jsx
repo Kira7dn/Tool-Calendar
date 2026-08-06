@@ -538,13 +538,12 @@ export function AppShell() {
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 animate-in fade-in duration-300">
           {/* Logo ring */}
           <div className="relative mb-8">
-            <div className="size-24 rounded-3xl bg-white/10 border-2 border-white/20 flex items-center justify-center backdrop-blur-sm">
-              <svg viewBox="0 0 100 100" className="w-12 h-12">
-                <polygon
-                  points="50,10 61,35 88,35 66,53 74,78 50,62 26,78 34,53 12,35 39,35"
-                  fill="#f5c518"
-                />
-              </svg>
+            <div className="size-24 rounded-full bg-white flex items-center justify-center overflow-hidden border border-white/20 shadow-xl backdrop-blur-sm">
+              <img
+                src="/assets/logo_campha.jpg"
+                alt="Logo"
+                className="w-full h-full object-cover"
+              />
             </div>
             {/* Spinning ring */}
             <div className="absolute inset-0 rounded-3xl border-2 border-transparent border-t-red-400 animate-spin" />

@@ -258,13 +258,8 @@ function Header({ user, onLogout, onOpenLogin }) {
     <header className="bg-white border-b-4 border-[#c8102e]">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 flex items-center justify-center bg-[#c8102e] rounded-full shadow-lg border-2 border-[#f5c518]">
-            <svg viewBox="0 0 100 100" className="w-10 h-10">
-              <polygon
-                points="50,10 61,35 88,35 66,53 74,78 50,62 26,78 34,53 12,35 39,35"
-                fill="#f5c518"
-              />
-            </svg>
+          <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg border border-gray-100 overflow-hidden shrink-0">
+            <img src="/assets/logo_campha.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-[#0a3d8f] tracking-tighter uppercase leading-tight">
@@ -581,13 +576,12 @@ export default function PublicSchedule() {
         {isLoggingOut && (
           <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 animate-in fade-in duration-300">
             <div className="relative mb-8">
-              <div className="size-24 rounded-3xl bg-white/10 border-2 border-white/20 flex items-center justify-center">
-                <svg viewBox="0 0 100 100" className="w-12 h-12">
-                  <polygon
-                    points="50,10 61,35 88,35 66,53 74,78 50,62 26,78 34,53 12,35 39,35"
-                    fill="#f5c518"
-                  />
-                </svg>
+              <div className="size-24 rounded-full bg-white flex items-center justify-center overflow-hidden border border-white/20 shadow-xl">
+                <img
+                  src="/assets/logo_campha.jpg"
+                  alt="Logo"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="absolute inset-0 rounded-3xl border-2 border-transparent border-t-red-400 animate-spin" />
             </div>

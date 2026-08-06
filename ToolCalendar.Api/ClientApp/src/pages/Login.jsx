@@ -98,11 +98,11 @@ export function LoginPage({ onLoginSuccess }) {
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary to-primary opacity-80" />
 
           <CardHeader className="pt-8 pb-4 text-center space-y-3">
-            <div className="mx-auto size-20 rounded-2xl bg-white/50 backdrop-blur-md flex items-center justify-center ring-1 ring-white/20 shadow-sm transition-transform hover:scale-105 duration-500">
+            <div className="mx-auto size-20 rounded-full bg-white flex items-center justify-center shadow-md overflow-hidden transition-transform hover:scale-105 duration-500">
               <img
-                src="/assets/LINK STRATEGY.png"
+                src="/assets/logo_campha.jpg"
                 alt="Logo"
-                className="size-14 object-contain drop-shadow-sm"
+                className="w-full h-full object-cover"
                 onError={(e) => {
                   e.currentTarget.src = 'https://via.placeholder.com/64'
                 }}

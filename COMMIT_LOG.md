@@ -1,3 +1,11 @@
+### [2026-08-07 02:07] Thay thế toàn bộ logo ngôi sao bằng logo Cẩm Phả
+- **Mô tả**: Tìm và thay thế tất cả các biểu tượng ngôi sao SVG hardcode và ảnh logo mặc định ở trang `PublicSchedule`, màn hình đăng nhập `Login`, và overlay đăng xuất `AppShell` thành ảnh `logo_campha.jpg` thống nhất trên toàn ứng dụng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/pages/Login.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): thay thế toàn bộ logo ngôi sao bằng logo Cẩm Phả trên các trang public/login"`
+
 ### [2026-08-07 01:59] Thay đổi logo Cẩm Phả và làm đẹp Sidebar
 - **Mô tả**: Thay thế icon cờ mặc định bằng `logo_campha.jpg`, điều chỉnh lại kích thước, xoá viền và nền thừa để hiển thị logo tràn viền, cân xứng với phần text "UBND phường Cẩm Phả".
 - **Tệp thay đổi**:
