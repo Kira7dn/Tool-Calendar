@@ -1323,3 +1323,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `src/constants/document.js` (Sửa đổi)
   - 14 file components và pages (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor: loại bỏ magic strings toàn bộ frontend (roles, status, priority)"`
+
+### [2026-08-06 23:56] Xóa phân hệ Cabinet khỏi CSDL và Tài liệu
+- **Mô tả**: Tách phân hệ "Phòng họp không giấy tờ" (Cabinet) thành dự án riêng biệt. Tiến hành gỡ bỏ schema bảng liên quan đến Cabinet trong `tc-rule-database-schema.md`, xóa thông tin phân hệ trong `SYSTEM_FEATURES.md`, và drop các bảng thuộc Cabinet khỏi SQLite CSDL để làm gọn dự án `Tool-Calendar`.
+- **Tệp thay đổi**:
+  - `data_dump/documents.db` (Sửa đổi - Drop tables)
+  - `SYSTEM_FEATURES.md` (Sửa đổi)
+  - `.agents/rules/tc-rule-database-schema.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(db): loại bỏ phân hệ cabinet khỏi csdl và tài liệu"`
+
