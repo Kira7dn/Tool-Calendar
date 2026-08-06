@@ -1,3 +1,9 @@
+### [2026-08-07 01:51] Fix lỗi "Cannot read properties of undefined (reading 'length')" khi mở văn bản
+- **Mô tả**: Khi mở trang chi tiết văn bản, API trả về dữ liệu không đúng format (không phải array) trong một số trường hợp, khiến `users`, `comments`, `routings` bị set thành object thay vì array, dẫn đến crash khi gọi `.length`. Thêm `Array.isArray()` guard cho tất cả các hàm fetch trong `useDocDetail.js`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/hooks/useDocDetail.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): guard Array.isArray cho users/comments/routings tránh lỗi .length undefined"`
+
 ### [2026-08-07 01:45] Tối ưu cấu hình OCR tiếng Việt
 - **Mô tả**:
   - Tăng `RenderDpi` từ 300 → 400 (ảnh PDF render sắc nét hơn 33%, cải thiện nhận diện chữ nhỏ).

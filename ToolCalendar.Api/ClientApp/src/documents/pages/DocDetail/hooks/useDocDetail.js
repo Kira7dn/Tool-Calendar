@@ -37,8 +37,14 @@ export function useDocDetail(docId, onBack) {
         setDoc(data)
         setEditForm(data)
       }
-      if (deptRes.ok) setDepartments(await deptRes.json())
-      if (userRes.ok) setUsers(await userRes.json())
+      if (deptRes.ok) {
+        const deptData = await deptRes.json()
+        setDepartments(Array.isArray(deptData) ? deptData : [])
+      }
+      if (userRes.ok) {
+        const userData = await userRes.json()
+        setUsers(Array.isArray(userData) ? userData : [])
+      }
 
       await Promise.all([fetchComments(), fetchRoutings()])
     } catch (error) {
@@ -52,7 +58,8 @@ export function useDocDetail(docId, onBack) {
     try {
       const response = await fetch(`/api/documents/${docId}/routings`)
       if (response.ok) {
-        setRoutings(await response.json())
+        const data = await response.json()
+        setRoutings(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Failed to fetch routings:', error)
@@ -63,7 +70,8 @@ export function useDocDetail(docId, onBack) {
     try {
       const response = await fetch(`/api/documents/${docId}/comments`)
       if (response.ok) {
-        setComments(await response.json())
+        const data = await response.json()
+        setComments(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Failed to fetch comments:', error)
