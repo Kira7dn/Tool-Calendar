@@ -1,3 +1,9 @@
+### [2026-08-07 02:13] Sửa lỗi chính tả tên phường Cẩm Phả
+- **Mô tả**: Sửa chữ "CẨM PHÁ" thành "CẨM PHẢ" trong trang PublicSchedule.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi chính tả CẨM PHÁ thành CẨM PHẢ"`
+
 ### [2026-08-07 02:07] Thay thế toàn bộ logo ngôi sao bằng logo Cẩm Phả
 - **Mô tả**: Tìm và thay thế tất cả các biểu tượng ngôi sao SVG hardcode và ảnh logo mặc định ở trang `PublicSchedule`, màn hình đăng nhập `Login`, và overlay đăng xuất `AppShell` thành ảnh `logo_campha.jpg` thống nhất trên toàn ứng dụng.
 - **Tệp thay đổi**:

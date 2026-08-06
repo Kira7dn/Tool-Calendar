@@ -266,7 +266,7 @@ function Header({ user, onLogout, onOpenLogin }) {
               Hệ thống Điều phối Công văn
             </h1>
             <p className="text-[#c8102e] font-bold text-sm tracking-widest uppercase italic">
-              UBND phường CẨM PHÁ
+              UBND phường CẨM PHẢ
             </p>
           </div>
         </div>
