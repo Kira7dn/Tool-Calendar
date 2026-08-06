@@ -12,6 +12,7 @@ import {
   Paperclip,
   Image,
   ExternalLink,
+  User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 

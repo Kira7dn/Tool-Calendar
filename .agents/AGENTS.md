@@ -12,7 +12,8 @@ Bạn là **AI Agent** đang làm việc trong dự án **Tool-Calendar** — H�
 4. **Response-Contract:** Mọi API endpoint **phải** trả về lớp `ApiResponse<T>` chuẩn hóa. Không được trả về object thô.
 5. **Zero-Secret:** Tuyệt đối không commit API key, password, connection string, JWT secret vào Git. Dùng `.env` hoặc `appsettings.json` (không track bởi Git).
 6. **Conventional-Commits:** Mọi commit message phải đúng chuẩn `<type>(<scope>): <mô tả>`. Xem Chốt Commit ở `CODE_QUALITY.md`.
-7. **AI Behavior Standard:** AI phải tuân thủ nghiêm ngặt tiêu chuẩn code tinh gọn, bằng chứng toàn diện và giao tiếp cộc lốc theo chuẩn OpenClaw. Xem chi tiết tại `tc-rule-ai-behavior.md`.
+7. **No-Temporary-Files:** Yêu cầu AI tự động xóa các file tạm sinh ra trong quá trình kiểm tra tài khoản, lỗi, dump,... ngay sau khi hoàn thành. Xem chi tiết tại `tc-rule-no-temporary-files.md`.
+8. **AI Behavior Standard:** AI phải tuân thủ nghiêm ngặt tiêu chuẩn code tinh gọn, bằng chứng toàn diện và giao tiếp cộc lốc theo chuẩn OpenClaw. Xem chi tiết tại `tc-rule-ai-behavior.md`.
 
 ---
 

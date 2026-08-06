@@ -77,6 +77,9 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/certs:/etc/nginx/certs:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - official-doc-backend
     restart: always

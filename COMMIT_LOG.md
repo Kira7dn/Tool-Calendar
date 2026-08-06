@@ -1,3 +1,16 @@
+### [2026-08-07 01:38] Cập nhật hạ tầng Nginx và quy tắc AI Agent
+- **Mô tả**: 
+  - Cấu hình Nginx proxy cho hệ thống Lịch công tác và Cabinet thông qua port 443 (phân giải theo tên miền).
+  - Khắc phục lỗi hiển thị trang DocOverviewTab do `currentUser` bị null.
+  - Cập nhật quy tắc AI Agent (`tc-rule-no-temporary-files.md`), bổ sung yêu cầu tự động dọn rác.
+- **Tệp thay đổi**:
+  - `nginx/conf.d/default.conf` (Sửa đổi)
+  - `docker-compose.yml` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocOverviewTab.jsx` (Sửa đổi)
+  - `.agents/AGENTS.md` (Sửa đổi)
+  - `.agents/rules/tc-rule-no-temporary-files.md` (Mới)
+- **Lệnh git commit**: `git commit -m "chore(infra): cấu hình nginx proxy và cập nhật rule dọn dẹp AI Agent"`
+
 ### [2026-08-05 22:50] Nâng cấp bảo mật Session lên chuẩn Enterprise (Refresh Token & Heartbeat)
 - **Mô tả**:
   - Chuyển đổi từ Access Token 24h sang kiến trúc bảo mật chuẩn: Access Token 15 phút + Refresh Token 7 ngày.
