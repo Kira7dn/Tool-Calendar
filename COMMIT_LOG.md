@@ -1490,3 +1490,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `.gitignore` (Sửa đổi)
   - `.agents/workflows/tc-workflow-git-push.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): thêm script deploy tự động lên vnpt qua ssh"`
+
+### [2026-08-07 15:32] Fix submit evidence API endpoint in DocDetail
+- **Mô tả**: Sửa lỗi gọi sai API endpoint khi Báo cáo hoàn thành văn bản. Endpoint ở backend là `/api/documents/{id}/submit-evidence` và nhận param `notes` nhưng Frontend ở DocModals.jsx lại gọi `/api/documents/{id}/evidence` và truyền param `note`, dẫn đến lỗi 405 Method Not Allowed.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocModals.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi 405 khi gọi api báo cáo hoàn thành văn bản"`

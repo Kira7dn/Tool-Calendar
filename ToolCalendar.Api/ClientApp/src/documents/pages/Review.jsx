@@ -263,7 +263,7 @@ export function Review({ onBack }) {
 
           <div className="flex-1">
             <iframe
-              src={`${currentDoc.filePath}#toolbar=0&navpanes=0`}
+              src={`${currentDoc.filePath}?access_token=${localStorage.getItem('auth_token')}#toolbar=0&navpanes=0`}
               className="w-full h-full border-none"
               title="PDF Preview"
             />

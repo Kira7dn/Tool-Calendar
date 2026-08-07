@@ -113,9 +113,9 @@ export function DocModals({
     setIsSaving(true)
     try {
       const formData = new FormData()
-      formData.append('note', evidenceNote)
+      formData.append('notes', evidenceNote)
       evidenceFiles.forEach((f) => formData.append('files', f))
-      const response = await fetch(`/api/documents/${docId}/evidence`, {
+      const response = await fetch(`/api/documents/${docId}/submit-evidence`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
         body: formData,
@@ -170,7 +170,7 @@ export function DocModals({
                 <div className="flex-1 relative overflow-hidden">
                   <iframe
                     key={pdfPage}
-                    src={`/api/documents/${docId}/file#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                    src={`/api/documents/${docId}/file?access_token=${localStorage.getItem('auth_token')}#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
                     className="w-full h-full border-none shadow-inner"
                     title="PDF Comparison"
                   />

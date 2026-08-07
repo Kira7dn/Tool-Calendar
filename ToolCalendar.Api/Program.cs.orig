@@ -190,11 +190,6 @@ builder.Services.AddAuthentication(x =>
             {
                 context.Token = accessToken;
             }
-            // Cho phép PDF viewer lấy token qua query string
-            else if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/documents") && path.Value.EndsWith("/file"))
-            {
-                context.Token = accessToken;
-            }
             // 2. Đọc token từ HttpOnly Cookie (jwt_cookie) do AuthController set lúc Login
             // Giúp mở file PDF an toàn bằng iframe/window.open không cần token trên URL
             else if (context.Request.Cookies.TryGetValue("jwt_cookie", out var cookieToken))

@@ -101,7 +101,7 @@ public class DocumentUploadService : IDocumentUploadService
         var uploadsDir = Path.Combine(_env.ContentRootPath, "Uploads", "Documents");
         Directory.CreateDirectory(uploadsDir);
 
-        var finalFileName = $"{Guid.NewGuid()}_{safeFileName}";
+        var finalFileName = $"{Guid.NewGuid()}_{safeFileName}{ext}";
         var finalPath = Path.Combine(uploadsDir, finalFileName);
         File.Move(quarantinePath, finalPath);
 
