@@ -149,7 +149,7 @@ namespace ToolCalendar.Api.Controllers
                     new Claim("sid",                        user.SessionId ?? user.SecurityStamp),
                     new Claim("LastLogin",                  lastLoginTime),
                 }),
-                Expires           = DateTime.UtcNow.AddMinutes(15),
+                Expires           = DateTime.UtcNow.AddHours(8),
                 SigningCredentials = new SigningCredentials(
                     new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256Signature)
@@ -168,15 +168,15 @@ namespace ToolCalendar.Api.Controllers
             {
                 HttpOnly = true,
                 Secure   = true,
-                SameSite = SameSiteMode.Strict,
-                Expires  = DateTime.UtcNow.AddMinutes(15)
+                SameSite = SameSiteMode.Lax,
+                Expires  = DateTime.UtcNow.AddHours(8)
             });
 
             Response.Cookies.Append("refresh_cookie", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure   = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.Lax,
                 Expires  = refreshTokenExpiryTime
             });
 
@@ -251,7 +251,7 @@ namespace ToolCalendar.Api.Controllers
             {
                 HttpOnly = true,
                 Secure   = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.Lax,
                 Expires  = DateTime.UtcNow.AddMinutes(15)
             });
 
@@ -259,7 +259,7 @@ namespace ToolCalendar.Api.Controllers
             {
                 HttpOnly = true,
                 Secure   = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.Lax,
                 Expires  = newExpiryTime
             });
 

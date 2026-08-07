@@ -184,6 +184,25 @@ export function Upload({ onTabChange }) {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
   const [reviewItem, setReviewItem] = useState(null)
   const [pdfPage, setPdfPage] = useState(1)
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null)
+  const [isPdfLoading, setIsPdfLoading] = useState(false)
+
+  // Fetch PDF as blob để tránh lỗi token hết hạn khi dùng iframe query string
+  const fetchPdfBlob = async (docId) => {
+    setIsPdfLoading(true)
+    setPdfBlobUrl(null)
+    try {
+      const res = await fetch(`/api/documents/${docId}/file`)
+      if (!res.ok) throw new Error('Lỗi tải PDF')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      setPdfBlobUrl(url)
+    } catch (e) {
+      toast.error('Không thể tải file PDF')
+    } finally {
+      setIsPdfLoading(false)
+    }
+  }
 
   const inputRef = useRef(null)
   const folderInputRef = useRef(null)
@@ -913,8 +932,9 @@ export function Upload({ onTabChange }) {
                                     onClick={() => {
                                       if (typeof row.id !== 'number') return
                                       setReviewItem({ ...row })
-                                      setIsReviewModalOpen(true)
                                       setPdfPage(1)
+                                      fetchPdfBlob(row.id)
+                                      setIsReviewModalOpen(true)
                                     }}
                                     disabled={typeof row.id !== 'number'}
                                     className={cn(
@@ -999,7 +1019,16 @@ export function Upload({ onTabChange }) {
       </div>
 
       {/* Review Modal: PDF Side-by-Side with Form (Ảnh 2 Design) */}
-      <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
+      <Dialog
+        open={isReviewModalOpen}
+        onOpenChange={(open) => {
+          setIsReviewModalOpen(open)
+          if (!open && pdfBlobUrl) {
+            URL.revokeObjectURL(pdfBlobUrl)
+            setPdfBlobUrl(null)
+          }
+        }}
+      >
         <DialogContent className="!max-w-[98vw] w-[98vw] h-[96vh] p-0 overflow-hidden border-none shadow-2xl flex flex-col bg-white transition-all duration-500 rounded-3xl">
           {/* Header */}
           <div className="h-20 bg-white border-b border-slate-100 px-8 flex items-center justify-between shrink-0">
@@ -1022,13 +1051,17 @@ export function Upload({ onTabChange }) {
             {/* Left side: PDF Viewer */}
             <div className="flex-1 bg-slate-100 flex flex-col relative border-r border-slate-100">
               <div className="flex-1 relative overflow-hidden bg-slate-200 m-4 rounded-2xl shadow-inner border border-slate-200">
+                {isPdfLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-100 z-10">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm font-bold text-slate-500">Đang tải PDF...</span>
+                    </div>
+                  </div>
+                )}
                 <iframe
                   key={`${reviewItem?.id}-${pdfPage}`}
-                  src={
-                    typeof reviewItem?.id === 'number'
-                      ? `/api/documents/${reviewItem.id}/file#page=${pdfPage}&view=FitH`
-                      : ''
-                  }
+                  src={pdfBlobUrl ? `${pdfBlobUrl}#page=${pdfPage}&view=FitH` : ''}
                   className="w-full h-full border-none"
                   title="PDF Viewer"
                 />

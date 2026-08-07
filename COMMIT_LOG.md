@@ -1,5 +1,12 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-07 13:23] Fix lỗi iframe "Đối soát PDF" hiển thị HTML thay vì PDF
+- **Mô tả**: Token JWT hết hạn sau 15 phút khiến query string `?access_token=...` trả về 401, server fallback `index.html` → iframe hiển thị HTML (trông như ảnh). Fix: dùng `fetch` API với Authorization header tự động (qua Global Fetch Interceptor) để tải PDF thành blob URL, sau đó feed blob URL cho iframe. Thêm loading spinner khi đang tải PDF.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/Upload.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi iframe đối soát PDF hiển thị HTML do token hết hạn"`
+
+
 ### [2026-08-07 11:41] Sửa lỗi Service Worker chặn API và điều chỉnh logo
 - **Mô tả**: Sửa lỗi PWA Service Worker (VitePWA) chặn request navigation đến `/api/` (gây lỗi iframe xem PDF hiển thị dashboard). Thêm `navigateFallbackDenylist: [/^\/api/]` vào cấu hình. Thay thế `logo.png` và `logo_bcp.png` bằng `logo_campha.jpg` để đồng nhất cờ, đổi `object-cover` thành `object-contain` để logo không bị cắt xén (để thừa cho cân xứng).
 - **Tệp thay đổi**:
