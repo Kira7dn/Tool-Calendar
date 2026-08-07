@@ -1502,3 +1502,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/NotificationController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(notify): bổ sung api unsubscribe bị thiếu"`
+
+### [2026-08-07 15:51] Xóa các file tạm rác sinh ra trong quá trình debug
+- **Mô tả**: Xóa các file tạm (`token.txt`, `patch_program.patch`, `TokenGen.csx`, `ToolCalendar.Api/Program.cs.orig`) đã bị vô tình đưa vào git trong các commit trước đó để làm sạch source code trên server.
+- **Tệp thay đổi**:
+  - `token.txt` (Xóa)
+  - `patch_program.patch` (Xóa)
+  - `TokenGen.csx` (Xóa)
+  - `ToolCalendar.Api/Program.cs.orig` (Xóa)
+- **Lệnh git commit**: `git commit -m "chore(infra): xóa các file tạm sinh ra trong quá trình debug"`
