@@ -1,3 +1,9 @@
+### [2026-08-07 08:44] Sửa lỗi Cannot read properties of undefined (reading 'length') ở DocDetail
+- **Mô tả**: Sửa lỗi trang chi tiết văn bản (DocDetail) bị crash trắng màn hình khi người dùng bấm vào văn bản. Lỗi xảy ra do biến trạng thái `commentFiles` và các state liên quan bị mất sau quá trình refactor tách component. Đã bổ sung lại các state vào `useDocDetail.js` và hàm `handlePostComment`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/hooks/useDocDetail.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): add missing comment state to useDocDetail to fix crash"`
+
 ### [2026-08-07 02:13] Sửa lỗi chính tả tên phường Cẩm Phả
 - **Mô tả**: Sửa chữ "CẨM PHÁ" thành "CẨM PHẢ" trong trang PublicSchedule.
 - **Tệp thay đổi**:

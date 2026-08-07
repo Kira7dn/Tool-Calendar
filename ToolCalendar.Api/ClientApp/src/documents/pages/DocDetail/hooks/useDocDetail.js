@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 
 export function useDocDetail(docId, onBack) {
@@ -22,6 +22,12 @@ export function useDocDetail(docId, onBack) {
   // PDF state
   const [pdfPage, setPdfPage] = useState(1)
   const [isFullscreenPdf, setIsFullscreenPdf] = useState(false)
+
+  // Comments form state
+  const [commentFiles, setCommentFiles] = useState([])
+  const [newComment, setNewComment] = useState('')
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+  const fileInputRef = useRef(null)
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -156,6 +162,41 @@ export function useDocDetail(docId, onBack) {
     }
   }
 
+  const handlePostComment = async () => {
+    if (!newComment.trim()) return
+    setIsSubmittingComment(true)
+    try {
+      const formData = new FormData()
+      formData.append('content', newComment)
+
+      if (commentFiles.length > 0) {
+        commentFiles.forEach((file) => {
+          formData.append('files', file)
+        })
+      }
+
+      const response = await fetch(`/api/documents/${docId}/comments`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: formData,
+      })
+      if (response.ok) {
+        setNewComment('')
+        setCommentFiles([])
+        await fetchComments()
+      } else {
+        toast.error('Có lỗi xảy ra khi gửi bình luận.')
+      }
+    } catch (error) {
+      console.error('Failed to post comment:', error)
+      toast.error('Lỗi kết nối máy chủ')
+    } finally {
+      setIsSubmittingComment(false)
+    }
+  }
+
   return {
     doc,
     setDoc,
@@ -189,5 +230,12 @@ export function useDocDetail(docId, onBack) {
     handleUpdateStatus,
     executeDelete,
     handleViewEvidence,
+    commentFiles,
+    setCommentFiles,
+    newComment,
+    setNewComment,
+    isSubmittingComment,
+    handlePostComment,
+    fileInputRef,
   }
 }
