@@ -1451,3 +1451,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): tránh ghi đè dữ liệu OCR khi update từ list"`
+
+### [2026-08-07 14:38] Sửa lỗi ẩn nút hành động khi văn bản được giao
+- **Mô tả**: Sửa lỗi logic frontend khiến nút "Tiếp nhận xử lý" bị ẩn khi một văn bản được admin "Rà soát" và giao xuống. Nguyên nhân do frontend so sánh strict `===` giữa `assignedTo` (số) và `user_id` từ `localStorage` (chuỗi), và thiếu kiểm tra trạng thái "Đã rà soát". Đồng thời, thêm hiển thị nút "Báo cáo hoàn thành" khi văn bản đang ở trạng thái "Đang xử lý".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi mất nút tiếp nhận và hoàn thành văn bản do sai kiểu dữ liệu"`

@@ -96,7 +96,7 @@ export default function DocDetail({ docId, onBack }) {
     { key: 'history', label: 'LỊCH SỬ' },
   ]
 
-  const pdfUrl = `/api/documents/${docId}/file#page=${pdfPage}&toolbar=0&navpanes=0`
+  const pdfUrl = `/api/documents/${docId}/file?access_token=${localStorage.getItem("auth_token")}#page=${pdfPage}&toolbar=0&navpanes=0`
 
   return (
     <div className="h-full font-sans flex flex-col gap-4 overflow-hidden px-2 pb-2">
@@ -114,9 +114,9 @@ export default function DocDetail({ docId, onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-          {doc.status === DOCUMENT_STATUS.CHUA_XU_LY &&
-            (doc.assignedTo === localStorage.getItem('user_id') ||
-              isUserInRoutings(routings, localStorage.getItem('user_id'))) && (
+          {(doc.status === DOCUMENT_STATUS.CHUA_XU_LY || doc.status === DOCUMENT_STATUS.DA_RA_SOAT) &&
+            (doc.assignedTo == localStorage.getItem('user_id') ||
+              isUserInRoutings(routings, parseInt(localStorage.getItem('user_id')))) && (
               <button
                 onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DANG_XU_LY)}
                 className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black rounded-xl"
@@ -124,6 +124,18 @@ export default function DocDetail({ docId, onBack }) {
                 TIẾP NHẬN XỬ LÝ
               </button>
             )}
+            
+          {doc.status === DOCUMENT_STATUS.DANG_XU_LY &&
+            (doc.assignedTo == localStorage.getItem('user_id') ||
+              isUserInRoutings(routings, parseInt(localStorage.getItem('user_id')))) && (
+              <button
+                onClick={() => setIsEvidenceModalOpen(true)}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20"
+              >
+                BÁO CÁO HOÀN THÀNH
+              </button>
+            )}
+
           <button
             onClick={() => {
               const token = localStorage.getItem('auth_token')
