@@ -1,5 +1,12 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-07 14:55] Cập nhật logic hiển thị nút Tiếp nhận và Báo cáo hoàn thành
+- **Mô tả**: Sửa điều kiện hiển thị nút "Tiếp nhận xử lý" và "Báo cáo hoàn thành" trong `DocDetail.jsx` (hỗ trợ trạng thái Đã rà soát và so sánh ID chuẩn xác).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): cập nhật logic hiển thị nút xử lý văn bản"`
+
+
 ### [2026-08-07 13:23] Fix lỗi iframe "Đối soát PDF" hiển thị HTML thay vì PDF
 - **Mô tả**: Token JWT hết hạn sau 15 phút khiến query string `?access_token=...` trả về 401, server fallback `index.html` → iframe hiển thị HTML (trông như ảnh). Fix: dùng `fetch` API với Authorization header tự động (qua Global Fetch Interceptor) để tải PDF thành blob URL, sau đó feed blob URL cho iframe. Thêm loading spinner khi đang tải PDF.
 - **Tệp thay đổi**:

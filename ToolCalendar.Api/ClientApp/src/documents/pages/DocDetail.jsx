@@ -96,7 +96,7 @@ export default function DocDetail({ docId, onBack }) {
     { key: 'history', label: 'LỊCH SỬ' },
   ]
 
-  const pdfUrl = `/api/documents/${docId}/file?access_token=${localStorage.getItem("auth_token")}#page=${pdfPage}&toolbar=0&navpanes=0`
+  const pdfUrl = `/api/documents/${docId}/file?access_token=${localStorage.getItem('auth_token')}#page=${pdfPage}&toolbar=0&navpanes=0`
 
   return (
     <div className="h-full font-sans flex flex-col gap-4 overflow-hidden px-2 pb-2">
@@ -114,7 +114,8 @@ export default function DocDetail({ docId, onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-          {(doc.status === DOCUMENT_STATUS.CHUA_XU_LY || doc.status === DOCUMENT_STATUS.DA_RA_SOAT) &&
+          {(doc.status === DOCUMENT_STATUS.CHUA_XU_LY ||
+            doc.status === DOCUMENT_STATUS.DA_RA_SOAT) &&
             (doc.assignedTo == localStorage.getItem('user_id') ||
               isUserInRoutings(routings, parseInt(localStorage.getItem('user_id')))) && (
               <button
@@ -124,7 +125,7 @@ export default function DocDetail({ docId, onBack }) {
                 TIẾP NHẬN XỬ LÝ
               </button>
             )}
-            
+
           {doc.status === DOCUMENT_STATUS.DANG_XU_LY &&
             (doc.assignedTo == localStorage.getItem('user_id') ||
               isUserInRoutings(routings, parseInt(localStorage.getItem('user_id')))) && (

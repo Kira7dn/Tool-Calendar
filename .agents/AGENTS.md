@@ -95,7 +95,7 @@ Tool-Calendar/
 3. **Implement** → Viết code tuân thủ Tech Stack và Architecture
 4. **Test** → Thêm/cập nhật Unit Tests trong `ToolCalendar.Tests/`
 5. **Log** → Cập nhật `COMMIT_LOG.md` với đầy đủ thông tin
-6. **Commit** → Dùng đúng chuẩn Conventional Commits
+6. **Commit & Deploy** → Dùng đúng chuẩn Conventional Commits, tự động deploy lên VNPT server, và xóa file rác (Xem `tc-rule-auto-deploy.md`)
 
 ### Khi debug/sửa lỗi:
 1. Đọc `COMMIT_LOG.md` để hiểu ngữ cảnh thay đổi gần nhất
@@ -118,7 +118,6 @@ Tool-Calendar/
 ---
 
 **Status:** ACTIVE — TOOL-CALENDAR PROJECT RULES  
-**Version:** 2.1 (Nâng cấp chuẩn OpenClaw)  
-**Last Updated:** 2026-07-25  
-**See also:** [SYSTEM_FEATURES.md](../SYSTEM_FEATURES.md) | [COMMIT_LOG.md](../COMMIT_LOG.md) | [CODE_QUALITY.md](../CODE_QUALITY.md) | [tc-rule-ai-behavior.md](rules/tc-rule-ai-behavior.md)
- | [tc-rule-magic-strings.md](rules/tc-rule-magic-strings.md)
+**Version:** 2.2 (Bổ sung Auto Deploy)  
+**Last Updated:** 2026-08-07  
+**See also:** [SYSTEM_FEATURES.md](../SYSTEM_FEATURES.md) | [COMMIT_LOG.md](../COMMIT_LOG.md) | [CODE_QUALITY.md](../CODE_QUALITY.md) | [tc-rule-ai-behavior.md](rules/tc-rule-ai-behavior.md) | [tc-rule-magic-strings.md](rules/tc-rule-magic-strings.md) | [tc-rule-auto-deploy.md](rules/tc-rule-auto-deploy.md)
