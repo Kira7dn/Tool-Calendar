@@ -1445,3 +1445,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/public/assets/logo_campha.jpg` (Mới)
 - **Lệnh git commit**: `git commit -m "style(shell): thay thế logo Cẩm Phả và xóa menu phòng họp không giấy tờ"`
+
+### [2026-08-07 14:30] Sửa lỗi mất dữ liệu OCR khi cập nhật văn bản từ màn hình tiếp nhận
+- **Mô tả**: Khi người dùng thao tác ở màn hình "Tiếp nhận văn bản", frontend sử dụng API list `GetPagedAsync` (vốn đã ẩn `FullText` và `OcrPagesJson` thành rỗng để tối ưu). Khi submit PUT lên, frontend gửi nguyên object với trường rỗng này lên, khiến server lưu vào DB và ghi đè mất kết quả OCR thật. Đã fix trong `DocumentsController.cs` `Update`: giữ nguyên dữ liệu OCR cũ nếu dữ liệu đẩy lên là rỗng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): tránh ghi đè dữ liệu OCR khi update từ list"`

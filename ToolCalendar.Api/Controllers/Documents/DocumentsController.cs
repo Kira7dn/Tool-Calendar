@@ -190,6 +190,18 @@ namespace ToolCalendar.Api.Controllers.Documents
 
             var existing = await _documentRepository.GetDocumentByIdAsync(id);
             if (existing == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
+
+            // Bảo toàn dữ liệu OCR nếu client gửi lên chuỗi rỗng do fetch từ danh sách (list query ẩn FullText)
+            if (string.IsNullOrEmpty(record.FullText) && !string.IsNullOrEmpty(existing.FullText))
+            {
+                record.FullText = existing.FullText;
+            }
+            if ((string.IsNullOrEmpty(record.OcrPagesJson) || record.OcrPagesJson == "[]") && 
+                !string.IsNullOrEmpty(existing.OcrPagesJson) && existing.OcrPagesJson != "[]")
+            {
+                record.OcrPagesJson = existing.OcrPagesJson;
+            }
+
             await _documentRepository.UpdateAsync(record);
 
             // Cập nhật trạng thái của user trong bảng DocumentRoutings (nếu có)
