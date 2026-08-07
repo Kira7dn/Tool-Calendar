@@ -1457,3 +1457,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi mất nút tiếp nhận và hoàn thành văn bản do sai kiểu dữ liệu"`
+
+### [2026-08-07 14:43] Thêm luật tự động deploy (CI/CD) lên máy chủ VNPT Cloud
+- **Mô tả**: Thiết lập Github Actions (`deploy.yml`) để mỗi khi có code mới được đẩy lên nhánh `phonghopkhonggiayto`, hệ thống sẽ tự động đăng nhập vào máy chủ VNPT qua SSH để pull code và chạy lại Docker.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Mới)
+- **Lệnh git commit**: `git commit -m "chore(infra): thêm github actions tự động deploy lên vnpt"`

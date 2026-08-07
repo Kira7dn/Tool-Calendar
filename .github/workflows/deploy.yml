@@ -1,0 +1,27 @@
+name: Deploy to VNPT Cloud
+
+on:
+  push:
+    branches:
+      - phonghopkhonggiayto
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Execute remote ssh commands to deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VNPT_HOST }}
+          username: ${{ secrets.VNPT_USERNAME }}
+          password: ${{ secrets.VNPT_PASSWORD }}
+          port: 22
+          script: |
+            cd /root/Tool-Calendar || cd /root/lichcongtac || exit 1
+            git pull origin phonghopkhonggiayto
+            docker compose build
+            docker compose up -d
