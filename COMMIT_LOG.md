@@ -1431,3 +1431,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): add missing DOCUMENT_STATUS imports"`
 
+
+### [2026-08-07 12:10] Xóa menu "Phòng họp không giấy tờ" và căn chỉnh logo Cẩm Phả
+- **Mô tả**: Theo yêu cầu của người dùng, xóa bỏ mục menu "Phòng họp không giấy tờ" (Văn bản đến hạn) do không còn sử dụng, đồng thời thay thế logo sidebar bằng logo Cẩm Phả và căn chỉnh cho cân xứng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/public/assets/logo_campha.jpg` (Mới)
+- **Lệnh git commit**: `git commit -m "style(shell): thay thế logo Cẩm Phả và xóa menu phòng họp không giấy tờ"`
