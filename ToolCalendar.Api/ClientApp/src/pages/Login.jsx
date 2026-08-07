@@ -102,7 +102,7 @@ export function LoginPage({ onLoginSuccess }) {
               <img
                 src="/assets/logo_campha.jpg"
                 alt="Logo"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onError={(e) => {
                   e.currentTarget.src = 'https://via.placeholder.com/64'
                 }}

@@ -259,7 +259,11 @@ function Header({ user, onLogout, onOpenLogin }) {
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg border border-gray-100 overflow-hidden shrink-0">
-            <img src="/assets/logo_campha.jpg" alt="Logo" className="w-full h-full object-cover" />
+            <img
+              src="/assets/logo_campha.jpg"
+              alt="Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <h1 className="text-2xl font-black text-[#0a3d8f] tracking-tighter uppercase leading-tight">
@@ -580,7 +584,7 @@ export default function PublicSchedule() {
                 <img
                   src="/assets/logo_campha.jpg"
                   alt="Logo"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
               <div className="absolute inset-0 rounded-3xl border-2 border-transparent border-t-red-400 animate-spin" />

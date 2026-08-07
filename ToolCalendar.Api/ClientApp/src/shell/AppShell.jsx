@@ -542,7 +542,7 @@ export function AppShell() {
               <img
                 src="/assets/logo_campha.jpg"
                 alt="Logo"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </div>
             {/* Spinning ring */}

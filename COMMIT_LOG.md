@@ -1,3 +1,16 @@
+## Lịch sử (Mới nhất ở trên)
+
+### [2026-08-07 11:41] Sửa lỗi Service Worker chặn API và điều chỉnh logo
+- **Mô tả**: Sửa lỗi PWA Service Worker (VitePWA) chặn request navigation đến `/api/` (gây lỗi iframe xem PDF hiển thị dashboard). Thêm `navigateFallbackDenylist: [/^\/api/]` vào cấu hình. Thay thế `logo.png` và `logo_bcp.png` bằng `logo_campha.jpg` để đồng nhất cờ, đổi `object-cover` thành `object-contain` để logo không bị cắt xén (để thừa cho cân xứng).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/vite.config.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/pages/Login.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/wwwroot/assets/logo.png`, `logo_bcp.png`, `logo_campha.jpg` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi iframe xem pdf và đồng bộ logo"`
+
 ### [2026-08-07 08:44] Sửa lỗi Cannot read properties of undefined (reading 'length') ở DocDetail
 - **Mô tả**: Sửa lỗi trang chi tiết văn bản (DocDetail) bị crash trắng màn hình khi người dùng bấm vào văn bản. Lỗi xảy ra do biến trạng thái `commentFiles` và các state liên quan bị mất sau quá trình refactor tách component. Đã bổ sung lại các state vào `useDocDetail.js` và hàm `handlePostComment`.
 - **Tệp thay đổi**:
