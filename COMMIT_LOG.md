@@ -1,5 +1,11 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-07 15:02] Cho phép Admin thấy nút thao tác trên mọi công văn
+- **Mô tả**: Sửa `DocDetail.jsx`, cấp quyền bypass điều kiện luân chuyển/phân công cho role Admin (`localStorage.getItem('user_role') === 'Admin'`) để tiện test và điều hành mà không cần giả lập tài khoản người dùng khác.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): cho phép Admin có toàn quyền thao tác Tiếp nhận/Hoàn thành văn bản"`
+
 ### [2026-08-07 14:57] Sửa đường dẫn trên server VNPT trong script deploy
 - **Mô tả**: Sửa `deploy_to_vnpt.sh` để trỏ vào đúng thư mục `Tool-Calendar-New` trên máy chủ VNPT thay vì `lichcongtac` cũ.
 - **Tệp thay đổi**:

@@ -117,7 +117,8 @@ export default function DocDetail({ docId, onBack }) {
           {(doc.status === DOCUMENT_STATUS.CHUA_XU_LY ||
             doc.status === DOCUMENT_STATUS.DA_RA_SOAT) &&
             (doc.assignedTo == localStorage.getItem('user_id') ||
-              isUserInRoutings(routings, parseInt(localStorage.getItem('user_id')))) && (
+              isUserInRoutings(routings, parseInt(localStorage.getItem('user_id'))) ||
+              localStorage.getItem('user_role') === 'Admin') && (
               <button
                 onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DANG_XU_LY)}
                 className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black rounded-xl"
@@ -128,7 +129,8 @@ export default function DocDetail({ docId, onBack }) {
 
           {doc.status === DOCUMENT_STATUS.DANG_XU_LY &&
             (doc.assignedTo == localStorage.getItem('user_id') ||
-              isUserInRoutings(routings, parseInt(localStorage.getItem('user_id')))) && (
+              isUserInRoutings(routings, parseInt(localStorage.getItem('user_id'))) ||
+              localStorage.getItem('user_role') === 'Admin') && (
               <button
                 onClick={() => setIsEvidenceModalOpen(true)}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20"
