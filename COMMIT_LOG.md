@@ -1511,3 +1511,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `TokenGen.csx` (Xóa)
   - `ToolCalendar.Api/Program.cs.orig` (Xóa)
 - **Lệnh git commit**: `git commit -m "chore(infra): xóa các file tạm sinh ra trong quá trình debug"`
+
+### [2026-08-07 16:05] Khắc phục lỗi số liệu Dashboard không cập nhật realtime
+- **Mô tả**: Sửa lỗi trang Dashboard (Bảng điều hành công văn) gặp tình trạng "cache mismatch" khi có sự kiện cập nhật văn bản (số tổng bị khựng 30 giây trong khi danh sách thì trống). Giải pháp: Frontend sẽ tự động gọi API `POST /api/stats/invalidate-cache` trước khi tải lại dữ liệu khi nhận được tín hiệu realtime từ SignalR để đảm bảo cả con số và danh sách luôn đồng bộ lập tức với Database.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/Dashboard.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(stats): tự động xóa cache khi nhận realtime update để đồng bộ dashboard"`

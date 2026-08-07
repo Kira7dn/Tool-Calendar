@@ -28,7 +28,14 @@ export function Dashboard({ onTabChange }) {
 
   useEffect(() => {
     fetchData()
-    const handleUpdate = () => fetchData()
+    const handleUpdate = () => {
+      fetch('/api/stats/invalidate-cache', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
+        .catch(() => {})
+        .finally(() => fetchData())
+    }
     document.addEventListener('realtime:document_updated', handleUpdate)
     return () => document.removeEventListener('realtime:document_updated', handleUpdate)
   }, [])
