@@ -56,7 +56,17 @@ namespace ToolCalendar.Api.Controllers
             };
 
             _notificationRepo.InsertPushSubscription(subscription);
-            return Ok(ApiResponse.Ok("Subscribed successfully"));
+            return Ok(ApiResponse.Ok("Đăng ký nhận thông báo thành công."));
+        }
+
+        [HttpPost("unsubscribe")]
+        public IActionResult Unsubscribe([FromBody] PushSubscriptionRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Endpoint))
+                return BadRequest(ApiResponse.Fail("Thiếu thông tin endpoint."));
+
+            _notificationRepo.DeletePushSubscription(request.Endpoint);
+            return Ok(ApiResponse.Ok("Đã hủy đăng ký nhận thông báo."));
         }
 
         [HttpPost("test")]

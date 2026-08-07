@@ -1496,3 +1496,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/documents/pages/DocDetail/components/DocModals.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi 405 khi gọi api báo cáo hoàn thành văn bản"`
+
+### [2026-08-07 15:39] Fix missing unsubscribe endpoint in Notification API
+- **Mô tả**: Bổ sung endpoint `/api/notification/unsubscribe` bị thiếu ở backend (Frontend đã gọi POST đến endpoint này khi người dùng tắt nhận thông báo nhưng backend trả về 404/405).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/NotificationController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(notify): bổ sung api unsubscribe bị thiếu"`
