@@ -1,5 +1,11 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-07 14:57] Sửa đường dẫn trên server VNPT trong script deploy
+- **Mô tả**: Sửa `deploy_to_vnpt.sh` để trỏ vào đúng thư mục `Tool-Calendar-New` trên máy chủ VNPT thay vì `lichcongtac` cũ.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): sửa đường dẫn thư mục Tool-Calendar-New trong script deploy_to_vnpt.sh"`
+
 ### [2026-08-07 14:55] Cập nhật logic hiển thị nút Tiếp nhận và Báo cáo hoàn thành
 - **Mô tả**: Sửa điều kiện hiển thị nút "Tiếp nhận xử lý" và "Báo cáo hoàn thành" trong `DocDetail.jsx` (hỗ trợ trạng thái Đã rà soát và so sánh ID chuẩn xác).
 - **Tệp thay đổi**:
