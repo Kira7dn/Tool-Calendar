@@ -62,3 +62,4 @@ ToolCalendar.Core/Models/PaddleOCR/
 Models/PaddleOCR/
 scratch/
 
+.deploy.env

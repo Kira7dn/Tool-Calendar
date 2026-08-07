@@ -1463,3 +1463,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `.github/workflows/deploy.yml` (Mới)
 - **Lệnh git commit**: `git commit -m "chore(infra): thêm github actions tự động deploy lên vnpt"`
+
+### [2026-08-07 14:48] Thêm script deploy trực tiếp lên VNPT Server
+- **Mô tả**: Viết script `deploy_to_vnpt.sh` sử dụng `expect` để tự động hóa quá trình SSH bằng mật khẩu và pull code, deploy docker lên máy chủ VNPT. Đã thêm cấu hình biến môi trường cục bộ `.deploy.env` vào `.gitignore` để bảo mật. Cập nhật rule trong `tc-workflow-git-push.md` để yêu cầu chạy script này sau mỗi lần commit.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Mới)
+  - `.gitignore` (Sửa đổi)
+  - `.agents/workflows/tc-workflow-git-push.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): thêm script deploy tự động lên vnpt qua ssh"`
