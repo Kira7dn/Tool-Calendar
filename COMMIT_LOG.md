@@ -1,5 +1,11 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-07 17:13] Cố định đường dẫn deploy tránh ghi đè dự án khác trên VNPT
+- **Mô tả**: Sửa `deploy_to_vnpt.sh`, gỡ bỏ `cd /root/Tool-Calendar-New || cd ...`, cố định duy nhất tại `/root/Tool-Calendar` để đảm bảo dự án này không nhảy nhầm sang thư mục `lichcongtac` hay các thư mục khác, gây mất dữ liệu hoặc xung đột container.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): isolate deploy path strictly to Tool-Calendar to prevent conflicts"`
+
 ### [2026-08-07 15:02] Cho phép Admin thấy nút thao tác trên mọi công văn
 - **Mô tả**: Sửa `DocDetail.jsx`, cấp quyền bypass điều kiện luân chuyển/phân công cho role Admin (`localStorage.getItem('user_role') === 'Admin'`) để tiện test và điều hành mà không cần giả lập tài khoản người dùng khác.
 - **Tệp thay đổi**:
