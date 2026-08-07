@@ -1523,3 +1523,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/documents/pages/Dashboard.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(stats): tự động xóa cache khi nhận realtime update để đồng bộ dashboard"`
+### [2026-08-07 18:49] fix(ui): khôi phục lại menu Văn bản đến hạn
+- **Mô tả**: Do lúc trước khi xóa "Phòng họp không giấy tờ" đã xóa nhầm mục "Văn bản đến hạn", tiến hành khôi phục lại mục này trên thanh sidebar.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): khôi phục lại menu Văn bản đến hạn"`

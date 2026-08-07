@@ -40,6 +40,12 @@ const navItems = [
     icon: CheckSquare,
   },
   { tab: 'settings', labelKey: 'settings', label: 'Cấu hình', icon: Settings },
+  {
+    isLink: true,
+    url: '/campha',
+    label: 'Văn bản đến hạn',
+    icon: CalendarDays,
+  },
 ]
 
 export function AppSidebar({ activeTab, setActiveTab, setCurrentDocId, setIsReviewOpen }) {
