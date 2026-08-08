@@ -98,6 +98,7 @@ export default function DocDetail({ docId, onBack }) {
 
   const canInteract =
     doc.assignedTo == localStorage.getItem('user_id') ||
+    doc.uploadedByUserId == localStorage.getItem('user_id') ||
     isUserInRoutings(routings, parseInt(localStorage.getItem('user_id'))) ||
     localStorage.getItem('user_role') === 'Admin'
 

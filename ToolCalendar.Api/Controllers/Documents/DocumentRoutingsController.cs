@@ -54,8 +54,8 @@ namespace ToolCalendar.Api.Controllers.Documents
 
             int newId = await _routingRepo.CreateRoutingAsync(routing);
 
-            // ✅ Cập nhật Cán bộ xử lý và Đơn vị chủ trì dựa trên người nhận
-            if (routing.ReceiverId > 0)
+            // ✅ Cập nhật Cán bộ xử lý và Đơn vị chủ trì dựa trên người nhận (Chỉ khi vai trò là Chủ trì)
+            if (routing.ReceiverId > 0 && routing.Role == "Chủ trì")
             {
                 var receiver = _userRepo.GetUserById(routing.ReceiverId);
                 await _documentRepo.UpdateHandlerAsync(documentId, routing.ReceiverId, receiver?.DepartmentId);

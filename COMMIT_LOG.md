@@ -1678,3 +1678,17 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(routing): chỉ cho phép người được giao xử lý báo cáo hoàn thành"`
+
+### [2026-08-08 14:15] Sửa lỗi luồng xử lý: Người gửi có nút Báo cáo hoàn thành
+- **Mô tả**: Bổ sung quyền cho người tải văn bản được thao tác chuyển luân chuyển. Sửa logic API  chỉ đổi  khi vai trò là . Nếu chuyển , người chuyển (Chủ trì hiện tại) vẫn giữ quyền  và nút .
+- **Tệp thay đổi**:
+  -  (Sửa đổi)
+  -  (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): chỉ chuyển quyền xử lý chính khi vai trò là Chủ trì"`
+
+### [2026-08-08 14:15] Sửa lỗi luồng xử lý: Người gửi có nút Báo cáo hoàn thành
+- **Mô tả**: Bổ sung quyền cho người tải văn bản được thao tác chuyển luân chuyển. Sửa logic API CreateRouting chỉ đổi AssignedTo khi vai trò là Chủ trì. Nếu chuyển Phối hợp, người chuyển (Chủ trì hiện tại) vẫn giữ quyền AssignedTo và nút Báo cáo hoàn thành.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): chỉ chuyển quyền xử lý chính khi vai trò là Chủ trì"`
