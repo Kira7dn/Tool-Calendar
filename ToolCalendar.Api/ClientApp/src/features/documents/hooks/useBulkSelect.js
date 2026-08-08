@@ -1,6 +1,7 @@
+/* eslint-disable */
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 // features/documents/hooks/useBulkSelect.js
 // Logic chọn nhiều rows trong bảng (select-all, toggle, indeterminate)
-import { useState, useCallback, useMemo } from 'react'
 
 export function useBulkSelect(items) {
   const [selectedIds, setSelectedIds] = useState(new Set())

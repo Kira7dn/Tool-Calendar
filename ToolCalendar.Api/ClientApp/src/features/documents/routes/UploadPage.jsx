@@ -1,7 +1,8 @@
+/* eslint-disable */
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 // features/documents/routes/UploadPage.jsx
 // Trang Số hóa tài liệu — ghép tất cả components và hooks lại (~150 dòng)
 /* eslint-disable */
-import React, { useState, useRef, useEffect } from 'react'
 import { ROLES } from '../../../constants/roles'
 import { DOCUMENT_STATUS } from '@/constants/document'
 import { cn } from '@/lib/utils'

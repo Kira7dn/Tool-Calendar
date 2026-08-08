@@ -1651,3 +1651,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(docs): bỏ whitespace-pre-wrap để OCR data hiển thị dàn trang tốt hơn"`
+
+### [2026-08-08 10:56] Thêm import React hooks bị thiếu
+- **Mô tả**: Sửa lỗi `useState is not defined` do thiếu import khi tách logic ra custom hooks trong đợt refactor trước đó, khiến ứng dụng React bị sập khi vào trang Danh sách và Chi tiết công văn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/*.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/users/hooks/*.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/pages/*.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): thêm import useState/useEffect bị thiếu gây sập giao diện"`

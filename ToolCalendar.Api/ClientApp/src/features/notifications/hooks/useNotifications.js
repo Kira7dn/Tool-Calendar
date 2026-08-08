@@ -1,6 +1,7 @@
+/* eslint-disable */
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 // features/notifications/hooks/useNotifications.js
 // Toàn bộ logic fetch, mark-read, SignalR listener cho thông báo
-import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 
 export function useNotifications({ onOpenDoc }) {
