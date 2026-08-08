@@ -148,7 +148,7 @@ namespace ToolCalendar.Data.Repositories
             string sql = @"
                 UPDATE DocumentRoutings
                 SET Status = @Status, ProcessingContent = @ProcessingContent
-                WHERE DocumentId = @DocumentId AND ReceiverId = @ReceiverId AND Status != 'Đã xử lý' AND Status != 'Hoàn thành'";
+                WHERE DocumentId = @DocumentId AND ReceiverId = @ReceiverId AND Status != 'Đã xử lý' AND Status != 'Đã xử lý'";
 
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@DocumentId", documentId);

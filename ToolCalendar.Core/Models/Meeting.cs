@@ -8,7 +8,7 @@ namespace ToolCalendar.Models
         public DateTime EndTime { get; set; }
         public int? RoomId { get; set; }
         public string? RoomName { get; set; } // Join
-        public string Status { get; set; } = "Sắp diễn ra"; // Sắp diễn ra, Đang diễn ra, Hoàn thành, Hủy
+        public string Status { get; set; } = "Sắp diễn ra"; // Sắp diễn ra, Đang diễn ra, Đã xử lý, Hủy
         public int CreatorId { get; set; }
         public string? CreatorName { get; set; } // Join
         public DateTime CreatedAt { get; set; }

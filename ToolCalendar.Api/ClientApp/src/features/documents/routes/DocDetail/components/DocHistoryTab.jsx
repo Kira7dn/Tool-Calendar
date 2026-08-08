@@ -86,10 +86,10 @@ export function DocHistoryTab({ doc, users, routings }) {
     })
   })
 
-  if (doc?.status === DOCUMENT_STATUS.HOAN_THANH) {
+  if (doc?.status === DOCUMENT_STATUS.DA_XU_LY) {
     historyEvents.push({
       id: 'complete',
-      title: 'HOÀN THÀNH VĂN BẢN',
+      title: 'ĐÃ XỬ LÝ VĂN BẢN',
       time: doc?.completionDate ? new Date(doc.completionDate) : new Date(),
       user: doc?.assignedTo ? users.find((u) => u.id === doc.assignedTo)?.fullName : 'Hệ thống',
       active: true,

@@ -40,13 +40,13 @@ namespace ToolCalendar.Core.Data.Repositories
                     COUNT(*) AS Total,
                     SUM(CASE WHEN ThoiHan IS NOT NULL
                               AND ThoiHan < date('now')
-                              AND Status != 'Hoàn thành' THEN 1 ELSE 0 END) AS Overdue,
+                              AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS Overdue,
                     SUM(CASE WHEN ThoiHan >= date('now')
                               AND ThoiHan < date('now', '+1 day')
-                              AND Status != 'Hoàn thành' THEN 1 ELSE 0 END) AS Today,
+                              AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS Today,
                     SUM(CASE WHEN ThoiHan >= date('now')
                               AND ThoiHan <= date('now', '+7 days')
-                              AND Status != 'Hoàn thành' THEN 1 ELSE 0 END) AS Urgent
+                              AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS Urgent
                 FROM Documents
             ", connection))
             {
@@ -91,7 +91,7 @@ namespace ToolCalendar.Core.Data.Repositories
 
             using (var cmdTop = new SqliteCommand(@"
                 SELECT Id, SoVanBan, TenCongVan, TrichYeu, ThoiHan FROM Documents
-                WHERE Status != 'Hoàn thành'
+                WHERE Status != 'Đã xử lý'
                 ORDER BY CASE WHEN ThoiHan IS NULL THEN 1 ELSE 0 END, ThoiHan ASC
                 LIMIT 3
             ", connection))
@@ -138,7 +138,7 @@ namespace ToolCalendar.Core.Data.Repositories
                     CASE WHEN ThoiHan < @today THEN '__overdue__' ELSE ThoiHan END AS Bucket,
                     COUNT(*) AS Cnt
                 FROM Documents
-                WHERE Status != 'Hoàn thành'
+                WHERE Status != 'Đã xử lý'
                   AND ThoiHan IS NOT NULL
                   AND ThoiHan < @endDate
                 GROUP BY Bucket
@@ -198,10 +198,10 @@ namespace ToolCalendar.Core.Data.Repositories
                     d.Id,
                     d.Name,
                     COUNT(doc.Id) AS Total,
-                    SUM(CASE WHEN doc.Status = 'Hoàn thành' AND (doc.ThoiHan IS NULL OR doc.CompletionDate IS NULL OR date(doc.CompletionDate) <= date(doc.ThoiHan)) THEN 1 ELSE 0 END) AS OnTime,
-                    SUM(CASE WHEN doc.Status = 'Hoàn thành' AND doc.ThoiHan IS NOT NULL AND doc.CompletionDate IS NOT NULL AND date(doc.CompletionDate) > date(doc.ThoiHan) THEN 1 ELSE 0 END) AS Overdue,
-                    SUM(CASE WHEN doc.Status != 'Hoàn thành' AND (doc.ThoiHan IS NULL OR doc.ThoiHan >= date('now')) THEN 1 ELSE 0 END) AS ProcessingOnTime,
-                    SUM(CASE WHEN doc.Status != 'Hoàn thành' AND doc.ThoiHan IS NOT NULL AND doc.ThoiHan < date('now') THEN 1 ELSE 0 END) AS ProcessingOverdue
+                    SUM(CASE WHEN doc.Status = 'Đã xử lý' AND (doc.ThoiHan IS NULL OR doc.CompletionDate IS NULL OR date(doc.CompletionDate) <= date(doc.ThoiHan)) THEN 1 ELSE 0 END) AS OnTime,
+                    SUM(CASE WHEN doc.Status = 'Đã xử lý' AND doc.ThoiHan IS NOT NULL AND doc.CompletionDate IS NOT NULL AND date(doc.CompletionDate) > date(doc.ThoiHan) THEN 1 ELSE 0 END) AS Overdue,
+                    SUM(CASE WHEN doc.Status != 'Đã xử lý' AND (doc.ThoiHan IS NULL OR doc.ThoiHan >= date('now')) THEN 1 ELSE 0 END) AS ProcessingOnTime,
+                    SUM(CASE WHEN doc.Status != 'Đã xử lý' AND doc.ThoiHan IS NOT NULL AND doc.ThoiHan < date('now') THEN 1 ELSE 0 END) AS ProcessingOverdue
                 FROM Departments d
                 LEFT JOIN Documents doc ON d.Id = doc.DepartmentId AND doc.NgayThem LIKE @prefix
                 WHERE d.IsActive = 1

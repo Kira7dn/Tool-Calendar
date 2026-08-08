@@ -1,7 +1,7 @@
 export const DOCUMENT_STATUS = {
   CHUA_XU_LY: 'Chưa xử lý',
   DANG_XU_LY: 'Đang xử lý',
-  HOAN_THANH: 'Hoàn thành',
+  DA_XU_LY: 'Đã xử lý',
   DA_RA_SOAT: 'Đã rà soát',
   LOI_OCR: 'Lỗi OCR',
 }

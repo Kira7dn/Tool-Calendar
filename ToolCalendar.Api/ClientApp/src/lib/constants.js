@@ -17,9 +17,9 @@ export const DOC_STATUS = {
     icon: '🔍',
     variant: 'info',
   },
-  HOAN_THANH: {
-    value: 'Hoàn thành',
-    label: 'Hoàn thành',
+  DA_XU_LY: {
+    value: 'Đã xử lý',
+    label: 'Đã xử lý',
     icon: '✅',
     variant: 'success',
   },

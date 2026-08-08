@@ -1,5 +1,6 @@
 // features/tasks/components/EvidenceModal.jsx
 // Modal nộp bằng chứng hoàn thành nhiệm vụ (tách từ MyTasks.jsx)
+/* eslint-disable react/prop-types, no-unused-vars, react/no-array-index-key */
 import React, { useState } from 'react'
 import { Upload, FileText, CheckCircle2, Loader2, Paperclip } from 'lucide-react'
 import {
@@ -142,7 +143,7 @@ export function EvidenceModal({ isOpen, onClose, docId, onSuccess }) {
             ) : (
               <CheckCircle2 className="size-4 mr-2" />
             )}
-            Nộp & Hoàn thành
+            Nộp & Đã xử lý
           </Button>
         </DialogFooter>
       </DialogContent>

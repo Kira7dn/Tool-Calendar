@@ -90,7 +90,7 @@ export function DocOverviewTab({ doc, departments, users, handleViewEvidence }) 
         </div>
 
         {/* Phần kết quả xử lý dành cho Admin/Lãnh đạo kiểm tra */}
-        {(doc.status === DOCUMENT_STATUS.HOAN_THANH || doc.evidenceNotes || doc.evidencePaths) && (
+        {(doc.status === DOCUMENT_STATUS.DA_XU_LY || doc.evidenceNotes || doc.evidencePaths) && (
           <div className="mt-8 pt-8 border-t border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-xl bg-green-50 text-green-600 shadow-sm border border-green-100">

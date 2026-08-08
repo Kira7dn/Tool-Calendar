@@ -83,7 +83,7 @@ namespace ToolCalendar.Services
                 var docRepo = scope.ServiceProvider.GetRequiredService<ToolCalendar.Core.Data.Interfaces.IDocumentRepository>();
                 var auditRepo = scope.ServiceProvider.GetRequiredService<IAuditLogRepository>();
                 var docs = await docRepo.GetAllAsync();
-                var activeDocs = docs.Where(d => d.Status != "Hoàn thành" && d.ThoiHan.HasValue).ToList();
+                var activeDocs = docs.Where(d => d.Status != "Đã xử lý" && d.ThoiHan.HasValue).ToList();
 
                 DateTime today = DateTime.Today;
                 int count = 0;

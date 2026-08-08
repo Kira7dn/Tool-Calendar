@@ -19,7 +19,7 @@ namespace ToolCalendar.Models
         public DateTime? ThoiHan { get; set; }
         public string DonViChiDao { get; set; } = "";    // Đơn vị/phòng bị chỉ đạo
         public string FilePath { get; set; } = "";
-        public string Status { get; set; } = "Chưa xử lý"; // Chưa xử lý, Đang xử lý, Hoàn thành, Quá hạn
+        public string Status { get; set; } = "Chưa xử lý"; // Chưa xử lý, Đang xử lý, Đã xử lý, Quá hạn
         public string Priority { get; set; } = "Thường"; // Thường, Khẩn, Hỏa tốc
         public int? DepartmentId { get; set; }
         public string? DepartmentName { get; set; }
@@ -46,7 +46,7 @@ namespace ToolCalendar.Models
         {
             get
             {
-                if (Status == "Hoàn thành") return 9999; // Mã đặc biệt cho việc đã hoàn thành
+                if (Status == "Đã xử lý") return 9999; // Mã đặc biệt cho việc đã hoàn thành
                 if (ThoiHan == null) return int.MaxValue;
                 return (int)(ThoiHan.Value.Date - DateTime.Today).TotalDays;
             }
@@ -57,7 +57,7 @@ namespace ToolCalendar.Models
         {
             get
             {
-                if (Status == "Hoàn thành") return "✅ Hoàn thành";
+                if (Status == "Đã xử lý") return "✅ Đã xử lý";
                 if (ThoiHan == null) return "Chưa xác định";
 
                 int days = SoNgayConLai;

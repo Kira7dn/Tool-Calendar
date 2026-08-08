@@ -25,9 +25,9 @@ export function useMyTasks() {
       const isOverdue =
         deadline &&
         deadline < now &&
-        !(task.status || '').toLowerCase().includes(DOCUMENT_STATUS.HOAN_THANH.toLowerCase())
+        !(task.status || '').toLowerCase().includes(DOCUMENT_STATUS.DA_XU_LY.toLowerCase())
       const status = (task.status || '').toLowerCase()
-      if (status.includes(DOCUMENT_STATUS.HOAN_THANH.toLowerCase())) c++
+      if (status.includes(DOCUMENT_STATUS.DA_XU_LY.toLowerCase())) c++
       else if (isOverdue) o++
       else if (status.includes('đang xử lý')) d++
       else n++
@@ -87,21 +87,21 @@ export function useMyTasks() {
       const isOverdue =
         deadline &&
         deadline < now &&
-        !(task.status || '').toLowerCase().includes(DOCUMENT_STATUS.HOAN_THANH.toLowerCase())
+        !(task.status || '').toLowerCase().includes(DOCUMENT_STATUS.DA_XU_LY.toLowerCase())
       const status = (task.status || '').toLowerCase()
       if (statusFilter === TASK_FILTER.ALL) return matchesSearch
       if (statusFilter === TASK_FILTER.NEW)
         return (
           matchesSearch &&
           !status.includes('đang xử lý') &&
-          !status.includes(DOCUMENT_STATUS.HOAN_THANH.toLowerCase()) &&
+          !status.includes(DOCUMENT_STATUS.DA_XU_LY.toLowerCase()) &&
           !isOverdue
         )
       if (statusFilter === TASK_FILTER.DOING)
         return matchesSearch && status.includes('đang xử lý') && !isOverdue
       if (statusFilter === TASK_FILTER.OVERDUE) return matchesSearch && isOverdue
       if (statusFilter === TASK_FILTER.COMPLETED)
-        return matchesSearch && status.includes(DOCUMENT_STATUS.HOAN_THANH.toLowerCase())
+        return matchesSearch && status.includes(DOCUMENT_STATUS.DA_XU_LY.toLowerCase())
       return matchesSearch
     })
   }, [tasks, searchQuery, statusFilter])
