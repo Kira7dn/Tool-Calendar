@@ -319,7 +319,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             catch { }
 
             // 3. Thông báo SignalR để các máy khác cập nhật giao diện (Dashboard, List)
-            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = "Đã hoàn thành" });
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = "Hoàn thành" });
 
             // 4. Ghi nhận hoạt động cán bộ cho dashboard
             try

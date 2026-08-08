@@ -228,7 +228,7 @@ namespace ToolCalendar.Core.Data.Repositories
                        Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds,
                        EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich, UploadedByUserId
                 FROM Documents
-                WHERE Status != 'Đã hoàn thành'
+                WHERE Status != 'Hoàn thành'
                   AND (
                       AssignedTo = @userId
                       OR AssignedUserIds = @exactSingle
@@ -377,29 +377,29 @@ namespace ToolCalendar.Core.Data.Repositories
                 if (s == "overdue")
                 {
                     // Công thức chuẩn từ Dashboard Overdue
-                    filters.Add("doc.ThoiHan < date('now') AND doc.Status != 'Đã hoàn thành' AND doc.ThoiHan IS NOT NULL");
+                    filters.Add("doc.ThoiHan < date('now') AND doc.Status != 'Hoàn thành' AND doc.ThoiHan IS NOT NULL");
                 }
                 else if (s == "urgent")
                 {
                     // Công thức chuẩn từ Dashboard Sắp hết hạn (7 ngày tới)
-                    filters.Add("doc.ThoiHan >= date('now') AND doc.ThoiHan <= date('now', '+7 days') AND doc.Status != 'Đã hoàn thành'");
+                    filters.Add("doc.ThoiHan >= date('now') AND doc.ThoiHan <= date('now', '+7 days') AND doc.Status != 'Hoàn thành'");
                 }
                 else if (s == "processing_ontime")
                 {
-                    filters.Add("doc.Status != 'Đã hoàn thành' AND (doc.ThoiHan IS NULL OR date(doc.ThoiHan) >= date('now'))");
+                    filters.Add("doc.Status != 'Hoàn thành' AND (doc.ThoiHan IS NULL OR date(doc.ThoiHan) >= date('now'))");
                 }
                 else if (s == "completed_ontime")
                 {
-                    filters.Add("doc.Status = 'Đã hoàn thành' AND (doc.ThoiHan IS NULL OR doc.CompletionDate IS NULL OR date(doc.CompletionDate) <= date(doc.ThoiHan))");
+                    filters.Add("doc.Status = 'Hoàn thành' AND (doc.ThoiHan IS NULL OR doc.CompletionDate IS NULL OR date(doc.CompletionDate) <= date(doc.ThoiHan))");
                 }
                 else if (s == "completed_overdue")
                 {
-                    filters.Add("doc.Status = 'Đã hoàn thành' AND doc.ThoiHan IS NOT NULL AND doc.CompletionDate IS NOT NULL AND date(doc.CompletionDate) > date(doc.ThoiHan)");
+                    filters.Add("doc.Status = 'Hoàn thành' AND doc.ThoiHan IS NOT NULL AND doc.CompletionDate IS NOT NULL AND date(doc.CompletionDate) > date(doc.ThoiHan)");
                 }
                 else if (s == "today")
                 {
                     // Công thức chuẩn từ Dashboard Đến hạn hôm nay
-                    filters.Add("date(doc.ThoiHan) = date('now') AND doc.Status != 'Đã hoàn thành'");
+                    filters.Add("date(doc.ThoiHan) = date('now') AND doc.Status != 'Hoàn thành'");
                 }
                 else
                 {
@@ -626,7 +626,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 UPDATE Documents SET 
                     EvidencePaths=@paths, 
                     EvidenceNotes=@notes, 
-                    Status='Đã hoàn thành', 
+                    Status='Hoàn thành', 
                     CompletionDate=datetime('now', 'localtime') 
                 WHERE Id=@docId";
             using var cmd = new SqliteCommand(sql, connection);
@@ -840,7 +840,7 @@ namespace ToolCalendar.Core.Data.Repositories
             if (string.IsNullOrEmpty(value)) return value;
             
             // Map common mangled patterns back to correct Vietnamese
-            if (value.Contains("hoÃ") || value.Contains("ho\u00c3")) return "Đã hoàn thành";
+            if (value.Contains("hoÃ") || value.Contains("ho\u00c3")) return "Hoàn thành";
             if (value.Contains("ChÆ") || value.Contains("Ch\u00c6")) return "Chưa xử lý";
             if (value.Contains("ThÆ") || value.Contains("Th\u00c6")) return "Thường";
             if (value.Contains("Kháº") || value.Contains("Kh\u1ea7")) return "Khẩn";

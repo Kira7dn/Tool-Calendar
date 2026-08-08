@@ -1757,3 +1757,21 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(routing): update document routing table ui to match requested design"`
+
+### [2026-08-08 16:16] Chuẩn hóa trạng thái Hoàn thành
+- **Mô tả**: Hợp nhất hai trạng thái `DA_HOAN_THANH` và `HOAN_THANH` bị lặp trong Constants (frontend) và chuẩn hóa chuỗi trạng thái thành `Hoàn thành` thay vì `Đã hoàn thành` trong toàn bộ Frontend, Backend, và Database để tránh lỗi xử lý nghiệp vụ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/constants/document.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/lib/constants.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocRoutingTab.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocOverviewTab.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocHistoryTab.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/tasks/hooks/useMyTasks.js` (Sửa đổi)
+  - `ToolCalendar.Core/Services/NotificationService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRoutingRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/StatsRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Models/DocumentRecord.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(docs): consolidate completed document status across fullstack"`

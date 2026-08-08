@@ -189,7 +189,7 @@ export default function DocDetail({ docId, onBack }) {
           {doc.status === DOCUMENT_STATUS.DANG_XU_LY && canSubmitEvidence && (
             <>
               <button
-                onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DA_HOAN_THANH)}
+                onClick={() => handleUpdateStatus(DOCUMENT_STATUS.HOAN_THANH)}
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black rounded-xl shadow-lg shadow-amber-500/20"
               >
                 KẾT THÚC VĂN BẢN

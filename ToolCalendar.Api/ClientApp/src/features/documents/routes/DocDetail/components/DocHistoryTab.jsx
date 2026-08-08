@@ -86,7 +86,7 @@ export function DocHistoryTab({ doc, users, routings }) {
     })
   })
 
-  if (doc?.status === DOCUMENT_STATUS.DA_HOAN_THANH) {
+  if (doc?.status === DOCUMENT_STATUS.HOAN_THANH) {
     historyEvents.push({
       id: 'complete',
       title: 'HOÀN THÀNH VĂN BẢN',
