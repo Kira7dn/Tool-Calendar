@@ -1814,3 +1814,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): restore missing HeaderCol component in DocumentRoutingTree"`
+### [2026-08-08 16:53] Đồng bộ SignalR notification status sang Đã xử lý
+- **Mô tả**: Cập nhật message SignalR `DocumentUpdated` trong endpoint báo cáo hoàn thành từ `"Hoàn thành"` sang `"Đã xử lý"` để đồng bộ với hệ thống trạng thái mới (DA_XU_LY).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): sync SignalR notification status to Đã xử lý"`
