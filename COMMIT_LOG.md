@@ -1819,3 +1819,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): sync SignalR notification status to Đã xử lý"`
+### [2026-08-08 16:56] Redesign bảng Quá Trình Xử Lý với scroll ngang và UI mới
+- **Mô tả**: Thiết kế lại toàn bộ `DocumentRoutingTree`: thêm `overflow-x-auto` để cột Trạng thái không bị cắt; header gradient đẹp hơn; avatar initials cho Người xử lý; badge màu cho Trạng thái; tooltip cải tiến có mũi tên; hover highlight row.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): redesign routing tree table with horizontal scroll and badge status"`

@@ -1,10 +1,30 @@
 /* eslint-disable */
-import React, { useState, useEffect } from 'react'
-import { DOCUMENT_STATUS } from '@/constants/document'
-import { ChevronRight, ChevronDown, Clock, User } from 'lucide-react'
+import React, { useState } from 'react'
+import { ChevronRight, ChevronDown, Clock, User, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export const DocumentRoutingTree = ({ routings, onRefresh }) => {
+const STATUS_STYLES = {
+  'Hoàn thành': 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+  'Đã xử lý': 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+  'Đang xử lý': 'bg-blue-100 text-blue-700 border border-blue-200',
+  'Chưa xử lý': 'bg-slate-100 text-slate-600 border border-slate-200',
+  'Từ chối': 'bg-red-100 text-red-700 border border-red-200',
+  'Đã xử lý quá hạn': 'bg-red-500 text-white border border-red-600',
+}
+
+const Tooltip = ({ text, children }) => (
+  <div className="relative group inline-flex max-w-full">
+    {children}
+    {text && text !== '---' && (
+      <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 hidden -translate-x-1/2 rounded-lg bg-slate-800 px-3 py-2 text-xs text-white shadow-xl group-hover:block whitespace-pre-wrap max-w-[280px]">
+        {text}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+      </div>
+    )}
+  </div>
+)
+
+export const DocumentRoutingTree = ({ routings }) => {
   const [expandedNodes, setExpandedNodes] = useState(new Set())
 
   const toggleNode = (nodeId) => {
@@ -17,7 +37,6 @@ export const DocumentRoutingTree = ({ routings, onRefresh }) => {
     setExpandedNodes(newExpanded)
   }
 
-  // Khởi tạo tất cả các node đều mở mặc định
   React.useEffect(() => {
     if (routings && routings.length > 0) {
       const allIds = new Set()
@@ -34,17 +53,16 @@ export const DocumentRoutingTree = ({ routings, onRefresh }) => {
 
   if (!routings || !Array.isArray(routings) || routings.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-        <div className="p-4 rounded-full bg-white shadow-sm mb-4">
-          <Clock className="size-8 text-slate-300" />
+      <div className="flex flex-col items-center justify-center p-16 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+        <div className="p-5 rounded-full bg-white shadow-md mb-4 ring-4 ring-slate-100">
+          <Clock className="size-9 text-slate-300" />
         </div>
-        <p className="text-sm font-bold text-slate-600">Chưa có luồng xử lý nào</p>
+        <p className="text-sm font-bold text-slate-500">Chưa có luồng xử lý nào</p>
         <p className="text-xs text-slate-400 mt-1">Hệ thống chưa ghi nhận thông tin luân chuyển.</p>
       </div>
     )
   }
 
-  // Flatten the tree for easy zebra-striping
   const flatNodes = []
   const flatten = (nodes, level = 0) => {
     nodes.forEach((node) => {
@@ -56,155 +74,155 @@ export const DocumentRoutingTree = ({ routings, onRefresh }) => {
   }
   flatten(routings)
 
-  const TruncatedCell = ({ content, children, className, align = 'left', tooltip }) => {
-    const displayContent = content || '---'
-    const tooltipText = tooltip || displayContent
-
-    return (
-      <div className={cn('p-2 flex items-center relative group', className)}>
-        {children}
-        <span className={cn('truncate block flex-1', align === 'center' ? 'text-center' : '')}>
-          {displayContent}
-        </span>
-        {tooltipText !== '---' && (
-          <div className="absolute hidden group-hover:block z-50 bg-slate-800 text-white p-2 rounded text-xs whitespace-normal min-w-max max-w-[300px] top-full mt-1 left-1/2 -translate-x-1/2 shadow-lg pointer-events-none">
-            {tooltipText}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  const HeaderCol = ({ className, children }) => (
-    <div
-      className={cn(
-        'p-3 font-bold text-white uppercase tracking-wider border-r border-white/20 last:border-r-0 text-center flex items-center justify-center',
-        className
-      )}
-    >
-      {children}
-    </div>
-  )
+  const COLS = [
+    { key: 'person', label: 'Người xử lý', className: 'w-[200px] text-left' },
+    { key: 'role', label: 'Vai trò', className: 'w-[100px] text-center' },
+    { key: 'fwd', label: 'Ngày chuyển', className: 'w-[110px] text-center' },
+    { key: 'deadline', label: 'Hạn xử lý', className: 'w-[110px] text-center' },
+    { key: 'comment', label: 'Bút phê', className: 'w-[160px] text-left' },
+    { key: 'content', label: 'Nội dung xử lý', className: 'w-[180px] text-left' },
+    { key: 'status', label: 'Trạng thái', className: 'w-[130px] text-center' },
+  ]
 
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
+    <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden bg-white">
       {/* Legend */}
-      <div className="flex justify-end p-2 bg-slate-50 border-b border-slate-200">
-        <div className="flex items-center gap-2 text-sm text-slate-700 font-medium">
-          <div className="w-8 h-4 rounded-sm bg-[#db4437]"></div>
-          <span>Đã xử lý quá hạn</span>
+      <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-semibold">
+          <AlertCircle size={13} className="text-slate-400" />
+          <span>Luồng luân chuyển công văn</span>
+        </div>
+        <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium">
+          <span className="inline-block w-3 h-3 rounded-sm bg-red-500"></span>
+          Đã xử lý quá hạn
         </div>
       </div>
 
-      {/* Table Header */}
-      <div className="flex text-xs bg-[#17627e]">
-        <HeaderCol className="flex-1 min-w-[180px] !justify-start">Người xử lý</HeaderCol>
-        <HeaderCol className="w-[90px] shrink-0">Vai trò</HeaderCol>
-        <HeaderCol className="w-[100px] shrink-0">Ngày chuyển</HeaderCol>
-        <HeaderCol className="w-[100px] shrink-0">Hạn xử lý</HeaderCol>
-        <HeaderCol className="flex-1 min-w-[150px]">Bút phê</HeaderCol>
-        <HeaderCol className="flex-1 min-w-[150px]">Nội dung xử lý</HeaderCol>
-        <HeaderCol className="w-[120px] shrink-0">Trạng thái</HeaderCol>
-      </div>
-
-      {/* Table Body */}
-      <div className="flex flex-col max-h-[500px] overflow-y-auto text-sm border-x border-b border-slate-200">
-        {flatNodes.map((node, index) => {
-          const isOverdue = node.status === 'Đã xử lý quá hạn'
-          const hasChildren = node.children && node.children.length > 0
-          const isExpanded = expandedNodes.has(node.id)
-
-          return (
-            <div
-              key={node.id}
-              className={cn(
-                'flex items-stretch border-b border-slate-200 transition-colors',
-                index % 2 === 0 ? 'bg-white' : 'bg-[#f5f5f5]',
-                isOverdue ? '!bg-[#fde8e8]' : ''
-              )}
-            >
-              {/* Người xử lý column */}
+      {/* Scrollable table wrapper */}
+      <div className="overflow-x-auto">
+        <div style={{ minWidth: '990px' }}>
+          {/* Header */}
+          <div className="flex bg-gradient-to-r from-[#17627e] to-[#1a7a9e] text-[11px] font-bold text-white uppercase tracking-widest">
+            {COLS.map((col, i) => (
               <div
-                className="flex-1 min-w-[180px] p-2 flex items-center gap-2 border-r border-slate-200 relative group"
-                style={{ paddingLeft: `${Math.max(0.5, node.level * 1.5 + 0.5)}rem` }}
-              >
-                {hasChildren ? (
-                  <button
-                    onClick={() => toggleNode(node.id)}
-                    className="p-0.5 rounded hover:bg-slate-300 text-slate-600 transition-colors shrink-0"
-                  >
-                    {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                  </button>
-                ) : (
-                  <span className="w-[18px] shrink-0" />
+                key={col.key}
+                className={cn(
+                  'px-3 py-3 border-r border-white/10 last:border-r-0 flex items-center shrink-0',
+                  col.className,
+                  col.key === 'person' ? 'flex-1 min-w-[200px]' : '',
+                  col.key === 'comment' || col.key === 'content' ? 'flex-1 min-w-[160px]' : ''
                 )}
+              >
+                {col.label}
+              </div>
+            ))}
+          </div>
 
-                {node.level > 0 && <span className="text-slate-400 shrink-0">└─</span>}
-                <User size={14} className="text-slate-500 shrink-0" />
-                <span
+          {/* Body */}
+          <div className="flex flex-col divide-y divide-slate-100 max-h-[480px] overflow-y-auto">
+            {flatNodes.map((node, index) => {
+              const isOverdue = node.status === 'Đã xử lý quá hạn'
+              const hasChildren = node.children && node.children.length > 0
+              const isExpanded = expandedNodes.has(node.id)
+              const statusStyle =
+                STATUS_STYLES[node.status] || 'bg-slate-100 text-slate-600 border border-slate-200'
+
+              return (
+                <div
+                  key={node.id}
                   className={cn(
-                    'truncate block flex-1',
-                    node.level === 0 ? 'font-bold' : 'font-medium'
+                    'flex items-center text-xs transition-colors hover:bg-blue-50/40',
+                    index % 2 === 0 ? 'bg-white' : 'bg-slate-50/60',
+                    isOverdue ? '!bg-red-50' : ''
                   )}
                 >
-                  {node.receiverName || 'Unknown User'}
-                </span>
-                {node.receiverName && (
-                  <div className="absolute hidden group-hover:block z-50 bg-slate-800 text-white p-2 rounded text-xs whitespace-normal min-w-max max-w-[300px] top-full mt-1 left-4 shadow-lg pointer-events-none">
-                    {node.receiverName}
+                  {/* Người xử lý */}
+                  <div
+                    className="flex-1 min-w-[200px] px-3 py-2.5 flex items-center gap-1.5 border-r border-slate-100 shrink-0"
+                    style={{ paddingLeft: `${Math.max(0.75, node.level * 1.5 + 0.75)}rem` }}
+                  >
+                    {hasChildren ? (
+                      <button
+                        onClick={() => toggleNode(node.id)}
+                        className="p-0.5 rounded hover:bg-slate-200 text-slate-500 transition-colors shrink-0"
+                      >
+                        {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                      </button>
+                    ) : (
+                      <span className="w-[17px] shrink-0" />
+                    )}
+                    {node.level > 0 && (
+                      <span className="text-slate-300 shrink-0 text-[10px]">└</span>
+                    )}
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#17627e] to-[#1a9ac7] flex items-center justify-center text-white text-[9px] font-black shrink-0">
+                      {(node.receiverName || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <Tooltip text={node.receiverName}>
+                      <span
+                        className={cn(
+                          'truncate max-w-[120px]',
+                          node.level === 0
+                            ? 'font-bold text-slate-800'
+                            : 'font-medium text-slate-600'
+                        )}
+                      >
+                        {node.receiverName || 'Unknown'}
+                      </span>
+                    </Tooltip>
                   </div>
-                )}
-              </div>
 
-              {/* Vai trò */}
-              <TruncatedCell
-                content={node.role}
-                className="w-[90px] border-r border-slate-200 shrink-0 text-slate-700"
-                align="center"
-              />
+                  {/* Vai trò */}
+                  <div className="w-[100px] px-3 py-2.5 flex items-center justify-center border-r border-slate-100 shrink-0 text-slate-600">
+                    {node.role || '---'}
+                  </div>
 
-              {/* Ngày chuyển */}
-              <TruncatedCell
-                content={
-                  node.forwardDate ? new Date(node.forwardDate).toLocaleDateString('vi-VN') : '---'
-                }
-                className="w-[100px] border-r border-slate-200 shrink-0 text-slate-600"
-                align="center"
-              />
+                  {/* Ngày chuyển */}
+                  <div className="w-[110px] px-3 py-2.5 flex items-center justify-center border-r border-slate-100 shrink-0 text-slate-500">
+                    {node.forwardDate
+                      ? new Date(node.forwardDate).toLocaleDateString('vi-VN')
+                      : '---'}
+                  </div>
 
-              {/* Hạn xử lý */}
-              <TruncatedCell
-                content={
-                  node.deadline ? new Date(node.deadline).toLocaleDateString('vi-VN') : '---'
-                }
-                className="w-[100px] border-r border-slate-200 shrink-0 font-semibold text-amber-700"
-                align="center"
-              />
+                  {/* Hạn xử lý */}
+                  <div
+                    className={cn(
+                      'w-[110px] px-3 py-2.5 flex items-center justify-center border-r border-slate-100 shrink-0 font-semibold',
+                      isOverdue ? 'text-red-600' : 'text-amber-600'
+                    )}
+                  >
+                    {node.deadline ? new Date(node.deadline).toLocaleDateString('vi-VN') : '---'}
+                  </div>
 
-              {/* Bút phê */}
-              <TruncatedCell
-                content={node.comment}
-                className="flex-1 min-w-[150px] text-slate-700 border-r border-slate-200"
-              />
+                  {/* Bút phê */}
+                  <Tooltip text={node.comment}>
+                    <div className="flex-1 min-w-[160px] px-3 py-2.5 border-r border-slate-100 shrink-0 text-slate-600 truncate">
+                      {node.comment || <span className="text-slate-300">---</span>}
+                    </div>
+                  </Tooltip>
 
-              {/* Nội dung xử lý */}
-              <TruncatedCell
-                content={node.processingContent}
-                className="flex-1 min-w-[150px] text-slate-700 border-r border-slate-200"
-              />
+                  {/* Nội dung xử lý */}
+                  <Tooltip text={node.processingContent}>
+                    <div className="flex-1 min-w-[180px] px-3 py-2.5 border-r border-slate-100 shrink-0 text-slate-600 truncate">
+                      {node.processingContent || <span className="text-slate-300">---</span>}
+                    </div>
+                  </Tooltip>
 
-              {/* Trạng thái */}
-              <TruncatedCell
-                content={node.status}
-                className={cn(
-                  'w-[120px] shrink-0 font-medium',
-                  isOverdue ? 'bg-[#db4437] text-white border-l border-[#db4437]' : 'text-slate-800'
-                )}
-                align="center"
-              />
-            </div>
-          )
-        })}
+                  {/* Trạng thái */}
+                  <div className="w-[130px] px-3 py-2.5 flex items-center justify-center shrink-0">
+                    <span
+                      className={cn(
+                        'inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap',
+                        statusStyle
+                      )}
+                    >
+                      {node.status || '---'}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )
