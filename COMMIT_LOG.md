@@ -1559,3 +1559,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `deploy_to_vnpt.sh` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): cập nhật script deploy để tránh lỗi conflict container"`
+
+### [2026-08-08 09:02] Sửa lỗi xung đột container khi deploy lên máy chủ VNPT
+- **Mô tả**: Bổ sung `docker rm -f lichcongtac-backend` vào script deploy để xóa triệt để container cũ bị treo/xung đột trước khi docker-compose up lại.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): xóa triệt để container bị treo trước khi deploy"`
