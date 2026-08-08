@@ -1698,3 +1698,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): set UploadedByUserId when creating document manually"`
+
+### [2026-08-08 14:28] Cập nhật script deploy tự động dọn rác
+- **Mô tả**: Sửa script deploy tự động thêm cờ `docker system prune -a -f --volumes` trước khi build trên server VNPT để dọn rác, giải phóng dung lượng ổ cứng bị đầy (Error: no space left on device). Cập nhật rule tự động deploy.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+  - `.agents/rules/tc-rule-auto-deploy.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): add auto prune docker on vnpt server deploy"`

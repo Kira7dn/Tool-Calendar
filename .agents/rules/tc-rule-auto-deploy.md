@@ -22,7 +22,8 @@ Mỗi khi hoàn thành một task, AI phải tự động làm các bước sau 
    chmod +x deploy_to_vnpt.sh
    ./deploy_to_vnpt.sh
    ```
-2. Nếu script thất bại, tự động chẩn đoán lỗi (ví dụ: sshpass không cài đặt, permission denied) và thông báo ngay cho Developer.
+   *Lưu ý: Script này đã được cập nhật để tự động chạy `docker system prune -a -f --volumes` trên server nhằm dọn dẹp rác Docker trước khi build, tránh lỗi đầy ổ cứng.*
+2. Nếu script thất bại, tự động chẩn đoán lỗi (ví dụ: sshpass không cài đặt, permission denied, ổ cứng đầy) và thông báo ngay cho Developer.
 
 ### Bước 3: Dọn Dẹp File Tạm (Clean Up)
 1. Xóa mọi file tạm trên local (ví dụ: `test.js`, `test.cs`, `*.log`, `*.tmp`, `dump.sql`).
