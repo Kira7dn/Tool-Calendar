@@ -1855,3 +1855,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): prevent truncation of doc comments title"`
 
+### [2026-08-08 17:52] Cấu hình 2 cấp luân chuyển và độc quyền Chủ trì
+- **Mô tả**: Sửa UI chỉ cho phép tài khoản đăng tải (hoặc Admin) được quyền Chuyển xử lý, giới hạn quy trình luân chuyển ở mức 2 cấp. Cập nhật backend chỉ cho phép một người được gán vai trò Chủ trì trên một văn bản, tự động giáng cấp thành Phối hợp nếu được chọn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(routing): giới hạn 2 cấp luân chuyển và 1 chủ trì duy nhất"`

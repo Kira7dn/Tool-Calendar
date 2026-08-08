@@ -54,11 +54,30 @@ namespace ToolCalendar.Api.Controllers.Documents
 
             if (routing.ReceiverId > 0)
             {
-                // ✅ Chỉ cập nhật Cán bộ xử lý chính nếu vai trò là Chủ trì
+                // ✅ Chỉ cho phép 1 người Chủ trì. Nếu đã có, tự động chuyển thành Phối hợp
                 if (routing.Role == "Chủ trì")
                 {
-                    var receiver = _userRepo.GetUserById(routing.ReceiverId);
-                    await _documentRepo.UpdateHandlerAsync(documentId, routing.ReceiverId, receiver?.DepartmentId);
+                    var existingTree = await _routingRepo.GetTreeByDocumentIdAsync(documentId);
+                    bool hasChuTri = false;
+                    void CheckNode(DocumentRoutingRecord node)
+                    {
+                        if (node.Role == "Chủ trì") hasChuTri = true;
+                        if (node.Children != null)
+                        {
+                            foreach (var child in node.Children) CheckNode(child);
+                        }
+                    }
+                    foreach (var root in existingTree) CheckNode(root);
+
+                    if (hasChuTri)
+                    {
+                        routing.Role = "Phối hợp";
+                    }
+                    else
+                    {
+                        var receiver = _userRepo.GetUserById(routing.ReceiverId);
+                        await _documentRepo.UpdateHandlerAsync(documentId, routing.ReceiverId, receiver?.DepartmentId);
+                    }
                 }
 
                 // ✅ Gửi thông báo cho TẤT CẢ các vai trò (Chủ trì, Phối hợp, ...)

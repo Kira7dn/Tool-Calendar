@@ -254,7 +254,10 @@ export default function DocDetail({ docId, onBack }) {
               displayRoutings={displayRoutings}
               fetchRoutings={fetchRoutings}
               setIsForwardModalOpen={setIsForwardModalOpen}
-              canForward={canInteract}
+              canForward={
+                doc.uploadedByUserId == currentUserId ||
+                localStorage.getItem('user_role') === 'Admin'
+              }
             />
           )}
           {activeTab === 'history' && <DocHistoryTab doc={doc} users={users} routings={routings} />}
