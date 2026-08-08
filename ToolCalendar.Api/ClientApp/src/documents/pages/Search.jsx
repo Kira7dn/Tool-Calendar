@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ErrorState } from '@/components/ui/error-state'
 
 export function Search({ filters, onTabChange }) {
   const [documents, setDocuments] = useState([])
@@ -30,9 +31,11 @@ export function Search({ filters, onTabChange }) {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(false)
 
   // Search Filters
   const [search, setSearch] = useState(filters?.search || '')
+  const [debouncedSearch, setDebouncedSearch] = useState(filters?.search || '')
   const [status, setStatus] = useState(filters?.status || '')
   const [fromDate, setFromDate] = useState(filters?.fromDate || '')
   const [toDate, setToDate] = useState(filters?.toDate || '')
@@ -51,6 +54,7 @@ export function Search({ filters, onTabChange }) {
       const newAddTo = filters.addToDate ?? ''
 
       setSearch(newSearch)
+      setDebouncedSearch(newSearch)
       setStatus(newStatus)
       setSort(newSort)
       setFromDate(newFrom)
@@ -58,34 +62,28 @@ export function Search({ filters, onTabChange }) {
       setAddFromDate(newAddFrom)
       setAddToDate(newAddTo)
       setPage(1)
-
-      setIsLoading(true)
-      let url = `/api/documents?page=1&size=${pageSize}&search=${encodeURIComponent(newSearch)}&status=${newStatus}&sort=${newSort}`
-      if (newFrom) url += `&fromDate=${newFrom}`
-      if (newTo) url += `&toDate=${newTo}`
-      if (newAddFrom) url += `&addFromDate=${newAddFrom}`
-      if (newAddTo) url += `&addToDate=${newAddTo}`
-
-      fetch(url)
-        .then((res) => res.json())
-        .then((data) => {
-          setDocuments(data.data || [])
-          setTotalPages(data.totalPages || 1)
-          setTotalCount(data.totalCount || 0)
-          setIsLoading(false)
-        })
-        .catch(() => setIsLoading(false))
     }
   }, [filters])
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      if (search !== debouncedSearch) {
+        setDebouncedSearch(search)
+        setPage(1)
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [search, debouncedSearch])
+
+  useEffect(() => {
     fetchDocuments()
-  }, [page, pageSize])
+  }, [page, pageSize, debouncedSearch, status, sort, fromDate, toDate, addFromDate, addToDate])
 
   const fetchDocuments = async () => {
     setIsLoading(true)
+    setError(false)
     try {
-      let url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(search)}&status=${status}&sort=${sort}`
+      let url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(debouncedSearch)}&status=${status}&sort=${sort}`
       if (fromDate) url += `&fromDate=${fromDate}`
       if (toDate) url += `&toDate=${toDate}`
       if (addFromDate) url += `&addFromDate=${addFromDate}`
@@ -97,9 +95,12 @@ export function Search({ filters, onTabChange }) {
         setDocuments(data.data || [])
         setTotalPages(data.totalPages || 1)
         setTotalCount(data.totalCount || 0)
+      } else {
+        throw new Error('API fetch failed')
       }
     } catch (error) {
       console.error('Failed to fetch documents:', error)
+      setError(true)
     } finally {
       setIsLoading(false)
     }
@@ -332,6 +333,12 @@ export function Search({ filters, onTabChange }) {
                       </TableCell>
                     </TableRow>
                   ))
+                ) : error ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={7} className="h-[200px] text-center p-0 align-middle">
+                      <ErrorState onRetry={fetchDocuments} />
+                    </TableCell>
+                  </TableRow>
                 ) : documents.length > 0 ? (
                   documents.map((doc, idx) => (
                     <TableRow

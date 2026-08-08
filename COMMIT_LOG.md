@@ -1542,3 +1542,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): khôi phục lại menu Văn bản đến hạn"`
+
+### [2026-08-08 08:55] Refactor Frontend với ErrorState và Debounce
+- **Mô tả**: Tái cấu trúc các component FE theo yêu cầu, khắc phục lỗi trắng trang khi mất kết nối mạng bằng cách bắt lỗi `catch` khi gọi API `fetch` và hiển thị component `ErrorState`. Thêm logic Debounce vào trang `Search.jsx`. Áp dụng cho các màn hình: PublicSchedule, Dashboard, Search, Review, Documents. Đã kiểm tra format code bằng Prettier và ESLint.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/ui/error-state.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/Dashboard.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/Search.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/Review.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/documents/pages/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(api): áp dụng error boundary và debounce chống trắng trang"`

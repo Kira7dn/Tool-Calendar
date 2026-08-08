@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { DOCUMENT_STATUS } from '@/constants/document'
 import { AlertTriangle, Clock, FileText } from 'lucide-react'
 import { DashboardToolbar, KpiCard, DeadlineBarChart, EventLogCard } from '@/components/dashboard'
+import { ErrorState } from '@/components/ui/error-state'
 
 const emptyStats = {
   total: 0,
@@ -24,6 +25,7 @@ export function Dashboard({ onTabChange }) {
   const [activities, setActivities] = useState([])
   const [deadlineSeries, setDeadlineSeries] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
@@ -80,8 +82,10 @@ export function Dashboard({ onTabChange }) {
         nextLists.today = data.data || []
       }
       setKpiLists(nextLists)
+      setError(false)
     } catch (error) {
       console.error('Dashboard Fetch Error:', error)
+      setError(true)
     } finally {
       setIsLoading(false)
     }
@@ -104,46 +108,58 @@ export function Dashboard({ onTabChange }) {
         onUpload={() => onTabChange('upload')}
       />
 
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-3 shrink-0">
-        <KpiCard
-          title={DOCUMENT_STATUS.DANG_XU_LY}
-          description="Chưa hoàn thành"
-          value={stats.total}
-          icon={FileText}
-          tone="info"
-          isLoading={isLoading}
-          items={kpiLists.processing}
-          emptyText="Chưa có dữ liệu danh sách đang xử lý"
-          onClick={() => onTabChange('documents')}
-        />
-        <KpiCard
-          title="Quá hạn"
-          description="Ưu tiên ngay"
-          value={stats.overdue}
-          icon={AlertTriangle}
-          tone="danger"
-          isLoading={isLoading}
-          items={kpiLists.overdue}
-          emptyText="Không có văn bản quá hạn"
-          onClick={() => onTabChange('documents', { status: 'overdue' })}
-        />
-        <KpiCard
-          title="Hạn hôm nay"
-          description="Trong ngày"
-          value={stats.today}
-          icon={Clock}
-          tone="warning"
-          isLoading={isLoading}
-          items={kpiLists.today}
-          emptyText="Không có văn bản đến hạn hôm nay"
-          onClick={() => onTabChange('documents', { status: 'today' })}
-        />
-      </section>
+      {error ? (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 flex-1 p-8">
+          <ErrorState onRetry={fetchData} />
+        </div>
+      ) : (
+        <>
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-3 shrink-0">
+            <KpiCard
+              title={DOCUMENT_STATUS.DANG_XU_LY}
+              description="Chưa hoàn thành"
+              value={stats.total}
+              icon={FileText}
+              tone="info"
+              isLoading={isLoading}
+              items={kpiLists.processing}
+              emptyText="Chưa có dữ liệu danh sách đang xử lý"
+              onClick={() => onTabChange('documents')}
+            />
+            <KpiCard
+              title="Quá hạn"
+              description="Ưu tiên ngay"
+              value={stats.overdue}
+              icon={AlertTriangle}
+              tone="danger"
+              isLoading={isLoading}
+              items={kpiLists.overdue}
+              emptyText="Không có văn bản quá hạn"
+              onClick={() => onTabChange('documents', { status: 'overdue' })}
+            />
+            <KpiCard
+              title="Hạn hôm nay"
+              description="Trong ngày"
+              value={stats.today}
+              icon={Clock}
+              tone="warning"
+              isLoading={isLoading}
+              items={kpiLists.today}
+              emptyText="Không có văn bản đến hạn hôm nay"
+              onClick={() => onTabChange('documents', { status: 'today' })}
+            />
+          </section>
 
-      <section className="grid grid-cols-1 xl:grid-cols-12 gap-3">
-        <DeadlineBarChart className="xl:col-span-8" data={deadlineSeries} isLoading={isLoading} />
-        <EventLogCard className="xl:col-span-4" activities={activities} isLoading={isLoading} />
-      </section>
+          <section className="grid grid-cols-1 xl:grid-cols-12 gap-3">
+            <DeadlineBarChart
+              className="xl:col-span-8"
+              data={deadlineSeries}
+              isLoading={isLoading}
+            />
+            <EventLogCard className="xl:col-span-4" activities={activities} isLoading={isLoading} />
+          </section>
+        </>
+      )}
     </div>
   )
 }

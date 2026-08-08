@@ -24,11 +24,13 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { ErrorState } from '@/components/ui/error-state'
 
 export function Review({ onBack }) {
   const [docs, setDocs] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [departments, setDepartments] = useState([])
   const [users, setUsers] = useState([])
@@ -80,14 +82,18 @@ export function Review({ onBack }) {
 
   const fetchReviewDocs = async () => {
     setIsLoading(true)
+    setError(false)
     try {
       const response = await fetch('/api/documents?status=Chưa xử lý&size=50')
       if (response.ok) {
         const data = await response.json()
         setDocs(data.data || [])
+      } else {
+        throw new Error('API fetch failed')
       }
     } catch (error) {
       console.error('Failed to fetch review docs:', error)
+      setError(true)
     } finally {
       setIsLoading(false)
     }
@@ -167,6 +173,17 @@ export function Review({ onBack }) {
       <div className="flex flex-col items-center justify-center h-[70vh] gap-4">
         <Loader2 className="size-10 animate-spin text-primary" />
         <p className="text-muted-foreground font-bold">Đang chuẩn bị dữ liệu OCR...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="fixed inset-0 z-[1000] bg-background flex flex-col items-center justify-center p-8">
+        <ErrorState onRetry={fetchReviewDocs} />
+        <Button onClick={onBack} variant="outline" className="mt-4">
+          Quay lại
+        </Button>
       </div>
     )
   }

@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ErrorState } from '@/components/ui/error-state'
 
 export function Documents({ onTabChange, filters }) {
   const [documents, setDocuments] = useState([])
@@ -42,6 +43,7 @@ export function Documents({ onTabChange, filters }) {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [status, setStatus] = useState(filters?.status || '')
@@ -91,6 +93,7 @@ export function Documents({ onTabChange, filters }) {
 
   const fetchDocuments = async () => {
     setIsLoading(true)
+    setError(false)
     try {
       const url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(debouncedSearch)}&status=${status}&sort=${sort}`
       const response = await fetch(url)
@@ -99,9 +102,12 @@ export function Documents({ onTabChange, filters }) {
         setDocuments(data.data || [])
         setTotalPages(data.totalPages || 1)
         setTotalCount(data.totalCount || 0)
+      } else {
+        throw new Error('API fetch failed')
       }
     } catch (error) {
       console.error('Failed to fetch documents:', error)
+      setError(true)
     } finally {
       setIsLoading(false)
     }
@@ -287,6 +293,12 @@ export function Documents({ onTabChange, filters }) {
                       </TableCell>
                     </TableRow>
                   ))
+                ) : error ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={8} className="h-[240px] text-center p-0 align-middle">
+                      <ErrorState onRetry={fetchDocuments} />
+                    </TableCell>
+                  </TableRow>
                 ) : documents.length > 0 ? (
                   documents.map((doc, idx) => (
                     <TableRow key={doc.id} className="group transition-colors h-[48px]">
