@@ -1,5 +1,12 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-08 16:00] Vô hiệu hóa cache cho file index.html
+- **Mô tả**: Bổ sung middleware trong `Program.cs` để thêm các header `Cache-Control: no-cache, no-store, must-revalidate` đối với nội dung `text/html`. Điều này giúp trình duyệt luôn tải file HTML mới nhất sau khi deploy, tránh việc người dùng bị giữ lại giao diện cũ (gây ra lỗi Error 310 do code JS cũ không đồng bộ).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): vô hiệu hóa browser cache cho index.html để đảm bảo luôn tải JS mới nhất"`
+
+
 ### [2026-08-08 15:52] Khắc phục lỗi React #310 khi vào trang chi tiết văn bản
 - **Mô tả**: Di chuyển hook `useMemo` tính toán `displayRoutings` lên trên các câu lệnh `if (isLoading)` và `if (!doc)` trong `DocDetail.jsx`. Việc này tuân thủ đúng "Rules of Hooks" của React, sửa triệt để lỗi "Rendered fewer hooks than expected" (Minified React error #310) khi tải trang.
 - **Tệp thay đổi**:

@@ -349,6 +349,22 @@ app.UseRateLimiter(); // Kích hoạt Rate Limiting
 app.UseWebSockets();
 
 
+// Middleware chống cache cho HTML (index.html) để đảm bảo luôn tải JS mới nhất
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        if (context.Response.ContentType?.StartsWith("text/html") == true)
+        {
+            context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            context.Response.Headers["Pragma"] = "no-cache";
+            context.Response.Headers["Expires"] = "0";
+        }
+        return Task.CompletedTask;
+    });
+    await next();
+});
+
 // Serve static files (chỉ wwwroot - giao diện web, KHÔNG phải Uploads)
 app.UseDefaultFiles();
 app.UseStaticFiles();
