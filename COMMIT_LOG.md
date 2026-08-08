@@ -1,5 +1,12 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-08 15:35] Ràng buộc quyền kết thúc văn bản cho người dùng cuối (Leaf Nodes)
+- **Mô tả**: Thay đổi logic phân quyền hiển thị nút "Kết thúc văn bản" và "Báo cáo hoàn thành". Thay vì hiển thị cho bất cứ người nhận nào, bây giờ nút này CHỈ hiển thị cho những người nằm ở **nhánh cuối cùng** của luồng chuyển xử lý (những người chưa chuyển văn bản tiếp cho ai khác). Điều này đảm bảo những người trung gian (như B và E trong chuỗi A->B->E->F) sẽ không có quyền kết thúc văn bản sau khi đã chuyển đi.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocRoutingTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): chỉ hiển thị nút kết thúc văn bản cho người xử lý cuối cùng trong nhánh (leaf nodes)"`
+
 ### [2026-08-08 15:22] Thiết kế lại cây luân chuyển xử lý văn bản
 - **Mô tả**: Thay đổi cấu trúc hiển thị cây luân chuyển để người Tiếp nhận (Văn thư) là thư mục gốc, và người Xử lý chính là thư mục con, mô phỏng đúng luồng nghiệp vụ. Thêm nút "KẾT THÚC VĂN BẢN" cho người xử lý để có thể đóng văn bản mà không cần nộp báo cáo.
 - **Tệp thay đổi**:

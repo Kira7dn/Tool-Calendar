@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React from 'react'
+import React, { useMemo } from 'react'
 import { DOCUMENT_STATUS } from '@/constants/document'
 import { ArrowLeft, Loader2, FileText, ExternalLink, Edit, Trash2, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -104,6 +104,47 @@ export default function DocDetail({ docId, onBack }) {
     isUserInRoutings(routings, currentUserId) ||
     localStorage.getItem('user_role') === 'Admin'
 
+  const displayRoutings = useMemo(() => {
+    // Check if there is an uploader (Văn thư)
+    const uploader = users?.find((u) => u.id === doc?.uploadedByUserId)
+    const uploaderName = uploader?.fullName || 'Văn thư / Tiếp nhận'
+
+    // Root node (Tiếp nhận)
+    const rootNode = {
+      id: 'synthetic-root-uploader',
+      receiverName: uploaderName,
+      receiverId: doc?.uploadedByUserId,
+      role: 'Tiếp nhận',
+      forwardDate: doc?.ngayThem,
+      deadline: doc?.thoiHan,
+      comment: '',
+      processingContent: '',
+      status: 'Đã xử lý',
+      children: [],
+    }
+
+    if (doc?.assignedTo && doc.assignedTo !== doc?.uploadedByUserId) {
+      const assignedUser = users?.find((u) => u.id === doc.assignedTo)
+      const assigneeNode = {
+        id: 'synthetic-root-assignee',
+        receiverName: assignedUser?.fullName || 'Người được phân công',
+        receiverId: doc.assignedTo,
+        role: 'Xử lý chính',
+        forwardDate: doc.ngayThem,
+        deadline: doc.thoiHan,
+        comment: 'Nhận nhiệm vụ xử lý chính',
+        processingContent: '',
+        status: routings && routings.length > 0 ? 'Đã chuyển tiếp' : doc.status,
+        children: routings || [],
+      }
+      rootNode.children = [assigneeNode]
+    } else {
+      rootNode.children = routings || []
+    }
+
+    return [rootNode]
+  }, [routings, doc, users])
+
   const isLeafReceiver = (routingList, userId) => {
     if (!routingList || !Array.isArray(routingList) || routingList.length === 0) return false
     for (const r of routingList) {
@@ -113,10 +154,8 @@ export default function DocDetail({ docId, onBack }) {
     return false
   }
 
-  const hasRoutings = routings && routings.length > 0
-  const canSubmitEvidence = hasRoutings
-    ? isLeafReceiver(routings, currentUserId)
-    : doc.assignedTo == currentUserId
+  // User can only submit evidence if they are a leaf node in the FULL routing tree
+  const canSubmitEvidence = isLeafReceiver(displayRoutings, currentUserId)
 
   const pdfUrl = `/api/documents/${docId}/file?access_token=${localStorage.getItem('auth_token')}#page=${pdfPage}&toolbar=0&navpanes=0`
 
@@ -212,11 +251,10 @@ export default function DocDetail({ docId, onBack }) {
           {activeTab === 'routing' && (
             <DocRoutingTab
               doc={doc}
-              routings={routings}
+              displayRoutings={displayRoutings}
               fetchRoutings={fetchRoutings}
               setIsForwardModalOpen={setIsForwardModalOpen}
               canForward={canInteract}
-              users={users}
             />
           )}
           {activeTab === 'history' && <DocHistoryTab doc={doc} users={users} routings={routings} />}

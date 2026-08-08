@@ -6,53 +6,11 @@ import { DocumentRoutingTree } from '@/components/DocumentRoutingTree'
 
 export function DocRoutingTab({
   doc,
-  routings,
+  displayRoutings,
   fetchRoutings,
   setIsForwardModalOpen,
   canForward,
-  users,
 }) {
-  const displayRoutings = useMemo(() => {
-    // Check if there is an uploader (Văn thư)
-    const uploader = users?.find((u) => u.id === doc?.uploadedByUserId)
-    const uploaderName = uploader?.fullName || 'Văn thư / Tiếp nhận'
-
-    // Root node (Tiếp nhận)
-    const rootNode = {
-      id: 'synthetic-root-uploader',
-      receiverName: uploaderName,
-      receiverId: doc?.uploadedByUserId,
-      role: 'Tiếp nhận',
-      forwardDate: doc?.ngayThem,
-      deadline: doc?.thoiHan,
-      comment: '',
-      processingContent: '',
-      status: 'Đã xử lý',
-      children: [],
-    }
-
-    if (doc?.assignedTo && doc.assignedTo !== doc?.uploadedByUserId) {
-      const assignedUser = users?.find((u) => u.id === doc.assignedTo)
-      const assigneeNode = {
-        id: 'synthetic-root-assignee',
-        receiverName: assignedUser?.fullName || 'Người được phân công',
-        receiverId: doc.assignedTo,
-        role: 'Xử lý chính',
-        forwardDate: doc.ngayThem,
-        deadline: doc.thoiHan,
-        comment: 'Nhận nhiệm vụ xử lý chính',
-        processingContent: '',
-        status: routings && routings.length > 0 ? 'Đã chuyển tiếp' : doc.status,
-        children: routings || [],
-      }
-      rootNode.children = [assigneeNode]
-    } else {
-      rootNode.children = routings || []
-    }
-
-    return [rootNode]
-  }, [routings, doc, users])
-
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8 flex flex-col h-auto lg:h-full overflow-hidden animate-in fade-in zoom-in-95 duration-400">
       <div className="flex items-center justify-between mb-6 shrink-0">
