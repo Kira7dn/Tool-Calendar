@@ -1839,3 +1839,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(notify): send routing notifications for all roles and use INotificationManager"`
+### [2026-08-08 17:29] Hotfix thiếu using directive ToolCalendar.Services
+- **Mô tả**: Bổ sung `using ToolCalendar.Services;` trong `DocumentRoutingsController` để server có thể build được (lỗi biên dịch `INotificationManager` not found).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): add missing using ToolCalendar.Services namespace"`
