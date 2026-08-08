@@ -1861,3 +1861,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
   - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(routing): giới hạn 2 cấp luân chuyển và 1 chủ trì duy nhất"`
+### [2026-08-08 18:08] Sửa logic mất quyền chủ trì
+- **Mô tả**: Khi người dùng hiện tại có vai trò "Chủ trì" chuyển xử lý cho một người khác với vai trò "Chủ trì", hệ thống sẽ tự động tước (giáng cấp) tất cả các vai trò "Chủ trì" cũ trên văn bản đó xuống thành "Phối hợp", đảm bảo rằng tại mọi thời điểm chỉ có duy nhất một người mang vai trò "Chủ trì".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRoutingRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): giang cap chu tri cu thanh phoi hop khi co chu tri moi"`

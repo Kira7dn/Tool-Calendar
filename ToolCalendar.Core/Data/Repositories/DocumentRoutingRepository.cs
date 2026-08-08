@@ -10,6 +10,7 @@ namespace ToolCalendar.Data.Repositories
         Task<int> CreateRoutingAsync(DocumentRoutingRecord routing);
         Task UpdateStatusAsync(int id, string status, string processingContent);
         Task UpdateStatusByDocumentAndReceiverAsync(int documentId, int receiverId, string status, string processingContent);
+        Task DowngradeRoleAsync(int documentId, string oldRole, string newRole);
     }
 
     public class DocumentRoutingRepository : IDocumentRoutingRepository
@@ -155,6 +156,22 @@ namespace ToolCalendar.Data.Repositories
             cmd.Parameters.AddWithValue("@ReceiverId", receiverId);
             cmd.Parameters.AddWithValue("@Status", status);
             cmd.Parameters.AddWithValue("@ProcessingContent", processingContent);
+            await cmd.ExecuteNonQueryAsync();
+        }
+        public async Task DowngradeRoleAsync(int documentId, string oldRole, string newRole)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            
+            string sql = @"
+                UPDATE DocumentRoutings
+                SET Role = @NewRole
+                WHERE DocumentId = @DocumentId AND Role = @OldRole";
+
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@DocumentId", documentId);
+            cmd.Parameters.AddWithValue("@OldRole", oldRole);
+            cmd.Parameters.AddWithValue("@NewRole", newRole);
             await cmd.ExecuteNonQueryAsync();
         }
     }

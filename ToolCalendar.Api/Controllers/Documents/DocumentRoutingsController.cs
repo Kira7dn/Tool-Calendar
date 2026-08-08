@@ -50,34 +50,21 @@ namespace ToolCalendar.Api.Controllers.Documents
             }
             routing.CreatedAt = DateTime.Now;
 
+            // ✅ Chỉ cho phép 1 người Chủ trì duy nhất.
+            // Nếu người dùng chọn chuyển cho người khác làm Chủ trì, tất cả Chủ trì cũ sẽ bị giáng xuống thành Phối hợp.
+            if (routing.Role == "Chủ trì")
+            {
+                await _routingRepo.DowngradeRoleAsync(documentId, "Chủ trì", "Phối hợp");
+            }
+
             int newId = await _routingRepo.CreateRoutingAsync(routing);
 
             if (routing.ReceiverId > 0)
             {
-                // ✅ Chỉ cho phép 1 người Chủ trì. Nếu đã có, tự động chuyển thành Phối hợp
                 if (routing.Role == "Chủ trì")
                 {
-                    var existingTree = await _routingRepo.GetTreeByDocumentIdAsync(documentId);
-                    bool hasChuTri = false;
-                    void CheckNode(DocumentRoutingRecord node)
-                    {
-                        if (node.Role == "Chủ trì") hasChuTri = true;
-                        if (node.Children != null)
-                        {
-                            foreach (var child in node.Children) CheckNode(child);
-                        }
-                    }
-                    foreach (var root in existingTree) CheckNode(root);
-
-                    if (hasChuTri)
-                    {
-                        routing.Role = "Phối hợp";
-                    }
-                    else
-                    {
-                        var receiver = _userRepo.GetUserById(routing.ReceiverId);
-                        await _documentRepo.UpdateHandlerAsync(documentId, routing.ReceiverId, receiver?.DepartmentId);
-                    }
+                    var receiver = _userRepo.GetUserById(routing.ReceiverId);
+                    await _documentRepo.UpdateHandlerAsync(documentId, routing.ReceiverId, receiver?.DepartmentId);
                 }
 
                 // ✅ Gửi thông báo cho TẤT CẢ các vai trò (Chủ trì, Phối hợp, ...)
