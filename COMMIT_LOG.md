@@ -1692,3 +1692,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
   - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(routing): chỉ chuyển quyền xử lý chính khi vai trò là Chủ trì"`
+
+### [2026-08-08 14:24] Sửa lỗi API thêm văn bản không lưu UploadedByUserId
+- **Mô tả**: Bổ sung xử lý lấy `userId` từ JWT claims và gán cho `UploadedByUserId` trong endpoint `/api/documents/Create`. Nếu thiếu trường này, văn bản khi được tạo thủ công sẽ mặc định gán cho Admin, dẫn đến người tải lên (Văn thư) không thể thấy nút Chuyển xử lý.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): set UploadedByUserId when creating document manually"`

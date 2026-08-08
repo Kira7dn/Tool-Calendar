@@ -163,6 +163,14 @@ namespace ToolCalendar.Api.Controllers.Documents
         public async Task<IActionResult> Create([FromBody] DocumentRecord record)
         {
             if (record == null) return BadRequest(ApiResponse.Fail("Dữ liệu văn bản không hợp lệ."));
+
+            // Lấy userId của người đang đăng nhập từ JWT claims
+            var userIdStr = User.FindFirstValue("uid") ?? User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                record.UploadedByUserId = userId;
+            }
+
             int id = await _documentRepository.InsertAsync(record);
             record.Id = id;
             _ = _hubContext.Clients.All.SendAsync("DocumentUpdated");
