@@ -1553,3 +1553,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/documents/pages/Review.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/documents/pages/Documents.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(api): áp dụng error boundary và debounce chống trắng trang"`
+
+### [2026-08-08 08:58] Cập nhật script deploy lên VNPT Server
+- **Mô tả**: Bổ sung `docker compose down` trước khi build và up trong script `deploy_to_vnpt.sh` để khắc phục lỗi xung đột tên container khi deploy lên máy chủ VNPT.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): cập nhật script deploy để tránh lỗi conflict container"`
