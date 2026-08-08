@@ -56,16 +56,24 @@ export const DocumentRoutingTree = ({ routings, onRefresh }) => {
   }
   flatten(routings)
 
-  const HeaderCol = ({ className, children }) => (
-    <div
-      className={cn(
-        'p-3 font-bold text-white uppercase tracking-wider border-r border-white/20 last:border-r-0 text-center flex items-center justify-center',
-        className
-      )}
-    >
-      {children}
-    </div>
-  )
+  const TruncatedCell = ({ content, children, className, align = 'left', tooltip }) => {
+    const displayContent = content || '---'
+    const tooltipText = tooltip || displayContent
+
+    return (
+      <div className={cn('p-2 flex items-center relative group', className)}>
+        {children}
+        <span className={cn('truncate block flex-1', align === 'center' ? 'text-center' : '')}>
+          {displayContent}
+        </span>
+        {tooltipText !== '---' && (
+          <div className="absolute hidden group-hover:block z-50 bg-slate-800 text-white p-2 rounded text-xs whitespace-normal min-w-max max-w-[300px] top-full mt-1 left-1/2 -translate-x-1/2 shadow-lg pointer-events-none">
+            {tooltipText}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
@@ -106,76 +114,83 @@ export const DocumentRoutingTree = ({ routings, onRefresh }) => {
             >
               {/* Người xử lý column */}
               <div
-                className="flex-1 min-w-[180px] p-2 flex items-center gap-2 border-r border-slate-200"
+                className="flex-1 min-w-[180px] p-2 flex items-center gap-2 border-r border-slate-200 relative group"
                 style={{ paddingLeft: `${Math.max(0.5, node.level * 1.5 + 0.5)}rem` }}
               >
                 {hasChildren ? (
                   <button
                     onClick={() => toggleNode(node.id)}
-                    className="p-0.5 rounded hover:bg-slate-300 text-slate-600 transition-colors"
+                    className="p-0.5 rounded hover:bg-slate-300 text-slate-600 transition-colors shrink-0"
                   >
                     {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </button>
                 ) : (
-                  <span className="w-[18px]" />
+                  <span className="w-[18px] shrink-0" />
                 )}
 
-                {node.level > 0 && <span className="text-slate-400">└─</span>}
-                <User size={14} className="text-slate-500" />
+                {node.level > 0 && <span className="text-slate-400 shrink-0">└─</span>}
+                <User size={14} className="text-slate-500 shrink-0" />
                 <span
                   className={cn(
-                    'whitespace-normal break-words',
+                    'truncate block flex-1',
                     node.level === 0 ? 'font-bold' : 'font-medium'
                   )}
                 >
                   {node.receiverName || 'Unknown User'}
                 </span>
+                {node.receiverName && (
+                  <div className="absolute hidden group-hover:block z-50 bg-slate-800 text-white p-2 rounded text-xs whitespace-normal min-w-max max-w-[300px] top-full mt-1 left-4 shadow-lg pointer-events-none">
+                    {node.receiverName}
+                  </div>
+                )}
               </div>
 
               {/* Vai trò */}
-              <div className="w-[90px] p-2 flex items-center justify-center border-r border-slate-200 shrink-0 text-center text-slate-700">
-                {node.role}
-              </div>
+              <TruncatedCell
+                content={node.role}
+                className="w-[90px] border-r border-slate-200 shrink-0 text-slate-700"
+                align="center"
+              />
 
               {/* Ngày chuyển */}
-              <div className="w-[100px] p-2 flex items-center justify-center border-r border-slate-200 shrink-0 text-center text-slate-600">
-                {node.forwardDate ? new Date(node.forwardDate).toLocaleDateString('vi-VN') : '---'}
-              </div>
+              <TruncatedCell
+                content={
+                  node.forwardDate ? new Date(node.forwardDate).toLocaleDateString('vi-VN') : '---'
+                }
+                className="w-[100px] border-r border-slate-200 shrink-0 text-slate-600"
+                align="center"
+              />
 
               {/* Hạn xử lý */}
-              <div className="w-[100px] p-2 flex items-center justify-center border-r border-slate-200 shrink-0 text-center font-semibold text-amber-700">
-                {node.deadline ? new Date(node.deadline).toLocaleDateString('vi-VN') : '---'}
-              </div>
+              <TruncatedCell
+                content={
+                  node.deadline ? new Date(node.deadline).toLocaleDateString('vi-VN') : '---'
+                }
+                className="w-[100px] border-r border-slate-200 shrink-0 font-semibold text-amber-700"
+                align="center"
+              />
 
               {/* Bút phê */}
-              <div className="flex-1 min-w-[150px] p-2 flex items-center text-slate-700 border-r border-slate-200 truncate relative group">
-                {node.comment || '---'}
-                {node.comment && (
-                  <div className="absolute hidden group-hover:block z-10 bg-slate-800 text-white p-2 rounded text-xs whitespace-normal min-w-[200px] top-full mt-1 left-0 shadow-lg">
-                    {node.comment}
-                  </div>
-                )}
-              </div>
+              <TruncatedCell
+                content={node.comment}
+                className="flex-1 min-w-[150px] text-slate-700 border-r border-slate-200"
+              />
 
               {/* Nội dung xử lý */}
-              <div className="flex-1 min-w-[150px] p-2 flex items-center text-slate-700 border-r border-slate-200 truncate relative group">
-                {node.processingContent || '---'}
-                {node.processingContent && (
-                  <div className="absolute hidden group-hover:block z-10 bg-slate-800 text-white p-2 rounded text-xs whitespace-normal min-w-[200px] top-full mt-1 left-0 shadow-lg">
-                    {node.processingContent}
-                  </div>
-                )}
-              </div>
+              <TruncatedCell
+                content={node.processingContent}
+                className="flex-1 min-w-[150px] text-slate-700 border-r border-slate-200"
+              />
 
               {/* Trạng thái */}
-              <div
+              <TruncatedCell
+                content={node.status}
                 className={cn(
-                  'w-[120px] p-2 flex items-center justify-center shrink-0 text-center font-medium',
+                  'w-[120px] shrink-0 font-medium',
                   isOverdue ? 'bg-[#db4437] text-white border-l border-[#db4437]' : 'text-slate-800'
                 )}
-              >
-                {node.status}
-              </div>
+                align="center"
+              />
             </div>
           )
         })}

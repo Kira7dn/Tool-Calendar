@@ -1798,3 +1798,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): add min-w-0 to prevent layout overflow in DocDetail"`
+### [2026-08-08 16:38] Add TruncatedCell with Tooltip in Routing Tree
+- **Mô tả**: Tối ưu UI bảng luân chuyển công văn. Sử dụng `TruncatedCell` để tự động cắt chữ dài (ellipsis) cho toàn bộ các cột (Bút phê, Nội dung xử lý, Người xử lý, etc) không xuống dòng, và hiển thị tooltip (hover text) khi người dùng di chuột vào để dễ đọc hơn và giữ form bảng đẹp.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): truncate table cells in routing tree and show hover tooltips"`
