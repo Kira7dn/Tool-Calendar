@@ -1,5 +1,11 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-08 15:40] Sửa lỗi hiển thị tên người dùng bị cắt bớt trong cây luân chuyển
+- **Mô tả**: Bỏ thuộc tính `truncate` và thêm `whitespace-normal break-words` cùng với `title` tooltip cho cột tên người dùng trong `DocumentRoutingTree`. Giải quyết tình trạng tên dài (ví dụ: Bùi Thị Thanh...) bị mất chữ, hiển thị đầy đủ tên trên nhiều dòng hoặc khi hover chuột.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(docs): sửa lỗi hiển thị tên người dùng bị cắt bớt trong cây luân chuyển"`
+
 ### [2026-08-08 15:35] Ràng buộc quyền kết thúc văn bản cho người dùng cuối (Leaf Nodes)
 - **Mô tả**: Thay đổi logic phân quyền hiển thị nút "Kết thúc văn bản" và "Báo cáo hoàn thành". Thay vì hiển thị cho bất cứ người nhận nào, bây giờ nút này CHỈ hiển thị cho những người nằm ở **nhánh cuối cùng** của luồng chuyển xử lý (những người chưa chuyển văn bản tiếp cho ai khác). Điều này đảm bảo những người trung gian (như B và E trong chuỗi A->B->E->F) sẽ không có quyền kết thúc văn bản sau khi đã chuyển đi.
 - **Tệp thay đổi**:

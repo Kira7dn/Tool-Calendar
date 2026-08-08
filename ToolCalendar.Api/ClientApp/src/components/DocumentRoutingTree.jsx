@@ -45,9 +45,10 @@ const RoutingNode = ({ node, level = 0 }) => {
           <User size={14} className={level === 0 ? 'text-blue-500' : 'text-slate-400'} />
           <span
             className={cn(
-              'text-xs truncate',
+              'text-xs whitespace-normal break-words',
               level === 0 ? 'font-bold text-slate-800' : 'font-medium text-slate-700'
             )}
+            title={node.receiverName}
           >
             {node.receiverName || 'Unknown User'}
           </span>
