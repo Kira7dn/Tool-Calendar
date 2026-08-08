@@ -15,21 +15,18 @@ namespace ToolCalendar.Api.Controllers.Documents
     public class DocumentRoutingsController : ControllerBase
     {
         private readonly IDocumentRoutingRepository _routingRepo;
-        private readonly IHubContext<NotificationHub> _hubContext;
-        private readonly INotificationRepository _notificationRepo;
+        private readonly INotificationManager _notificationManager;
         private readonly IDocumentRepository _documentRepo;
         private readonly IUserRepository _userRepo;
 
         public DocumentRoutingsController(
             IDocumentRoutingRepository routingRepo,
-            IHubContext<NotificationHub> hubContext,
-            INotificationRepository notificationRepo,
+            INotificationManager notificationManager,
             IDocumentRepository documentRepo,
             IUserRepository userRepo)
         {
             _routingRepo    = routingRepo;
-            _hubContext      = hubContext;
-            _notificationRepo = notificationRepo;
+            _notificationManager = notificationManager;
             _documentRepo   = documentRepo;
             _userRepo        = userRepo;
         }
@@ -54,33 +51,25 @@ namespace ToolCalendar.Api.Controllers.Documents
 
             int newId = await _routingRepo.CreateRoutingAsync(routing);
 
-            // ✅ Cập nhật Cán bộ xử lý và Đơn vị chủ trì dựa trên người nhận (Chỉ khi vai trò là Chủ trì)
-            if (routing.ReceiverId > 0 && routing.Role == "Chủ trì")
+            if (routing.ReceiverId > 0)
             {
-                var receiver = _userRepo.GetUserById(routing.ReceiverId);
-                await _documentRepo.UpdateHandlerAsync(documentId, routing.ReceiverId, receiver?.DepartmentId);
-
-                // 1. Lưu thông báo vào DB để hiện ở biểu tượng cái chuông
-                _notificationRepo.InsertNotification(new Core.Models.NotificationRecord
+                // ✅ Chỉ cập nhật Cán bộ xử lý chính nếu vai trò là Chủ trì
+                if (routing.Role == "Chủ trì")
                 {
-                    UserId = routing.ReceiverId,
-                    Title = "Công việc mới",
-                    Body = "Bạn có công văn mới cần xử lý.",
-                    Type = "system",
-                    DocId = documentId
-                });
+                    var receiver = _userRepo.GetUserById(routing.ReceiverId);
+                    await _documentRepo.UpdateHandlerAsync(documentId, routing.ReceiverId, receiver?.DepartmentId);
+                }
 
-                // 2. Gửi realtime SignalR
-                _ = _hubContext.Clients
-                    .Group($"User_{routing.ReceiverId}")
-                    .SendAsync("NewTask", new
-                    {
-                        documentId  = documentId,
-                        routingId   = newId,
-                        message     = "Bạn có công văn mới cần xử lý",
-                        senderId    = routing.SenderId,
-                        assignedAt  = DateTime.Now
-                    });
+                // ✅ Gửi thông báo cho TẤT CẢ các vai trò (Chủ trì, Phối hợp, ...)
+                var doc = await _documentRepo.GetDocumentByIdAsync(documentId);
+                var docName = doc?.TenCongVan ?? "văn bản mới";
+                
+                await _notificationManager.SendToUserAsync(
+                    routing.ReceiverId,
+                    "Công việc mới",
+                    $"Bạn nhận được {docName} để xử lý với vai trò: {routing.Role}",
+                    new { docId = documentId, type = "routing", routingId = newId }
+                );
             }
 
             return Ok(ApiResponse.Ok(new { id = newId }));

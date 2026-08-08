@@ -1834,3 +1834,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): use shadcn tooltip portal to prevent clipping inside scrollable table"`
+### [2026-08-08 17:26] Fix bug mất thông báo khi chuyển công văn vai trò Phối hợp
+- **Mô tả**: Sửa lỗi trong `DocumentRoutingsController` chỉ gửi thông báo khi `Role == "Chủ trì"`. Tách phần thông báo ra ngoài, cho phép gửi cho mọi role, đồng thời chuyển sang dùng `INotificationManager` để đồng bộ Push notification + SignalR + DB.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(notify): send routing notifications for all roles and use INotificationManager"`
