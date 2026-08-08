@@ -1,7 +1,5 @@
-import { ROLES } from '../../../constants/roles'
 /* eslint-disable */
-/* eslint-disable no-empty */
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import {
   ChevronLeft,
   ChevronRight,
@@ -22,151 +20,30 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { toast } from 'sonner'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { ErrorState } from '@/components/ui/error-state'
+import { ROLES } from '@/constants/roles'
+import { useReview } from '@/features/documents/hooks/useReview'
 
 export function Review({ onBack }) {
-  const [docs, setDocs] = useState([])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [departments, setDepartments] = useState([])
-  const [users, setUsers] = useState([])
-
-  const [formData, setFormData] = useState({
-    soVanBan: '',
-    coQuanChuQuan: '',
-    trichYeu: '',
-    thoiHan: '',
-    departmentId: '',
-    assignedTo: '',
-  })
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  useEffect(() => {
-    fetchReviewDocs()
-    fetchReferenceData()
-  }, [])
-
-  const fetchReferenceData = async () => {
-    try {
-      const headers = {}
-      const [deptRes, userRes] = await Promise.all([
-        fetch('/api/admin/departments', { headers }),
-        fetch('/api/users', { headers }),
-      ])
-      if (deptRes.ok) setDepartments(await deptRes.json())
-      if (userRes.ok) {
-        const userData = await userRes.json()
-        setUsers(userData.filter((u) => u.role === ROLES.CAN_BO || u.role === ROLES.ADMIN))
-      }
-    } catch (e) {}
-  }
-
-  useEffect(() => {
-    if (docs.length > 0 && docs[currentIndex]) {
-      const doc = docs[currentIndex]
-      setFormData({
-        soVanBan: doc.soVanBan || '',
-        coQuanChuQuan: doc.coQuanChuQuan || '',
-        trichYeu: doc.trichYeu || '',
-        thoiHan: doc.thoiHan ? doc.thoiHan.split('T')[0] : '',
-        departmentId: doc.departmentId || '',
-        assignedTo: doc.assignedTo || '',
-      })
-    }
-  }, [currentIndex, docs])
-
-  const fetchReviewDocs = async () => {
-    setIsLoading(true)
-    setError(false)
-    try {
-      const response = await fetch('/api/documents?status=Chưa xử lý&size=50')
-      if (response.ok) {
-        const data = await response.json()
-        setDocs(data.data || [])
-      } else {
-        throw new Error('API fetch failed')
-      }
-    } catch (error) {
-      console.error('Failed to fetch review docs:', error)
-      setError(true)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSave = async () => {
-    const doc = docs[currentIndex]
-    setIsSaving(true)
-    try {
-      const headers = { 'Content-Type': 'application/json' }
-
-      const response = await fetch(`/api/documents/${doc.id}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify({
-          ...doc,
-          ...formData,
-          thoiHan: formData.thoiHan ? `${formData.thoiHan}T00:00:00` : null,
-          status: 'Đã rà soát',
-        }),
-      })
-
-      if (response.ok) {
-        // Also assign if data provided
-        if (formData.departmentId || formData.assignedTo) {
-          await fetch(`/api/documents/${doc.id}/assign`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-              departmentIds: formData.departmentId ? [parseInt(formData.departmentId)] : [],
-              userIds: formData.assignedTo ? [parseInt(formData.assignedTo)] : [],
-            }),
-          })
-        }
-
-        const newDocs = [...docs]
-        newDocs.splice(currentIndex, 1)
-        setDocs(newDocs)
-        if (currentIndex >= newDocs.length && newDocs.length > 0) {
-          setCurrentIndex(newDocs.length - 1)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to save review:', error)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    setIsDeleting(true)
-    const doc = docs[currentIndex]
-    try {
-      const response = await fetch(`/api/documents/bulk-delete`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify([doc.id]),
-      })
-      if (response.ok) {
-        toast.success('Đã xóa văn bản thành công')
-        const newDocs = [...docs]
-        newDocs.splice(currentIndex, 1)
-        setDocs(newDocs)
-      } else {
-        toast.error('Lỗi khi xóa văn bản')
-      }
-    } catch (e) {
-      toast.error('Có lỗi xảy ra khi xóa')
-    } finally {
-      setIsDeleting(false)
-      setIsDeleteModalOpen(false)
-    }
-  }
+  const {
+    docs,
+    currentIndex,
+    setCurrentIndex,
+    isLoading,
+    error,
+    isSaving,
+    departments,
+    users,
+    formData,
+    setFormData,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    isDeleting,
+    handleSave,
+    handleDelete,
+    fetchReviewDocs,
+  } = useReview()
 
   if (isLoading) {
     return (
@@ -277,7 +154,6 @@ export function Review({ onBack }) {
               <ExternalLink className="size-4" />
             </a>
           </div>
-
           <div className="flex-1">
             <iframe
               src={`${currentDoc.filePath}?access_token=${localStorage.getItem('auth_token')}#toolbar=0&navpanes=0`}
@@ -311,7 +187,6 @@ export function Review({ onBack }) {
                     className="h-12 font-bold text-primary"
                   />
                 </FormField>
-
                 <FormField label="Ngày ban hành / Thời hạn" icon={Calendar}>
                   <Input
                     type="date"
@@ -320,7 +195,6 @@ export function Review({ onBack }) {
                     className="h-12 font-medium"
                   />
                 </FormField>
-
                 <FormField label="Cơ quan chủ quản / Ban hành" icon={Building2}>
                   <Input
                     value={formData.coQuanChuQuan}
@@ -328,7 +202,6 @@ export function Review({ onBack }) {
                     className="h-12 font-medium"
                   />
                 </FormField>
-
                 <FormField label="Trích yếu nội dung" icon={Layout}>
                   <Textarea
                     value={formData.trichYeu}

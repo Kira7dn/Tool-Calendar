@@ -1,6 +1,5 @@
-import { ROLES } from '../../../constants/roles'
 /* eslint-disable */
-import React, { useEffect, useState, useRef } from 'react'
+import React from 'react'
 import {
   Plus,
   Search,
@@ -25,7 +24,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
-import { toast } from 'sonner'
 import {
   Table,
   TableBody,
@@ -35,93 +33,35 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ErrorState } from '@/components/ui/error-state'
+import { ROLES } from '@/constants/roles'
+import { useDocumentsList } from '@/features/documents/hooks/useDocumentsList'
 
 export function Documents({ onTabChange, filters }) {
-  const [documents, setDocuments] = useState([])
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
-  const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [status, setStatus] = useState(filters?.status || '')
-  const [sort, setSort] = useState(filters?.sort || 'newest')
-
-  useEffect(() => {
-    if (filters) {
-      if (filters.search !== undefined) {
-        setSearch(filters.search)
-        setDebouncedSearch(filters.search)
-      }
-      if (filters.status !== undefined) {
-        setStatus(filters.status)
-        // Tự động sort deadline_asc cho quá hạn / hạn hôm nay, mặc định newest nếu không có status
-        if (!filters.sort) {
-          if (filters.status === 'overdue' || filters.status === 'today') {
-            setSort('deadline_asc')
-          } else {
-            setSort('newest')
-          }
-        }
-      }
-      if (filters.sort !== undefined) setSort(filters.sort)
-      setPage(1)
-    }
-  }, [filters])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (search !== debouncedSearch) {
-        setDebouncedSearch(search)
-        setPage(1)
-      }
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [search, debouncedSearch])
-
-  useEffect(() => {
-    fetchDocuments()
-
-    const handleUpdate = () => fetchDocuments()
-    document.addEventListener('realtime:document_updated', handleUpdate)
-    return () => document.removeEventListener('realtime:document_updated', handleUpdate)
-  }, [page, pageSize, status, sort, debouncedSearch])
-
-  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, doc: null })
-
-  const fetchDocuments = async () => {
-    setIsLoading(true)
-    setError(false)
-    try {
-      const url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(debouncedSearch)}&status=${status}&sort=${sort}`
-      const response = await fetch(url)
-      if (response.ok) {
-        const data = await response.json()
-        setDocuments(data.data || [])
-        setTotalPages(data.totalPages || 1)
-        setTotalCount(data.totalCount || 0)
-      } else {
-        throw new Error('API fetch failed')
-      }
-    } catch (error) {
-      console.error('Failed to fetch documents:', error)
-      setError(true)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value)
-  }
+  const {
+    documents,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    totalCount,
+    isLoading,
+    error,
+    search,
+    setSearch,
+    status,
+    setStatus,
+    sort,
+    setSort,
+    deleteConfirm,
+    setDeleteConfirm,
+    executeDelete,
+  } = useDocumentsList(filters)
 
   const getStatusBadge = (doc) => {
     const statusText = doc.trangThai || doc.status
     const daysLeft = doc.soNgayConLai
     const config = getStatusConfig(statusText, daysLeft)
-
     return (
       <Badge variant={config.variant} className="font-bold border">
         {config.label}
@@ -132,8 +72,7 @@ export function Documents({ onTabChange, filters }) {
   const formatDate = (dateStr) => {
     if (!dateStr) return '-'
     try {
-      const date = new Date(dateStr)
-      return date.toLocaleDateString('vi-VN')
+      return new Date(dateStr).toLocaleDateString('vi-VN')
     } catch {
       return dateStr
     }
@@ -144,28 +83,7 @@ export function Documents({ onTabChange, filters }) {
       if (action === 'view') window.app.services.openDocDetail(doc.id)
       if (action === 'edit') window.app.services.openDocDetail(doc.id, 'edit')
       if (action === 'pdf') window.app.services.openPdfPreview(doc.id, doc.soVanBan)
-      if (action === 'delete') {
-        setDeleteConfirm({ open: true, doc })
-      }
-    }
-  }
-
-  const executeDelete = async () => {
-    const doc = deleteConfirm.doc
-    if (!doc) return
-
-    try {
-      const res = await fetch(`/api/documents/${doc.id}`, {
-        method: 'DELETE',
-      })
-      if (res.ok) {
-        toast.success('Đã xóa văn bản thành công')
-        fetchDocuments()
-      }
-    } catch (error) {
-      toast.error('Có lỗi xảy ra khi xóa')
-    } finally {
-      setDeleteConfirm({ open: false, doc: null })
+      if (action === 'delete') setDeleteConfirm({ open: true, doc })
     }
   }
 
@@ -197,7 +115,7 @@ export function Documents({ onTabChange, filters }) {
                 placeholder="Tìm số hiệu, nội dung..."
                 className="pl-9 h-9"
                 value={search}
-                onChange={handleSearchChange}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <select
@@ -296,7 +214,7 @@ export function Documents({ onTabChange, filters }) {
                 ) : error ? (
                   <TableRow className="hover:bg-transparent">
                     <TableCell colSpan={8} className="h-[240px] text-center p-0 align-middle">
-                      <ErrorState onRetry={fetchDocuments} />
+                      <ErrorState onRetry={() => setPage(1)} />
                     </TableCell>
                   </TableRow>
                 ) : documents.length > 0 ? (
@@ -386,10 +304,9 @@ export function Documents({ onTabChange, filters }) {
               <p className="text-xs text-muted-foreground font-medium">
                 Trang <span className="text-foreground">{page}</span> /{' '}
                 <span className="text-foreground">{totalPages || 1}</span>
-                <span className="mx-2 text-muted-foreground/30">|</span>
-                Tổng <span className="text-foreground font-bold">{totalCount}</span> văn bản
+                <span className="mx-2 text-muted-foreground/30">|</span>Tổng{' '}
+                <span className="text-foreground font-bold">{totalCount}</span> văn bản
               </p>
-
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
                   Hiển thị:
@@ -409,7 +326,6 @@ export function Documents({ onTabChange, filters }) {
                 </select>
               </div>
             </div>
-
             <div className="flex gap-2">
               <Button
                 variant="outline"

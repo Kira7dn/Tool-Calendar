@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import {
   Search as SearchIcon,
   Calendar,
@@ -23,88 +23,35 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ErrorState } from '@/components/ui/error-state'
+import { useSearch } from '@/features/documents/hooks/useSearch'
 
 export function Search({ filters, onTabChange }) {
-  const [documents, setDocuments] = useState([])
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(false)
-
-  // Search Filters
-  const [search, setSearch] = useState(filters?.search || '')
-  const [debouncedSearch, setDebouncedSearch] = useState(filters?.search || '')
-  const [status, setStatus] = useState(filters?.status || '')
-  const [fromDate, setFromDate] = useState(filters?.fromDate || '')
-  const [toDate, setToDate] = useState(filters?.toDate || '')
-  const [addFromDate, setAddFromDate] = useState(filters?.addFromDate || '')
-  const [addToDate, setAddToDate] = useState(filters?.addToDate || '')
-  const [sort, setSort] = useState(filters?.sort || 'newest')
-
-  useEffect(() => {
-    if (filters) {
-      const newSearch = filters.search ?? ''
-      const newStatus = filters.status ?? ''
-      const newSort = filters.sort ?? 'newest'
-      const newFrom = filters.fromDate ?? ''
-      const newTo = filters.toDate ?? ''
-      const newAddFrom = filters.addFromDate ?? ''
-      const newAddTo = filters.addToDate ?? ''
-
-      setSearch(newSearch)
-      setDebouncedSearch(newSearch)
-      setStatus(newStatus)
-      setSort(newSort)
-      setFromDate(newFrom)
-      setToDate(newTo)
-      setAddFromDate(newAddFrom)
-      setAddToDate(newAddTo)
-      setPage(1)
-    }
-  }, [filters])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (search !== debouncedSearch) {
-        setDebouncedSearch(search)
-        setPage(1)
-      }
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [search, debouncedSearch])
-
-  useEffect(() => {
-    fetchDocuments()
-  }, [page, pageSize, debouncedSearch, status, sort, fromDate, toDate, addFromDate, addToDate])
-
-  const fetchDocuments = async () => {
-    setIsLoading(true)
-    setError(false)
-    try {
-      let url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(debouncedSearch)}&status=${status}&sort=${sort}`
-      if (fromDate) url += `&fromDate=${fromDate}`
-      if (toDate) url += `&toDate=${toDate}`
-      if (addFromDate) url += `&addFromDate=${addFromDate}`
-      if (addToDate) url += `&addToDate=${addToDate}`
-
-      const response = await fetch(url)
-      if (response.ok) {
-        const data = await response.json()
-        setDocuments(data.data || [])
-        setTotalPages(data.totalPages || 1)
-        setTotalCount(data.totalCount || 0)
-      } else {
-        throw new Error('API fetch failed')
-      }
-    } catch (error) {
-      console.error('Failed to fetch documents:', error)
-      setError(true)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const {
+    documents,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    totalCount,
+    isLoading,
+    error,
+    search,
+    setSearch,
+    status,
+    setStatus,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
+    addFromDate,
+    setAddFromDate,
+    addToDate,
+    setAddToDate,
+    sort,
+    setSort,
+    fetchDocuments,
+  } = useSearch(filters)
 
   const handleSearch = (e) => {
     e?.preventDefault()
@@ -116,7 +63,6 @@ export function Search({ filters, onTabChange }) {
     const statusText = doc.trangThai || doc.status
     const daysLeft = doc.soNgayConLai
     const config = getStatusConfig(statusText, daysLeft)
-
     return (
       <Badge variant={config.variant} className="font-bold border">
         {config.label}
@@ -127,8 +73,7 @@ export function Search({ filters, onTabChange }) {
   const formatDate = (dateStr) => {
     if (!dateStr) return '-'
     try {
-      const date = new Date(dateStr)
-      return date.toLocaleDateString('vi-VN')
+      return new Date(dateStr).toLocaleDateString('vi-VN')
     } catch {
       return dateStr
     }
@@ -150,11 +95,9 @@ export function Search({ filters, onTabChange }) {
             </p>
           </div>
 
-          {/* Từ khóa */}
           <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-              <SearchIcon className="size-3 text-primary" />
-              Từ khóa tìm kiếm
+              <SearchIcon className="size-3 text-primary" /> Từ khóa tìm kiếm
             </span>
             <div className="relative">
               <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
@@ -167,12 +110,11 @@ export function Search({ filters, onTabChange }) {
             </div>
           </div>
 
-          {/* Trạng thái */}
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
               <span className="size-3 inline-flex items-center justify-center text-primary text-[9px]">
                 ●
-              </span>
+              </span>{' '}
               Trạng thái
             </span>
             <select
@@ -189,12 +131,11 @@ export function Search({ filters, onTabChange }) {
             </select>
           </div>
 
-          {/* Sắp xếp */}
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
               <span className="size-3 inline-flex items-center justify-center text-primary text-[9px]">
                 ↕
-              </span>
+              </span>{' '}
               Sắp xếp theo
             </span>
             <select
@@ -211,11 +152,9 @@ export function Search({ filters, onTabChange }) {
 
         {/* Dòng 2: Ngày tiếp nhận + Hạn xử lý + Nút tìm */}
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-3 border-t border-border/40 pt-4 md:pt-2">
-          {/* Ngày tiếp nhận */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground shrink-0 flex items-center gap-1.5 md:ml-1">
-              <Calendar className="size-3 text-primary" />
-              Tiếp nhận từ ngày
+              <Calendar className="size-3 text-primary" /> Tiếp nhận từ ngày
             </span>
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <Input
@@ -234,11 +173,9 @@ export function Search({ filters, onTabChange }) {
             </div>
           </div>
 
-          {/* Hạn xử lý */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground shrink-0 flex items-center gap-1.5 md:ml-3">
-              <Calendar className="size-3 text-primary" />
-              Hạn xử lý từ
+              <Calendar className="size-3 text-primary" /> Hạn xử lý từ
             </span>
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <Input
@@ -395,8 +332,8 @@ export function Search({ filters, onTabChange }) {
             <p className="text-xs text-muted-foreground font-medium">
               Trang <span className="text-foreground font-bold">{page}</span> /{' '}
               <span className="text-foreground">{totalPages || 1}</span>
-              <span className="mx-2 text-muted-foreground/30">|</span>
-              Tổng <span className="text-foreground font-bold">{totalCount}</span> kết quả
+              <span className="mx-2 text-muted-foreground/30">|</span>Tổng{' '}
+              <span className="text-foreground font-bold">{totalCount}</span> kết quả
             </p>
             <div className="flex gap-1.5">
               <Button

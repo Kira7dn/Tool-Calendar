@@ -1607,3 +1607,35 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `src/documents/pages/MyTasks.jsx` (Sửa đổi — giảm từ 728 xuống 203 dòng)
   - `src/shell/AppShell.jsx` (Sửa đổi — trỏ sang UploadPage mới)
 - **Lệnh git commit**: `git commit -m "refactor(docs,tasks): split Upload+MyTasks into feature modules"`
+### [2026-08-08 10:28] Refactor Users component theo chuẩn Bulletproof React
+- **Mô tả**: Tách logic và form UI của file `Users.jsx` (736 dòng) ra thành file hook riêng (`useUsers.js`) và component modal riêng (`UserModal.jsx`) để tuân thủ rule tối đa 250 dòng/file.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/Users.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/users/hooks/useUsers.js` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/users/components/UserModal.jsx` (Mới)
+- **Lệnh git commit**: `git commit -m "refactor(users): tách Users component thành useUsers hook và UserModal"`
+### [2026-08-08 10:29] Refactor DocModals component theo chuẩn Bulletproof React
+- **Mô tả**: Tách logic và form UI của file `DocModals.jsx` (520 dòng) ra thành các component modal nhỏ hơn (`EditDocModal.jsx`, `SubmitEvidenceModal.jsx`) để tuân thủ rule tối đa 250 dòng/file.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocModals.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/EditDocModal.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/SubmitEvidenceModal.jsx` (Mới)
+- **Lệnh git commit**: `git commit -m "refactor(docs): tách DocModals thành các modal components riêng biệt"`
+### [2026-08-08 10:31] Refactor Documents component theo chuẩn Bulletproof React
+- **Mô tả**: Tách logic fetch, search, filter, pagination từ `Documents.jsx` ra file custom hook `useDocumentsList.js`, giảm số dòng code UI.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/useDocumentsList.js` (Mới)
+- **Lệnh git commit**: `git commit -m "refactor(docs): tách useDocumentsList custom hook từ trang quản lý văn bản"`
+### [2026-08-08 10:32] Refactor Review component theo chuẩn Bulletproof React
+- **Mô tả**: Tách logic fetch, update OCR review, assign từ `Review.jsx` (440 dòng) ra file custom hook `useReview.js`, giảm số dòng code UI xuống còn ~140 dòng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Review.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/useReview.js` (Mới)
+- **Lệnh git commit**: `git commit -m "refactor(docs): tách useReview custom hook từ trang kiểm duyệt"`
+### [2026-08-08 10:33] Refactor Search component theo chuẩn Bulletproof React
+- **Mô tả**: Tách logic search, filter từ `Search.jsx` ra custom hook `useSearch.js` để file UI ngắn gọn và dễ bảo trì hơn, tuân thủ rule 250 dòng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Search.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/useSearch.js` (Mới)
+- **Lệnh git commit**: `git commit -m "refactor(docs): tách useSearch custom hook từ trang tìm kiếm"`
