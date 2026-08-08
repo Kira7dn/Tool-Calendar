@@ -1583,3 +1583,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `deploy_to_vnpt.sh` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): chỉ restart backend tool-calendar khi deploy, không sập nginx dùng chung"`
+
+### [2026-08-08 10:02] refactor(shell): tách AppShell.jsx 1183 dòng → 321 dòng theo Bulletproof React
+- **Mô tả**: Phẫu thuật siêu component AppShell.jsx bằng cách tách biệt logic thông báo, UI notification panel, và menu user thành các module riêng theo Feature-Driven Architecture (học từ bulletproof-react và lichcongtac).
+- **Tệp thay đổi**:
+  - `src/shell/AppShell.jsx` (Sửa đổi — giảm từ 1183 xuống 321 dòng)
+  - `src/shell/NotifPanel.jsx` (Mới — Popover Desktop + Full-screen Mobile, 139 dòng)
+  - `src/shell/UserMenu.jsx` (Mới — Avatar + Dropdown + Modal đổi mật khẩu, 139 dòng)
+  - `src/features/notifications/hooks/useNotifications.js` (Mới — fetch/markRead/markAllRead hook, 60 dòng)
+  - `src/features/notifications/components/NotifAvatar.jsx` (Mới — Icon avatar, 27 dòng)
+  - `src/features/notifications/components/NotificationList.jsx` (Mới — Danh sách thông báo, 73 dòng)
+- **Lệnh git commit**: `git commit -m "refactor(shell): split AppShell.jsx into focused modules"`
