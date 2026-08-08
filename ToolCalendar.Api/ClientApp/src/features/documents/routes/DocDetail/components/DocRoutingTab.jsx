@@ -1,10 +1,38 @@
 /* eslint-disable */
-import React from 'react'
+import React, { useMemo } from 'react'
 import { DOCUMENT_STATUS } from '@/constants/document'
 import { Send } from 'lucide-react'
 import { DocumentRoutingTree } from '@/components/DocumentRoutingTree'
 
-export function DocRoutingTab({ doc, routings, fetchRoutings, setIsForwardModalOpen, canForward }) {
+export function DocRoutingTab({
+  doc,
+  routings,
+  fetchRoutings,
+  setIsForwardModalOpen,
+  canForward,
+  users,
+}) {
+  const displayRoutings = useMemo(() => {
+    if (doc?.assignedTo && doc.assignedTo !== doc?.uploadedByUserId) {
+      const assignedUser = users?.find((u) => u.id === doc.assignedTo)
+      return [
+        {
+          id: 'synthetic-root',
+          receiverName: assignedUser?.fullName || 'Người được phân công',
+          receiverId: doc.assignedTo,
+          role: 'Xử lý chính',
+          forwardDate: doc.ngayThem,
+          deadline: doc.thoiHan,
+          comment: 'Nhận nhiệm vụ xử lý chính',
+          processingContent: '',
+          status: routings && routings.length > 0 ? 'Đã chuyển tiếp' : doc.status,
+          children: routings || [],
+        },
+      ]
+    }
+    return routings || []
+  }, [routings, doc, users])
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8 flex flex-col h-auto lg:h-full overflow-hidden animate-in fade-in zoom-in-95 duration-400">
       <div className="flex items-center justify-between mb-6 shrink-0">
@@ -21,7 +49,7 @@ export function DocRoutingTab({ doc, routings, fetchRoutings, setIsForwardModalO
         )}
       </div>
       <div className="flex-1 lg:overflow-auto h-[400px] lg:h-auto overflow-y-auto">
-        <DocumentRoutingTree routings={routings} onRefresh={fetchRoutings} />
+        <DocumentRoutingTree routings={displayRoutings} onRefresh={fetchRoutings} />
       </div>
     </div>
   )

@@ -1,5 +1,12 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-08 14:56] Hiển thị người được phân công trong cây luân chuyển
+- **Mô tả**: Khi văn bản được giao việc trực tiếp (AssignedTo) mà chưa có luân chuyển nào, tab "Quá trình xử lý" sẽ tự động tạo một node gốc đại diện cho người được phân công, thay vì hiển thị "Chưa có luồng xử lý nào", giúp đáp ứng đúng kỳ vọng của người dùng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocRoutingTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): hiển thị người được phân công trong cây luân chuyển khi chưa có routing"`
+
 ### [2026-08-08 08:30] Cấu hình Log Rotation chống tràn bộ nhớ / ổ cứng (Production Mode)
 - **Mô tả**: Bổ sung giới hạn lưu trữ log cho toàn bộ các container Docker (tối đa 10MB/file, giữ lại 3 file) trong `docker-compose.yml`. Điều này giúp ngăn chặn tình trạng file log phình to lên hàng chục GB theo thời gian gây "trắng website", tràn bộ nhớ hay hết dung lượng ổ cứng.
 - **Tệp thay đổi**:

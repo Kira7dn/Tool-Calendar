@@ -96,13 +96,27 @@ export default function DocDetail({ docId, onBack }) {
     { key: 'history', label: 'LỊCH SỬ' },
   ]
 
+  const currentUserId = parseInt(localStorage.getItem('user_id'), 10)
+
   const canInteract =
-    doc.assignedTo == localStorage.getItem('user_id') ||
-    doc.uploadedByUserId == localStorage.getItem('user_id') ||
-    isUserInRoutings(routings, parseInt(localStorage.getItem('user_id'))) ||
+    doc.assignedTo == currentUserId ||
+    doc.uploadedByUserId == currentUserId ||
+    isUserInRoutings(routings, currentUserId) ||
     localStorage.getItem('user_role') === 'Admin'
 
-  const canSubmitEvidence = doc.assignedTo == localStorage.getItem('user_id')
+  const isLeafReceiver = (routingList, userId) => {
+    if (!routingList || !Array.isArray(routingList) || routingList.length === 0) return false
+    for (const r of routingList) {
+      if (r.receiverId === userId && (!r.children || r.children.length === 0)) return true
+      if (r.children && isLeafReceiver(r.children, userId)) return true
+    }
+    return false
+  }
+
+  const hasRoutings = routings && routings.length > 0
+  const canSubmitEvidence = hasRoutings
+    ? isLeafReceiver(routings, currentUserId)
+    : doc.assignedTo == currentUserId
 
   const pdfUrl = `/api/documents/${docId}/file?access_token=${localStorage.getItem('auth_token')}#page=${pdfPage}&toolbar=0&navpanes=0`
 
@@ -194,6 +208,7 @@ export default function DocDetail({ docId, onBack }) {
               fetchRoutings={fetchRoutings}
               setIsForwardModalOpen={setIsForwardModalOpen}
               canForward={canInteract}
+              users={users}
             />
           )}
           {activeTab === 'history' && <DocHistoryTab doc={doc} users={users} routings={routings} />}
