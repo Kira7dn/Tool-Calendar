@@ -1849,3 +1849,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/ForwardDocumentModal.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): exclude current user from forward dropdown"`
+### [2026-08-08 17:34] Fix lỗi hiển thị chữ Thảo luận trực tuyến
+- **Mô tả**: Giảm khoảng cách chữ `tracking-widest` và cho phép thu gọn `truncate` đối với tiêu đề THẢO LUẬN TRỰC TUYẾN để không bị tràn khung chứa gây cắt mất chữ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): prevent truncation of doc comments title"`
+

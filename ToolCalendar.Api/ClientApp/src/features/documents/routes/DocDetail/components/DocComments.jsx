@@ -16,13 +16,13 @@ export function DocComments({
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col min-h-full overflow-hidden">
       <div className="px-5 py-3 border-b border-slate-50 flex items-center justify-between bg-slate-50/20 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-[0_0_12px_rgba(220,38,38,0.7)] animate-pulse" />
-          <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-[0_0_12px_rgba(220,38,38,0.7)] animate-pulse shrink-0" />
+          <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-widest truncate">
             THẢO LUẬN TRỰC TUYẾN
           </h2>
         </div>
-        <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black border border-slate-200">
+        <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black border border-slate-200 shrink-0">
           {comments.length}
         </span>
       </div>
