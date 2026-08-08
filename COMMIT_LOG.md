@@ -1867,3 +1867,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Data/Repositories/DocumentRoutingRepository.cs` (Sửa đổi)
   - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(routing): giang cap chu tri cu thanh phoi hop khi co chu tri moi"`
+### [2026-08-08 18:15] Sửa trạng thái cứng và logic hiển thị nút Chuyển xử lý
+- **Mô tả**:
+  - Chỉ cho phép người đang là Chủ trì (hoặc người đăng tải nếu chưa gán Chủ trì) có quyền hiển thị nút Chuyển xử lý.
+  - Sửa lại trạng thái "Đã xử lý" cứng của người đăng tải và người được phân công trong UI: các node này sẽ hiển thị đúng theo trạng thái văn bản, hoặc "Đã chuyển tiếp" / "Chưa xử lý" tương ứng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): chi cho chu tri chuyen tiep va sua trang thai hien thi"`

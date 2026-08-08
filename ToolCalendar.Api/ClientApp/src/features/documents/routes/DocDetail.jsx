@@ -76,7 +76,13 @@ export default function DocDetail({ docId, onBack }) {
       deadline: doc?.thoiHan,
       comment: '',
       processingContent: '',
-      status: 'Đã xử lý',
+      status:
+        doc?.status === DOCUMENT_STATUS.DA_XU_LY
+          ? 'Đã xử lý'
+          : (doc?.assignedTo && doc.assignedTo !== doc?.uploadedByUserId) ||
+              (routings && routings.length > 0)
+            ? 'Đã chuyển tiếp'
+            : doc?.status || 'Chưa xử lý',
       children: [],
     }
 
@@ -91,7 +97,12 @@ export default function DocDetail({ docId, onBack }) {
         deadline: doc?.thoiHan,
         comment: 'Nhận nhiệm vụ xử lý chính',
         processingContent: '',
-        status: routings && routings.length > 0 ? 'Đã chuyển tiếp' : doc?.status,
+        status:
+          doc?.status === DOCUMENT_STATUS.DA_XU_LY
+            ? 'Đã xử lý'
+            : routings && routings.length > 0
+              ? 'Đã chuyển tiếp'
+              : doc?.status || 'Chưa xử lý',
         children: routings || [],
       }
       rootNode.children = [assigneeNode]
@@ -255,7 +266,9 @@ export default function DocDetail({ docId, onBack }) {
               fetchRoutings={fetchRoutings}
               setIsForwardModalOpen={setIsForwardModalOpen}
               canForward={
-                doc.uploadedByUserId == currentUserId ||
+                (doc.assignedTo
+                  ? doc.assignedTo == currentUserId
+                  : doc.uploadedByUserId == currentUserId) ||
                 localStorage.getItem('user_role') === 'Admin'
               }
             />
