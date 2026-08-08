@@ -19,7 +19,7 @@ import { useNotifications } from '../features/notifications/hooks/useNotificatio
 
 import { Dashboard } from '../documents/pages/Dashboard.jsx'
 import { Documents } from '../documents/pages/Documents.jsx'
-import { Upload } from '../documents/pages/Upload.jsx'
+import { UploadPage } from '../features/documents/routes/UploadPage.jsx'
 import { Users } from '../pages/Users.jsx'
 import DocDetail from '../documents/pages/DocDetail.jsx'
 import { MyTasks } from '../documents/pages/MyTasks.jsx'
@@ -341,7 +341,7 @@ export function AppShell() {
                 {activeTab === 'documents' && (
                   <Documents filters={tabFilters['documents']} onTabChange={handleTabChange} />
                 )}
-                {activeTab === 'upload' && <Upload />}
+                {activeTab === 'upload' && <UploadPage />}
                 {activeTab === 'users' && <Users />}
                 {activeTab === 'my-tasks' && (
                   <MyTasks filters={tabFilters['my-tasks']} onTabChange={handleTabChange} />
