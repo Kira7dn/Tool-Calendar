@@ -1793,3 +1793,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Models/DocumentRecord.cs` (Sửa đổi)
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(docs): rename document status completed to processed"`
+### [2026-08-08 16:35] Fix right panel truncation in DocDetail
+- **Mô tả**: Thêm class `min-w-0` vào container bên trái trong layout của `DocDetail.jsx` để tránh bảng `DocRoutingTab` đẩy panel comment (Thảo luận trực tuyến) trôi ra khỏi màn hình do lỗi flexbox intrinsic width.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): add min-w-0 to prevent layout overflow in DocDetail"`

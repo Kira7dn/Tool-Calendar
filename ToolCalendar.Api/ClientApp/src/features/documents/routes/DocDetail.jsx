@@ -231,7 +231,7 @@ export default function DocDetail({ docId, onBack }) {
 
       {/* 3. Main Content */}
       <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pb-10 lg:pb-0">
-        <div className="flex-none lg:flex-1 flex flex-col min-h-0">
+        <div className="flex-none lg:flex-1 flex flex-col min-h-0 min-w-0">
           {activeTab === 'overview' && (
             <DocOverviewTab
               doc={doc}
