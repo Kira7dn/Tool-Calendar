@@ -75,6 +75,17 @@ export const DocumentRoutingTree = ({ routings, onRefresh }) => {
     )
   }
 
+  const HeaderCol = ({ className, children }) => (
+    <div
+      className={cn(
+        'p-3 font-bold text-white uppercase tracking-wider border-r border-white/20 last:border-r-0 text-center flex items-center justify-center',
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
       {/* Legend */}

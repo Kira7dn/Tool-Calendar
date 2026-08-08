@@ -1809,3 +1809,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): fix DocComments panel clipped on non-desktop screens"`
+### [2026-08-08 16:49] Hotfix: khôi phục HeaderCol bị xóa nhầm trong DocumentRoutingTree
+- **Mô tả**: Refactor trước đã vô tình xóa mất component `HeaderCol` và lệnh `return (` trong `DocumentRoutingTree.jsx`, gây lỗi "HeaderCol is not defined" khi click tab Quá Trình Xử Lý.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): restore missing HeaderCol component in DocumentRoutingTree"`
