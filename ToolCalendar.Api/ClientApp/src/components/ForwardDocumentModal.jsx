@@ -52,10 +52,13 @@ export const ForwardDocumentModal = ({
     }
   }
 
+  const currentUserId = parseInt(localStorage.getItem('user_id') || '0', 10)
+
   const filteredUsers = users.filter(
     (u) =>
-      u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.username.toLowerCase().includes(searchTerm.toLowerCase())
+      u.id !== currentUserId &&
+      (u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.username.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   const handleSubmit = async (e) => {

@@ -1844,3 +1844,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): add missing using ToolCalendar.Services namespace"`
+### [2026-08-08 17:31] Fix logic người dùng tự chuyển công văn cho chính mình
+- **Mô tả**: Sửa UI modal `Chuyển xử lý` (ForwardDocumentModal) để tự động lọc và ẩn người dùng hiện tại khỏi danh sách dropdown cán bộ nhận văn bản, ngăn chặn tình trạng "tự chuyển cho chính mình".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/ForwardDocumentModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): exclude current user from forward dropdown"`
