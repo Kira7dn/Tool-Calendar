@@ -804,7 +804,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
             var cd = new System.Net.Mime.ContentDisposition { FileName = Path.GetFileName(filePath), Inline = true };
-            Response.Headers["Content-Disposition"] = cd.ToString();
+            Response.Headers["Content-Disposition"] = cd.ToString().Replace("\r", "").Replace("\n", "");
             return PhysicalFile(filePath, mimeType);
         }
     }

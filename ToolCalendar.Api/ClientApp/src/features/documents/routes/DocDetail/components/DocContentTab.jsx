@@ -29,7 +29,7 @@ export function DocContentTab({ doc, docId, pdfUrl, setIsFullscreenPdf }) {
         <div className="flex-1 bg-slate-100/50 border-r border-slate-100 relative">
           <iframe src={pdfUrl} className="w-full h-full border-none" title="PDF Viewer" />
         </div>
-        <div className="w-full md:w-80 bg-slate-900 p-6 overflow-auto flex flex-col gap-4">
+        <div className="w-full md:w-80 shrink-0 bg-slate-900 p-6 overflow-auto flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
               OCR DATA STREAM

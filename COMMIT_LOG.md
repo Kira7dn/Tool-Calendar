@@ -1639,3 +1639,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Search.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/useSearch.js` (Mới)
 - **Lệnh git commit**: `git commit -m "refactor(docs): tách useSearch custom hook từ trang tìm kiếm"`
+### [2026-08-08 10:45] Sửa lỗi tải PDF và layout OCR
+- **Mô tả**: Sửa lỗi Kestrel quăng exception `Invalid non-ASCII or control character in header: 0x000D` do header Content-Disposition có chứa ký tự xuống dòng. Thêm `shrink-0` cho panel OCR để layout không bị bóp méo khi thu hẹp màn hình, gây lỗi nhảy chữ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi tải PDF (CRLF header) và layout OCR bị méo"`
