@@ -1645,3 +1645,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi tải PDF (CRLF header) và layout OCR bị méo"`
+
+### [2026-08-08 10:50] Sửa lỗi hiển thị dọc của văn bản OCR
+- **Mô tả**: Bỏ thuộc tính whitespace-pre-wrap của phần OCR data để các từ không bị rớt dòng liên tục do OCR nhận diện mỗi từ thành 1 dòng riêng biệt.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(docs): bỏ whitespace-pre-wrap để OCR data hiển thị dàn trang tốt hơn"`

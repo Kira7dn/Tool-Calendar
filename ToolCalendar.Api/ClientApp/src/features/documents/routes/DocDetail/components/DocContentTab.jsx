@@ -74,7 +74,7 @@ export function DocContentTab({ doc, docId, pdfUrl, setIsFullscreenPdf }) {
               Xử lý lại OCR
             </button>
           </div>
-          <div className="text-slate-400 font-mono text-[11px] leading-relaxed whitespace-pre-wrap select-all">
+          <div className="text-slate-400 font-mono text-[11px] leading-relaxed select-all">
             {doc.fullText || 'HỆ THỐNG KHÔNG TÌM THẤY DỮ LIỆU OCR.'}
           </div>
         </div>
