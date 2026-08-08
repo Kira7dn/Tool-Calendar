@@ -1,5 +1,19 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-08 08:30] Cấu hình Log Rotation chống tràn bộ nhớ / ổ cứng (Production Mode)
+- **Mô tả**: Bổ sung giới hạn lưu trữ log cho toàn bộ các container Docker (tối đa 10MB/file, giữ lại 3 file) trong `docker-compose.yml`. Điều này giúp ngăn chặn tình trạng file log phình to lên hàng chục GB theo thời gian gây "trắng website", tràn bộ nhớ hay hết dung lượng ổ cứng.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(infra): add log rotation limits to all docker containers to prevent disk and memory overflow"`
+
+### [2026-08-08 08:24] Dọn dẹp các cấu hình ngrok không còn sử dụng
+- **Mô tả**: Xoá bỏ container ngrok trong `docker-compose.yml`, dọn dẹp các ghi chú ngrok trong `README.md`, và loại bỏ `.ngrok-free.dev` khỏi CORS policy ở `Program.cs` do hệ thống đã chạy trên server thật (VNPT).
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+  - `README.md` (Sửa đổi)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): xoá bỏ toàn bộ cấu hình ngrok do đã chuyển sang chạy server VNPT"`
+
 ### [2026-08-07 17:13] Cố định đường dẫn deploy tránh ghi đè dự án khác trên VNPT
 - **Mô tả**: Sửa `deploy_to_vnpt.sh`, gỡ bỏ `cd /root/Tool-Calendar-New || cd ...`, cố định duy nhất tại `/root/Tool-Calendar` để đảm bảo dự án này không nhảy nhầm sang thư mục `lichcongtac` hay các thư mục khác, gây mất dữ liệu hoặc xung đột container.
 - **Tệp thay đổi**:

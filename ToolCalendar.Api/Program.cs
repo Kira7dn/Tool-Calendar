@@ -302,7 +302,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         policy => policy
-            // Cho phép: localhost (dev), ngrok/localtunnel (staging), và IP LAN nội bộ
+            // Cho phép: localhost (dev) và IP LAN nội bộ
             .SetIsOriginAllowed(origin =>
             {
                 if (string.IsNullOrEmpty(origin)) return false;
@@ -310,11 +310,7 @@ builder.Services.AddCors(options =>
                 return
                     uri.Host == "localhost" ||
                     uri.Host == "127.0.0.1" ||
-                    uri.Host.StartsWith("192.168.") ||  // LAN nội bộ
-                    uri.Host.EndsWith(".ngrok-free.dev") ||
-                    uri.Host.EndsWith(".ngrok.io") ||
-                    uri.Host.EndsWith(".loca.lt") ||    // localtunnel
-                    uri.Host.EndsWith(".trycloudflare.com"); // cloudflare tunnel
+                    uri.Host.StartsWith("192.168."); // LAN nội bộ
             })
             .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .WithHeaders("Authorization", "Content-Type", "Accept", "Origin", "User-Agent", "X-Requested-With", "x-hub-protocol", "x-signalr-user-agent")
@@ -325,12 +321,12 @@ var app = builder.Build();
 
 app.UseMiddleware<ToolCalendar.Api.Middleware.GlobalExceptionMiddleware>();
 
-// Cấu hình để nhận diện HTTPS từ Nginx/Ngrok Proxy (Quan trọng khi dùng ngrok)
+// Cấu hình để nhận diện HTTPS từ Nginx Proxy
 var forwardedOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 };
-forwardedOptions.KnownNetworks.Clear(); // Tin tưởng mọi mạng (cần thiết cho ngrok/proxy bên ngoài)
+forwardedOptions.KnownNetworks.Clear(); // Tin tưởng mọi mạng (cần thiết cho Nginx proxy)
 forwardedOptions.KnownProxies.Clear();   // Tin tưởng mọi proxy
 app.UseForwardedHeaders(forwardedOptions);
 
