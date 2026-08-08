@@ -1705,3 +1705,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `deploy_to_vnpt.sh` (Sửa đổi)
   - `.agents/rules/tc-rule-auto-deploy.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): add auto prune docker on vnpt server deploy"`
+
+### [2026-08-08 14:29] Sửa lỗi thứ tự thực thi trong script deploy
+- **Mô tả**: Đưa cờ dọn rác Docker (`docker system prune -a -f --volumes`) lên chạy trước `git fetch` trong chuỗi lệnh ssh. Nếu để sau, `git fetch` sẽ thất bại do ổ cứng bị đầy trước khi kịp dọn rác. Đồng thời chuyển thành toán tử `&&` thay vì `;` để an toàn.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): run docker prune before git fetch in deploy script to free space"`
