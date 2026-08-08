@@ -1,5 +1,11 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-08 15:52] Khắc phục lỗi React #310 khi vào trang chi tiết văn bản
+- **Mô tả**: Di chuyển hook `useMemo` tính toán `displayRoutings` lên trên các câu lệnh `if (isLoading)` và `if (!doc)` trong `DocDetail.jsx`. Việc này tuân thủ đúng "Rules of Hooks" của React, sửa triệt để lỗi "Rendered fewer hooks than expected" (Minified React error #310) khi tải trang.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi React 310 do gọi hook useMemo sau early return trong DocDetail"`
+
 ### [2026-08-08 15:40] Sửa lỗi hiển thị tên người dùng bị cắt bớt trong cây luân chuyển
 - **Mô tả**: Bỏ thuộc tính `truncate` và thêm `whitespace-normal break-words` cùng với `title` tooltip cho cột tên người dùng trong `DocumentRoutingTree`. Giải quyết tình trạng tên dài (ví dụ: Bùi Thị Thanh...) bị mất chữ, hiển thị đầy đủ tên trên nhiều dòng hoặc khi hover chuột.
 - **Tệp thay đổi**:
