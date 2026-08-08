@@ -1565,3 +1565,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `deploy_to_vnpt.sh` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): xóa triệt để container bị treo trước khi deploy"`
+
+### [2026-08-08 09:05] Khắc phục lỗi conflict port 443 khi deploy Nginx
+- **Mô tả**: Tiếp tục bổ sung lệnh `docker rm -f lichcongtac-nginx` vào script deploy để tránh tình trạng container nginx cũ giữ port 443 dẫn đến không thể khởi động lại Nginx.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): xóa container nginx cũ để giải phóng port 443"`
