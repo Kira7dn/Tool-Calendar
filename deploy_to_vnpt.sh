@@ -13,7 +13,7 @@ echo "Đang triển khai lên VNPT Server ($VNPT_HOST)..."
 # Dùng expect để ssh và chạy lệnh tự động
 expect << EOF
 set timeout -1
-spawn ssh -o StrictHostKeyChecking=no $VNPT_USER@$VNPT_HOST "cd /root/Tool-Calendar || exit 1; git pull origin phonghopkhonggiayto; docker rm -f lichcongtac-backend lichcongtac-nginx; docker compose down; docker compose build; docker compose up -d"
+spawn ssh -o StrictHostKeyChecking=no $VNPT_USER@$VNPT_HOST "cd /root/Tool-Calendar || exit 1; git fetch origin phonghopkhonggiayto; git reset --hard origin/phonghopkhonggiayto; docker rm -f lichcongtac-backend lichcongtac-nginx nginx-proxy; docker compose down; docker compose build; docker compose up -d"
 expect {
     "password:" {
         send "$VNPT_PASS\r"

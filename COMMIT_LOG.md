@@ -1571,3 +1571,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `deploy_to_vnpt.sh` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): xóa container nginx cũ để giải phóng port 443"`
+
+### [2026-08-08 09:12] Sửa lỗi git pull bị kẹt trên máy chủ VNPT
+- **Mô tả**: Thay thế lệnh `git pull` bằng `git fetch` và `git reset --hard` để đảm bảo code trên server luôn đồng bộ chính xác với branch mà không bị kẹt ở giao diện yêu cầu merge commit. Thêm lệnh xoá triệt để các container rác cũ.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): dùng git reset hard khi deploy để tránh lỗi git pull"`
