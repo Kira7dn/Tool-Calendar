@@ -1829,3 +1829,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): fix tooltip clipped by overflow-hidden in routing tree"`
+### [2026-08-08 17:13] Sửa triệt để lỗi tooltip bị cắt bằng shadcn/ui Portal
+- **Mô tả**: Thay thế tooltip custom CSS (vẫn bị giới hạn bởi `overflow-y-auto` của container bảng) bằng `Tooltip` component của shadcn/ui. Shadcn sử dụng Radix UI Portal để đưa tooltip ra ngoài DOM hierarchy (gắn trực tiếp vào `<body>`), đảm bảo tooltip không bao giờ bị cắt bởi bất kỳ container nào.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): use shadcn tooltip portal to prevent clipping inside scrollable table"`

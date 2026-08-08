@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { ChevronRight, ChevronDown, Clock, User, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 const STATUS_STYLES = {
   'Hoàn thành': 'bg-emerald-100 text-emerald-700 border border-emerald-200',
@@ -12,17 +13,23 @@ const STATUS_STYLES = {
   'Đã xử lý quá hạn': 'bg-red-500 text-white border border-red-600',
 }
 
-const Tooltip = ({ text, children }) => (
-  <div className="relative group inline-flex max-w-full">
-    {children}
-    {text && text !== '---' && (
-      <div className="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 z-[9999] hidden -translate-x-1/2 rounded-lg bg-slate-800 px-3 py-2 text-xs text-white shadow-xl group-hover:block whitespace-pre-wrap max-w-[280px]">
-        {text}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-800" />
-      </div>
-    )}
-  </div>
-)
+const CellTooltip = ({ text, children }) => {
+  if (!text || text === '---') return children
+
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent
+          side="top"
+          className="max-w-[300px] whitespace-pre-wrap bg-slate-800 text-white border-none shadow-xl z-[99999]"
+        >
+          {text}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
 
 export const DocumentRoutingTree = ({ routings }) => {
   const [expandedNodes, setExpandedNodes] = useState(new Set())
@@ -85,10 +92,7 @@ export const DocumentRoutingTree = ({ routings }) => {
   ]
 
   return (
-    <div
-      className="rounded-xl border border-slate-200 shadow-sm bg-white"
-      style={{ overflow: 'visible' }}
-    >
+    <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden bg-white">
       {/* Legend */}
       <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
         <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-semibold">
@@ -160,7 +164,7 @@ export const DocumentRoutingTree = ({ routings }) => {
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#17627e] to-[#1a9ac7] flex items-center justify-center text-white text-[9px] font-black shrink-0">
                       {(node.receiverName || 'U').charAt(0).toUpperCase()}
                     </div>
-                    <Tooltip text={node.receiverName}>
+                    <CellTooltip text={node.receiverName}>
                       <span
                         className={cn(
                           'truncate max-w-[120px]',
@@ -171,7 +175,7 @@ export const DocumentRoutingTree = ({ routings }) => {
                       >
                         {node.receiverName || 'Unknown'}
                       </span>
-                    </Tooltip>
+                    </CellTooltip>
                   </div>
 
                   {/* Vai trò */}
@@ -197,18 +201,18 @@ export const DocumentRoutingTree = ({ routings }) => {
                   </div>
 
                   {/* Bút phê */}
-                  <Tooltip text={node.comment}>
+                  <CellTooltip text={node.comment}>
                     <div className="flex-1 min-w-[160px] px-3 py-2.5 border-r border-slate-100 shrink-0 text-slate-600 truncate">
                       {node.comment || <span className="text-slate-300">---</span>}
                     </div>
-                  </Tooltip>
+                  </CellTooltip>
 
                   {/* Nội dung xử lý */}
-                  <Tooltip text={node.processingContent}>
+                  <CellTooltip text={node.processingContent}>
                     <div className="flex-1 min-w-[180px] px-3 py-2.5 border-r border-slate-100 shrink-0 text-slate-600 truncate">
                       {node.processingContent || <span className="text-slate-300">---</span>}
                     </div>
-                  </Tooltip>
+                  </CellTooltip>
 
                   {/* Trạng thái */}
                   <div className="w-[130px] px-3 py-2.5 flex items-center justify-center shrink-0">
