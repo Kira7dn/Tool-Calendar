@@ -1577,3 +1577,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `deploy_to_vnpt.sh` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): dùng git reset hard khi deploy để tránh lỗi git pull"`
+
+### [2026-08-08 09:02] Sửa nghiêm trọng: deploy Tool-Calendar không được sập Lịch Công Tác
+- **Mô tả**: Script deploy trước đây chạy `docker compose down` sẽ kéo sập `nginx-proxy` dùng chung cho cả 2 hệ thống (Tool-Calendar và Lịch Công Tác). Sửa lại để chỉ build và restart đúng service `official-doc-backend` — không đụng vào nginx-proxy hay lichcongtac-backend.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): chỉ restart backend tool-calendar khi deploy, không sập nginx dùng chung"`
