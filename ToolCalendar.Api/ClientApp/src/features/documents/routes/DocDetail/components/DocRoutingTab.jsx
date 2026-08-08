@@ -13,24 +13,44 @@ export function DocRoutingTab({
   users,
 }) {
   const displayRoutings = useMemo(() => {
+    // Check if there is an uploader (Văn thư)
+    const uploader = users?.find((u) => u.id === doc?.uploadedByUserId)
+    const uploaderName = uploader?.fullName || 'Văn thư / Tiếp nhận'
+
+    // Root node (Tiếp nhận)
+    const rootNode = {
+      id: 'synthetic-root-uploader',
+      receiverName: uploaderName,
+      receiverId: doc?.uploadedByUserId,
+      role: 'Tiếp nhận',
+      forwardDate: doc?.ngayThem,
+      deadline: doc?.thoiHan,
+      comment: '',
+      processingContent: '',
+      status: 'Đã xử lý',
+      children: [],
+    }
+
     if (doc?.assignedTo && doc.assignedTo !== doc?.uploadedByUserId) {
       const assignedUser = users?.find((u) => u.id === doc.assignedTo)
-      return [
-        {
-          id: 'synthetic-root',
-          receiverName: assignedUser?.fullName || 'Người được phân công',
-          receiverId: doc.assignedTo,
-          role: 'Xử lý chính',
-          forwardDate: doc.ngayThem,
-          deadline: doc.thoiHan,
-          comment: 'Nhận nhiệm vụ xử lý chính',
-          processingContent: '',
-          status: routings && routings.length > 0 ? 'Đã chuyển tiếp' : doc.status,
-          children: routings || [],
-        },
-      ]
+      const assigneeNode = {
+        id: 'synthetic-root-assignee',
+        receiverName: assignedUser?.fullName || 'Người được phân công',
+        receiverId: doc.assignedTo,
+        role: 'Xử lý chính',
+        forwardDate: doc.ngayThem,
+        deadline: doc.thoiHan,
+        comment: 'Nhận nhiệm vụ xử lý chính',
+        processingContent: '',
+        status: routings && routings.length > 0 ? 'Đã chuyển tiếp' : doc.status,
+        children: routings || [],
+      }
+      rootNode.children = [assigneeNode]
+    } else {
+      rootNode.children = routings || []
     }
-    return routings || []
+
+    return [rootNode]
   }, [routings, doc, users])
 
   return (

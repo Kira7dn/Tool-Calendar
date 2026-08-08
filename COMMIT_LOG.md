@@ -1,5 +1,12 @@
 ## Lịch sử (Mới nhất ở trên)
 
+### [2026-08-08 15:22] Thiết kế lại cây luân chuyển xử lý văn bản
+- **Mô tả**: Thay đổi cấu trúc hiển thị cây luân chuyển để người Tiếp nhận (Văn thư) là thư mục gốc, và người Xử lý chính là thư mục con, mô phỏng đúng luồng nghiệp vụ. Thêm nút "KẾT THÚC VĂN BẢN" cho người xử lý để có thể đóng văn bản mà không cần nộp báo cáo.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocRoutingTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): thiết kế lại cây luân chuyển và thêm nút kết thúc văn bản"`
+
 ### [2026-08-08 14:56] Hiển thị người được phân công trong cây luân chuyển
 - **Mô tả**: Khi văn bản được giao việc trực tiếp (AssignedTo) mà chưa có luân chuyển nào, tab "Quá trình xử lý" sẽ tự động tạo một node gốc đại diện cho người được phân công, thay vì hiển thị "Chưa có luồng xử lý nào", giúp đáp ứng đúng kỳ vọng của người dùng.
 - **Tệp thay đổi**:

@@ -148,12 +148,20 @@ export default function DocDetail({ docId, onBack }) {
             )}
 
           {doc.status === DOCUMENT_STATUS.DANG_XU_LY && canSubmitEvidence && (
-            <button
-              onClick={() => setIsEvidenceModalOpen(true)}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20"
-            >
-              BÁO CÁO HOÀN THÀNH
-            </button>
+            <>
+              <button
+                onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DA_HOAN_THANH)}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black rounded-xl shadow-lg shadow-amber-500/20"
+              >
+                KẾT THÚC VĂN BẢN
+              </button>
+              <button
+                onClick={() => setIsEvidenceModalOpen(true)}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20"
+              >
+                BÁO CÁO HOÀN THÀNH
+              </button>
+            </>
           )}
 
           <button
