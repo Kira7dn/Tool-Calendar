@@ -261,7 +261,7 @@ export default function DocDetail({ docId, onBack }) {
         </div>
 
         {/* Right Panel */}
-        <div className="w-full lg:w-80 shrink-0 flex flex-col h-[500px] lg:h-full">
+        <div className="w-full lg:w-80 shrink-0 flex flex-col min-h-[500px] lg:h-full">
           <DocComments
             comments={comments}
             commentFiles={commentFiles}

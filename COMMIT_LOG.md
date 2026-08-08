@@ -1803,3 +1803,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): truncate table cells in routing tree and show hover tooltips"`
+### [2026-08-08 16:41] Fix layout cắt bị khuyết panel Thảo luận trực tuyến
+- **Mô tả**: Panel "THẢO LUẬN TRỰC TUYẾN" bên phải bị clip mất phần dưới (input box ẩn) do dùng `h-[500px]` cứng trên các màn hình không phải desktop, cộng với `h-full overflow-hidden` bên trong. Sửa thành `min-h-[500px]` cho wrapper ngoài và `min-h-full` cho DocComments để content không bị cắt.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): fix DocComments panel clipped on non-desktop screens"`
