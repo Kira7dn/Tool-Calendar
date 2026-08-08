@@ -1659,3 +1659,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/users/hooks/*.js` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/pages/*.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): thêm import useState/useEffect bị thiếu gây sập giao diện"`
+
+### [2026-08-08 13:00] Sửa lỗi useState is not defined trên production
+- **Mô tả**: Bổ sung import các React hooks (useState, useEffect, useCallback) bị thiếu trong `useDocumentsList.js` do quá trình tái cấu trúc và lỡ dùng `/* eslint-disable */` khiến CI/CD không bắt được lỗi.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/useDocumentsList.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(documents): bổ sung import useState/useEffect bị thiếu gây lỗi màn hình trắng"`
