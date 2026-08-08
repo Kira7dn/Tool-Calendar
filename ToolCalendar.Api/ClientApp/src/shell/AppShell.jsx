@@ -17,16 +17,16 @@ import { registerServiceWorker, subscribeUserToPush } from '@/lib/push-notificat
 import { signalRService } from '@/lib/signalr'
 import { useNotifications } from '../features/notifications/hooks/useNotifications'
 
-import { Dashboard } from '../documents/pages/Dashboard.jsx'
-import { Documents } from '../documents/pages/Documents.jsx'
+import { Dashboard } from '../features/documents/routes/Dashboard.jsx'
+import { Documents } from '../features/documents/routes/Documents.jsx'
 import { UploadPage } from '../features/documents/routes/UploadPage.jsx'
 import { Users } from '../pages/Users.jsx'
-import DocDetail from '../documents/pages/DocDetail.jsx'
-import { MyTasks } from '../documents/pages/MyTasks.jsx'
-import { Review } from '../documents/pages/Review.jsx'
+import DocDetail from '../features/documents/routes/DocDetail.jsx'
+import { MyTasks } from '../features/documents/routes/MyTasks.jsx'
+import { Review } from '../features/documents/routes/Review.jsx'
 import { Settings as SettingsPage } from '../pages/Settings.jsx'
-import { Search as SearchPage } from '../documents/pages/Search.jsx'
-import { MonthlyReport } from '../documents/pages/MonthlyReport.jsx'
+import { Search as SearchPage } from '../features/documents/routes/Search.jsx'
+import { MonthlyReport } from '../features/documents/routes/MonthlyReport.jsx'
 
 export function AppShell() {
   const [activeTab, setActiveTab] = React.useState(() => {

@@ -1,4 +1,4 @@
-import { ROLES } from '../../constants/roles'
+import { ROLES } from '../../../constants/roles'
 /* eslint-disable */
 import React, { useEffect, useState } from 'react'
 import { DOCUMENT_STATUS } from '@/constants/document'

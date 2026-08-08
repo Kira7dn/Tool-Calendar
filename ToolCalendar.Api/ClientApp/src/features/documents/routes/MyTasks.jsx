@@ -27,9 +27,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { DOCUMENT_STATUS, TASK_FILTER } from '../../constants/document'
-import { useMyTasks } from '../../features/tasks/hooks/useMyTasks'
-import { EvidenceModal } from '../../features/tasks/components/EvidenceModal'
+import { DOCUMENT_STATUS, TASK_FILTER } from '../../../constants/document'
+import { useMyTasks } from '../../../features/tasks/hooks/useMyTasks'
+import { EvidenceModal } from '../../../features/tasks/components/EvidenceModal'
 
 function StatItem({ label, count, color, isLoading, isActive, onClick }) {
   const colorMap = {

@@ -1,4 +1,4 @@
-import { ROLES } from '../../../../constants/roles'
+import { ROLES } from '@/constants/roles'
 /* eslint-disable react/prop-types, no-unused-vars, react/no-array-index-key */
 import React, { useState } from 'react'
 import {

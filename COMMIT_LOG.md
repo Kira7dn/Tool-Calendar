@@ -1594,3 +1594,16 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `src/features/notifications/components/NotifAvatar.jsx` (Mới — Icon avatar, 27 dòng)
   - `src/features/notifications/components/NotificationList.jsx` (Mới — Danh sách thông báo, 73 dòng)
 - **Lệnh git commit**: `git commit -m "refactor(shell): split AppShell.jsx into focused modules"`
+
+### [2026-08-08 10:13] refactor(docs,tasks): Tách Upload.jsx + MyTasks.jsx theo Bulletproof React
+- **Mô tả**: Tiếp tục giai đoạn 2 và 3 của kế hoạch refactor FE. Upload.jsx (1406 dòng) và MyTasks.jsx (728 dòng) được phẫu thuật thành các module nhỏ theo Feature-Driven Architecture.
+- **Tệp thay đổi**:
+  - `src/features/documents/hooks/useSaveAll.js` (Mới — logic save/bulk-delete/clear-batch)
+  - `src/features/documents/hooks/useBulkSelect.js` (Mới — logic chọn nhiều rows)
+  - `src/features/documents/components/ReviewModal.jsx` (Mới — modal đối soát PDF, 194 dòng)
+  - `src/features/documents/routes/UploadPage.jsx` (Mới — trang Upload gọn, 312 dòng)
+  - `src/features/tasks/hooks/useMyTasks.js` (Mới — hook fetch/filter/paginate nhiệm vụ)
+  - `src/features/tasks/components/EvidenceModal.jsx` (Mới — modal nộp bằng chứng, 111 dòng)
+  - `src/documents/pages/MyTasks.jsx` (Sửa đổi — giảm từ 728 xuống 203 dòng)
+  - `src/shell/AppShell.jsx` (Sửa đổi — trỏ sang UploadPage mới)
+- **Lệnh git commit**: `git commit -m "refactor(docs,tasks): split Upload+MyTasks into feature modules"`
