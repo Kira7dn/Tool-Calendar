@@ -1,12 +1,5 @@
 ## Lịch sử (Mới nhất ở trên)
 
-### [2026-08-08 16:05] Đơn giản hóa cột Trạng thái trong bảng Luân chuyển
-- **Mô tả**: Thay đổi cách hiển thị cột "Trạng thái" trong quá trình xử lý (cây thư mục). Thay vì hiển thị các trạng thái phức tạp hoặc dạng badge màu, hệ thống giờ đây chỉ hiển thị text đơn giản "Đã xử lý" hoặc "Chưa xử lý" dựa trên việc người dùng đã có hành động chuyển tiếp/báo cáo hoàn thành hay chưa (như ảnh thiết kế).
-- **Tệp thay đổi**:
-  - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
-- **Lệnh git commit**: `git commit -m "style(docs): hiển thị trạng thái Đã xử lý / Chưa xử lý ở dạng text đơn giản trong bảng luân chuyển"`
-
-
 ### [2026-08-08 16:00] Vô hiệu hóa cache cho file index.html
 - **Mô tả**: Bổ sung middleware trong `Program.cs` để thêm các header `Cache-Control: no-cache, no-store, must-revalidate` đối với nội dung `text/html`. Điều này giúp trình duyệt luôn tải file HTML mới nhất sau khi deploy, tránh việc người dùng bị giữ lại giao diện cũ (gây ra lỗi Error 310 do code JS cũ không đồng bộ).
 - **Tệp thay đổi**:
@@ -1758,3 +1751,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `deploy_to_vnpt.sh` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(infra): run docker prune before git fetch in deploy script to free space"`
+
+### [2026-08-08 16:12] Cập nhật giao diện Luồng xử lý
+- **Mô tả**: Thay đổi giao diện hiển thị bảng Luồng xử lý (DocumentRoutingTree) theo yêu cầu. Loại bỏ các badge trạng thái, thay bằng chữ thường, thêm màu nền xen kẽ (zebra-striping), cập nhật màu header thành xanh đậm (`#17627e`) và thêm legend cho trạng thái "Đã xử lý quá hạn".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(routing): update document routing table ui to match requested design"`

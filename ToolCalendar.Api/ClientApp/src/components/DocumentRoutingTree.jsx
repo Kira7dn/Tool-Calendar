@@ -1,130 +1,37 @@
 /* eslint-disable */
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DOCUMENT_STATUS } from '@/constants/document'
-import {
-  ChevronRight,
-  ChevronDown,
-  CheckCircle2,
-  Circle,
-  Clock,
-  FileText,
-  User,
-} from 'lucide-react'
+import { ChevronRight, ChevronDown, Clock, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const RoutingNode = ({ node, level = 0 }) => {
-  const [expanded, setExpanded] = useState(true)
-  const hasChildren = node.children && node.children.length > 0
-
-  return (
-    <>
-      <div
-        className={cn(
-          'flex items-center hover:bg-slate-50 border-b border-slate-100 transition-colors',
-          level === 0 ? 'bg-white font-medium' : 'bg-white'
-        )}
-      >
-        {/* Người xử lý column */}
-        <div
-          className="flex-1 min-w-[200px] p-3 flex items-center gap-2 border-r border-slate-100"
-          style={{ paddingLeft: `${Math.max(0.75, level * 1.5 + 0.75)}rem` }}
-        >
-          {hasChildren ? (
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="p-0.5 rounded hover:bg-slate-200 text-slate-500 transition-colors"
-            >
-              {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </button>
-          ) : (
-            <span className="w-[18px]" /> // placeholder for alignment
-          )}
-
-          {level > 0 && <span className="text-slate-300">└─</span>}
-
-          <User size={14} className={level === 0 ? 'text-blue-500' : 'text-slate-400'} />
-          <span
-            className={cn(
-              'text-xs whitespace-normal break-words',
-              level === 0 ? 'font-bold text-slate-800' : 'font-medium text-slate-700'
-            )}
-            title={node.receiverName}
-          >
-            {node.receiverName || 'Unknown User'}
-          </span>
-        </div>
-
-        {/* Vai trò */}
-        <div className="w-[100px] p-3 text-xs text-center border-r border-slate-100 shrink-0 font-medium text-slate-600">
-          {node.role}
-        </div>
-
-        {/* Ngày chuyển */}
-        <div className="w-[110px] p-3 text-[11px] text-center border-r border-slate-100 shrink-0 text-slate-500">
-          {node.forwardDate ? new Date(node.forwardDate).toLocaleDateString('vi-VN') : '---'}
-        </div>
-
-        {/* Hạn xử lý */}
-        <div className="w-[110px] p-3 text-[11px] text-center border-r border-slate-100 shrink-0 font-semibold text-amber-600">
-          {node.deadline ? new Date(node.deadline).toLocaleDateString('vi-VN') : '---'}
-        </div>
-
-        {/* Bút phê */}
-        <div className="flex-1 min-w-[150px] p-3 text-xs italic text-slate-600 border-r border-slate-100 truncate relative group">
-          {node.comment || '---'}
-          {node.comment && (
-            <div className="absolute hidden group-hover:block z-10 bg-slate-800 text-white p-2 rounded text-[10px] whitespace-normal min-w-[200px] top-full mt-1 left-0 shadow-lg">
-              {node.comment}
-            </div>
-          )}
-        </div>
-
-        {/* Nội dung xử lý */}
-        <div className="flex-1 min-w-[150px] p-3 text-xs text-slate-600 border-r border-slate-100 truncate relative group">
-          {node.processingContent || '---'}
-          {node.processingContent && (
-            <div className="absolute hidden group-hover:block z-10 bg-slate-800 text-white p-2 rounded text-[10px] whitespace-normal min-w-[200px] top-full mt-1 left-0 shadow-lg">
-              {node.processingContent}
-            </div>
-          )}
-        </div>
-
-        {/* Trạng thái */}
-        <div className="w-[120px] p-3 text-xs text-center shrink-0">
-          <span
-            className={cn(
-              'font-semibold',
-              hasChildren ||
-                node.status === DOCUMENT_STATUS.DA_HOAN_THANH ||
-                node.status === 'Hoàn thành' ||
-                node.status === 'Đã hoàn thành' ||
-                node.status === 'Đã xử lý'
-                ? 'text-green-600'
-                : 'text-slate-600'
-            )}
-          >
-            {hasChildren ||
-            node.status === DOCUMENT_STATUS.DA_HOAN_THANH ||
-            node.status === 'Hoàn thành' ||
-            node.status === 'Đã hoàn thành' ||
-            node.status === 'Đã xử lý'
-              ? 'Đã xử lý'
-              : 'Chưa xử lý'}
-          </span>
-        </div>
-      </div>
-
-      {/* Render children recursively */}
-      {expanded &&
-        hasChildren &&
-        node.children.map((child, idx) => (
-          <RoutingNode key={child.id || idx} node={child} level={level + 1} />
-        ))}
-    </>
-  )
-}
-
 export const DocumentRoutingTree = ({ routings, onRefresh }) => {
+  const [expandedNodes, setExpandedNodes] = useState(new Set())
+
+  const toggleNode = (nodeId) => {
+    const newExpanded = new Set(expandedNodes)
+    if (newExpanded.has(nodeId)) {
+      newExpanded.delete(nodeId)
+    } else {
+      newExpanded.add(nodeId)
+    }
+    setExpandedNodes(newExpanded)
+  }
+
+  // Khởi tạo tất cả các node đều mở mặc định
+  React.useEffect(() => {
+    if (routings && routings.length > 0) {
+      const allIds = new Set()
+      const extractIds = (nodes) => {
+        nodes.forEach((n) => {
+          allIds.add(n.id)
+          if (n.children) extractIds(n.children)
+        })
+      }
+      extractIds(routings)
+      setExpandedNodes(allIds)
+    }
+  }, [routings])
+
   if (!routings || !Array.isArray(routings) || routings.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
@@ -137,11 +44,22 @@ export const DocumentRoutingTree = ({ routings, onRefresh }) => {
     )
   }
 
-  // Header helpers
+  // Flatten the tree for easy zebra-striping
+  const flatNodes = []
+  const flatten = (nodes, level = 0) => {
+    nodes.forEach((node) => {
+      flatNodes.push({ ...node, level })
+      if (expandedNodes.has(node.id) && node.children && node.children.length > 0) {
+        flatten(node.children, level + 1)
+      }
+    })
+  }
+  flatten(routings)
+
   const HeaderCol = ({ className, children }) => (
     <div
       className={cn(
-        'p-3 font-bold text-slate-700 uppercase tracking-wider bg-slate-100 border-b border-slate-200 border-r last:border-r-0',
+        'p-3 font-bold text-white uppercase tracking-wider border-r border-white/20 last:border-r-0 text-center flex items-center justify-center',
         className
       )}
     >
@@ -150,23 +68,117 @@ export const DocumentRoutingTree = ({ routings, onRefresh }) => {
   )
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+    <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
+      {/* Legend */}
+      <div className="flex justify-end p-2 bg-slate-50 border-b border-slate-200">
+        <div className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+          <div className="w-8 h-4 rounded-sm bg-[#db4437]"></div>
+          <span>Đã xử lý quá hạn</span>
+        </div>
+      </div>
+
       {/* Table Header */}
-      <div className="flex text-[10px]">
-        <HeaderCol className="flex-1 min-w-[200px]">Người xử lý</HeaderCol>
-        <HeaderCol className="w-[100px] text-center shrink-0">Vai trò</HeaderCol>
-        <HeaderCol className="w-[110px] text-center shrink-0">Ngày chuyển</HeaderCol>
-        <HeaderCol className="w-[110px] text-center shrink-0">Hạn xử lý</HeaderCol>
+      <div className="flex text-xs bg-[#17627e]">
+        <HeaderCol className="flex-1 min-w-[180px] !justify-start">Người xử lý</HeaderCol>
+        <HeaderCol className="w-[90px] shrink-0">Vai trò</HeaderCol>
+        <HeaderCol className="w-[100px] shrink-0">Ngày chuyển</HeaderCol>
+        <HeaderCol className="w-[100px] shrink-0">Hạn xử lý</HeaderCol>
         <HeaderCol className="flex-1 min-w-[150px]">Bút phê</HeaderCol>
         <HeaderCol className="flex-1 min-w-[150px]">Nội dung xử lý</HeaderCol>
-        <HeaderCol className="w-[120px] text-center shrink-0">Trạng thái</HeaderCol>
+        <HeaderCol className="w-[120px] shrink-0">Trạng thái</HeaderCol>
       </div>
 
       {/* Table Body */}
-      <div className="flex flex-col max-h-[500px] overflow-y-auto">
-        {routings.map((rootNode, idx) => (
-          <RoutingNode key={rootNode.id || idx} node={rootNode} level={0} />
-        ))}
+      <div className="flex flex-col max-h-[500px] overflow-y-auto text-sm border-x border-b border-slate-200">
+        {flatNodes.map((node, index) => {
+          const isOverdue = node.status === 'Đã xử lý quá hạn'
+          const hasChildren = node.children && node.children.length > 0
+          const isExpanded = expandedNodes.has(node.id)
+
+          return (
+            <div
+              key={node.id}
+              className={cn(
+                'flex items-stretch border-b border-slate-200 transition-colors',
+                index % 2 === 0 ? 'bg-white' : 'bg-[#f5f5f5]',
+                isOverdue ? '!bg-[#fde8e8]' : ''
+              )}
+            >
+              {/* Người xử lý column */}
+              <div
+                className="flex-1 min-w-[180px] p-2 flex items-center gap-2 border-r border-slate-200"
+                style={{ paddingLeft: `${Math.max(0.5, node.level * 1.5 + 0.5)}rem` }}
+              >
+                {hasChildren ? (
+                  <button
+                    onClick={() => toggleNode(node.id)}
+                    className="p-0.5 rounded hover:bg-slate-300 text-slate-600 transition-colors"
+                  >
+                    {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  </button>
+                ) : (
+                  <span className="w-[18px]" />
+                )}
+
+                {node.level > 0 && <span className="text-slate-400">└─</span>}
+                <User size={14} className="text-slate-500" />
+                <span
+                  className={cn(
+                    'whitespace-normal break-words',
+                    node.level === 0 ? 'font-bold' : 'font-medium'
+                  )}
+                >
+                  {node.receiverName || 'Unknown User'}
+                </span>
+              </div>
+
+              {/* Vai trò */}
+              <div className="w-[90px] p-2 flex items-center justify-center border-r border-slate-200 shrink-0 text-center text-slate-700">
+                {node.role}
+              </div>
+
+              {/* Ngày chuyển */}
+              <div className="w-[100px] p-2 flex items-center justify-center border-r border-slate-200 shrink-0 text-center text-slate-600">
+                {node.forwardDate ? new Date(node.forwardDate).toLocaleDateString('vi-VN') : '---'}
+              </div>
+
+              {/* Hạn xử lý */}
+              <div className="w-[100px] p-2 flex items-center justify-center border-r border-slate-200 shrink-0 text-center font-semibold text-amber-700">
+                {node.deadline ? new Date(node.deadline).toLocaleDateString('vi-VN') : '---'}
+              </div>
+
+              {/* Bút phê */}
+              <div className="flex-1 min-w-[150px] p-2 flex items-center text-slate-700 border-r border-slate-200 truncate relative group">
+                {node.comment || '---'}
+                {node.comment && (
+                  <div className="absolute hidden group-hover:block z-10 bg-slate-800 text-white p-2 rounded text-xs whitespace-normal min-w-[200px] top-full mt-1 left-0 shadow-lg">
+                    {node.comment}
+                  </div>
+                )}
+              </div>
+
+              {/* Nội dung xử lý */}
+              <div className="flex-1 min-w-[150px] p-2 flex items-center text-slate-700 border-r border-slate-200 truncate relative group">
+                {node.processingContent || '---'}
+                {node.processingContent && (
+                  <div className="absolute hidden group-hover:block z-10 bg-slate-800 text-white p-2 rounded text-xs whitespace-normal min-w-[200px] top-full mt-1 left-0 shadow-lg">
+                    {node.processingContent}
+                  </div>
+                )}
+              </div>
+
+              {/* Trạng thái */}
+              <div
+                className={cn(
+                  'w-[120px] p-2 flex items-center justify-center shrink-0 text-center font-medium',
+                  isOverdue ? 'bg-[#db4437] text-white border-l border-[#db4437]' : 'text-slate-800'
+                )}
+              >
+                {node.status}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
