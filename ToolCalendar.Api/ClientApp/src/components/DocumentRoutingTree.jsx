@@ -93,18 +93,23 @@ const RoutingNode = ({ node, level = 0 }) => {
         <div className="w-[120px] p-3 text-xs text-center shrink-0">
           <span
             className={cn(
-              'px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider',
-              node.status === DOCUMENT_STATUS.DA_HOAN_THANH ||
-                node.status === DOCUMENT_STATUS.DA_HOAN_THANH
-                ? 'bg-green-50 text-green-700'
-                : node.status === 'Đang giải quyết' || node.status === DOCUMENT_STATUS.DANG_XU_LY
-                  ? 'bg-blue-50 text-blue-700'
-                  : node.status === 'Đã xử lý quá hạn'
-                    ? 'bg-red-50 text-red-700'
-                    : 'bg-slate-100 text-slate-500'
+              'font-semibold',
+              hasChildren ||
+                node.status === DOCUMENT_STATUS.DA_HOAN_THANH ||
+                node.status === 'Hoàn thành' ||
+                node.status === 'Đã hoàn thành' ||
+                node.status === 'Đã xử lý'
+                ? 'text-green-600'
+                : 'text-slate-600'
             )}
           >
-            {node.status}
+            {hasChildren ||
+            node.status === DOCUMENT_STATUS.DA_HOAN_THANH ||
+            node.status === 'Hoàn thành' ||
+            node.status === 'Đã hoàn thành' ||
+            node.status === 'Đã xử lý'
+              ? 'Đã xử lý'
+              : 'Chưa xử lý'}
           </span>
         </div>
       </div>
