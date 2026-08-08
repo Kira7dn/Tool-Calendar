@@ -96,6 +96,11 @@ export default function DocDetail({ docId, onBack }) {
     { key: 'history', label: 'LỊCH SỬ' },
   ]
 
+  const canInteract =
+    doc.assignedTo == localStorage.getItem('user_id') ||
+    isUserInRoutings(routings, parseInt(localStorage.getItem('user_id'))) ||
+    localStorage.getItem('user_role') === 'Admin'
+
   const pdfUrl = `/api/documents/${docId}/file?access_token=${localStorage.getItem('auth_token')}#page=${pdfPage}&toolbar=0&navpanes=0`
 
   return (
@@ -116,9 +121,7 @@ export default function DocDetail({ docId, onBack }) {
         <div className="flex items-center gap-2 w-full md:w-auto">
           {(doc.status === DOCUMENT_STATUS.CHUA_XU_LY ||
             doc.status === DOCUMENT_STATUS.DA_RA_SOAT) &&
-            (doc.assignedTo == localStorage.getItem('user_id') ||
-              isUserInRoutings(routings, parseInt(localStorage.getItem('user_id'))) ||
-              localStorage.getItem('user_role') === 'Admin') && (
+            canInteract && (
               <button
                 onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DANG_XU_LY)}
                 className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black rounded-xl"
@@ -128,9 +131,7 @@ export default function DocDetail({ docId, onBack }) {
             )}
 
           {doc.status === DOCUMENT_STATUS.DANG_XU_LY &&
-            (doc.assignedTo == localStorage.getItem('user_id') ||
-              isUserInRoutings(routings, parseInt(localStorage.getItem('user_id'))) ||
-              localStorage.getItem('user_role') === 'Admin') && (
+            canInteract && (
               <button
                 onClick={() => setIsEvidenceModalOpen(true)}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20"
@@ -190,6 +191,7 @@ export default function DocDetail({ docId, onBack }) {
               routings={routings}
               fetchRoutings={fetchRoutings}
               setIsForwardModalOpen={setIsForwardModalOpen}
+              canForward={canInteract}
             />
           )}
           {activeTab === 'history' && <DocHistoryTab doc={doc} users={users} routings={routings} />}

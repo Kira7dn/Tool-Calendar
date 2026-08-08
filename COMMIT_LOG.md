@@ -1665,3 +1665,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/useDocumentsList.js` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(documents): bổ sung import useState/useEffect bị thiếu gây lỗi màn hình trắng"`
+
+### [2026-08-08 13:08] Ẩn nút Chuyển xử lý với người dùng không liên quan
+- **Mô tả**: Nút 'Chuyển xử lý' ở tab Luân chuyển giờ chỉ hiển thị nếu người dùng là Admin, hoặc là người đang được phân công xử lý (assignedTo), hoặc có mặt trong cây luân chuyển (routings). Tránh việc ai cũng có quyền luân chuyển văn bản của người khác.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocRoutingTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(routing): ẩn nút Chuyển xử lý với người dùng không có quyền"`

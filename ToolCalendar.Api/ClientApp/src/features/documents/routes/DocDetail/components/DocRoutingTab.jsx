@@ -4,14 +4,14 @@ import { DOCUMENT_STATUS } from '@/constants/document'
 import { Send } from 'lucide-react'
 import { DocumentRoutingTree } from '@/components/DocumentRoutingTree'
 
-export function DocRoutingTab({ doc, routings, fetchRoutings, setIsForwardModalOpen }) {
+export function DocRoutingTab({ doc, routings, fetchRoutings, setIsForwardModalOpen, canForward }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8 flex flex-col h-auto lg:h-full overflow-hidden animate-in fade-in zoom-in-95 duration-400">
       <div className="flex items-center justify-between mb-6 shrink-0">
         <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
           QUÁ TRÌNH XỬ LÝ (LUÂN CHUYỂN)
         </h2>
-        {doc.status !== DOCUMENT_STATUS.DA_HOAN_THANH && (
+        {doc.status !== DOCUMENT_STATUS.DA_HOAN_THANH && canForward && (
           <button
             onClick={() => setIsForwardModalOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold hover:bg-blue-100 transition-colors"
