@@ -115,6 +115,18 @@ export function UserModal({ isOpen, onClose, user, departments, onSuccess }) {
       if (response.ok) {
         onClose()
         toast.success(user ? 'Cập nhật tài khoản thành công' : 'Tạo tài khoản thành công')
+
+        if (user && user.id.toString() === localStorage.getItem('user_id')) {
+          if (user.role !== formData.role) {
+            toast.info('Vai trò của bạn đã bị thay đổi, hệ thống sẽ đăng xuất để cập nhật.')
+            setTimeout(() => {
+              localStorage.clear()
+              window.location.href = '/login'
+            }, 1500)
+            return
+          }
+        }
+
         if (onSuccess) onSuccess()
       } else {
         const err = await response.json()

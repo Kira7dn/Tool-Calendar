@@ -1874,3 +1874,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): chi cho chu tri chuyen tiep va sua trang thai hien thi"`
+### [2026-08-08 19:56] Tự động đăng xuất khi thay đổi vai trò bản thân
+- **Mô tả**: Thêm logic tự động đăng xuất người dùng (xoá local storage và redirect về trang login) nếu họ tự sửa tài khoản của chính mình và thay đổi vai trò (VD: Admin tự chuyển mình thành Cán bộ xử lý).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/users/components/UserModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(users): auto logout when user changes their own role"`
