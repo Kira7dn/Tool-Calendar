@@ -16,9 +16,9 @@ const Tooltip = ({ text, children }) => (
   <div className="relative group inline-flex max-w-full">
     {children}
     {text && text !== '---' && (
-      <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 hidden -translate-x-1/2 rounded-lg bg-slate-800 px-3 py-2 text-xs text-white shadow-xl group-hover:block whitespace-pre-wrap max-w-[280px]">
+      <div className="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 z-[9999] hidden -translate-x-1/2 rounded-lg bg-slate-800 px-3 py-2 text-xs text-white shadow-xl group-hover:block whitespace-pre-wrap max-w-[280px]">
         {text}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-800" />
       </div>
     )}
   </div>
@@ -85,7 +85,10 @@ export const DocumentRoutingTree = ({ routings }) => {
   ]
 
   return (
-    <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden bg-white">
+    <div
+      className="rounded-xl border border-slate-200 shadow-sm bg-white"
+      style={{ overflow: 'visible' }}
+    >
       {/* Legend */}
       <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
         <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-semibold">

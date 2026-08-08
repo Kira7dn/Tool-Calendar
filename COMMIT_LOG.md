@@ -1824,3 +1824,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): redesign routing tree table with horizontal scroll and badge status"`
+### [2026-08-08 17:04] Fix tooltip bị clip bởi overflow-hidden
+- **Mô tả**: Tooltip trong bảng luân chuyển bị clip do outer container có `overflow-hidden`. Sửa bằng cách dùng `overflow: visible` trên outer wrapper và tăng z-index của tooltip lên `z-[9999]` để luôn hiển thị phía trên dòng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/DocumentRoutingTree.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): fix tooltip clipped by overflow-hidden in routing tree"`
