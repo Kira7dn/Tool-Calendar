@@ -1672,3 +1672,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocRoutingTab.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(routing): ẩn nút Chuyển xử lý với người dùng không có quyền"`
+
+### [2026-08-08 13:16] Ẩn nút Báo cáo hoàn thành với Admin và người không phận sự
+- **Mô tả**: Tách cờ `canSubmitEvidence` ra khỏi `canInteract`. Nút 'Báo cáo hoàn thành' giờ chỉ hiển thị cho người dùng được giao chủ trì xử lý văn bản (`assignedTo`), ngăn việc Admin hoặc người luân chuyển ấn nhầm.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(routing): chỉ cho phép người được giao xử lý báo cáo hoàn thành"`

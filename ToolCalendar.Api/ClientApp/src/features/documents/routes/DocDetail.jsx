@@ -101,6 +101,8 @@ export default function DocDetail({ docId, onBack }) {
     isUserInRoutings(routings, parseInt(localStorage.getItem('user_id'))) ||
     localStorage.getItem('user_role') === 'Admin'
 
+  const canSubmitEvidence = doc.assignedTo == localStorage.getItem('user_id')
+
   const pdfUrl = `/api/documents/${docId}/file?access_token=${localStorage.getItem('auth_token')}#page=${pdfPage}&toolbar=0&navpanes=0`
 
   return (
@@ -130,15 +132,14 @@ export default function DocDetail({ docId, onBack }) {
               </button>
             )}
 
-          {doc.status === DOCUMENT_STATUS.DANG_XU_LY &&
-            canInteract && (
-              <button
-                onClick={() => setIsEvidenceModalOpen(true)}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20"
-              >
-                BÁO CÁO HOÀN THÀNH
-              </button>
-            )}
+          {doc.status === DOCUMENT_STATUS.DANG_XU_LY && canSubmitEvidence && (
+            <button
+              onClick={() => setIsEvidenceModalOpen(true)}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20"
+            >
+              BÁO CÁO HOÀN THÀNH
+            </button>
+          )}
 
           <button
             onClick={() => {
