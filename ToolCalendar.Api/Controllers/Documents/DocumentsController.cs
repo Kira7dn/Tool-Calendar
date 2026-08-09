@@ -277,6 +277,13 @@ namespace ToolCalendar.Api.Controllers.Documents
             doc.Status = "Từ chối";
             await _documentRepository.UpdateAsync(doc);
 
+            // Cập nhật trạng thái "Từ chối" trong bảng DocumentRoutings (nếu có bản ghi)
+            try
+            {
+                await _routingRepo.UpdateStatusByDocumentAndReceiverAsync(id, currentUserId, "Từ chối", $"Từ chối tiếp nhận: {reason}");
+            }
+            catch { }
+
             var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Cán bộ";
             var docName = doc.TenCongVan ?? "văn bản";
 

@@ -1,3 +1,9 @@
+### [2026-08-10 00:20] Cập nhật bảng DocumentRoutings khi Hủy tiếp nhận
+- **Mô tả**: API `RejectAssignment` trước đây chỉ cập nhật `doc.Status = "Từ chối"`, không cập nhật trạng thái "Từ chối" vào bản ghi `DocumentRoutings` của người được giao. Điều này dẫn đến data không lưu đúng nếu người dùng từ chối. Sửa lỗi: Cập nhật thêm `_routingRepo.UpdateStatusByDocumentAndReceiverAsync` khi `RejectAssignment`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): cập nhật status routing khi reject assignment"`
+
 ### [2026-08-10 00:05] Refactor luân chuyển: tạo routing record thật khi giao AssignedTo, xóa synthetic node
 - **Mô tả**: Gốc rễ vấn đề: khi Văn thư giao `AssignedTo` trực tiếp, frontend tự dựng "synthetic node" ảo → không có lịch sử, mất người khi `AssignedTo` bị ghi đè (VD: giao Hợp rồi giao Đức, Hợp biến mất khỏi cây). Giải pháp: (1) Backend `UpdateDocument` khi `AssignedTo` thay đổi sẽ tự động `CreateRoutingAsync` một record thật vào DB với `Role="Xử lý chính"`. (2) Frontend `DocDetail.jsx` xóa hoàn toàn logic "synthetic-root-assignee", cây luân chuyển giờ build thuần từ DB (`routings`). (3) `isLevel2` và `myRouting` cũng dùng từ `routings` thật thay vì `displayRoutings`. Kết quả: khi Nơ giao Hợp (record 1), Hợp từ chối, Nơ giao Đức (record 2) → cây hiển thị Hợp và Đức cùng cấp, đúng hoàn toàn.
 - **Tệp thay đổi**:
