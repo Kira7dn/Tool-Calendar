@@ -172,9 +172,9 @@ export default function DocDetail({ docId, onBack }) {
   // Cấp 1: người upload (Văn thư/Admin)
   const isLevel1 = doc.uploadedByUserId == currentUserId
   // Cấp 2: nằm trong routings nhưng không phải Cấp 1
-  const isLevel2 = !isLevel1 && isUserInRoutings(routings, currentUserId)
+  const isLevel2 = !isLevel1 && isUserInRoutings(displayRoutings, currentUserId)
   // Routing record cụ thể của user hiện tại (dùng để gọi API reject)
-  const myRouting = isLevel2 ? findUserRouting(routings, currentUserId) : null
+  const myRouting = isLevel2 ? findUserRouting(displayRoutings, currentUserId) : null
 
   const canInteract =
     doc.assignedTo == currentUserId ||

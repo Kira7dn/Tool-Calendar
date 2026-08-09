@@ -1,3 +1,14 @@
+### [2026-08-09 23:35] Fix lỗi thiếu nút Hủy tiếp nhận cho người được phân công trực tiếp
+- **Mô tả**: Khi người dùng được gán vào `AssignedTo` (Cán bộ xử lý chính) lúc Văn thư tạo văn bản, họ không có bản ghi trong bảng `DocumentRoutings`. Vì thế nút Hủy tiếp nhận không hiện và không có ID để reject. Đã sửa: 
+  1. Thêm API `PUT /api/documents/{id}/reject-assignment` trong `DocumentsController` để hủy giao việc trực tiếp (xóa AssignedTo, đổi Status).
+  2. Sửa frontend `DocDetail.jsx` để dùng `displayRoutings` (chứa node ảo của assignedTo) khi tìm kiếm `myRouting`.
+  3. Sửa `useDocDetail.js` để gọi đúng API `/reject-assignment` nếu routing ID là "synthetic-root-assignee".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/hooks/useDocDetail.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): thêm API reject-assignment và sửa lỗi không hiện nút hủy cho assignedTo"`
+
 ### [2026-08-09 23:25] Điều chỉnh logic Cấp 1 / Cấp 2 trong phân quyền luân chuyển
 - **Mô tả**: Sửa lại logic trong `DocDetail.jsx`: Chỉ người upload văn bản (Văn thư/Admin) mới được coi là Cấp 1. Người được giao văn bản lúc ban đầu (`assignedTo`) sẽ được coi là Cấp 2 (do nhận việc từ Văn thư). Nhờ vậy, người được giao việc lúc upload cũng bị chặn nút "Chuyển xử lý" và có quyền bấm "Hủy tiếp nhận" như luật Cấp 2.
 - **Tệp thay đổi**:

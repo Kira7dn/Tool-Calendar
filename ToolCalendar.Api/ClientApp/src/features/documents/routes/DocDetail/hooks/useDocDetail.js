@@ -132,9 +132,17 @@ export function useDocDetail(docId, onBack) {
       return
     }
     try {
-      const res = await fetch(`/api/routings/${routingId}/reject`, {
+      const isAssignment = routingId === 'synthetic-root-assignee'
+      const url = isAssignment
+        ? `/api/documents/${docId}/reject-assignment`
+        : `/api/routings/${routingId}/reject`
+
+      const res = await fetch(url, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
         body: JSON.stringify({ reason: reason || 'Không có lý do' }),
       })
       const data = await res.json()
