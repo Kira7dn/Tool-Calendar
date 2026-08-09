@@ -1973,3 +1973,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "perf(routing): sử dụng background task để gửi thông báo nhằm tránh block API response"`
 
+
+### [2026-08-10 00:53] Ẩn nút Hủy tiếp nhận sau khi đã nộp kết quả
+- **Mô tả**: Frontend hiện tại chỉ ẩn nút Hủy tiếp nhận khi status routing là "Hoàn thành", nhưng khi nộp bằng chứng thì status là "Đã xử lý". Bổ sung thêm điều kiện ẩn nút khi status là "Đã xử lý".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): ẩn nút Hủy tiếp nhận khi người dùng đã nộp kết quả xử lý (Đã xử lý)"`
+
