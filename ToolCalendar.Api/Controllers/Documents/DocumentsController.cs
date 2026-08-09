@@ -259,7 +259,6 @@ namespace ToolCalendar.Api.Controllers.Documents
                 return BadRequest(ApiResponse.Fail("Không thể hủy tiếp nhận khi văn bản đã hoàn thành."));
 
             var reason = string.IsNullOrWhiteSpace(dto.Reason) ? "Không có lý do" : dto.Reason.Trim();
-            doc.AssignedTo = null;
             doc.Status = "Từ chối";
             await _documentRepository.UpdateAsync(doc);
 

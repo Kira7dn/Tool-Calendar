@@ -1,3 +1,9 @@
+### [2026-08-09 23:55] Giữ nguyên AssignedTo khi Hủy tiếp nhận để hiển thị đúng trên UI
+- **Mô tả**: Khi người được giao việc trực tiếp bấm Hủy tiếp nhận, API `reject-assignment` trước đây set `doc.AssignedTo = null`. Điều này khiến frontend mất đi "synthetic node" của người được giao, dẫn đến UI hiển thị sai người Từ chối là Văn thư (Uploader). Sửa lỗi bằng cách không set null `AssignedTo`, chỉ cập nhật `Status = 'Từ chối'`, để luồng hiển thị Luân chuyển trên UI chính xác.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): không xóa assignedTo khi hủy tiếp nhận để UI hiển thị đúng người từ chối"`
+
 ### [2026-08-09 23:45] Sửa lỗi 403 Forbidden khi Hủy tiếp nhận (RejectAssignment)
 - **Mô tả**: API `PUT /api/documents/{id}/reject-assignment` vô tình bị gắn thẻ `[Authorize(Roles = "Admin,VanThu")]` do copy paste, dẫn đến tài khoản Cán bộ/Lãnh đạo khi thao tác gọi API này bị lỗi 403 Forbidden. Đã xóa thẻ Authorize giới hạn role này để bất kỳ ai được giao việc cũng có thể gọi API Hủy.
 - **Tệp thay đổi**:
