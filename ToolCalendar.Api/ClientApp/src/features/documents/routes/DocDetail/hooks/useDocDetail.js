@@ -110,10 +110,10 @@ export function useDocDetail(docId, onBack) {
 
   const handleUpdateStatus = async (newStatus) => {
     try {
-      const res = await fetch(`/api/documents/${docId}`, {
+      const res = await fetch(`/api/documents/${docId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...doc, status: newStatus }),
+        body: JSON.stringify({ status: newStatus }),
       })
       if (res.ok) {
         toast.success(`Đã chuyển trạng thái sang: ${newStatus}`)

@@ -195,6 +195,7 @@ export default function DocDetail({ docId, onBack }) {
             myRouting.status !== 'Từ chối' &&
             myRouting.status !== 'Hoàn thành' &&
             myRouting.status !== 'Đã xử lý' &&
+            myRouting.status !== 'Đang xử lý' &&
             doc.status !== 'Hoàn thành' && (
               <button
                 onClick={() => setIsRejectModalOpen(true)}

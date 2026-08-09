@@ -1980,3 +1980,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): ẩn nút Hủy tiếp nhận khi người dùng đã nộp kết quả xử lý (Đã xử lý)"`
 
+
+### [2026-08-10 01:12] Sửa lỗi duplicate luân chuyển khi Tiếp nhận xử lý và Ẩn Hủy tiếp nhận
+- **Mô tả**: Sửa lỗi logic race condition khi bấm Tiếp nhận xử lý gửi kèm object doc cũ khiến backend nhầm tưởng thay đổi AssignedTo nên tạo mới routing (tách riêng endpoint `/api/documents/{id}/status`). Ẩn nút Hủy tiếp nhận sau khi đã Tiếp nhận (Đang xử lý).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRoutingRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/hooks/useDocDetail.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi nhân bản luân chuyển khi tiếp nhận xử lý và ẩn nút Hủy tiếp nhận"`

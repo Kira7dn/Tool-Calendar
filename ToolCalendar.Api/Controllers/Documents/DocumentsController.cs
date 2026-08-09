@@ -264,6 +264,35 @@ namespace ToolCalendar.Api.Controllers.Documents
             return Ok(ApiResponse.Ok("Cập nhật văn bản thành công."));
         }
 
+        public class UpdateStatusDto { public string Status { get; set; } }
+
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusDto dto)
+        {
+            var doc = await _documentRepository.GetDocumentByIdAsync(id);
+            if (doc == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
+
+            doc.Status = dto.Status;
+            await _documentRepository.UpdateAsync(doc);
+
+            if (dto.Status == "Đang xử lý")
+            {
+                try
+                {
+                    var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    if (int.TryParse(currentUserIdStr, out int currentUserId))
+                    {
+                        await _routingRepo.UpdateStatusByDocumentAndReceiverAsync(id, currentUserId, "Đang xử lý", "Đã tiếp nhận công việc");
+                    }
+                }
+                catch { }
+            }
+
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = doc.Status });
+            return Ok(ApiResponse.Ok("Cập nhật trạng thái thành công."));
+        }
+
+
         [HttpPut("{id}/reject-assignment")]
         public async Task<IActionResult> RejectAssignment(int id, [FromBody] RejectRoutingDto dto)
         {
