@@ -87,7 +87,8 @@ export function DocComments({
               <MessageSquare size={40} strokeWidth={2} className="text-slate-400" />
             </div>
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center leading-loose">
-              CHƯA CÓ Ý KIẾN CHỈ ĐẠO
+              CHƯA CÓ{' '}
+              {localStorage.getItem('user_role') === 'LanhDao' ? 'Ý KIẾN CHỈ ĐẠO' : 'Ý KIẾN'}
               <br />
               NÀO ĐƯỢC GHI NHẬN
             </p>
@@ -119,7 +120,11 @@ export function DocComments({
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Nhập ý kiến chỉ đạo..."
+            placeholder={
+              localStorage.getItem('user_role') === 'LanhDao'
+                ? 'Nhập ý kiến chỉ đạo...'
+                : 'Nhập nội dung thảo luận...'
+            }
             rows={2}
             className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 resize-none outline-none leading-relaxed"
           />

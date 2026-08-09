@@ -1,3 +1,11 @@
+### [2026-08-09 15:48] Sửa lỗi đá tài khoản và hiển thị chữ bình luận
+- **Mô tả**: Sửa lỗi Global Fetch Interceptor tự động gọi `/api/auth/refresh` khi người dùng nhập sai mật khẩu ở màn hình Login, dẫn đến lấy nhầm token của phiên (cookie) trước đó làm người dùng bị đá vào tài khoản cũ (tài khoản `user`). Đồng thời sửa chữ placeholder bình luận cho phù hợp với quyền (Cán bộ: nội dung thảo luận, Lãnh đạo: ý kiến chỉ đạo).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(auth): ngăn chặn refresh token khi login sai và sửa chữ bình luận"`
+
+
 ## Lịch sử (Mới nhất ở trên)
 
 ### [2026-08-08 16:00] Vô hiệu hóa cache cho file index.html
