@@ -82,6 +82,46 @@ namespace ToolCalendar.Api.Controllers.Documents
             return Ok(ApiResponse.Ok(new { id = newId }));
         }
 
+        [HttpPut("/api/routings/{id}/reject")]
+        public async Task<IActionResult> RejectRouting(int id, [FromBody] RejectRoutingDto dto)
+        {
+            // Lấy userId hiện tại từ JWT claim
+            var userIdClaim = User.FindFirst("uid")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int currentUserId))
+                return Unauthorized(ApiResponse.Fail("Không thể xác định người dùng hiện tại."));
+
+            // Kiểm tra routing tồn tại
+            var routing = await _routingRepo.GetByIdAsync(id);
+            if (routing == null)
+                return NotFound(ApiResponse.Fail("Không tìm thấy bản ghi luân chuyển."));
+
+            // Chỉ người là ReceiverId mới được hủy tiếp nhận (chống giả mạo)
+            if (routing.ReceiverId != currentUserId)
+                return StatusCode(403, ApiResponse.Fail("Bạn không có quyền hủy tiếp nhận bản ghi này."));
+
+            // Không thể hủy nếu đã hoàn thành hoặc đã từ chối trước đó
+            if (routing.Status == "Hoàn thành" || routing.Status == "Từ chối")
+                return BadRequest(ApiResponse.Fail($"Không thể hủy tiếp nhận khi trạng thái là '{routing.Status}'."));
+
+            // Cập nhật trạng thái routing → Từ chối
+            var reason = string.IsNullOrWhiteSpace(dto.Reason) ? "Không có lý do" : dto.Reason.Trim();
+            await _routingRepo.UpdateStatusAsync(id, "Từ chối", reason);
+
+            // Gửi thông báo cho người đã chuyển (SenderId)
+            var doc = await _documentRepo.GetDocumentByIdAsync(routing.DocumentId);
+            var receiver = _userRepo.GetUserById(currentUserId);
+            var docName = doc?.TenCongVan ?? "văn bản";
+
+            await _notificationManager.SendToUserAsync(
+                routing.SenderId,
+                "Từ chối tiếp nhận",
+                $"{receiver?.FullName ?? "Người dùng"} đã từ chối tiếp nhận '{docName}'. Lý do: {reason}",
+                new { docId = routing.DocumentId, type = "routing_rejected", routingId = id }
+            );
+
+            return Ok(ApiResponse.Ok("Đã hủy tiếp nhận thành công."));
+        }
+
         [HttpPut("/api/routings/{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] RoutingUpdateDto dto)
         {
@@ -95,4 +135,10 @@ namespace ToolCalendar.Api.Controllers.Documents
         public string Status { get; set; } = "";
         public string ProcessingContent { get; set; } = "";
     }
+
+    public class RejectRoutingDto
+    {
+        public string Reason { get; set; } = "";
+    }
 }
+

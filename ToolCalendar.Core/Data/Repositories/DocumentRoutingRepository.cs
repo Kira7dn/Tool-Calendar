@@ -7,6 +7,7 @@ namespace ToolCalendar.Data.Repositories
     public interface IDocumentRoutingRepository
     {
         Task<List<DocumentRoutingRecord>> GetTreeByDocumentIdAsync(int documentId);
+        Task<DocumentRoutingRecord?> GetByIdAsync(int id);
         Task<int> CreateRoutingAsync(DocumentRoutingRecord routing);
         Task UpdateStatusAsync(int id, string status, string processingContent);
         Task UpdateStatusByDocumentAndReceiverAsync(int documentId, int receiverId, string status, string processingContent);
@@ -93,6 +94,37 @@ namespace ToolCalendar.Data.Repositories
             }
 
             return rootNodes;
+        }
+
+        public async Task<DocumentRoutingRecord?> GetByIdAsync(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            string sql = @"
+                SELECT Id, DocumentId, SenderId, ReceiverId, ParentRoutingId,
+                       Role, ForwardDate, Deadline, Comment, ProcessingContent, Status, CreatedAt
+                FROM DocumentRoutings
+                WHERE Id = @Id";
+
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@Id", id);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            return new DocumentRoutingRecord
+            {
+                Id            = Convert.ToInt32(reader["Id"]),
+                DocumentId    = Convert.ToInt32(reader["DocumentId"]),
+                SenderId      = Convert.ToInt32(reader["SenderId"]),
+                ReceiverId    = Convert.ToInt32(reader["ReceiverId"]),
+                ParentRoutingId = reader["ParentRoutingId"] != DBNull.Value ? Convert.ToInt32(reader["ParentRoutingId"]) : null,
+                Role          = reader["Role"].ToString() ?? "Chủ trì",
+                Status        = reader["Status"].ToString() ?? "Chưa xử lý",
+                ProcessingContent = reader["ProcessingContent"].ToString() ?? "",
+                CreatedAt     = DateTime.Parse(reader["CreatedAt"].ToString()!),
+            };
         }
 
         public async Task<int> CreateRoutingAsync(DocumentRoutingRecord routing)

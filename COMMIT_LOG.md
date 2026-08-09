@@ -1,3 +1,13 @@
+### [2026-08-09 22:55] Giới hạn luân chuyển 2 cấp + Nút Hủy tiếp nhận
+- **Mô tả**: Triển khai 2 tính năng nghiệp vụ quan trọng: (1) Chặn Cấp 2 (người được Cấp 1 giao việc qua DocumentRoutings) không được bấm nút "Chuyển xử lý" nữa — tránh tình trạng đùn đẩy công việc vô hạn. (2) Thêm nút "HỦY TIẾP NHẬN" màu cam dành riêng cho Cấp 2, khi bấm mở modal nhập lý do, sau khi xác nhận API sẽ cập nhật routing Status = 'Từ chối' và tự động gửi thông báo cho người đã giao việc (SenderId). Backend có validation chặt: chỉ ReceiverId đúng mới reject được, không thể reject nếu status đã là 'Hoàn thành' hoặc 'Từ chối'.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRoutingRepository.cs` (Sửa đổi — Thêm GetByIdAsync, thêm vào interface)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi — Thêm PUT /api/routings/{id}/reject + RejectRoutingDto)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/hooks/useDocDetail.js` (Sửa đổi — Thêm isRejectModalOpen, rejectReason state + handleRejectRouting)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi — Thêm findUserRouting helper, isLevel1/isLevel2/myRouting logic, fix canForward, thêm nút HỦY TIẾP NHẬN, truyền reject props)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocModals.jsx` (Sửa đổi — Thêm RejectRoutingModal inline với textarea + nút xác nhận)
+- **Lệnh git commit**: `git commit -m "feat(routing): giới hạn luân chuyển 2 cấp + thêm nút hủy tiếp nhận cho Cấp 2"`
+
 ### [2026-08-09 16:50] Sửa lỗi SecurityStamp bị lệch gây văng tài khoản (Anti-Concurrent Login bug)
 - **Mô tả**: Sửa lỗi ngầm trong `UserRepository.UpdateUser` liên tục tạo `SecurityStamp` mới mỗi khi gọi `UpdateUser` (làm đè luồng của Identity khiến `tokenStamp` bị lệch và đẩy người dùng ra ngay sau khi login khi tính năng chống đăng nhập nhiều nơi đang được bật trong Program.cs). Cập nhật `UsersController` tạo `SecurityStamp` mới khi Admin đổi quyền người dùng. Lỗi này giống hệt lỗi bên dự án LichCongTac.
 - **Tệp thay đổi**:

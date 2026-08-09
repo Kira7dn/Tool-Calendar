@@ -11,6 +11,19 @@ import { DocHistoryTab } from './DocDetail/components/DocHistoryTab'
 import { DocComments } from './DocDetail/components/DocComments'
 import { DocModals } from './DocDetail/components/DocModals'
 
+// Tìm bản ghi routing của user (kết quả là record, không chỉ boolean)
+const findUserRouting = (routingList, userId) => {
+  if (!routingList || !Array.isArray(routingList)) return null
+  for (const r of routingList) {
+    if (r.receiverId === userId) return r
+    if (r.children) {
+      const found = findUserRouting(r.children, userId)
+      if (found) return found
+    }
+  }
+  return null
+}
+
 const isUserInRoutings = (routingList, userId) => {
   if (!routingList || !Array.isArray(routingList)) return false
   for (const r of routingList) {
@@ -41,6 +54,10 @@ export default function DocDetail({ docId, onBack }) {
     setIsEditModalOpen,
     isEvidenceModalOpen,
     setIsEvidenceModalOpen,
+    isRejectModalOpen,
+    setIsRejectModalOpen,
+    rejectReason,
+    setRejectReason,
     editForm,
     setEditForm,
     pdfPage,
@@ -50,6 +67,7 @@ export default function DocDetail({ docId, onBack }) {
     fetchRoutings,
     fetchData,
     handleUpdateStatus,
+    handleRejectRouting,
     executeDelete,
     handleViewEvidence,
     newComment,
@@ -149,12 +167,20 @@ export default function DocDetail({ docId, onBack }) {
   ]
 
   const currentUserId = parseInt(localStorage.getItem('user_id'), 10)
+  const isAdmin = localStorage.getItem('user_role') === 'Admin'
+
+  // Cấp 1: người upload hoặc người được assignedTo
+  const isLevel1 = doc.assignedTo == currentUserId || doc.uploadedByUserId == currentUserId
+  // Cấp 2: nằm trong routings nhưng không phải Cấp 1
+  const isLevel2 = !isLevel1 && isUserInRoutings(routings, currentUserId)
+  // Routing record cụ thể của user hiện tại (dùng để gọi API reject)
+  const myRouting = isLevel2 ? findUserRouting(routings, currentUserId) : null
 
   const canInteract =
     doc.assignedTo == currentUserId ||
     doc.uploadedByUserId == currentUserId ||
     isUserInRoutings(routings, currentUserId) ||
-    localStorage.getItem('user_role') === 'Admin'
+    isAdmin
 
   const isLeafReceiver = (routingList, userId) => {
     if (!routingList || !Array.isArray(routingList) || routingList.length === 0) return false
@@ -165,8 +191,10 @@ export default function DocDetail({ docId, onBack }) {
     return false
   }
 
-  // User can only submit evidence if they are a leaf node in the FULL routing tree
+  // Chỉ Leaf node mới được nộp bằng chứng
   const canSubmitEvidence = isLeafReceiver(displayRoutings, currentUserId)
+  // Chỉ Cấp 1 (và Admin) mới được chuyển xử lý — Cấp 2 bị khóa
+  const canForward = (isLevel1 || isAdmin) && !isLevel2
 
   const pdfUrl = `/api/documents/${docId}/file?access_token=${localStorage.getItem('auth_token')}#page=${pdfPage}&toolbar=0&navpanes=0`
 
@@ -186,6 +214,20 @@ export default function DocDetail({ docId, onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
+          {/* Nút HỦY TIẾ́P NHẠN — chỉ hiện với Cấp 2 khi routing còn active */}
+          {isLevel2 &&
+            myRouting &&
+            myRouting.status !== 'Từ chối' &&
+            myRouting.status !== 'Hoàn thành' &&
+            doc.status !== 'Hoàn thành' && (
+              <button
+                onClick={() => setIsRejectModalOpen(true)}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-black rounded-xl shadow-lg shadow-orange-500/20 transition-colors"
+              >
+                HỦY TIẾ́P NHẠN
+              </button>
+            )}
+
           {(doc.status === DOCUMENT_STATUS.CHUA_XU_LY ||
             doc.status === DOCUMENT_STATUS.DA_RA_SOAT) &&
             canInteract && (
@@ -193,7 +235,7 @@ export default function DocDetail({ docId, onBack }) {
                 onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DANG_XU_LY)}
                 className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black rounded-xl"
               >
-                TIẾP NHẬN XỬ LÝ
+                TIẾ́P NHẠN XỬ LÝ
               </button>
             )}
 
@@ -265,12 +307,7 @@ export default function DocDetail({ docId, onBack }) {
               displayRoutings={displayRoutings}
               fetchRoutings={fetchRoutings}
               setIsForwardModalOpen={setIsForwardModalOpen}
-              canForward={
-                (doc.assignedTo
-                  ? doc.assignedTo == currentUserId
-                  : doc.uploadedByUserId == currentUserId) ||
-                localStorage.getItem('user_role') === 'Admin'
-              }
+              canForward={canForward}
             />
           )}
           {activeTab === 'history' && <DocHistoryTab doc={doc} users={users} routings={routings} />}
@@ -317,6 +354,11 @@ export default function DocDetail({ docId, onBack }) {
         fetchRoutings={fetchRoutings}
         pdfPage={pdfPage}
         setPdfPage={setPdfPage}
+        isRejectModalOpen={isRejectModalOpen}
+        setIsRejectModalOpen={setIsRejectModalOpen}
+        rejectReason={rejectReason}
+        setRejectReason={setRejectReason}
+        onConfirmReject={() => handleRejectRouting(myRouting?.id, rejectReason)}
       />
     </div>
   )

@@ -31,6 +31,11 @@ export function DocModals({
   fetchRoutings,
   pdfPage,
   setPdfPage,
+  isRejectModalOpen,
+  setIsRejectModalOpen,
+  rejectReason,
+  setRejectReason,
+  onConfirmReject,
 }) {
   return (
     <>
@@ -85,15 +90,59 @@ export function DocModals({
         </div>
       )}
 
-      <ConfirmationModal
-        open={isDeleteModalOpen}
-        onOpenChange={setIsDeleteModalOpen}
-        title="Xác nhận xóa văn bản?"
-        description="Bạn có chắc chắn muốn xóa văn bản này không? Thao tác này sẽ xóa vĩnh viễn dữ liệu và các tệp đính kèm liên quan."
-        confirmLabel="XÓA NGAY"
-        onConfirm={executeDelete}
-        variant="destructive"
-      />
+      {isDeleteModalOpen && (
+        <ConfirmationModal
+          open={isDeleteModalOpen}
+          onOpenChange={setIsDeleteModalOpen}
+          title="Xác nhận xóa văn bản?"
+          description="Bạn có chắc chắn muốn xóa văn bản này không? Thao tác này sẽ xóa vĩnh viễn dữ liệu và các tệp đính kèm liên quan."
+          confirmLabel="XÓA NGAY"
+          onConfirm={executeDelete}
+          variant="destructive"
+        />
+      )}
+
+      {/* Modal HỦY TIẾ́P NHẠN với textarea nhập lý do */}
+      {isRejectModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setIsRejectModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-black text-slate-900 mb-1">Hủy Tiếp Nhận Văn Bản</h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Vui lòng nhập lý do từ chối để thông báo cho người đã giao việc.
+            </p>
+            <textarea
+              className="w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none h-28 bg-slate-50"
+              placeholder="Ví dụ: Không thuộc chuyên môn phòng, đề nghị chuyển sang phòng khác..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              autoFocus
+            />
+            <div className="flex gap-3 mt-4 justify-end">
+              <button
+                onClick={() => {
+                  setIsRejectModalOpen(false)
+                  setRejectReason('')
+                }}
+                className="px-5 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-colors"
+              >
+                Không, giữ lại
+              </button>
+              <button
+                onClick={onConfirmReject}
+                className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-black transition-colors shadow-lg shadow-orange-500/30"
+              >
+                Xác nhận Hủy Tiếp Nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isFullscreenPdf && (
         <div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col animate-in fade-in zoom-in-95 duration-300">

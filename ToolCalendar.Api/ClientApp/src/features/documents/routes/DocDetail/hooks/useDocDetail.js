@@ -17,6 +17,8 @@ export function useDocDetail(docId, onBack) {
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isEvidenceModalOpen, setIsEvidenceModalOpen] = useState(false)
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
   const [editForm, setEditForm] = useState(null)
 
   // PDF state
@@ -124,6 +126,31 @@ export function useDocDetail(docId, onBack) {
     }
   }
 
+  const handleRejectRouting = async (routingId, reason) => {
+    if (!routingId) {
+      toast.error('Không tìm thấy bản ghi luân chuyển của bạn.')
+      return
+    }
+    try {
+      const res = await fetch(`/api/routings/${routingId}/reject`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason || 'Không có lý do' }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success !== false) {
+        toast.success('Đã hủy tiếp nhận thành công.')
+        setIsRejectModalOpen(false)
+        setRejectReason('')
+        await Promise.all([fetchRoutings(), fetchData()])
+      } else {
+        toast.error(data.message || 'Không thể hủy tiếp nhận.')
+      }
+    } catch (err) {
+      toast.error('Lỗi kết nối máy chủ.')
+    }
+  }
+
   const executeDelete = async () => {
     try {
       const response = await fetch(`/api/documents/${docId}`, {
@@ -218,6 +245,10 @@ export function useDocDetail(docId, onBack) {
     setIsEditModalOpen,
     isEvidenceModalOpen,
     setIsEvidenceModalOpen,
+    isRejectModalOpen,
+    setIsRejectModalOpen,
+    rejectReason,
+    setRejectReason,
     editForm,
     setEditForm,
     pdfPage,
@@ -228,6 +259,7 @@ export function useDocDetail(docId, onBack) {
     fetchRoutings,
     fetchComments,
     handleUpdateStatus,
+    handleRejectRouting,
     executeDelete,
     handleViewEvidence,
     commentFiles,
