@@ -610,7 +610,7 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            string sql = "UPDATE Documents SET AssignedTo=@receiverId, DepartmentId=@deptId WHERE Id=@docId";
+            string sql = "UPDATE Documents SET AssignedTo=@receiverId, DepartmentId=@deptId, Status='Chưa xử lý' WHERE Id=@docId";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@receiverId", receiverId);
             cmd.Parameters.AddWithValue("@deptId", (object?)departmentId ?? DBNull.Value);

@@ -210,6 +210,12 @@ namespace ToolCalendar.Api.Controllers.Documents
                 record.OcrPagesJson = existing.OcrPagesJson;
             }
 
+            // Nếu thay đổi người được giao xử lý chính, reset trạng thái văn bản về Chưa xử lý
+            if (record.AssignedTo.HasValue && record.AssignedTo != existing?.AssignedTo)
+            {
+                record.Status = "Chưa xử lý";
+            }
+
             await _documentRepository.UpdateAsync(record);
 
             // Cập nhật trạng thái của user trong bảng DocumentRoutings (nếu có)

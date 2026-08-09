@@ -4,7 +4,14 @@
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(routing): cập nhật status routing khi reject assignment"`
 
-### [2026-08-10 00:05] Refactor luân chuyển: tạo routing record thật khi giao AssignedTo, xóa synthetic node
+### [2026-08-10 00:35] Fix lỗi đồng bộ trạng thái văn bản và Routing khi Hủy tiếp nhận và Bổ nhiệm mới
+- **Mô tả**: Khi người xử lý chính từ chối, trạng thái của `DocumentRoutings` thành "Từ chối" nhưng `Documents.Status` không được cập nhật tương ứng. Ngược lại, khi chuyển cho người xử lý mới, `Documents.Status` không được reset về "Chưa xử lý", khiến người mới không thấy nút Tiếp nhận xử lý trên giao diện.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi: Reset Status về Chưa xử lý khi thay đổi AssignedTo)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi: Cập nhật Documents.Status thành Từ chối nếu người từ chối là AssignedTo)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi: UpdateHandlerAsync set Status = 'Chưa xử lý')
+- **Lệnh git commit**: `git commit -m "fix(routing): đồng bộ trạng thái văn bản (Từ chối, Chưa xử lý) với cây luân chuyển"`
+
 - **Mô tả**: Gốc rễ vấn đề: khi Văn thư giao `AssignedTo` trực tiếp, frontend tự dựng "synthetic node" ảo → không có lịch sử, mất người khi `AssignedTo` bị ghi đè (VD: giao Hợp rồi giao Đức, Hợp biến mất khỏi cây). Giải pháp: (1) Backend `UpdateDocument` khi `AssignedTo` thay đổi sẽ tự động `CreateRoutingAsync` một record thật vào DB với `Role="Xử lý chính"`. (2) Frontend `DocDetail.jsx` xóa hoàn toàn logic "synthetic-root-assignee", cây luân chuyển giờ build thuần từ DB (`routings`). (3) `isLevel2` và `myRouting` cũng dùng từ `routings` thật thay vì `displayRoutings`. Kết quả: khi Nơ giao Hợp (record 1), Hợp từ chối, Nơ giao Đức (record 2) → cây hiển thị Hợp và Đức cùng cấp, đúng hoàn toàn.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi — thêm auto-create routing)

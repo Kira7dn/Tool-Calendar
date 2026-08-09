@@ -107,8 +107,16 @@ namespace ToolCalendar.Api.Controllers.Documents
             var reason = string.IsNullOrWhiteSpace(dto.Reason) ? "Không có lý do" : dto.Reason.Trim();
             await _routingRepo.UpdateStatusAsync(id, "Từ chối", reason);
 
-            // Gửi thông báo cho người đã chuyển (SenderId)
             var doc = await _documentRepo.GetDocumentByIdAsync(routing.DocumentId);
+            
+            // Nếu người từ chối đang là người xử lý chính của văn bản, cập nhật luôn trạng thái văn bản
+            if (doc != null && doc.AssignedTo == currentUserId && (routing.Role == "Xử lý chính" || routing.Role == "Chủ trì"))
+            {
+                doc.Status = "Từ chối";
+                await _documentRepo.UpdateAsync(doc);
+            }
+
+            // Gửi thông báo cho người đã chuyển (SenderId)
             var receiver = _userRepo.GetUserById(currentUserId);
             var docName = doc?.TenCongVan ?? "văn bản";
 
