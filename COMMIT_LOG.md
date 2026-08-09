@@ -1989,3 +1989,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/hooks/useDocDetail.js` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi nhân bản luân chuyển khi tiếp nhận xử lý và ẩn nút Hủy tiếp nhận"`
+
+### [2026-08-10 01:31] Cấp quyền Kết thúc văn bản cho Văn thư (Level 1)
+- **Mô tả**: Cho phép người khởi tạo văn bản (Văn thư) và Admin có quyền Báo cáo đã xử lý / Kết thúc văn bản dù họ không phải là node lá (leaf node) trong quy trình luân chuyển.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): cho phép văn thư và admin kết thúc văn bản"`
