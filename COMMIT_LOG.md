@@ -1901,3 +1901,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/UsersController.cs` (Sửa đổi)
   - `ToolCalendar.Core/Data/Repositories/UserRepository.cs` (Sửa đổi, log tạm)
 - **Lệnh git commit**: `git commit -m "fix(auth): sửa lỗi đổi mật khẩu không hoạt động do AddPasswordAsync từ chối mật khẩu rỗng"`
+
+### [2026-08-09 22:11] Remove temporary TestHash endpoint
+- **Mô tả**: Xóa API `/api/users/test-hash` do chỉ được dùng để test hàm băm mật khẩu trong lúc sửa lỗi, không cần thiết cho môi trường chạy thật.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/UsersController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(api): xóa endpoint test-hash không cần thiết"`

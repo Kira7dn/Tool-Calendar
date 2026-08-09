@@ -61,14 +61,7 @@ namespace ToolCalendar.Api.Controllers
             return Ok(ApiResponse.Ok(users));
         }
 
-        [HttpGet("test-hash")]
-        public IActionResult TestHash([FromQuery] string password)
-        {
-            var user = new User { Username = "test" };
-            var hasher = new ToolCalendar.Api.Security.HybridPasswordHasher();
-            var hash = hasher.HashPassword(user, password);
-            return Ok(new { password, hash });
-        }
+
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpGet("{id}")]
