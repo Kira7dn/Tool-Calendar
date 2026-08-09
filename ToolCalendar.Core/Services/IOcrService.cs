@@ -1,4 +1,4 @@
-﻿using ToolCalendar.Models;
+using ToolCalendar.Models;
 
 namespace ToolCalendar.Services
 {
