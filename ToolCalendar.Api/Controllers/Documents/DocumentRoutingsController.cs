@@ -19,17 +19,20 @@ namespace ToolCalendar.Api.Controllers.Documents
         private readonly INotificationManager _notificationManager;
         private readonly IDocumentRepository _documentRepo;
         private readonly IUserRepository _userRepo;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public DocumentRoutingsController(
             IDocumentRoutingRepository routingRepo,
             INotificationManager notificationManager,
             IDocumentRepository documentRepo,
-            IUserRepository userRepo)
+            IUserRepository userRepo,
+            IServiceScopeFactory scopeFactory)
         {
             _routingRepo    = routingRepo;
             _notificationManager = notificationManager;
             _documentRepo   = documentRepo;
             _userRepo        = userRepo;
+            _scopeFactory    = scopeFactory;
         }
 
         [HttpGet("{documentId}/routings")]
@@ -71,12 +74,22 @@ namespace ToolCalendar.Api.Controllers.Documents
                 var doc = await _documentRepo.GetDocumentByIdAsync(documentId);
                 var docName = doc?.TenCongVan ?? "văn bản mới";
                 
-                await _notificationManager.SendToUserAsync(
-                    routing.ReceiverId,
-                    "Công việc mới",
-                    $"Bạn nhận được {docName} để xử lý với vai trò: {routing.Role}",
-                    new { docId = documentId, type = "routing", routingId = newId }
-                );
+                // Fire and forget notification
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        using var scope = _scopeFactory.CreateScope();
+                        var notificationManager = scope.ServiceProvider.GetRequiredService<INotificationManager>();
+                        await notificationManager.SendToUserAsync(
+                            routing.ReceiverId,
+                            "Công việc mới",
+                            $"Bạn nhận được {docName} để xử lý với vai trò: {routing.Role}",
+                            new { docId = documentId, type = "routing", routingId = newId }
+                        );
+                    }
+                    catch { }
+                });
             }
 
             return Ok(ApiResponse.Ok(new { id = newId }));

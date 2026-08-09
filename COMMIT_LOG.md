@@ -1966,3 +1966,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/UsersController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(api): xóa endpoint test-hash không cần thiết"`
+
+### [2026-08-10 00:47] Tối ưu hiệu năng gửi thông báo khi luân chuyển
+- **Mô tả**: Sử dụng Task.Run và IServiceScopeFactory để đẩy logic gửi thông báo (Push/Email) vào background thread, tránh block API Response khi người dùng bấm luân chuyển.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(routing): sử dụng background task để gửi thông báo nhằm tránh block API response"`
+
