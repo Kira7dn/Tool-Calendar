@@ -61,6 +61,15 @@ namespace ToolCalendar.Api.Controllers
             return Ok(ApiResponse.Ok(users));
         }
 
+        [HttpGet("test-hash")]
+        public IActionResult TestHash([FromQuery] string password)
+        {
+            var user = new User { Username = "test" };
+            var hasher = new ToolCalendar.Api.Security.HybridPasswordHasher();
+            var hash = hasher.HashPassword(user, password);
+            return Ok(new { password, hash });
+        }
+
         [Authorize(Roles = "Admin,VanThu")]
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
@@ -117,11 +126,11 @@ namespace ToolCalendar.Api.Controllers
                 var identityUser = await _userManager.FindByIdAsync(id.ToString());
                 if (identityUser != null)
                 {
-                    await _userManager.RemovePasswordAsync(identityUser);
-                    await _userManager.AddPasswordAsync(identityUser, request.PasswordHash);
-
+                    // Hash trực tiếp bằng PasswordHasher của UserManager (PBKDF2)
+                    var hash = _userManager.PasswordHasher.HashPassword(identityUser, request.PasswordHash);
+                    
                     // Đồng bộ sang biến user để không bị ghi đè lại mật khẩu cũ ở lệnh UpdateUser cuối hàm
-                    user.PasswordHash = identityUser.PasswordHash;
+                    user.PasswordHash = hash;
                     user.SecurityStamp = identityUser.SecurityStamp;
 
                     // Xóa cache để SecurityStamp mới có hiệu lực ngay
@@ -147,7 +156,15 @@ namespace ToolCalendar.Api.Controllers
             user.Role        = request.Role;
             user.DepartmentId = request.DepartmentId;
 
+            // Invalidate token cũ khi Admin cập nhật thông tin user (để các thay đổi quyền có hiệu lực ngay)
+            user.SecurityStamp = Guid.NewGuid().ToString();
+
             _userRepository.UpdateUser(user);
+            
+            // Xóa cache session để SecurityStamp mới có hiệu lực ngay lập tức
+            var memCache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+            memCache?.Remove($"UserSession_{user.Id}");
+
             return Ok(ApiResponse.Ok("Cập nhật người dùng thành công."));
         }
 

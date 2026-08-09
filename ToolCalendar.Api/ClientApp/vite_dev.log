@@ -1,0 +1,10 @@
+
+> toolcalendar-client@0.0.4 dev
+> vite --host 0.0.0.0 --host 0.0.0.0
+
+
+  VITE v7.3.2  ready in 191 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.1.38:5173/
+  ➜  Network: http://169.254.166.139:5173/

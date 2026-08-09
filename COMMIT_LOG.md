@@ -1,3 +1,10 @@
+### [2026-08-09 16:50] Sửa lỗi SecurityStamp bị lệch gây văng tài khoản (Anti-Concurrent Login bug)
+- **Mô tả**: Sửa lỗi ngầm trong `UserRepository.UpdateUser` liên tục tạo `SecurityStamp` mới mỗi khi gọi `UpdateUser` (làm đè luồng của Identity khiến `tokenStamp` bị lệch và đẩy người dùng ra ngay sau khi login khi tính năng chống đăng nhập nhiều nơi đang được bật trong Program.cs). Cập nhật `UsersController` tạo `SecurityStamp` mới khi Admin đổi quyền người dùng. Lỗi này giống hệt lỗi bên dự án LichCongTac.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/UserRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/UsersController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(auth): sửa lỗi lệch SecurityStamp gây văng tài khoản (đồng bộ từ LichCongTac)"`
+
 ### [2026-08-09 15:48] Sửa lỗi đá tài khoản và hiển thị chữ bình luận
 - **Mô tả**: Sửa lỗi Global Fetch Interceptor tự động gọi `/api/auth/refresh` khi người dùng nhập sai mật khẩu ở màn hình Login, dẫn đến lấy nhầm token của phiên (cookie) trước đó làm người dùng bị đá vào tài khoản cũ (tài khoản `user`). Đồng thời sửa chữ placeholder bình luận cho phù hợp với quyền (Cán bộ: nội dung thảo luận, Lãnh đạo: ý kiến chỉ đạo).
 - **Tệp thay đổi**:
@@ -1887,3 +1894,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/users/components/UserModal.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(users): auto logout when user changes their own role"`
+
+### [2026-08-09 22:10] Fix password reset logic missing empty password check
+- **Mô tả**: Sửa lỗi chức năng cập nhật mật khẩu thất bại nhưng không báo lỗi. Nguyên nhân do `UserManager.AddPasswordAsync` từ chối cập nhật mật khẩu nếu `GetPasswordHashAsync` trả về không null (bao gồm cả chuỗi rỗng `""` do DB `TEXT NOT NULL` constraint). Khi gặp lỗi này, mật khẩu rỗng sẽ bị ghi đè lên tài khoản. Giải pháp: Sử dụng trực tiếp `PasswordHasher.HashPassword` để hash thay vì qua `RemovePasswordAsync` và `AddPasswordAsync`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/UsersController.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/UserRepository.cs` (Sửa đổi, log tạm)
+- **Lệnh git commit**: `git commit -m "fix(auth): sửa lỗi đổi mật khẩu không hoạt động do AddPasswordAsync từ chối mật khẩu rỗng"`
