@@ -1,3 +1,9 @@
+### [2026-08-09 23:25] Điều chỉnh logic Cấp 1 / Cấp 2 trong phân quyền luân chuyển
+- **Mô tả**: Sửa lại logic trong `DocDetail.jsx`: Chỉ người upload văn bản (Văn thư/Admin) mới được coi là Cấp 1. Người được giao văn bản lúc ban đầu (`assignedTo`) sẽ được coi là Cấp 2 (do nhận việc từ Văn thư). Nhờ vậy, người được giao việc lúc upload cũng bị chặn nút "Chuyển xử lý" và có quyền bấm "Hủy tiếp nhận" như luật Cấp 2.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): cập nhật logic Cấp 1 chỉ là người upload, Cấp 2 là người được phân công"`
+
 ### [2026-08-09 22:55] Giới hạn luân chuyển 2 cấp + Nút Hủy tiếp nhận
 - **Mô tả**: Triển khai 2 tính năng nghiệp vụ quan trọng: (1) Chặn Cấp 2 (người được Cấp 1 giao việc qua DocumentRoutings) không được bấm nút "Chuyển xử lý" nữa — tránh tình trạng đùn đẩy công việc vô hạn. (2) Thêm nút "HỦY TIẾP NHẬN" màu cam dành riêng cho Cấp 2, khi bấm mở modal nhập lý do, sau khi xác nhận API sẽ cập nhật routing Status = 'Từ chối' và tự động gửi thông báo cho người đã giao việc (SenderId). Backend có validation chặt: chỉ ReceiverId đúng mới reject được, không thể reject nếu status đã là 'Hoàn thành' hoặc 'Từ chối'.
 - **Tệp thay đổi**:

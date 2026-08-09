@@ -169,8 +169,8 @@ export default function DocDetail({ docId, onBack }) {
   const currentUserId = parseInt(localStorage.getItem('user_id'), 10)
   const isAdmin = localStorage.getItem('user_role') === 'Admin'
 
-  // Cấp 1: người upload hoặc người được assignedTo
-  const isLevel1 = doc.assignedTo == currentUserId || doc.uploadedByUserId == currentUserId
+  // Cấp 1: người upload (Văn thư/Admin)
+  const isLevel1 = doc.uploadedByUserId == currentUserId
   // Cấp 2: nằm trong routings nhưng không phải Cấp 1
   const isLevel2 = !isLevel1 && isUserInRoutings(routings, currentUserId)
   // Routing record cụ thể của user hiện tại (dùng để gọi API reject)
