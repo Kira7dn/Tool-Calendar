@@ -226,10 +226,25 @@ namespace ToolCalendar.Api.Controllers.Documents
                 catch { }
             }
 
-            // Nếu có sự thay đổi về người được giao hoặc gán mới
+            // Nếu có sự thay đổi về người được giao → tạo routing record thật trong DB
             if (record.AssignedTo.HasValue && record.AssignedTo != existing?.AssignedTo)
             {
                 try {
+                    // Tạo bản ghi DocumentRoutings thật để cây luân chuyển luôn chính xác
+                    var newRouting = new DocumentRoutingRecord
+                    {
+                        DocumentId = id,
+                        SenderId = record.UploadedByUserId > 0 ? record.UploadedByUserId : existing?.UploadedByUserId ?? 0,
+                        ReceiverId = record.AssignedTo.Value,
+                        Role = "Xử lý chính",
+                        ForwardDate = DateTime.Now,
+                        Deadline = record.ThoiHan.HasValue ? record.ThoiHan.Value : null,
+                        Comment = "Nhận nhiệm vụ xử lý chính",
+                        Status = "Chưa xử lý",
+                        CreatedAt = DateTime.Now,
+                    };
+                    await _routingRepo.CreateRoutingAsync(newRouting);
+
                     await _notificationManager.SendToUserAsync(
                         record.AssignedTo.Value,
                         "Công việc được giao mới",

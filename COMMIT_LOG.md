@@ -1,3 +1,10 @@
+### [2026-08-10 00:05] Refactor luân chuyển: tạo routing record thật khi giao AssignedTo, xóa synthetic node
+- **Mô tả**: Gốc rễ vấn đề: khi Văn thư giao `AssignedTo` trực tiếp, frontend tự dựng "synthetic node" ảo → không có lịch sử, mất người khi `AssignedTo` bị ghi đè (VD: giao Hợp rồi giao Đức, Hợp biến mất khỏi cây). Giải pháp: (1) Backend `UpdateDocument` khi `AssignedTo` thay đổi sẽ tự động `CreateRoutingAsync` một record thật vào DB với `Role="Xử lý chính"`. (2) Frontend `DocDetail.jsx` xóa hoàn toàn logic "synthetic-root-assignee", cây luân chuyển giờ build thuần từ DB (`routings`). (3) `isLevel2` và `myRouting` cũng dùng từ `routings` thật thay vì `displayRoutings`. Kết quả: khi Nơ giao Hợp (record 1), Hợp từ chối, Nơ giao Đức (record 2) → cây hiển thị Hợp và Đức cùng cấp, đúng hoàn toàn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi — thêm auto-create routing)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi — xóa synthetic node)
+- **Lệnh git commit**: `git commit -m "refactor(routing): tạo routing record thật khi giao AssignedTo, xóa synthetic node frontend"`
+
 ### [2026-08-09 23:55] Giữ nguyên AssignedTo khi Hủy tiếp nhận để hiển thị đúng trên UI
 - **Mô tả**: Khi người được giao việc trực tiếp bấm Hủy tiếp nhận, API `reject-assignment` trước đây set `doc.AssignedTo = null`. Điều này khiến frontend mất đi "synthetic node" của người được giao, dẫn đến UI hiển thị sai người Từ chối là Văn thư (Uploader). Sửa lỗi bằng cách không set null `AssignedTo`, chỉ cập nhật `Status = 'Từ chối'`, để luồng hiển thị Luân chuyển trên UI chính xác.
 - **Tệp thay đổi**:

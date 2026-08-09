@@ -80,11 +80,10 @@ export default function DocDetail({ docId, onBack }) {
   } = useDocDetail(docId, onBack)
 
   const displayRoutings = useMemo(() => {
-    // Check if there is an uploader (Văn thư)
+    // Root node (Văn thư tiếp nhận) — synthetic, chỉ là tiêu đề hiển thị
     const uploader = users?.find((u) => u.id === doc?.uploadedByUserId)
     const uploaderName = uploader?.fullName || 'Văn thư / Tiếp nhận'
 
-    // Root node (Tiếp nhận)
     const rootNode = {
       id: 'synthetic-root-uploader',
       receiverName: uploaderName,
@@ -97,35 +96,11 @@ export default function DocDetail({ docId, onBack }) {
       status:
         doc?.status === DOCUMENT_STATUS.DA_XU_LY
           ? 'Đã xử lý'
-          : (doc?.assignedTo && doc.assignedTo !== doc?.uploadedByUserId) ||
-              (routings && routings.length > 0)
+          : routings && routings.length > 0
             ? 'Đã chuyển tiếp'
             : doc?.status || 'Chưa xử lý',
-      children: [],
-    }
-
-    if (doc?.assignedTo && doc.assignedTo !== doc?.uploadedByUserId) {
-      const assignedUser = users?.find((u) => u.id === doc.assignedTo)
-      const assigneeNode = {
-        id: 'synthetic-root-assignee',
-        receiverName: assignedUser?.fullName || 'Người được phân công',
-        receiverId: doc.assignedTo,
-        role: 'Xử lý chính',
-        forwardDate: doc?.ngayThem,
-        deadline: doc?.thoiHan,
-        comment: 'Nhận nhiệm vụ xử lý chính',
-        processingContent: '',
-        status:
-          doc?.status === DOCUMENT_STATUS.DA_XU_LY
-            ? 'Đã xử lý'
-            : routings && routings.length > 0
-              ? 'Đã chuyển tiếp'
-              : doc?.status || 'Chưa xử lý',
-        children: routings || [],
-      }
-      rootNode.children = [assigneeNode]
-    } else {
-      rootNode.children = routings || []
+      // Cây con lấy thẳng từ DB — không dùng synthetic node nữa
+      children: routings || [],
     }
 
     return [rootNode]
@@ -171,10 +146,10 @@ export default function DocDetail({ docId, onBack }) {
 
   // Cấp 1: người upload (Văn thư/Admin)
   const isLevel1 = doc.uploadedByUserId == currentUserId
-  // Cấp 2: nằm trong routings nhưng không phải Cấp 1
-  const isLevel2 = !isLevel1 && isUserInRoutings(displayRoutings, currentUserId)
-  // Routing record cụ thể của user hiện tại (dùng để gọi API reject)
-  const myRouting = isLevel2 ? findUserRouting(displayRoutings, currentUserId) : null
+  // Cấp 2: là receiver trong routings thật từ DB (không phải Cấp 1)
+  const isLevel2 = !isLevel1 && isUserInRoutings(routings, currentUserId)
+  // Routing record cụ thể của user hiện tại (dùng để gọi API reject) — tìm trong routings thật
+  const myRouting = isLevel2 ? findUserRouting(routings, currentUserId) : null
 
   const canInteract =
     doc.assignedTo == currentUserId ||
