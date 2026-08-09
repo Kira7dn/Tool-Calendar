@@ -1,3 +1,9 @@
+### [2026-08-09 23:45] Sửa lỗi 403 Forbidden khi Hủy tiếp nhận (RejectAssignment)
+- **Mô tả**: API `PUT /api/documents/{id}/reject-assignment` vô tình bị gắn thẻ `[Authorize(Roles = "Admin,VanThu")]` do copy paste, dẫn đến tài khoản Cán bộ/Lãnh đạo khi thao tác gọi API này bị lỗi 403 Forbidden. Đã xóa thẻ Authorize giới hạn role này để bất kỳ ai được giao việc cũng có thể gọi API Hủy.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): xóa giới hạn role Admin/VanThu cho API reject-assignment"`
+
 ### [2026-08-09 23:35] Fix lỗi thiếu nút Hủy tiếp nhận cho người được phân công trực tiếp
 - **Mô tả**: Khi người dùng được gán vào `AssignedTo` (Cán bộ xử lý chính) lúc Văn thư tạo văn bản, họ không có bản ghi trong bảng `DocumentRoutings`. Vì thế nút Hủy tiếp nhận không hiện và không có ID để reject. Đã sửa: 
   1. Thêm API `PUT /api/documents/{id}/reject-assignment` trong `DocumentsController` để hủy giao việc trực tiếp (xóa AssignedTo, đổi Status).

@@ -243,7 +243,6 @@ namespace ToolCalendar.Api.Controllers.Documents
             return Ok(ApiResponse.Ok("Cập nhật văn bản thành công."));
         }
 
-        [Authorize(Roles = "Admin,VanThu")]
         [HttpPut("{id}/reject-assignment")]
         public async Task<IActionResult> RejectAssignment(int id, [FromBody] RejectRoutingDto dto)
         {
