@@ -140,6 +140,17 @@ namespace ToolCalendar.Api.Controllers.Documents
                 new { docId = routing.DocumentId, type = "routing_rejected", routingId = id }
             );
 
+            // Thêm thông báo cho người upload nếu khác SenderId và khác người từ chối
+            if (doc != null && doc.UploadedByUserId > 0 && doc.UploadedByUserId != routing.SenderId && doc.UploadedByUserId != currentUserId)
+            {
+                await _notificationManager.SendToUserAsync(
+                    doc.UploadedByUserId,
+                    "Từ chối tiếp nhận",
+                    $"{receiver?.FullName ?? "Người dùng"} đã từ chối tiếp nhận '{docName}'. Lý do: {reason}",
+                    new { docId = routing.DocumentId, type = "routing_rejected", routingId = id }
+                );
+            }
+
             return Ok(ApiResponse.Ok("Đã hủy tiếp nhận thành công."));
         }
 

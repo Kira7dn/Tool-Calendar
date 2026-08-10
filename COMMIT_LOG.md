@@ -1995,3 +1995,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(docs): cho phép văn thư và admin kết thúc văn bản"`
+
+### [2026-08-10 08:08] Bổ sung thông báo cho người tải văn bản lên
+- **Mô tả**: Sửa lỗi người tải văn bản không nhận được thông báo khi người xử lý chính cập nhật trạng thái, từ chối luân chuyển hoặc thêm bình luận.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(notify): bổ sung thông báo trạng thái, comment và từ chối cho người tải lên"`

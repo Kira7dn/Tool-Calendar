@@ -189,13 +189,10 @@ export default function DocDetail({ docId, onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-          {/* Nút HỦY TIẾ́P NHẠN — chỉ hiện với Cấp 2 khi routing còn active */}
+          {/* Nút HỦY TIẾ́P NHẠN — chỉ hiện với Cấp 2 khi routing là Chưa xử lý */}
           {isLevel2 &&
             myRouting &&
-            myRouting.status !== 'Từ chối' &&
-            myRouting.status !== 'Hoàn thành' &&
-            myRouting.status !== 'Đã xử lý' &&
-            myRouting.status !== 'Đang xử lý' &&
+            myRouting.status === 'Chưa xử lý' &&
             doc.status !== 'Hoàn thành' && (
               <button
                 onClick={() => setIsRejectModalOpen(true)}
@@ -205,33 +202,38 @@ export default function DocDetail({ docId, onBack }) {
               </button>
             )}
 
+          {/* Nút TIẾP NHẬN XỬ LÝ — hiện khi doc chưa xử lý, HOẶC user Cấp 2 chưa tiếp nhận */}
           {(doc.status === DOCUMENT_STATUS.CHUA_XU_LY ||
-            doc.status === DOCUMENT_STATUS.DA_RA_SOAT) &&
+            doc.status === DOCUMENT_STATUS.DA_RA_SOAT ||
+            (isLevel2 && myRouting && myRouting.status === 'Chưa xử lý')) &&
             canInteract && (
               <button
                 onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DANG_XU_LY)}
-                className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black rounded-xl"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-blue-600/20"
               >
                 TIẾ́P NHẠN XỬ LÝ
               </button>
             )}
 
-          {doc.status === DOCUMENT_STATUS.DANG_XU_LY && canSubmitEvidence && (
-            <>
-              <button
-                onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DA_XU_LY)}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black rounded-xl shadow-lg shadow-amber-500/20"
-              >
-                KẾT THÚC VĂN BẢN
-              </button>
-              <button
-                onClick={() => setIsEvidenceModalOpen(true)}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20"
-              >
-                BÁO CÁO ĐÃ XỬ LÝ
-              </button>
-            </>
-          )}
+          {/* KẾT THÚC VĂN BẢN & BÁO CÁO ĐÃ XỬ LÝ — chỉ hiện khi doc Đang xử lý VÀ (user là Cấp 1 HOẶC user Cấp 2 đã tiếp nhận) */}
+          {doc.status === DOCUMENT_STATUS.DANG_XU_LY &&
+            canSubmitEvidence &&
+            (!isLevel2 || (myRouting && myRouting.status === 'Đang xử lý')) && (
+              <>
+                <button
+                  onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DA_XU_LY)}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black rounded-xl shadow-lg shadow-amber-500/20"
+                >
+                  KẾT THÚC VĂN BẢN
+                </button>
+                <button
+                  onClick={() => setIsEvidenceModalOpen(true)}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20"
+                >
+                  BÁO CÁO ĐÃ XỬ LÝ
+                </button>
+              </>
+            )}
 
           <button
             onClick={() => {

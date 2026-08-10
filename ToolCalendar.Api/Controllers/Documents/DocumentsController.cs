@@ -275,17 +275,30 @@ namespace ToolCalendar.Api.Controllers.Documents
             doc.Status = dto.Status;
             await _documentRepository.UpdateAsync(doc);
 
+            var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            int.TryParse(currentUserIdStr, out int currentUserId);
+            var currentUsername = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Người dùng";
+
             if (dto.Status == "Đang xử lý")
             {
                 try
                 {
-                    var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                    if (int.TryParse(currentUserIdStr, out int currentUserId))
+                    if (currentUserId > 0)
                     {
                         await _routingRepo.UpdateStatusByDocumentAndReceiverAsync(id, currentUserId, "Đang xử lý", "Đã tiếp nhận công việc");
                     }
                 }
                 catch { }
+            }
+
+            if (doc.UploadedByUserId > 0 && doc.UploadedByUserId != currentUserId)
+            {
+                await _notificationManager.SendToUserAsync(
+                    doc.UploadedByUserId,
+                    "Cập nhật trạng thái",
+                    $"{currentUsername} đã cập nhật trạng thái văn bản '{doc.TenCongVan ?? "văn bản"}' thành '{dto.Status}'.",
+                    new { docId = id, type = "status_updated" }
+                );
             }
 
             _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = doc.Status });
@@ -677,7 +690,12 @@ namespace ToolCalendar.Api.Controllers.Documents
             {
                 if (doc.AssignedTo.HasValue && doc.AssignedTo != userId)
                 {
-                    await _notificationManager.SendToUserAsync(doc.AssignedTo.Value, "Thảo luận mới", $"{username} vừa bình luận trong văn bản {doc.SoVanBan}", new { docId = id });
+                    await _notificationManager.SendToUserAsync(doc.AssignedTo.Value, "Thảo luận mới", $"{username} vừa bình luận trong văn bản {doc.SoVanBan ?? "văn bản"}", new { docId = id });
+                }
+
+                if (doc.UploadedByUserId > 0 && doc.UploadedByUserId != userId && doc.UploadedByUserId != doc.AssignedTo)
+                {
+                    await _notificationManager.SendToUserAsync(doc.UploadedByUserId, "Thảo luận mới", $"{username} vừa bình luận trong văn bản {doc.SoVanBan ?? "văn bản"}", new { docId = id });
                 }
             }
 
