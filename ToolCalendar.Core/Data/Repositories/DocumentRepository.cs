@@ -625,9 +625,7 @@ namespace ToolCalendar.Core.Data.Repositories
             string sql = @"
                 UPDATE Documents SET 
                     EvidencePaths=@paths, 
-                    EvidenceNotes=@notes, 
-                    Status='Đã xử lý', 
-                    CompletionDate=datetime('now', 'localtime') 
+                    EvidenceNotes=@notes
                 WHERE Id=@docId";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@paths", evidenceJson);

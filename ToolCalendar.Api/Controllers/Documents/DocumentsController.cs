@@ -414,18 +414,32 @@ namespace ToolCalendar.Api.Controllers.Documents
             await _documentRepository.SubmitEvidenceAsync(id, evidenceJson, notes);
 
             // 2.5 Cập nhật trạng thái của user hiện tại trong bảng DocumentRoutings (nếu có)
-            try
+            var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            int.TryParse(currentUserIdStr, out int currentUserId);
+            if (currentUserId > 0)
             {
-                var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (int.TryParse(currentUserIdStr, out int currentUserId))
+                try
                 {
                     await _routingRepo.UpdateStatusByDocumentAndReceiverAsync(id, currentUserId, "Đã xử lý", notes);
                 }
+                catch { }
             }
-            catch { }
 
-            // 3. Thông báo SignalR để các máy khác cập nhật giao diện (Dashboard, List)
-            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = "Đã xử lý" });
+            // 2.6 Kiểm tra tất cả đã xong chưa
+            bool allDone = await _routingRepo.AreAllRoutingsFinishedAsync(id);
+            if (allDone)
+            {
+                doc.Status = "Đã xử lý";
+                doc.CompletionDate = DateTime.Now;
+                doc.EvidencePaths = evidenceJson;
+                doc.EvidenceNotes = notes;
+                await _documentRepository.UpdateAsync(doc);
+                _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = "Đã xử lý" });
+            }
+            else
+            {
+                _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = "Đang xử lý" });
+            }
 
             // 4. Ghi nhận hoạt động cán bộ cho dashboard
             try

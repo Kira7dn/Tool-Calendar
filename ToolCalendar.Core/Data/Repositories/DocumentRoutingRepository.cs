@@ -12,6 +12,7 @@ namespace ToolCalendar.Data.Repositories
         Task UpdateStatusAsync(int id, string status, string processingContent);
         Task UpdateStatusByDocumentAndReceiverAsync(int documentId, int receiverId, string status, string processingContent);
         Task DowngradeRoleAsync(int documentId, string oldRole, string newRole);
+        Task<bool> AreAllRoutingsFinishedAsync(int documentId);
     }
 
     public class DocumentRoutingRepository : IDocumentRoutingRepository
@@ -205,6 +206,19 @@ namespace ToolCalendar.Data.Repositories
             cmd.Parameters.AddWithValue("@OldRole", oldRole);
             cmd.Parameters.AddWithValue("@NewRole", newRole);
             await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task<bool> AreAllRoutingsFinishedAsync(int documentId)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            string sql = @"
+                SELECT COUNT(*) FROM DocumentRoutings
+                WHERE DocumentId = @documentId AND Status NOT IN ('Đã xử lý', 'Hoàn thành', 'Từ chối')";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@DocumentId", documentId);
+            var count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            return count == 0;
         }
     }
 }

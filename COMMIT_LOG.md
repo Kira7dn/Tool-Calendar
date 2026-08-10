@@ -2008,3 +2008,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(routing): đồng bộ trạng thái luân chuyển khi kết thúc văn bản"`
+
+### [2026-08-10 08:48] Tối ưu hóa điều kiện Kết thúc văn bản và Ẩn nút chức năng
+- **Mô tả**: Khi người xử lý bấm 'Báo cáo đã xử lý', văn bản sẽ không tự động hoàn thành nếu còn người khác đang xử lý. Chỉ khi tất cả người nhận đã hoàn thành/từ chối thì văn bản mới 'Đã xử lý'. Nếu người tạo chủ động bấm 'Kết thúc văn bản', tất cả các nút 'Tiếp nhận', 'Hủy tiếp nhận' của những người liên quan sẽ bị ẩn đi.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRoutingRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): check all assignees before completing document and hide buttons when done"`

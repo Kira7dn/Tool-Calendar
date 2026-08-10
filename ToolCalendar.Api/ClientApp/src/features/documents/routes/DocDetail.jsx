@@ -193,6 +193,7 @@ export default function DocDetail({ docId, onBack }) {
           {isLevel2 &&
             myRouting &&
             myRouting.status === 'Chưa xử lý' &&
+            doc.status !== DOCUMENT_STATUS.DA_XU_LY &&
             doc.status !== 'Hoàn thành' && (
               <button
                 onClick={() => setIsRejectModalOpen(true)}
@@ -206,6 +207,7 @@ export default function DocDetail({ docId, onBack }) {
           {(doc.status === DOCUMENT_STATUS.CHUA_XU_LY ||
             doc.status === DOCUMENT_STATUS.DA_RA_SOAT ||
             (isLevel2 && myRouting && myRouting.status === 'Chưa xử lý')) &&
+            doc.status !== DOCUMENT_STATUS.DA_XU_LY &&
             canInteract && (
               <button
                 onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DANG_XU_LY)}
