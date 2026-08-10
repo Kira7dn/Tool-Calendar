@@ -2017,3 +2017,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(routing): check all assignees before completing document and hide buttons when done"`
+
+### [2026-08-10 08:51] Fix build error in DocumentsController
+- **Mô tả**: Sửa lỗi khai báo trùng lặp biến currentUserIdStr và currentUserId.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): remove duplicate variable declarations in DocumentsController"`

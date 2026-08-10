@@ -444,8 +444,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             // 4. Ghi nhận hoạt động cán bộ cho dashboard
             try
             {
-                var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (int.TryParse(currentUserIdStr, out int currentUserId))
+                if (currentUserId > 0)
                 {
                     _auditRepo.InsertAuditLog(currentUserId, $"Đã nộp bằng chứng hoàn thành văn bản {doc.SoVanBan}.");
                 }
@@ -455,8 +454,6 @@ namespace ToolCalendar.Api.Controllers.Documents
             // 5. Gửi thông báo cho toàn bộ những người liên quan
             try {
                 var currentUserName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Cán bộ";
-                var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                int.TryParse(currentUserIdStr, out int currentUserId);
 
                 var routings = await _routingRepo.GetTreeByDocumentIdAsync(id);
                 var involvedUserIds = new System.Collections.Generic.HashSet<int>();
