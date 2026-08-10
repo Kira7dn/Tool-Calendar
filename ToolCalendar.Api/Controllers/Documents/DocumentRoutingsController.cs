@@ -20,19 +20,22 @@ namespace ToolCalendar.Api.Controllers.Documents
         private readonly IDocumentRepository _documentRepo;
         private readonly IUserRepository _userRepo;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         public DocumentRoutingsController(
             IDocumentRoutingRepository routingRepo,
             INotificationManager notificationManager,
             IDocumentRepository documentRepo,
             IUserRepository userRepo,
-            IServiceScopeFactory scopeFactory)
+            IServiceScopeFactory scopeFactory,
+            IHubContext<NotificationHub> hubContext)
         {
             _routingRepo    = routingRepo;
             _notificationManager = notificationManager;
             _documentRepo   = documentRepo;
             _userRepo        = userRepo;
             _scopeFactory    = scopeFactory;
+            _hubContext      = hubContext;
         }
 
         [HttpGet("{documentId}/routings")]
@@ -91,6 +94,9 @@ namespace ToolCalendar.Api.Controllers.Documents
                     catch { }
                 });
             }
+
+            // 🔔 Phát sự kiện realtime cho tất cả người đang xem trang này
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = documentId });
 
             return Ok(ApiResponse.Ok(new { id = newId }));
         }
@@ -151,14 +157,20 @@ namespace ToolCalendar.Api.Controllers.Documents
                 );
             }
 
+            // 🔔 Phát sự kiện realtime để refresh trang chi tiết
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = routing.DocumentId });
+
             return Ok(ApiResponse.Ok("Đã hủy tiếp nhận thành công."));
         }
 
         [HttpPut("/api/routings/{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] RoutingUpdateDto dto)
         {
+            var routing = await _routingRepo.GetByIdAsync(id);
             await _routingRepo.UpdateStatusAsync(id, dto.Status, dto.ProcessingContent);
-            return Ok(ApiResponse.Ok("Cập nhật trạng thái luân chuyển thành công."));
+            if (routing != null)
+                _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = routing.DocumentId });
+            return Ok(ApiResponse.Ok("Đã cập nhật trạng thái luân chuyển thành công."));
         }
     }
 

@@ -379,7 +379,7 @@ namespace ToolCalendar.Api.Controllers.Documents
                 }
             }
 
-            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated");
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id });
             return Ok(ApiResponse.Ok("Giao việc thành công."));
         }
 

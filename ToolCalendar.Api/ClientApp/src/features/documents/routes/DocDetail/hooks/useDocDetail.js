@@ -96,14 +96,37 @@ export function useDocDetail(docId, onBack) {
         }
       }
 
+      // Realtime: cập nhật nút, trạng thái, routing khi có bất kỳ thay đổi nào trên công văn
+      const handleDocumentUpdated = (e) => {
+        // Nếu sự kiện có docId cụ thể thì chỉ cập nhật khi trùng
+        // Nếu không có thì cập nhật luôn (broadcast toàn bộ)
+        const eventDocId = e?.detail?.id
+        if (!eventDocId || eventDocId === parseInt(docId)) {
+          fetchData()
+          fetchRoutings()
+        }
+      }
+
+      // Realtime: khi có công văn mới được chuyển đến (NewTask) — refresh routing/buttons
+      const handleNewTask = (e) => {
+        if (e?.detail?.documentId === parseInt(docId)) {
+          fetchData()
+          fetchRoutings()
+        }
+      }
+
       document.addEventListener('realtime:new_comment', handleCommentEvent)
       document.addEventListener('realtime:delete_comment', handleCommentEvent)
       document.addEventListener('realtime:comment_reaction', handleCommentEvent)
+      document.addEventListener('realtime:document_updated', handleDocumentUpdated)
+      document.addEventListener('realtime:new_task', handleNewTask)
 
       return () => {
         document.removeEventListener('realtime:new_comment', handleCommentEvent)
         document.removeEventListener('realtime:delete_comment', handleCommentEvent)
         document.removeEventListener('realtime:comment_reaction', handleCommentEvent)
+        document.removeEventListener('realtime:document_updated', handleDocumentUpdated)
+        document.removeEventListener('realtime:new_task', handleNewTask)
       }
     }
   }, [docId])

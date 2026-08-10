@@ -2031,3 +2031,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(docs): add UploadedByFullName column to Document table"`
+
+### [2026-08-10 11:04] Realtime cập nhật trang chi tiết công văn
+- **Mô tả**: DocDetail.jsx giờ lắng nghe sự kiện realtime:document_updated và realtime:new_task từ SignalR. Khi ai chuyển xử lý, tiếp nhận, từ chối, hay hoàn thành thì trang đang mở của người khác tự động cập nhật mà không cần F5. Backend cũng cập nhật để gửi documentId kèm theo event DocumentUpdated.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/hooks/useDocDetail.js` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(realtime): refresh DocDetail on document_updated and new_task signals"`
