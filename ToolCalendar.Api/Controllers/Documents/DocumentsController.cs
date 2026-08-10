@@ -279,13 +279,14 @@ namespace ToolCalendar.Api.Controllers.Documents
             int.TryParse(currentUserIdStr, out int currentUserId);
             var currentUsername = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Người dùng";
 
-            if (dto.Status == "Đang xử lý")
+            if (dto.Status == "Đang xử lý" || dto.Status == "Đã xử lý")
             {
                 try
                 {
                     if (currentUserId > 0)
                     {
-                        await _routingRepo.UpdateStatusByDocumentAndReceiverAsync(id, currentUserId, "Đang xử lý", "Đã tiếp nhận công việc");
+                        var routingMsg = dto.Status == "Đã xử lý" ? "Đã kết thúc văn bản" : "Đã tiếp nhận công việc";
+                        await _routingRepo.UpdateStatusByDocumentAndReceiverAsync(id, currentUserId, dto.Status, routingMsg);
                     }
                 }
                 catch { }

@@ -2002,3 +2002,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
   - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(notify): bổ sung thông báo trạng thái, comment và từ chối cho người tải lên"`
+
+### [2026-08-10 08:25] Đồng bộ trạng thái luân chuyển khi Kết thúc văn bản
+- **Mô tả**: Sửa lỗi khi người xử lý click 'Kết thúc văn bản' nhưng trạng thái trong bảng luân chuyển (Quá trình xử lý) của người đó vẫn hiển thị 'Đang xử lý'. Bây giờ sẽ tự động chuyển thành 'Đã xử lý'.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): đồng bộ trạng thái luân chuyển khi kết thúc văn bản"`
