@@ -2039,3 +2039,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(realtime): refresh DocDetail on document_updated and new_task signals"`
+
+### [2026-08-10 11:25] Fix nút Hủy tiếp nhận và Tiếp nhận xử lý cho người Phối hợp/Cấp 2
+- **Mô tả**: Người được giao (Phối hợp/Chủ trì) đã tiếp nhận vẫn thấy nút Hủy tiếp nhận. Nút Tiếp nhận xử lý không hiện sai khi routing đã là Đang xử lý.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): show cancel button for level2 with Dang xu ly routing status"`

@@ -192,28 +192,29 @@ export default function DocDetail({ docId, onBack }) {
           {/* Nút HỦY TIẾ́P NHẠN — chỉ hiện với Cấp 2 khi routing là Chưa xử lý */}
           {isLevel2 &&
             myRouting &&
-            myRouting.status === 'Chưa xử lý' &&
+            (myRouting.status === 'Chưa xử lý' || myRouting.status === 'Đang xử lý') &&
             doc.status !== DOCUMENT_STATUS.DA_XU_LY &&
             doc.status !== 'Hoàn thành' && (
               <button
                 onClick={() => setIsRejectModalOpen(true)}
                 className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-black rounded-xl shadow-lg shadow-orange-500/20 transition-colors"
               >
-                HỦY TIẾ́P NHẠN
+                HỦY TIẼP NHẬN
               </button>
             )}
 
-          {/* Nút TIẾP NHẬN XỬ LÝ — hiện khi doc chưa xử lý, HOẶC user Cấp 2 chưa tiếp nhận */}
-          {(doc.status === DOCUMENT_STATUS.CHUA_XU_LY ||
-            doc.status === DOCUMENT_STATUS.DA_RA_SOAT ||
+          {/* Nút TIẾP NHẬN XỬ LÝ — hiện khi doc chưa xử lý, HOẸC user Cấp 2 chưa tiếp nhận */}
+          {((!isLevel2 &&
+            (doc.status === DOCUMENT_STATUS.CHUA_XU_LY ||
+              doc.status === DOCUMENT_STATUS.DA_RA_SOAT) &&
+            canInteract) ||
             (isLevel2 && myRouting && myRouting.status === 'Chưa xử lý')) &&
-            doc.status !== DOCUMENT_STATUS.DA_XU_LY &&
-            canInteract && (
+            doc.status !== DOCUMENT_STATUS.DA_XU_LY && (
               <button
                 onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DANG_XU_LY)}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-blue-600/20"
               >
-                TIẾ́P NHẠN XỬ LÝ
+                TIẾP NHẬN XỬ LÝ
               </button>
             )}
 
