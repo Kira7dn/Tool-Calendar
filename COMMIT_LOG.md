@@ -2023,3 +2023,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(routing): remove duplicate variable declarations in DocumentsController"`
+
+### [2026-08-10 10:46] Bổ sung cột Người tạo văn bản
+- **Mô tả**: Bổ sung cột Người tạo (UploadedByFullName) vào bảng danh sách công văn và join thêm bảng Users trong backend để trả về tên người upload.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Models/DocumentRecord.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): add UploadedByFullName column to Document table"`

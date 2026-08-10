@@ -322,7 +322,7 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            string sql = "SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id ORDER BY doc.ThoiHan ASC NULLS LAST";
+            string sql = "SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id LEFT JOIN Users u ON doc.UploadedByUserId = u.Id ORDER BY doc.ThoiHan ASC NULLS LAST";
             using var cmd = new SqliteCommand(sql, connection);
             using var reader = await cmd.ExecuteReaderAsync();
 
@@ -337,7 +337,7 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            string sql = "SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, doc.FullText, doc.OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id WHERE doc.Id = @id";
+            string sql = "SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, doc.FullText, doc.OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id LEFT JOIN Users u ON doc.UploadedByUserId = u.Id WHERE doc.Id = @id";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -462,9 +462,10 @@ namespace ToolCalendar.Core.Data.Repositories
             // 2. Paged data
             int offset = (page - 1) * pageSize;
             string dataSql = $@"
-                SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName
+                SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName
                 FROM Documents doc
                 LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id
+                LEFT JOIN Users u ON doc.UploadedByUserId = u.Id
                 {searchFilter}
                 ORDER BY {orderBy} 
                 LIMIT @pageSize OFFSET @offset";
@@ -791,6 +792,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 NgayThem = DateTime.Parse(r["NgayThem"]?.ToString() ?? DateTime.UtcNow.AddHours(7).ToString()),
                 DaTaoLich = r["DaTaoLich"] != DBNull.Value && Convert.ToInt32(r["DaTaoLich"]) > 0,
                 UploadedByUserId = r.HasColumn("UploadedByUserId") && r["UploadedByUserId"] != DBNull.Value ? Convert.ToInt32(r["UploadedByUserId"]) : 1,
+                UploadedByFullName = r.HasColumn("UploadedByFullName") && r["UploadedByFullName"] != DBNull.Value ? r["UploadedByFullName"].ToString() : "Hệ thống",
                 ContentHash = r.HasColumn("ContentHash") && r["ContentHash"] != DBNull.Value
                     ? r["ContentHash"].ToString()
                     : null

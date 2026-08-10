@@ -33,6 +33,7 @@ namespace ToolCalendar.Models
         public DateTime NgayThem { get; set; } = DateTime.Now;
         public bool DaTaoLich { get; set; } = false;
         public int UploadedByUserId { get; set; } = 1;
+        public string? UploadedByFullName { get; set; }
 
         /// <summary>
         /// SHA-256 hash (hex string) của nội dung file gốc.

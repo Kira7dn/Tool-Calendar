@@ -160,6 +160,7 @@ export function Documents({ onTabChange, filters }) {
                   <TableHead className="font-bold text-foreground w-32">Số văn bản</TableHead>
                   <TableHead className="font-bold text-foreground w-32">Ngày ban hành</TableHead>
                   <TableHead className="font-bold text-foreground">Trích yếu</TableHead>
+                  <TableHead className="font-bold text-foreground w-32">Người tạo</TableHead>
                   <TableHead className="font-bold text-foreground w-32">Tham mưu</TableHead>
                   <TableHead className="font-bold text-foreground w-32">Thời hạn</TableHead>
                   <TableHead className="font-bold text-foreground w-32">Trạng thái</TableHead>
@@ -237,6 +238,12 @@ export function Documents({ onTabChange, filters }) {
                         title={doc.trichYeu}
                       >
                         {doc.trichYeu || '-'}
+                      </TableCell>
+                      <TableCell
+                        className="text-muted-foreground w-32 truncate text-xs"
+                        title={doc.uploadedByFullName}
+                      >
+                        {doc.uploadedByFullName || '-'}
                       </TableCell>
                       <TableCell className="text-muted-foreground w-32 truncate text-xs">
                         {doc.coQuanChuQuan || '-'}
