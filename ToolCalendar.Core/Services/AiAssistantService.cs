@@ -90,14 +90,14 @@ Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đ�
 
                 var systemPrompt = $@"{persona}
 Hôm nay là {now:dd/MM/yyyy HH:mm:ss}.{documentContext}
-Nhiệm vụ của bạn là trả lời thân thiện theo đúng phong thái trên và hỗ trợ công việc.
-Nếu người dùng yêu cầu NHẮC VIỆC (ví dụ: nhắc tôi họp, lên lịch...), bóc tách THỜI GIAN NHẮC (yyyy-MM-dd HH:mm:ss) và NỘI DUNG.
-BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON (chỉ JSON, không văn bản dư thừa):
+Nhiệm vụ của bạn là trả lời thân thiện theo đúng phong thái trên và hỗ trợ công việc. LUÔN BẮT ĐẦU bằng lời xưng hô (ví dụ: Dạ báo cáo sếp, Chào đồng chí...).
+
+BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON THEO ĐÚNG ĐỊNH DẠNG SAU (KHÔNG thêm văn bản nào ngoài JSON):
 {{
-  ""isReminder"": true hoặc false,
-  ""remindAt"": ""2026-08-11 14:00:00"" (CHỈ điền khi isReminder = true),
-  ""content"": ""Nội dung việc cần nhắc"" (CHỈ điền khi isReminder = true),
-  ""replyText"": ""Toàn bộ câu trả lời chi tiết của bạn dành cho người dùng""
+  ""isReminder"": false,
+  ""remindAt"": ""2026-08-11 14:00:00"" (chỉ điền thời gian nếu người dùng yêu cầu nhắc việc, nếu không thì để rỗng),
+  ""reminderContent"": ""Nội dung việc cần nhắc"" (chỉ điền nếu là nhắc việc, nếu không thì để rỗng),
+  ""replyText"": ""Toàn bộ câu trả lời, lời chào và nội dung tóm tắt dành cho người dùng""
 }}";
 
                 // 2. Lấy lịch sử chat — lỗi DB không được dừng luồng
@@ -152,26 +152,56 @@ BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON (chỉ JSON, không văn bản dư th
                 if (text.EndsWith("```")) text = text[..^3];
                 text = text.Trim();
 
-                // 4. Parse JSON — nếu model không trả đúng JSON thì dùng raw text
+                // 4. Parse JSON - Cố gắng trích xuất chuỗi JSON nếu AI sinh ra text dư thừa
+                string jsonPart = text;
+                string extraText = "";
+                int firstBrace = text.IndexOf('{');
+                int lastBrace = text.LastIndexOf('}');
+                
+                if (firstBrace >= 0 && lastBrace > firstBrace)
+                {
+                    jsonPart = text.Substring(firstBrace, lastBrace - firstBrace + 1);
+                    if (lastBrace < text.Length - 1)
+                    {
+                        extraText = text.Substring(lastBrace + 1).Trim();
+                    }
+                }
+
                 string replyText;
                 try
                 {
-                    using var jsonResult = JsonDocument.Parse(text);
+                    using var jsonResult = JsonDocument.Parse(jsonPart);
                     var rootJson = jsonResult.RootElement;
 
                     replyText = rootJson.TryGetProperty("replyText", out var replyProp)
-                        ? replyProp.GetString() ?? text
-                        : text;
+                        ? replyProp.GetString() ?? ""
+                        : "";
 
                     var isReminder = rootJson.TryGetProperty("isReminder", out var isReminderProp) &&
                                      isReminderProp.ValueKind is JsonValueKind.True or JsonValueKind.False &&
                                      isReminderProp.GetBoolean();
 
-                    var reminderContent = rootJson.TryGetProperty("content", out var rcProp) ? rcProp.GetString() : null;
-
-                    if (!isReminder)
+                    var reminderContent = rootJson.TryGetProperty("reminderContent", out var rcProp) ? rcProp.GetString() : null;
+                    if (string.IsNullOrWhiteSpace(reminderContent)) 
                     {
-                        if (!string.IsNullOrWhiteSpace(reminderContent) && reminderContent.Length > 10)
+                        // Fallback in case the model used 'content' instead of 'reminderContent'
+                        reminderContent = rootJson.TryGetProperty("content", out var legacyRcProp) ? legacyRcProp.GetString() : null;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(replyText))
+                    {
+                        replyText = extraText;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(extraText) && !replyText.Contains(extraText))
+                    {
+                        // Nối thêm nếu có đoạn text nằm ngoài block JSON mà replyText chưa có
+                        replyText = $"{replyText}\n\n{extraText}".Trim();
+                    }
+
+                    // Fallback nếu model vẫn vứt tóm tắt vào reminderContent/content khi không phải reminder
+                    if (!isReminder && !string.IsNullOrWhiteSpace(reminderContent) && reminderContent.Length > 15)
+                    {
+                        if (string.IsNullOrWhiteSpace(replyText) || !replyText.Contains(reminderContent))
                         {
                             replyText = $"{replyText}\n\n{reminderContent}".Trim();
                         }
@@ -179,7 +209,7 @@ BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON (chỉ JSON, không văn bản dư th
 
                     if (string.IsNullOrWhiteSpace(replyText))
                     {
-                        replyText = "Dạ em đã nghe ạ. Sếp/Đồng chí cần em hỗ trợ gì thêm về văn bản này không ạ?";
+                        replyText = "Dạ em đã nghe ạ. Sếp/Đồng chí cần em hỗ trợ gì thêm không ạ?";
                     }
 
                     if (isReminder)
@@ -200,7 +230,22 @@ BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON (chỉ JSON, không văn bản dư th
                 catch (JsonException jsonEx)
                 {
                     _logger.LogWarning("[AiAssistant] Model không trả JSON hợp lệ, dùng raw text. Lỗi: {Msg}", jsonEx.Message);
-                    replyText = text;
+                    // Dọn dẹp JSON rác nếu parse lỗi hoàn toàn
+                    replyText = text.Replace("{", "").Replace("}", "").Replace("\"", "").Trim();
+                    if (string.IsNullOrWhiteSpace(replyText))
+                    {
+                        replyText = "Dạ báo cáo, hiện tại em chưa thể trích xuất được thông tin, mong sếp thử lại ạ.";
+                    }
+                }
+
+                // Đảm bảo LUÔN CÓ từ thưa gửi nếu model quên (Hard fallback)
+                var lowerReply = replyText.ToLower();
+                if (!lowerReply.Contains("dạ") && !lowerReply.Contains("báo cáo") && !lowerReply.Contains("chào"))
+                {
+                    string greeting = (user.Role == "Admin" || user.Role == "LanhDao") 
+                                      ? "Dạ báo cáo sếp,\n" 
+                                      : "Chào đồng chí,\n";
+                    replyText = greeting + replyText;
                 }
 
                 // 5. Lưu reply của AI — lỗi DB không được dừng luồng

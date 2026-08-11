@@ -2245,3 +2245,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(chat): sửa lỗi AI chia nhỏ kết quả làm mất nội dung tóm tắt"`
  
+### [2026-08-11 23:54] Sửa lỗi hiển thị chuỗi JSON thô và bổ sung lời chào cứng
+- **Mô tả**: Khi người dùng hỏi nội dung công văn, AI đã trả về kèm một block JSON thô trên giao diện. Ngoài ra AI không dùng câu thưa gửi. Đã điều chỉnh system prompt để giới hạn output, cải thiện thuật toán bóc tách JSON bằng IndexOf, và thêm hard-fallback chèn lời chào ("Dạ báo cáo sếp," / "Chào đồng chí,") nếu text trả về thiếu sự tôn trọng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): sửa lỗi hiển thị JSON thô và bổ sung lời chào bắt buộc"`
