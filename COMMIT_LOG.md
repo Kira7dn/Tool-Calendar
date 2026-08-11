@@ -1,3 +1,9 @@
+### [2026-08-11 17:45] Sửa lỗi xung đột tên file/thư mục UploadPage trên Linux
+- **Mô tả**: Sửa lỗi trang "Tải hồ sơ mới" / "Thêm mới" bị lỗi trên môi trường production (VNPT server - Linux). Nguyên nhân do có cả file `UploadPage.jsx` và thư mục `UploadPage/` nằm cùng cấp, gây lỗi module resolution của Vite khi build/chạy trên file system phân biệt chữ hoa chữ thường. Đã chuyển `UploadPage.jsx` thành `UploadPage/index.jsx`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage.jsx` (Đổi tên thành `UploadPage/index.jsx`)
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa import)
+- **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi xung đột tên UploadPage trên linux"`
 ### [2026-08-11 11:52] Cải tiến OCR: Thay thế Polling bằng SignalR
 - **Mô tả**: Tối ưu hóa kiến trúc giao tiếp Client-Server cho tính năng Upload OCR. Gỡ bỏ vòng lặp `while(true)` gọi API (Polling) 2 giây/lần ở frontend. Thay vào đó, tích hợp lắng nghe trực tiếp sự kiện `ocr_progress` qua SignalR (WebSockets). Kết quả OCR giờ đây sẽ được cập nhật real-time ngay lập tức khi Worker Python xử lý xong, giảm tải hoàn toàn cho Server Web.
 - **Tệp thay đổi**:

@@ -1,13 +1,13 @@
 /* eslint-disable */
 import React, { useRef, useState, useEffect } from 'react'
-import { UploadDropzone } from '../components/UploadDropzone'
-import { useBulkSelect } from '../hooks/useBulkSelect'
-import { useSaveAll } from '../hooks/useSaveAll'
+import { UploadDropzone } from '../../components/UploadDropzone'
+import { useBulkSelect } from '../../hooks/useBulkSelect'
+import { useSaveAll } from '../../hooks/useSaveAll'
 
-import { useUploadPage } from './UploadPage/hooks/useUploadPage'
-import { UploadActions } from './UploadPage/components/UploadActions'
-import { UploadTable } from './UploadPage/components/UploadTable'
-import { UploadModals } from './UploadPage/components/UploadModals'
+import { useUploadPage } from './hooks/useUploadPage'
+import { UploadActions } from './components/UploadActions'
+import { UploadTable } from './components/UploadTable'
+import { UploadModals } from './components/UploadModals'
 
 function Ring({ pct }) {
   const r = 22

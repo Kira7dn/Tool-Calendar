@@ -19,7 +19,7 @@ import { useNotifications } from '../features/notifications/hooks/useNotificatio
 
 import { Dashboard } from '../features/documents/routes/Dashboard.jsx'
 import { Documents } from '../features/documents/routes/Documents.jsx'
-import { UploadPage } from '../features/documents/routes/UploadPage.jsx'
+import { UploadPage } from '../features/documents/routes/UploadPage'
 import { Users } from '../pages/Users.jsx'
 import DocDetail from '../features/documents/routes/DocDetail.jsx'
 import { MyTasks } from '../features/documents/routes/MyTasks.jsx'

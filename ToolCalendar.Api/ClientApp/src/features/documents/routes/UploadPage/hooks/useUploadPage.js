@@ -43,7 +43,7 @@ export function useUploadPage() {
       const res = await fetch(`/api/documents/${docId}/file`)
       if (!res.ok) throw new Error()
       const blob = await res.blob()
-      
+
       try {
         const arrayBuffer = await blob.arrayBuffer()
         const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true })

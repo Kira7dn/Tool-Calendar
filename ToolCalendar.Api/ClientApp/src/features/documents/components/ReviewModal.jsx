@@ -1,6 +1,7 @@
+/* eslint-disable react/prop-types */
+
 // features/documents/components/ReviewModal.jsx
 // Modal đối soát PDF + chỉnh sửa thông tin văn bản (tách từ Upload.jsx)
-import React, { useState } from 'react'
 import {
   Clock,
   Calendar,
@@ -252,10 +253,10 @@ export function ReviewModal({
                       <option value="">Chọn cán bộ...</option>
                       {(reviewItem?.departmentIds?.[0]
                         ? users.filter(
-                          (u) =>
-                            u.role === ROLES.ADMIN ||
-                            u.departmentId === reviewItem.departmentIds[0]
-                        )
+                            (u) =>
+                              u.role === ROLES.ADMIN ||
+                              u.departmentId === reviewItem.departmentIds[0]
+                          )
                         : users
                       ).map((u) => (
                         <option key={u.id} value={u.id}>

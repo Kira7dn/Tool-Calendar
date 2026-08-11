@@ -166,8 +166,12 @@ export default function DocDetail({ docId, onBack }) {
     return false
   }
 
-  // Leaf node, Văn thư (Level 1) hoặc Admin đều được nộp bằng chứng và kết thúc
-  const canSubmitEvidence = isLeafReceiver(displayRoutings, currentUserId) || isLevel1 || isAdmin
+  // Leaf node, Văn thư (Level 1), Admin, hoặc người có vai trò Chủ trì đều được nộp bằng chứng và kết thúc
+  const canSubmitEvidence =
+    isLeafReceiver(displayRoutings, currentUserId) ||
+    isLevel1 ||
+    isAdmin ||
+    (myRouting && myRouting.role === 'Chủ trì')
   // Chỉ Cấp 1 (và Admin) mới được chuyển xử lý — Cấp 2 bị khóa
   const canForward = (isLevel1 || isAdmin) && !isLevel2
 
