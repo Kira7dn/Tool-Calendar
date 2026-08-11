@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Core.Services;
+using ToolCalendar.Core.Data.Interfaces;
+using System.Collections.Generic;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -13,10 +15,38 @@ namespace ToolCalendar.Api.Controllers
     public class ChatController : ControllerBase
     {
         private readonly IAiAssistantService _aiAssistantService;
+        private readonly IChatHistoryRepository _chatHistoryRepo;
 
-        public ChatController(IAiAssistantService aiAssistantService)
+        public ChatController(IAiAssistantService aiAssistantService, IChatHistoryRepository chatHistoryRepo)
         {
             _aiAssistantService = aiAssistantService;
+            _chatHistoryRepo = chatHistoryRepo;
+        }
+
+        [HttpGet("history")]
+        public IActionResult GetHistory()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(ApiResponse.Fail("Không tìm thấy thông tin người dùng."));
+            }
+
+            var history = _chatHistoryRepo.GetHistoryByUserId(userId, 50);
+            return Ok(ApiResponse<List<ChatMessageDto>>.Ok(history));
+        }
+
+        [HttpDelete("history")]
+        public IActionResult ClearHistory()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(ApiResponse.Fail("Không tìm thấy thông tin người dùng."));
+            }
+
+            _chatHistoryRepo.ClearHistory(userId);
+            return Ok(ApiResponse.Ok("Đã xóa lịch sử chat."));
         }
 
         [HttpPost("message")]

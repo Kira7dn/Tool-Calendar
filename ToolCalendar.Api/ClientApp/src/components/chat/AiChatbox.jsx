@@ -1,24 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, X } from 'lucide-react'
+import { Bot, Send, X, Trash2 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 export function AiChatbox() {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState('')
-  const [messages, setMessages] = useState(() => {
-    const role = localStorage.getItem('user_role') || ''
-    const isAdmin = role === 'Admin' || role === 'LanhDao'
-    return [
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: isAdmin
-          ? 'Dạ vâng ạ, Em chào sếp. Sếp cần em hỗ trợ hay nhắc việc gì cứ nhắn em nhé!'
-          : 'Chào đồng chí, tôi là Trợ lý AI. Đồng chí cần hỗ trợ gì cứ nhắn tôi nhé!',
-        timestamp: new Date().toISOString(),
-      },
-    ]
-  })
+  const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef(null)
 
@@ -29,6 +16,72 @@ export function AiChatbox() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const response = await fetch('/api/chat/history')
+        if (response.ok) {
+          const result = await response.json()
+          if (result.data && result.data.length > 0) {
+            setMessages(
+              result.data.map((msg) => ({
+                id: msg.id.toString(),
+                role: msg.role,
+                content: msg.content,
+                timestamp: msg.createdAt,
+              }))
+            )
+          } else {
+            // Không có lịch sử, tạo câu chào mặc định
+            const role = localStorage.getItem('user_role') || ''
+            const isAdmin = role === 'Admin' || role === 'LanhDao'
+            setMessages([
+              {
+                id: 'welcome',
+                role: 'assistant',
+                content: isAdmin
+                  ? 'Dạ vâng ạ, Em chào sếp. Sếp cần em hỗ trợ hay nhắc việc gì cứ nhắn em nhé!'
+                  : 'Chào đồng chí, tôi là Trợ lý AI. Đồng chí cần hỗ trợ gì cứ nhắn tôi nhé!',
+                timestamp: new Date().toISOString(),
+              },
+            ])
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch chat history:', error)
+      }
+    }
+
+    // Chỉ fetch khi mở box lần đầu và chưa có tin nhắn nào
+    if (isOpen && messages.length === 0) {
+      fetchHistory()
+    }
+  }, [isOpen, messages.length])
+
+  const handleClearHistory = async () => {
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Bạn có chắc chắn muốn xóa lịch sử chat và làm mới phiên làm việc của AI?'))
+      return
+
+    try {
+      await fetch('/api/chat/history', { method: 'DELETE' })
+      const role = localStorage.getItem('user_role') || ''
+      const isAdmin = role === 'Admin' || role === 'LanhDao'
+      setMessages([
+        {
+          id: 'welcome',
+          role: 'assistant',
+          content: isAdmin
+            ? 'Dạ vâng ạ, Em chào sếp. Sếp cần em hỗ trợ hay nhắc việc gì cứ nhắn em nhé!'
+            : 'Chào đồng chí, tôi là Trợ lý AI. Đồng chí cần hỗ trợ gì cứ nhắn tôi nhé!',
+          timestamp: new Date().toISOString(),
+        },
+      ])
+    } catch (error) {
+      console.error('Failed to clear history:', error)
+    }
+  }
 
   const handleSend = async (e) => {
     e?.preventDefault()
@@ -107,12 +160,21 @@ export function AiChatbox() {
               <p className="text-[10px] text-red-100">Luôn sẵn sàng hỗ trợ</p>
             </div>
           </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="p-2 hover:bg-white/20 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleClearHistory}
+              title="Xóa lịch sử trò chuyện"
+              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Messages */}

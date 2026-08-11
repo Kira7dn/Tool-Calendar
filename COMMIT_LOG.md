@@ -1,5 +1,20 @@
+### [2026-08-11 21:24] Bổ sung tính năng Lịch sử Chat cho Trợ lý AI (RAG Context)
+- **Mô tả**: Phát triển tính năng ghi nhớ ngữ cảnh cho AI thông qua bảng `ChatMessages` trong SQLite. 
+  - Thêm bảng `ChatMessages` lưu lịch sử chat.
+  - Cập nhật `AiAssistantService` thay đổi từ `/api/generate` sang `/api/chat` để hỗ trợ truyền tham số `messages` chứa ngữ cảnh (context) từ các câu hỏi trước đó. AI giờ đây có khả năng duy trì cuộc trò chuyện.
+  - Thêm endpoint `GET` và `DELETE` cho lịch sử chat.
+  - Nâng cấp `AiChatbox.jsx` tự động tải lại lịch sử tin nhắn cũ và bổ sung nút xóa (làm mới phiên AI).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Interfaces/IChatHistoryRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/ChatHistoryRepository.cs` (Mới)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/ChatController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): thêm lịch sử chat để ai ghi nhớ ngữ cảnh trò chuyện"`
+
 ### [2026-08-11 17:50] Phát triển tính năng Trợ lý AI (Chatbot)
-- **Mô tả**: Tích hợp trợ lý AI theo yêu cầu của người dùng. Hệ thống tự động phân tích ý định hẹn nhắc việc từ tin nhắn tự nhiên qua Gemini API, lưu vào bảng `Reminders`, và Worker sẽ liên tục kiểm tra để gửi Push Notification/SignalR khi tới giờ nhắc nhở. Thêm giao diện Chatbox nổi ở mọi trang.
 - **Tệp thay đổi**:
   - `data_dump/migration_reminders.sql` (Mới)
   - `ToolCalendar.Core/Models/Reminder.cs`, `ChatModels.cs` (Mới)

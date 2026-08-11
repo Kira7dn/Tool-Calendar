@@ -202,6 +202,17 @@ namespace ToolCalendar.Data
                     UpdatedAt TEXT
                 )";
 
+            string createChatMessagesTable = @"
+                CREATE TABLE IF NOT EXISTS ChatMessages (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    UserId INTEGER NOT NULL,
+                    Role TEXT NOT NULL,
+                    Content TEXT NOT NULL,
+                    CreatedAt TEXT DEFAULT (datetime('now', 'localtime')),
+                    FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                )";
+
+
             new SqliteCommand(createDocumentsTable, connection).ExecuteNonQuery();
             new SqliteCommand(createUsersTable, connection).ExecuteNonQuery();
             new SqliteCommand(createDepartmentsTable, connection).ExecuteNonQuery();
@@ -215,6 +226,7 @@ namespace ToolCalendar.Data
             new SqliteCommand(createDocumentRoutingsTable, connection).ExecuteNonQuery();
             new SqliteCommand(createPushSubscriptionsTable, connection).ExecuteNonQuery();
             new SqliteCommand(createQuestionnaireTemplatesTable, connection).ExecuteNonQuery();
+            new SqliteCommand(createChatMessagesTable, connection).ExecuteNonQuery();
 
             // Insert default admin if not exists
             using var checkCmd = new SqliteCommand("SELECT COUNT(*) FROM Users WHERE Role='Admin'", connection);

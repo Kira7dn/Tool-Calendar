@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ToolCalendar.Core.Data.Interfaces;
@@ -21,16 +22,24 @@ namespace ToolCalendar.Core.Services
         private readonly string _modelName;
         private readonly IReminderRepository _reminderRepo;
         private readonly IUserRepository _userRepo;
+        private readonly IChatHistoryRepository _chatHistoryRepo;
         private readonly ILogger<AiAssistantService> _logger;
 
-        public AiAssistantService(HttpClient httpClient, IConfiguration config, IReminderRepository reminderRepo, IUserRepository userRepo, ILogger<AiAssistantService> logger)
+        public AiAssistantService(
+            HttpClient httpClient, 
+            IConfiguration config, 
+            IReminderRepository reminderRepo, 
+            IUserRepository userRepo, 
+            IChatHistoryRepository chatHistoryRepo,
+            ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
-            // Dùng Ollama local url, default là http://127.0.0.1:11434
-            _ollamaUrl = config.GetValue<string>("Ollama:Url") ?? "http://127.0.0.1:11434/api/generate";
+            // Dùng Ollama local url, default là http://127.0.0.1:11434/api/chat
+            _ollamaUrl = config.GetValue<string>("Ollama:ChatUrl") ?? "http://127.0.0.1:11434/api/chat";
             _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:3b";
             _reminderRepo = reminderRepo;
             _userRepo = userRepo;
+            _chatHistoryRepo = chatHistoryRepo;
             _logger = logger;
         }
 
@@ -41,6 +50,9 @@ namespace ToolCalendar.Core.Services
             {
                 return "Lỗi xác thực người dùng.";
             }
+
+            // 1. Lưu tin nhắn của user vào DB
+            _chatHistoryRepo.AddMessage(userId, "user", message);
 
             string persona;
             string userName = !string.IsNullOrEmpty(user.FullName) ? user.FullName : user.Username;
@@ -75,20 +87,32 @@ BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON theo cấu trúc sau (chỉ JSON, kh�
   ""replyText"": ""Câu trả lời giao tiếp với người dùng theo đúng xưng hô lễ nghi""
 }}";
 
+            // 2. Lấy lịch sử chat (tối đa 10 tin nhắn gần nhất)
+            var history = _chatHistoryRepo.GetHistoryByUserId(userId, 10);
+            
+            var messages = new List<object>
+            {
+                new { role = "system", content = systemPrompt }
+            };
+
+            foreach (var msg in history)
+            {
+                messages.Add(new { role = msg.Role, content = msg.Content });
+            }
+
             var requestBody = new
             {
                 model = _modelName,
-                prompt = message,
-                system = systemPrompt,
+                messages = messages,
                 stream = false,
                 format = "json" // Ép Qwen/Ollama trả về JSON
             };
 
-            var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
             try
             {
-                var response = await _httpClient.PostAsync(_ollamaUrl, content);
+                var response = await _httpClient.PostAsync(_ollamaUrl, requestContent);
                 if (!response.IsSuccessStatusCode)
                 {
                     var err = await response.Content.ReadAsStringAsync();
@@ -100,12 +124,12 @@ BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON theo cấu trúc sau (chỉ JSON, kh�
                 using var doc = JsonDocument.Parse(responseJson);
                 var root = doc.RootElement;
                 
-                if (!root.TryGetProperty("response", out var responseProp))
+                if (!root.TryGetProperty("message", out var messageProp) || !messageProp.TryGetProperty("content", out var responseContentProp))
                 {
                     return "Dạ báo cáo, tôi không thể xử lý dữ liệu lúc này.";
                 }
 
-                var text = responseProp.GetString()?.Trim();
+                var text = responseContentProp.GetString()?.Trim();
                 if (string.IsNullOrEmpty(text))
                 {
                     return "Dạ báo cáo, tôi chưa hiểu rõ ý của đồng chí/sếp.";
@@ -136,7 +160,7 @@ BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON theo cấu trúc sau (chỉ JSON, kh�
                 if (isReminder)
                 {
                     var remindAtStr = rootJson.TryGetProperty("remindAt", out var remindAtProp) ? remindAtProp.GetString() : null;
-                    var reminderContent = rootJson.TryGetProperty("content", out var contentProp) ? contentProp.GetString() : null;
+                    var reminderContent = rootJson.TryGetProperty("content", out var remContentProp) ? remContentProp.GetString() : null;
 
                     if (DateTime.TryParse(remindAtStr, out var remindAt) && !string.IsNullOrEmpty(reminderContent))
                     {
@@ -144,6 +168,9 @@ BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON theo cấu trúc sau (chỉ JSON, kh�
                         _logger.LogInformation($"[AiAssistant] Đã lưu nhắc nhở cho UserId={userId}: {reminderContent} lúc {remindAt}");
                     }
                 }
+
+                // 3. Lưu câu trả lời của AI vào DB (chỉ lưu phần replyText)
+                _chatHistoryRepo.AddMessage(userId, "assistant", replyText);
 
                 return replyText;
             }
