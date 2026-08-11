@@ -1,3 +1,4 @@
+/* global TextDecoder */
 import PropTypes from 'prop-types'
 import { useState, useRef, useEffect } from 'react'
 import { Bot, Send, X, Trash2 } from 'lucide-react'
@@ -154,15 +155,59 @@ export function AiChatbox({ currentDocId }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage.content, documentId: currentDocId }),
       })
-      const result = await response.json()
 
-      const assistantMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: result?.reply || 'Tôi đã tiếp nhận yêu cầu của bạn.',
-        timestamp: new Date().toISOString(),
+      if (!response.ok) throw new Error('Lỗi kết nối máy chủ')
+
+      setIsLoading(false) // Tắt loading ngay khi nhận được byte đầu tiên
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder('utf-8')
+      let assistantContent = ''
+      const assistantId = (Date.now() + 1).toString()
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date().toISOString(),
+        },
+      ])
+
+      let buffer = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const parts = buffer.split('\n\n')
+        buffer = parts.pop() || '' // Giữ lại phần chưa hoàn chỉnh (nếu có)
+
+        for (const chunk of parts) {
+          if (chunk.startsWith('data: ')) {
+            const dataStr = chunk.slice(6)
+            if (dataStr.trim()) {
+              try {
+                const dataObj = JSON.parse(dataStr)
+                assistantContent += dataObj.text || ''
+                // Loại bỏ tag [REMINDER|...] khỏi UI
+                const displayContent = assistantContent
+                  .replace(/\[REMINDER\|.*?\|.*?\]/g, '')
+                  .trim()
+
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === assistantId ? { ...msg, content: displayContent } : msg
+                  )
+                )
+              } catch (e) {
+                console.error('Lỗi parse JSON stream:', e)
+              }
+            }
+          }
+        }
       }
-      setMessages((prev) => [...prev, assistantMessage])
     } catch (error) {
       console.error('Chat error:', error)
       const errorMessage = {

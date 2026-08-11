@@ -2255,3 +2255,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "perf(ai): giới hạn context công văn xuống 3000 ký tự để tăng tốc"`
+### [2026-08-12 00:05] Chuyển đổi Chat AI sang kiến trúc Streaming (Server-Sent Events)
+- **Mô tả**: Nâng cấp toàn diện cách Frontend và Backend giao tiếp trong tính năng Chat AI. Thay vì bắt người dùng đợi phản hồi toàn bộ đoạn văn JSON (gây chậm), hệ thống hiện tại sử dụng SSE (Server-Sent Events) để đọc stream thẳng từ Ollama và hiển thị chữ lên giao diện từng từ một (như ChatGPT). Cơ chế Nhắc Việc vẫn được đảm bảo thông qua việc parse thẻ `[REMINDER]` ẩn ở cuối stream trước khi lưu vào database.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi toàn bộ luồng sang IAsyncEnumerable, bỏ parse JSON bắt buộc)
+  - `ToolCalendar.Core/Services/IAiAssistantService.cs` (Sửa đổi Interface)
+  - `ToolCalendar.Api/Controllers/ChatController.cs` (Đổi `ProcessMessage` thành ghi `text/event-stream` trực tiếp xuống Response.Body)
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Dùng `body.getReader()`, parse stream data và ẩn tag Reminder trên UI)
+- **Lệnh git commit**: `git commit -m "feat(ai): chuyển đổi kiến trúc chat sang streaming sse để gõ realtime"`
