@@ -1,3 +1,9 @@
+### [2026-08-11 22:18] fix(db): thêm bảng Reminders và Safe Column Migration vào DatabaseService
+- **Mô tả**: Mỗi lần deploy mới, ứng dụng khởi động sẽ tự động tạo tất cả bảng còn thiếu (Reminders, ChatMessages) và tự thêm các cột mới vào DB cũ bằng `ALTER TABLE` + try/catch. Đảm bảo DB không bao giờ bị lỗi "no such table" sau khi deploy.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(db): thêm bảng Reminders và Safe Column Migration vào DatabaseService"`
+
 ### [2026-08-11 22:06] feat(chat): hiển thị tin chào ngay lập tức khi mở chatbox AI
 - **Mô tả**: Sửa lỗi chatbox mở ra nhưng trống không — tin chào giờ được hiển thị ngay lập tức, sau đó mới fetch lịch sử từ API và thay thế nếu có. Tin chào phân biệt theo role: Admin/LanhDao nhận "Em chào Sếp!", còn lại nhận "Chào đồng chí!".
 - **Tệp thay đổi**:

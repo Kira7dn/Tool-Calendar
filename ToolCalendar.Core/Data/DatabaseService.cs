@@ -212,6 +212,16 @@ namespace ToolCalendar.Data
                     FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
                 )";
 
+            string createRemindersTable = @"
+                CREATE TABLE IF NOT EXISTS Reminders (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    UserId INTEGER NOT NULL,
+                    Content TEXT NOT NULL,
+                    RemindAt TEXT NOT NULL,
+                    IsCompleted INTEGER DEFAULT 0,
+                    CreatedAt TEXT DEFAULT (datetime('now', 'localtime')),
+                    FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                )";
 
             new SqliteCommand(createDocumentsTable, connection).ExecuteNonQuery();
             new SqliteCommand(createUsersTable, connection).ExecuteNonQuery();
@@ -227,6 +237,40 @@ namespace ToolCalendar.Data
             new SqliteCommand(createPushSubscriptionsTable, connection).ExecuteNonQuery();
             new SqliteCommand(createQuestionnaireTemplatesTable, connection).ExecuteNonQuery();
             new SqliteCommand(createChatMessagesTable, connection).ExecuteNonQuery();
+            new SqliteCommand(createRemindersTable, connection).ExecuteNonQuery();
+
+            // ── Safe Column Migrations (ALTER TABLE IF NOT EXISTS column) ──────────
+            // SQLite không hỗ trợ IF NOT EXISTS cho ALTER TABLE, nên dùng try/catch.
+            // Mỗi lần app khởi động sẽ tự thêm cột còn thiếu vào DB cũ, không bao giờ lỗi.
+            var safeAlters = new[]
+            {
+                // Documents
+                "ALTER TABLE Documents ADD COLUMN AssignedUserIds TEXT DEFAULT '[]'",
+                "ALTER TABLE Documents ADD COLUMN AssignedDepartmentIds TEXT DEFAULT '[]'",
+                "ALTER TABLE Documents ADD COLUMN UpdatedAt TEXT",
+                // Users
+                "ALTER TABLE Users ADD COLUMN NormalizedUserName TEXT",
+                "ALTER TABLE Users ADD COLUMN LockoutEnabled INTEGER DEFAULT 1",
+                "ALTER TABLE Users ADD COLUMN FailedLoginCount INTEGER DEFAULT 0",
+                "ALTER TABLE Users ADD COLUMN LockoutUntil TEXT",
+                // Departments
+                "ALTER TABLE Departments ADD COLUMN Code TEXT",
+                "ALTER TABLE Departments ADD COLUMN ParentId INTEGER",
+                // AuditLogs
+                "ALTER TABLE AuditLogs ADD COLUMN Details TEXT",
+            };
+
+            foreach (var alterSql in safeAlters)
+            {
+                try
+                {
+                    new SqliteCommand(alterSql, connection).ExecuteNonQuery();
+                }
+                catch
+                {
+                    // Cột đã tồn tại — bỏ qua, không phải lỗi
+                }
+            }
 
             // Insert default admin if not exists
             using var checkCmd = new SqliteCommand("SELECT COUNT(*) FROM Users WHERE Role='Admin'", connection);
