@@ -2144,3 +2144,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): render AiChatbox component in AppShell layout"`
+
+### [2026-08-11 21:05] Sửa lỗi sai đường dẫn import trong AiChatbox
+- **Mô tả**: Sửa lỗi đường dẫn import `lib/utils` từ `../../../lib/utils` thành `../../lib/utils` trong `AiChatbox.jsx` gây ra lỗi khi build production.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): correct import path for lib/utils in AiChatbox"`

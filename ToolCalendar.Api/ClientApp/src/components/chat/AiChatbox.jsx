@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bot, Send, X } from 'lucide-react'
-import { cn } from '../../../lib/utils'
+import { cn } from '../../lib/utils'
 
 export function AiChatbox() {
   const [isOpen, setIsOpen] = useState(false)
