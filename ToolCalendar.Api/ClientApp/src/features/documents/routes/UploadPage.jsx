@@ -97,6 +97,7 @@ export function UploadPage() {
     setReviewItem,
     pdfPage,
     setPdfPage,
+    pdfPageCount,
     pdfBlobUrl,
     setPdfBlobUrl,
     isPdfLoading,

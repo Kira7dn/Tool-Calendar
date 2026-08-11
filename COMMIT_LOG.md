@@ -2111,3 +2111,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadActions.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ocr): update disabled UI for save button during ocr"`
+
+### [2026-08-11 16:36] Sửa lỗi chưa define biến pdfPageCount
+- **Mô tả**: Sửa lỗi ReferenceError `pdfPageCount is not defined` khi bấm nút Thêm mới để tải văn bản lên. Lỗi xảy ra do quên destructure `pdfPageCount` từ custom hook `useUploadPage` trong `UploadPage.jsx`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): add missing pdfPageCount destructuring to fix ReferenceError"`
