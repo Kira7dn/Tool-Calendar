@@ -1,3 +1,9 @@
+### [2026-08-11 22:06] feat(chat): hiển thị tin chào ngay lập tức khi mở chatbox AI
+- **Mô tả**: Sửa lỗi chatbox mở ra nhưng trống không — tin chào giờ được hiển thị ngay lập tức, sau đó mới fetch lịch sử từ API và thay thế nếu có. Tin chào phân biệt theo role: Admin/LanhDao nhận "Em chào Sếp!", còn lại nhận "Chào đồng chí!".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(chat): hiển thị tin chào ngay lập tức khi mở chatbox AI"`
+
 ### [2026-08-11 21:56] fix(infra): cấu hình kết nối Ollama local cho backend docker
 - **Mô tả**: Khi chạy trên server VNPT, Backend nằm trong Docker container (bridge network) nên gọi `127.0.0.1` sẽ trỏ vào chính container thay vì server (nơi Ollama đang chạy). Đã thêm `host.docker.internal:host-gateway` và truyền biến môi trường `Ollama__ChatUrl` để Backend kết nối được với Ollama trên host.
 - **Tệp thay đổi**:

@@ -65,7 +65,25 @@ export function AiChatbox({ currentDocId }) {
     scrollToBottom()
   }, [messages])
 
+  // Hiển thị tin chào ngay khi mở box lần đầu
   useEffect(() => {
+    if (!isOpen) return
+
+    const role = localStorage.getItem('user_role') || ''
+    const isAdmin = role === 'Admin' || role === 'LanhDao'
+    const welcomeMsg = {
+      id: 'welcome',
+      role: 'assistant',
+      content: isAdmin
+        ? 'Dạ vâng ạ, Em chào Sếp! 🫡 Sếp cần em tóm tắt công văn, nhắc việc, hay hỏi gì cứ nhắn em ạ!'
+        : 'Chào đồng chí! 👋 Tôi là Trợ lý AI. Đồng chí cần hỗ trợ nghiệp vụ hay nhắc việc gì cứ nhắn tôi nhé!',
+      timestamp: new Date().toISOString(),
+    }
+
+    // Hiển thị lời chào ngay lập tức
+    setMessages([welcomeMsg])
+
+    // Sau đó fetch lịch sử — nếu có thì thay thế tin chào
     const fetchHistory = async () => {
       try {
         const response = await fetch('/api/chat/history')
@@ -80,32 +98,16 @@ export function AiChatbox({ currentDocId }) {
                 timestamp: msg.createdAt,
               }))
             )
-          } else {
-            // Không có lịch sử, tạo câu chào mặc định
-            const role = localStorage.getItem('user_role') || ''
-            const isAdmin = role === 'Admin' || role === 'LanhDao'
-            setMessages([
-              {
-                id: 'welcome',
-                role: 'assistant',
-                content: isAdmin
-                  ? 'Dạ vâng ạ, Em chào sếp. Sếp cần em hỗ trợ hay nhắc việc gì cứ nhắn em nhé!'
-                  : 'Chào đồng chí, tôi là Trợ lý AI. Đồng chí cần hỗ trợ gì cứ nhắn tôi nhé!',
-                timestamp: new Date().toISOString(),
-              },
-            ])
           }
         }
       } catch (error) {
         console.error('Failed to fetch chat history:', error)
+        // Giữ nguyên tin chào nếu fetch lỗi
       }
     }
 
-    // Chỉ fetch khi mở box lần đầu và chưa có tin nhắn nào
-    if (isOpen && messages.length === 0) {
-      fetchHistory()
-    }
-  }, [isOpen, messages.length])
+    fetchHistory()
+  }, [isOpen])
 
   const handleClearHistory = async () => {
     // eslint-disable-next-line no-alert
