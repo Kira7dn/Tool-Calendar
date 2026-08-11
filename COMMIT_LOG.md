@@ -1,4 +1,9 @@
-### [2026-08-11 22:47] fix(ai): bao bọc toàn bộ luồng chat AiAssistant bằng try/catch và xử lý JSON fallback
+### [2026-08-11 23:11] chore(ai): chuyển LogDebug thành LogWarning để xem phản hồi của Ollama
+- **Mô tả**: Bật log raw response của Ollama ở môi trường production.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(ai): chuyển LogDebug thành LogWarning để xem phản hồi của Ollama"`
+
 - **Mô tả**: Bất kỳ lỗi nào trong luồng giao tiếp với Ollama (parse JSON lỗi, timeout, DB error khi lưu tin nhắn) sẽ không còn ném exception ra ngoài gây trắng trang. Model sẽ dùng raw text nếu không parse được JSON. Đã xóa code cũ bị lặp lại ở cuối file.
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)

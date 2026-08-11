@@ -130,7 +130,7 @@ BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON (chỉ JSON, không văn bản dư th
                 }
 
                 var responseJson = await response.Content.ReadAsStringAsync();
-                _logger.LogDebug("[AiAssistant] Ollama raw response: {Json}", responseJson[..Math.Min(200, responseJson.Length)]);
+                _logger.LogWarning("[AiAssistant] Ollama raw response: {Json}", responseJson);
 
                 using var ollamaDoc = JsonDocument.Parse(responseJson);
                 var root = ollamaDoc.RootElement;
