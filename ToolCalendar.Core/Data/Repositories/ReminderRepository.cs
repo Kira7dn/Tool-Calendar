@@ -13,8 +13,10 @@ namespace ToolCalendar.Core.Data.Repositories
 
         public ReminderRepository(IConfiguration configuration)
         {
-            var dbPath = configuration.GetValue<string>("Database:Path") ?? "documents.db";
-            _connectionString = $"Data Source={dbPath}";
+            var dbPath = Environment.GetEnvironmentVariable("DB_PATH")
+                      ?? configuration.GetValue<string>("Database:Path")
+                      ?? "documents.db";
+            _connectionString = $"Data Source={dbPath};Pooling=True;Default Timeout=30;Cache=Shared";
         }
 
         public int AddReminder(int userId, string content, string remindAt)

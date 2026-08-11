@@ -1,3 +1,10 @@
+### [2026-08-11 22:29] fix(db): thống nhất connection string dùng DB_PATH cho ChatHistory và Reminder
+- **Mô tả**: ChatHistoryRepository và ReminderRepository đang dùng `Database:Path` từ appsettings trong khi `DatabaseService` dùng `DB_PATH` env var — dẫn đến kết nối 2 file DB khác nhau trên server Docker. Fix: ưu tiên đọc `DB_PATH` env var trước, fallback về config.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/ChatHistoryRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/ReminderRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(db): thống nhất connection string dùng DB_PATH cho ChatHistory và Reminder"`
+
 ### [2026-08-11 22:18] fix(db): thêm bảng Reminders và Safe Column Migration vào DatabaseService
 - **Mô tả**: Mỗi lần deploy mới, ứng dụng khởi động sẽ tự động tạo tất cả bảng còn thiếu (Reminders, ChatMessages) và tự thêm các cột mới vào DB cũ bằng `ALTER TABLE` + try/catch. Đảm bảo DB không bao giờ bị lỗi "no such table" sau khi deploy.
 - **Tệp thay đổi**:
