@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React from 'react'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
-import { ReviewModal } from '../../components/ReviewModal'
+import { ReviewModal } from '../../../components/ReviewModal'
 
 export function UploadModals({
   showClearConfirm,

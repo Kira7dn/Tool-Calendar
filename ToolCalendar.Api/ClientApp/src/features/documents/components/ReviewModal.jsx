@@ -252,10 +252,10 @@ export function ReviewModal({
                       <option value="">Chọn cán bộ...</option>
                       {(reviewItem?.departmentIds?.[0]
                         ? users.filter(
-                            (u) =>
-                              u.role === ROLES.ADMIN ||
-                              u.departmentId === reviewItem.departmentIds[0]
-                          )
+                          (u) =>
+                            u.role === ROLES.ADMIN ||
+                            u.departmentId === reviewItem.departmentIds[0]
+                        )
                         : users
                       ).map((u) => (
                         <option key={u.id} value={u.id}>

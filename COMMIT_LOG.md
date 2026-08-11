@@ -2099,3 +2099,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/components/ReviewModal.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): chặn chuyển trang vượt quá số trang thực tế của pdf trong review modal"`
+
+### [2026-08-11 13:44] Sửa lỗi build liên quan đến path ReviewModal
+- **Mô tả**: Cập nhật lại đường dẫn import ReviewModal trong UploadModals.jsx.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadModals.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): update ReviewModal import path"`
