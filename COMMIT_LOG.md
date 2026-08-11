@@ -2138,3 +2138,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): add missing pdfPageCount destructuring to fix ReferenceError"`
+
+### [2026-08-11 21:02] Hiển thị giao diện Chatbox AI trên Layout chính
+- **Mô tả**: Bổ sung thẻ `<AiChatbox />` vào phần kết thúc của AppShell.jsx để hiển thị nút chat góc dưới màn hình. Lỗi này do phiên làm việc trước mới chỉ import component mà quên render nó vào DOM.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): render AiChatbox component in AppShell layout"`

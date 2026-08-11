@@ -434,6 +434,7 @@ export function AppShell() {
           setIsNotifMobileOpen(false)
         }}
       />
+      <AiChatbox />
     </>
   )
 }
