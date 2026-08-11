@@ -1,3 +1,18 @@
+### [2026-08-11 17:50] Phát triển tính năng Trợ lý AI (Chatbot)
+- **Mô tả**: Tích hợp trợ lý AI theo yêu cầu của người dùng. Hệ thống tự động phân tích ý định hẹn nhắc việc từ tin nhắn tự nhiên qua Gemini API, lưu vào bảng `Reminders`, và Worker sẽ liên tục kiểm tra để gửi Push Notification/SignalR khi tới giờ nhắc nhở. Thêm giao diện Chatbox nổi ở mọi trang.
+- **Tệp thay đổi**:
+  - `data_dump/migration_reminders.sql` (Mới)
+  - `ToolCalendar.Core/Models/Reminder.cs`, `ChatModels.cs` (Mới)
+  - `ToolCalendar.Core/Data/Interfaces/IReminderRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/ReminderRepository.cs` (Mới)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Mới)
+  - `ToolCalendar.Api/Controllers/ChatController.cs` (Mới)
+  - `ToolCalendar.Api/Services/ReminderWorker.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi: Đăng ký DI)
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi: Lắng nghe SignalR và hiển thị UI)
+  - `ToolCalendar.Api/ClientApp/src/lib/signalr.js` (Sửa đổi: Bắn sự kiện realtime:new_reminder)
+- **Lệnh git commit**: `git commit -m "feat(ai): tích hợp trợ lý ai chatbot nhắc việc tự động"`
 ### [2026-08-11 17:45] Sửa lỗi xung đột tên file/thư mục UploadPage trên Linux
 - **Mô tả**: Sửa lỗi trang "Tải hồ sơ mới" / "Thêm mới" bị lỗi trên môi trường production (VNPT server - Linux). Nguyên nhân do có cả file `UploadPage.jsx` và thư mục `UploadPage/` nằm cùng cấp, gây lỗi module resolution của Vite khi build/chạy trên file system phân biệt chữ hoa chữ thường. Đã chuyển `UploadPage.jsx` thành `UploadPage/index.jsx`.
 - **Tệp thay đổi**:

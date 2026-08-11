@@ -44,6 +44,12 @@ class SignalRService {
     })
 
     // 🔔 Lắng nghe khi có công văn mới được chuyển đến (NewTask)
+    // 🔔 Lắng nghe khi có nhắc nhở từ AI
+    this.connection.on('ReceiveReminder', (data) => {
+      console.log('[SignalR] Nhận được nhắc nhở AI:', data)
+      document.dispatchEvent(new CustomEvent('realtime:new_reminder', { detail: data }))
+    })
+
     this.connection.on('NewTask', (data) => {
       console.log('[SignalR] Công văn mới được chuyển đến:', data)
       document.dispatchEvent(new CustomEvent('realtime:new_task', { detail: data }))

@@ -8,6 +8,8 @@ using System.Text;
 using ToolCalendar.Api.Security;          // ✅ CustomUserStore, HybridPasswordHasher
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Core.Data.Repositories;
+using ToolCalendar.Core.Services;
+
 using ToolCalendar.Data;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
@@ -88,6 +90,9 @@ builder.Services.AddScoped<ISettingRepository, SettingRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IReminderRepository, ReminderRepository>();
+builder.Services.AddScoped<IAiAssistantService, AiAssistantService>();
+
 
 // ✅ ASP.NET Core Identity (Custom UserStore — không cần EF Core)
 // Toàn bộ dữ liệu vẫn lưu trong SQLite hiện có, không mất dữ liệu cũ
@@ -139,6 +144,8 @@ builder.Services.AddSingleton<IVapidService, VapidService>();
 builder.Services.AddScoped<INotificationManager, NotificationManager>();
 builder.Services.AddSingleton<DeadlineWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DeadlineWorker>());
+builder.Services.AddHostedService<ReminderWorker>();
+
 
 // ✅ Security Services
 builder.Services.AddSingleton<IClamAvService, ClamAvService>();  // Virus scanning

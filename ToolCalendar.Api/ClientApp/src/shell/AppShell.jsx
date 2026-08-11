@@ -20,6 +20,8 @@ import { useNotifications } from '../features/notifications/hooks/useNotificatio
 import { Dashboard } from '../features/documents/routes/Dashboard.jsx'
 import { Documents } from '../features/documents/routes/Documents.jsx'
 import { UploadPage } from '../features/documents/routes/UploadPage'
+import { AiChatbox } from '../components/chat/AiChatbox'
+
 import { Users } from '../pages/Users.jsx'
 import DocDetail from '../features/documents/routes/DocDetail.jsx'
 import { MyTasks } from '../features/documents/routes/MyTasks.jsx'
@@ -142,6 +144,15 @@ export function AppShell() {
 
     signalRService.start()
 
+    const handleNewReminder = (e) => {
+      const data = e.detail
+      toast.info('🤖 Nhắc nhở từ Trợ lý AI!', {
+        description: data?.content || 'Bạn có một lời nhắc mới!',
+        duration: 10000,
+      })
+    }
+    document.addEventListener('realtime:new_reminder', handleNewReminder)
+
     const handleNewTask = (e) => {
       const data = e.detail
       fetchNotifications()
@@ -167,6 +178,8 @@ export function AppShell() {
       document.removeEventListener('auth:kicked', handleKicked)
       document.removeEventListener('realtime:notifications_updated', handleNotifUpdate)
       document.removeEventListener('realtime:new_task', handleNewTask)
+      document.removeEventListener('realtime:new_reminder', handleNewReminder)
+
       if ('serviceWorker' in navigator)
         navigator.serviceWorker.removeEventListener('message', handleSWMessage)
       signalRService.stop()
