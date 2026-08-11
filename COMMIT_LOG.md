@@ -1,3 +1,9 @@
+### [2026-08-11 22:47] fix(ai): bao bọc toàn bộ luồng chat AiAssistant bằng try/catch và xử lý JSON fallback
+- **Mô tả**: Bất kỳ lỗi nào trong luồng giao tiếp với Ollama (parse JSON lỗi, timeout, DB error khi lưu tin nhắn) sẽ không còn ném exception ra ngoài gây trắng trang. Model sẽ dùng raw text nếu không parse được JSON. Đã xóa code cũ bị lặp lại ở cuối file.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): bao bọc toàn bộ luồng chat AiAssistant bằng try/catch và xử lý JSON fallback"`
+
 ### [2026-08-11 22:29] fix(db): thống nhất connection string dùng DB_PATH cho ChatHistory và Reminder
 - **Mô tả**: ChatHistoryRepository và ReminderRepository đang dùng `Database:Path` từ appsettings trong khi `DatabaseService` dùng `DB_PATH` env var — dẫn đến kết nối 2 file DB khác nhau trên server Docker. Fix: ưu tiên đọc `DB_PATH` env var trước, fallback về config.
 - **Tệp thay đổi**:

@@ -218,7 +218,7 @@ namespace ToolCalendar.Data
                     UserId INTEGER NOT NULL,
                     Content TEXT NOT NULL,
                     RemindAt TEXT NOT NULL,
-                    IsCompleted INTEGER DEFAULT 0,
+                    IsSent INTEGER DEFAULT 0,
                     CreatedAt TEXT DEFAULT (datetime('now', 'localtime')),
                     FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
                 )";
@@ -256,8 +256,8 @@ namespace ToolCalendar.Data
                 // Departments
                 "ALTER TABLE Departments ADD COLUMN Code TEXT",
                 "ALTER TABLE Departments ADD COLUMN ParentId INTEGER",
-                // AuditLogs
-                "ALTER TABLE AuditLogs ADD COLUMN Details TEXT",
+                // Reminders — fix schema mismatch (IsSent thay vì IsCompleted)
+                "ALTER TABLE Reminders ADD COLUMN IsSent INTEGER DEFAULT 0",
             };
 
             foreach (var alterSql in safeAlters)
