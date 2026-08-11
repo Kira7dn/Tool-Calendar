@@ -95,9 +95,9 @@ Nếu người dùng yêu cầu NHẮC VIỆC (ví dụ: nhắc tôi họp, lên
 BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON (chỉ JSON, không văn bản dư thừa):
 {{
   ""isReminder"": true hoặc false,
-  ""remindAt"": ""2026-08-11 14:00:00"" (nếu isReminder = true),
-  ""content"": ""Nội dung nhắc nhở"" (nếu isReminder = true),
-  ""replyText"": ""Câu trả lời giao tiếp với người dùng""
+  ""remindAt"": ""2026-08-11 14:00:00"" (CHỈ điền khi isReminder = true),
+  ""content"": ""Nội dung việc cần nhắc"" (CHỈ điền khi isReminder = true),
+  ""replyText"": ""Toàn bộ câu trả lời chi tiết của bạn dành cho người dùng""
 }}";
 
                 // 2. Lấy lịch sử chat — lỗi DB không được dừng luồng
@@ -163,19 +163,28 @@ BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON (chỉ JSON, không văn bản dư th
                         ? replyProp.GetString() ?? text
                         : text;
 
+                    var isReminder = rootJson.TryGetProperty("isReminder", out var isReminderProp) &&
+                                     isReminderProp.ValueKind is JsonValueKind.True or JsonValueKind.False &&
+                                     isReminderProp.GetBoolean();
+
+                    var reminderContent = rootJson.TryGetProperty("content", out var rcProp) ? rcProp.GetString() : null;
+
+                    if (!isReminder)
+                    {
+                        if (!string.IsNullOrWhiteSpace(reminderContent) && reminderContent.Length > 10)
+                        {
+                            replyText = $"{replyText}\n\n{reminderContent}".Trim();
+                        }
+                    }
+
                     if (string.IsNullOrWhiteSpace(replyText))
                     {
                         replyText = "Dạ em đã nghe ạ. Sếp/Đồng chí cần em hỗ trợ gì thêm về văn bản này không ạ?";
                     }
 
-                    var isReminder = rootJson.TryGetProperty("isReminder", out var isReminderProp) &&
-                                     isReminderProp.ValueKind is JsonValueKind.True or JsonValueKind.False &&
-                                     isReminderProp.GetBoolean();
-
                     if (isReminder)
                     {
                         var remindAtStr = rootJson.TryGetProperty("remindAt", out var raProp) ? raProp.GetString() : null;
-                        var reminderContent = rootJson.TryGetProperty("content", out var rcProp) ? rcProp.GetString() : null;
 
                         if (DateTime.TryParse(remindAtStr, out var remindAt) && !string.IsNullOrEmpty(reminderContent))
                         {

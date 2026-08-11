@@ -2239,3 +2239,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(chat): sửa lỗi AI Chatbox không hiển thị nội dung JSON trả về"`
+### [2026-08-11 23:42] Sửa lỗi AI tách câu trả lời vào trường content
+- **Mô tả**: Khi người dùng không yêu cầu nhắc nhở (`isReminder = false`), AI đôi lúc tự chia đôi câu trả lời, phần mở đầu đưa vào `replyText` và phần tóm tắt đưa vào `content`, dẫn đến UI bị mất câu trả lời chính. Đã sửa lại prompt để hướng dẫn AI rõ ràng hơn và thêm logic ghép `replyText` + `content` nếu không phải là nhắc nhở.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(chat): sửa lỗi AI chia nhỏ kết quả làm mất nội dung tóm tắt"`
+ 
