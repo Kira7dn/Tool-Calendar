@@ -2089,3 +2089,13 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - Các tệp trong `UploadPage` và `PublicSchedule` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(docs): bổ sung eslint-disable cho các component mới"`
+
+### [2026-08-11 13:42] Cập nhật logic phân trang ReviewModal PDF
+- **Mô tả**: Tích hợp thư viện `pdf-lib` để trích xuất và hiển thị tổng số trang của file PDF. Vô hiệu hóa nút Next khi đã đạt đến trang cuối, khắc phục lỗi người dùng click tăng số trang vô hạn (ví dụ trang 19) dù PDF chỉ có 2 trang.
+- **Tệp thay đổi**:
+  - `package.json`, `package-lock.json` (Mới: pdf-lib)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/hooks/useUploadPage.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadModals.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/components/ReviewModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): chặn chuyển trang vượt quá số trang thực tế của pdf trong review modal"`

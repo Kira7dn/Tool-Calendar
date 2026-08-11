@@ -315,6 +315,7 @@ export function UploadPage() {
         isPdfLoading={isPdfLoading}
         pdfPage={pdfPage}
         setPdfPage={setPdfPage}
+        pdfPageCount={pdfPageCount}
         departments={departments}
         users={users}
         setBatchItems={setBatchItems}

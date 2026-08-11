@@ -25,6 +25,7 @@ export function UploadModals({
   isPdfLoading,
   pdfPage,
   setPdfPage,
+  pdfPageCount,
   departments,
   users,
   setBatchItems,
@@ -46,6 +47,7 @@ export function UploadModals({
         isPdfLoading={isPdfLoading}
         pdfPage={pdfPage}
         setPdfPage={setPdfPage}
+        pdfPageCount={pdfPageCount}
         departments={departments}
         users={users}
         onSave={(updated) => {

@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useState, useEffect } from 'react'
+import { PDFDocument } from 'pdf-lib'
 import { ROLES } from '@/constants/roles'
 import { toast } from 'sonner'
 import { useDocumentUploadContext } from '../../../contexts/DocumentUploadContext'
@@ -13,6 +14,7 @@ export function useUploadPage() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
   const [reviewItem, setReviewItem] = useState(null)
   const [pdfPage, setPdfPage] = useState(1)
+  const [pdfPageCount, setPdfPageCount] = useState(1)
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null)
   const [isPdfLoading, setIsPdfLoading] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -36,10 +38,20 @@ export function useUploadPage() {
   const fetchPdfBlob = async (docId) => {
     setIsPdfLoading(true)
     setPdfBlobUrl(null)
+    setPdfPageCount(1)
     try {
       const res = await fetch(`/api/documents/${docId}/file`)
       if (!res.ok) throw new Error()
       const blob = await res.blob()
+      
+      try {
+        const arrayBuffer = await blob.arrayBuffer()
+        const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true })
+        setPdfPageCount(pdfDoc.getPageCount())
+      } catch (err) {
+        console.warn('Failed to parse PDF page count', err)
+      }
+
       setPdfBlobUrl(URL.createObjectURL(blob))
     } catch {
       toast.error('Không thể tải file PDF')
@@ -78,6 +90,7 @@ export function useUploadPage() {
     setReviewItem,
     pdfPage,
     setPdfPage,
+    pdfPageCount,
     pdfBlobUrl,
     setPdfBlobUrl,
     isPdfLoading,

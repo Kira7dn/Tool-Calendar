@@ -63,6 +63,7 @@ export function ReviewModal({
   isPdfLoading,
   pdfPage,
   setPdfPage,
+  pdfPageCount,
   departments,
   users,
   onSave,
@@ -122,19 +123,24 @@ export function ReviewModal({
               <div className="flex items-center gap-4 bg-slate-800/50 p-1 rounded-xl border border-white/5">
                 <button
                   onClick={() => setPdfPage(Math.max(1, pdfPage - 1))}
+                  disabled={pdfPage <= 1}
                   className="p-2 rounded-lg hover:bg-slate-700 text-white disabled:opacity-20 transition-all"
                 >
                   <ChevronLeft size={18} strokeWidth={3} />
                 </button>
-                <div className="flex items-center gap-3 px-4 border-x border-white/5">
+                <div className="flex items-center gap-2 px-4 border-x border-white/5">
                   <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">
                     Trang
                   </span>
                   <span className="text-sm font-black text-white">{pdfPage}</span>
+                  {pdfPageCount > 1 && (
+                    <span className="text-[10px] font-bold text-slate-400">/ {pdfPageCount}</span>
+                  )}
                 </div>
                 <button
-                  onClick={() => setPdfPage(pdfPage + 1)}
-                  className="p-2 rounded-lg hover:bg-slate-700 text-white transition-all"
+                  onClick={() => setPdfPage(Math.min(pdfPageCount || 999, pdfPage + 1))}
+                  disabled={pdfPageCount ? pdfPage >= pdfPageCount : false}
+                  className="p-2 rounded-lg hover:bg-slate-700 text-white disabled:opacity-20 transition-all"
                 >
                   <ChevronRight size={18} strokeWidth={3} />
                 </button>
