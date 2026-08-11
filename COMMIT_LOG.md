@@ -2234,3 +2234,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ai): update chatbox theme to red and adapt default greeting by role"`
+### [2026-08-11 23:27] Sửa lỗi fallback AI Chatbox
+- **Mô tả**: Sửa lỗi AI Chatbox luôn hiển thị câu fallback "Tôi đã tiếp nhận yêu cầu của bạn." do interceptor trong `main.jsx` đã unwrap `ApiResponse`, khiến `result.data` bị undefined. Đã đổi thành `result?.reply` để lấy đúng nội dung từ payload.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(chat): sửa lỗi AI Chatbox không hiển thị nội dung JSON trả về"`

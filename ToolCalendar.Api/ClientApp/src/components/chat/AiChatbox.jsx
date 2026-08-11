@@ -89,9 +89,9 @@ export function AiChatbox({ currentDocId }) {
         const response = await fetch('/api/chat/history')
         if (response.ok) {
           const result = await response.json()
-          if (result.data && result.data.length > 0) {
+          if (Array.isArray(result) && result.length > 0) {
             setMessages(
-              result.data.map((msg) => ({
+              result.map((msg) => ({
                 id: msg.id.toString(),
                 role: msg.role,
                 content: msg.content,
@@ -159,7 +159,7 @@ export function AiChatbox({ currentDocId }) {
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: result.data?.reply || 'Tôi đã tiếp nhận yêu cầu của bạn.',
+        content: result?.reply || 'Tôi đã tiếp nhận yêu cầu của bạn.',
         timestamp: new Date().toISOString(),
       }
       setMessages((prev) => [...prev, assistantMessage])
