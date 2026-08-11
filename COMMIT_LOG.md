@@ -2250,3 +2250,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): sửa lỗi hiển thị JSON thô và bổ sung lời chào bắt buộc"`
+### [2026-08-12 00:02] Tối ưu tốc độ AI (Cắt bớt Context)
+- **Mô tả**: Khi người dùng mở công văn dài (ví dụ 30 trang), việc nhồi toàn bộ FullText vào prompt khiến model Qwen 3B trên CPU mất quá nhiều thời gian đọc hiểu (Pre-fill time) dẫn đến AI phản hồi rất chậm. Đã thêm logic cắt bớt nội dung công văn xuống tối đa 3000 ký tự (khoảng 1.5 trang đầu) để tăng tốc độ phản hồi của AI lên gấp nhiều lần.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ai): giới hạn context công văn xuống 3000 ký tự để tăng tốc"`

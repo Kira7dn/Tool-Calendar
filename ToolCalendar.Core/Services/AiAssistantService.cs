@@ -85,7 +85,14 @@ Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đ�
                 {
                     var doc = await _documentRepo.GetDocumentByIdAsync(documentId.Value);
                     if (doc != null && !string.IsNullOrWhiteSpace(doc.FullText))
-                        documentContext = $"\n\nBối cảnh quan trọng: Công văn số {doc.SoVanBan}, tên: {doc.TenCongVan}. Nội dung:\n\"\"\"{doc.FullText}\"\"\"";
+                    {
+                        var text = doc.FullText;
+                        if (text.Length > 3000) 
+                        {
+                            text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt do quá dài]...";
+                        }
+                        documentContext = $"\n\nBối cảnh quan trọng: Công văn số {doc.SoVanBan}, tên: {doc.TenCongVan}. Nội dung:\n\"\"\"{text}\"\"\"";
+                    }
                 }
 
                 var systemPrompt = $@"{persona}
