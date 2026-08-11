@@ -1,4 +1,9 @@
-### [2026-08-11 23:11] chore(ai): chuyển LogDebug thành LogWarning để xem phản hồi của Ollama
+### [2026-08-11 23:14] fix(ai): thêm fallback khi Ollama trả về chuỗi rỗng
+- **Mô tả**: Nếu LLM sinh ra JSON có trường `replyText` là rỗng (`""`), giá trị này sẽ qua lọt try/catch và trả về frontend chuỗi rỗng. Frontend sẽ thấy rỗng (falsy) và hiện fallback cứng `'Tôi đã tiếp nhận yêu cầu của bạn.'`. Thêm logic để check và trả về câu hỏi mặc định thân thiện.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): thêm fallback khi Ollama trả về chuỗi rỗng"`
+
 - **Mô tả**: Bật log raw response của Ollama ở môi trường production.
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)

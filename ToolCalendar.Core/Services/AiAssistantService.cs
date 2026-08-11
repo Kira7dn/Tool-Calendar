@@ -163,6 +163,11 @@ BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON (chỉ JSON, không văn bản dư th
                         ? replyProp.GetString() ?? text
                         : text;
 
+                    if (string.IsNullOrWhiteSpace(replyText))
+                    {
+                        replyText = "Dạ em đã nghe ạ. Sếp/Đồng chí cần em hỗ trợ gì thêm về văn bản này không ạ?";
+                    }
+
                     var isReminder = rootJson.TryGetProperty("isReminder", out var isReminderProp) &&
                                      isReminderProp.ValueKind is JsonValueKind.True or JsonValueKind.False &&
                                      isReminderProp.GetBoolean();
