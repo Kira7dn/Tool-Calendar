@@ -2066,3 +2066,20 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): show cancel button for level2 with Dang xu ly routing status"`
+
+### [2026-08-11 12:03] Refactor UploadPage and PublicSchedule to Bulletproof React
+- **Mô tả**: Tái cấu trúc UploadPage và PublicSchedule theo chuẩn Bulletproof React để giảm dung lượng file xuống dưới 500 dòng, tách hooks và components.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/hooks/useUploadPage.js` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadActions.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadModals.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/hooks/usePublicSchedule.js` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/LoginModal.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/Header.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/NavBar.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/KickedModal.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/ScheduleBlock.jsx` (Mới)
+- **Lệnh git commit**: `git commit -m "refactor(docs): tái cấu trúc UploadPage và PublicSchedule theo chuẩn Bulletproof React"`
