@@ -12,7 +12,7 @@ namespace ToolCalendar.Core.Services
 {
     public interface IAiAssistantService
     {
-        Task<string> ProcessChatAsync(int userId, string message);
+        Task<string> ProcessChatAsync(int userId, string message, int? documentId = null);
     }
 
     public class AiAssistantService : IAiAssistantService
@@ -23,6 +23,7 @@ namespace ToolCalendar.Core.Services
         private readonly IReminderRepository _reminderRepo;
         private readonly IUserRepository _userRepo;
         private readonly IChatHistoryRepository _chatHistoryRepo;
+        private readonly IDocumentRepository _documentRepo;
         private readonly ILogger<AiAssistantService> _logger;
 
         public AiAssistantService(
@@ -31,6 +32,7 @@ namespace ToolCalendar.Core.Services
             IReminderRepository reminderRepo, 
             IUserRepository userRepo, 
             IChatHistoryRepository chatHistoryRepo,
+            IDocumentRepository documentRepo,
             ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
@@ -40,10 +42,11 @@ namespace ToolCalendar.Core.Services
             _reminderRepo = reminderRepo;
             _userRepo = userRepo;
             _chatHistoryRepo = chatHistoryRepo;
+            _documentRepo = documentRepo;
             _logger = logger;
         }
 
-        public async Task<string> ProcessChatAsync(int userId, string message)
+        public async Task<string> ProcessChatAsync(int userId, string message, int? documentId = null)
         {
             var user = _userRepo.GetUserById(userId);
             if (user == null)
@@ -75,8 +78,19 @@ Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đ�
             }
 
             var now = DateTime.Now;
+            string documentContext = "";
+
+            if (documentId.HasValue)
+            {
+                var doc = await _documentRepo.GetDocumentByIdAsync(documentId.Value);
+                if (doc != null && !string.IsNullOrWhiteSpace(doc.FullText))
+                {
+                    documentContext = $"\n\nBối cảnh quan trọng: Bạn đang được yêu cầu phân tích Công văn số {doc.SoVanBan}, tên: {doc.TenCongVan}. Nội dung văn bản như sau:\n\"\"\"{doc.FullText}\"\"\"";
+                }
+            }
+
             var systemPrompt = $@"{persona}
-Hôm nay là {now:dd/MM/yyyy HH:mm:ss}.
+Hôm nay là {now:dd/MM/yyyy HH:mm:ss}.{documentContext}
 Nhiệm vụ của bạn là trả lời thân thiện theo đúng phong thái trên và hỗ trợ công việc.
 Nếu người dùng yêu cầu NHẮC VIỆC (ví dụ: nhắc tôi họp, lên lịch...), bạn bóc tách THỜI GIAN NHẮC (định dạng yyyy-MM-dd HH:mm:ss) và NỘI DUNG.
 BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON theo cấu trúc sau (chỉ JSON, không văn bản dư thừa):

@@ -63,7 +63,7 @@ namespace ToolCalendar.Api.Controllers
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy thông tin người dùng."));
             }
 
-            var reply = await _aiAssistantService.ProcessChatAsync(userId, request.Message);
+            var reply = await _aiAssistantService.ProcessChatAsync(userId, request.Message, request.DocumentId);
 
             return Ok(ApiResponse<ChatResponse>.Ok(new ChatResponse
             {

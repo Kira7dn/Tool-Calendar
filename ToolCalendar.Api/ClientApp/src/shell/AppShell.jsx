@@ -434,7 +434,7 @@ export function AppShell() {
           setIsNotifMobileOpen(false)
         }}
       />
-      <AiChatbox />
+      <AiChatbox currentDocId={currentDocId} />
     </>
   )
 }

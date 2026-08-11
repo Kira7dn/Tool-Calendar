@@ -1,4 +1,14 @@
-### [2026-08-11 21:24] Bổ sung tính năng Lịch sử Chat cho Trợ lý AI (RAG Context)
+### [2026-08-11 14:30] feat(ocr): tích hợp AI Document Reading (RAG) vào màn hình chi tiết công văn
+- **Mô tả**: Cho phép AI đọc toàn văn (FullText) công văn đang xem bằng cách truyền `documentId` từ frontend xuống API chat, và inject nội dung công văn vào `systemPrompt` của LLM.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Models/ChatModels.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/ChatController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): tích hợp AI Document Reading (RAG) vào màn hình chi tiết công văn"`
+
+### [2026-08-11 14:15] feat(chat): hỗ trợ lưu lịch sử chat AI theo session (người dùng)
 - **Mô tả**: Phát triển tính năng ghi nhớ ngữ cảnh cho AI thông qua bảng `ChatMessages` trong SQLite. 
   - Thêm bảng `ChatMessages` lưu lịch sử chat.
   - Cập nhật `AiAssistantService` thay đổi từ `/api/generate` sang `/api/chat` để hỗ trợ truyền tham số `messages` chứa ngữ cảnh (context) từ các câu hỏi trước đó. AI giờ đây có khả năng duy trì cuộc trò chuyện.

@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
+import PropTypes from 'prop-types'
 import { Bot, Send, X, Trash2 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
-export function AiChatbox() {
+export function AiChatbox({ currentDocId }) {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
@@ -102,7 +103,7 @@ export function AiChatbox() {
       const response = await fetch('/api/chat/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage.content }),
+        body: JSON.stringify({ message: userMessage.content, documentId: currentDocId }),
       })
       const result = await response.json()
 
@@ -156,7 +157,14 @@ export function AiChatbox() {
               <Bot className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-sm">Trợ lý AI</h3>
+              <h3 className="font-bold text-sm flex items-center gap-2">
+                Trợ lý AI
+                {currentDocId && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] font-medium animate-pulse">
+                    📄 Đang đọc văn bản
+                  </span>
+                )}
+              </h3>
               <p className="text-[10px] text-red-100">Luôn sẵn sàng hỗ trợ</p>
             </div>
           </div>
@@ -242,4 +250,8 @@ export function AiChatbox() {
       </div>
     </>
   )
+}
+
+AiChatbox.propTypes = {
+  currentDocId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 }
