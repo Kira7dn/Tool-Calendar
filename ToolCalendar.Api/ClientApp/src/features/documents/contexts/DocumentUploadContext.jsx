@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 import { DOCUMENT_STATUS } from '@/constants/document'
 
 const DocumentUploadContext = createContext(null)
@@ -10,6 +10,46 @@ export function DocumentUploadProvider({ children }) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [overallProgress, setOverallProgress] = useState(0)
   const [currentFileName, setCurrentFileName] = useState('')
+
+  useEffect(() => {
+    const handleOcrProgress = async (e) => {
+      const { docId, status } = e.detail
+
+      if (status !== DOCUMENT_STATUS.DANG_XU_LY) {
+        try {
+          const res = await fetch(`/api/documents/${docId}`)
+          if (res.ok) {
+            const u = await res.json()
+            setBatchItems((prev) =>
+              prev.map((b) =>
+                b.id === docId
+                  ? {
+                      ...b,
+                      soVanBan: u.soVanBan || '',
+                      trichYeu: u.trichYeu || '',
+                      coQuanBanHanh: u.coQuanBanHanh || '',
+                      coQuanChuQuan: u.coQuanChuQuan || '',
+                      ngayBanHanh: u.ngayBanHanh ? u.ngayBanHanh.split('T')[0] : '',
+                      thoiHan: u.thoiHan ? u.thoiHan.split('T')[0] : '',
+                      departmentIds: u.departmentId ? [u.departmentId] : [],
+                      assignedToIds: u.assignedTo ? [u.assignedTo] : [],
+                      status: u.status === DOCUMENT_STATUS.LOI_OCR ? 'error' : 'ready',
+                    }
+                  : b
+              )
+            )
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+
+    document.addEventListener('realtime:ocr_progress', handleOcrProgress)
+    return () => {
+      document.removeEventListener('realtime:ocr_progress', handleOcrProgress)
+    }
+  }, [])
 
   const handleFileUpload = async (fileList) => {
     if (!fileList.length) return
@@ -63,45 +103,6 @@ export function DocumentUploadProvider({ children }) {
                   : 'ready',
           }
           setBatchItems((prev) => prev.map((b) => (b.id === item.id ? mapped : b)))
-          if (doc.status === DOCUMENT_STATUS.DANG_XU_LY) {
-            ;(async () => {
-              let attempts = 0
-              while (attempts < 150) {
-                await new Promise((r) => setTimeout(r, 2000))
-                try {
-                  const res = await fetch(`/api/documents/${doc.id}`)
-                  if (res.ok) {
-                    const u = await res.json()
-                    if (u.status !== DOCUMENT_STATUS.DANG_XU_LY) {
-                      setBatchItems((prev) =>
-                        prev.map((b) =>
-                          b.id === doc.id
-                            ? {
-                                ...b,
-                                soVanBan: u.soVanBan || '',
-                                trichYeu: u.trichYeu || '',
-                                coQuanBanHanh: u.coQuanBanHanh || '',
-                                coQuanChuQuan: u.coQuanChuQuan || '',
-                                ngayBanHanh: u.ngayBanHanh ? u.ngayBanHanh.split('T')[0] : '',
-                                thoiHan: u.thoiHan ? u.thoiHan.split('T')[0] : '',
-                                departmentIds: u.departmentId ? [u.departmentId] : [],
-                                assignedToIds: u.assignedTo ? [u.assignedTo] : [],
-                                status: u.status === DOCUMENT_STATUS.LOI_OCR ? 'error' : 'ready',
-                              }
-                            : b
-                        )
-                      )
-                      break
-                    }
-                  }
-                } catch {
-                  /* ignore */
-                }
-                attempts++
-              }
-            })()
-          }
-        } else {
           setBatchItems((prev) =>
             prev.map((b) =>
               b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b

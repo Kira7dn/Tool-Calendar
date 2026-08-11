@@ -61,6 +61,12 @@ class SignalRService {
       document.dispatchEvent(new CustomEvent('realtime:document_updated'))
     })
 
+    // 🔔 Lắng nghe sự kiện tiến trình OCR hoàn tất từ worker
+    this.connection.on('ocr_progress', (data) => {
+      console.log('[SignalR] Tiến trình OCR đã có cập nhật:', data)
+      document.dispatchEvent(new CustomEvent('realtime:ocr_progress', { detail: data }))
+    })
+
     try {
       await this.connection.start()
       console.log('[SignalR] Connected successfully')

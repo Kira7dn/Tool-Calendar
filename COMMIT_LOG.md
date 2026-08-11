@@ -1,3 +1,10 @@
+### [2026-08-11 11:52] Cải tiến OCR: Thay thế Polling bằng SignalR
+- **Mô tả**: Tối ưu hóa kiến trúc giao tiếp Client-Server cho tính năng Upload OCR. Gỡ bỏ vòng lặp `while(true)` gọi API (Polling) 2 giây/lần ở frontend. Thay vào đó, tích hợp lắng nghe trực tiếp sự kiện `ocr_progress` qua SignalR (WebSockets). Kết quả OCR giờ đây sẽ được cập nhật real-time ngay lập tức khi Worker Python xử lý xong, giảm tải hoàn toàn cho Server Web.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/lib/signalr.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/contexts/DocumentUploadContext.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ocr): replace HTTP polling with SignalR real-time event for OCR progress"`
+
 ### [2026-08-11 11:38] Giữ trạng thái OCR khi chuyển trang
 - **Mô tả**: Tách state quản lý upload và polling OCR vào DocumentUploadContext bao bọc ngoài cùng (AppShell level) để giữ dữ liệu OCR chạy ngầm và không bị mất khi người dùng chuyển sang các tab khác (Báo cáo thống kê, v.v.).
 - **Tệp thay đổi**:
