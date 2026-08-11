@@ -130,6 +130,7 @@ Lưu ý: Bạn KHÔNG được dùng format JSON. Chỉ cần trả lời bằng
             };
 
             HttpResponseMessage response = null;
+            bool connectionError = false;
             try
             {
                 response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
@@ -137,6 +138,11 @@ Lưu ý: Bạn KHÔNG được dùng format JSON. Chỉ cần trả lời bằng
             catch (Exception ex)
             {
                 _logger.LogError("[AiAssistant] Lỗi gọi Ollama: {Msg}", ex.Message);
+                connectionError = true;
+            }
+
+            if (connectionError)
+            {
                 yield return "Dạ báo cáo, hệ thống AI đang gặp sự cố kết nối.";
                 yield break;
             }
@@ -152,26 +158,28 @@ Lưu ý: Bạn KHÔNG được dùng format JSON. Chỉ cần trả lời bằng
             using var stream = await response.Content.ReadAsStreamAsync();
             using var reader = new StreamReader(stream);
 
-            while (!reader.EndOfStream)
+            string line;
+            while ((line = await reader.ReadLineAsync()) != null)
             {
-                var line = await reader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
+                string chunk = null;
                 try
                 {
                     using var ollamaDoc = JsonDocument.Parse(line);
                     if (ollamaDoc.RootElement.TryGetProperty("message", out var msgProp) &&
                         msgProp.TryGetProperty("content", out var contentProp))
                     {
-                        var chunk = contentProp.GetString();
-                        if (!string.IsNullOrEmpty(chunk))
-                        {
-                            fullResponse.Append(chunk);
-                            yield return chunk;
-                        }
+                        chunk = contentProp.GetString();
                     }
                 }
                 catch (JsonException) { /* Bỏ qua các line không phải JSON chuẩn */ }
+
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    fullResponse.Append(chunk);
+                    yield return chunk;
+                }
             }
 
             string finalReply = fullResponse.ToString().Trim();

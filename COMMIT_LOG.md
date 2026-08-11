@@ -2263,3 +2263,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/ChatController.cs` (Đổi `ProcessMessage` thành ghi `text/event-stream` trực tiếp xuống Response.Body)
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Dùng `body.getReader()`, parse stream data và ẩn tag Reminder trên UI)
 - **Lệnh git commit**: `git commit -m "feat(ai): chuyển đổi kiến trúc chat sang streaming sse để gõ realtime"`
+
+### [2026-08-11 17:21] Fix(chat): Sửa lỗi biên dịch yield return trong catch block
+- **Mô tả**: AiAssistantService bị lỗi biên dịch do dùng `yield return` trong catch block. Đã refactor lại để pass C# compiler.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(chat): sửa lỗi biên dịch yield return trong catch block"`
