@@ -166,6 +166,9 @@ export function UploadPage() {
     setBatchItems,
   })
 
+  const hasProcessingItems = batchItems.some((i) => i.status === 'processing')
+  const isGlobalProcessing = isProcessing || hasProcessingItems
+
   useEffect(() => {
     fetch('/api/admin/departments')
       .then((r) => r.ok && r.json())
@@ -371,14 +374,15 @@ export function UploadPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowClearConfirm(true)}
-            className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-[11px] font-bold hover:bg-slate-50 transition-all"
+            disabled={isGlobalProcessing}
+            className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-[11px] font-bold hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             HỦY ĐỢT TẢI
           </button>
           <button
             onClick={() => handleSaveAll()}
-            disabled={isSaving || batchItems.length === 0}
-            className="px-6 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
+            disabled={isSaving || batchItems.length === 0 || isGlobalProcessing}
+            className="px-6 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             LƯU & PHÂN CÔNG TẤT CẢ
           </button>
@@ -511,8 +515,8 @@ export function UploadPage() {
                           type="checkbox"
                           checked={isRowSelected}
                           onChange={() => toggleSelectOne(row.id)}
-                          disabled={typeof row.id !== 'number'}
-                          className="w-3.5 h-3.5 rounded accent-blue-600 cursor-pointer disabled:opacity-30"
+                          disabled={typeof row.id !== 'number' || row.status === 'processing'}
+                          className="w-3.5 h-3.5 rounded accent-blue-600 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -543,8 +547,9 @@ export function UploadPage() {
                         <input
                           value={row.soVanBan}
                           onChange={(e) => updateItem(row.id, 'soVanBan', e.target.value)}
+                          disabled={row.status === 'processing'}
                           placeholder="Số hiệu..."
-                          className="w-24 text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white placeholder-slate-300 transition-all font-bold text-slate-900"
+                          className="w-24 text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white placeholder-slate-300 transition-all font-bold text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -552,12 +557,14 @@ export function UploadPage() {
                           type="date"
                           value={row.thoiHan}
                           onChange={(e) => updateItem(row.id, 'thoiHan', e.target.value)}
-                          className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all"
+                          disabled={row.status === 'processing'}
+                          className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </td>
                       <td className="px-3 py-2">
                         <select
                           value={row.departmentIds[0] || ''}
+                          disabled={row.status === 'processing'}
                           onChange={(e) => {
                             const val = e.target.value ? parseInt(e.target.value) : ''
                             setBatchItems((prev) =>
@@ -568,7 +575,7 @@ export function UploadPage() {
                               )
                             )
                           }}
-                          className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
+                          className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <option value="">Chọn đơn vị</option>
                           {departments.map((d) => (
@@ -581,6 +588,7 @@ export function UploadPage() {
                       <td className="px-3 py-2">
                         <select
                           value={row.assignedToIds[0] || ''}
+                          disabled={row.status === 'processing'}
                           onChange={(e) =>
                             updateItem(
                               row.id,
@@ -588,7 +596,7 @@ export function UploadPage() {
                               e.target.value ? [parseInt(e.target.value)] : []
                             )
                           }
-                          className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold"
+                          className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <option value="">Chọn cán bộ</option>
                           {(row.departmentIds[0]
@@ -622,10 +630,12 @@ export function UploadPage() {
                                       fetchPdfBlob(row.id)
                                       setIsReviewModalOpen(true)
                                     }}
-                                    disabled={typeof row.id !== 'number'}
+                                    disabled={
+                                      typeof row.id !== 'number' || row.status === 'processing'
+                                    }
                                     className={cn(
                                       'p-1 rounded transition-colors',
-                                      typeof row.id === 'number'
+                                      typeof row.id === 'number' && row.status !== 'processing'
                                         ? 'text-blue-500 hover:bg-blue-50'
                                         : 'text-slate-300 cursor-not-allowed'
                                     )}
@@ -645,7 +655,8 @@ export function UploadPage() {
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => setDeleteItemConfirm({ open: true, item: row })}
-                                  className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                  disabled={row.status === 'processing'}
+                                  className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-400"
                                 >
                                   <TrashIcon />
                                 </button>
@@ -744,8 +755,8 @@ export function UploadPage() {
           </button>
           <button
             onClick={() => setShowBulkDeleteConfirm(true)}
-            disabled={isBulkDeleting}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-500 hover:bg-red-400 text-white text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+            disabled={isBulkDeleting || isGlobalProcessing}
+            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-500 hover:bg-red-400 text-white text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <TrashIcon />
             {isBulkDeleting ? 'Đang xóa...' : `Xóa ${selectedIds.size} văn bản`}

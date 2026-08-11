@@ -1,3 +1,9 @@
+### [2026-08-11 11:15] Vô hiệu hóa thao tác khi OCR đang chạy
+- **Mô tả**: Chặn thao tác người dùng trên giao diện "Số hóa tài liệu" khi tiến trình OCR đang diễn ra. Disable các nút "LƯU & PHÂN CÔNG TẤT CẢ", "HỦY ĐỢT TẢI", "Xóa nhiều", và chặn chỉnh sửa/chọn từng dòng nếu trạng thái của dòng đó đang là `processing`. Việc này để tránh user vô tình làm lỗi bất đồng bộ và bị ghi đè kết quả OCR.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): disable global actions and row inputs when ocr is processing"`
+
 ### [2026-08-10 00:20] Cập nhật bảng DocumentRoutings khi Hủy tiếp nhận
 - **Mô tả**: API `RejectAssignment` trước đây chỉ cập nhật `doc.Status = "Từ chối"`, không cập nhật trạng thái "Từ chối" vào bản ghi `DocumentRoutings` của người được giao. Điều này dẫn đến data không lưu đúng nếu người dùng từ chối. Sửa lỗi: Cập nhật thêm `_routingRepo.UpdateStatusByDocumentAndReceiverAsync` khi `RejectAssignment`.
 - **Tệp thay đổi**:
