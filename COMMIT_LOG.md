@@ -1,3 +1,9 @@
+### [2026-08-11 21:56] fix(infra): cấu hình kết nối Ollama local cho backend docker
+- **Mô tả**: Khi chạy trên server VNPT, Backend nằm trong Docker container (bridge network) nên gọi `127.0.0.1` sẽ trỏ vào chính container thay vì server (nơi Ollama đang chạy). Đã thêm `host.docker.internal:host-gateway` và truyền biến môi trường `Ollama__ChatUrl` để Backend kết nối được với Ollama trên host.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): cấu hình kết nối Ollama local cho backend docker"`
+
 ### [2026-08-11 14:45] style(ui): hỗ trợ kéo thả nút mở chatbox AI để không che khuất màn hình
 - **Mô tả**: Thêm tính năng Drag & Drop cho nút Chatbox nổi ở góc phải màn hình bằng Pointer Events.
 - **Tệp thay đổi**:

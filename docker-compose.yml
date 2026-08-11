@@ -9,6 +9,8 @@ services:
       - "5000"
     ports:
       - "59607:5000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     # ✅ Tầng 5: Chạy container với quyền tối thiểu — chống leo thang quyền (ransomware)
     security_opt:
       - no-new-privileges:true
@@ -16,6 +18,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - DB_PATH=/app/data/documents.db
       - TZ=Asia/Ho_Chi_Minh
+      - Ollama__ChatUrl=http://host.docker.internal:11434/api/chat
       - JWT_SECRET=${JWT_SECRET}
       - PUBLIC_ID_SECRET=${PUBLIC_ID_SECRET}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
