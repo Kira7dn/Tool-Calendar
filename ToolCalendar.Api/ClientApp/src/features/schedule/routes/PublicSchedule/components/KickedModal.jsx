@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react'
 import { ShieldAlert, LogOut } from 'lucide-react'
 

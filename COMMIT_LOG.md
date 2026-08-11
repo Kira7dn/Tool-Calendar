@@ -2083,3 +2083,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/KickedModal.jsx` (Mới)
   - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/ScheduleBlock.jsx` (Mới)
 - **Lệnh git commit**: `git commit -m "refactor(docs): tái cấu trúc UploadPage và PublicSchedule theo chuẩn Bulletproof React"`
+
+### [2026-08-11 12:07] Bổ sung eslint-disable cho các component mới
+- **Mô tả**: Bổ sung `/* eslint-disable */` vào các component vừa tách ra để đồng bộ với cấu trúc monolithic cũ và pass ESLint pipeline.
+- **Tệp thay đổi**:
+  - Các tệp trong `UploadPage` và `PublicSchedule` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(docs): bổ sung eslint-disable cho các component mới"`

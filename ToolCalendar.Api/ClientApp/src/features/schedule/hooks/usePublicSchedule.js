@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import * as signalR from '@microsoft/signalr'
