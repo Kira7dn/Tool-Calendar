@@ -38,16 +38,28 @@ export function UploadActions({
         <button
           onClick={() => setShowClearConfirm(true)}
           disabled={isGlobalProcessing}
-          className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-[11px] font-bold hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-4 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${
+            isGlobalProcessing
+              ? 'border-slate-200 text-slate-400 bg-slate-50 cursor-not-allowed'
+              : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+          }`}
         >
           HỦY ĐỢT TẢI
         </button>
         <button
           onClick={() => handleSaveAll()}
           disabled={isSaving || batchItemsLength === 0 || isGlobalProcessing}
-          className="px-6 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-6 py-1.5 rounded-lg text-white text-[11px] font-black uppercase tracking-widest transition-all shadow-lg ${
+            isGlobalProcessing || isSaving || batchItemsLength === 0
+              ? 'bg-slate-400 cursor-not-allowed shadow-none'
+              : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100'
+          }`}
         >
-          LƯU & PHÂN CÔNG TẤT CẢ
+          {isGlobalProcessing
+            ? 'ĐANG XỬ LÝ OCR...'
+            : isSaving
+              ? 'ĐANG LƯU...'
+              : 'LƯU & PHÂN CÔNG TẤT CẢ'}
         </button>
       </div>
     </div>

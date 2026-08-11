@@ -2105,3 +2105,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadModals.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): update ReviewModal import path"`
+
+### [2026-08-11 16:13] Cập nhật giao diện nút Lưu & Phân công trong lúc OCR
+- **Mô tả**: Sửa lỗi giao diện nút hiển thị chưa rõ ràng trạng thái disabled, khiến người dùng hiểu nhầm là vẫn click được khi OCR đang chạy. Nút sẽ chuyển sang màu xám và đổi chữ thành ĐANG XỬ LÝ OCR...
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadActions.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ocr): update disabled UI for save button during ocr"`
