@@ -2269,3 +2269,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(chat): sửa lỗi biên dịch yield return trong catch block"`
+
+### [2026-08-12 00:24] Style(chat): Thiết kế lại giao diện AiChatbox sang tone màu xanh tối
+- **Mô tả**: Thay đổi giao diện popup chat và nút bấm nổi theo thiết kế dạng robot tròn xanh với bóng mờ, đồng thời hỗ trợ chế độ xem mở rộng (isExpanded). Cập nhật màu sắc cho đồng bộ với thiết kế mới.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(chat): thiết kế lại giao diện AiChatbox sang tone màu xanh tối"`

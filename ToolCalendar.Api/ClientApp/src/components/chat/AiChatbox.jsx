@@ -1,11 +1,12 @@
 /* global TextDecoder */
 import PropTypes from 'prop-types'
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, X, Trash2 } from 'lucide-react'
+import { Bot, X, Maximize2, Minimize2, Lightbulb } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 export function AiChatbox({ currentDocId }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -81,10 +82,8 @@ export function AiChatbox({ currentDocId }) {
       timestamp: new Date().toISOString(),
     }
 
-    // Hiển thị lời chào ngay lập tức
     setMessages([welcomeMsg])
 
-    // Sau đó fetch lịch sử — nếu có thì thay thế tin chào
     const fetchHistory = async () => {
       try {
         const response = await fetch('/api/chat/history')
@@ -103,7 +102,6 @@ export function AiChatbox({ currentDocId }) {
         }
       } catch (error) {
         console.error('Failed to fetch chat history:', error)
-        // Giữ nguyên tin chào nếu fetch lỗi
       }
     }
 
@@ -134,14 +132,14 @@ export function AiChatbox({ currentDocId }) {
     }
   }
 
-  const handleSend = async (e) => {
+  const handleSend = async (e, text = message) => {
     e?.preventDefault()
-    if (!message.trim() || isLoading) return
+    if (!text.trim() || isLoading) return
 
     const userMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: message,
+      content: text,
       timestamp: new Date().toISOString(),
     }
 
@@ -158,7 +156,7 @@ export function AiChatbox({ currentDocId }) {
 
       if (!response.ok) throw new Error('Lỗi kết nối máy chủ')
 
-      setIsLoading(false) // Tắt loading ngay khi nhận được byte đầu tiên
+      setIsLoading(false)
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder('utf-8')
@@ -182,7 +180,7 @@ export function AiChatbox({ currentDocId }) {
 
         buffer += decoder.decode(value, { stream: true })
         const parts = buffer.split('\n\n')
-        buffer = parts.pop() || '' // Giữ lại phần chưa hoàn chỉnh (nếu có)
+        buffer = parts.pop() || ''
 
         for (const chunk of parts) {
           if (chunk.startsWith('data: ')) {
@@ -191,7 +189,6 @@ export function AiChatbox({ currentDocId }) {
               try {
                 const dataObj = JSON.parse(dataStr)
                 assistantContent += dataObj.text || ''
-                // Loại bỏ tag [REMINDER|...] khỏi UI
                 const displayContent = assistantContent
                   .replace(/\[REMINDER\|.*?\|.*?\]/g, '')
                   .trim()
@@ -222,6 +219,13 @@ export function AiChatbox({ currentDocId }) {
     }
   }
 
+  const suggestions = [
+    'Tóm tắt cho tôi công văn này',
+    'Hôm nay có bao nhiêu văn bản quá hạn',
+    'Nhắc tôi 5 phút nữa đi họp',
+    'Giải quyết, phê duyệt phân tích từ các phòng ban',
+  ]
+
   return (
     <>
       {/* Floating Button */}
@@ -233,82 +237,106 @@ export function AiChatbox({ currentDocId }) {
         onClick={handleClick}
         style={{
           transform: `translate(${position.x}px, ${position.y}px) ${isOpen ? 'scale(0)' : 'scale(1)'}`,
-          touchAction: 'none', // Prevent scrolling while dragging on touch devices
+          touchAction: 'none',
         }}
         className={cn(
-          'fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-2xl transition-all',
-          !isDragging && 'duration-300 hover:scale-110', // Remove duration while dragging for immediate response
-          'bg-gradient-to-r from-red-700 to-red-600 text-white',
+          'fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-[0_0_20px_rgba(251,146,60,0.4)] transition-all',
+          !isDragging && 'duration-300 hover:scale-110',
+          'bg-[#1c3a6b] text-white overflow-hidden',
           isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         )}
       >
-        <Bot className="w-8 h-8 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-[shimmer_2s_infinite]" />
+        <Bot className="w-8 h-8 pointer-events-none relative z-10 animate-[bounce_3s_infinite]" />
       </button>
 
       {/* Chat Window */}
       <div
         className={cn(
-          'fixed bottom-6 right-6 z-50 w-[350px] sm:w-[400px] bg-white rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 transform origin-bottom-right flex flex-col border border-slate-100',
-          isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'
+          'fixed z-50 bg-slate-50/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform origin-bottom-right flex flex-col border border-slate-200/50',
+          isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none',
+          isExpanded
+            ? 'bottom-[5vh] right-[5vw] w-[90vw] h-[90vh] sm:bottom-[10vh] sm:right-[10vw] sm:w-[80vw] sm:h-[80vh] max-w-[1000px]'
+            : 'bottom-6 right-6 w-[360px] h-[550px] max-h-[calc(100vh-48px)]'
         )}
-        style={{ height: '500px', maxHeight: 'calc(100vh - 48px)' }}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-700 to-red-600 p-4 flex items-center justify-between text-white shadow-md">
+        <div className="bg-slate-100/80 backdrop-blur-sm p-4 flex items-center justify-between border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-full">
-              <Bot className="w-6 h-6" />
+            <div className="relative w-12 h-12 bg-white rounded-full flex items-center justify-center font-bold text-blue-700 shadow-sm border border-slate-100">
+              AI
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
             </div>
             <div>
-              <h3 className="font-bold text-sm flex items-center gap-2">
+              <h3 className="font-bold text-[#1c3a6b] text-base flex items-center gap-2">
                 Trợ lý AI
-                {currentDocId && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] font-medium animate-pulse">
-                    📄 Đang đọc văn bản
-                  </span>
-                )}
               </h3>
-              <p className="text-[10px] text-red-100">Luôn sẵn sàng hỗ trợ</p>
+              <p className="text-xs text-slate-500 truncate max-w-[200px]">
+                Trợ lý thông minh, nhanh nội dung điện tử...
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={handleClearHistory}
               title="Xóa lịch sử trò chuyện"
-              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              className="p-2 bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-full shadow-sm transition-colors"
             >
-              <Trash2 className="w-4 h-4" />
+              <Lightbulb className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              title={isExpanded ? 'Thu nhỏ' : 'Mở rộng'}
+              className="p-2 bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-full shadow-sm transition-colors flex items-center gap-1"
+            >
+              {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              {!isExpanded && <span className="text-xs font-medium pr-1">Mở rộng</span>}
             </button>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              className="p-2 bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-full shadow-sm transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 custom-scrollbar">
+          {messages.length <= 1 && (
+            <div className="flex flex-col items-center justify-center my-6 space-y-2">
+              {suggestions.map((sug) => (
+                <button
+                  key={sug}
+                  onClick={(e) => handleSend(e, sug)}
+                  className="px-4 py-2 text-sm text-[#1c3a6b] bg-white border border-[#1c3a6b]/30 rounded-full hover:bg-blue-50 transition-colors max-w-[80%] truncate shadow-sm"
+                >
+                  {sug}
+                </button>
+              ))}
+            </div>
+          )}
+
           {messages.map((msg) => (
             <div
               key={msg.id}
               className={cn(
-                'flex items-end gap-2 max-w-[85%]',
+                'flex items-end gap-2',
+                isExpanded ? 'max-w-[70%]' : 'max-w-[85%]',
                 msg.role === 'user' ? 'ml-auto flex-row-reverse' : ''
               )}
             >
               {msg.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-5 h-5 text-red-700" />
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 border border-blue-200">
+                  <span className="text-xs font-bold text-blue-700">AI</span>
                 </div>
               )}
               <div
                 className={cn(
-                  'p-3 rounded-2xl text-[13px] leading-relaxed shadow-sm',
+                  'p-3.5 rounded-2xl text-[14px] leading-relaxed shadow-sm',
                   msg.role === 'user'
-                    ? 'bg-red-700 text-white rounded-br-sm'
+                    ? 'bg-[#1c3a6b] text-white rounded-br-sm'
                     : 'bg-white text-slate-700 border border-slate-100 rounded-bl-sm'
                 )}
               >
@@ -318,40 +346,62 @@ export function AiChatbox({ currentDocId }) {
           ))}
           {isLoading && (
             <div className="flex items-end gap-2 max-w-[85%]">
-              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-5 h-5 text-red-700" />
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 border border-blue-200">
+                <span className="text-xs font-bold text-blue-700">AI</span>
               </div>
               <div className="p-4 rounded-2xl bg-white border border-slate-100 rounded-bl-sm shadow-sm flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" />
+                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Warning Text */}
+        <div className="bg-slate-50/50 py-2 text-center border-t border-slate-100">
+          <p className="text-[11px] text-slate-500 flex items-center justify-center gap-1">
+            <span className="text-yellow-500">⚠️</span> Trợ lý AI là AI và có thể trả lời không
+            chính xác.
+          </p>
+        </div>
+
         {/* Input */}
-        <form onSubmit={handleSend} className="p-3 bg-white border-t border-slate-100">
-          <div className="relative flex items-center">
+        <form
+          onSubmit={(e) => handleSend(e, message)}
+          className="p-4 bg-white border-t border-slate-200"
+        >
+          <div className="relative flex items-center gap-2">
             <input
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Nhắc tôi lúc 15h kiểm tra công văn..."
-              className="w-full bg-slate-100 text-slate-700 text-sm rounded-full pl-4 pr-12 py-3 outline-none focus:ring-2 focus:ring-red-600/50 transition-all placeholder:text-slate-400"
+              placeholder="Nhập câu hỏi..."
+              className="flex-1 bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-full pl-5 pr-4 py-3 outline-none focus:ring-2 focus:ring-[#1c3a6b]/20 focus:border-[#1c3a6b]/50 transition-all placeholder:text-slate-400"
               disabled={isLoading}
             />
             <button
               type="submit"
               disabled={!message.trim() || isLoading}
-              className="absolute right-2 p-2 bg-red-700 text-white rounded-full hover:bg-red-800 disabled:opacity-50 disabled:hover:bg-red-700 transition-colors"
+              className="px-6 py-3 bg-[#1c3a6b] text-white text-sm font-medium rounded-full hover:bg-[#152b52] disabled:opacity-50 disabled:hover:bg-[#1c3a6b] transition-colors shadow-md flex items-center gap-2"
             >
-              <Send className="w-4 h-4 ml-0.5" />
+              Gửi
             </button>
           </div>
         </form>
       </div>
+
+      {/* Thêm CSS cho shimmer animation */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+      `,
+        }}
+      />
     </>
   )
 }
