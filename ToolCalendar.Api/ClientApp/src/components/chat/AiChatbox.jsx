@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
 import PropTypes from 'prop-types'
+import { useState, useRef, useEffect } from 'react'
 import { Bot, Send, X, Trash2 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
@@ -9,6 +9,53 @@ export function AiChatbox({ currentDocId }) {
   const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef(null)
+
+  // Dragging state
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [isMoved, setIsMoved] = useState(false)
+  const dragInfo = useRef({ isDown: false, startX: 0, startY: 0, initialX: 0, initialY: 0 })
+
+  const handlePointerDown = (e) => {
+    dragInfo.current = {
+      isDown: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: position.x,
+      initialY: position.y,
+    }
+    setIsDragging(true)
+    setIsMoved(false)
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  const handlePointerMove = (e) => {
+    if (!dragInfo.current.isDown) return
+    const dx = e.clientX - dragInfo.current.startX
+    const dy = e.clientY - dragInfo.current.startY
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      setIsMoved(true)
+    }
+    setPosition({
+      x: dragInfo.current.initialX + dx,
+      y: dragInfo.current.initialY + dy,
+    })
+  }
+
+  const handlePointerUp = (e) => {
+    dragInfo.current.isDown = false
+    setIsDragging(false)
+    e.currentTarget.releasePointerCapture(e.pointerId)
+  }
+
+  const handleClick = (e) => {
+    if (isMoved) {
+      e.preventDefault()
+      e.stopPropagation()
+      return
+    }
+    setIsOpen(true)
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -132,14 +179,24 @@ export function AiChatbox({ currentDocId }) {
     <>
       {/* Floating Button */}
       <button
-        onClick={() => setIsOpen(true)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onClick={handleClick}
+        style={{
+          transform: `translate(${position.x}px, ${position.y}px) ${isOpen ? 'scale(0)' : 'scale(1)'}`,
+          touchAction: 'none', // Prevent scrolling while dragging on touch devices
+        }}
         className={cn(
-          'fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110',
+          'fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-2xl transition-all',
+          !isDragging && 'duration-300 hover:scale-110', // Remove duration while dragging for immediate response
           'bg-gradient-to-r from-red-700 to-red-600 text-white',
-          isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
+          isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
         )}
       >
-        <Bot className="w-8 h-8" />
+        <Bot className="w-8 h-8 pointer-events-none" />
       </button>
 
       {/* Chat Window */}
