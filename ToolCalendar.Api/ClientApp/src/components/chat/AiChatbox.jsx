@@ -5,14 +5,20 @@ import { cn } from '../../lib/utils'
 export function AiChatbox() {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState('')
-  const [messages, setMessages] = useState([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content: 'Chào bạn, tôi là Trợ lý AI. Bạn cần nhắc việc gì cứ nhắn tôi nhé!',
-      timestamp: new Date().toISOString(),
-    },
-  ])
+  const [messages, setMessages] = useState(() => {
+    const role = localStorage.getItem('user_role') || ''
+    const isAdmin = role === 'Admin' || role === 'LanhDao'
+    return [
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: isAdmin
+          ? 'Dạ vâng ạ, Em chào sếp. Sếp cần em hỗ trợ hay nhắc việc gì cứ nhắn em nhé!'
+          : 'Chào đồng chí, tôi là Trợ lý AI. Đồng chí cần hỗ trợ gì cứ nhắn tôi nhé!',
+        timestamp: new Date().toISOString(),
+      },
+    ]
+  })
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef(null)
 
@@ -75,7 +81,7 @@ export function AiChatbox() {
         onClick={() => setIsOpen(true)}
         className={cn(
           'fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110',
-          'bg-gradient-to-r from-violet-600 to-indigo-600 text-white',
+          'bg-gradient-to-r from-red-700 to-red-600 text-white',
           isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
         )}
       >
@@ -91,14 +97,14 @@ export function AiChatbox() {
         style={{ height: '500px', maxHeight: 'calc(100vh - 48px)' }}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-4 flex items-center justify-between text-white shadow-md">
+        <div className="bg-gradient-to-r from-red-700 to-red-600 p-4 flex items-center justify-between text-white shadow-md">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-full">
               <Bot className="w-6 h-6" />
             </div>
             <div>
               <h3 className="font-bold text-sm">Trợ lý AI</h3>
-              <p className="text-[10px] text-violet-100">Luôn sẵn sàng hỗ trợ</p>
+              <p className="text-[10px] text-red-100">Luôn sẵn sàng hỗ trợ</p>
             </div>
           </div>
           <button
@@ -120,15 +126,15 @@ export function AiChatbox() {
               )}
             >
               {msg.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-5 h-5 text-indigo-600" />
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-5 h-5 text-red-700" />
                 </div>
               )}
               <div
                 className={cn(
                   'p-3 rounded-2xl text-[13px] leading-relaxed shadow-sm',
                   msg.role === 'user'
-                    ? 'bg-indigo-600 text-white rounded-br-sm'
+                    ? 'bg-red-700 text-white rounded-br-sm'
                     : 'bg-white text-slate-700 border border-slate-100 rounded-bl-sm'
                 )}
               >
@@ -138,13 +144,13 @@ export function AiChatbox() {
           ))}
           {isLoading && (
             <div className="flex items-end gap-2 max-w-[85%]">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-5 h-5 text-indigo-600" />
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-5 h-5 text-red-700" />
               </div>
               <div className="p-4 rounded-2xl bg-white border border-slate-100 rounded-bl-sm shadow-sm flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" />
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" />
               </div>
             </div>
           )}
@@ -159,13 +165,13 @@ export function AiChatbox() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Nhắc tôi lúc 15h kiểm tra công văn..."
-              className="w-full bg-slate-100 text-slate-700 text-sm rounded-full pl-4 pr-12 py-3 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-slate-400"
+              className="w-full bg-slate-100 text-slate-700 text-sm rounded-full pl-4 pr-12 py-3 outline-none focus:ring-2 focus:ring-red-600/50 transition-all placeholder:text-slate-400"
               disabled={isLoading}
             />
             <button
               type="submit"
               disabled={!message.trim() || isLoading}
-              className="absolute right-2 p-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-colors"
+              className="absolute right-2 p-2 bg-red-700 text-white rounded-full hover:bg-red-800 disabled:opacity-50 disabled:hover:bg-red-700 transition-colors"
             >
               <Send className="w-4 h-4 ml-0.5" />
             </button>

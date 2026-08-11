@@ -2156,3 +2156,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ai): integrate local qwen model with dynamic persona for chatbox"`
+
+### [2026-08-11 21:14] Cập nhật giao diện Chatbox và câu chào theo chức vụ
+- **Mô tả**: Thay đổi màu sắc chủ đạo của Chatbox sang màu đỏ để đồng bộ với giao diện truyền thống (màu quốc kỳ). Đồng thời, cập nhật câu chào mặc định của AI: tự động lấy chức vụ từ `localStorage` để hiển thị lời chào phù hợp (Sếp hoặc Đồng chí) ngay khi mở hộp chat.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ai): update chatbox theme to red and adapt default greeting by role"`
