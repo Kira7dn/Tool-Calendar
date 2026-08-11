@@ -89,6 +89,7 @@ window.fetch = async (...args) => {
 import { AppShell } from './shell/AppShell.jsx'
 import { LoginPage } from './pages/Login.jsx'
 import PublicSchedule from './pages/PublicSchedule.jsx'
+import { DocumentUploadProvider } from './features/documents/contexts/DocumentUploadContext.jsx'
 
 import './styles/globals.css'
 
@@ -333,14 +334,16 @@ function Root() {
   return (
     <>
       <TooltipProvider>
-        {!isAuthenticated ? <LoginPage onLoginSuccess={handleLoginSuccess} /> : <AppShell />}
+        <DocumentUploadProvider>
+          {!isAuthenticated ? <LoginPage onLoginSuccess={handleLoginSuccess} /> : <AppShell />}
 
-        {/* Auth Modals */}
-        <KickedModal isOpen={isKicked} onConfirm={() => setIsKicked(false)} />
-        <SessionExpiredModal
-          isOpen={isSessionExpired}
-          onConfirm={() => setIsSessionExpired(false)}
-        />
+          {/* Auth Modals */}
+          <KickedModal isOpen={isKicked} onConfirm={() => setIsKicked(false)} />
+          <SessionExpiredModal
+            isOpen={isSessionExpired}
+            onConfirm={() => setIsSessionExpired(false)}
+          />
+        </DocumentUploadProvider>
       </TooltipProvider>
     </>
   )

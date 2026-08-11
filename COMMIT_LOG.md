@@ -1,3 +1,11 @@
+### [2026-08-11 11:38] Giữ trạng thái OCR khi chuyển trang
+- **Mô tả**: Tách state quản lý upload và polling OCR vào DocumentUploadContext bao bọc ngoài cùng (AppShell level) để giữ dữ liệu OCR chạy ngầm và không bị mất khi người dùng chuyển sang các tab khác (Báo cáo thống kê, v.v.).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/contexts/DocumentUploadContext.jsx` (Mới)
+- **Lệnh git commit**: `git commit -m "feat(ocr): persist upload state via context to survive tab navigation"`
+
 ### [2026-08-11 11:15] Vô hiệu hóa thao tác khi OCR đang chạy
 - **Mô tả**: Chặn thao tác người dùng trên giao diện "Số hóa tài liệu" khi tiến trình OCR đang diễn ra. Disable các nút "LƯU & PHÂN CÔNG TẤT CẢ", "HỦY ĐỢT TẢI", "Xóa nhiều", và chặn chỉnh sửa/chọn từng dòng nếu trạng thái của dòng đó đang là `processing`. Việc này để tránh user vô tình làm lỗi bất đồng bộ và bị ghi đè kết quả OCR.
 - **Tệp thay đổi**:
