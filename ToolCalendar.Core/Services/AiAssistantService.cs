@@ -2,7 +2,6 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -18,83 +17,101 @@ namespace ToolCalendar.Core.Services
     public class AiAssistantService : IAiAssistantService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _geminiApiKey;
+        private readonly string _ollamaUrl;
+        private readonly string _modelName;
         private readonly IReminderRepository _reminderRepo;
+        private readonly IUserRepository _userRepo;
         private readonly ILogger<AiAssistantService> _logger;
 
-        public AiAssistantService(HttpClient httpClient, IConfiguration config, IReminderRepository reminderRepo, ILogger<AiAssistantService> logger)
+        public AiAssistantService(HttpClient httpClient, IConfiguration config, IReminderRepository reminderRepo, IUserRepository userRepo, ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
-            _geminiApiKey = config.GetValue<string>("Gemini:ApiKey") ?? "";
+            // Dùng Ollama local url, default là http://127.0.0.1:11434
+            _ollamaUrl = config.GetValue<string>("Ollama:Url") ?? "http://127.0.0.1:11434/api/generate";
+            _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:3b";
             _reminderRepo = reminderRepo;
+            _userRepo = userRepo;
             _logger = logger;
         }
 
         public async Task<string> ProcessChatAsync(int userId, string message)
         {
-            if (string.IsNullOrEmpty(_geminiApiKey))
+            var user = _userRepo.GetUserById(userId);
+            if (user == null)
             {
-                return "Hệ thống chưa được cấu hình API Key cho Trợ lý AI.";
+                return "Lỗi xác thực người dùng.";
+            }
+
+            string persona;
+            string userName = !string.IsNullOrEmpty(user.FullName) ? user.FullName : user.Username;
+
+            if (user.Role == "Admin" || user.Role == "LanhDao")
+            {
+                persona = $@"Bạn là Trợ lý AI của phần mềm Quản lý Công văn (cơ quan Nhà nước).
+Người đang nói chuyện với bạn là Sếp/Lãnh đạo của cơ quan (Tên: {userName}).
+Phong thái: Kính trọng, báo cáo ngắn gọn, đi thẳng vào vấn đề. 
+Xưng hô: Đại từ của bạn là 'Em' hoặc 'AI', gọi người dùng là 'Sếp' hoặc 'Thủ trưởng'.
+Luôn dạ vâng lễ phép (ví dụ: Dạ vâng ạ, Em xin báo cáo sếp...).";
+            }
+            else
+            {
+                persona = $@"Bạn là Trợ lý AI của phần mềm Quản lý Công văn (cơ quan Nhà nước).
+Người đang nói chuyện với bạn là Cán bộ/Văn thư (Tên: {userName}).
+Phong thái: Trực diện, chuyên nghiệp, hỗ trợ nghiệp vụ, lịch sự.
+Xưng hô: Đại từ của bạn là 'Tôi', gọi người dùng là 'Đồng chí'.
+Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đồng chí, Báo cáo đồng chí...).";
             }
 
             var now = DateTime.Now;
-            var systemPrompt = $@"
-Bạn là Trợ lý AI của phần mềm Quản lý Công văn (Tool-Calendar).
+            var systemPrompt = $@"{persona}
 Hôm nay là {now:dd/MM/yyyy HH:mm:ss}.
-Nhiệm vụ của bạn là phân tích yêu cầu nhắc nhở công việc của người dùng.
-Nếu người dùng yêu cầu nhắc nhở, hãy bóc tách THỜI GIAN NHẮC (theo định dạng yyyy-MM-dd HH:mm:ss) và NỘI DUNG CÔNG VIỆC.
-Trả về dữ liệu dưới dạng JSON (không có markdown code block) theo cấu trúc:
+Nhiệm vụ của bạn là trả lời thân thiện theo đúng phong thái trên và hỗ trợ công việc.
+Nếu người dùng yêu cầu NHẮC VIỆC (ví dụ: nhắc tôi họp, lên lịch...), bạn bóc tách THỜI GIAN NHẮC (định dạng yyyy-MM-dd HH:mm:ss) và NỘI DUNG.
+BẠN BẮT BUỘC TRẢ VỀ CHUẨN JSON theo cấu trúc sau (chỉ JSON, không văn bản dư thừa):
 {{
-  ""isReminder"": true,
-  ""remindAt"": ""2026-08-11 14:00:00"",
-  ""content"": ""Nội dung công việc cần làm"",
-  ""replyText"": ""Câu trả lời thân thiện dành cho người dùng""
-}}
-Nếu câu của người dùng không phải là nhắc việc (ví dụ: chào hỏi), hãy trả về:
-{{
-  ""isReminder"": false,
-  ""replyText"": ""Câu trả lời thân thiện dành cho người dùng""
-}}
-            ";
+  ""isReminder"": true hoặc false,
+  ""remindAt"": ""2026-08-11 14:00:00"" (nếu isReminder = true),
+  ""content"": ""Nội dung nhắc nhở"" (nếu isReminder = true),
+  ""replyText"": ""Câu trả lời giao tiếp với người dùng theo đúng xưng hô lễ nghi""
+}}";
 
             var requestBody = new
             {
-                system_instruction = new
-                {
-                    parts = new[] { new { text = systemPrompt } }
-                },
-                contents = new[]
-                {
-                    new { role = "user", parts = new[] { new { text = message } } }
-                }
+                model = _modelName,
+                prompt = message,
+                system = systemPrompt,
+                stream = false,
+                format = "json" // Ép Qwen/Ollama trả về JSON
             };
 
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key={_geminiApiKey}";
             var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
             try
             {
-                var response = await _httpClient.PostAsync(url, content);
+                var response = await _httpClient.PostAsync(_ollamaUrl, content);
                 if (!response.IsSuccessStatusCode)
                 {
                     var err = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("[AiAssistant] Lỗi gọi Gemini API: " + err);
-                    return "Xin lỗi, tôi đang gặp sự cố kết nối tới bộ não AI.";
+                    _logger.LogError("[AiAssistant] Lỗi gọi Ollama API: " + err);
+                    return "Dạ báo cáo, hệ thống kết nối AI cục bộ (Ollama) đang gặp sự cố. Đề nghị kiểm tra lại dịch vụ Ollama trên server.";
                 }
 
                 var responseJson = await response.Content.ReadAsStringAsync();
                 using var doc = JsonDocument.Parse(responseJson);
-                
                 var root = doc.RootElement;
-                if (!root.TryGetProperty("candidates", out var candidates) || candidates.GetArrayLength() == 0)
+                
+                if (!root.TryGetProperty("response", out var responseProp))
                 {
-                    return "Tôi không hiểu được ý của bạn.";
+                    return "Dạ báo cáo, tôi không thể xử lý dữ liệu lúc này.";
                 }
 
-                var text = candidates[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
-                
-                // Extract JSON block if it's wrapped in markdown
-                text = text.Trim();
+                var text = responseProp.GetString()?.Trim();
+                if (string.IsNullOrEmpty(text))
+                {
+                    return "Dạ báo cáo, tôi chưa hiểu rõ ý của đồng chí/sếp.";
+                }
+
+                // Dọn dẹp markdown nếu có (phòng hờ LLM vẫn sinh ra dù đã có format json)
                 if (text.StartsWith("```json"))
                 {
                     text = text.Substring(7);
@@ -108,15 +125,20 @@ Nếu câu của người dùng không phải là nhắc việc (ví dụ: chào
                 text = text.Trim();
 
                 using var jsonResult = JsonDocument.Parse(text);
-                var isReminder = jsonResult.RootElement.GetProperty("isReminder").GetBoolean();
-                var replyText = jsonResult.RootElement.GetProperty("replyText").GetString();
+                var rootJson = jsonResult.RootElement;
+
+                var isReminder = rootJson.TryGetProperty("isReminder", out var isReminderProp) && 
+                                 (isReminderProp.ValueKind == JsonValueKind.True || isReminderProp.ValueKind == JsonValueKind.False) 
+                                 ? isReminderProp.GetBoolean() : false;
+                                 
+                var replyText = rootJson.TryGetProperty("replyText", out var replyTextProp) ? replyTextProp.GetString() : "Đã tiếp nhận thông tin.";
 
                 if (isReminder)
                 {
-                    var remindAtStr = jsonResult.RootElement.GetProperty("remindAt").GetString();
-                    var reminderContent = jsonResult.RootElement.GetProperty("content").GetString();
+                    var remindAtStr = rootJson.TryGetProperty("remindAt", out var remindAtProp) ? remindAtProp.GetString() : null;
+                    var reminderContent = rootJson.TryGetProperty("content", out var contentProp) ? contentProp.GetString() : null;
 
-                    if (DateTime.TryParse(remindAtStr, out var remindAt))
+                    if (DateTime.TryParse(remindAtStr, out var remindAt) && !string.IsNullOrEmpty(reminderContent))
                     {
                         _reminderRepo.AddReminder(userId, reminderContent, remindAt.ToString("yyyy-MM-dd HH:mm:ss"));
                         _logger.LogInformation($"[AiAssistant] Đã lưu nhắc nhở cho UserId={userId}: {reminderContent} lúc {remindAt}");
@@ -128,7 +150,7 @@ Nếu câu của người dùng không phải là nhắc việc (ví dụ: chào
             catch (Exception ex)
             {
                 _logger.LogError("[AiAssistant] Lỗi xử lý Chat: " + ex.Message);
-                return "Đã xảy ra lỗi hệ thống khi phân tích yêu cầu của bạn.";
+                return "Dạ báo cáo, đã xảy ra lỗi phần mềm khi phân tích yêu cầu. Kính mong thông cảm.";
             }
         }
     }

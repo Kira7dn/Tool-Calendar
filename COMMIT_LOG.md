@@ -2150,3 +2150,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): correct import path for lib/utils in AiChatbox"`
+
+### [2026-08-11 21:07] Chuyển đổi Chatbox sang Local AI (Qwen) và tùy biến kịch bản xưng hô (Persona)
+- **Mô tả**: Thay thế gọi API Google Gemini bằng Ollama Local API (Qwen) cho Chatbox. Bổ sung việc lấy chức vụ của User từ `IUserRepository` để tạo System Prompt động: Nếu user là `Admin`/`LanhDao` thì AI xưng "Em", gọi "Sếp". Nếu user là `VanThu`/`CanBo` thì xưng "Tôi", gọi "Đồng chí". Ép Qwen format trả về chuẩn JSON.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): integrate local qwen model with dynamic persona for chatbox"`
