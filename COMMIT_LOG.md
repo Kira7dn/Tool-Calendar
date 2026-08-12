@@ -2397,3 +2397,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - Nhiều file `.jsx` và `.js` trong thư mục `ToolCalendar.Api/ClientApp/src/` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): global replace of Công văn to Văn bản across frontend"`
+
+### [2026-08-13 01:17] Đổi tên hệ thống thành "Hệ thống điều phối, quản lý văn bản"
+- **Mô tả**: Thay đổi tên hệ thống từ "Hệ thống điều phối văn bản" (hoặc "Công văn" trước đó) thành "Hệ thống điều phối, quản lý văn bản" trên giao diện Header, Sidebar, Login và cấu hình của vite theo đúng yêu cầu mới nhất.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/index.html` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/vite.config.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/Header.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/pages/Login.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): rename system to Hệ thống điều phối, quản lý văn bản"`
