@@ -85,6 +85,14 @@ export function Settings() {
     }
   }
 
+  const handleEnablePush = async () => {
+    const { requestNotificationPermission } = await import('@/lib/push-notifications')
+    const status = await requestNotificationPermission()
+    setPushStatus(status)
+    if (status === 'granted') toast.success('Đã bật thông báo trình duyệt!')
+    else toast.error('Không thể bật thông báo. Vui lòng kiểm tra quyền trình duyệt.')
+  }
+
   const testNotification = async () => {
     setIsTesting(true)
     try {
@@ -92,8 +100,14 @@ export function Settings() {
         method: 'POST',
         headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
       })
-      if (res.ok) toast.success('Đã gửi thông báo thử nghiệm thành công!')
+      if (res.ok) {
+        toast.success('Đã gửi thông báo thử nghiệm thành công!')
+      } else {
+        const err = await res.json()
+        toast.error(err.message || 'Gửi thông báo thất bại. Bạn có thể cần đăng ký lại.')
+      }
     } catch (e) {
+      toast.error('Có lỗi xảy ra khi gọi API.')
     } finally {
       setIsTesting(false)
     }
@@ -202,6 +216,7 @@ export function Settings() {
                   isTesting={isTesting}
                   onTriggerScan={triggerScan}
                   onTestNotification={testNotification}
+                  onEnablePush={handleEnablePush}
                 />
               )}
               {activeTab === 'audit' && <AuditTab />}

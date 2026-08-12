@@ -57,6 +57,7 @@ export function GeneralTab({
   isTesting,
   onTriggerScan,
   onTestNotification,
+  onEnablePush,
 }) {
   const [newKeyword, setNewKeyword] = useState('')
   const [newExcludeKeyword, setNewExcludeKeyword] = useState('')
@@ -129,14 +130,35 @@ export function GeneralTab({
             <Bell className="size-3.5 text-red-500" />
             Thông báo trình duyệt
           </Label>
-          <div className="flex items-center gap-2 px-5 py-3 h-11 rounded-2xl border border-red-100 bg-red-50/50 w-fit">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-sm shadow-red-200" />
-            <span className="text-[11px] font-black text-red-700 uppercase tracking-widest leading-none">
-              Hệ thống đang trực tuyến
-            </span>
-            <span className="ml-3 px-2 py-0.5 rounded-lg bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest">
-              Active
-            </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-5 py-3 h-11 rounded-2xl border border-red-100 bg-red-50/50 w-fit">
+              <span
+                className={cn(
+                  'w-2 h-2 rounded-full shadow-sm animate-pulse',
+                  pushStatus === 'granted' ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-400'
+                )}
+              />
+              <span className="text-[11px] font-black text-slate-700 uppercase tracking-widest leading-none">
+                Trạng thái:
+              </span>
+              <span
+                className={cn(
+                  'ml-3 px-2 py-0.5 rounded-lg text-white text-[9px] font-black uppercase tracking-widest',
+                  pushStatus === 'granted' ? 'bg-emerald-500' : 'bg-slate-500'
+                )}
+              >
+                {pushStatus === 'granted' ? 'Đã cấp quyền' : 'Chưa cấp quyền'}
+              </span>
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={onEnablePush}
+              className="h-11 rounded-2xl font-bold text-xs shadow-sm"
+            >
+              <Monitor className="size-4 mr-2 text-slate-500" />
+              {pushStatus === 'granted' ? 'Đăng ký lại (Nếu lỗi)' : 'Bật thông báo'}
+            </Button>
           </div>
         </div>
 

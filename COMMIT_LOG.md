@@ -2351,3 +2351,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `data_dump/backfill_vectors.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(db): revert column name to VectorJson"`
+
+### [2026-08-13 00:37] Fix test notification button and add subscribe button
+- **Mô tả**: Sửa lỗi nút "Gửi thông báo thử nghiệm" bị im lặng khi thất bại. Thêm nút "Bật thông báo" / "Đăng ký lại" để người dùng có thể gửi lại subscription token cho Push Notification nếu bị mất trên server.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/Settings.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/components/settings/GeneralTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(notify): handle test notification error and add resubscribe button"`
