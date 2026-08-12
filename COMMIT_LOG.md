@@ -2345,3 +2345,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(db): sử dụng DB_PATH trong DocumentChunkRepository để kết nối đúng database"`
+
+### [2026-08-12 15:10] Revert column name in backfill script
+- **Mô tả**: Hoàn tác tên cột EmbeddingVectorJson về VectorJson để script backfill chạy được trên server VNPT.
+- **Tệp thay đổi**:
+  - `data_dump/backfill_vectors.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(db): revert column name to VectorJson"`

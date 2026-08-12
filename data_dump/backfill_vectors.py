@@ -53,7 +53,7 @@ def main():
             vector = generate_embedding(chunk)
             if vector:
                 cursor.execute('''
-                    INSERT INTO DocumentChunks (DocumentId, ChunkIndex, TextContent, EmbeddingVectorJson)
+                    INSERT INTO DocumentChunks (DocumentId, ChunkIndex, TextContent, VectorJson)
                     VALUES (?, ?, ?, ?)
                 ''', (doc_id, chunk_idx, chunk, json.dumps(vector)))
                 
