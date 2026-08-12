@@ -2441,3 +2441,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/settings/GeneralTab.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): add missing Monitor icon import in GeneralTab"`
+
+### [2026-08-13 01:54] Sửa lỗi không hiển thị thông báo Push trên trình duyệt
+- **Mô tả**: Bổ sung Service Worker lắng nghe sự kiện push notification. Mặc định `vite-plugin-pwa` không tích hợp sẵn bộ bắt sự kiện push nếu dùng chế độ `generateSW`. Do đó, cần thêm file `custom-sw.js` và nạp vào thông qua `importScripts` trong `vite.config.js` để trình duyệt có thể hiển thị thông báo khi có push.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/public/custom-sw.js` (Mới)
+  - `ToolCalendar.Api/ClientApp/vite.config.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(notify): add custom service worker for push notifications"`
