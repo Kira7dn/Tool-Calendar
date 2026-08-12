@@ -1,3 +1,9 @@
+### [2026-08-12 09:37] feat(ai): tự động nhận diện mã số công văn trong câu hỏi để nạp ngữ cảnh
+- **Mô tả**: Khi người dùng nhắn hỏi AI ở màn hình trang chủ (Dashboard) mà không chọn trực tiếp một văn bản nào, AI sẽ bị thiếu ngữ cảnh (documentId = null) dẫn đến trả lời sai. Đã thêm logic dùng Regex (`\d+/[A-Za-z0-9\-&]+`) để tự động tìm kiếm mã số công văn trong tin nhắn của người dùng và truy vấn Database để nạp ngữ cảnh cho AI.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): tự động nhận diện mã số công văn trong câu hỏi để nạp ngữ cảnh"`
+
 ### [2026-08-12 09:25] fix(ai): bổ sung context metadata cho AI khi FullText trống để tránh hallucination
 - **Mô tả**: Sửa lỗi AI "bịa" (hallucinate) ra công văn giả mạo (ví dụ: công văn của UBND tỉnh Ninh Thuận) khi nội dung toàn văn (`FullText` từ OCR) bị trống. Thay vì bỏ qua toàn bộ thông tin văn bản khi không có `FullText`, hệ thống giờ đây luôn truyền `SoVanBan`, `TenCongVan`, và `TrichYeu` vào prompt, đồng thời hướng dẫn AI trả lời dựa trên trích yếu nếu chưa có bản OCR chi tiết.
 - **Tệp thay đổi**:

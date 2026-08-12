@@ -82,26 +82,41 @@ Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đ�
             var now = DateTime.Now;
             string documentContext = "";
 
+            DocumentRecord doc = null;
             if (documentId.HasValue)
             {
-                var doc = await _documentRepo.GetDocumentByIdAsync(documentId.Value);
-                if (doc != null)
+                doc = await _documentRepo.GetDocumentByIdAsync(documentId.Value);
+            }
+            else
+            {
+                // Thử nhận diện mã số công văn trong tin nhắn nếu người dùng chat ở màn hình ngoài
+                var match = System.Text.RegularExpressions.Regex.Match(message, @"\d+/[A-Za-z0-9\-&]+");
+                if (match.Success)
                 {
-                    documentContext = $"\n\nBối cảnh quan trọng: Công văn số {doc.SoVanBan}, tên: {doc.TenCongVan}. Trích yếu: {doc.TrichYeu}.";
-                    
-                    if (!string.IsNullOrWhiteSpace(doc.FullText))
+                    var paged = await _documentRepo.GetPagedAsync(1, 1, search: match.Value);
+                    if (paged.Items != null && paged.Items.Count > 0)
                     {
-                        var text = doc.FullText;
-                        if (text.Length > 3000) 
-                        {
-                            text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt do quá dài]...";
-                        }
-                        documentContext += $"\nNội dung toàn văn:\n\"\"\"{text}\"\"\"";
+                        doc = paged.Items[0];
                     }
-                    else
+                }
+            }
+
+            if (doc != null)
+            {
+                documentContext = $"\n\nBối cảnh quan trọng: Công văn số {doc.SoVanBan}, tên: {doc.TenCongVan}. Trích yếu: {doc.TrichYeu}.";
+                
+                if (!string.IsNullOrWhiteSpace(doc.FullText))
+                {
+                    var text = doc.FullText;
+                    if (text.Length > 3000) 
                     {
-                        documentContext += "\n(Ghi chú cho AI: Hệ thống chưa trích xuất được toàn văn OCR của công văn này. Hãy trả lời dựa vào Tên công văn và Trích yếu ở trên, và báo cho người dùng biết là chưa có nội dung chi tiết).";
+                        text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt do quá dài]...";
                     }
+                    documentContext += $"\nNội dung toàn văn:\n\"\"\"{text}\"\"\"";
+                }
+                else
+                {
+                    documentContext += "\n(Ghi chú cho AI: Hệ thống chưa trích xuất được toàn văn OCR của công văn này. Hãy trả lời dựa vào Tên công văn và Trích yếu ở trên, và báo cho người dùng biết là chưa có nội dung chi tiết).";
                 }
             }
 
