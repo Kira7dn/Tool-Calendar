@@ -15,8 +15,20 @@ namespace ToolCalendar.Core.Data.Repositories
 
         public DocumentChunkRepository(IConfiguration configuration)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection") 
-                                ?? "Data Source=data_dump/documents.db";
+            var dbPath = Environment.GetEnvironmentVariable("DB_PATH");
+            if (!string.IsNullOrEmpty(dbPath))
+            {
+                _connectionString = $"Data Source={dbPath}";
+            }
+            else
+            {
+                _connectionString = configuration.GetConnectionString("DefaultConnection") 
+                                    ?? "Data Source=data_dump/documents.db";
+                if (string.IsNullOrEmpty(_connectionString))
+                {
+                    _connectionString = "Data Source=data_dump/documents.db";
+                }
+            }
         }
 
         public async Task AddChunkAsync(int documentId, int chunkIndex, string textContent, float[] vector)

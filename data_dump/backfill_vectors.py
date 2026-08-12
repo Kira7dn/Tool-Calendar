@@ -5,7 +5,7 @@ import math
 
 DB_PATH = 'data_dump/documents.db'
 OLLAMA_URL = 'http://127.0.0.1:11434/api/embeddings'
-MODEL_NAME = 'qwen2.5:3b'
+MODEL_NAME = 'nomic-embed-text'
 CHUNK_SIZE = 1000
 
 def generate_embedding(text):
@@ -53,7 +53,7 @@ def main():
             vector = generate_embedding(chunk)
             if vector:
                 cursor.execute('''
-                    INSERT INTO DocumentChunks (DocumentId, ChunkIndex, TextContent, VectorJson)
+                    INSERT INTO DocumentChunks (DocumentId, ChunkIndex, TextContent, EmbeddingVectorJson)
                     VALUES (?, ?, ?, ?)
                 ''', (doc_id, chunk_idx, chunk, json.dumps(vector)))
                 

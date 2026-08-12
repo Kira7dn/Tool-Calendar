@@ -2339,3 +2339,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `data_dump/backfill_vectors.py` (Sửa đổi)
   - `ToolCalendar.Core/Services/OllamaEmbeddingService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): use nomic-embed-text for vector embeddings to fix HTTP 500 error"`
+
+### [2026-08-12 15:02] Fix RAG database connection path
+- **Mô tả**: Sửa lỗi DocumentChunkRepository không sử dụng biến môi trường DB_PATH, dẫn đến việc container kết nối vào DB rỗng và ném lỗi `no such table: DocumentChunks`, làm AI không lấy được ngữ cảnh và bịa đặt dữ liệu (hallucination).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(db): sử dụng DB_PATH trong DocumentChunkRepository để kết nối đúng database"`
