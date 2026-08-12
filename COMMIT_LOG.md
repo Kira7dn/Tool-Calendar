@@ -1,3 +1,9 @@
+### [2026-08-12 08:30] style(ui): chỉnh sửa giao diện chatbox AI và thêm nút gợi ý
+- **Mô tả**: Sửa lỗi giao diện chatbox AI bị mất chữ "Mở rộng" và nút bị che khuất khi ở kích thước nhỏ. Thay icon xóa lịch sử thành hình thùng rác (`Trash2`) và đổi nút bóng đèn (`Lightbulb`) thành chức năng bật/tắt gợi ý câu hỏi. Mở rộng chiều rộng mặc định của chatbox từ 360px lên 400px.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): chỉnh sửa giao diện chatbox AI và thêm nút gợi ý"`
+
 ### [2026-08-11 23:14] fix(ai): thêm fallback khi Ollama trả về chuỗi rỗng
 - **Mô tả**: Nếu LLM sinh ra JSON có trường `replyText` là rỗng (`""`), giá trị này sẽ qua lọt try/catch và trả về frontend chuỗi rỗng. Frontend sẽ thấy rỗng (falsy) và hiện fallback cứng `'Tôi đã tiếp nhận yêu cầu của bạn.'`. Thêm logic để check và trả về câu hỏi mặc định thân thiện.
 - **Tệp thay đổi**:

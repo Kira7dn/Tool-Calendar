@@ -1,12 +1,13 @@
 /* global TextDecoder */
 import PropTypes from 'prop-types'
 import { useState, useRef, useEffect } from 'react'
-import { Bot, X, Maximize2, Minimize2, Lightbulb } from 'lucide-react'
+import { Bot, X, Maximize2, Minimize2, Lightbulb, Trash2 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 export function AiChatbox({ currentDocId }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -258,32 +259,44 @@ export function AiChatbox({ currentDocId }) {
           isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none',
           isExpanded
             ? 'bottom-[5vh] right-[5vw] w-[90vw] h-[90vh] sm:bottom-[10vh] sm:right-[10vw] sm:w-[80vw] sm:h-[80vh] max-w-[1000px]'
-            : 'bottom-6 right-6 w-[360px] h-[550px] max-h-[calc(100vh-48px)]'
+            : 'bottom-6 right-6 w-[400px] h-[600px] max-w-[calc(100vw-48px)] max-h-[calc(100vh-48px)]'
         )}
       >
         {/* Header */}
         <div className="bg-slate-100/80 backdrop-blur-sm p-4 flex items-center justify-between border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="relative w-12 h-12 bg-white rounded-full flex items-center justify-center font-bold text-blue-700 shadow-sm border border-slate-100">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="relative w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-blue-700 shadow-sm border border-slate-100">
               AI
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
             </div>
-            <div>
-              <h3 className="font-bold text-[#1c3a6b] text-base flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-bold text-[#1c3a6b] text-base flex items-center gap-2 truncate">
                 Trợ lý AI
               </h3>
-              <p className="text-xs text-slate-500 truncate max-w-[200px]">
+              <p className="text-xs text-slate-500 truncate">
                 Trợ lý thông minh, nhanh nội dung điện tử...
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+            <button
+              onClick={() => setShowSuggestions(!showSuggestions)}
+              title="Gợi ý câu hỏi"
+              className={cn(
+                'p-2 rounded-full shadow-sm transition-colors',
+                showSuggestions
+                  ? 'bg-yellow-100 text-yellow-600'
+                  : 'bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              )}
+            >
+              <Lightbulb className="w-4 h-4" />
+            </button>
             <button
               onClick={handleClearHistory}
               title="Xóa lịch sử trò chuyện"
-              className="p-2 bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-full shadow-sm transition-colors"
+              className="p-2 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-full shadow-sm transition-colors"
             >
-              <Lightbulb className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsExpanded(!isExpanded)}
@@ -304,12 +317,15 @@ export function AiChatbox({ currentDocId }) {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 custom-scrollbar">
-          {messages.length <= 1 && (
+          {(messages.length <= 1 || showSuggestions) && (
             <div className="flex flex-col items-center justify-center my-6 space-y-2">
               {suggestions.map((sug) => (
                 <button
                   key={sug}
-                  onClick={(e) => handleSend(e, sug)}
+                  onClick={(e) => {
+                    handleSend(e, sug)
+                    setShowSuggestions(false)
+                  }}
                   className="px-4 py-2 text-sm text-[#1c3a6b] bg-white border border-[#1c3a6b]/30 rounded-full hover:bg-blue-50 transition-colors max-w-[80%] truncate shadow-sm"
                 >
                   {sug}
