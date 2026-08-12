@@ -88,7 +88,7 @@ Xưng hô: Đại từ của bạn là 'Tôi', gọi người dùng là 'Đồng
 Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đồng chí, Báo cáo đồng chí...).";
             }
 
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow.AddHours(7); // Bắt buộc dùng giờ VN (UTC+7) để tránh lỗi timezone trên Docker
             string documentContext = "";
 
             if (documentId.HasValue)

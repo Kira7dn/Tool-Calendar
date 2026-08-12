@@ -2367,3 +2367,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(docs): implement reactions UI for document comments"`
+
+### [2026-08-13 00:54] Fix AI Assistant Timezone Bug
+- **Mô tả**: Sửa lỗi AI lấy sai giờ thực tế (lấy giờ UTC thay vì UTC+7 của Việt Nam) do `DateTime.Now` chạy trên container Docker không cài sẵn `tzdata`. Thay bằng `DateTime.UtcNow.AddHours(7)` để luôn đảm bảo tính chuẩn xác cho giờ VN mà không cần build lại image.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(chat): use UTC+7 explicitly to fix AI timezone offset in Docker"`
