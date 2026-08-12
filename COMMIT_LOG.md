@@ -2417,3 +2417,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Review.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadActions.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): rename tailieu to vanban"`
+
+### [2026-08-13 01:25] Cập nhật giao diện thả cảm xúc (Reactions) phong cách Facebook
+- **Mô tả**: Thay đổi cách hiển thị các nút tương tác trong phần bình luận văn bản. Thay vì hiển thị dàn trải, giờ đây người dùng chỉ cần di chuột (hover) vào nút "Thích" để bật lên popover chứa các biểu tượng (👍, ❤️, 👏, 👀). Điều này giúp giao diện gọn gàng và chuyên nghiệp hơn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): facebook style reaction popover for comments"`

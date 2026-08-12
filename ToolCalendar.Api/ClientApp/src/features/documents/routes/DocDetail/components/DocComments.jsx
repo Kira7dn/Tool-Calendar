@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils'
 const REACTION_EMOJIS = {
   like: '👍',
   love: '❤️',
+  clap: '👏',
+  seen: '👀',
 }
 
 export function DocComments({
@@ -86,24 +88,44 @@ export function DocComments({
                 )}
 
                 {/* Reactions */}
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
-                  {Object.keys(REACTION_EMOJIS).map((type) => {
-                    const count = c.reactions?.[type]?.count || 0
-                    return (
-                      <button
-                        key={type}
-                        onClick={() => handleReact && handleReact(c.id, type)}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black transition-all ${
-                          count > 0
-                            ? 'bg-red-50 border-red-200 text-red-700'
-                            : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-                        }`}
-                      >
-                        <span className="text-sm">{REACTION_EMOJIS[type]}</span>
-                        {count > 0 && <span>{count}</span>}
-                      </button>
-                    )
-                  })}
+                <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                  {/* Nút Thích (có popover hover) */}
+                  <div className="relative group">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 text-[11px] font-black transition-all">
+                      <ThumbsUp size={14} /> Thích
+                    </button>
+                    {/* Popover chứa emojis */}
+                    <div className="absolute bottom-full left-0 mb-2 hidden group-hover:flex items-center gap-1 bg-white border border-slate-200 shadow-xl rounded-full p-1.5 z-10 transition-all origin-bottom-left animate-in fade-in zoom-in-95 duration-200">
+                      {Object.keys(REACTION_EMOJIS).map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => handleReact && handleReact(c.id, type)}
+                          className="p-1.5 hover:bg-slate-100 rounded-full transition-transform hover:scale-125 origin-bottom"
+                          title={type}
+                        >
+                          <span className="text-2xl leading-none block">
+                            {REACTION_EMOJIS[type]}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Hiển thị danh sách người đã react */}
+                  <div className="flex flex-wrap items-center gap-1.5 ml-auto">
+                    {Object.keys(REACTION_EMOJIS).map((type) => {
+                      const count = c.reactions?.[type]?.count || 0
+                      if (count === 0) return null
+                      return (
+                        <div
+                          key={type}
+                          className="flex items-center bg-slate-50 border border-slate-100 shadow-sm rounded-full px-2 py-0.5 text-[10px] font-black text-slate-600"
+                        >
+                          <span className="text-xs mr-1">{REACTION_EMOJIS[type]}</span> {count}
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
