@@ -74,6 +74,7 @@ export default function DocDetail({ docId, onBack }) {
     setNewComment,
     isSubmittingComment,
     handlePostComment,
+    handleReact,
     fileInputRef,
     previewImage,
     setPreviewImage,
@@ -309,6 +310,7 @@ export default function DocDetail({ docId, onBack }) {
             setNewComment={setNewComment}
             isSubmittingComment={isSubmittingComment}
             handlePostComment={handlePostComment}
+            handleReact={handleReact}
             fileInputRef={fileInputRef}
           />
         </div>

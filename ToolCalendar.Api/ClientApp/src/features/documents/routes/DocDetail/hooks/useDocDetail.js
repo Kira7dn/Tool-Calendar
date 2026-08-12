@@ -255,6 +255,18 @@ export function useDocDetail(docId, onBack) {
     }
   }
 
+  const handleReact = async (commentId, type) => {
+    try {
+      const { documentApi } = await import('@/features/documents/api/documentApi')
+      await documentApi.reactToComment(docId, commentId, type)
+      // Comment fetch will be handled by realtime signalR or we can fetch immediately
+      // Actually fetchComments is best:
+      await fetchComments()
+    } catch (err) {
+      toast.error('Không thể thả cảm xúc')
+    }
+  }
+
   return {
     doc,
     setDoc,
@@ -299,6 +311,7 @@ export function useDocDetail(docId, onBack) {
     setNewComment,
     isSubmittingComment,
     handlePostComment,
+    handleReact,
     fileInputRef,
   }
 }

@@ -2358,3 +2358,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/pages/Settings.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/components/settings/GeneralTab.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(notify): handle test notification error and add resubscribe button"`
+
+### [2026-08-13 00:46] Implement Reactions UI for DocComments
+- **Mô tả**: Bổ sung giao diện thả cảm xúc (Reactions) cho mục Thảo luận trực tuyến. Nối API `ReactToComment` từ Backend ra ngoài màn hình chi tiết công văn, hiển thị biểu tượng Like (👍) và Love (❤️) với số lượng click.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/api/documentApi.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/hooks/useDocDetail.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): implement reactions UI for document comments"`

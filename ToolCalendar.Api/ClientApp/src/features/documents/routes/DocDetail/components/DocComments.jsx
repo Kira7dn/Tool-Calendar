@@ -1,7 +1,12 @@
 /* eslint-disable */
 import React from 'react'
-import { MessageSquare, Paperclip, X, Image, Send, Loader2 } from 'lucide-react'
+import { MessageSquare, Paperclip, X, Image, Send, Loader2, Heart, ThumbsUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+const REACTION_EMOJIS = {
+  like: '👍',
+  love: '❤️',
+}
 
 export function DocComments({
   comments,
@@ -11,6 +16,7 @@ export function DocComments({
   setNewComment,
   isSubmittingComment,
   handlePostComment,
+  handleReact,
   fileInputRef,
 }) {
   return (
@@ -78,6 +84,27 @@ export function DocComments({
                     })()}
                   </div>
                 )}
+
+                {/* Reactions */}
+                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
+                  {Object.keys(REACTION_EMOJIS).map((type) => {
+                    const count = c.reactions?.[type]?.count || 0
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => handleReact && handleReact(c.id, type)}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black transition-all ${
+                          count > 0
+                            ? 'bg-red-50 border-red-200 text-red-700'
+                            : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                        }`}
+                      >
+                        <span className="text-sm">{REACTION_EMOJIS[type]}</span>
+                        {count > 0 && <span>{count}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           ))

@@ -39,6 +39,18 @@ export const documentApi = {
     return res.json()
   },
 
+  reactToComment: async (docId, commentId, reactionType) => {
+    const res = await fetch(`/api/documents/${docId}/comments/${commentId}/react`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ reactionType }),
+    })
+    if (!res.ok) throw new Error('Không thể thả cảm xúc')
+    return res.json()
+  },
+
   getReferenceData: async () => {
     const [deptRes, userRes] = await Promise.all([
       fetch('/api/admin/departments'),
