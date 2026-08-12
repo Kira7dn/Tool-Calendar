@@ -2373,3 +2373,27 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(chat): use UTC+7 explicitly to fix AI timezone offset in Docker"`
+
+### [2026-08-13 01:12] Cập nhật thuật toán cắt văn bản (Chunking) theo chuẩn Anything-LLM
+- **Mô tả**: Tối ưu hóa script `backfill_vectors.py` theo kiến trúc của Anything-LLM. Áp dụng kỹ thuật băm dữ liệu theo từ (word) có khoảng lặp (overlap 50 từ) thay vì cắt cứng theo ký tự để bảo toàn ngữ cảnh. Đồng thời, tự động gắn Header (Tên công văn, Số hiệu) vào đầu mỗi chunk trước khi tính toán Embedding để AI hiểu rõ ngữ cảnh nguồn.
+- **Tệp thay đổi**:
+  - `data_dump/backfill_vectors.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): optimize vector chunking strategy based on Anything-LLM architecture"`
+
+### [2026-08-13 01:13] Cập nhật thuật toán cắt văn bản (Chunking) trong OcrQueueService theo chuẩn Anything-LLM
+- **Mô tả**: Bổ sung kỹ thuật băm dữ liệu theo từ (word) có overlap 50 từ và gắn Metadata Header (Tên công văn, Số hiệu) vào `OcrQueueService.cs` (nơi xử lý OCR runtime) để đồng bộ chiến lược sinh Vector với file script backfill.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): apply Anything-LLM chunking strategy to OcrQueueService"`
+
+### [2026-08-13 01:15] Đổi tên menu Tải hồ sơ mới
+- **Mô tả**: Sửa text "Tải hồ sơ mới" thành "Tải văn bản mới" trên thanh Sidebar theo yêu cầu của người dùng để phù hợp hơn với nghiệp vụ quản lý công văn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): rename upload menu to Tải văn bản mới"`
+
+### [2026-08-13 01:16] Đổi toàn bộ từ khóa Công văn thành Văn bản trên UI
+- **Mô tả**: Thay thế hàng loạt từ "Công văn" và "công văn" thành "Văn bản" trên toàn bộ giao diện Frontend (Sidebar, Chatbox, Dashboard, Notifications, Routing Tree,...) theo yêu cầu thay đổi nghiệp vụ của người dùng.
+- **Tệp thay đổi**:
+  - Nhiều file `.jsx` và `.js` trong thư mục `ToolCalendar.Api/ClientApp/src/` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): global replace of Công văn to Văn bản across frontend"`

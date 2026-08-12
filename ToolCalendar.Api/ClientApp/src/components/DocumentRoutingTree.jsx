@@ -97,7 +97,7 @@ export const DocumentRoutingTree = ({ routings }) => {
       <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
         <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-semibold">
           <AlertCircle size={13} className="text-slate-400" />
-          <span>Luồng luân chuyển công văn</span>
+          <span>Luồng luân chuyển văn bản</span>
         </div>
         <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium">
           <span className="inline-block w-3 h-3 rounded-sm bg-red-500"></span>

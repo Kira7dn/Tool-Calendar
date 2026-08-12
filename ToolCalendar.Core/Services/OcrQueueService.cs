@@ -7,6 +7,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
+using System.Linq;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Hubs;
 using ToolCalendar.Core.Services;
@@ -253,19 +254,38 @@ namespace ToolCalendar.Services
                     {
                         _logger.LogInformation("[RAG] Đang tạo Vector cho DocumentId {Id}...", docId);
                         
-                        // Cắt văn bản thành các đoạn (khoảng 1000 ký tự mỗi đoạn)
-                        int chunkSize = 1000;
                         var text = updatedDoc.FullText;
-                        int chunkIndex = 0;
-
-                        for (int i = 0; i < text.Length; i += chunkSize)
+                        
+                        // Cắt văn bản thông minh theo từ (Words) có Overlap
+                        int chunkWords = 250;
+                        int overlapWords = 50;
+                        var words = text.Split(new[] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                        
+                        var chunks = new List<string>();
+                        int i = 0;
+                        while (i < words.Length)
                         {
-                            var chunk = text.Substring(i, Math.Min(chunkSize, text.Length - i));
+                            var chunkTokens = words.Skip(i).Take(chunkWords);
+                            chunks.Add(string.Join(" ", chunkTokens));
+                            if (i + chunkWords >= words.Length) break;
+                            i += (chunkWords - overlapWords);
+                        }
+
+                        // Tạo phần header metadata cho từng chunk
+                        string tenCv = !string.IsNullOrWhiteSpace(updatedDoc.TenCongVan) ? updatedDoc.TenCongVan : "Không có";
+                        string soCv = !string.IsNullOrWhiteSpace(updatedDoc.SoVanBan) ? updatedDoc.SoVanBan : "Không có";
+                        string header = $"[Tên Công văn: {tenCv}] [Số hiệu: {soCv}]\n\n";
+
+                        int chunkIndex = 0;
+                        foreach (var chunk in chunks)
+                        {
+                            var enrichedChunk = header + chunk;
+                            
                             // Tính Vector
-                            var vector = await embedService.GenerateEmbeddingAsync(chunk);
+                            var vector = await embedService.GenerateEmbeddingAsync(enrichedChunk);
                             if (vector != null && vector.Length > 0)
                             {
-                                await chunkRepo.AddChunkAsync(docId, chunkIndex++, chunk, vector);
+                                await chunkRepo.AddChunkAsync(docId, chunkIndex++, enrichedChunk, vector);
                             }
                         }
                         _logger.LogInformation("[RAG] Đã lưu {Count} đoạn Vector cho DocumentId {Id}.", chunkIndex, docId);

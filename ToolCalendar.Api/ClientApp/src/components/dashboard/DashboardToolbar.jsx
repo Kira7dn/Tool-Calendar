@@ -10,7 +10,7 @@ export function DashboardToolbar({ searchQuery, setSearchQuery, onSearch, canUpl
       {/* Title Row */}
       <div className="flex flex-col gap-0 border-l-4 border-primary pl-3 py-0.5">
         <h2 className="text-lg md:text-xl font-extrabold tracking-tight text-foreground">
-          Bảng điều hành công văn
+          Bảng điều hành văn bản
         </h2>
         <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider leading-snug">
           Giám sát xử lý, quá hạn và thời hạn văn bản trong hệ thống

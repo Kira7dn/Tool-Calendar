@@ -43,7 +43,7 @@ class SignalRService {
       document.dispatchEvent(new CustomEvent('auth:kicked', { detail: { message } }))
     })
 
-    // 🔔 Lắng nghe khi có công văn mới được chuyển đến (NewTask)
+    // 🔔 Lắng nghe khi có văn bản mới được chuyển đến (NewTask)
     // 🔔 Lắng nghe khi có nhắc nhở từ AI
     this.connection.on('ReceiveReminder', (data) => {
       console.log('[SignalR] Nhận được nhắc nhở AI:', data)
@@ -51,7 +51,7 @@ class SignalRService {
     })
 
     this.connection.on('NewTask', (data) => {
-      console.log('[SignalR] Công văn mới được chuyển đến:', data)
+      console.log('[SignalR] Văn bản mới được chuyển đến:', data)
       document.dispatchEvent(new CustomEvent('realtime:new_task', { detail: data }))
     })
 
@@ -61,9 +61,9 @@ class SignalRService {
       document.dispatchEvent(new CustomEvent('realtime:meeting_updated'))
     })
 
-    // 🔔 Lắng nghe khi có thay đổi công văn
+    // 🔔 Lắng nghe khi có thay đổi văn bản
     this.connection.on('DocumentUpdated', () => {
-      console.log('[SignalR] Danh sách công văn đã thay đổi')
+      console.log('[SignalR] Danh sách văn bản đã thay đổi')
       document.dispatchEvent(new CustomEvent('realtime:document_updated'))
     })
 

@@ -96,7 +96,7 @@ export function useDocDetail(docId, onBack) {
         }
       }
 
-      // Realtime: cập nhật nút, trạng thái, routing khi có bất kỳ thay đổi nào trên công văn
+      // Realtime: cập nhật nút, trạng thái, routing khi có bất kỳ thay đổi nào trên văn bản
       const handleDocumentUpdated = (e) => {
         // Nếu sự kiện có docId cụ thể thì chỉ cập nhật khi trùng
         // Nếu không có thì cập nhật luôn (broadcast toàn bộ)
@@ -107,7 +107,7 @@ export function useDocDetail(docId, onBack) {
         }
       }
 
-      // Realtime: khi có công văn mới được chuyển đến (NewTask) — refresh routing/buttons
+      // Realtime: khi có văn bản mới được chuyển đến (NewTask) — refresh routing/buttons
       const handleNewTask = (e) => {
         if (e?.detail?.documentId === parseInt(docId)) {
           fetchData()

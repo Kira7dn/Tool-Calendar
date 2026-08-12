@@ -78,7 +78,7 @@ export function AiChatbox({ currentDocId }) {
       id: 'welcome',
       role: 'assistant',
       content: isAdmin
-        ? 'Dạ vâng ạ, Em chào Sếp! 🫡 Sếp cần em tóm tắt công văn, nhắc việc, hay hỏi gì cứ nhắn em ạ!'
+        ? 'Dạ vâng ạ, Em chào Sếp! 🫡 Sếp cần em tóm tắt văn bản, nhắc việc, hay hỏi gì cứ nhắn em ạ!'
         : 'Chào đồng chí! 👋 Tôi là Trợ lý AI. Đồng chí cần hỗ trợ nghiệp vụ hay nhắc việc gì cứ nhắn tôi nhé!',
       timestamp: new Date().toISOString(),
     }
@@ -221,7 +221,7 @@ export function AiChatbox({ currentDocId }) {
   }
 
   const suggestions = [
-    'Tóm tắt cho tôi công văn này',
+    'Tóm tắt cho tôi văn bản này',
     'Hôm nay có bao nhiêu văn bản quá hạn',
     'Nhắc tôi 5 phút nữa đi họp',
     'Giải quyết, phê duyệt phân tích từ các phòng ban',

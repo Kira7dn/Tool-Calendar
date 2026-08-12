@@ -113,7 +113,7 @@ export function LoginPage({ onLoginSuccess }) {
                 Chào mừng trở lại
               </CardTitle>
               <CardDescription className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em]">
-                Hệ thống điều phối công văn
+                Hệ thống điều phối văn bản
               </CardDescription>
             </div>
           </CardHeader>

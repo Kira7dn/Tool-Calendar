@@ -156,8 +156,8 @@ export function AppShell() {
     const handleNewTask = (e) => {
       const data = e.detail
       fetchNotifications()
-      toast.info('📄 Bạn có công văn mới cần xử lý!', {
-        description: data?.message || 'Lãnh đạo vừa chuyển cho bạn một công văn.',
+      toast.info('📄 Bạn có văn bản mới cần xử lý!', {
+        description: data?.message || 'Lãnh đạo vừa chuyển cho bạn một văn bản.',
         duration: 8000,
         action: data?.documentId
           ? {
@@ -220,7 +220,7 @@ export function AppShell() {
               Yêu cầu bật thông báo
             </h2>
             <p className="text-muted-foreground font-medium text-xs md:text-sm leading-relaxed mb-6 md:mb-8">
-              Để đảm bảo tính tức thời trong việc điều phối công văn, hệ thống yêu cầu bạn phải chấp
+              Để đảm bảo tính tức thời trong việc điều phối văn bản, hệ thống yêu cầu bạn phải chấp
               nhận nhận thông báo từ trình duyệt để tiếp tục sử dụng.
             </p>
             {pushPermission === 'default' ? (
@@ -267,7 +267,7 @@ export function AppShell() {
             Đang đăng xuất
           </p>
           <p className="text-white/40 text-xs font-bold uppercase tracking-widest">
-            Hệ thống điều phối công văn
+            Hệ thống điều phối văn bản
           </p>
           <div className="flex gap-2 mt-8">
             {[0, 1, 2].map((i) => (
@@ -306,9 +306,9 @@ export function AppShell() {
                 >
                   <span className="md:hidden">Hệ Thống</span>
                   <span className="md:hidden block text-[0.7rem] font-bold text-muted-foreground uppercase tracking-widest">
-                    Điều Phối Công Văn
+                    Điều Phối Văn Bản
                   </span>
-                  <span className="hidden md:inline">Hệ Thống Điều Phối Công Văn</span>
+                  <span className="hidden md:inline">Hệ Thống Điều Phối Văn Bản</span>
                 </h1>
                 <p className="hidden md:block text-[0.7rem] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-0.5">
                   Giám sát và đôn đốc thực thi công việc

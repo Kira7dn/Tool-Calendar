@@ -33,7 +33,7 @@ export function Header({ user, onLogout, onOpenLogin }) {
           </div>
           <div>
             <h1 className="text-2xl font-black text-[#0a3d8f] tracking-tighter uppercase leading-tight">
-              Hệ thống Điều phối Công văn
+              Hệ thống Điều phối Văn bản
             </h1>
             <p className="text-[#c8102e] font-bold text-sm tracking-widest uppercase italic">
               UBND phường CẨM PHẢ
