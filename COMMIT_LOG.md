@@ -1,3 +1,9 @@
+### [2026-08-12 09:40] fix(ai): sửa lỗi namespace và biến match khi build
+- **Mô tả**: Sửa lỗi `DocumentRecord` không tìm thấy do thiếu namespace `ToolCalendar.Models` và đổi tên biến `match` thành `docMatch` để tránh trùng lặp biến trong `AiAssistantService.cs`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): sửa lỗi namespace và biến match khi build"`
+
 ### [2026-08-12 09:37] feat(ai): tự động nhận diện mã số công văn trong câu hỏi để nạp ngữ cảnh
 - **Mô tả**: Khi người dùng nhắn hỏi AI ở màn hình trang chủ (Dashboard) mà không chọn trực tiếp một văn bản nào, AI sẽ bị thiếu ngữ cảnh (documentId = null) dẫn đến trả lời sai. Đã thêm logic dùng Regex (`\d+/[A-Za-z0-9\-&]+`) để tự động tìm kiếm mã số công văn trong tin nhắn của người dùng và truy vấn Database để nạp ngữ cảnh cho AI.
 - **Tệp thay đổi**:

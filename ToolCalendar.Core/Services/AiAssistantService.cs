@@ -82,7 +82,7 @@ Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đ�
             var now = DateTime.Now;
             string documentContext = "";
 
-            DocumentRecord doc = null;
+            ToolCalendar.Models.DocumentRecord doc = null;
             if (documentId.HasValue)
             {
                 doc = await _documentRepo.GetDocumentByIdAsync(documentId.Value);
@@ -90,10 +90,10 @@ Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đ�
             else
             {
                 // Thử nhận diện mã số công văn trong tin nhắn nếu người dùng chat ở màn hình ngoài
-                var match = System.Text.RegularExpressions.Regex.Match(message, @"\d+/[A-Za-z0-9\-&]+");
-                if (match.Success)
+                var docMatch = System.Text.RegularExpressions.Regex.Match(message, @"\d+/[A-Za-z0-9\-&]+");
+                if (docMatch.Success)
                 {
-                    var paged = await _documentRepo.GetPagedAsync(1, 1, search: match.Value);
+                    var paged = await _documentRepo.GetPagedAsync(1, 1, search: docMatch.Value);
                     if (paged.Items != null && paged.Items.Count > 0)
                     {
                         doc = paged.Items[0];
