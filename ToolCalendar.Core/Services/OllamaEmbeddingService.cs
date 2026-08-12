@@ -26,7 +26,7 @@ namespace ToolCalendar.Core.Services
             // Endpoint cho embedding là /api/embeddings
             _ollamaUrl = (config.GetValue<string>("Ollama:ChatUrl") ?? "http://127.0.0.1:11434/api/chat").Replace("/api/chat", "/api/embeddings");
             // Mặc định dùng chính model qwen2.5:3b để nhúng, hoặc nomic-embed-text nếu có
-            _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:3b";
+            _modelName = config.GetValue<string>("Ollama:EmbeddingModel") ?? "nomic-embed-text";
             _logger = logger;
         }
 

@@ -2326,3 +2326,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(chat): thiết kế lại giao diện AiChatbox sang tone màu xanh tối"`
+
+### [2026-08-12 14:12] Sửa lỗi mô hình RAG bị HTTP 500 do dùng sai model
+- **Mô tả**: LLM `qwen2.5:3b` trên VNPT Server bị crash khi gọi endpoint `/api/embeddings`, dẫn đến không sinh được Vector và gây lỗi AI "bịa" thông tin. Đổi sang dùng model chuyên dụng `nomic-embed-text` cho embeddings.
+- **Tệp thay đổi**:
+  - `data_dump/backfill_vectors.py` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OllamaEmbeddingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): use nomic-embed-text for vector embeddings to fix HTTP 500 error"`
