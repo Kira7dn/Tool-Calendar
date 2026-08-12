@@ -1,3 +1,9 @@
+### [2026-08-12 10:02] fix(ocr): thêm using namespace cho IOllamaEmbeddingService
+- **Mô tả**: Sửa lỗi biên dịch do thiếu using `ToolCalendar.Core.Services` trong `OcrQueueService.cs` gây lỗi Docker build.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): thêm using namespace cho IOllamaEmbeddingService"`
+
 ### [2026-08-12 09:58] feat(ai): nâng cấp lên chuẩn RAG và Agentic Router (không dùng if/else hardcode)
 - **Mô tả**: Gỡ bỏ code cứng Regex và If/Else trong `AiAssistantService`. Xây dựng luồng Agentic Router dùng LLM phân loại câu hỏi (STATS, SEARCH, CHAT) siêu tốc. Thiết lập hệ thống Hybrid RAG nội bộ C# (Lưu trữ và cắt chunk vào bảng `DocumentChunks` SQLite, gọi Ollama API sinh Vector với `qwen2.5:3b`, tính Cosine Similarity trong RAM). Cập nhật Queue Worker OCR để tự động sinh Vector khi xử lý xong công văn mới. Viết script `backfill_vectors.py` để đồng bộ lại dữ liệu cũ.
 - **Tệp thay đổi**:
