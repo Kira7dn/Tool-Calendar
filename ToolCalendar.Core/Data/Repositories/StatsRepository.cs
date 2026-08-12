@@ -4,6 +4,7 @@ using ToolCalendar.Core.Data.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace ToolCalendar.Core.Data.Repositories
 {
@@ -229,6 +230,73 @@ namespace ToolCalendar.Core.Data.Repositories
             }
 
             return list;
+        }
+        public async Task<string> GetAiContextStatsAsync()
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var cmd = new SqliteCommand(@"
+                SELECT
+                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan < date('now') AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS QuaHan,
+                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan = date('now') AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS HomNay,
+                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan = date('now', '+1 day') AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS NgayMai,
+                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan > date('now', '+1 day') AND ThoiHan <= date('now', '+7 days') AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS TrongTuan,
+                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan > date('now', '+7 days') AND ThoiHan <= date('now', '+30 days') AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS TrongThang,
+                    COUNT(*) AS TongTonDong
+                FROM Documents
+                WHERE Status != 'Đã xử lý'
+            ", connection);
+
+            var quaHan = 0;
+            var homNay = 0;
+            var ngayMai = 0;
+            var trongTuan = 0;
+            var trongThang = 0;
+            var tongTonDong = 0;
+
+            using (var r = await cmd.ExecuteReaderAsync())
+            {
+                if (await r.ReadAsync())
+                {
+                    quaHan = r["QuaHan"] == DBNull.Value ? 0 : Convert.ToInt32(r["QuaHan"]);
+                    homNay = r["HomNay"] == DBNull.Value ? 0 : Convert.ToInt32(r["HomNay"]);
+                    ngayMai = r["NgayMai"] == DBNull.Value ? 0 : Convert.ToInt32(r["NgayMai"]);
+                    trongTuan = r["TrongTuan"] == DBNull.Value ? 0 : Convert.ToInt32(r["TrongTuan"]);
+                    trongThang = r["TrongThang"] == DBNull.Value ? 0 : Convert.ToInt32(r["TrongThang"]);
+                    tongTonDong = r["TongTonDong"] == DBNull.Value ? 0 : Convert.ToInt32(r["TongTonDong"]);
+                }
+            }
+
+            using var cmdTop = new SqliteCommand(@"
+                SELECT SoVanBan, TenCongVan, ThoiHan 
+                FROM Documents 
+                WHERE Status != 'Đã xử lý' AND ThoiHan IS NOT NULL AND ThoiHan >= date('now')
+                ORDER BY ThoiHan ASC 
+                LIMIT 1
+            ", connection);
+            
+            string vanBanGanNhat = "Hiện tại không có công văn nào có hạn chót trong tương lai gần.";
+            using (var rTop = await cmdTop.ExecuteReaderAsync())
+            {
+                if (await rTop.ReadAsync())
+                {
+                    var so = rTop["SoVanBan"]?.ToString();
+                    var ten = rTop["TenCongVan"]?.ToString();
+                    var han = rTop["ThoiHan"] == DBNull.Value ? "" : Convert.ToDateTime(rTop["ThoiHan"]).ToString("dd/MM/yyyy");
+                    vanBanGanNhat = $"Văn bản đến hạn gần nhất là công văn số {so} ({ten}), có hạn chót là ngày {han}.";
+                }
+            }
+
+            return $"[DỮ LIỆU THỐNG KÊ THỜI GIAN THỰC CỦA HỆ THỐNG ĐỂ TRẢ LỜI NGƯỜI DÙNG]\n" +
+                   $"- Tổng số công văn chưa xử lý / tồn đọng trong hệ thống: {tongTonDong}\n" +
+                   $"- Số công văn đã quá hạn xử lý: {quaHan}\n" +
+                   $"- Số công văn đến hạn HÔM NAY: {homNay}\n" +
+                   $"- Số công văn đến hạn NGÀY MAI: {ngayMai}\n" +
+                   $"- Số công văn đến hạn TRONG TUẦN NÀY (7 ngày tới, không tính hôm nay/ngày mai): {trongTuan}\n" +
+                   $"- Số công văn đến hạn TRONG THÁNG SAU (từ 8 đến 30 ngày tới): {trongThang}\n" +
+                   $"- {vanBanGanNhat}\n\n" +
+                   $"LƯU Ý QUAN TRỌNG: Bạn BẮT BUỘC phải dựa vào bảng số liệu trên để trả lời các câu hỏi về 'bao nhiêu công văn', 'thống kê', 'hạn gần nhất' của sếp. Tuyệt đối không tự bịa ra số liệu khác.";
         }
     }
 }

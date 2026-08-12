@@ -26,6 +26,9 @@ namespace ToolCalendar.Core.Services
         private readonly IUserRepository _userRepo;
         private readonly IChatHistoryRepository _chatHistoryRepo;
         private readonly IDocumentRepository _documentRepo;
+        private readonly IStatsRepository _statsRepo;
+        private readonly IOllamaEmbeddingService _embeddingService;
+        private readonly IDocumentChunkRepository _chunkRepo;
         private readonly ILogger<AiAssistantService> _logger;
 
         public AiAssistantService(
@@ -35,6 +38,9 @@ namespace ToolCalendar.Core.Services
             IUserRepository userRepo,
             IChatHistoryRepository chatHistoryRepo,
             IDocumentRepository documentRepo,
+            IStatsRepository statsRepo,
+            IOllamaEmbeddingService embeddingService,
+            IDocumentChunkRepository chunkRepo,
             ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
@@ -44,6 +50,9 @@ namespace ToolCalendar.Core.Services
             _userRepo = userRepo;
             _chatHistoryRepo = chatHistoryRepo;
             _documentRepo = documentRepo;
+            _statsRepo = statsRepo;
+            _embeddingService = embeddingService;
+            _chunkRepo = chunkRepo;
             _logger = logger;
         }
 
@@ -82,41 +91,75 @@ Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đ�
             var now = DateTime.Now;
             string documentContext = "";
 
-            ToolCalendar.Models.DocumentRecord doc = null;
             if (documentId.HasValue)
             {
-                doc = await _documentRepo.GetDocumentByIdAsync(documentId.Value);
+                var doc = await _documentRepo.GetDocumentByIdAsync(documentId.Value);
+                if (doc != null)
+                {
+                    documentContext = $"\n\nBối cảnh quan trọng: Công văn số {doc.SoVanBan}, tên: {doc.TenCongVan}. Trích yếu: {doc.TrichYeu}.";
+                    if (!string.IsNullOrWhiteSpace(doc.FullText))
+                    {
+                        var text = doc.FullText;
+                        if (text.Length > 3000) text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt]...";
+                        documentContext += $"\nNội dung toàn văn:\n\"\"\"{text}\"\"\"";
+                    }
+                }
             }
             else
             {
-                // Thử nhận diện mã số công văn trong tin nhắn nếu người dùng chat ở màn hình ngoài
-                var docMatch = System.Text.RegularExpressions.Regex.Match(message, @"\d+/[A-Za-z0-9\-&]+");
-                if (docMatch.Success)
+                // Agentic Router: Dùng chính LLM để phân loại câu hỏi (siêu tốc với max_tokens = 5)
+                string intent = "CHAT";
+                try
                 {
-                    var paged = await _documentRepo.GetPagedAsync(1, 1, search: docMatch.Value);
-                    if (paged.Items != null && paged.Items.Count > 0)
+                    var routerPrompt = $"Phân loại câu hỏi sau thành 1 trong 3 nhóm: [STATS] nếu hỏi về thống kê/số lượng/ngày hạn, [SEARCH] nếu tìm kiếm nội dung công văn, [CHAT] nếu trò chuyện bình thường. Câu hỏi: \"{message}\". Chỉ trả về đúng 1 từ (STATS, SEARCH, hoặc CHAT), không giải thích.";
+                    var routerPayload = new { model = _modelName, messages = new[] { new { role = "user", content = routerPrompt } }, stream = false, options = new { temperature = 0.0, num_predict = 5 } };
+                    var routerJson = System.Text.Json.JsonSerializer.Serialize(routerPayload);
+                    var routerResponse = await _httpClient.PostAsync(_ollamaUrl, new StringContent(routerJson, System.Text.Encoding.UTF8, "application/json"));
+                    
+                    if (routerResponse.IsSuccessStatusCode)
                     {
-                        doc = paged.Items[0];
+                        var routerResult = await routerResponse.Content.ReadAsStringAsync();
+                        var routerObj = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(routerResult);
+                        var reply = routerObj.GetProperty("message").GetProperty("content").GetString()?.Trim().ToUpper() ?? "";
+                        
+                        if (reply.Contains("STAT")) intent = "STATS";
+                        else if (reply.Contains("SEARCH")) intent = "SEARCH";
                     }
                 }
-            }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("[AiAssistant] Lỗi Router: {Msg}", ex.Message);
+                }
 
-            if (doc != null)
-            {
-                documentContext = $"\n\nBối cảnh quan trọng: Công văn số {doc.SoVanBan}, tên: {doc.TenCongVan}. Trích yếu: {doc.TrichYeu}.";
-                
-                if (!string.IsNullOrWhiteSpace(doc.FullText))
+                _logger.LogInformation("[AiAssistant] Câu hỏi: {Message} -> Phân loại: {Intent}", message, intent);
+
+                if (intent == "STATS")
                 {
-                    var text = doc.FullText;
-                    if (text.Length > 3000) 
-                    {
-                        text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt do quá dài]...";
-                    }
-                    documentContext += $"\nNội dung toàn văn:\n\"\"\"{text}\"\"\"";
+                    try { documentContext = $"\n\n{await _statsRepo.GetAiContextStatsAsync()}"; }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Lỗi lấy dữ liệu STATS"); }
                 }
-                else
+                else if (intent == "SEARCH")
                 {
-                    documentContext += "\n(Ghi chú cho AI: Hệ thống chưa trích xuất được toàn văn OCR của công văn này. Hãy trả lời dựa vào Tên công văn và Trích yếu ở trên, và báo cho người dùng biết là chưa có nội dung chi tiết).";
+                    try
+                    {
+                        var questionVector = await _embeddingService.GenerateEmbeddingAsync(message);
+                        if (questionVector != null && questionVector.Length > 0)
+                        {
+                            var similarChunks = await _chunkRepo.FindSimilarChunksAsync(questionVector, topK: 3);
+                            if (similarChunks.Count > 0)
+                            {
+                                documentContext = "\n\n[DỮ LIỆU TÌM KIẾM TỪ CƠ SỞ DỮ LIỆU (RAG)]\nDựa vào câu hỏi, hệ thống đã trích xuất các đoạn văn bản sau từ các công văn:\n";
+                                foreach (var chunk in similarChunks)
+                                {
+                                    var doc = await _documentRepo.GetDocumentByIdAsync(chunk.DocumentId);
+                                    string name = doc != null ? $"Công văn số {doc.SoVanBan} ({doc.TenCongVan})" : $"Công văn ID {chunk.DocumentId}";
+                                    documentContext += $"\n--- Trích đoạn từ {name} ---\n{chunk.TextContent}\n";
+                                }
+                                documentContext += "\nLUÔN dựa vào dữ liệu trích xuất trên để trả lời. Nếu không đủ thông tin, hãy báo là hệ thống không tìm thấy nội dung phù hợp.";
+                            }
+                        }
+                    }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Lỗi quét Vector (SEARCH)"); }
                 }
             }
 

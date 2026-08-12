@@ -238,6 +238,44 @@ namespace ToolCalendar.Services
                 updatedDoc.Status = updatedDoc.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
 
                 await docRepo.UpdateAsync(updatedDoc);
+
+                // --- BẮT ĐẦU: RAG - Chunking và Tính toán Vector ---
+                try
+                {
+                    var chunkRepo = scope.ServiceProvider.GetRequiredService<IDocumentChunkRepository>();
+                    var embedService = scope.ServiceProvider.GetRequiredService<IOllamaEmbeddingService>();
+
+                    // Xóa các chunk cũ nếu có (ví dụ khi reprocess OCR)
+                    await chunkRepo.DeleteChunksByDocumentIdAsync(docId);
+
+                    if (!string.IsNullOrWhiteSpace(updatedDoc.FullText))
+                    {
+                        _logger.LogInformation("[RAG] Đang tạo Vector cho DocumentId {Id}...", docId);
+                        
+                        // Cắt văn bản thành các đoạn (khoảng 1000 ký tự mỗi đoạn)
+                        int chunkSize = 1000;
+                        var text = updatedDoc.FullText;
+                        int chunkIndex = 0;
+
+                        for (int i = 0; i < text.Length; i += chunkSize)
+                        {
+                            var chunk = text.Substring(i, Math.Min(chunkSize, text.Length - i));
+                            // Tính Vector
+                            var vector = await embedService.GenerateEmbeddingAsync(chunk);
+                            if (vector != null && vector.Length > 0)
+                            {
+                                await chunkRepo.AddChunkAsync(docId, chunkIndex++, chunk, vector);
+                            }
+                        }
+                        _logger.LogInformation("[RAG] Đã lưu {Count} đoạn Vector cho DocumentId {Id}.", chunkIndex, docId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "[RAG] Lỗi khi tạo/lưu Vector cho DocumentId {Id}", docId);
+                }
+                // --- KẾT THÚC: RAG ---
+
                 await NotifyProgressAsync(scope, docId, updatedDoc.Status);
 
                 _logger.LogInformation("[RabbitMQ Worker] ✅ OCR thành công DocumentId {Id} → {Status}", docId, updatedDoc.Status);

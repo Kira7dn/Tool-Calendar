@@ -92,6 +92,9 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IReminderRepository, ReminderRepository>();
 builder.Services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();
+builder.Services.AddScoped<IOcrTextProcessingService, OcrTextProcessingService>();
+builder.Services.AddScoped<IOllamaEmbeddingService, OllamaEmbeddingService>();
+builder.Services.AddScoped<IDocumentChunkRepository, DocumentChunkRepository>();
 builder.Services.AddScoped<IAiAssistantService, AiAssistantService>();
 
 

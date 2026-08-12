@@ -1,3 +1,24 @@
+### [2026-08-12 09:58] feat(ai): nâng cấp lên chuẩn RAG và Agentic Router (không dùng if/else hardcode)
+- **Mô tả**: Gỡ bỏ code cứng Regex và If/Else trong `AiAssistantService`. Xây dựng luồng Agentic Router dùng LLM phân loại câu hỏi (STATS, SEARCH, CHAT) siêu tốc. Thiết lập hệ thống Hybrid RAG nội bộ C# (Lưu trữ và cắt chunk vào bảng `DocumentChunks` SQLite, gọi Ollama API sinh Vector với `qwen2.5:3b`, tính Cosine Similarity trong RAM). Cập nhật Queue Worker OCR để tự động sinh Vector khi xử lý xong công văn mới. Viết script `backfill_vectors.py` để đồng bộ lại dữ liệu cũ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IDocumentChunkRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Mới)
+  - `ToolCalendar.Core/Services/OllamaEmbeddingService.cs` (Mới)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `data_dump/migration_document_chunks.sql` (Mới)
+  - `data_dump/backfill_vectors.py` (Mới)
+- **Lệnh git commit**: `git commit -m "feat(ai): nâng cấp lên chuẩn RAG và Agentic Router (không dùng if/else hardcode)"`
+
+### [2026-08-12 09:46] feat(ai): bơm dữ liệu thống kê bảng điều khiển vào ngữ cảnh AI để chống bịa số liệu
+- **Mô tả**: Bổ sung `GetAiContextStatsAsync` trong `StatsRepository` để truy vấn thống kê nhanh (Hôm nay, Ngày mai, Tuần này, Tháng tới, Quá hạn) bằng ADO.NET. Inject `IStatsRepository` vào `AiAssistantService` và tự động bơm chuỗi dữ liệu này vào ngữ cảnh cho AI nếu người dùng hỏi ở màn hình ngoài (không đính kèm ID công văn). Giúp AI trả lời chính xác số lượng công văn theo các mốc thời gian.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IStatsRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/StatsRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): bơm dữ liệu thống kê bảng điều khiển vào ngữ cảnh AI để chống bịa số liệu"`
+
 ### [2026-08-12 09:40] fix(ai): sửa lỗi namespace và biến match khi build
 - **Mô tả**: Sửa lỗi `DocumentRecord` không tìm thấy do thiếu namespace `ToolCalendar.Models` và đổi tên biến `match` thành `docMatch` để tránh trùng lặp biến trong `AiAssistantService.cs`.
 - **Tệp thay đổi**:
