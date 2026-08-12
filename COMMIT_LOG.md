@@ -2408,3 +2408,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): rename system to Hệ thống điều phối, quản lý văn bản"`
+
+### [2026-08-13 01:23] Đổi tên tài liệu thành văn bản
+- **Mô tả**: Sửa text "Tải tài liệu" và các từ khóa liên quan thành "văn bản" trên toàn bộ giao diện theo yêu cầu của người dùng để nhất quán thuật ngữ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/dashboard/DashboardToolbar.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/useSaveAll.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Review.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadActions.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): rename tailieu to vanban"`

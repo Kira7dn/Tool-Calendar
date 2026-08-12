@@ -106,7 +106,7 @@ export function useSaveAll({ batchItems, setBatchItems }) {
       }
       setBatchItems([])
       if (onDone) onDone()
-      toast.success('Đã hủy đợt tải và xóa các tài liệu nháp')
+      toast.success('Đã hủy đợt tải và xóa các văn bản nháp')
     },
     [batchItems, setBatchItems]
   )

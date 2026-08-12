@@ -28,7 +28,7 @@ export function UploadActions({
           </svg>
         </div>
         <div>
-          <h1 className="text-sm font-bold text-slate-900 leading-tight">Số hóa tài liệu</h1>
+          <h1 className="text-sm font-bold text-slate-900 leading-tight">Số hóa văn bản</h1>
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
             PDF OCR Engine
           </p>

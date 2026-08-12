@@ -103,7 +103,7 @@ export function Review({ onBack }) {
           <div className="flex flex-col">
             <h2 className="text-primary-foreground">Kiểm duyệt bóc tách OCR</h2>
             <p className="text-primary-foreground/50 text-[10px] font-black uppercase tracking-widest">
-              Tài liệu {currentIndex + 1} / {docs.length}
+              Văn bản {currentIndex + 1} / {docs.length}
             </p>
           </div>
         </div>
@@ -277,7 +277,7 @@ export function Review({ onBack }) {
               onClick={() => setIsDeleteModalOpen(true)}
               className="w-full text-destructive font-bold hover:bg-destructive/5 rounded-xl h-12"
             >
-              <Trash2 className="size-4 mr-2" /> Xóa tài liệu này
+              <Trash2 className="size-4 mr-2" /> Xóa văn bản này
             </Button>
           </div>
         </div>
@@ -286,9 +286,9 @@ export function Review({ onBack }) {
       <ConfirmationModal
         open={isDeleteModalOpen}
         onOpenChange={setIsDeleteModalOpen}
-        title="Xác nhận xóa tài liệu?"
+        title="Xác nhận xóa văn bản?"
         description={`Bạn có chắc chắn muốn xóa văn bản "${currentDoc?.fileName}"? Hành động này sẽ gỡ bỏ hoàn toàn dữ liệu khỏi hệ thống.`}
-        confirmLabel="XÓA TÀI LIỆU"
+        confirmLabel="XÓA VĂN BẢN"
         onConfirm={handleDelete}
         isLoading={isDeleting}
         variant="destructive"

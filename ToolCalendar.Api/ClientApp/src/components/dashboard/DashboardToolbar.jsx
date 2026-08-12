@@ -34,16 +34,12 @@ export function DashboardToolbar({ searchQuery, setSearchQuery, onSearch, canUpl
         </Button>
         {canUpload && (
           <Button className="h-9 shrink-0 font-bold hidden sm:flex" onClick={onUpload}>
-            <Upload className="size-4 mr-1.5" />
-            Tải tài liệu
+            <Upload className="size-3.5 mr-1" />
+            Tải văn bản
           </Button>
         )}
         {canUpload && (
-          <Button
-            className="h-9 w-9 shrink-0 sm:hidden p-0"
-            onClick={onUpload}
-            title="Tải tài liệu"
-          >
+          <Button className="h-9 w-9 shrink-0 sm:hidden p-0" onClick={onUpload} title="Tải văn bản">
             <Upload className="size-4" />
           </Button>
         )}
