@@ -85,14 +85,23 @@ Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đ�
             if (documentId.HasValue)
             {
                 var doc = await _documentRepo.GetDocumentByIdAsync(documentId.Value);
-                if (doc != null && !string.IsNullOrWhiteSpace(doc.FullText))
+                if (doc != null)
                 {
-                    var text = doc.FullText;
-                    if (text.Length > 3000) 
+                    documentContext = $"\n\nBối cảnh quan trọng: Công văn số {doc.SoVanBan}, tên: {doc.TenCongVan}. Trích yếu: {doc.TrichYeu}.";
+                    
+                    if (!string.IsNullOrWhiteSpace(doc.FullText))
                     {
-                        text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt do quá dài]...";
+                        var text = doc.FullText;
+                        if (text.Length > 3000) 
+                        {
+                            text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt do quá dài]...";
+                        }
+                        documentContext += $"\nNội dung toàn văn:\n\"\"\"{text}\"\"\"";
                     }
-                    documentContext = $"\n\nBối cảnh quan trọng: Công văn số {doc.SoVanBan}, tên: {doc.TenCongVan}. Nội dung:\n\"\"\"{text}\"\"\"";
+                    else
+                    {
+                        documentContext += "\n(Ghi chú cho AI: Hệ thống chưa trích xuất được toàn văn OCR của công văn này. Hãy trả lời dựa vào Tên công văn và Trích yếu ở trên, và báo cho người dùng biết là chưa có nội dung chi tiết).";
+                    }
                 }
             }
 

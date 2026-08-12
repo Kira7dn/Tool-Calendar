@@ -1,3 +1,9 @@
+### [2026-08-12 09:25] fix(ai): bổ sung context metadata cho AI khi FullText trống để tránh hallucination
+- **Mô tả**: Sửa lỗi AI "bịa" (hallucinate) ra công văn giả mạo (ví dụ: công văn của UBND tỉnh Ninh Thuận) khi nội dung toàn văn (`FullText` từ OCR) bị trống. Thay vì bỏ qua toàn bộ thông tin văn bản khi không có `FullText`, hệ thống giờ đây luôn truyền `SoVanBan`, `TenCongVan`, và `TrichYeu` vào prompt, đồng thời hướng dẫn AI trả lời dựa trên trích yếu nếu chưa có bản OCR chi tiết.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): bổ sung context metadata cho AI khi FullText trống để tránh hallucination"`
+
 ### [2026-08-12 08:30] style(ui): chỉnh sửa giao diện chatbox AI và thêm nút gợi ý
 - **Mô tả**: Sửa lỗi giao diện chatbox AI bị mất chữ "Mở rộng" và nút bị che khuất khi ở kích thước nhỏ. Thay icon xóa lịch sử thành hình thùng rác (`Trash2`) và đổi nút bóng đèn (`Lightbulb`) thành chức năng bật/tắt gợi ý câu hỏi. Mở rộng chiều rộng mặc định của chatbox từ 360px lên 400px.
 - **Tệp thay đổi**:
