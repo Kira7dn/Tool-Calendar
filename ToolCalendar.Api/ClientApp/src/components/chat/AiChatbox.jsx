@@ -110,10 +110,6 @@ export function AiChatbox({ currentDocId }) {
   }, [isOpen])
 
   const handleClearHistory = async () => {
-    // eslint-disable-next-line no-alert
-    if (!window.confirm('Bạn có chắc chắn muốn xóa lịch sử chat và làm mới phiên làm việc của AI?'))
-      return
-
     try {
       await fetch('/api/chat/history', { method: 'DELETE' })
       const role = localStorage.getItem('user_role') || ''

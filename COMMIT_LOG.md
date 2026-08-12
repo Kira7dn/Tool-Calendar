@@ -2423,3 +2423,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(docs): facebook style reaction popover for comments"`
+
+### [2026-08-13 01:29] Xóa hộp thoại xác nhận khi xóa lịch sử chat
+- **Mô tả**: Bỏ qua bước "Bạn có chắc chắn muốn xóa lịch sử chat..." để cho phép người dùng dọn dẹp lịch sử ngay lập tức bằng 1 click.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(chat): remove confirm dialog on clear history"`
