@@ -796,7 +796,13 @@
   - seed_db.sql (Sửa đổi)
 - **Lệnh git commit**: git commit -m "chore(db): clear document data and export new seed_db.sql"
 
-# Nhật ký Thay đổi Mã Nguồn (Commit Log)
+# Nhật ký Thay đổi (Commit Log)
+
+### [2026-08-12 14:32] Fix Qwen2.5 3B hallucination khi đọc OCR rác
+- **Mô tả**: Do các công văn cũ bị lỗi OCR sinh ra đoạn văn bản rác chứa các ngày tháng lạ, model nhỏ Qwen2.5 3B đã bị nhầm lẫn và tự động lấy các ngày tháng này để bịa ra tóm tắt sai (hallucinate). Đã cập nhật System Prompt trong `AiAssistantService.cs` thêm luật CỰC KỲ QUAN TRỌNG cấm AI tự sáng tác ngày tháng và cấm dịch mã rác OCR.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): thêm luật chống hallucinate ngày tháng khi đọc ocr rác vào system prompt"`
 
 Tệp này lưu trữ lịch sử các thay đổi và tính năng mới được thêm vào hệ thống để AI có thể nhanh chóng nắm bắt ngữ cảnh mà không cần quét lại toàn bộ mã nguồn.
 
