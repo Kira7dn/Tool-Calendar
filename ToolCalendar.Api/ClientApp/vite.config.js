@@ -24,7 +24,7 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Hệ Thống Điều Phối, Quản Lý Văn Bản',
+        name: 'Hệ thống theo dõi, xử lý văn bản',
         short_name: 'Lịch Công Tác',
         description: 'Hệ thống quản lý lịch công tác và điều phối, quản lý văn bản',
         theme_color: '#ffffff',

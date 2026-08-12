@@ -267,7 +267,7 @@ export function AppShell() {
             Đang đăng xuất
           </p>
           <p className="text-white/40 text-xs font-bold uppercase tracking-widest">
-            Hệ thống điều phối, quản lý văn bản
+            Hệ thống theo dõi, xử lý văn bản
           </p>
           <div className="flex gap-2 mt-8">
             {[0, 1, 2].map((i) => (
@@ -308,7 +308,7 @@ export function AppShell() {
                   <span className="md:hidden block text-[0.7rem] font-bold text-muted-foreground uppercase tracking-widest">
                     Điều Phối, Quản Lý Văn Bản
                   </span>
-                  <span className="hidden md:inline">Hệ Thống Điều Phối, Quản Lý Văn Bản</span>
+                  <span className="hidden md:inline">Hệ thống theo dõi, xử lý văn bản</span>
                 </h1>
                 <p className="hidden md:block text-[0.7rem] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-0.5">
                   Giám sát và đôn đốc thực thi công việc

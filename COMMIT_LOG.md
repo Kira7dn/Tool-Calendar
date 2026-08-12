@@ -2430,6 +2430,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(chat): remove confirm dialog on clear history"`
 
+### [2026-08-13 01:40] Đổi dữ liệu "Công văn" thành "Văn bản" trong database
+- **Mô tả**: Thay thế từ "Công văn" (và các biến thể viết hoa) thành "Văn bản" trực tiếp trên dữ liệu `TenCongVan` và `TrichYeu` trong bảng `Documents` trên database production VNPT để thống nhất giao diện (Dashboard hiển thị tên tài liệu).
+- **Tệp thay đổi**:
+  - `data_dump/documents.db` (Sửa đổi dữ liệu thủ công qua SQL trên host server)
+- **Lệnh git commit**: Không cần commit code cho thay đổi dữ liệu database này.
+
 ### [2026-08-13 01:32] Sửa lỗi Monitor is not defined ở trang Cấu hình
 - **Mô tả**: Import thêm icon `Monitor` từ `lucide-react` bị thiếu trong component `GeneralTab.jsx` gây ra lỗi trắng trang Cấu hình.
 - **Tệp thay đổi**:

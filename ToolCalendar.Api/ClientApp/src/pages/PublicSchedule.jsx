@@ -64,7 +64,7 @@ export default function PublicSchedule() {
               Đang đăng xuất
             </p>
             <p className="text-white/40 text-xs font-bold uppercase tracking-widest">
-              Hệ thống điều phối, quản lý văn bản
+              Hệ thống theo dõi, xử lý văn bản
             </p>
             <div className="flex gap-2 mt-8">
               {[0, 1, 2].map((i) => (
