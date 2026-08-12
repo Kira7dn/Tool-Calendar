@@ -2429,3 +2429,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(chat): remove confirm dialog on clear history"`
+
+### [2026-08-13 01:32] Sửa lỗi Monitor is not defined ở trang Cấu hình
+- **Mô tả**: Import thêm icon `Monitor` từ `lucide-react` bị thiếu trong component `GeneralTab.jsx` gây ra lỗi trắng trang Cấu hình.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/settings/GeneralTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): add missing Monitor icon import in GeneralTab"`

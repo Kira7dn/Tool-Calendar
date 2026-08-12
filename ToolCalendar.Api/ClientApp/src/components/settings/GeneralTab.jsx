@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React, { useState } from 'react'
-import { Clock, Bell, Loader2, Send, Play, Scan, Plus, X, Zap, Info } from 'lucide-react'
+import { Clock, Bell, Loader2, Send, Play, Scan, Plus, X, Zap, Info, Monitor } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
