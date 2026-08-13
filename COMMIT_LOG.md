@@ -1,3 +1,10 @@
+### [2026-08-13 16:15] fix(docs): sửa lỗi fullscreen PDF trên mobile
+- **Mô tả**: Khi người dùng nhấn phóng to (fullscreen) bản PDF lúc review/edit trên giao diện mobile/Zalo in-app browser, tính năng đang sử dụng `window.open` khiến PDF lấp đầy toàn màn hình và không có nút đóng (back). Đã sửa thành sử dụng React state `isFullScreen` và CSS `fixed inset-0 z-[100]` để mở rộng iFrame in-app với nút thu nhỏ (Minimize), giúp trải nghiệm mượt mà và thoát dễ dàng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/components/ReviewModal.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/EditDocModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi fullscreen PDF bằng in-app modal thay vì window.open"`
+
 ### [2026-08-13 16:08] Khôi phục tiêu đề Thảo luận trực tuyến
 - **Mô tả**: Khôi phục lại chữ 'THẢO LUẬN TRỰC TUYẾN' và tối ưu CSS chống tràn chữ để giao diện không bị vỡ trên màn hình hẹp.
 - **Tệp thay đổi**:

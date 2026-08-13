@@ -12,12 +12,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
+  Minimize2,
 } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ROLES } from '../../../constants/roles'
 import { toast } from 'sonner'
+import { useState } from 'react'
 
 // FormField helper
 const FormField = ({ label, value, onChange, icon: Icon, type = 'text' }) => (
@@ -69,6 +71,8 @@ export function ReviewModal({
   users,
   onSave,
 }) {
+  const [isFullScreen, setIsFullScreen] = useState(false)
+
   return (
     <Dialog
       open={isOpen}
@@ -96,8 +100,20 @@ export function ReviewModal({
 
         <div className="flex-1 flex overflow-hidden">
           {/* Left: PDF Viewer */}
-          <div className="flex-1 bg-slate-100 flex flex-col relative border-r border-slate-100">
-            <div className="flex-1 relative overflow-hidden bg-slate-200 m-4 rounded-2xl shadow-inner border border-slate-200">
+          <div
+            className={cn(
+              'bg-slate-100 flex flex-col relative transition-all duration-300',
+              isFullScreen
+                ? 'fixed inset-0 z-[100] w-screen h-screen'
+                : 'flex-1 border-r border-slate-100'
+            )}
+          >
+            <div
+              className={cn(
+                'relative overflow-hidden bg-slate-200 shadow-inner border border-slate-200 flex-1 transition-all',
+                isFullScreen ? 'm-0 rounded-none border-none' : 'm-4 rounded-2xl'
+              )}
+            >
               {isPdfLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-slate-100 z-10">
                   <div className="flex flex-col items-center gap-3">
@@ -114,7 +130,14 @@ export function ReviewModal({
               />
             </div>
             {/* PDF Toolbar */}
-            <div className="h-16 bg-slate-900 mx-4 mb-4 rounded-2xl flex items-center justify-between px-8 shadow-xl">
+            <div
+              className={cn(
+                'bg-slate-900 flex items-center justify-between px-8 shadow-xl transition-all',
+                isFullScreen
+                  ? 'h-20 m-0 rounded-none pb-[env(safe-area-inset-bottom)]'
+                  : 'h-16 mx-4 mb-4 rounded-2xl'
+              )}
+            >
               <div className="flex items-center gap-3 text-slate-400">
                 <FileText size={18} className="text-blue-500" />
                 <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">
@@ -147,10 +170,10 @@ export function ReviewModal({
                 </button>
               </div>
               <button
-                onClick={() => window.open(`/api/documents/${reviewItem?.id}/file`, '_blank')}
+                onClick={() => setIsFullScreen(!isFullScreen)}
                 className="p-2.5 rounded-xl bg-white/5 text-slate-400 hover:text-white hover:bg-blue-600 transition-all"
               >
-                <Maximize2 size={18} />
+                {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
               </button>
             </div>
           </div>

@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
+  Minimize2,
   Calendar,
   Clock,
   Building2,
@@ -63,6 +64,7 @@ export function EditDocModal({
   setPdfPage,
 }) {
   const [isSaving, setIsSaving] = useState(false)
+  const [isFullScreen, setIsFullScreen] = useState(false)
 
   const handleSaveEdit = async () => {
     setIsSaving(true)
@@ -117,7 +119,12 @@ export function EditDocModal({
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          <div className="hidden md:flex flex-1 flex-col bg-slate-100 border-r border-slate-100 relative">
+          <div
+            className={cn(
+              'flex-1 flex-col bg-slate-100 border-r border-slate-100 relative transition-all duration-300',
+              isFullScreen ? 'fixed inset-0 z-[100] w-screen h-screen flex' : 'hidden md:flex'
+            )}
+          >
             <div className="flex-1 relative overflow-hidden">
               <iframe
                 key={pdfPage}
@@ -126,7 +133,12 @@ export function EditDocModal({
                 title="PDF Comparison"
               />
             </div>
-            <div className="h-14 bg-slate-900 flex items-center justify-between px-6 shrink-0 border-t border-slate-800">
+            <div
+              className={cn(
+                'bg-slate-900 flex items-center justify-between px-6 shrink-0 border-t border-slate-800 transition-all',
+                isFullScreen ? 'h-20 pb-[env(safe-area-inset-bottom)]' : 'h-14'
+              )}
+            >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-slate-800 text-slate-400">
                   <FileText size={16} />
@@ -155,14 +167,10 @@ export function EditDocModal({
                 </button>
               </div>
               <button
-                onClick={() => {
-                  const token = localStorage.getItem('auth_token')
-                  document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
-                  window.open(`/api/documents/${docId}/file`, '_blank')
-                }}
+                onClick={() => setIsFullScreen(!isFullScreen)}
                 className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-red-600 transition-all"
               >
-                <Maximize2 size={16} />
+                {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
               </button>
             </div>
           </div>
