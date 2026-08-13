@@ -1,4 +1,10 @@
-### [2026-08-13 15:30] feat(ai): thêm tính năng AI tìm tài liệu tham khảo pháp lý từ nội dung văn bản
+### [2026-08-13 15:45] fix(docs): sửa lỗi frontend parse JSON api references
+- **Mô tả**: Global Fetch Interceptor ở main.jsx tự động unwrap ApiResponse thành mảng data, nhưng DocContentTab.jsx lại kiểm tra json.success khiến nó lọt vào nhánh báo lỗi. Đã sửa lại catch logic thành kiểm tra Array.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi frontend parse JSON api references"`
+
+
 - **Mô tả**: Nâng cấp tab Nội dung: Đổi tên thành "Văn bản và tài liệu tham khảo", ẩn panel OCR raw text (chuyển nút OCR lại lên header) và thay bằng panel AI Tìm kiếm. Khi bấm Tìm kiếm, backend lấy OCR text gọi Ollama trích xuất 3 từ khóa, sau đó gọi DuckDuckGo API tìm kiếm trên các trang uy tín (thuvienphapluat.vn, chinhphu.vn, moj.gov.vn, quangninh.gov.vn) để trả về danh sách link tài liệu. Tính năng hoàn toàn tự động, không cần Google API Key, có fallback tạo link tìm kiếm sẵn.
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiReferenceService.cs` (Mới)

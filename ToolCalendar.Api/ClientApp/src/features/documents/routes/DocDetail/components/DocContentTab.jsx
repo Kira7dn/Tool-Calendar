@@ -58,12 +58,14 @@ export function DocContentTab({ doc, docId, pdfUrl, setIsFullscreenPdf }) {
       const res = await fetch(`/api/documents/${docId}/references`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      const json = await res.json()
-      if (json.success && Array.isArray(json.data)) {
-        setReferences(json.data)
+      const data = await res.json()
+
+      // Do Global Fetch Interceptor tự động unwrap dữ liệu (trả về thẳng json.data)
+      if (Array.isArray(data)) {
+        setReferences(data)
         setRefState('done')
       } else {
-        setErrorMsg(json.message || 'Không tìm thấy kết quả.')
+        setErrorMsg(data?.message || data?.error || 'Không tìm thấy kết quả.')
         setRefState('error')
       }
     } catch {
