@@ -1,3 +1,15 @@
+### [2026-08-13 17:15] feat(ocr): thay thế Web Scraper DuckDuckGo bằng Tavily AI Search API
+- **Mô tả**: Nâng cấp module AiReferenceService, gỡ bỏ HTML Scraping của DuckDuckGo (cũ) và thay thế bằng Tavily Search API. 
+  - Khai báo API Key ẩn trong biến môi trường `TAVILY_API_KEY`.
+  - Giới hạn miền tìm kiếm `include_domains` vào danh sách `PrioritySites` (thuvienphapluat, chinhphu, moj,...).
+  - Tối ưu hiệu năng: Thay vì gọi vòng lặp từng trang web, nay gộp chung vào 1 request Tavily duy nhất.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/appsettings.json` (Thêm cấu hình)
+  - `docker-compose.yml` (Thêm Env)
+  - `.env` & `.env.example`
+- **Lệnh git commit**: `git commit -m "feat(ocr): thay thế Web Scraper DuckDuckGo bằng Tavily AI Search API"`
+
 ### [2026-08-13 16:58] feat(ocr): tích hợp AnythingLLM Web Search Crawler thay cho DuckDuckGo API
 - **Mô tả**: Thay thế DuckDuckGo Instant Answer API (api.duckduckgo.com) bằng kỹ thuật HTML Scraping tương tự module `web-browsing.js` của AnythingLLM. Hệ thống giả lập User-Agent, truy cập thẳng vào SERP (html.duckduckgo.com), dùng Regex bóc tách thẻ HTML và giải mã redirect URL (`uddg=...`). Khắc phục triệt để lỗi "0 kết quả" (ra link dự phòng) khi tìm kiếm văn bản.
 - **Tệp thay đổi**:

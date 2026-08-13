@@ -29,6 +29,7 @@ namespace ToolCalendar.Core.Services
         private readonly string _ollamaUrl;
         private readonly string _modelName;
         private readonly ILogger<AiReferenceService> _logger;
+        private readonly string? _tavilyApiKey;
 
         private static readonly string[] PrioritySites = new[]
         {
@@ -45,6 +46,7 @@ namespace ToolCalendar.Core.Services
             _httpClient.Timeout = TimeSpan.FromSeconds(100);
             _ollamaUrl = config.GetValue<string>("Ollama:ChatUrl") ?? "http://127.0.0.1:11434/api/chat";
             _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:1.5b";
+            _tavilyApiKey = config.GetValue<string>("Tavily:ApiKey") ?? config.GetValue<string>("TAVILY_API_KEY");
             _logger = logger;
         }
 
@@ -59,12 +61,8 @@ namespace ToolCalendar.Core.Services
 
                 foreach (var keyword in keywords)
                 {
-                    foreach (var site in PrioritySites)
-                    {
-                        var siteResults = await SearchDuckDuckGoAsync(keyword, site);
-                        results.AddRange(siteResults);
-                        if (results.Count >= 10) break;
-                    }
+                    var siteResults = await SearchTavilyAsync(keyword, PrioritySites);
+                    results.AddRange(siteResults);
                     if (results.Count >= 10) break;
                 }
 
@@ -125,67 +123,67 @@ namespace ToolCalendar.Core.Services
             return new List<string> { documentTitle };
         }
 
-        private async Task<List<DocumentReference>> SearchDuckDuckGoAsync(string keyword, string site)
+        private async Task<List<DocumentReference>> SearchTavilyAsync(string keyword, string[] domains)
         {
             var refs = new List<DocumentReference>();
+            
+            if (string.IsNullOrWhiteSpace(_tavilyApiKey))
+            {
+                _logger.LogWarning("[AiReference] Tavily Api Key is missing!");
+                return refs;
+            }
+
             try
             {
-                var query = HttpUtility.UrlEncode($"{keyword} site:{site}");
-                var url = $"https://html.duckduckgo.com/html?q={query}";
-
-                var request = new HttpRequestMessage(HttpMethod.Get, url);
-                request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-
-                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(15));
-                var response = await _httpClient.SendAsync(request, cts.Token);
-                
-                if (!response.IsSuccessStatusCode) return refs;
-
-                var html = await response.Content.ReadAsStringAsync(cts.Token);
-                
-                var blocks = html.Split("<div class=\"result results_links");
-                for (int i = 1; i < blocks.Length; i++)
+                var requestBody = new
                 {
-                    var block = blocks[i];
-                    
-                    var titleMatch = System.Text.RegularExpressions.Regex.Match(block, @"<a[^>]*class=""result__a""[^>]*>(.*?)<\/a>", System.Text.RegularExpressions.RegexOptions.Singleline);
-                    var urlMatch = System.Text.RegularExpressions.Regex.Match(block, @"<a[^>]*class=""result__a""[^>]*href=""([^""]*)""", System.Text.RegularExpressions.RegexOptions.Singleline);
-                    var snippetMatch = System.Text.RegularExpressions.Regex.Match(block, @"<a[^>]*class=""result__snippet""[^>]*>(.*?)<\/a>", System.Text.RegularExpressions.RegexOptions.Singleline);
-                    
-                    if (!titleMatch.Success || !urlMatch.Success) continue;
-                    
-                    var title = System.Text.RegularExpressions.Regex.Replace(titleMatch.Groups[1].Value, @"<[^>]+>|&nbsp;", "").Trim();
-                    var snippet = snippetMatch.Success ? System.Text.RegularExpressions.Regex.Replace(snippetMatch.Groups[1].Value, @"<[^>]+>|&nbsp;", "").Trim() : "";
-                    var rawUrl = urlMatch.Groups[1].Value;
-                    
-                    string actualUrl = rawUrl;
-                    if (rawUrl.Contains("uddg="))
-                    {
-                        var uri = new Uri(rawUrl.StartsWith("//") ? $"https:{rawUrl}" : (rawUrl.StartsWith("http") ? rawUrl : $"https://duckduckgo.com{rawUrl}"));
-                        var queryDict = HttpUtility.ParseQueryString(uri.Query);
-                        if (queryDict["uddg"] != null)
-                        {
-                            actualUrl = queryDict["uddg"]!;
-                        }
-                    }
+                    api_key = _tavilyApiKey,
+                    query = keyword,
+                    search_depth = "basic",
+                    include_domains = domains,
+                    max_results = 5
+                };
 
-                    if (!string.IsNullOrEmpty(actualUrl) && actualUrl.StartsWith("http"))
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                var response = await _httpClient.PostAsync("https://api.tavily.com/search", content, cts.Token);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMsg = await response.Content.ReadAsStringAsync(cts.Token);
+                    _logger.LogWarning("[AiReference] Tavily error: {Code} - {Msg}", response.StatusCode, errorMsg);
+                    return refs;
+                }
+
+                var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
+                using var doc = JsonDocument.Parse(responseBody);
+                
+                if (doc.RootElement.TryGetProperty("results", out var results))
+                {
+                    foreach (var result in results.EnumerateArray())
                     {
+                        var title = result.GetProperty("title").GetString() ?? "";
+                        var url = result.GetProperty("url").GetString() ?? "";
+                        var snippet = result.GetProperty("content").GetString() ?? "";
+                        
+                        var uri = new Uri(url);
+                        var source = uri.Host.Replace("www.", "");
+
                         refs.Add(new DocumentReference
                         {
                             Title = title,
-                            Url = actualUrl,
+                            Url = url,
                             Snippet = snippet,
-                            Source = site
+                            Source = source
                         });
                     }
-
-                    if (refs.Count >= 3) break;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning("[AiReference] DuckDuckGo HTML scraping failed for {Site}: {Msg}", site, ex.Message);
+                _logger.LogWarning("[AiReference] Tavily API failed: {Msg}", ex.Message);
             }
             return refs;
         }
