@@ -1,3 +1,9 @@
+### [2026-08-13 17:25] feat(ocr): nâng cấp RAG AI bằng thuật toán Multi-subqueries (tương tự Khoj)
+- **Mô tả**: Tối ưu hóa chức năng trích xuất từ khóa cho AI Reference. Thay vì tạo 1 từ khóa duy nhất, prompt mới yêu cầu LLM tách văn bản thành 2-3 câu sub-queries riêng biệt. Hàm tìm kiếm lặp qua tất cả sub-queries, gộp kết quả và loại bỏ các URL trùng lặp (DistinctBy) để tăng độ đa dạng và tránh sót thông tin pháp lý quan trọng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): nâng cấp RAG AI bằng thuật toán Multi-subqueries"`
+
 ### [2026-08-13 17:15] feat(ocr): thay thế Web Scraper DuckDuckGo bằng Tavily AI Search API
 - **Mô tả**: Nâng cấp module AiReferenceService, gỡ bỏ HTML Scraping của DuckDuckGo (cũ) và thay thế bằng Tavily Search API. 
   - Khai báo API Key ẩn trong biến môi trường `TAVILY_API_KEY`.

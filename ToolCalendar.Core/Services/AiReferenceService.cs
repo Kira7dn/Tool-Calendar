@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -63,8 +64,10 @@ namespace ToolCalendar.Core.Services
                 {
                     var siteResults = await SearchTavilyAsync(keyword, PrioritySites);
                     results.AddRange(siteResults);
-                    if (results.Count >= 10) break;
                 }
+
+                // Loại bỏ kết quả trùng lặp URL và lấy tối đa 12 kết quả
+                results = results.DistinctBy(x => x.Url).Take(12).ToList();
 
                 if (results.Count == 0 && keywords.Count > 0)
                     results.AddRange(BuildFallbackLinks(keywords));
@@ -84,14 +87,14 @@ namespace ToolCalendar.Core.Services
             {
                 var textSample = fullText?.Length > 1500 ? fullText[..1500] : fullText ?? documentTitle;
 
-                var prompt = $"Bạn là chuyên gia. Hãy đọc văn bản sau và trích xuất đúng 1 cụm từ khóa (khoảng 3-6 từ, ưu tiên Số ký hiệu văn bản nếu có, ví dụ: 'Nghị định 15/2020', 'Công văn 123/UBND') để tra cứu trên Google. \n\nVăn bản: {textSample}\n\nChỉ trả về 1 cụm từ khóa, không giải thích gì thêm.";
+                var prompt = $"Bạn là chuyên gia. Hãy đọc văn bản sau và trích xuất 2-3 câu truy vấn phụ (sub-queries) để tra cứu trên hệ thống tìm kiếm pháp luật (Mỗi câu trên 1 dòng, không đánh số thứ tự, ưu tiên Số ký hiệu văn bản nếu có, ví dụ: 'Nghị định 15/2020 toàn văn'). \n\nVăn bản: {textSample}\n\nChỉ trả về các câu truy vấn, không giải thích gì thêm.";
 
                 var requestBody = new
                 {
                     model = _modelName,
                     messages = new[] { new { role = "user", content = prompt } },
                     stream = false,
-                    options = new { temperature = 0.1, num_predict = 100 }
+                    options = new { temperature = 0.2, num_predict = 150 }
                 };
 
                 var json = JsonSerializer.Serialize(requestBody);
@@ -104,10 +107,19 @@ namespace ToolCalendar.Core.Services
                 using var doc = JsonDocument.Parse(responseBody);
                 var aiText = doc.RootElement.GetProperty("message").GetProperty("content").GetString() ?? "";
 
-                var keyword = aiText.Trim().Trim('"', '\'', '.', '\n');
-                if (!string.IsNullOrWhiteSpace(keyword) && keyword.Length < 100 && !keyword.StartsWith("["))
+                var lines = aiText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                var keywordsList = new List<string>();
+                foreach(var line in lines)
                 {
-                    return new List<string> { keyword };
+                    var k = line.Trim().Trim('"', '\'', '.', '-', '*', '1', '2', '3');
+                    if (!string.IsNullOrWhiteSpace(k) && k.Length < 100 && !k.StartsWith("["))
+                    {
+                        keywordsList.Add(k);
+                    }
+                }
+                if (keywordsList.Count > 0)
+                {
+                    return keywordsList.Take(3).ToList();
                 }
             }
             catch (Exception ex)
