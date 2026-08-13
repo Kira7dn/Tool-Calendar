@@ -131,58 +131,61 @@ namespace ToolCalendar.Core.Services
             try
             {
                 var query = HttpUtility.UrlEncode($"{keyword} site:{site}");
-                var url = $"https://api.duckduckgo.com/?q={query}&format=json&no_html=1&no_redirect=1";
+                var url = $"https://html.duckduckgo.com/html?q={query}";
 
-                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(8));
-                var response = await _httpClient.GetAsync(url, cts.Token);
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+
+                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(15));
+                var response = await _httpClient.SendAsync(request, cts.Token);
+                
                 if (!response.IsSuccessStatusCode) return refs;
 
-                var body = await response.Content.ReadAsStringAsync(cts.Token);
-                using var doc = JsonDocument.Parse(body);
-                var root = doc.RootElement;
-
-                if (root.TryGetProperty("RelatedTopics", out var topics))
+                var html = await response.Content.ReadAsStringAsync(cts.Token);
+                
+                var blocks = html.Split("<div class=\"result results_links");
+                for (int i = 1; i < blocks.Length; i++)
                 {
-                    foreach (var topic in topics.EnumerateArray())
+                    var block = blocks[i];
+                    
+                    var titleMatch = System.Text.RegularExpressions.Regex.Match(block, @"<a[^>]*class=""result__a""[^>]*>(.*?)<\/a>", System.Text.RegularExpressions.RegexOptions.Singleline);
+                    var urlMatch = System.Text.RegularExpressions.Regex.Match(block, @"<a[^>]*class=""result__a""[^>]*href=""([^""]*)""", System.Text.RegularExpressions.RegexOptions.Singleline);
+                    var snippetMatch = System.Text.RegularExpressions.Regex.Match(block, @"<a[^>]*class=""result__snippet""[^>]*>(.*?)<\/a>", System.Text.RegularExpressions.RegexOptions.Singleline);
+                    
+                    if (!titleMatch.Success || !urlMatch.Success) continue;
+                    
+                    var title = System.Text.RegularExpressions.Regex.Replace(titleMatch.Groups[1].Value, @"<[^>]+>|&nbsp;", "").Trim();
+                    var snippet = snippetMatch.Success ? System.Text.RegularExpressions.Regex.Replace(snippetMatch.Groups[1].Value, @"<[^>]+>|&nbsp;", "").Trim() : "";
+                    var rawUrl = urlMatch.Groups[1].Value;
+                    
+                    string actualUrl = rawUrl;
+                    if (rawUrl.Contains("uddg="))
                     {
-                        if (!topic.TryGetProperty("FirstURL", out var urlProp)) continue;
-                        if (!topic.TryGetProperty("Text", out var textProp)) continue;
-
-                        var refUrl = urlProp.GetString() ?? "";
-                        var refText = textProp.GetString() ?? "";
-                        if (string.IsNullOrEmpty(refUrl) || !refUrl.StartsWith("http")) continue;
-
-                        refs.Add(new DocumentReference
+                        var uri = new Uri(rawUrl.StartsWith("//") ? $"https:{rawUrl}" : (rawUrl.StartsWith("http") ? rawUrl : $"https://duckduckgo.com{rawUrl}"));
+                        var queryDict = HttpUtility.ParseQueryString(uri.Query);
+                        if (queryDict["uddg"] != null)
                         {
-                            Title = refText.Length > 80 ? refText[..80] + "..." : refText,
-                            Url = refUrl,
-                            Snippet = refText,
-                            Source = site
-                        });
-
-                        if (refs.Count >= 3) break;
+                            actualUrl = queryDict["uddg"]!;
+                        }
                     }
-                }
 
-                if (refs.Count == 0 && root.TryGetProperty("AbstractURL", out var absUrl))
-                {
-                    var absUrlStr = absUrl.GetString() ?? "";
-                    var absText = root.TryGetProperty("Abstract", out var abs) ? abs.GetString() ?? "" : keyword;
-                    if (!string.IsNullOrEmpty(absUrlStr) && absUrlStr.StartsWith("http"))
+                    if (!string.IsNullOrEmpty(actualUrl) && actualUrl.StartsWith("http"))
                     {
                         refs.Add(new DocumentReference
                         {
-                            Title = absText.Length > 80 ? absText[..80] + "..." : absText,
-                            Url = absUrlStr,
-                            Snippet = absText,
+                            Title = title,
+                            Url = actualUrl,
+                            Snippet = snippet,
                             Source = site
                         });
                     }
+
+                    if (refs.Count >= 3) break;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning("[AiReference] DuckDuckGo failed for {Site}: {Msg}", site, ex.Message);
+                _logger.LogWarning("[AiReference] DuckDuckGo HTML scraping failed for {Site}: {Msg}", site, ex.Message);
             }
             return refs;
         }

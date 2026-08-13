@@ -1,3 +1,9 @@
+### [2026-08-13 16:58] feat(ocr): tích hợp AnythingLLM Web Search Crawler thay cho DuckDuckGo API
+- **Mô tả**: Thay thế DuckDuckGo Instant Answer API (api.duckduckgo.com) bằng kỹ thuật HTML Scraping tương tự module `web-browsing.js` của AnythingLLM. Hệ thống giả lập User-Agent, truy cập thẳng vào SERP (html.duckduckgo.com), dùng Regex bóc tách thẻ HTML và giải mã redirect URL (`uddg=...`). Khắc phục triệt để lỗi "0 kết quả" (ra link dự phòng) khi tìm kiếm văn bản.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): tích hợp AnythingLLM Web Search Crawler thay cho DuckDuckGo API"`
+
 ### [2026-08-13 16:35] fix(ocr): cải thiện logic AI extract keyword và đổi giao diện sáng
 - **Mô tả**:
   - Sửa lỗi AI (Ollama qwen2.5 1.5b) thường xuyên xuất sai JSON format khi yêu cầu trả JSON array, dẫn đến việc lấy sai từ khoá "CÔNG VĂN". Thay đổi sang trả về chuỗi text trực tiếp với ưu tiên "Số ký hiệu văn bản" (ví dụ Nghị định 15/2020) và thêm Fallback lấy 50 ký tự đầu tiên của nội dung OCR thay vì title mặc định là "CÔNG VĂN".
