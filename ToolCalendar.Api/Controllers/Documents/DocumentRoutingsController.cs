@@ -128,10 +128,12 @@ namespace ToolCalendar.Api.Controllers.Documents
 
             var doc = await _documentRepo.GetDocumentByIdAsync(routing.DocumentId);
             
-            // Nếu người từ chối đang là người xử lý chính của văn bản, cập nhật luôn trạng thái văn bản
+            // Nếu người từ chối đang là người xử lý chính của văn bản,
+            // reset doc.Status về "Chưa xử lý" để người giao việc có thể hành động tiếp.
+            // KHÔNG set "Từ chối" vì đó là routing-level status, không phải Document status hợp lệ.
             if (doc != null && doc.AssignedTo == currentUserId && (routing.Role == "Xử lý chính" || routing.Role == "Chủ trì"))
             {
-                doc.Status = "Từ chối";
+                doc.Status = "Chưa xử lý";
                 await _documentRepo.UpdateAsync(doc);
             }
 

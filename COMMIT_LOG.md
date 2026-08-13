@@ -1,3 +1,9 @@
+### [2026-08-13 15:06] fix(routing): sửa bug doc.Status bị set "Từ chối" khi routing bị reject
+- **Mô tả**: Khi người được giao việc (Level 2) từ chối routing, backend sai khi set `doc.Status = "Từ chối"` — đây là routing-level status, không phải Document status hợp lệ (DOCUMENT_STATUS constants không có "Từ chối"). Hậu quả: người giao việc (Level 1 / Nguyễn Thị Nơ) mất sạch các nút hành động vì không có nút nào khớp status "Từ chối". Fix: đổi sang `doc.Status = "Chưa xử lý"` để người giao việc có thể tiếp tục hành động sau khi bị từ chối.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(routing): reset doc.Status về Chưa xử lý thay vì Từ chối khi routing bị reject"`
+
 ### [2026-08-13 13:35] style(docs): sửa tiêu đề THẢO LUẬN TRỰC TUYẾN thành THẢO LUẬN
 - **Mô tả**: Sửa lỗi giao diện hiển thị bị cắt bớt (hiển thị "THẢO LUẬN TRỰC T...") do text quá dài so với chiều ngang của container trên màn hình nhỏ hoặc do có padding/margin làm hẹp không gian, đổi về "THẢO LUẬN" cho gọn và hiển thị đầy đủ.
 - **Tệp thay đổi**:
