@@ -26,8 +26,8 @@ export function DocComments({
       <div className="px-5 py-3 border-b border-slate-50 flex items-center justify-between bg-slate-50/20 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-[0_0_12px_rgba(220,38,38,0.7)] animate-pulse shrink-0" />
-          <h2 className="text-[11px] font-black text-slate-500 uppercase tracking-widest truncate">
-            THẢO LUẬN
+          <h2 className="text-[10px] md:text-[11px] font-black text-slate-500 uppercase tracking-wider truncate">
+            THẢO LUẬN TRỰC TUYẾN
           </h2>
         </div>
         <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black border border-slate-200 shrink-0">

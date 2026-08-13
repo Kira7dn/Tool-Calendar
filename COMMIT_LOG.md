@@ -1,3 +1,9 @@
+### [2026-08-13 16:08] Khôi phục tiêu đề Thảo luận trực tuyến
+- **Mô tả**: Khôi phục lại chữ 'THẢO LUẬN TRỰC TUYẾN' và tối ưu CSS chống tràn chữ để giao diện không bị vỡ trên màn hình hẹp.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(docs): khôi phục tiêu đề Thảo luận trực tuyến và tối ưu css"`
+
 ### [2026-08-13 15:55] perf(ai): tối ưu hóa model Ollama và thời gian timeout
 - **Mô tả**: Khi chạy trên server VNPT, quá trình tải model AI vào RAM mất nhiều thời gian dẫn đến timeout (hơn 20s). Đổi model mặc định thành qwen2.5:1.5b (nhẹ hơn) và tăng timeout lên 90 giây để xử lý cold start. Mặc dù trước đó hệ thống fallback (dùng tên văn bản) vẫn hoạt động cứu cánh, nhưng việc này giúp AI thực sự chạy được và phân tích sâu nội dung văn bản.
 - **Tệp thay đổi**:
