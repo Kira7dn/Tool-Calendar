@@ -7,6 +7,7 @@ using System.Security.Cryptography;  // HMACSHA256 - dùng cho webhook notificat
 using System.Text;                   // Encoding - dùng cho webhook notifications
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Core.Models;
+using ToolCalendar.Core.Services;
 using ToolCalendar.Data;
 using ToolCalendar.Data.Repositories;
 using ToolCalendar.Hubs;
@@ -30,6 +31,7 @@ namespace ToolCalendar.Api.Controllers.Documents
         private readonly IConfiguration _configuration;
         private readonly IDocumentUploadService _uploadService;
         private readonly IAuditLogRepository _auditRepo;
+        private readonly IAiReferenceService _aiReferenceService;
 
         public DocumentsController(
             IDocumentExtractorService extractor,
@@ -41,7 +43,8 @@ namespace ToolCalendar.Api.Controllers.Documents
             IDocumentRoutingRepository routingRepo,
             IConfiguration configuration,
             IDocumentUploadService uploadService,
-            IAuditLogRepository auditRepo)
+            IAuditLogRepository auditRepo,
+            IAiReferenceService aiReferenceService)
         {
             _extractor = extractor;
             _ocrQueue = ocrQueue;
@@ -53,6 +56,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             _configuration = configuration;
             _uploadService = uploadService;
             _auditRepo = auditRepo;
+            _aiReferenceService = aiReferenceService;
         }
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
@@ -919,6 +923,24 @@ namespace ToolCalendar.Api.Controllers.Documents
 
             // ✅ Perf: PhysicalFile stream trực tiếp, không load cả file vào RAM
             return ServePhysicalFileSecured(filePath, "application/pdf");
+        }
+
+        // ── AI References: Tìm tài liệu tham khảo từ nội dung văn bản ──
+        [HttpGet("{id}/references")]
+        public async Task<IActionResult> GetAiReferences(int id)
+        {
+            var doc = await _documentRepository.GetDocumentByIdAsync(id);
+            if (doc == null)
+                return NotFound(ApiResponse.Fail("Không tìm thấy văn bản."));
+
+            var fullText = doc.FullText ?? "";
+            var documentTitle = doc.TenCongVan ?? doc.SoVanBan ?? "văn bản";
+
+            if (string.IsNullOrWhiteSpace(fullText) && string.IsNullOrWhiteSpace(documentTitle))
+                return Ok(ApiResponse<List<DocumentReference>>.Ok(new List<DocumentReference>()));
+
+            var references = await _aiReferenceService.FindReferencesAsync(fullText, documentTitle);
+            return Ok(ApiResponse<List<DocumentReference>>.Ok(references));
         }
 
         private string GetDayLabel(DateTime date)

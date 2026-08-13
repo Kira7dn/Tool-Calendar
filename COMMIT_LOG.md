@@ -1,3 +1,12 @@
+### [2026-08-13 15:30] feat(ai): thêm tính năng AI tìm tài liệu tham khảo pháp lý từ nội dung văn bản
+- **Mô tả**: Nâng cấp tab Nội dung: Đổi tên thành "Văn bản và tài liệu tham khảo", ẩn panel OCR raw text (chuyển nút OCR lại lên header) và thay bằng panel AI Tìm kiếm. Khi bấm Tìm kiếm, backend lấy OCR text gọi Ollama trích xuất 3 từ khóa, sau đó gọi DuckDuckGo API tìm kiếm trên các trang uy tín (thuvienphapluat.vn, chinhphu.vn, moj.gov.vn, quangninh.gov.vn) để trả về danh sách link tài liệu. Tính năng hoàn toàn tự động, không cần Google API Key, có fallback tạo link tìm kiếm sẵn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): thêm tính năng AI tìm tài liệu tham khảo pháp lý từ nội dung văn bản"`
+
 ### [2026-08-13 15:06] fix(routing): sửa bug doc.Status bị set "Từ chối" khi routing bị reject
 - **Mô tả**: Khi người được giao việc (Level 2) từ chối routing, backend sai khi set `doc.Status = "Từ chối"` — đây là routing-level status, không phải Document status hợp lệ (DOCUMENT_STATUS constants không có "Từ chối"). Hậu quả: người giao việc (Level 1 / Nguyễn Thị Nơ) mất sạch các nút hành động vì không có nút nào khớp status "Từ chối". Fix: đổi sang `doc.Status = "Chưa xử lý"` để người giao việc có thể tiếp tục hành động sau khi bị từ chối.
 - **Tệp thay đổi**:

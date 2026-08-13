@@ -96,6 +96,7 @@ builder.Services.AddScoped<IOcrTextProcessingService, OcrTextProcessingService>(
 builder.Services.AddScoped<IOllamaEmbeddingService, OllamaEmbeddingService>();
 builder.Services.AddScoped<IDocumentChunkRepository, DocumentChunkRepository>();
 builder.Services.AddScoped<IAiAssistantService, AiAssistantService>();
+builder.Services.AddScoped<IAiReferenceService, AiReferenceService>();
 
 
 // ✅ ASP.NET Core Identity (Custom UserStore — không cần EF Core)
