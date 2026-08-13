@@ -1,3 +1,9 @@
+### [2026-08-13 13:35] style(docs): sửa tiêu đề THẢO LUẬN TRỰC TUYẾN thành THẢO LUẬN
+- **Mô tả**: Sửa lỗi giao diện hiển thị bị cắt bớt (hiển thị "THẢO LUẬN TRỰC T...") do text quá dài so với chiều ngang của container trên màn hình nhỏ hoặc do có padding/margin làm hẹp không gian, đổi về "THẢO LUẬN" cho gọn và hiển thị đầy đủ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(docs): sửa tiêu đề THẢO LUẬN TRỰC TUYẾN thành THẢO LUẬN"`
+
 ### [2026-08-13 11:05] feat(routing): thêm chọn phòng ban vào Modal Chuyển xử lý
 - **Mô tả**: Giao diện chuyển xử lý ban đầu chỉ có tìm và chọn cán bộ (bước này bị dài nếu tìm người không nhớ tên). Cải tiến theo yêu cầu của user: Thêm tuỳ chọn Phòng ban vào trước, bắt buộc chọn phòng ban trước khi chọn người nhận. Sau đó chỉ hiển thị những người nhận thuộc phòng ban đã chọn.
 - **Tệp thay đổi**:
