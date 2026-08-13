@@ -1,4 +1,10 @@
-### [2026-08-13 15:45] fix(docs): sửa lỗi frontend parse JSON api references
+### [2026-08-13 15:55] perf(ai): tối ưu hóa model Ollama và thời gian timeout
+- **Mô tả**: Khi chạy trên server VNPT, quá trình tải model AI vào RAM mất nhiều thời gian dẫn đến timeout (hơn 20s). Đổi model mặc định thành qwen2.5:1.5b (nhẹ hơn) và tăng timeout lên 90 giây để xử lý cold start. Mặc dù trước đó hệ thống fallback (dùng tên văn bản) vẫn hoạt động cứu cánh, nhưng việc này giúp AI thực sự chạy được và phân tích sâu nội dung văn bản.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ai): tối ưu hóa model Ollama và thời gian timeout"`
+
+
 - **Mô tả**: Global Fetch Interceptor ở main.jsx tự động unwrap ApiResponse thành mảng data, nhưng DocContentTab.jsx lại kiểm tra json.success khiến nó lọt vào nhánh báo lỗi. Đã sửa lại catch logic thành kiểm tra Array.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi)

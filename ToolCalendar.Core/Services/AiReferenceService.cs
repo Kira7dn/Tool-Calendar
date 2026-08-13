@@ -42,8 +42,9 @@ namespace ToolCalendar.Core.Services
         public AiReferenceService(HttpClient httpClient, IConfiguration config, ILogger<AiReferenceService> logger)
         {
             _httpClient = httpClient;
+            _httpClient.Timeout = TimeSpan.FromSeconds(100);
             _ollamaUrl = config.GetValue<string>("Ollama:ChatUrl") ?? "http://127.0.0.1:11434/api/chat";
-            _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:3b";
+            _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:1.5b";
             _logger = logger;
         }
 
@@ -98,7 +99,7 @@ namespace ToolCalendar.Core.Services
                 var json = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(20));
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(90));
                 var response = await _httpClient.PostAsync(_ollamaUrl, content, cts.Token);
                 var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
 
