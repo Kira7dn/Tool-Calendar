@@ -86,7 +86,7 @@ namespace ToolCalendar.Core.Services
             {
                 var textSample = fullText?.Length > 1500 ? fullText[..1500] : fullText ?? documentTitle;
 
-                var prompt = $"Ban la chuyen gia phap ly Viet Nam. Tu doan van ban nay, hay trich xuat dung 3 cum tu khoa ngan gon (2-6 tu) de tim kiem van ban phap luat lien quan tren internet.\n\nVan ban:\n{textSample}\n\nTra ve DUNG dinh dang JSON array:\n[\"tu khoa 1\", \"tu khoa 2\", \"tu khoa 3\"]";
+                var prompt = $"Bạn là chuyên gia. Hãy đọc văn bản sau và trích xuất đúng 1 cụm từ khóa (khoảng 3-6 từ, ưu tiên Số ký hiệu văn bản nếu có, ví dụ: 'Nghị định 15/2020', 'Công văn 123/UBND') để tra cứu trên Google. \n\nVăn bản: {textSample}\n\nChỉ trả về 1 cụm từ khóa, không giải thích gì thêm.";
 
                 var requestBody = new
                 {
@@ -106,11 +106,10 @@ namespace ToolCalendar.Core.Services
                 using var doc = JsonDocument.Parse(responseBody);
                 var aiText = doc.RootElement.GetProperty("message").GetProperty("content").GetString() ?? "";
 
-                var match = System.Text.RegularExpressions.Regex.Match(aiText, @"\[.*?\]", System.Text.RegularExpressions.RegexOptions.Singleline);
-                if (match.Success)
+                var keyword = aiText.Trim().Trim('"', '\'', '.', '\n');
+                if (!string.IsNullOrWhiteSpace(keyword) && keyword.Length < 100 && !keyword.StartsWith("["))
                 {
-                    var keywords = JsonSerializer.Deserialize<List<string>>(match.Value);
-                    if (keywords != null && keywords.Count > 0) return keywords;
+                    return new List<string> { keyword };
                 }
             }
             catch (Exception ex)
@@ -118,6 +117,11 @@ namespace ToolCalendar.Core.Services
                 _logger.LogWarning("[AiReference] Ollama keyword extraction failed: {Msg}", ex.Message);
             }
 
+            if (string.IsNullOrWhiteSpace(documentTitle) || documentTitle.Trim().ToUpper() == "CÔNG VĂN")
+            {
+                var fb = !string.IsNullOrWhiteSpace(fullText) && fullText.Length > 50 ? fullText[..50] : "văn bản pháp luật";
+                return new List<string> { fb };
+            }
             return new List<string> { documentTitle };
         }
 

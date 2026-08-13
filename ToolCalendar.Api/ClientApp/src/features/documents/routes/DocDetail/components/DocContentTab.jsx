@@ -19,15 +19,15 @@ function ReferenceCard({ item }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block group rounded-xl border border-slate-700 bg-slate-800/60 hover:bg-slate-700/80 hover:border-blue-500/60 transition-all duration-200 p-4 no-underline"
+      className="block group rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-blue-400/60 shadow-sm transition-all duration-200 p-4 no-underline"
     >
       <div className="flex items-start gap-3">
         <span className="text-xl shrink-0 mt-0.5">{icon}</span>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-bold text-blue-400 uppercase tracking-widest mb-1 truncate">
+          <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-1 truncate">
             {item.source}
           </p>
-          <p className="text-slate-200 text-[12px] font-semibold leading-snug mb-2 line-clamp-2 group-hover:text-white transition-colors">
+          <p className="text-slate-800 text-[12px] font-semibold leading-snug mb-2 line-clamp-2 group-hover:text-slate-900 transition-colors">
             {item.title}
           </p>
           {item.snippet && item.snippet !== item.title && (
@@ -35,7 +35,7 @@ function ReferenceCard({ item }) {
               {item.snippet}
             </p>
           )}
-          <p className="text-blue-500 text-[10px] mt-2 truncate group-hover:text-blue-400">
+          <p className="text-blue-500 text-[10px] mt-2 truncate group-hover:text-blue-600">
             {item.url}
           </p>
         </div>
@@ -143,10 +143,10 @@ export function DocContentTab({ doc, docId, pdfUrl, setIsFullscreenPdf }) {
         </div>
 
         {/* Panel phải: AI References */}
-        <div className="w-full md:w-80 shrink-0 bg-slate-900 flex flex-col overflow-hidden">
+        <div className="w-full md:w-80 shrink-0 bg-slate-50 flex flex-col overflow-hidden">
           {/* Sub-header */}
-          <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between shrink-0">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between shrink-0">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
               Tài liệu tham khảo
             </p>
             <button
@@ -172,12 +172,12 @@ export function DocContentTab({ doc, docId, pdfUrl, setIsFullscreenPdf }) {
             {refState === 'idle' && (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-4">
                 <span className="text-4xl opacity-60">🤖</span>
-                <p className="text-slate-400 text-[11px] leading-relaxed">
+                <p className="text-slate-500 text-[11px] leading-relaxed">
                   AI sẽ đọc nội dung văn bản và tìm các tài liệu pháp lý liên quan từ{' '}
                   <span className="text-blue-400">thuvienphapluat.vn</span>,{' '}
                   <span className="text-blue-400">chinhphu.vn</span> và các nguồn uy tín khác.
                 </p>
-                <p className="text-slate-600 text-[10px]">Nhấn 🔍 Tìm kiếm để bắt đầu</p>
+                <p className="text-slate-400 text-[10px]">Nhấn 🔍 Tìm kiếm để bắt đầu</p>
               </div>
             )}
 
@@ -185,12 +185,12 @@ export function DocContentTab({ doc, docId, pdfUrl, setIsFullscreenPdf }) {
             {refState === 'loading' && (
               <div className="flex flex-col items-center justify-center h-full gap-4">
                 <div className="w-8 h-8 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
-                <p className="text-slate-400 text-[11px] text-center">
+                <p className="text-slate-500 text-[11px] text-center">
                   AI đang phân tích nội dung văn bản
                   <br />
                   và tìm kiếm tài liệu tham khảo...
                 </p>
-                <p className="text-slate-600 text-[10px]">(Có thể mất 15-30 giây)</p>
+                <p className="text-slate-400 text-[10px]">(Có thể mất 15-30 giây)</p>
               </div>
             )}
 
@@ -212,7 +212,7 @@ export function DocContentTab({ doc, docId, pdfUrl, setIsFullscreenPdf }) {
             {refState === 'done' && references.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-4">
                 <span className="text-3xl">🔍</span>
-                <p className="text-slate-400 text-[11px]">
+                <p className="text-slate-500 text-[11px]">
                   Không tìm thấy tài liệu tham khảo phù hợp.
                 </p>
               </div>

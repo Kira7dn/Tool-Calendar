@@ -1,3 +1,12 @@
+### [2026-08-13 16:35] fix(ocr): cải thiện logic AI extract keyword và đổi giao diện sáng
+- **Mô tả**:
+  - Sửa lỗi AI (Ollama qwen2.5 1.5b) thường xuyên xuất sai JSON format khi yêu cầu trả JSON array, dẫn đến việc lấy sai từ khoá "CÔNG VĂN". Thay đổi sang trả về chuỗi text trực tiếp với ưu tiên "Số ký hiệu văn bản" (ví dụ Nghị định 15/2020) và thêm Fallback lấy 50 ký tự đầu tiên của nội dung OCR thay vì title mặc định là "CÔNG VĂN".
+  - Chuyển giao diện cột "TÀI LIỆU THAM KHẢO" từ Dark Mode (`bg-slate-900`) sang Light Mode (`bg-slate-50`) để dễ nhìn hơn trên nền trắng của PDF.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): cải thiện logic AI extract keyword và đổi giao diện sáng"`
+
 ### [2026-08-13 16:15] fix(docs): sửa lỗi fullscreen PDF trên mobile
 - **Mô tả**: Khi người dùng nhấn phóng to (fullscreen) bản PDF lúc review/edit trên giao diện mobile/Zalo in-app browser, tính năng đang sử dụng `window.open` khiến PDF lấp đầy toàn màn hình và không có nút đóng (back). Đã sửa thành sử dụng React state `isFullScreen` và CSS `fixed inset-0 z-[100]` để mở rộng iFrame in-app với nút thu nhỏ (Minimize), giúp trải nghiệm mượt mà và thoát dễ dàng.
 - **Tệp thay đổi**:
