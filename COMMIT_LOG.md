@@ -2448,3 +2448,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/public/custom-sw.js` (Mới)
   - `ToolCalendar.Api/ClientApp/vite.config.js` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(notify): add custom service worker for push notifications"`
+
+### [2026-08-13 08:58] Cập nhật logic tính ngày hạn OCR
+- **Mô tả**: Trừ 1 ngày vào ngày hạn xử lý nếu từ khóa trích xuất được có chứa chữ "trước" (ví dụ: "hoàn thành trước ngày 15/08").
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
+  - `ToolCalendar.Tests/OcrTextRegexTests.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): subtract 1 day from deadline if keyword contains 'truoc'"`

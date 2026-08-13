@@ -437,13 +437,13 @@ Nội dung:
             string timeSkip = @"(?:\d{1,2}h\d{0,2}\s*|\d{1,2}\s*giờ\s*)?";
             var deadlinePatterns = new List<string> {
                 // 1. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [Thời gian (tùy chọn)] + [Ngày/Tháng/Năm]
-                $@"(?:{kwPattern})\s+[^0-9\n]{{0,30}}?\s*{timeSkip}(?:ngày|này|ngay)?\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})",
+                $@"(?<kw>{kwPattern})\s+[^0-9\n]{{0,30}}?\s*{timeSkip}(?:ngày|này|ngay)?\s*(?<d>\d{{1,2}})\s*[\/\-\.\s]\s*(?<m>\d{{1,2}})\s*[\/\-\.\s]\s*(?<y>\d{{4}})",
                 // 2. Mẫu: [Từ khóa] + [Từ đệm linh hoạt] + [Thời gian (tùy chọn)] + [ngày... tháng... năm...]
-                $@"(?:{kwPattern})\s+[^0-9\n]{{0,30}}?\s*{timeSkip}(?:ngày|này|ngay)?\s*(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})",
+                $@"(?<kw>{kwPattern})\s+[^0-9\n]{{0,30}}?\s*{timeSkip}(?:ngày|này|ngay)?\s*(?<d>\d{{1,2}})\s+(?:tháng|thang)\s+(?<m>\d{{1,2}})\s+(?:năm|nam)\s+(?<y>\d{{4}})",
                 // 3. Mẫu: [Ngày/Tháng/Năm] + [Thời gian (tùy chọn)] + [Từ đệm] + [Từ khóa]
-                $@"(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{1,2}})\s*[\/\-\.\s]\s*(\d{{4}})\s+{timeSkip}[^0-9\n]{{0,30}}?\s*(?:{kwPattern})",
+                $@"(?<d>\d{{1,2}})\s*[\/\-\.\s]\s*(?<m>\d{{1,2}})\s*[\/\-\.\s]\s*(?<y>\d{{4}})\s+{timeSkip}[^0-9\n]{{0,30}}?\s*(?<kw>{kwPattern})",
                 // 4. Mẫu: [ngày... tháng... năm...] + [Thời gian (tùy chọn)] + [Từ đệm] + [Từ khóa]
-                $@"(\d{{1,2}})\s+(?:tháng|thang)\s+(\d{{1,2}})\s+(?:năm|nam)\s+(\d{{4}})\s+{timeSkip}[^0-9\n]{{0,30}}?\s*(?:{kwPattern})"
+                $@"(?<d>\d{{1,2}})\s+(?:tháng|thang)\s+(?<m>\d{{1,2}})\s+(?:năm|nam)\s+(?<y>\d{{4}})\s+{timeSkip}[^0-9\n]{{0,30}}?\s*(?<kw>{kwPattern})"
             };
 
             DateTime? bestMatchDate = null;
@@ -454,13 +454,19 @@ Nội dung:
                 var matches = Regex.Matches(t, pattern, RegexOptions.IgnoreCase);
                 foreach (Match m in matches)
                 {
-                    if (int.TryParse(m.Groups[1].Value, out int day) &&
-                        int.TryParse(m.Groups[2].Value, out int month) &&
-                        int.TryParse(m.Groups[3].Value, out int year))
+                    if (int.TryParse(m.Groups["d"].Value, out int day) &&
+                        int.TryParse(m.Groups["m"].Value, out int month) &&
+                        int.TryParse(m.Groups["y"].Value, out int year))
                     {
                         try
                         {
                             var detectedDate = new DateTime(year, month, day);
+
+                            // Nếu từ khóa chứa chữ "trước", trừ đi 1 ngày (VD: "hoàn thành trước ngày 15/8" -> hạn là 14/8)
+                            if (m.Groups["kw"].Success && m.Groups["kw"].Value.IndexOf("trước", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                detectedDate = detectedDate.AddDays(-1);
+                            }
 
                             // Kiểm tra từ khóa loại trừ trong 50 ký tự xung quanh
                             if (excPattern != null)

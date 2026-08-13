@@ -46,5 +46,20 @@ namespace ToolCalendar.Tests
             // Assert
             result.SoVanBan.Should().Be("10/SYT-NVY");
         }
+
+        [Fact]
+        public async Task ParseTextAsync_ShouldSubtractOneDay_WhenKeywordContainsTruoc()
+        {
+            // Arrange
+            // "hoàn thành trước ngày 15/08/2026" -> Hạn phải là 14/08/2026
+            string text = "UBND TỈNH\nSố: 10/SYT-NVY\nYêu cầu hoàn thành trước ngày 15/08/2026 nhé\n...";
+            
+            // Act
+            var result = await _service.ParseTextAsync(text, "test.pdf");
+
+            // Assert
+            result.ThoiHan.Should().HaveValue();
+            result.ThoiHan.Value.Should().Be(new System.DateTime(2026, 8, 14));
+        }
     }
 }
