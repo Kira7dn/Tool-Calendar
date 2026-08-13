@@ -284,11 +284,16 @@ export function UserModal({ isOpen, onClose, user, departments, onSuccess }) {
                 className="w-full px-4 h-11 rounded-xl bg-muted/50 border-none text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
               >
                 <option value="0">Chưa phân phòng</option>
-                {departments.map((d) => (
-                  <option key={d.id} value={d.id.toString()}>
-                    {d.name}
-                  </option>
-                ))}
+                {departments
+                  .filter(
+                    (d) =>
+                      d.isActive !== false || d.id.toString() === formData?.departmentId?.toString()
+                  )
+                  .map((d) => (
+                    <option key={d.id} value={d.id.toString()}>
+                      {d.name}
+                    </option>
+                  ))}
               </select>
             </div>
 

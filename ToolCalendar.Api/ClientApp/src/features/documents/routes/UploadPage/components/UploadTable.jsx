@@ -205,11 +205,13 @@ export function UploadTable({
                       className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="">Chọn đơn vị</option>
-                      {departments.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
-                        </option>
-                      ))}
+                      {departments
+                        .filter((d) => d.isActive !== false || d.id === item?.departmentIds?.[0])
+                        .map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name}
+                          </option>
+                        ))}
                     </select>
                   </td>
                   <td className="px-3 py-2">

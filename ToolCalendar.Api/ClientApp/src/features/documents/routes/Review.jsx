@@ -226,11 +226,13 @@ export function Review({ onBack }) {
                         className="w-full h-10 rounded-xl border border-border bg-muted/50 px-3 text-sm font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                       >
                         <option value="">Chọn đơn vị...</option>
-                        {departments.map((d) => (
-                          <option key={d.id} value={d.id}>
-                            {d.name}
-                          </option>
-                        ))}
+                        {departments
+                          .filter((d) => d.isActive !== false || d.id === formData?.departmentId)
+                          .map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.name}
+                            </option>
+                          ))}
                       </select>
                     </div>
                     <div className="space-y-2">

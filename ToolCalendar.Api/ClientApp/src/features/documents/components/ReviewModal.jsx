@@ -224,11 +224,15 @@ export function ReviewModal({
                       className="w-full px-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Chọn đơn vị...</option>
-                      {departments.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
-                        </option>
-                      ))}
+                      {departments
+                        .filter(
+                          (d) => d.isActive !== false || d.id === reviewItem?.departmentIds?.[0]
+                        )
+                        .map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name}
+                          </option>
+                        ))}
                     </select>
                   </div>
                   <div className="flex flex-col gap-2">

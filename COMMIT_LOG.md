@@ -2455,3 +2455,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
   - `ToolCalendar.Tests/OcrTextRegexTests.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ocr): subtract 1 day from deadline if keyword contains 'truoc'"`
+### [2026-08-13 10:52] Filter inactive departments from UI dropdowns
+- **Mô tả**: Fix lỗi các phòng ban đã ngừng hoạt động (IsActive = 0) vẫn hiển thị trong dropdown chọn đơn vị. Cập nhật frontend để lọc bỏ phòng ban inactive, nhưng vẫn hiển thị nếu phòng ban đó đã được lưu trước đó để không làm hỏng UI.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/components/ReviewModal.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/EditDocModal.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Review.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/users/components/UserModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): filter inactive departments from dropdowns"`
