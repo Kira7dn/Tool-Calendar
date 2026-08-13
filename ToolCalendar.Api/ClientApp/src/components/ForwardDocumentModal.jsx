@@ -11,6 +11,8 @@ export const ForwardDocumentModal = ({
   onForwardSuccess,
 }) => {
   const [users, setUsers] = useState([])
+  const [departments, setDepartments] = useState([])
+  const [selectedDepartment, setSelectedDepartment] = useState('')
   const [selectedUser, setSelectedUser] = useState('')
   const [role, setRole] = useState('Chủ trì')
   const [deadline, setDeadline] = useState('')
@@ -25,8 +27,11 @@ export const ForwardDocumentModal = ({
   useEffect(() => {
     if (isOpen) {
       fetchUsers()
+      fetchDepartments()
       setIsDropdownOpen(false)
       setSearchTerm('')
+      setSelectedDepartment('')
+      setSelectedUser('')
     }
   }, [isOpen])
 
@@ -52,11 +57,26 @@ export const ForwardDocumentModal = ({
     }
   }
 
+  const fetchDepartments = async () => {
+    try {
+      const response = await fetch('/api/admin/departments', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setDepartments(Array.isArray(data) ? data : [])
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const currentUserId = parseInt(localStorage.getItem('user_id') || '0', 10)
 
   const filteredUsers = users.filter(
     (u) =>
       u.id !== currentUserId &&
+      u.departmentId === parseInt(selectedDepartment) &&
       (u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.username.toLowerCase().includes(searchTerm.toLowerCase()))
   )
@@ -134,79 +154,105 @@ export const ForwardDocumentModal = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="relative" ref={dropdownRef}>
+          <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Người nhận <span className="text-red-500">*</span>
+              Phòng ban <span className="text-red-500">*</span>
             </label>
-            <div
-              className={`w-full px-4 py-2.5 rounded-xl border text-sm bg-white cursor-pointer flex justify-between items-center transition-all ${isDropdownOpen ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200 hover:border-slate-300'}`}
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            <select
+              value={selectedDepartment}
+              onChange={(e) => {
+                setSelectedDepartment(e.target.value)
+                setSelectedUser('')
+                setSearchTerm('')
+              }}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all appearance-none cursor-pointer"
             >
-              <span className={selectedUser ? 'text-slate-900 font-semibold' : 'text-slate-400'}>
-                {selectedUser
-                  ? `${users.find((u) => u.id == selectedUser)?.fullName} (${users.find((u) => u.id == selectedUser)?.username})`
-                  : '-- Chọn cán bộ xử lý --'}
-              </span>
-              <ChevronDown
-                size={16}
-                className={`text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+              <option value="">-- Chọn phòng ban --</option>
+              {departments
+                .filter((d) => d.isActive !== false)
+                .map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          {selectedDepartment && (
+            <div className="relative" ref={dropdownRef}>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Người nhận <span className="text-red-500">*</span>
+              </label>
+              <div
+                className={`w-full px-4 py-2.5 rounded-xl border text-sm bg-white cursor-pointer flex justify-between items-center transition-all ${isDropdownOpen ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200 hover:border-slate-300'}`}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <span className={selectedUser ? 'text-slate-900 font-semibold' : 'text-slate-400'}>
+                  {selectedUser
+                    ? `${users.find((u) => u.id == selectedUser)?.fullName} (${users.find((u) => u.id == selectedUser)?.username})`
+                    : '-- Chọn cán bộ xử lý --'}
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={`text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </div>
+
+              {isDropdownOpen && (
+                <div className="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-64 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
+                    <Search size={16} className="text-slate-400 ml-2 shrink-0" />
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder="Tìm kiếm theo tên hoặc tài khoản..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400 py-1"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  <div className="overflow-y-auto flex-1 p-1">
+                    {filteredUsers.length > 0 ? (
+                      filteredUsers.map((u) => (
+                        <div
+                          key={u.id}
+                          className={`px-3 py-2 text-sm rounded-lg cursor-pointer flex items-center justify-between hover:bg-blue-50 transition-colors ${selectedUser == u.id ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-700'}`}
+                          onClick={() => {
+                            setSelectedUser(u.id)
+                            setIsDropdownOpen(false)
+                            setSearchTerm('')
+                          }}
+                        >
+                          <div className="flex flex-col">
+                            <span>{u.fullName}</span>
+                            <span
+                              className={`text-[10px] font-normal ${selectedUser == u.id ? 'text-blue-500' : 'text-slate-400'}`}
+                            >
+                              {u.username}
+                            </span>
+                          </div>
+                          {selectedUser == u.id && <Check size={16} className="text-blue-600" />}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-6 text-center text-sm text-slate-400 flex flex-col items-center gap-2">
+                        <UserX size={24} className="text-slate-300" />
+                        Không tìm thấy cán bộ nào
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              <input
+                type="text"
+                className="absolute opacity-0 w-0 h-0 -z-10"
+                required
+                value={selectedUser}
+                onChange={() => {}}
               />
             </div>
-
-            {isDropdownOpen && (
-              <div className="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-64 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
-                  <Search size={16} className="text-slate-400 ml-2 shrink-0" />
-                  <input
-                    type="text"
-                    autoFocus
-                    placeholder="Tìm kiếm theo tên hoặc tài khoản..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400 py-1"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-                <div className="overflow-y-auto flex-1 p-1">
-                  {filteredUsers.length > 0 ? (
-                    filteredUsers.map((u) => (
-                      <div
-                        key={u.id}
-                        className={`px-3 py-2 text-sm rounded-lg cursor-pointer flex items-center justify-between hover:bg-blue-50 transition-colors ${selectedUser == u.id ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-700'}`}
-                        onClick={() => {
-                          setSelectedUser(u.id)
-                          setIsDropdownOpen(false)
-                          setSearchTerm('')
-                        }}
-                      >
-                        <div className="flex flex-col">
-                          <span>{u.fullName}</span>
-                          <span
-                            className={`text-[10px] font-normal ${selectedUser == u.id ? 'text-blue-500' : 'text-slate-400'}`}
-                          >
-                            {u.username}
-                          </span>
-                        </div>
-                        {selectedUser == u.id && <Check size={16} className="text-blue-600" />}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="px-4 py-6 text-center text-sm text-slate-400 flex flex-col items-center gap-2">
-                      <UserX size={24} className="text-slate-300" />
-                      Không tìm thấy cán bộ nào
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            <input
-              type="text"
-              className="absolute opacity-0 w-0 h-0 -z-10"
-              required
-              value={selectedUser}
-              onChange={() => {}}
-            />
-          </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>

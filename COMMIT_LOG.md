@@ -1,3 +1,9 @@
+### [2026-08-13 11:05] feat(routing): thêm chọn phòng ban vào Modal Chuyển xử lý
+- **Mô tả**: Giao diện chuyển xử lý ban đầu chỉ có tìm và chọn cán bộ (bước này bị dài nếu tìm người không nhớ tên). Cải tiến theo yêu cầu của user: Thêm tuỳ chọn Phòng ban vào trước, bắt buộc chọn phòng ban trước khi chọn người nhận. Sau đó chỉ hiển thị những người nhận thuộc phòng ban đã chọn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/ForwardDocumentModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(routing): thêm chọn phòng ban vào Modal Chuyển xử lý"`
+
 ### [2026-08-12 10:02] fix(ocr): thêm using namespace cho IOllamaEmbeddingService
 - **Mô tả**: Sửa lỗi biên dịch do thiếu using `ToolCalendar.Core.Services` trong `OcrQueueService.cs` gây lỗi Docker build.
 - **Tệp thay đổi**:
