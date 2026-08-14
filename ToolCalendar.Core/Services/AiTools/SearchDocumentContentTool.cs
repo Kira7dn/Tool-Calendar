@@ -87,7 +87,7 @@ namespace ToolCalendar.Core.Services.AiTools
                 {
                     var doc = await _documentRepo.GetDocumentByIdAsync(c.DocumentId);
                     string metadata = $"Ngày BH: {doc?.NgayBanHanh?.ToString("dd/MM/yyyy") ?? "Không rõ"} | Cơ quan BH: {doc?.CoQuanBanHanh ?? "Không rõ"}";
-                    sb.AppendLine($"[Công văn số {doc?.SoVanBan ?? c.DocumentId.ToString()} ({metadata})]: {c.TextContent}");
+                    sb.AppendLine($"[DOC|{doc?.Id}|Công văn số {doc?.SoVanBan ?? c.DocumentId.ToString()}] ({metadata}): {c.TextContent}");
                 }
                 return sb.ToString();
             }

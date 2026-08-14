@@ -79,7 +79,7 @@ namespace ToolCalendar.Core.Services.AiTools
                 foreach (var doc in result.Items)
                 {
                     string dateStr = doc.ThoiHan.HasValue ? doc.ThoiHan.Value.ToString("dd/MM/yyyy") : "Không có";
-                    sb.AppendLine($"- [Id: {doc.Id}] Số VB: {doc.SoVanBan ?? "N/A"} | Tên: {doc.TenCongVan} | Trạng thái: {doc.Status} | Hạn: {dateStr}");
+                    sb.AppendLine($"- [DOC|{doc.Id}|{doc.TenCongVan}] | Số VB: {doc.SoVanBan ?? "N/A"} | Trạng thái: {doc.Status} | Hạn: {dateStr}");
                 }
 
                 return sb.ToString();

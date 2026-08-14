@@ -2691,3 +2691,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Program.cs` (Sửa đổi - xóa service registration)
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi - xóa biến gemini, thêm vòng lặp try-catch với Task.Delay)
 - **Lệnh git commit**: `git commit -m "refactor(ai): xoa gemini fallback de bao mat du lieu, them co che auto-retry cho ollama"`
+
+### [2026-08-14 14:26] Hỗ trợ hiển thị nút bấm Công văn trực tiếp trong Chat AI
+- **Mô tả**: Dạy AI xuất ra tag `[DOC|Id|Tên]` và cấu hình Frontend tự động parse đoạn text này thành một Component Button. Khi click sẽ gọi trực tiếp vào `window.app.services.openDocDetail(id)` để mở Drawer chi tiết.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiTools/SearchDocumentsByConditionTool.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiTools/SearchDocumentContentTool.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): support clickable document links inside chat messages"`

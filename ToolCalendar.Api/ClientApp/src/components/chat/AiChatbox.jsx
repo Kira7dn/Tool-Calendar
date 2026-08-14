@@ -1,7 +1,7 @@
 /* global TextDecoder */
 import PropTypes from 'prop-types'
 import { useState, useRef, useEffect } from 'react'
-import { Bot, X, Maximize2, Minimize2, Lightbulb, Trash2 } from 'lucide-react'
+import { Bot, X, Maximize2, Minimize2, Lightbulb, Trash2, FileText } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 export function AiChatbox({ currentDocId }) {
@@ -223,6 +223,31 @@ export function AiChatbox({ currentDocId }) {
     'Giải quyết, phê duyệt phân tích từ các phòng ban',
   ]
 
+  /* eslint-disable react/no-array-index-key */
+  const renderMessageContent = (content) => {
+    if (!content) return null
+    const parts = content.split(/(\[DOC\|\d+\|.*?\])/g)
+    return parts.map((part, index) => {
+      const match = part.match(/\[DOC\|(\d+)\|(.*?)\]/)
+      if (match) {
+        const id = match[1]
+        const name = match[2]
+        return (
+          <button
+            key={`doc-${id}-${index}`}
+            onClick={() => window.app?.services?.openDocDetail?.(id)}
+            className="inline-flex items-center gap-1 px-2 py-0.5 mx-1 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md font-semibold text-xs transition-colors align-middle shadow-sm whitespace-normal text-left"
+            title="Nhấn để xem chi tiết công văn"
+          >
+            <FileText className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate max-w-[200px] sm:max-w-[300px]">{name}</span>
+          </button>
+        )
+      }
+      return <span key={`text-${index}`}>{part}</span>
+    })
+  }
+
   return (
     <>
       {/* Floating Button */}
@@ -352,7 +377,7 @@ export function AiChatbox({ currentDocId }) {
                     : 'bg-white text-slate-700 border border-slate-100 rounded-bl-sm'
                 )}
               >
-                {msg.content}
+                {msg.role === 'assistant' ? renderMessageContent(msg.content) : msg.content}
               </div>
             </div>
           ))}
