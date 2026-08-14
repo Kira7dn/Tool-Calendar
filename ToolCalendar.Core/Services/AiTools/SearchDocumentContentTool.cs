@@ -1,0 +1,100 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using ToolCalendar.Core.Data.Interfaces;
+using ToolCalendar.Core.Services;
+
+namespace ToolCalendar.Core.Services.AiTools
+{
+    public class SearchDocumentContentTool : IAiTool
+    {
+        private readonly IDocumentChunkRepository _chunkRepo;
+        private readonly IOllamaEmbeddingService _embeddingService;
+        private readonly IDocumentRepository _documentRepo;
+        private const float SimilarityThreshold = 0.20f;
+
+        public SearchDocumentContentTool(
+            IDocumentChunkRepository chunkRepo,
+            IOllamaEmbeddingService embeddingService,
+            IDocumentRepository documentRepo)
+        {
+            _chunkRepo = chunkRepo;
+            _embeddingService = embeddingService;
+            _documentRepo = documentRepo;
+        }
+
+        public string Name => "search_document_content";
+        public string Description => "Tìm kiếm chi tiết nội dung công văn. Dùng khi sếp hỏi các câu cụ thể về nội dung, quy định, luật pháp, thời hạn, hoặc yêu cầu tìm công văn cụ thể.";
+
+        public object ParametersSchema => new
+        {
+            type = "object",
+            properties = new
+            {
+                keyword = new
+                {
+                    type = "string",
+                    description = "Từ khóa cần tìm kiếm (bắt buộc)"
+                },
+                so_hieu = new
+                {
+                    type = "string",
+                    description = "Số hiệu công văn nếu có (ví dụ: '123/UBND', '22/KH')"
+                },
+                ngay_ban_hanh = new
+                {
+                    type = "string",
+                    description = "Ngày ban hành nếu có (ví dụ: '15/08', '2023')"
+                }
+            },
+            required = new[] { "keyword" }
+        };
+
+        public async Task<string> ExecuteAsync(Dictionary<string, object> arguments)
+        {
+            try
+            {
+                if (!arguments.TryGetValue("keyword", out var kwObj) || kwObj == null)
+                {
+                    return "Thiếu tham số keyword.";
+                }
+
+                string keyword = kwObj.ToString() ?? "";
+                string? soHieu = arguments.TryGetValue("so_hieu", out var shObj) ? shObj?.ToString() : null;
+                string? ngayBanHanh = arguments.TryGetValue("ngay_ban_hanh", out var ngObj) ? ngObj?.ToString() : null;
+
+                var questionVector = await _embeddingService.GenerateEmbeddingAsync(keyword);
+
+                var distinctChunks = new List<DocumentChunkResult>();
+                if (questionVector != null && questionVector.Length > 0)
+                {
+                    distinctChunks = await _chunkRepo.FindHybridChunksAsync(keyword, questionVector, topK: 5, minSimilarityScore: SimilarityThreshold, soHieu: soHieu, ngayBanHanh: ngayBanHanh);
+                }
+                else
+                {
+                    distinctChunks = await _chunkRepo.FindByKeywordAsync(keyword, topK: 5);
+                }
+
+                if (distinctChunks.Count == 0)
+                {
+                    return "KHÔNG_TÌM_THẤY: Không có nội dung phù hợp trong cơ sở dữ liệu công văn. Hãy thông báo cho người dùng rằng hệ thống không tìm thấy thông tin liên quan, và không được tự bịa đặt.";
+                }
+
+                var sb = new StringBuilder();
+                foreach (var c in distinctChunks)
+                {
+                    var doc = await _documentRepo.GetDocumentByIdAsync(c.DocumentId);
+                    string metadata = $"Ngày BH: {doc?.NgayBanHanh?.ToString("dd/MM/yyyy") ?? "Không rõ"} | Cơ quan BH: {doc?.CoQuanBanHanh ?? "Không rõ"}";
+                    sb.AppendLine($"[Công văn số {doc?.SoVanBan ?? c.DocumentId.ToString()} ({metadata})]: {c.TextContent}");
+                }
+                return sb.ToString();
+            }
+            catch (Exception ex)
+            {
+                return "Lỗi khi tìm kiếm dữ liệu: " + ex.Message;
+            }
+        }
+    }
+}

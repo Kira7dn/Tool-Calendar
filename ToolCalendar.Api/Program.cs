@@ -9,6 +9,7 @@ using ToolCalendar.Api.Security;          // ✅ CustomUserStore, HybridPassword
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Core.Data.Repositories;
 using ToolCalendar.Core.Services;
+using ToolCalendar.Core.Services.AiTools;
 
 using ToolCalendar.Data;
 using ToolCalendar.Hubs;
@@ -96,6 +97,14 @@ builder.Services.AddScoped<IOcrTextProcessingService, OcrTextProcessingService>(
 builder.Services.AddScoped<IOllamaEmbeddingService, OllamaEmbeddingService>();
 builder.Services.AddScoped<IDocumentChunkRepository, DocumentChunkRepository>();
 builder.Services.AddScoped<IUserMemoryRepository, UserMemoryRepository>(); // ANYTHINGLLM Idea #5: Long-Term Memory
+
+// Đăng ký AI Tools (Khoj Architecture)
+builder.Services.AddScoped<IAiTool, GetDocumentStatsTool>();
+builder.Services.AddScoped<IAiTool, SearchDocumentContentTool>();
+builder.Services.AddScoped<IAiTool, WebSearchTool>();
+builder.Services.AddScoped<IAiTool, ChartGeneratorTool>();
+builder.Services.AddScoped<AiToolRegistry>();
+
 builder.Services.AddScoped<IAiAssistantService, AiAssistantService>();
 builder.Services.AddScoped<IAiReferenceService, AiReferenceService>();
 

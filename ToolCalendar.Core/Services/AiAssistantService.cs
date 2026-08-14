@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ToolCalendar.Core.Data.Interfaces;
 using System.Text.RegularExpressions;
 using System.Linq;
+using ToolCalendar.Core.Services.AiTools;
 
 namespace ToolCalendar.Core.Services
 {
@@ -31,6 +32,7 @@ namespace ToolCalendar.Core.Services
         private readonly IOllamaEmbeddingService _embeddingService;
         private readonly IDocumentChunkRepository _chunkRepo;
         private readonly IUserMemoryRepository _memoryRepo;
+        private readonly AiToolRegistry _toolRegistry;
         private readonly ILogger<AiAssistantService> _logger;
 
         // ANYTHINGLLM Idea #1: N-Hop Tool Chain — tối đa 5 lượt tool call liên tiếp
@@ -49,6 +51,7 @@ namespace ToolCalendar.Core.Services
             IOllamaEmbeddingService embeddingService,
             IDocumentChunkRepository chunkRepo,
             IUserMemoryRepository memoryRepo,
+            AiToolRegistry toolRegistry,
             ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
@@ -62,6 +65,7 @@ namespace ToolCalendar.Core.Services
             _embeddingService = embeddingService;
             _chunkRepo = chunkRepo;
             _memoryRepo = memoryRepo;
+            _toolRegistry = toolRegistry;
             _logger = logger;
         }
 
@@ -131,6 +135,9 @@ LƯU Ý CỰC KỲ QUAN TRỌNG ĐỂ TRÁNH BỊA ĐẶT (HALLUCINATION):
 3. Nếu văn bản bị lỗi font (OCR rác), hãy tóm tắt phần nội dung đọc được ở bên dưới.
 4. Nếu người dùng hỏi thông tin không có trong văn bản, BẮT BUỘC trả lời: ""Dạ, trong văn bản không đề cập đến thông tin này.""
 
+KHOJ Idea #4 — ReAct (Reasoning and Acting):
+Trước khi gọi bất kỳ công cụ (tool) nào, hoặc đưa ra câu trả lời cuối cùng, hãy TỰ SUY LUẬN (Thought Process) để đảm bảo kết quả chính xác nhất. Nếu cần gọi nhiều tool, hãy gọi lần lượt.
+
 KHOJ Idea #8 — INLINE CITATION (TRÍCH DẪN NỐI TUYẾN):
 Khi trả lời dựa vào dữ liệu từ công văn cụ thể, BẮT BUỘC trích dẫn theo format: (Công văn số X/YYY-ZZZ, ngày DD/MM/YYYY).
 KHÔNG được viết trái lời chung chung khi đã có dữ liệu cụ thể.
@@ -163,39 +170,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
                 messages.Add(new { role = msg.Role, content = msg.Content });
             messages.Add(new { role = "user", content = message });
 
-            var tools = new object[]
-            {
-                new
-                {
-                    type = "function",
-                    function = new
-                    {
-                        name = "get_document_stats",
-                        description = "Lấy số liệu thống kê công văn (tồn đọng, quá hạn, đến hạn hôm nay, ngày mai, tuần tới...) và danh sách chi tiết.",
-                        parameters = new { type = "object", properties = new Dictionary<string, object>() }
-                    }
-                },
-                new
-                {
-                    type = "function",
-                    function = new
-                    {
-                        name = "search_document_content",
-                        description = "Tìm kiếm nội dung chi tiết trong các công văn (RAG). Sử dụng khi người dùng hỏi về quy định, chính sách, nội dung văn bản cụ thể. Bạn có thể trích xuất Số hiệu hoặc Ngày tháng nếu có trong câu hỏi.",
-                        parameters = new
-                        {
-                            type = "object",
-                            properties = new Dictionary<string, object>
-                            {
-                                { "keyword", new { type = "string", description = "Từ khóa tìm kiếm (ngắn gọn, tối đa 3-5 từ)" } },
-                                { "so_hieu", new { type = "string", description = "Số hiệu công văn (nếu người dùng nhắc đến, ví dụ: 123/UBND)" } },
-                                { "ngay_ban_hanh", new { type = "string", description = "Ngày ban hành (nếu người dùng nhắc đến, ví dụ: 12/05/2023)" } }
-                            },
-                            required = new[] { "keyword" }
-                        }
-                    }
-                }
-            };
+            var tools = _toolRegistry.GetToolsSchema().ToArray();
 
             using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(90));
 
@@ -298,61 +273,31 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
                     string toolResult;
                     _logger.LogInformation("[AiAssistant] Executing Tool: {Name} (lần {Count})", name, toolCallCount[name]);
 
-                    if (name == "get_document_stats")
+                    var dictArgs = new Dictionary<string, object>();
+                    try
                     {
-                        try { toolResult = await _statsRepo.GetAiContextStatsAsync(); }
-                        catch (Exception ex) { toolResult = "Lỗi khi lấy dữ liệu thống kê: " + ex.Message; }
-                    }
-                    else if (name == "search_document_content")
-                    {
-                        try
+                        var argsObj = JsonDocument.Parse(args);
+                        foreach (var prop in argsObj.RootElement.EnumerateObject())
                         {
-                            string keyword = message;
-                            string? soHieu = null;
-                            string? ngayBanHanh = null;
-
-                            var argsObj = JsonDocument.Parse(args);
-                            if (argsObj.RootElement.TryGetProperty("keyword", out var kwProp))
-                                keyword = kwProp.GetString() ?? message;
-                            if (argsObj.RootElement.TryGetProperty("so_hieu", out var soHieuProp))
-                                soHieu = soHieuProp.GetString();
-                            if (argsObj.RootElement.TryGetProperty("ngay_ban_hanh", out var ngayProp))
-                                ngayBanHanh = ngayProp.GetString();
-
-                            var questionVector = await _embeddingService.GenerateEmbeddingAsync(keyword);
-                            
-                            var distinctChunks = new List<DocumentChunkResult>();
-                            if (questionVector != null && questionVector.Length > 0)
+                            dictArgs[prop.Name] = prop.Value.ValueKind switch
                             {
-                                // Kỹ thuật #1, #3, #4, #6: Gọi hàm Hybrid (TF-IDF + Cosine), có Threshold và Task.WhenAll bên trong.
-                                distinctChunks = await _chunkRepo.FindHybridChunksAsync(keyword, questionVector, topK: 5, minSimilarityScore: SimilarityThreshold, soHieu: soHieu, ngayBanHanh: ngayBanHanh);
-                            }
-                            else
-                            {
-                                // Fallback nếu không generate được vector
-                                distinctChunks = await _chunkRepo.FindByKeywordAsync(keyword, topK: 5);
-                            }
-
-                            // ANYTHINGLLM Idea #7: Query-Mode Refusal — không có kết quả → từ chối thẳng
-                            if (distinctChunks.Count == 0)
-                            {
-                                toolResult = "KHÔNG_TÌM_THẤY: Không có nội dung phù hợp trong cơ sở dữ liệu công văn. Hãy thông báo cho người dùng rằng hệ thống không tìm thấy thông tin liên quan, và không được tự bịa đặt.";
-                            }
-                            else
-                            {
-                                var sb = new StringBuilder();
-                                foreach (var c in distinctChunks)
-                                {
-                                    var doc = await _documentRepo.GetDocumentByIdAsync(c.DocumentId);
-                                    
-                                    // DIFY Idea #5: Enriched Citation Format
-                                    string metadata = $"Ngày BH: {doc?.NgayBanHanh?.ToString("dd/MM/yyyy") ?? "Không rõ"} | Cơ quan BH: {doc?.CoQuanBanHanh ?? "Không rõ"}";
-                                    sb.AppendLine($"[Công văn số {doc?.SoVanBan ?? c.DocumentId.ToString()} ({metadata})]: {c.TextContent}");
-                                }
-                                toolResult = sb.ToString();
-                            }
+                                JsonValueKind.String => prop.Value.GetString() ?? "",
+                                JsonValueKind.Number => prop.Value.GetDouble(),
+                                JsonValueKind.True => true,
+                                JsonValueKind.False => false,
+                                JsonValueKind.Array => prop.Value.Clone(), // Lưu element clone cho Array
+                                _ => prop.Value.GetRawText()
+                            };
                         }
-                        catch (Exception ex) { toolResult = "Lỗi khi tìm kiếm dữ liệu: " + ex.Message; }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("[AiAssistant] Lỗi parse JSON arguments: {Msg}", ex.Message);
+                    }
+
+                    if (_toolRegistry.HasTool(name))
+                    {
+                        toolResult = await _toolRegistry.ExecuteToolAsync(name, dictArgs);
                     }
                     else
                     {

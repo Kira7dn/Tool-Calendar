@@ -2652,3 +2652,17 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi toán tử null với DateTime trong AiAssistantService"`
+
+### [2026-08-14 09:58] Tích hợp bộ công cụ Khoj (MCP, Web Search, ReAct)
+- **Mô tả**: Refactor kiến trúc AiAssistantService để sử dụng AiToolRegistry (lấy cảm hứng từ MCP của Khoj). Bổ sung thêm khả năng ReAct (Reasoning and Acting) vào Prompt. Thêm WebSearchTool (tra cứu DuckDuckGo HTML) và ChartGeneratorTool (vẽ biểu đồ Mermaid) để biến trợ lý thành Super Agent.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/ToolCalendar.Core.csproj` (Sửa đổi: Thêm HtmlAgilityPack)
+  - `ToolCalendar.Core/Services/AiTools/IAiTool.cs` (Mới)
+  - `ToolCalendar.Core/Services/AiTools/AiToolRegistry.cs` (Mới)
+  - `ToolCalendar.Core/Services/AiTools/GetDocumentStatsTool.cs` (Mới)
+  - `ToolCalendar.Core/Services/AiTools/SearchDocumentContentTool.cs` (Mới)
+  - `ToolCalendar.Core/Services/AiTools/WebSearchTool.cs` (Mới)
+  - `ToolCalendar.Core/Services/AiTools/ChartGeneratorTool.cs` (Mới)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi: Áp dụng Registry và ReAct)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi: Đăng ký DI)
+- **Lệnh git commit**: `git commit -m "feat(api): refactor AiAssistant với AiToolRegistry, thêm WebSearch và ChartGenerator (chuẩn Khoj)"`
