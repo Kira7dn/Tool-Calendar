@@ -262,7 +262,7 @@ export function AiChatbox({ currentDocId }) {
           touchAction: 'none',
         }}
         className={cn(
-          'fixed bottom-20 md:bottom-6 right-6 z-[600] p-4 rounded-full shadow-[0_0_20px_rgba(251,146,60,0.4)] transition-all',
+          'fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 right-6 z-[9999] p-4 rounded-full shadow-[0_0_20px_rgba(251,146,60,0.4)] transition-all',
           !isDragging && 'duration-300 hover:scale-110',
           'bg-[#1c3a6b] text-white overflow-hidden',
           isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
@@ -276,11 +276,11 @@ export function AiChatbox({ currentDocId }) {
       {/* Chat Window */}
       <div
         className={cn(
-          'fixed z-[600] bg-slate-50/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform origin-bottom-right flex flex-col border border-slate-200/50',
+          'fixed z-[9999] bg-slate-50/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform origin-bottom-right flex flex-col border border-slate-200/50',
           isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none',
           isExpanded
-            ? 'bottom-[5vh] right-[5vw] w-[90vw] h-[90vh] sm:bottom-[10vh] sm:right-[10vw] sm:w-[80vw] sm:h-[80vh] max-w-[1000px]'
-            : 'bottom-20 md:bottom-6 right-6 w-[400px] h-[600px] max-w-[calc(100vw-48px)] max-h-[calc(100vh-100px)]'
+            ? 'bottom-[5dvh] right-[5vw] w-[90vw] h-[90dvh] sm:bottom-[10vh] sm:right-[10vw] sm:w-[80vw] sm:h-[80vh] max-w-[1000px]'
+            : 'bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 right-2 sm:right-6 w-[calc(100vw-16px)] sm:w-[400px] h-[600px] max-h-[calc(100dvh-7rem-env(safe-area-inset-bottom))]'
         )}
       >
         {/* Header */}

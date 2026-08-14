@@ -2744,3 +2744,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiTools/SearchDocumentContentTool.cs` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ai): support clickable document links inside chat messages"`
+
+### [2026-08-14 17:50] Fix AiChatbox PWA mobile layout & update behavior
+- **Mô tả**: Fix lỗi giao diện ô chat bị thanh điều hướng dưới (bottom nav) che khuất trên mobile bằng cách cấu hình lại bottom-margin tính toán theo env(safe-area-inset-bottom) và sử dụng dvh. Đồng thời cấu hình lại Vite PWA với `cleanupOutdatedCaches`, `clientsClaim`, `skipWaiting` để PWA tự động cập nhật ngay lập tức khi mở từ màn hình chính (Add to Home Screen).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/vite.config.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): fix aichatbox mobile layout overlap and force pwa auto-update"`
