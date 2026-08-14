@@ -2642,3 +2642,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ocr): triển khai 7 kỹ thuật RAG cao cấp từ Dify và AnythingLLM"`
+### [2026-08-14 09:39] Vá lỗi build DocumentChunkRepository (Khôi phục FindByKeywordAsync)
+- **Mô tả**: Vá lỗi build C# `CS0535: 'DocumentChunkRepository' does not implement interface member` do thiếu hàm `FindByKeywordAsync` trong quá trình hợp nhất nhánh.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(db): khôi phục hàm FindByKeywordAsync cho giao diện IDocumentChunkRepository"`

@@ -104,6 +104,41 @@ namespace ToolCalendar.Core.Data.Repositories
             return results;
         }
 
+        public async Task<List<DocumentChunkResult>> FindByKeywordAsync(string keyword, int topK = 5)
+        {
+            var results = new List<DocumentChunkResult>();
+            if (string.IsNullOrWhiteSpace(keyword)) return results;
+
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var cmd = connection.CreateCommand();
+            // Đơn giản hóa Keyword Search bằng LIKE
+            cmd.CommandText = @"
+                SELECT DocumentId, TextContent 
+                FROM DocumentChunks 
+                WHERE TextContent LIKE '%' || @Keyword || '%'
+                LIMIT @TopK";
+            
+            cmd.Parameters.AddWithValue("@Keyword", keyword);
+            cmd.Parameters.AddWithValue("@TopK", topK);
+
+            using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    results.Add(new DocumentChunkResult
+                    {
+                        DocumentId = reader.GetInt32(0),
+                        TextContent = reader.GetString(1),
+                        SimilarityScore = 1.0f // Baseline score cho keyword match
+                    });
+                }
+            }
+
+            return results;
+        }
+
         public async Task<List<DocumentChunkResult>> FindHybridChunksAsync(string query, float[] questionVector, int topK = 5, float minSimilarityScore = 0.20f, string? soHieu = null, string? ngayBanHanh = null)
         {
             // DIFY Idea #6: Parallel Retrieval (Task.WhenAll)
