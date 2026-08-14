@@ -1,3 +1,9 @@
+### [2026-08-14 14:47] fix(ai): sửa lỗi AI trích xuất câu hỏi dài thay vì từ khóa pháp luật
+- **Mô tả**: Fix lỗi khi người dùng bấm "Tìm kiếm" ở phần Tài liệu tham khảo, hệ thống trả về link trống (ví dụ: `thuvienphapluat.vn/tim-van-ban.aspx?keyword=Nội dung của...`). Nguyên nhân do AI ExtractKeywordsAsync được prompt yêu cầu trích xuất "câu truy vấn phụ" nên nó lấy nguyên cả câu hỏi dài thay vì từ khóa. Đã cập nhật lại System Prompt để áp dụng rule nghiêm ngặt (giống Khoj/Perplexity) buộc AI trả về 1-2 từ khóa siêu ngắn (số hiệu, tên luật).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): sua loi AI trich xuat cau hoi dai thay vi tu khoa tim kiem"`
+
 ### [2026-08-14 11:30] feat(ai): thêm tool tìm kiếm theo hạn và cơ chế Fallback Gemini
 - **Mô tả**: Fix lỗi AI "quá tải" (timeout) khi truy vấn các yêu cầu theo ngày tháng do phải gọi RAG liên tục không tìm được kết quả. 
   - Tạo `SearchDocumentsByConditionTool` để tra cứu trực tiếp bằng SQLite với các tham số `thoi_han`, `status`, `keyword`.

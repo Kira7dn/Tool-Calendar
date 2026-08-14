@@ -87,7 +87,17 @@ namespace ToolCalendar.Core.Services
             {
                 var textSample = fullText?.Length > 1500 ? fullText[..1500] : fullText ?? documentTitle;
 
-                var prompt = $"Bạn là chuyên gia. Hãy đọc văn bản sau và trích xuất 2-3 câu truy vấn phụ (sub-queries) để tra cứu trên hệ thống tìm kiếm pháp luật (Mỗi câu trên 1 dòng, không đánh số thứ tự, ưu tiên Số ký hiệu văn bản nếu có, ví dụ: 'Nghị định 15/2020 toàn văn'). \n\nVăn bản: {textSample}\n\nChỉ trả về các câu truy vấn, không giải thích gì thêm.";
+                var prompt = $@"Bạn là AI chuyên trích xuất từ khóa tìm kiếm (Search Query Generator) giống như các hệ thống Khoj/Perplexity. 
+Nhiệm vụ của bạn là đọc văn bản/câu hỏi sau và trích xuất ra 1-2 TỪ KHÓA (keywords) CỐT LÕI NHẤT để tra cứu trên trang Thư viện Pháp luật.
+
+QUY TẮC BẮT BUỘC (NẾU VI PHẠM SẼ BỊ PHẠT):
+- Tuyệt đối không đặt câu hỏi hoặc dùng câu dài (VD: sai: 'Nghị định nào liên quan đến...', sai: 'Tôi muốn tìm...').
+- Từ khóa phải cực kỳ ngắn gọn, tập trung vào danh từ, số hiệu, tên luật pháp (VD: 'Luật Đất đai 2024', 'Nghị định 15/2020/NĐ-CP', 'Nghị quyết 01').
+- Mỗi từ khóa trên 1 dòng, KHÔNG đánh số thứ tự, KHÔNG giải thích.
+
+Văn bản/Câu hỏi: {textSample}
+
+Từ khóa:";
 
                 var requestBody = new
                 {
