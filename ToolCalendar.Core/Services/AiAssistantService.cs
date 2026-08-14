@@ -184,6 +184,9 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             bool foundFinalResponse = false;
             string? finalTextNoStream = null;
 
+            // Xử lý fake-stream để flush headers ngay lập tức, tắt trạng thái "đang tải" của frontend
+            yield return "(Đang phân tích yêu cầu...)\n\n";
+
             for (int hop = 0; hop <= MaxToolCalls; hop++)
             {
                 bool isLastHop = (hop == MaxToolCalls);
@@ -269,6 +272,8 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
                 // Có tool calls → xử lý từng tool
                 _logger.LogInformation("[AiAssistant] Hop {Hop}: Tool Calling detected.", hop + 1);
                 
+                yield return $"(Đang tra cứu hệ thống...)\n\n";
+
                 // Tránh lỗi "Cannot access a disposed object" khi doc1 bị dispose ở cuối vòng lặp
                 messages.Add(JsonSerializer.Deserialize<object>(msgNode.GetRawText())!);
 

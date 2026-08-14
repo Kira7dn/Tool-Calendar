@@ -1,3 +1,9 @@
+### [2026-08-14 15:51] perf(ai): cải thiện UX tốc độ phản hồi của AI Chatbox
+- **Mô tả**: Tối ưu hóa trải nghiệm người dùng (UX) trên Chatbox. Backend trả về ngay chunk đầu tiên `(Đang phân tích yêu cầu...)` để flush header `text/event-stream` ngay lập tức. Điều này giúp frontend tắt trạng thái `isLoading` (dấu 3 chấm chờ đợi) ngay tức thì, tránh người dùng tưởng hệ thống bị treo khi AI đang trong vòng lặp Tool Calling tốn thời gian.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ai): cai thien ux toc do phan hoi cua ai chatbox"`
+
 ### [2026-08-14 15:15] feat(ui): ẩn menu Cấu hình hệ thống đối với tài khoản không phải Admin
 - **Mô tả**: Người dùng có role khác Admin (Cán bộ, Văn thư, Lãnh đạo) không được phép truy cập trang Cấu hình hệ thống. Đã thêm điều kiện kiểm tra role trong Sidebar và UserMenu để ẩn hoàn toàn tab "Cấu hình" đối với các tài khoản này.
 - **Tệp thay đổi**:
