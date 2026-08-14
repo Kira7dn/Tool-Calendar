@@ -298,7 +298,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
 
                     if (name == "get_document_stats")
                     {
-                        try { toolResult = await _statsRepo.GetStatisticsAsync(); }
+                        try { toolResult = await _statsRepo.GetAiContextStatsAsync(); }
                         catch (Exception ex) { toolResult = "Lỗi khi lấy dữ liệu thống kê: " + ex.Message; }
                     }
                     else if (name == "search_document_content")
