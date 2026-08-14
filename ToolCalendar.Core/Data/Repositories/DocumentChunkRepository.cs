@@ -13,6 +13,51 @@ namespace ToolCalendar.Core.Data.Repositories
     {
         private readonly string _connectionString;
 
+        // In-Memory Vector Cache
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, List<(string TextContent, float[] Vector)>> _vectorCache = new();
+        private static bool _isCacheInitialized = false;
+        private static readonly System.Threading.SemaphoreSlim _cacheLock = new(1, 1);
+
+        private async Task EnsureCacheInitializedAsync()
+        {
+            if (_isCacheInitialized) return;
+
+            await _cacheLock.WaitAsync();
+            try
+            {
+                if (_isCacheInitialized) return;
+
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = "SELECT DocumentId, TextContent, VectorJson FROM DocumentChunks";
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var documentId = reader.GetInt32(0);
+                    var textContent = reader.GetString(1);
+                    var vectorJson = reader.GetString(2);
+                    var vector = JsonSerializer.Deserialize<float[]>(vectorJson);
+
+                    if (vector != null)
+                    {
+                        _vectorCache.AddOrUpdate(
+                            documentId,
+                            _ => new List<(string, float[])> { (textContent, vector) },
+                            (_, list) => { list.Add((textContent, vector)); return list; }
+                        );
+                    }
+                }
+
+                _isCacheInitialized = true;
+            }
+            finally
+            {
+                _cacheLock.Release();
+            }
+        }
+
         public DocumentChunkRepository(IConfiguration configuration)
         {
             var dbPath = Environment.GetEnvironmentVariable("DB_PATH");
@@ -48,6 +93,21 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@VectorJson", vectorJson);
 
             await cmd.ExecuteNonQueryAsync();
+
+            // Cập nhật Cache
+            if (_isCacheInitialized)
+            {
+                _vectorCache.AddOrUpdate(
+                    documentId,
+                    _ => new List<(string, float[])> { (textContent, vector) },
+                    (_, list) =>
+                    {
+                        var newList = new List<(string, float[])>(list);
+                        newList.Add((textContent, vector));
+                        return newList;
+                    }
+                );
+            }
         }
 
         public async Task DeleteChunksByDocumentIdAsync(int documentId)
@@ -60,33 +120,19 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@DocumentId", documentId);
 
             await cmd.ExecuteNonQueryAsync();
+
+            // Xoá khỏi Cache
+            if (_isCacheInitialized)
+            {
+                _vectorCache.TryRemove(documentId, out _);
+            }
         }
 
         public async Task<List<DocumentChunkResult>> FindSimilarChunksAsync(float[] questionVector, int topK = 3, float minSimilarityScore = 0.20f)
         {
-            var allChunks = new List<(int DocumentId, string TextContent, float[] Vector)>();
+            await EnsureCacheInitializedAsync();
 
-            using var connection = new SqliteConnection(_connectionString);
-            await connection.OpenAsync();
-
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = "SELECT DocumentId, TextContent, VectorJson FROM DocumentChunks";
-
-            using (var reader = await cmd.ExecuteReaderAsync())
-            {
-                while (await reader.ReadAsync())
-                {
-                    var documentId = reader.GetInt32(0);
-                    var textContent = reader.GetString(1);
-                    var vectorJson = reader.GetString(2);
-                    
-                    var vector = JsonSerializer.Deserialize<float[]>(vectorJson);
-                    if (vector != null)
-                    {
-                        allChunks.Add((documentId, textContent, vector));
-                    }
-                }
-            }
+            var allChunks = _vectorCache.SelectMany(kvp => kvp.Value.Select(v => new { DocumentId = kvp.Key, v.TextContent, v.Vector }));
 
             // Calculate cosine similarity in memory
             // ANYTHINGLLM Idea #3: Similarity Threshold — loại bỏ chunk quá xa câu hỏi
@@ -236,49 +282,49 @@ namespace ToolCalendar.Core.Data.Repositories
 
         private async Task<List<(int DocumentId, string TextContent, float[] Vector)>> FetchVectorChunksAsync(string? soHieu = null, string? ngayBanHanh = null)
         {
-            var allChunks = new List<(int DocumentId, string TextContent, float[] Vector)>();
-            using var connection = new SqliteConnection(_connectionString);
-            await connection.OpenAsync();
-            using var cmd = connection.CreateCommand();
+            await EnsureCacheInitializedAsync();
 
-            // DIFY Idea #2: Metadata Filter trước khi RAG
-            string joinClause = "";
-            string whereClause = "1 = 1";
+            var allowedDocIds = new HashSet<int>();
+            bool hasFilter = !string.IsNullOrEmpty(soHieu) || !string.IsNullOrEmpty(ngayBanHanh);
 
-            if (!string.IsNullOrEmpty(soHieu) || !string.IsNullOrEmpty(ngayBanHanh))
+            if (hasFilter)
             {
-                joinClause = "JOIN Documents d ON DocumentChunks.DocumentId = d.Id";
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+                using var cmd = connection.CreateCommand();
+                
+                string whereClause = "1=1";
                 if (!string.IsNullOrEmpty(soHieu))
                 {
-                    whereClause += " AND d.SoVanBan LIKE '%' || @SoHieu || '%'";
+                    whereClause += " AND SoVanBan LIKE '%' || @SoHieu || '%'";
                     cmd.Parameters.AddWithValue("@SoHieu", soHieu);
                 }
                 if (!string.IsNullOrEmpty(ngayBanHanh))
                 {
-                    whereClause += " AND d.NgayBanHanh LIKE '%' || @NgayBanHanh || '%'";
+                    whereClause += " AND NgayBanHanh LIKE '%' || @NgayBanHanh || '%'";
                     cmd.Parameters.AddWithValue("@NgayBanHanh", ngayBanHanh);
+                }
+                cmd.CommandText = $"SELECT Id FROM Documents WHERE {whereClause}";
+                
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    allowedDocIds.Add(reader.GetInt32(0));
                 }
             }
 
-            cmd.CommandText = $@"
-                SELECT DocumentChunks.DocumentId, DocumentChunks.TextContent, DocumentChunks.VectorJson 
-                FROM DocumentChunks 
-                {joinClause}
-                WHERE {whereClause}";
-
-            using (var reader = await cmd.ExecuteReaderAsync())
+            var results = new List<(int DocumentId, string TextContent, float[] Vector)>();
+            foreach (var kvp in _vectorCache)
             {
-                while (await reader.ReadAsync())
+                if (!hasFilter || allowedDocIds.Contains(kvp.Key))
                 {
-                    var vectorJson = reader.GetString(2);
-                    var vector = JsonSerializer.Deserialize<float[]>(vectorJson);
-                    if (vector != null)
+                    foreach (var chunk in kvp.Value)
                     {
-                        allChunks.Add((reader.GetInt32(0), reader.GetString(1), vector));
+                        results.Add((kvp.Key, chunk.TextContent, chunk.Vector));
                     }
                 }
             }
-            return allChunks;
+            return results;
         }
 
         private static float CalculateTfIdfCosine(Dictionary<string, float> vec1, Dictionary<string, float> vec2)

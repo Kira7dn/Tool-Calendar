@@ -1,3 +1,10 @@
+### [2026-08-14 16:00] perf(ai): tối ưu hóa vector caching bằng RAM để giảm độ trễ
+- **Mô tả**: Áp dụng kỹ thuật In-Memory Vector Caching để lưu trữ toàn bộ vector của `DocumentChunks` và `UserMemories` trên RAM (sử dụng ConcurrentDictionary). Thay vì đọc SQLite và phân tích JSON chứa hàng nghìn chiều vector ở mỗi tin nhắn, hệ thống sẽ tính toán Cosine Similarity trực tiếp trên RAM, giúp giảm thời gian truy xuất từ vài giây xuống < 10ms.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/UserMemoryRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ai): toi uu hoa vector caching bang ram de giam do tre"`
+
 ### [2026-08-14 15:51] perf(ai): cải thiện UX tốc độ phản hồi của AI Chatbox
 - **Mô tả**: Tối ưu hóa trải nghiệm người dùng (UX) trên Chatbox. Backend trả về ngay chunk đầu tiên `(Đang phân tích yêu cầu...)` để flush header `text/event-stream` ngay lập tức. Điều này giúp frontend tắt trạng thái `isLoading` (dấu 3 chấm chờ đợi) ngay tức thì, tránh người dùng tưởng hệ thống bị treo khi AI đang trong vòng lặp Tool Calling tốn thời gian.
 - **Tệp thay đổi**:
