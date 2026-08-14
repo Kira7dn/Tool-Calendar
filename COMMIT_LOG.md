@@ -2595,3 +2595,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(rag): thêm chunk overlap, hybrid search và token-aware memory học từ Dify"`
+
+### [2026-08-14 08:46] Sửa lỗi compile khi deploy
+- **Mô tả**: Sửa lỗi yield return bên trong catch block của `AiAssistantService.cs` và lỗi tham chiếu biến `vanBanGanNhat` không tồn tại trong `StatsRepository.cs` gây hỏng quá trình deploy backend lên VNPT server.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/StatsRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(compile): sửa lỗi compile của StatsRepository và AiAssistantService"`

@@ -260,6 +260,7 @@ Lưu ý: Bạn KHÔNG được dùng format JSON. Chỉ cần trả lời bằng
 
             HttpResponseMessage response = null;
             bool connectionError = false;
+            bool isTimeout = false;
             try
             {
                 response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
@@ -267,15 +268,20 @@ Lưu ý: Bạn KHÔNG được dùng format JSON. Chỉ cần trả lời bằng
             catch (System.Threading.Tasks.TaskCanceledException)
             {
                 _logger.LogWarning("[AiAssistant] Ollama timeout sau 90 giây.");
-                yield return user.Role is "Admin" or "LanhDao"
-                    ? "Dạ báo cáo sếp, hệ thống AI đang quá tải, xin sếp thử lại sau ạ."
-                    : "Hệ thống AI đang bận, đồng chí vui lòng thử lại sau.";
-                yield break;
+                isTimeout = true;
             }
             catch (Exception ex)
             {
                 _logger.LogError("[AiAssistant] Lỗi gọi Ollama: {Msg}", ex.Message);
                 connectionError = true;
+            }
+
+            if (isTimeout)
+            {
+                yield return user.Role is "Admin" or "LanhDao"
+                    ? "Dạ báo cáo sếp, hệ thống AI đang quá tải, xin sếp thử lại sau ạ."
+                    : "Hệ thống AI đang bận, đồng chí vui lòng thử lại sau.";
+                yield break;
             }
 
             if (connectionError)

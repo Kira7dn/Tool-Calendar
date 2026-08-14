@@ -337,8 +337,7 @@ namespace ToolCalendar.Core.Data.Repositories
                    $"- Số công văn đến hạn HÔM NAY: {homNay}\n" +
                    $"- Số công văn đến hạn NGÀY MAI: {ngayMai}\n" +
                    $"- Số công văn đến hạn TRONG TUẦN NÀY (7 ngày tới): {trongTuan}\n" +
-                   $"- Số công văn đến hạn TRONG THÁNG SAU (từ 8 đến 30 ngày tới): {trongThang}\n" +
-                   $"- {vanBanGanNhat}\n\n" +
+                   $"- Số công văn đến hạn TRONG THÁNG SAU (từ 8 đến 30 ngày tới): {trongThang}\n\n" +
                    $"DANH SÁCH CÔNG VĂN ĐẾN HẠN HÔM NAY ({homNay} văn bản):\n" +
                    (listHomNay.Length > 0 ? listHomNay.ToString() : "  (Không có công văn nào đến hạn hôm nay)\n") +
                    $"\nDANH SÁCH CÔNG VĂN ĐÃ QUÁ HẠN ({quaHan} văn bản):\n" +
