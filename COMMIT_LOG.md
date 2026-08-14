@@ -1,3 +1,10 @@
+### [2026-08-14 15:15] feat(ui): ẩn menu Cấu hình hệ thống đối với tài khoản không phải Admin
+- **Mô tả**: Người dùng có role khác Admin (Cán bộ, Văn thư, Lãnh đạo) không được phép truy cập trang Cấu hình hệ thống. Đã thêm điều kiện kiểm tra role trong Sidebar và UserMenu để ẩn hoàn toàn tab "Cấu hình" đối với các tài khoản này.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/shell/UserMenu.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): an menu Cau hinh he thong doi voi tai khoan khong phai Admin"`
+
 ### [2026-08-14 14:47] fix(ai): sửa lỗi AI trích xuất câu hỏi dài thay vì từ khóa pháp luật
 - **Mô tả**: Fix lỗi khi người dùng bấm "Tìm kiếm" ở phần Tài liệu tham khảo, hệ thống trả về link trống (ví dụ: `thuvienphapluat.vn/tim-van-ban.aspx?keyword=Nội dung của...`). Nguyên nhân do AI ExtractKeywordsAsync được prompt yêu cầu trích xuất "câu truy vấn phụ" nên nó lấy nguyên cả câu hỏi dài thay vì từ khóa. Đã cập nhật lại System Prompt để áp dụng rule nghiêm ngặt (giống Khoj/Perplexity) buộc AI trả về 1-2 từ khóa siêu ngắn (số hiệu, tên luật).
 - **Tệp thay đổi**:

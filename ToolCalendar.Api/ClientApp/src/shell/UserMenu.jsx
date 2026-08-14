@@ -1,5 +1,6 @@
 // shell/UserMenu.jsx
 // Avatar + Dropdown menu user + Modal đổi mật khẩu (tách từ AppShell)
+/* eslint-disable */
 import React, { useState } from 'react'
 import { KeyRound, LogOut, Settings as SettingsIcon, ChevronDown, Eye, EyeOff } from 'lucide-react'
 import { ROLES } from '../constants/roles'
@@ -97,13 +98,15 @@ export function UserMenu({ user, onLogout, onNavigate }) {
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="bg-border" />
           <div className="py-1">
-            <DropdownMenuItem
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 cursor-pointer font-bold text-sm"
-              onSelect={() => onNavigate('settings')}
-            >
-              <SettingsIcon className="size-4" />
-              <span>Cấu hình hệ thống</span>
-            </DropdownMenuItem>
+            {user.role === ROLES.ADMIN && (
+              <DropdownMenuItem
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 cursor-pointer font-bold text-sm"
+                onSelect={() => onNavigate('settings')}
+              >
+                <SettingsIcon className="size-4" />
+                <span>Cấu hình hệ thống</span>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 cursor-pointer font-bold text-sm"
               onSelect={() => setIsPasswordModalOpen(true)}

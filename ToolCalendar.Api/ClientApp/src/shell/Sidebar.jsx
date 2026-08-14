@@ -91,6 +91,7 @@ export function AppSidebar({ activeTab, setActiveTab, setCurrentDocId, setIsRevi
                   return null
                 if (item.tab === 'upload' && role !== ROLES.ADMIN && role !== ROLES.VAN_THU)
                   return null
+                if (item.tab === 'settings' && role !== ROLES.ADMIN) return null
 
                 if (item.hidden) return null
 
