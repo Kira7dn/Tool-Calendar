@@ -2683,3 +2683,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi: Áp dụng Registry và ReAct)
   - `ToolCalendar.Api/Program.cs` (Sửa đổi: Đăng ký DI)
 - **Lệnh git commit**: `git commit -m "feat(api): refactor AiAssistant với AiToolRegistry, thêm WebSearch và ChartGenerator (chuẩn Khoj)"`
+
+### [2026-08-14 14:08] Gỡ bỏ Gemini Fallback & Áp dụng cơ chế Auto-Retry cục bộ
+- **Mô tả**: Loại bỏ tính năng bẻ lái sang Gemini API để đảm bảo bảo mật dữ liệu tuyệt đối (không gửi tài liệu ra ngoài). Thay thế bằng cơ chế Auto-Retry nội bộ cho Ollama: Nếu Ollama bị timeout hoặc lỗi, Backend sẽ tạm nghỉ 2 giây rồi gọi lại tối đa 1 lần, nếu vẫn lỗi sẽ báo thông báo lịch sự "Hệ thống đang quá tải" ra giao diện thay vì ném exception.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/GeminiFallbackService.cs` (Xóa)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi - xóa service registration)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi - xóa biến gemini, thêm vòng lặp try-catch với Task.Delay)
+- **Lệnh git commit**: `git commit -m "refactor(ai): xoa gemini fallback de bao mat du lieu, them co che auto-retry cho ollama"`

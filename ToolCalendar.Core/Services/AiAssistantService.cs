@@ -34,7 +34,6 @@ namespace ToolCalendar.Core.Services
         private readonly IUserMemoryRepository _memoryRepo;
         private readonly AiToolRegistry _toolRegistry;
         private readonly ILogger<AiAssistantService> _logger;
-        private readonly GeminiFallbackService _geminiFallbackService;
 
         // ANYTHINGLLM Idea #1: N-Hop Tool Chain — tối đa 5 lượt tool call liên tiếp
         private const int MaxToolCalls = 5;
@@ -53,7 +52,6 @@ namespace ToolCalendar.Core.Services
             IDocumentChunkRepository chunkRepo,
             IUserMemoryRepository memoryRepo,
             AiToolRegistry toolRegistry,
-            GeminiFallbackService geminiFallbackService,
             ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
@@ -68,7 +66,6 @@ namespace ToolCalendar.Core.Services
             _chunkRepo = chunkRepo;
             _memoryRepo = memoryRepo;
             _toolRegistry = toolRegistry;
-            _geminiFallbackService = geminiFallbackService;
             _logger = logger;
         }
 
@@ -199,36 +196,56 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
                 bool connectionError = false;
                 bool isTimeout = false;
 
-                try
+                int retryCount = 0;
+                const int MaxRetries = 1;
+
+                while (retryCount <= MaxRetries)
                 {
-                    var req = new HttpRequestMessage(HttpMethod.Post, _ollamaUrl)
+                    try
                     {
-                        Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
-                    };
-                    response1 = await _httpClient.SendAsync(req, cts.Token);
-                }
-                catch (System.Threading.Tasks.TaskCanceledException)
-                {
-                    _logger.LogWarning("[AiAssistant] Ollama timeout sau 90 giây.");
-                    isTimeout = true;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError("[AiAssistant] Lỗi gọi Ollama: {Msg}", ex.Message);
-                    connectionError = true;
+                        var req = new HttpRequestMessage(HttpMethod.Post, _ollamaUrl)
+                        {
+                            Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
+                        };
+                        response1 = await _httpClient.SendAsync(req, cts.Token);
+                        
+                        if (response1.IsSuccessStatusCode)
+                        {
+                            connectionError = false;
+                            isTimeout = false;
+                            break;
+                        }
+                    }
+                    catch (System.Threading.Tasks.TaskCanceledException)
+                    {
+                        _logger.LogWarning("[AiAssistant] Ollama timeout. Retry {Count}/{Max}", retryCount, MaxRetries);
+                        isTimeout = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError("[AiAssistant] Lỗi gọi Ollama: {Msg}. Retry {Count}/{Max}", ex.Message, retryCount, MaxRetries);
+                        connectionError = true;
+                    }
+
+                    retryCount++;
+                    if (retryCount <= MaxRetries)
+                    {
+                        try { await Task.Delay(2000, cts.Token); } catch { break; }
+                    }
                 }
 
-                if (isTimeout || connectionError || !response1!.IsSuccessStatusCode)
+                if (isTimeout || connectionError || response1 == null || !response1.IsSuccessStatusCode)
                 {
-                    if (!response1?.IsSuccessStatusCode ?? false)
+                    if (response1 != null && !response1.IsSuccessStatusCode)
                     {
-                        _logger.LogError("[AiAssistant] Ollama trả lỗi HTTP {Code}", (int)response1!.StatusCode);
+                        _logger.LogError("[AiAssistant] Ollama trả lỗi HTTP {Code}", (int)response1.StatusCode);
                     }
                     
-                    _logger.LogWarning("[AiAssistant] Ollama failed. Triggering Gemini Fallback.");
+                    _logger.LogWarning("[AiAssistant] Ollama failed after retries. Graceful degradation.");
                     
-                    var geminiResponse = await _geminiFallbackService.CallGeminiAsync(messages, systemPrompt);
-                    yield return geminiResponse;
+                    yield return isLeader 
+                        ? "Dạ báo cáo sếp, hệ thống AI hiện đang xử lý khối lượng lớn tài liệu nên bị quá tải. Sếp vui lòng thử lại sau vài giây nhé ạ!" 
+                        : "Hệ thống AI hiện đang xử lý khối lượng lớn tài liệu nên bị quá tải. Đồng chí vui lòng thử lại sau vài giây nhé!";
                     yield break;
                 }
 

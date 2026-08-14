@@ -103,7 +103,6 @@ builder.Services.AddScoped<IAiTool, GetDocumentStatsTool>();
 builder.Services.AddScoped<IAiTool, SearchDocumentContentTool>();
 builder.Services.AddScoped<IAiTool, SearchDocumentsByConditionTool>();
 builder.Services.AddScoped<IAiTool, WebSearchTool>();
-builder.Services.AddScoped<GeminiFallbackService>();
 builder.Services.AddScoped<IAiTool, ChartGeneratorTool>();
 builder.Services.AddScoped<AiToolRegistry>();
 
