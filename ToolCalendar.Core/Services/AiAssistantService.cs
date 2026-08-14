@@ -71,6 +71,9 @@ namespace ToolCalendar.Core.Services
 
         public async IAsyncEnumerable<string> ProcessChatStreamAsync(int userId, string message, int? documentId = null)
         {
+            // Xử lý fake-stream để flush headers ngay lập tức, tắt trạng thái "đang tải" của frontend
+            yield return "(Đang phân tích yêu cầu...)\n\n";
+
             var user = _userRepo.GetUserById(userId);
             if (user == null)
             {
@@ -183,9 +186,6 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             var toolCallCount = new Dictionary<string, int>();
             bool foundFinalResponse = false;
             string? finalTextNoStream = null;
-
-            // Xử lý fake-stream để flush headers ngay lập tức, tắt trạng thái "đang tải" của frontend
-            yield return "(Đang phân tích yêu cầu...)\n\n";
 
             for (int hop = 0; hop <= MaxToolCalls; hop++)
             {

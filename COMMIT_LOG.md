@@ -1,3 +1,9 @@
+### [2026-08-14 16:11] fix(ai): sửa lỗi spinner frontend không biến mất do fake stream bị chặn bởi hàm embedding
+- **Mô tả**: Dù đã thêm fake stream `(Đang phân tích yêu cầu...)` để tắt spinner của frontend, nhưng lệnh `yield return` lại bị đặt bên dưới hàm `GenerateEmbeddingAsync`. Hàm này chạy đồng bộ và block luồng, dẫn đến frontend vẫn bị treo spinner vài giây chờ Ollama tạo vector. Đã chuyển `yield return` lên ngay đầu hàm `ProcessChatStreamAsync` để giải quyết.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): sua loi spinner frontend khong bien mat do fake stream bi chan"`
+
 ### [2026-08-14 16:00] perf(ai): tối ưu hóa vector caching bằng RAM để giảm độ trễ
 - **Mô tả**: Áp dụng kỹ thuật In-Memory Vector Caching để lưu trữ toàn bộ vector của `DocumentChunks` và `UserMemories` trên RAM (sử dụng ConcurrentDictionary). Thay vì đọc SQLite và phân tích JSON chứa hàng nghìn chiều vector ở mỗi tin nhắn, hệ thống sẽ tính toán Cosine Similarity trực tiếp trên RAM, giúp giảm thời gian truy xuất từ vài giây xuống < 10ms.
 - **Tệp thay đổi**:
