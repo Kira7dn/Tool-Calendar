@@ -2634,3 +2634,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Data/Repositories/StatsRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(compile): sửa lỗi compile của StatsRepository và AiAssistantService"`
+### [2026-08-14 09:30] Triển khai kỹ thuật RAG tối ưu (Dify & AnythingLLM)
+- **Mô tả**: Tích hợp các kỹ thuật RAG từ AnythingLLM và Dify (Parallel Retrieval, TF-IDF + Cosine Hybrid Reranker, Metadata Filter bằng LLM, Enriched Citation Format, Recursive Separator Chunking) để tăng cường chất lượng context và khả năng trả lời của trợ lý AI. Đồng thời đã chạy SQL migration bảng `UserMemories` trên VNPT server.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IDocumentChunkRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): triển khai 7 kỹ thuật RAG cao cấp từ Dify và AnythingLLM"`

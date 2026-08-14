@@ -256,44 +256,12 @@ namespace ToolCalendar.Services
                         
                         var text = updatedDoc.FullText;
                         
-                        // DOCLING + KHOJ: Semantic Chunking với Vietnamese Legal Separators
-                        var chunks = new List<string>();
-                        // Thứ tự ưu tiên cắt: Điều/Khoản/Chương (cấu trúc pháp lý) > đoạn văn > câu
-                        // Nguồn cảm hứng: Khoj RecursiveCharacterTextSplitter với separators list
-                        var paragraphs = System.Text.RegularExpressions.Regex.Split(
-                            text,
-                            @"(?<=\n\n|(?<=\n)\s*(?:Điều\s+\d+|Khoản\s+\d+|Mục\s+\d+|Chương\s+\d+|[IVX]+\s*\.)\s|\.[ \n]|;\s*\n|:\s*\n|\r\n\r\n)"
-                        );
-
-                        var currentChunk = new System.Text.StringBuilder();
-                        int currentWordCount = 0;
-                        int maxWordsPerChunk = 300; // Chunk lý tưởng cho Qwen2.5
-
-                        foreach (var para in paragraphs)
-                        {
-                            if (string.IsNullOrWhiteSpace(para)) continue;
-
-                            // KHOJ: Loại bỏ "từ" rác quá dài (> 200 chars)
-                            var sanitizedPara = string.Join(" ", para.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
-                                .Select(w => w.Length <= 200 ? w : ""));
-
-                            int wordCount = sanitizedPara.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Length;
-
-                            if (currentWordCount > 0 && currentWordCount + wordCount > maxWordsPerChunk)
-                            {
-                                chunks.Add(currentChunk.ToString().Trim());
-                                currentChunk.Clear();
-                                currentWordCount = 0;
-                            }
-
-                            currentChunk.Append(sanitizedPara).Append(" ");
-                            currentWordCount += wordCount;
-                        }
-
-                        if (currentChunk.Length > 0)
-                        {
-                            chunks.Add(currentChunk.ToString().Trim());
-                        }
+                        // DIFY Idea #7: Recursive Separator Hierarchy (RecursiveCharacterTextSplitter)
+                        // Tách theo các cấp độ để giữ ngữ nghĩa thay vì tách ngẫu nhiên.
+                        var separators = new[] { "\n\n", "\r\n\r\n", "\nĐiều", "\nKhoản", "\nChương", "\n", ". ", "; ", " " };
+                        int maxWordsPerChunk = 300;
+                        
+                        var chunks = RecursiveSplit(text, separators, maxWordsPerChunk);
 
                         // DIFY Idea #1: Chunk Overlap — lặp lại 100 từ cuối của chunk trước
                         // Tránh mất thông tin nằm ở ranh giới 2 chunk liền nhau
@@ -388,6 +356,74 @@ namespace ToolCalendar.Services
             }
             catch { }
             base.Dispose();
+        }
+
+        private static List<string> RecursiveSplit(string text, string[] separators, int maxWords)
+        {
+            var finalChunks = new List<string>();
+            if (string.IsNullOrWhiteSpace(text)) return finalChunks;
+
+            // Bắt đầu đệ quy từ cấp separator đầu tiên
+            SplitText(text, separators, 0, maxWords, finalChunks);
+            return finalChunks;
+        }
+
+        private static void SplitText(string text, string[] separators, int separatorIndex, int maxWords, List<string> finalChunks)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return;
+
+            int wordCount = text.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
+
+            // Nếu đoạn text đã đủ nhỏ so với yêu cầu, thì add vào luôn
+            if (wordCount <= maxWords || separatorIndex >= separators.Length)
+            {
+                finalChunks.Add(text.Trim());
+                return;
+            }
+
+            // Thử tách theo separator hiện tại
+            var separator = separators[separatorIndex];
+            var parts = System.Text.RegularExpressions.Regex.Split(text, $"(?<={System.Text.RegularExpressions.Regex.Escape(separator)})");
+
+            var currentChunk = new System.Text.StringBuilder();
+            int currentWordCount = 0;
+
+            foreach (var part in parts)
+            {
+                if (string.IsNullOrWhiteSpace(part)) continue;
+
+                int partWordCount = part.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
+
+                // KHOJ: Nếu bản thân part vẫn còn to hơn maxWords, phải dùng separator nhỏ hơn để tách tiếp
+                if (partWordCount > maxWords)
+                {
+                    if (currentChunk.Length > 0)
+                    {
+                        finalChunks.Add(currentChunk.ToString().Trim());
+                        currentChunk.Clear();
+                        currentWordCount = 0;
+                    }
+                    // Gọi đệ quy cho cục quá to với separator cấp thấp hơn
+                    SplitText(part, separators, separatorIndex + 1, maxWords, finalChunks);
+                }
+                else
+                {
+                    if (currentWordCount > 0 && currentWordCount + partWordCount > maxWords)
+                    {
+                        finalChunks.Add(currentChunk.ToString().Trim());
+                        currentChunk.Clear();
+                        currentWordCount = 0;
+                    }
+
+                    currentChunk.Append(part);
+                    currentWordCount += partWordCount;
+                }
+            }
+
+            if (currentChunk.Length > 0)
+            {
+                finalChunks.Add(currentChunk.ToString().Trim());
+            }
         }
     }
 }
