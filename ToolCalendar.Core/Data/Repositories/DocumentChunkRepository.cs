@@ -102,6 +102,42 @@ namespace ToolCalendar.Core.Data.Repositories
             return results;
         }
 
+        public async Task<List<DocumentChunkResult>> FindByKeywordAsync(string keyword, int topK = 5)
+        {
+            var results = new List<DocumentChunkResult>();
+
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var cmd = connection.CreateCommand();
+            // DIFY Idea #2: BM25/Keyword Search (đơn giản hoá bằng LIKE)
+            // Tìm các chunk chứa từ khóa, ưu tiên các chunk ngắn gọn có chứa từ khóa
+            cmd.CommandText = @"
+                SELECT DocumentId, TextContent 
+                FROM DocumentChunks 
+                WHERE TextContent LIKE '%' || @Keyword || '%'
+                ORDER BY LENGTH(TextContent) ASC
+                LIMIT @TopK";
+            
+            cmd.Parameters.AddWithValue("@Keyword", keyword);
+            cmd.Parameters.AddWithValue("@TopK", topK);
+
+            using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    results.Add(new DocumentChunkResult
+                    {
+                        DocumentId = reader.GetInt32(0),
+                        TextContent = reader.GetString(1),
+                        SimilarityScore = 1.0f // Gán điểm tuyệt đối cho khớp từ khóa
+                    });
+                }
+            }
+
+            return results;
+        }
+
         private static float CosineSimilarity(float[] vector1, float[] vector2)
         {
             if (vector1.Length != vector2.Length)

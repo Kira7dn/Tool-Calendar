@@ -142,21 +142,57 @@ Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đ�
                 {
                     try
                     {
-                        var questionVector = await _embeddingService.GenerateEmbeddingAsync(message);
-                        if (questionVector != null && questionVector.Length > 0)
+                        // PLAN-AND-SOLVE: Thay vì embedding câu hỏi gốc, gọi AI để sinh ra các sub-queries
+                        var planPrompt = $"Bạn là chuyên gia phân tích dữ liệu. Hãy phân tích câu hỏi sau và chia nhỏ thành 2-3 câu hỏi phụ (sub-queries) ngắn gọn để tìm kiếm trong cơ sở dữ liệu. Chỉ trả về danh sách các câu hỏi phụ, mỗi câu 1 dòng, không đánh số, không giải thích. \nCâu hỏi gốc: \"{message}\"";
+                        var planPayload = new { model = _modelName, messages = new[] { new { role = "user", content = planPrompt } }, stream = false, options = new { temperature = 0.3, num_predict = 100 } };
+                        var planJson = System.Text.Json.JsonSerializer.Serialize(planPayload);
+                        var planResponse = await _httpClient.PostAsync(_ollamaUrl, new StringContent(planJson, System.Text.Encoding.UTF8, "application/json"));
+                        
+                        List<string> searchQueries = new List<string> { message }; // Luôn giữ câu hỏi gốc
+                        
+                        if (planResponse.IsSuccessStatusCode)
                         {
-                            var similarChunks = await _chunkRepo.FindSimilarChunksAsync(questionVector, topK: 3);
-                            if (similarChunks.Count > 0)
+                            var planResult = await planResponse.Content.ReadAsStringAsync();
+                            var planObj = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(planResult);
+                            var subQs = planObj.GetProperty("message").GetProperty("content").GetString()?.Trim() ?? "";
+                            
+                            var lines = subQs.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                                             .Select(l => l.Trim().TrimStart('-', '*', '1', '2', '3', '.', ' '))
+                                             .Where(l => l.Length > 3).ToList();
+                            searchQueries.AddRange(lines);
+                        }
+
+                        _logger.LogInformation("[AiAssistant] RAG Queries: {Queries}", string.Join(" | ", searchQueries));
+
+                        var allSimilarChunks = new List<ToolCalendar.Core.Data.Interfaces.DocumentChunkResult>();
+                        
+                        // DIFY Idea #2: Hybrid Search — Kết hợp Keyword và Vector Search
+                        var keywordChunks = await _chunkRepo.FindByKeywordAsync(message, topK: 3);
+                        allSimilarChunks.AddRange(keywordChunks);
+
+                        foreach (var query in searchQueries.Take(3)) // Giới hạn tối đa 3 queries để tránh quá tải
+                        {
+                            var questionVector = await _embeddingService.GenerateEmbeddingAsync(query);
+                            if (questionVector != null && questionVector.Length > 0)
                             {
-                                documentContext = "\n\n[DỮ LIỆU TÌM KIẾM TỪ CƠ SỞ DỮ LIỆU (RAG)]\nDựa vào câu hỏi, hệ thống đã trích xuất các đoạn văn bản sau từ các công văn:\n";
-                                foreach (var chunk in similarChunks)
-                                {
-                                    var doc = await _documentRepo.GetDocumentByIdAsync(chunk.DocumentId);
-                                    string name = doc != null ? $"Công văn số {doc.SoVanBan} ({doc.TenCongVan})" : $"Công văn ID {chunk.DocumentId}";
-                                    documentContext += $"\n--- Trích đoạn từ {name} ---\n{chunk.TextContent}\n";
-                                }
-                                documentContext += "\nLUÔN dựa vào dữ liệu trích xuất trên để trả lời. Nếu không đủ thông tin, hãy báo là hệ thống không tìm thấy nội dung phù hợp.";
+                                var chunks = await _chunkRepo.FindSimilarChunksAsync(questionVector, topK: 2); // Mỗi query lấy top 2
+                                allSimilarChunks.AddRange(chunks);
                             }
+                        }
+
+                        // Lọc trùng lặp chunk (tránh việc nhiều queries tìm ra cùng 1 chunk)
+                        var distinctChunks = allSimilarChunks.DistinctBy(c => c.TextContent).Take(5).ToList();
+
+                        if (distinctChunks.Count > 0)
+                        {
+                            documentContext = "\n\n[DỮ LIỆU TÌM KIẾM TỪ CƠ SỞ DỮ LIỆU (RAG)]\nDựa vào câu hỏi và quá trình phân tích sâu, hệ thống đã trích xuất các đoạn văn bản sau từ các công văn:\n";
+                            foreach (var chunk in distinctChunks)
+                            {
+                                var doc = await _documentRepo.GetDocumentByIdAsync(chunk.DocumentId);
+                                string name = doc != null ? $"Công văn số {doc.SoVanBan} ({doc.TenCongVan})" : $"Công văn ID {chunk.DocumentId}";
+                                documentContext += $"\n--- Trích đoạn từ {name} (Ngày: {doc?.NgayBanHanh?.ToString("dd/MM/yyyy") ?? "N/A"}) ---\n{chunk.TextContent}\n";
+                            }
+                            documentContext += "\nLUÔN dựa vào dữ liệu trích xuất trên để trả lời. Nếu không đủ thông tin, hãy báo là hệ thống không tìm thấy nội dung phù hợp.";
                         }
                     }
                     catch (Exception ex) { _logger.LogWarning(ex, "Lỗi quét Vector (SEARCH)"); }
@@ -173,6 +209,11 @@ LƯU Ý CỰC KỲ QUAN TRỌNG ĐỂ TRÁNH BỊA ĐẶT (HALLUCINATION):
 3. Nếu văn bản bị lỗi font (OCR rác), hãy tóm tắt phần nội dung đọc được ở bên dưới. Đừng cố dịch các đoạn mã rác.
 4. Nếu người dùng hỏi thông tin không có trong văn bản, BẮT BUỘC trả lời: ""Dạ, trong văn bản không đề cập đến thông tin này.""
 
+KHOJ Idea #8 — INLINE CITATION (TRÍCH DẪN NỐI TUYẾN):
+Khi trả lời dựa vào dữ liệu từ công văn cụ thể, BẮT BUỘC trích dẫn theo format: (Công văn số X/YYY-ZZZ, ngày DD/MM/YYYY).
+Ví dụ: ""Theo quy định về đầu tư xây dựng (Công văn số 148/BC-UBND, ngày 10/04/2025), mức hỗ trợ là...""
+KHÔNG được viết trái lời chung chung khi đã có dữ liệu cụ thể.
+
 NẾU người dùng yêu cầu nhắc nhở công việc (ví dụ: nhắc tôi lúc 3h chiều họp...), bạn BẮT BUỘC phải đính kèm một dòng tag sau ĐÚNG Y HỆT vào CUỐI câu trả lời của bạn (thay thế YYYY-MM-DD HH:mm:ss bằng thời gian tương ứng):
 [REMINDER|YYYY-MM-DD HH:mm:ss|Nội dung việc cần nhắc]
 
@@ -182,8 +223,19 @@ Dạ vâng ạ, em đã ghi nhận lịch họp cho sếp rồi ạ!
 
 Lưu ý: Bạn KHÔNG được dùng format JSON. Chỉ cần trả lời bằng văn bản bình thường (Markdown) và thêm tag [REMINDER] ở cuối nếu có lịch nhắc.";
 
+            // DIFY Idea #3: Token-Aware Memory — Cắt tỉa history theo số ký tự
             List<ChatMessageDto> history = new();
-            try { history = _chatHistoryRepo.GetHistoryByUserId(userId, 10); }
+            try 
+            { 
+                var fullHistory = _chatHistoryRepo.GetHistoryByUserId(userId, 20); 
+                int totalChars = 0;
+                foreach (var msg in fullHistory.AsEnumerable().Reverse())
+                {
+                    totalChars += msg.Content.Length;
+                    if (totalChars > 3000) break; // ~1000 tokens, ngưỡng an toàn cho qwen2.5:3b (4096 tokens max)
+                    history.Insert(0, msg);
+                }
+            }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể đọc lịch sử: {Msg}", ex.Message); }
 
             var messages = new List<object> { new { role = "system", content = systemPrompt } };
@@ -202,11 +254,23 @@ Lưu ý: Bạn KHÔNG được dùng format JSON. Chỉ cần trả lời bằng
                 Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
             };
 
+            // ANYTHINGLLM Idea #10: Timeout Fallback 30 giây cho Ollama
+            // Nếu Ollama bị chậm/quá tải, ChatBox sẽ trả lời thân thiện thay vì treo mãi mãi
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(90));
+
             HttpResponseMessage response = null;
             bool connectionError = false;
             try
             {
-                response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+            }
+            catch (System.Threading.Tasks.TaskCanceledException)
+            {
+                _logger.LogWarning("[AiAssistant] Ollama timeout sau 90 giây.");
+                yield return user.Role is "Admin" or "LanhDao"
+                    ? "Dạ báo cáo sếp, hệ thống AI đang quá tải, xin sếp thử lại sau ạ."
+                    : "Hệ thống AI đang bận, đồng chí vui lòng thử lại sau.";
+                yield break;
             }
             catch (Exception ex)
             {

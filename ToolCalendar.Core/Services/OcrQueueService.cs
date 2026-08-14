@@ -256,19 +256,58 @@ namespace ToolCalendar.Services
                         
                         var text = updatedDoc.FullText;
                         
-                        // Cắt văn bản thông minh theo từ (Words) có Overlap
-                        int chunkWords = 250;
-                        int overlapWords = 50;
-                        var words = text.Split(new[] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                        
+                        // DOCLING + KHOJ: Semantic Chunking với Vietnamese Legal Separators
                         var chunks = new List<string>();
-                        int i = 0;
-                        while (i < words.Length)
+                        // Thứ tự ưu tiên cắt: Điều/Khoản/Chương (cấu trúc pháp lý) > đoạn văn > câu
+                        // Nguồn cảm hứng: Khoj RecursiveCharacterTextSplitter với separators list
+                        var paragraphs = System.Text.RegularExpressions.Regex.Split(
+                            text,
+                            @"(?<=\n\n|(?<=\n)\s*(?:Điều\s+\d+|Khoản\s+\d+|Mục\s+\d+|Chương\s+\d+|[IVX]+\s*\.)\s|\.[ \n]|;\s*\n|:\s*\n|\r\n\r\n)"
+                        );
+
+                        var currentChunk = new System.Text.StringBuilder();
+                        int currentWordCount = 0;
+                        int maxWordsPerChunk = 300; // Chunk lý tưởng cho Qwen2.5
+
+                        foreach (var para in paragraphs)
                         {
-                            var chunkTokens = words.Skip(i).Take(chunkWords);
-                            chunks.Add(string.Join(" ", chunkTokens));
-                            if (i + chunkWords >= words.Length) break;
-                            i += (chunkWords - overlapWords);
+                            if (string.IsNullOrWhiteSpace(para)) continue;
+
+                            // KHOJ: Loại bỏ "từ" rác quá dài (> 200 chars)
+                            var sanitizedPara = string.Join(" ", para.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(w => w.Length <= 200 ? w : ""));
+
+                            int wordCount = sanitizedPara.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Length;
+
+                            if (currentWordCount > 0 && currentWordCount + wordCount > maxWordsPerChunk)
+                            {
+                                chunks.Add(currentChunk.ToString().Trim());
+                                currentChunk.Clear();
+                                currentWordCount = 0;
+                            }
+
+                            currentChunk.Append(sanitizedPara).Append(" ");
+                            currentWordCount += wordCount;
+                        }
+
+                        if (currentChunk.Length > 0)
+                        {
+                            chunks.Add(currentChunk.ToString().Trim());
+                        }
+
+                        // DIFY Idea #1: Chunk Overlap — lặp lại 100 từ cuối của chunk trước
+                        // Tránh mất thông tin nằm ở ranh giới 2 chunk liền nhau
+                        var overlappedChunks = new List<string>();
+                        for (int ci = 0; ci < chunks.Count; ci++)
+                        {
+                            var chunkText = chunks[ci];
+                            if (ci > 0)
+                            {
+                                var prevWords = chunks[ci - 1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                var overlapWords = prevWords.Skip(Math.Max(0, prevWords.Length - 100)).ToArray();
+                                chunkText = string.Join(" ", overlapWords) + " " + chunkText;
+                            }
+                            overlappedChunks.Add(chunkText);
                         }
 
                         // Tạo phần header metadata cho từng chunk
@@ -277,10 +316,10 @@ namespace ToolCalendar.Services
                         string header = $"[Tên Công văn: {tenCv}] [Số hiệu: {soCv}]\n\n";
 
                         int chunkIndex = 0;
-                        foreach (var chunk in chunks)
+                        foreach (var chunk in overlappedChunks)
                         {
                             var enrichedChunk = header + chunk;
-                            
+
                             // Tính Vector
                             var vector = await embedService.GenerateEmbeddingAsync(enrichedChunk);
                             if (vector != null && vector.Length > 0)
@@ -288,7 +327,8 @@ namespace ToolCalendar.Services
                                 await chunkRepo.AddChunkAsync(docId, chunkIndex++, enrichedChunk, vector);
                             }
                         }
-                        _logger.LogInformation("[RAG] Đã lưu {Count} đoạn Vector cho DocumentId {Id}.", chunkIndex, docId);
+                        _logger.LogInformation("[RAG] Đã lưu {Count} đoạn Vector (có overlap) cho DocumentId {Id}.", chunkIndex, docId);
+
                     }
                 }
                 catch (Exception ex)

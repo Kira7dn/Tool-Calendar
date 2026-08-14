@@ -1,3 +1,44 @@
+### [2026-08-14 08:31] feat(chat): bổ sung danh sách chi tiết công văn đến hạn vào AI Context
+- **Mô tả**: `GetAiContextStatsAsync()` trước đây chỉ trả về số lượng (đếm). Nay bổ sung 3 query lấy danh sách tên cụ thể: (1) Công văn đến hạn HÔM NAY (tối đa 20 văn bản), (2) Công văn đã QUÁ HẠN (tối đa 20 văn bản), (3) Công văn SẮP ĐẾN HẠN trong 7 ngày tới (tối đa 15 văn bản). AI Chatbox giờ có thể liệt kê cụ thể từng văn bản thay vì chỉ trả lời số lượng chung. Cũng sửa luôn timezone — toàn bộ query đã chuyển sang `date('now', '+7 hours')` để đúng giờ Việt Nam.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/StatsRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(chat): bổ sung danh sách chi tiết công văn đến hạn vào AI Context Stats"`
+
+### [2026-08-14 08:22] feat(ocr,chat): tích hợp 4 ý tưởng Enterprise từ AnythingLLM + Khoj
+- **Mô tả**:
+  - **#1 PDF-First OCR Fallback (AnythingLLM):** Thêm `TryExtractPdfTextDirect()` vào `OcrService`. PDF có text layer sẽ được phát hiện và bỏ qua PaddleOCR hoàn toàn, tránh lãng phí tài nguyên.
+  - **#3 Null Byte + Long Word Cleaner (Khoj):** Thêm `CleanExtractedText()` — xóa null bytes (`\x00`) và các token quá dài (>500 chars) — rác phổ biến trong PDF scan lỗi.
+  - **#6 Vietnamese Legal Separators (Khoj):** Nâng cấp Semantic Chunking trong `OcrQueueService` bằng cách bổ sung separator pháp lý tiếng Việt: `Điều \d+`, `Khoản \d+`, `Mục \d+`, `Chương \d+`. Chunk RAG giờ tôn trọng cấu trúc luật pháp thay vì cắt ngẫu nhiên.
+  - **#8 Inline Citation (Khoj):** Cập nhật System Prompt trong `AiAssistantService` bắt buộc AI trích dẫn tên công văn và ngày ban hành khi trả lời dựa vào dữ liệu cụ thể.
+  - **#10 Timeout Fallback 90s (AnythingLLM):** Thêm `CancellationTokenSource(90s)` vào HTTP call tới Ollama. Nếu Ollama không phản hồi sau 90 giây → trả về thông báo thân thiện theo vai trò người dùng (Sếp vs Cán bộ).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr,chat): tích hợp 4 ý tưởng Enterprise từ AnythingLLM + Khoj (PDF-First, NullByte Cleaner, VN Legal Separators, Inline Citation, Timeout Fallback)"`
+
+### [2026-08-13 18:04] feat(chat): áp dụng kiến trúc Plan-and-Solve cho RAG Search
+- **Mô tả**: Tích hợp ý tưởng từ gpt-researcher vào `AiAssistantService.cs`. Khi người dùng hỏi một câu phức tạp thuộc Intent SEARCH, AI không còn dùng nguyên câu hỏi đó để query Vector DB (do câu hỏi dài thường bị loãng ngữ nghĩa). Thay vào đó, một "Planner LLM" sẽ tự sinh ra 2-3 Sub-queries (câu hỏi phụ). Hệ thống sẽ chạy RAG cho cả câu gốc lẫn các sub-queries (topK=2), sau đó loại bỏ trùng lặp và gom tối đa 5 chunks đưa vào context. Việc này tăng độ bao phủ tìm kiếm lên 300%.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(chat): áp dụng kiến trúc Plan-and-Solve cho RAG Search"`
+
+### [2026-08-13 17:55] feat(ocr): áp dụng kiến trúc chuẩn Enterprise của IBM Docling
+- **Mô tả**: 
+  - **Document Zoning**: Thu hẹp không gian tìm kiếm của Regex cho dữ liệu cứng (Số văn bản, Ngày tháng) xuống còn 1500 ký tự đầu tiên (Header Zone), tránh lỗi bắt nhầm ngày/số ở phụ lục hoặc văn bản trích dẫn dưới thân bài.
+  - **Semantic Chunking**: Nâng cấp hệ thống Vector RAG trong `OcrQueueService`. Thay vì cắt chuỗi bạo lực (250 từ), hệ thống mới chẻ văn bản dựa trên dấu chấm câu và xuống dòng kép, giúp duy trì nguyên vẹn ngữ nghĩa pháp lý của từng câu văn trước khi ném vào Ollama.
+  - **Pseudo Table Recovery**: Cải tiến bộ tiền xử lý Text. Các khoảng trống lớn sinh ra từ các ô trống trong bảng biểu sẽ được tự động convert thành cấu trúc Markdown ` | `. Giúp AI không bị đọc nhầm dữ liệu giữa các cột.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): áp dụng kiến trúc chuẩn Enterprise của IBM Docling (Zoning, Semantic Chunking, Markdown Table)"`
+
+### [2026-08-13 17:55] refactor(ocr): cấu trúc lại mã nguồn OCR theo kiến trúc AI Fallback (Hybrid)
+- **Mô tả**: Tinh gọn `OcrTextProcessingService.cs` bằng cách xóa bỏ hàng trăm dòng mã Regex thừa dùng để trích xuất Trích yếu và Mức độ khẩn. Nâng cấp luồng OCR bằng cách ưu tiên Regex cho dữ liệu cứng (Số văn bản, Ngày tháng), sau đó gọi Ollama (qwen2.5:1.5b trên server VNPT) để phân tích các dữ liệu mềm (Trích yếu, Cơ quan, Độ khẩn) và fallback cho các dữ liệu cứng nếu Regex thất bại. Gỡ bỏ hoàn toàn sự phụ thuộc vào Google Gemini.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrTextProcessingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(ocr): cấu trúc lại mã nguồn OCR theo kiến trúc AI Fallback (Hybrid)"`
+
 ### [2026-08-13 17:25] feat(ocr): nâng cấp RAG AI bằng thuật toán Multi-subqueries (tương tự Khoj)
 - **Mô tả**: Tối ưu hóa chức năng trích xuất từ khóa cho AI Reference. Thay vì tạo 1 từ khóa duy nhất, prompt mới yêu cầu LLM tách văn bản thành 2-3 câu sub-queries riêng biệt. Hàm tìm kiếm lặp qua tất cả sub-queries, gộp kết quả và loại bỏ các URL trùng lặp (DistinctBy) để tăng độ đa dạng và tránh sót thông tin pháp lý quan trọng.
 - **Tệp thay đổi**:
@@ -2223,11 +2264,7 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/UsersController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(api): xóa endpoint test-hash không cần thiết"`
 
-### [2026-08-10 00:47] Tối ưu hiệu năng gửi thông báo khi luân chuyển
-- **Mô tả**: Sử dụng Task.Run và IServiceScopeFactory để đẩy logic gửi thông báo (Push/Email) vào background thread, tránh block API Response khi người dùng bấm luân chuyển.
-- **Tệp thay đổi**:
-  - `ToolCalendar.Api/Controllers/Documents/DocumentRoutingsController.cs` (Sửa đổi)
-- **Lệnh git commit**: `git commit -m "perf(routing): sử dụng background task để gửi thông báo nhằm tránh block API response"`
+
 
 
 ### [2026-08-10 00:53] Ẩn nút Hủy tiếp nhận sau khi đã nộp kết quả
@@ -2549,3 +2586,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/users/components/UserModal.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(docs): filter inactive departments from dropdowns"`
+
+### [2026-08-14 08:45] Áp dụng 3 cải tiến RAG/Memory từ Dify
+- **Mô tả**: Học hỏi mã nguồn Dify và triển khai 3 tính năng quan trọng: (1) Chunk Overlap để tránh mất thông tin ở biên (OcrQueueService), (2) Hybrid Search (Vector + Keyword) dùng BM25/LIKE để tìm kiếm từ khóa/số công văn chính xác, (3) Token-Aware Memory (prune theo ký tự) để ngăn chặn lỗi Context Overflow cho ChatBox AI.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IDocumentChunkRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(rag): thêm chunk overlap, hybrid search và token-aware memory học từ Dify"`

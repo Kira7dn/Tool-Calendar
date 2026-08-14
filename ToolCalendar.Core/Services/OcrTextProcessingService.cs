@@ -42,7 +42,10 @@ namespace ToolCalendar.Services
 
             foreach (var rawLine in rawLines)
             {
-                var line = Regex.Replace(rawLine, @"[^\S\n]+", " ").Trim();
+                // DOCLING: Pseudo Table-Structure Recovery
+                // Khoảng trắng lớn (từ 3 space hoặc tab) sẽ biến thành cột Markdown '|'
+                var line = Regex.Replace(rawLine, @"[ \t]{3,}|\t+", " | ");
+                line = Regex.Replace(line, @"[^\S\n|]+", " ").Trim();
 
                 if (line.Length == 0)
                 {
@@ -116,107 +119,113 @@ namespace ToolCalendar.Services
             return current.Length >= 40 && !Regex.IsMatch(current, @"[.!?]$");
         }
 
-        // ------- Phân tích văn bản bằng Gemini -------
-        private async Task<DocumentRecord?> ParseTextWithGeminiAsync(string text, string filePath, string ocrPagesJson)
+        // ------- Phân tích văn bản bằng Ollama (VNPT Server) -------
+        private async Task<DocumentRecord?> ParseTextWithOllamaAsync(string text)
         {
-            var apiKey = _configuration["GEMINI_API_KEY"];
-            if (string.IsNullOrWhiteSpace(apiKey)) return null;
-
             try
             {
+                var chatUrl = _configuration["Ollama:ChatUrl"] ?? "http://host.docker.internal:11434/api/chat";
                 var client = _httpClientFactory.CreateClient();
-                client.Timeout = TimeSpan.FromSeconds(15); // Flash-lite cực kỳ nhanh nên để 15s
-                // Dùng gemini-flash-lite-latest vì gemma-4 bị chậm và gemini-flash-lite-latest thành công trên key này
-                var requestUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key={apiKey}";
+                client.Timeout = TimeSpan.FromSeconds(30);
                 
                 string cleanedText = PostProcessExtractedText(text);
 
-                var prompt = @"Bạn là chuyên gia bóc tách dữ liệu công văn. Hãy đọc nội dung thô (có thể lộn xộn hoặc sai trật tự) dưới đây và trả về JSON chuẩn với các trường:
+                var prompt = @"Bạn là chuyên gia bóc tách dữ liệu công văn. Hãy đọc nội dung thô dưới đây và trả về JSON chuẩn với các trường:
 - SoVanBan: Số và ký hiệu văn bản (vd: 9679/SNN&MT-QLĐĐ).
 - TenCongVan: Tên loại công văn (vd: CÔNG VĂN, QUYẾT ĐỊNH, BÁO CÁO).
-- TrichYeu: Trích yếu nội dung công văn.
+- TrichYeu: Trích yếu/tóm tắt nội dung chính của công văn (rất quan trọng, bắt buộc có).
 - NgayBanHanh: Ngày ban hành định dạng YYYY-MM-DD.
 - CoQuanBanHanh: Tên cơ quan ban hành.
 - CoQuanChuQuan: Tên cơ quan chủ quản (nếu có).
+- Priority: Chọn 1 trong 3 (Hỏa tốc, Khẩn, Thường).
 Bắt buộc trả về ĐÚNG định dạng JSON, không kèm markdown hay text nào khác.
 Nội dung:
 " + cleanedText;
 
                 var requestBody = new
                 {
-                    contents = new[]
-                    {
-                        new { parts = new[] { new { text = prompt } } }
-                    },
-                    generationConfig = new
-                    {
-                        response_mime_type = "application/json",
-                        temperature = 0.1
-                    }
+                    model = "qwen2.5:1.5b",
+                    messages = new[] { new { role = "user", content = prompt } },
+                    stream = false,
+                    format = "json",
+                    options = new { temperature = 0.1 }
                 };
 
                 var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                var response = await client.PostAsync(requestUrl, content);
+                var response = await client.PostAsync(chatUrl, content);
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"[Gemini API Error] {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                    Console.WriteLine($"[Ollama API Error] {response.StatusCode}");
                     return null;
                 }
 
                 var responseString = await response.Content.ReadAsStringAsync();
-                
                 using var jsonDoc = JsonDocument.Parse(responseString);
-                var candidates = jsonDoc.RootElement.GetProperty("candidates");
-                if (candidates.GetArrayLength() == 0) return null;
+                var messageContent = jsonDoc.RootElement.GetProperty("message").GetProperty("content").GetString();
                 
-                var contentText = candidates[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
-                if (string.IsNullOrWhiteSpace(contentText)) return null;
+                if (string.IsNullOrWhiteSpace(messageContent)) return null;
 
-                var result = JsonSerializer.Deserialize<JsonElement>(contentText);
-                
-                var record = new DocumentRecord
-                {
-                    FilePath = filePath,
-                    FullText = text,
-                    OcrPagesJson = string.IsNullOrWhiteSpace(ocrPagesJson) ? "[]" : ocrPagesJson,
-                    NgayThem = DateTime.Now,
-                    Status = "Chưa xử lý"
-                };
+                var result = JsonSerializer.Deserialize<JsonElement>(messageContent);
+                var record = new DocumentRecord();
 
                 if (result.TryGetProperty("SoVanBan", out var soVanBan)) record.SoVanBan = soVanBan.GetString();
                 if (result.TryGetProperty("TenCongVan", out var tenCongVan)) record.TenCongVan = tenCongVan.GetString();
                 if (result.TryGetProperty("TrichYeu", out var trichYeu)) record.TrichYeu = trichYeu.GetString();
-                
                 if (result.TryGetProperty("NgayBanHanh", out var ngayBanHanhStr) && DateTime.TryParse(ngayBanHanhStr.GetString(), out var ngayBanHanh))
                 {
                     record.NgayBanHanh = ngayBanHanh;
                 }
-                
                 if (result.TryGetProperty("CoQuanBanHanh", out var coQuanBanHanh)) record.CoQuanBanHanh = coQuanBanHanh.GetString();
                 if (result.TryGetProperty("CoQuanChuQuan", out var coQuanChuQuan)) record.CoQuanChuQuan = coQuanChuQuan.GetString();
+                if (result.TryGetProperty("Priority", out var priority)) record.Priority = priority.GetString();
                 
                 return record;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Gemini Parsing Error]: {ex.Message}");
+                Console.WriteLine($"[Ollama Parsing Error]: {ex.Message}");
                 return null;
             }
         }
 
-        // ------- Phân tích văn bản Controller -------
+        // ------- Phân tích văn bản Controller (Hybrid: Regex + AI Fallback) -------
         public async Task<DocumentRecord> ParseTextAsync(string text, string filePath, string ocrPagesJson = "[]")
         {
-            var geminiResult = await ParseTextWithGeminiAsync(text, filePath, ocrPagesJson);
-            var regexResult = await ParseTextWithRegexAsync(text, filePath, ocrPagesJson);
-
-            if (geminiResult != null)
+            // 1. Chạy Regex trước (rất nhanh, độ chính xác tuyệt đối cho dữ liệu cứng)
+            var record = await ParseTextWithRegexAsync(text, filePath, ocrPagesJson);
+            
+            // 2. Chạy Ollama để lấy dữ liệu "mềm" (Trích yếu, độ khẩn) và dự phòng
+            var aiData = await ParseTextWithOllamaAsync(text);
+            
+            if (aiData != null)
             {
-                geminiResult.ThoiHan = regexResult.ThoiHan;
-                return geminiResult;
+                // Thay thế dữ liệu mềm 100% bằng AI
+                if (!string.IsNullOrWhiteSpace(aiData.TrichYeu))
+                    record.TrichYeu = aiData.TrichYeu;
+                    
+                if (!string.IsNullOrWhiteSpace(aiData.Priority) && (aiData.Priority == "Hỏa tốc" || aiData.Priority == "Khẩn"))
+                    record.Priority = aiData.Priority;
+                    
+                if (!string.IsNullOrWhiteSpace(aiData.TenCongVan))
+                    record.TenCongVan = aiData.TenCongVan;
+
+                // Dữ liệu cứng: Chỉ lấp vào nếu Regex thất bại (Rỗng)
+                if (string.IsNullOrWhiteSpace(record.SoVanBan) && !string.IsNullOrWhiteSpace(aiData.SoVanBan)) 
+                    record.SoVanBan = aiData.SoVanBan;
+                
+                if (record.NgayBanHanh == null && aiData.NgayBanHanh != null) 
+                    record.NgayBanHanh = aiData.NgayBanHanh;
+                
+                if (string.IsNullOrWhiteSpace(record.CoQuanBanHanh) && !string.IsNullOrWhiteSpace(aiData.CoQuanBanHanh))
+                    record.CoQuanBanHanh = aiData.CoQuanBanHanh;
+                    
+                if (string.IsNullOrWhiteSpace(record.CoQuanChuQuan) && !string.IsNullOrWhiteSpace(aiData.CoQuanChuQuan))
+                    record.CoQuanChuQuan = aiData.CoQuanChuQuan;
             }
-            return regexResult;
+            
+            EvaluateConfidence(record);
+            return record;
         }
 
         // ------- Phân tích văn bản cũ -------
@@ -248,7 +257,10 @@ Nội dung:
 
             int vVIndex = t.IndexOf("V/v", StringComparison.OrdinalIgnoreCase);
             if (vVIndex < 0) vVIndex = t.IndexOf("Về việc", StringComparison.OrdinalIgnoreCase);
-            string searchArea = vVIndex > 0 ? t.Substring(0, vVIndex) : (t.Length > 1500 ? t.Substring(0, 1500) : t);
+            
+            // DOCLING: Document Zoning (Phân vùng 1500 ký tự đầu để tìm dữ liệu CỨNG)
+            int zoneEnd = vVIndex > 0 ? vVIndex : Math.Min(t.Length, 1500);
+            string searchArea = t.Substring(0, zoneEnd);
 
             // Bóc tách Tên công văn (QUYẾT ĐỊNH, THÔNG BÁO, CÔNG VĂN...)
             var tenCVPatterns = new[] {
@@ -266,27 +278,18 @@ Nội dung:
             }
             if (string.IsNullOrEmpty(record.TenCongVan)) record.TenCongVan = "CÔNG VĂN";
 
-            // Xác định mức độ khẩn
-            if (t.Contains("HỎA TỐC", StringComparison.OrdinalIgnoreCase)) record.Priority = "Hỏa tốc";
-            else if (t.Contains("KHẨN", StringComparison.OrdinalIgnoreCase)) record.Priority = "Khẩn";
-            else record.Priority = "Thường";
+            // Xác định mức độ khẩn (Giao cho AI phân loại, regex chỉ gán mặc định)
+            record.Priority = "Thường";
 
             // ---- Bóc tách Số hiệu văn bản (V3 - Pattern-First, không phụ thuộc từ khóa "Số:") ----
             // Thuật toán: Tìm trực tiếp định dạng [số]/[MÃ-CQUAN] trong vùng header,
             // không yêu cầu OCR đọc được chữ "Số:" vốn hay bị mất/sai với file scan có ký số.
 
-            // Xác định vùng Header (từ đầu đến "V/v"/"Về việc" hoặc tối đa 800 ký tự)
-            int hdrEnd = vVIndex > 0 ? vVIndex : Math.Min(t.Length, 800);
-            string headerZone = t.Substring(0, hdrEnd);
-
-            // Pattern cốt lõi: [1-6 chữ số][/hoặc-][Chữ hoa đầu + các ký tự hợp lệ bao gồm cả dấu chấm]
-            // Ví dụ khớp: 148/BC.UBND-VHXH | 2348-QĐ/TU | 1234/UBND-VX | 425/VP.UBND-XDMT
-            // Ví dụ KHÔNG khớp: 10/4/2026 (sau / là số, không phải chữ hoa)
+            // DOCLING: Chỉ chạy tìm Số Văn Bản trong khu vực searchArea (Header Zone)
             var candidatePattern = new Regex(
                 @"(?<!\d)(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-Za-zĐđÀ-ỹ0-9\-/\.&_]{1,30})\b",
                 RegexOptions.IgnoreCase);
 
-            // Danh sách các từ khóa chỉ văn bản căn cứ/trích dẫn (bỏ qua số của chúng)
             var referenceKeywords = new Regex(
                 @"(Quy\s*định|Nghị\s*quyết|Nghị\s*định|Thông\s*tư|Luật|Pháp\s*lệnh|Công\s*điện)\s*(?:số|s[ôo6])?\s*$",
                 RegexOptions.IgnoreCase);
@@ -294,28 +297,21 @@ Nội dung:
             string bestSo = "";
             int bestSoPrio = -1;
 
-            var candidates = candidatePattern.Matches(headerZone);
+            var candidates = candidatePattern.Matches(searchArea);
             foreach (Match m in candidates)
             {
                 string num = m.Groups[1].Value;
                 string agency = m.Groups[2].Value;
 
-                // Lọc: bỏ qua ngày tháng kiểu 10/4 hoặc 31/7 (sau / là 1-2 chữ số không có chữ cái)
                 if (Regex.IsMatch(agency, @"^[/\-]\s*\d{1,2}$")) continue;
-
-                // Lọc: loại trừ số năm như 2025, 2026 (4 chữ số bắt đầu bằng 20)
                 if (Regex.IsMatch(num, @"^20\d{2}$")) continue;
 
-                // Kiểm tra 60 ký tự trước để phát hiện văn bản căn cứ
                 int lb = Math.Max(0, m.Index - 60);
-                string ctx = headerZone.Substring(lb, m.Index - lb);
+                string ctx = searchArea.Substring(lb, m.Index - lb);
                 if (referenceKeywords.IsMatch(ctx)) continue;
 
-                // Tính điểm ưu tiên
                 int prio = 1;
-                // Điểm cao nếu trước đó có từ khóa "Số:" (kể cả bị OCR đọc thành "S6:", "S0:")
                 if (Regex.IsMatch(ctx, @"[Ss][ôóo60]\s*[:.]?\s*(?:\d{1,3}[:\s]+)?\s*$")) prio = 100;
-                // Điểm vừa nếu nằm ở cuối dòng ngắn (đặc trưng của dòng số hiệu)
                 else if (Regex.IsMatch(ctx, @"\n\s*$") || lb == 0) prio = 60;
 
                 if (prio > bestSoPrio)
@@ -326,17 +322,16 @@ Nội dung:
                 if (bestSoPrio >= 100) break;
             }
 
-            // Bước 2 fallback: Nếu header không có, tìm trong toàn văn với từ khóa "Số:"
-            // nhưng loại trừ nghiêm ngặt các số của văn bản căn cứ
+            // Bước 2 fallback: Tìm trong searchArea với từ khóa "Số:"
             if (string.IsNullOrWhiteSpace(bestSo))
             {
-                var fullMatches = Regex.Matches(t,
+                var fullMatches = Regex.Matches(searchArea,
                     @"[Ss][ôóo60]\s*[:.]?\s*(?:\d{1,3}[:\s]+)?(\d{1,6})\s*([/\-]\s*[A-ZĐÀÁẢÃẠĂẮẶẰẲẴÂẤẬẦẨẪ][A-Za-zĐđÀ-ỹ0-9\-/\.&_]{1,30})\b",
                     RegexOptions.IgnoreCase);
                 foreach (Match m in fullMatches)
                 {
                     int lb = Math.Max(0, m.Index - 60);
-                    string ctx = t.Substring(lb, m.Index - lb);
+                    string ctx = searchArea.Substring(lb, m.Index - lb);
                     if (Regex.IsMatch(ctx, @"(Quy\s*định|Nghị\s*quyết|Nghị\s*định|Thông\s*tư|Luật)\s*$", RegexOptions.IgnoreCase))
                         continue;
                     bestSo = $"{m.Groups[1].Value}{m.Groups[2].Value}";
@@ -361,9 +356,8 @@ Nội dung:
                 // Nếu tên file không có định dạng số hiệu → để trống, người dùng tự điền
             }
 
-            // Tìm ngày ban hành - hỗ trợ lỗi OCR "f0"->"10", "lO"->"10", "l"->"1"
-            // Regex chấp nhận chữ cái thay cho số (do OCR nhận sai font nghiêng)
-            var mNgayBHMatches = Regex.Matches(t,
+            // DOCLING: Chỉ tìm ngày ban hành trong searchArea (Zoning)
+            var mNgayBHMatches = Regex.Matches(searchArea,
                 @"(?:ngày|ngay|ng[àa]y)\s*([0-9a-zA-Z]{1,2})\s*(?:tháng|thang|th[áa]ng)\s*([0-9a-zA-Z]{1,2})\s*(?:năm|nam|n[ăaàãä]m|n[ăaàãä]rn|n[ăaàãä]n)\s*(\d{4})",
                 RegexOptions.IgnoreCase);
 
@@ -382,7 +376,7 @@ Nội dung:
 
                 if (string.IsNullOrWhiteSpace(dayStr) || !dayStr.All(char.IsDigit))
                 {
-                    var isolatedDayMatch = Regex.Match(t, @"(?m)^\s*([1-9]|[12]\d|3[01])\s*$");
+                    var isolatedDayMatch = Regex.Match(searchArea, @"(?m)^\s*([1-9]|[12]\d|3[01])\s*$");
                     dayStr = isolatedDayMatch.Success ? isolatedDayMatch.Groups[1].Value : "1";
                 }
 
@@ -680,32 +674,7 @@ Nội dung:
             if (donViList.Count > 0)
                 record.DonViChiDao = string.Join("; ", donViList.Distinct());
 
-            var mTrichYeu = Regex.Match(t,
-                @"[Vv]/[vV]\s*[:\.]?\s*([\s\S]{10,400}?)(\n\s*\n|\n\s*-|Kính gửi|Độc lập|Địa danh|Quảng Ninh|ngày\s+\d|tháng\s+\d|$)",
-                RegexOptions.IgnoreCase);
-            if (mTrichYeu.Success)
-            {
-                string val = mTrichYeu.Groups[1].Value.Trim();
-                record.TrichYeu = Regex.Replace(val, @"\r?\n", " ").Replace("  ", " ").Trim();
-            }
-            else
-            {
-                var mVV = Regex.Match(t, @"[Vv]ề\s+việc\s+([\s\S]{10,400}?)(\n\s*\n|\n\s*-|Kính gửi|Quảng Ninh|ngày|$)", RegexOptions.IgnoreCase);
-                if (mVV.Success)
-                {
-                    string val = mVV.Groups[1].Value.Trim();
-                    record.TrichYeu = Regex.Replace(val, @"\r?\n", " ").Replace("  ", " ").Trim();
-                }
-            }
-
-            if (string.IsNullOrWhiteSpace(record.TrichYeu) && !string.IsNullOrEmpty(record.TenCongVan))
-            {
-                var mTitle = Regex.Match(t, $@"{record.TenCongVan}\s*[^:\n]{{0,50}}?\s*(?:số|Số)?\s*\d+[^\n]{{0,100}}?\s+([^ \n][^\n]{{10,300}})", RegexOptions.IgnoreCase);
-                if (mTitle.Success)
-                {
-                    record.TrichYeu = mTitle.Groups[1].Value.Trim();
-                }
-            }
+            // (Đã xóa đoạn regex bóc tách Trích yếu, nhường phần này 100% cho AI phân tích ở luồng Fallback)
 
             if (string.IsNullOrWhiteSpace(record.SoVanBan))
             {
@@ -823,7 +792,7 @@ Nội dung:
                 System.Diagnostics.Debug.WriteLine($"Dept auto-detect error: {ex.Message}");
             }
 
-            EvaluateConfidence(record);
+            // Việc đánh giá EvaluateConfidence sẽ được thực hiện tại Controller (ParseTextAsync) sau khi AI Fallback
             return await Task.FromResult(record);
         }
 

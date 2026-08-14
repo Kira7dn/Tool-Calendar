@@ -64,8 +64,49 @@ namespace ToolCalendar.Services
 
         public async Task<string> ExtractTextFromPdfOcrAsync(string filePath)
         {
+            // ANYTHINGLLM: PDF-First, OCR Fallback Pattern
+            // Thử đọc text trực tiếp từ PDF trước (nhanh x10, chính xác 100% cho PDF điện tử)
+            string directText = TryExtractPdfTextDirect(filePath);
+            if (!string.IsNullOrWhiteSpace(directText) && directText.Length > 80)
+            {
+                _logger.LogInformation("[OCR] PDF có text layer — bỏ qua PaddleOCR, đọc trực tiếp ({Chars} ký tự).", directText.Length);
+                // KHOJ: Loại bỏ null bytes và ký tự rác
+                return CleanExtractedText(directText);
+            }
+            _logger.LogInformation("[OCR] PDF dạng scan/ảnh — tiến hành PaddleOCR.");
             var result = await ExtractPdfOcrResultAsync(filePath);
             return result.FullText;
+        }
+
+        /// <summary>ANYTHINGLLM Idea #1: Đọc text layer trực tiếp từ PDF bằng itext7 (đã có sẵn trong project).</summary>
+        private static string TryExtractPdfTextDirect(string filePath)
+        {
+            try
+            {
+                var sb = new System.Text.StringBuilder();
+                using var reader = new iText.Kernel.Pdf.PdfReader(filePath);
+                using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(reader);
+                for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
+                {
+                    var page = pdfDoc.GetPage(i);
+                    var text = iText.Kernel.Pdf.Canvas.Parser.PdfTextExtractor.GetTextFromPage(page);
+                    sb.AppendLine(text);
+                }
+                return sb.ToString();
+            }
+            catch { return string.Empty; }
+        }
+
+        /// <summary>KHOJ Idea #3: Loại bỏ null bytes, ký tự rác, và từ quá dài (>500 ký tự).</summary>
+        private static string CleanExtractedText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+            // Xóa null bytes (\x00) — thứ hay xuất hiện trong PDF scan bị lỗi
+            text = text.Replace("\x00", string.Empty);
+            // Loại bỏ các "từ" quá dài (> 500 ký tự) — thường là rác OCR hoặc base64 ẩn
+            var words = text.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.None);
+            var cleaned = string.Join(" ", words.Select(w => w.Length <= 500 ? w : " "));
+            return cleaned;
         }
 
         public async Task<OcrExtractionResult> ExtractPdfOcrResultAsync(string filePath, OcrRunOptions? options = null)

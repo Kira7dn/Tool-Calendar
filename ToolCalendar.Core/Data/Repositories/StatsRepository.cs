@@ -238,14 +238,14 @@ namespace ToolCalendar.Core.Data.Repositories
 
             using var cmd = new SqliteCommand(@"
                 SELECT
-                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan < date('now') AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS QuaHan,
-                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan = date('now') AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS HomNay,
-                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan = date('now', '+1 day') AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS NgayMai,
-                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan > date('now', '+1 day') AND ThoiHan <= date('now', '+7 days') AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS TrongTuan,
-                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan > date('now', '+7 days') AND ThoiHan <= date('now', '+30 days') AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS TrongThang,
+                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan < date('now', '+7 hours') AND Status != 'Hoàn thành' THEN 1 ELSE 0 END) AS QuaHan,
+                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan = date('now', '+7 hours') AND Status != 'Hoàn thành' THEN 1 ELSE 0 END) AS HomNay,
+                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan = date('now', '+7 hours', '+1 day') AND Status != 'Hoàn thành' THEN 1 ELSE 0 END) AS NgayMai,
+                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan > date('now', '+7 hours', '+1 day') AND ThoiHan <= date('now', '+7 hours', '+7 days') AND Status != 'Hoàn thành' THEN 1 ELSE 0 END) AS TrongTuan,
+                    SUM(CASE WHEN ThoiHan IS NOT NULL AND ThoiHan > date('now', '+7 hours', '+7 days') AND ThoiHan <= date('now', '+7 hours', '+30 days') AND Status != 'Hoàn thành' THEN 1 ELSE 0 END) AS TrongThang,
                     COUNT(*) AS TongTonDong
                 FROM Documents
-                WHERE Status != 'Đã xử lý'
+                WHERE Status != 'Hoàn thành'
             ", connection);
 
             var quaHan = 0;
@@ -268,23 +268,66 @@ namespace ToolCalendar.Core.Data.Repositories
                 }
             }
 
-            using var cmdTop = new SqliteCommand(@"
-                SELECT SoVanBan, TenCongVan, ThoiHan 
-                FROM Documents 
-                WHERE Status != 'Đã xử lý' AND ThoiHan IS NOT NULL AND ThoiHan >= date('now')
-                ORDER BY ThoiHan ASC 
-                LIMIT 1
+            // Danh sách chi tiết công văn đến hạn hôm nay
+            using var cmdHomNay = new SqliteCommand(@"
+                SELECT SoVanBan, TenCongVan, ThoiHan, Status, Priority
+                FROM Documents
+                WHERE ThoiHan = date('now', '+7 hours') AND Status != 'Hoàn thành'
+                ORDER BY TenCongVan ASC
+                LIMIT 20
             ", connection);
-            
-            string vanBanGanNhat = "Hiện tại không có công văn nào có hạn chót trong tương lai gần.";
-            using (var rTop = await cmdTop.ExecuteReaderAsync())
+            var listHomNay = new System.Text.StringBuilder();
+            using (var r = await cmdHomNay.ExecuteReaderAsync())
             {
-                if (await rTop.ReadAsync())
+                while (await r.ReadAsync())
                 {
-                    var so = rTop["SoVanBan"]?.ToString();
-                    var ten = rTop["TenCongVan"]?.ToString();
-                    var han = rTop["ThoiHan"] == DBNull.Value ? "" : Convert.ToDateTime(rTop["ThoiHan"]).ToString("dd/MM/yyyy");
-                    vanBanGanNhat = $"Văn bản đến hạn gần nhất là công văn số {so} ({ten}), có hạn chót là ngày {han}.";
+                    var so = r["SoVanBan"]?.ToString() ?? "(không số)";
+                    var ten = r["TenCongVan"]?.ToString();
+                    var tt = r["Status"]?.ToString();
+                    var priority = r["Priority"]?.ToString();
+                    listHomNay.AppendLine($"  • [{priority}] {so} — {ten} (Trạng thái: {tt})");
+                }
+            }
+
+            // Danh sách chi tiết công văn quá hạn
+            using var cmdQuaHan = new SqliteCommand(@"
+                SELECT SoVanBan, TenCongVan, ThoiHan, Status, Priority
+                FROM Documents
+                WHERE ThoiHan < date('now', '+7 hours') AND Status != 'Hoàn thành'
+                ORDER BY ThoiHan ASC
+                LIMIT 20
+            ", connection);
+            var listQuaHan = new System.Text.StringBuilder();
+            using (var r2 = await cmdQuaHan.ExecuteReaderAsync())
+            {
+                while (await r2.ReadAsync())
+                {
+                    var so = r2["SoVanBan"]?.ToString() ?? "(không số)";
+                    var ten = r2["TenCongVan"]?.ToString();
+                    var han = r2["ThoiHan"] == DBNull.Value ? "" : Convert.ToDateTime(r2["ThoiHan"]).ToString("dd/MM/yyyy");
+                    var tt = r2["Status"]?.ToString();
+                    listQuaHan.AppendLine($"  • {so} — {ten} (Hạn: {han}, Trạng thái: {tt})");
+                }
+            }
+
+            // Danh sách công văn đến hạn trong 7 ngày tới (không tính hôm nay)
+            using var cmdSapHan = new SqliteCommand(@"
+                SELECT SoVanBan, TenCongVan, ThoiHan, Status, Priority
+                FROM Documents
+                WHERE ThoiHan > date('now', '+7 hours') AND ThoiHan <= date('now', '+7 hours', '+7 days') AND Status != 'Hoàn thành'
+                ORDER BY ThoiHan ASC
+                LIMIT 15
+            ", connection);
+            var listSapHan = new System.Text.StringBuilder();
+            using (var r3 = await cmdSapHan.ExecuteReaderAsync())
+            {
+                while (await r3.ReadAsync())
+                {
+                    var so = r3["SoVanBan"]?.ToString() ?? "(không số)";
+                    var ten = r3["TenCongVan"]?.ToString();
+                    var han = r3["ThoiHan"] == DBNull.Value ? "" : Convert.ToDateTime(r3["ThoiHan"]).ToString("dd/MM/yyyy");
+                    var tt = r3["Status"]?.ToString();
+                    listSapHan.AppendLine($"  • {so} — {ten} (Hạn: {han}, Trạng thái: {tt})");
                 }
             }
 
@@ -293,10 +336,17 @@ namespace ToolCalendar.Core.Data.Repositories
                    $"- Số công văn đã quá hạn xử lý: {quaHan}\n" +
                    $"- Số công văn đến hạn HÔM NAY: {homNay}\n" +
                    $"- Số công văn đến hạn NGÀY MAI: {ngayMai}\n" +
-                   $"- Số công văn đến hạn TRONG TUẦN NÀY (7 ngày tới, không tính hôm nay/ngày mai): {trongTuan}\n" +
+                   $"- Số công văn đến hạn TRONG TUẦN NÀY (7 ngày tới): {trongTuan}\n" +
                    $"- Số công văn đến hạn TRONG THÁNG SAU (từ 8 đến 30 ngày tới): {trongThang}\n" +
                    $"- {vanBanGanNhat}\n\n" +
-                   $"LƯU Ý QUAN TRỌNG: Bạn BẮT BUỘC phải dựa vào bảng số liệu trên để trả lời các câu hỏi về 'bao nhiêu công văn', 'thống kê', 'hạn gần nhất' của sếp. Tuyệt đối không tự bịa ra số liệu khác.";
+                   $"DANH SÁCH CÔNG VĂN ĐẾN HẠN HÔM NAY ({homNay} văn bản):\n" +
+                   (listHomNay.Length > 0 ? listHomNay.ToString() : "  (Không có công văn nào đến hạn hôm nay)\n") +
+                   $"\nDANH SÁCH CÔNG VĂN ĐÃ QUÁ HẠN ({quaHan} văn bản):\n" +
+                   (listQuaHan.Length > 0 ? listQuaHan.ToString() : "  (Không có công văn nào quá hạn)\n") +
+                   $"\nDANH SÁCH CÔNG VĂN SẮP ĐẾN HẠN TRONG 7 NGÀY TỚI:\n" +
+                   (listSapHan.Length > 0 ? listSapHan.ToString() : "  (Không có công văn nào sắp đến hạn)\n") +
+                   $"\nLƯU Ý: Bạn BẮT BUỘC dựa vào danh sách trên để liệt kê chính xác khi người dùng hỏi. Tuyệt đối không tự bịa thêm văn bản không có trong danh sách.";
         }
     }
 }
+
