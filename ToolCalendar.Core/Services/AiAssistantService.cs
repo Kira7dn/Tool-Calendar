@@ -346,7 +346,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
                                     var doc = await _documentRepo.GetDocumentByIdAsync(c.DocumentId);
                                     
                                     // DIFY Idea #5: Enriched Citation Format
-                                    string metadata = $"Ngày BH: {doc?.NgayBanHanh ?? "Không rõ"} | Cơ quan BH: {doc?.CoQuanBanHanh ?? "Không rõ"}";
+                                    string metadata = $"Ngày BH: {doc?.NgayBanHanh?.ToString("dd/MM/yyyy") ?? "Không rõ"} | Cơ quan BH: {doc?.CoQuanBanHanh ?? "Không rõ"}";
                                     sb.AppendLine($"[Công văn số {doc?.SoVanBan ?? c.DocumentId.ToString()} ({metadata})]: {c.TextContent}");
                                 }
                                 toolResult = sb.ToString();

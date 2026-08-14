@@ -2647,3 +2647,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(db): khôi phục hàm FindByKeywordAsync cho giao diện IDocumentChunkRepository"`
+### [2026-08-14 09:42] Vá lỗi build kiểu dữ liệu nullable cho Enriched Citation
+- **Mô tả**: Vá lỗi build C# `CS0019: Operator '??' cannot be applied to operands of type 'DateTime?' and 'string'` tại `AiAssistantService.cs`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi toán tử null với DateTime trong AiAssistantService"`
