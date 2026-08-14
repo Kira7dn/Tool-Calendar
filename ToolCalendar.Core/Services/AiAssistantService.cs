@@ -252,7 +252,9 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
 
                 // Có tool calls → xử lý từng tool
                 _logger.LogInformation("[AiAssistant] Hop {Hop}: Tool Calling detected.", hop + 1);
-                messages.Add(msgNode);
+                
+                // Tránh lỗi "Cannot access a disposed object" khi doc1 bị dispose ở cuối vòng lặp
+                messages.Add(JsonSerializer.Deserialize<object>(msgNode.GetRawText())!);
 
                 foreach (var toolCall in toolCallsNode.EnumerateArray())
                 {

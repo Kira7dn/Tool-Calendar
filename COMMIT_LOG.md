@@ -1,8 +1,13 @@
+### [2026-08-14 10:18] fix(api): sửa lỗi ObjectDisposedException khi gọi AI Tools
+- **Mô tả**: Fix lỗi `Cannot access a disposed object` (tên object: `JsonDocument`) trong AiAssistantService. Lỗi xảy ra do đối tượng doc1 khởi tạo bằng `using var doc1 = JsonDocument.Parse()` bị dispose cuối vòng lặp (vòng lặp N-Hop), khiến `msgNode` truyền vào mảng `messages` bị vô hiệu hoá. Fix bằng cách deserialize thành đối tượng object thuần tuý.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): sua loi ObjectDisposedException khi goi AI Tools"`
+
 ### [2026-08-14 09:26] fix(chat): sửa tên method GetStatisticsAsync → GetAiContextStatsAsync
 - **Mô tả**: Bug build server — khi viết lại `AiAssistantService.cs` dùng sai tên method `GetStatisticsAsync` thay vì `GetAiContextStatsAsync` trong `IStatsRepository`. Fix để Docker build thành công trên VNPT.
 - **Tệp thay đổi**: `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(chat): sua ten method GetStatisticsAsync thanh GetAiContextStatsAsync"`
-
 ### [2026-08-14 09:12] feat(chat,db): áp dụng 7 kỹ thuật AI cao cấp từ AnythingLLM vào Tool-Calendar
 - **Mô tả**: Sau khi nghiên cứu toàn bộ source code AnythingLLM (aibitat/, memories/, TextSplitter/, EmbeddingRerankers/), áp dụng 7 kỹ thuật vượt trội:
   - **#1 N-Hop Tool Chain**: Nâng cấp `AiAssistantService` từ 2-hop cứng thành vòng lặp N-hop (tối đa 5 lượt) — AI có thể tự gọi nhiều tools liên tiếp, giống `handleAsyncExecution()` đệ quy của AnythingLLM.

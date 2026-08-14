@@ -1,7 +1,6 @@
 #!/bin/bash
 source .deploy.env
-
-expect << EOF
+expect << EXP
 set timeout -1
 spawn ssh -o StrictHostKeyChecking=no $VNPT_USER@$VNPT_HOST "docker logs --tail 200 doc-coordination-system"
 expect {
@@ -11,4 +10,4 @@ expect {
     }
     eof
 }
-EOF
+EXP
