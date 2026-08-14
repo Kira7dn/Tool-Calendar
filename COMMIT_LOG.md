@@ -1,3 +1,9 @@
+### [2026-08-14 16:22] style(ai): sửa lỗi giao diện thanh chat AI bị che khuất trên mobile
+- **Mô tả**: Trên giao diện mobile, thanh điều hướng dưới cùng (bottom navigation bar) đè lên box chat do `z-index` thấp (`z-50` so với `z-[500]`) và lề dưới quá nhỏ (`bottom-6`). Đã nâng `z-index` lên `z-[600]` và tăng `bottom` lên `bottom-20` trên màn hình nhỏ để box chat nổi hoàn toàn trên thanh điều hướng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ai): fix AiChatbox overlapping with bottom nav on mobile"`
+
 ### [2026-08-14 16:20] fix(ai): vô hiệu hóa proxy buffering của Nginx để luồng SSE (Server-Sent Events) hoạt động mượt mà
 - **Mô tả**: Dù backend đã stream chunk đầu tiên `(Đang phân tích yêu cầu...)` ngay lập tức, nhưng reverse proxy (Nginx) trên VNPT Server mặc định bật tính năng `proxy_buffering`. Tính năng này gom các chunk lại cho đến khi đầy buffer hoặc request kết thúc mới gửi về cho frontend, làm vô hiệu hóa hoàn toàn hiệu ứng streaming. Đã thêm HTTP Header `X-Accel-Buffering: no` ở controller để ép Nginx trả chunk ngay lập tức.
 - **Tệp thay đổi**:
