@@ -95,6 +95,7 @@ builder.Services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();
 builder.Services.AddScoped<IOcrTextProcessingService, OcrTextProcessingService>();
 builder.Services.AddScoped<IOllamaEmbeddingService, OllamaEmbeddingService>();
 builder.Services.AddScoped<IDocumentChunkRepository, DocumentChunkRepository>();
+builder.Services.AddScoped<IUserMemoryRepository, UserMemoryRepository>(); // ANYTHINGLLM Idea #5: Long-Term Memory
 builder.Services.AddScoped<IAiAssistantService, AiAssistantService>();
 builder.Services.AddScoped<IAiReferenceService, AiReferenceService>();
 

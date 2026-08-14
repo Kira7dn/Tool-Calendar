@@ -62,7 +62,7 @@ namespace ToolCalendar.Core.Data.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
-        public async Task<List<DocumentChunkResult>> FindSimilarChunksAsync(float[] questionVector, int topK = 3)
+        public async Task<List<DocumentChunkResult>> FindSimilarChunksAsync(float[] questionVector, int topK = 3, float minSimilarityScore = 0.20f)
         {
             var allChunks = new List<(int DocumentId, string TextContent, float[] Vector)>();
 
@@ -89,12 +89,14 @@ namespace ToolCalendar.Core.Data.Repositories
             }
 
             // Calculate cosine similarity in memory
+            // ANYTHINGLLM Idea #3: Similarity Threshold — loại bỏ chunk quá xa câu hỏi
             var results = allChunks.Select(chunk => new DocumentChunkResult
             {
                 DocumentId = chunk.DocumentId,
                 TextContent = chunk.TextContent,
                 SimilarityScore = CosineSimilarity(questionVector, chunk.Vector)
             })
+            .Where(x => x.SimilarityScore >= minSimilarityScore)  // ← Threshold filter
             .OrderByDescending(x => x.SimilarityScore)
             .Take(topK)
             .ToList();

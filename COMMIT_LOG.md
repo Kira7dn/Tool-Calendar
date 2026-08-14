@@ -1,3 +1,30 @@
+### [2026-08-14 09:12] feat(chat,db): áp dụng 7 kỹ thuật AI cao cấp từ AnythingLLM vào Tool-Calendar
+- **Mô tả**: Sau khi nghiên cứu toàn bộ source code AnythingLLM (aibitat/, memories/, TextSplitter/, EmbeddingRerankers/), áp dụng 7 kỹ thuật vượt trội:
+  - **#1 N-Hop Tool Chain**: Nâng cấp `AiAssistantService` từ 2-hop cứng thành vòng lặp N-hop (tối đa 5 lượt) — AI có thể tự gọi nhiều tools liên tiếp, giống `handleAsyncExecution()` đệ quy của AnythingLLM.
+  - **#2 Tool Dedup Guard**: `toolCallCount` dictionary chặn cùng tool bị gọi >2 lần — tránh vòng lặp vô tận giống `Deduplicator` trong `memory.js`.
+  - **#3 Similarity Threshold Filter**: `FindSimilarChunksAsync()` nhận tham số `minSimilarityScore = 0.20f` — loại bỏ chunk noise giống `similarityThreshold` trong `stream.js` L186.
+  - **#4 Source Window Backfill**: Khi RAG trả về rỗng, AI nhận thông báo chuẩn thay vì hallucinate.
+  - **#5 Long-Term Memory (Store/Recall)**: Tạo bảng `UserMemories` + `UserMemoryRepository` + 2 system tag `[STORE_MEMORY|...]` — giống plugin `memory.js` của AnythingLLM (action: store + search). Memories được inject vào System Prompt mỗi lượt chat.
+  - **#6 Document Header Metadata**: Header chunk nâng cấp thành XML `<document_metadata>` chuẩn giống `TextSplitter.stringifyHeader()`. Embedding tính từ nội dung thuần (không header) để tránh nhiễu.
+  - **#7 Query-Mode Refusal (Hallucination Guard)**: Khi tool RAG trả về 0 kết quả → inject chuỗi `KHÔNG_TÌM_THẤY:` báo AI từ chối, không tự bịa.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Viết lại hoàn toàn)
+  - `ToolCalendar.Core/Data/Interfaces/IDocumentChunkRepository.cs` (Sửa đổi — thêm minSimilarityScore)
+  - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi — threshold filter)
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi — XML metadata header)
+  - `ToolCalendar.Core/Data/Interfaces/IUserMemoryRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/UserMemoryRepository.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi — đăng ký DI)
+- **SQL Migration**: `CREATE TABLE UserMemories (Id, UserId, Content, VectorJson, CreatedAt)` — đã chạy trực tiếp trên dev DB.
+- **Lệnh git commit**: `git commit -m "feat(chat,db): áp dụng 7 kỹ thuật AI cao cấp từ AnythingLLM (N-Hop, Dedup, Threshold, LTMemory, DocHeader, QueryRefusal)"`
+
+### [2026-08-14 09:10] feat(chat): triển khai kiến trúc Agentic (Function Calling)
+- **Mô tả**: Thay thế cơ chế nội suy Regex cũ trong Chatbox bằng kiến trúc 2-Hop Agentic (Function Calling) lấy cảm hứng từ Dify/Khoj. `AiAssistantService` giờ đây gửi mảng schemas `tools` (gồm `get_document_stats` và `search_document_content`) cho Ollama (Hop 1, `stream=false`). Nếu Ollama trả về `tool_calls`, C# sẽ thực thi hàm tương ứng, nạp kết quả JSON vào lịch sử chat và gọi tiếp Hop 2 (`stream=true`) để AI trả lời tự nhiên. `StatsRepository` được chuyển đổi trả về JSON thay vì chuỗi văn bản để tiết kiệm token.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/StatsRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(chat): triển khai kiến trúc Agentic (Function Calling) 2-hop cho Chatbox AI"`
+
 ### [2026-08-14 08:31] feat(chat): bổ sung danh sách chi tiết công văn đến hạn vào AI Context
 - **Mô tả**: `GetAiContextStatsAsync()` trước đây chỉ trả về số lượng (đếm). Nay bổ sung 3 query lấy danh sách tên cụ thể: (1) Công văn đến hạn HÔM NAY (tối đa 20 văn bản), (2) Công văn đã QUÁ HẠN (tối đa 20 văn bản), (3) Công văn SẮP ĐẾN HẠN trong 7 ngày tới (tối đa 15 văn bản). AI Chatbox giờ có thể liệt kê cụ thể từng văn bản thay vì chỉ trả lời số lượng chung. Cũng sửa luôn timezone — toàn bộ query đã chuyển sang `date('now', '+7 hours')` để đúng giờ Việt Nam.
 - **Tệp thay đổi**:

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace ToolCalendar.Core.Data.Repositories
 {
@@ -276,16 +277,17 @@ namespace ToolCalendar.Core.Data.Repositories
                 ORDER BY TenCongVan ASC
                 LIMIT 20
             ", connection);
-            var listHomNay = new System.Text.StringBuilder();
+            var listHomNay = new List<object>();
             using (var r = await cmdHomNay.ExecuteReaderAsync())
             {
                 while (await r.ReadAsync())
                 {
-                    var so = r["SoVanBan"]?.ToString() ?? "(không số)";
-                    var ten = r["TenCongVan"]?.ToString();
-                    var tt = r["Status"]?.ToString();
-                    var priority = r["Priority"]?.ToString();
-                    listHomNay.AppendLine($"  • [{priority}] {so} — {ten} (Trạng thái: {tt})");
+                    listHomNay.Add(new {
+                        So = r["SoVanBan"]?.ToString() ?? "(không số)",
+                        Ten = r["TenCongVan"]?.ToString(),
+                        TrangThai = r["Status"]?.ToString(),
+                        UuTien = r["Priority"]?.ToString()
+                    });
                 }
             }
 
@@ -297,16 +299,17 @@ namespace ToolCalendar.Core.Data.Repositories
                 ORDER BY ThoiHan ASC
                 LIMIT 20
             ", connection);
-            var listQuaHan = new System.Text.StringBuilder();
+            var listQuaHan = new List<object>();
             using (var r2 = await cmdQuaHan.ExecuteReaderAsync())
             {
                 while (await r2.ReadAsync())
                 {
-                    var so = r2["SoVanBan"]?.ToString() ?? "(không số)";
-                    var ten = r2["TenCongVan"]?.ToString();
-                    var han = r2["ThoiHan"] == DBNull.Value ? "" : Convert.ToDateTime(r2["ThoiHan"]).ToString("dd/MM/yyyy");
-                    var tt = r2["Status"]?.ToString();
-                    listQuaHan.AppendLine($"  • {so} — {ten} (Hạn: {han}, Trạng thái: {tt})");
+                    listQuaHan.Add(new {
+                        So = r2["SoVanBan"]?.ToString() ?? "(không số)",
+                        Ten = r2["TenCongVan"]?.ToString(),
+                        Han = r2["ThoiHan"] == DBNull.Value ? "" : Convert.ToDateTime(r2["ThoiHan"]).ToString("dd/MM/yyyy"),
+                        TrangThai = r2["Status"]?.ToString()
+                    });
                 }
             }
 
@@ -318,33 +321,34 @@ namespace ToolCalendar.Core.Data.Repositories
                 ORDER BY ThoiHan ASC
                 LIMIT 15
             ", connection);
-            var listSapHan = new System.Text.StringBuilder();
+            var listSapHan = new List<object>();
             using (var r3 = await cmdSapHan.ExecuteReaderAsync())
             {
                 while (await r3.ReadAsync())
                 {
-                    var so = r3["SoVanBan"]?.ToString() ?? "(không số)";
-                    var ten = r3["TenCongVan"]?.ToString();
-                    var han = r3["ThoiHan"] == DBNull.Value ? "" : Convert.ToDateTime(r3["ThoiHan"]).ToString("dd/MM/yyyy");
-                    var tt = r3["Status"]?.ToString();
-                    listSapHan.AppendLine($"  • {so} — {ten} (Hạn: {han}, Trạng thái: {tt})");
+                    listSapHan.Add(new {
+                        So = r3["SoVanBan"]?.ToString() ?? "(không số)",
+                        Ten = r3["TenCongVan"]?.ToString(),
+                        Han = r3["ThoiHan"] == DBNull.Value ? "" : Convert.ToDateTime(r3["ThoiHan"]).ToString("dd/MM/yyyy"),
+                        TrangThai = r3["Status"]?.ToString()
+                    });
                 }
             }
 
-            return $"[DỮ LIỆU THỐNG KÊ THỜI GIAN THỰC CỦA HỆ THỐNG ĐỂ TRẢ LỜI NGƯỜI DÙNG]\n" +
-                   $"- Tổng số công văn chưa xử lý / tồn đọng trong hệ thống: {tongTonDong}\n" +
-                   $"- Số công văn đã quá hạn xử lý: {quaHan}\n" +
-                   $"- Số công văn đến hạn HÔM NAY: {homNay}\n" +
-                   $"- Số công văn đến hạn NGÀY MAI: {ngayMai}\n" +
-                   $"- Số công văn đến hạn TRONG TUẦN NÀY (7 ngày tới): {trongTuan}\n" +
-                   $"- Số công văn đến hạn TRONG THÁNG SAU (từ 8 đến 30 ngày tới): {trongThang}\n\n" +
-                   $"DANH SÁCH CÔNG VĂN ĐẾN HẠN HÔM NAY ({homNay} văn bản):\n" +
-                   (listHomNay.Length > 0 ? listHomNay.ToString() : "  (Không có công văn nào đến hạn hôm nay)\n") +
-                   $"\nDANH SÁCH CÔNG VĂN ĐÃ QUÁ HẠN ({quaHan} văn bản):\n" +
-                   (listQuaHan.Length > 0 ? listQuaHan.ToString() : "  (Không có công văn nào quá hạn)\n") +
-                   $"\nDANH SÁCH CÔNG VĂN SẮP ĐẾN HẠN TRONG 7 NGÀY TỚI:\n" +
-                   (listSapHan.Length > 0 ? listSapHan.ToString() : "  (Không có công văn nào sắp đến hạn)\n") +
-                   $"\nLƯU Ý: Bạn BẮT BUỘC dựa vào danh sách trên để liệt kê chính xác khi người dùng hỏi. Tuyệt đối không tự bịa thêm văn bản không có trong danh sách.";
+            var result = new
+            {
+                TongTonDong = tongTonDong,
+                QuaHan = quaHan,
+                HomNay = homNay,
+                NgayMai = ngayMai,
+                TrongTuan = trongTuan,
+                TrongThang = trongThang,
+                DanhSachHomNay = listHomNay,
+                DanhSachQuaHan = listQuaHan,
+                DanhSachSapHan = listSapHan
+            };
+
+            return JsonSerializer.Serialize(result);
         }
     }
 }

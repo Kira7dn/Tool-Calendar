@@ -310,24 +310,30 @@ namespace ToolCalendar.Services
                             overlappedChunks.Add(chunkText);
                         }
 
-                        // Tạo phần header metadata cho từng chunk
+                        // ANYTHINGLLM Idea #6: Document Header Metadata in Chunks
+                        // Mỗi chunk được prepend một header XML chuẩn giống AnythingLLM TextSplitter.stringifyHeader()
+                        // Giúp AI biết chunk đến từ tài liệu nào và trích dẫn chính xác
                         string tenCv = !string.IsNullOrWhiteSpace(updatedDoc.TenCongVan) ? updatedDoc.TenCongVan : "Không có";
                         string soCv = !string.IsNullOrWhiteSpace(updatedDoc.SoVanBan) ? updatedDoc.SoVanBan : "Không có";
-                        string header = $"[Tên Công văn: {tenCv}] [Số hiệu: {soCv}]\n\n";
+                        string ngayBanHanh = updatedDoc.NgayBanHanh.HasValue
+                            ? updatedDoc.NgayBanHanh.Value.ToString("dd/MM/yyyy")
+                            : "Không rõ";
+                        string coQuan = !string.IsNullOrWhiteSpace(updatedDoc.CoQuanBanHanh) ? updatedDoc.CoQuanBanHanh : "Không rõ";
+                        string header = $"<document_metadata>\nsourceDocument: {tenCv}\npublished: {ngayBanHanh}\nsoHieu: {soCv}\ncoQuan: {coQuan}\n</document_metadata>\n\n";
 
                         int chunkIndex = 0;
                         foreach (var chunk in overlappedChunks)
                         {
                             var enrichedChunk = header + chunk;
 
-                            // Tính Vector
-                            var vector = await embedService.GenerateEmbeddingAsync(enrichedChunk);
+                            // Tính Vector (embedding của nội dung không kèm header để tránh nhiễu embedding)
+                            var vector = await embedService.GenerateEmbeddingAsync(chunk);
                             if (vector != null && vector.Length > 0)
                             {
                                 await chunkRepo.AddChunkAsync(docId, chunkIndex++, enrichedChunk, vector);
                             }
                         }
-                        _logger.LogInformation("[RAG] Đã lưu {Count} đoạn Vector (có overlap) cho DocumentId {Id}.", chunkIndex, docId);
+                        _logger.LogInformation("[RAG] Đã lưu {Count} đoạn Vector (có overlap + metadata header) cho DocumentId {Id}.", chunkIndex, docId);
 
                     }
                 }

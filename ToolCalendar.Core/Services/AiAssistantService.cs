@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ToolCalendar.Core.Data.Interfaces;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace ToolCalendar.Core.Services
 {
@@ -29,7 +30,13 @@ namespace ToolCalendar.Core.Services
         private readonly IStatsRepository _statsRepo;
         private readonly IOllamaEmbeddingService _embeddingService;
         private readonly IDocumentChunkRepository _chunkRepo;
+        private readonly IUserMemoryRepository _memoryRepo;
         private readonly ILogger<AiAssistantService> _logger;
+
+        // ANYTHINGLLM Idea #1: N-Hop Tool Chain — tối đa 5 lượt tool call liên tiếp
+        private const int MaxToolCalls = 5;
+        // ANYTHINGLLM Idea #3: Similarity Threshold (0.20 = ngưỡng tối thiểu)
+        private const float SimilarityThreshold = 0.20f;
 
         public AiAssistantService(
             HttpClient httpClient,
@@ -41,6 +48,7 @@ namespace ToolCalendar.Core.Services
             IStatsRepository statsRepo,
             IOllamaEmbeddingService embeddingService,
             IDocumentChunkRepository chunkRepo,
+            IUserMemoryRepository memoryRepo,
             ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
@@ -53,6 +61,7 @@ namespace ToolCalendar.Core.Services
             _statsRepo = statsRepo;
             _embeddingService = embeddingService;
             _chunkRepo = chunkRepo;
+            _memoryRepo = memoryRepo;
             _logger = logger;
         }
 
@@ -68,27 +77,33 @@ namespace ToolCalendar.Core.Services
             try { _chatHistoryRepo.AddMessage(userId, "user", message); }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể lưu tin nhắn user: {Msg}", ex.Message); }
 
-            string persona;
             string userName = !string.IsNullOrEmpty(user.FullName) ? user.FullName : user.Username;
+            bool isLeader = user.Role == "Admin" || user.Role == "LanhDao";
 
-            if (user.Role == "Admin" || user.Role == "LanhDao")
+            // ANYTHINGLLM Idea #5: Long-Term Memory — inject memories vào System Prompt
+            string memorySection = "";
+            try
             {
-                persona = $@"Bạn là Trợ lý AI của phần mềm Quản lý Công văn (cơ quan Nhà nước).
-Người đang nói chuyện với bạn là Sếp/Lãnh đạo của cơ quan (Tên: {userName}).
-Phong thái: Kính trọng, báo cáo ngắn gọn, đi thẳng vào vấn đề.
-Xưng hô: Đại từ của bạn là 'Em' hoặc 'AI', gọi người dùng là 'Sếp' hoặc 'Thủ trưởng'.
-Luôn dạ vâng lễ phép (ví dụ: Dạ vâng ạ, Em xin báo cáo sếp...).";
+                var questionVector = await _embeddingService.GenerateEmbeddingAsync(message);
+                List<UserMemoryResult> memories = new();
+                if (questionVector != null && questionVector.Length > 0)
+                    memories = await _memoryRepo.RecallMemoriesAsync(userId, questionVector, topK: 5, minScore: 0.25f);
+                if (memories.Count == 0)
+                    memories = await _memoryRepo.GetRecentMemoriesAsync(userId, limit: 3);
+                if (memories.Count > 0)
+                {
+                    var sb = new StringBuilder("## Những điều tôi nhớ về bạn\n");
+                    foreach (var m in memories) sb.AppendLine($"- {m.Content}");
+                    memorySection = "\n\n" + sb.ToString();
+                }
             }
-            else
-            {
-                persona = $@"Bạn là Trợ lý AI của phần mềm Quản lý Công văn (cơ quan Nhà nước).
-Người đang nói chuyện với bạn là Cán bộ/Văn thư (Tên: {userName}).
-Phong thái: Trực diện, chuyên nghiệp, hỗ trợ nghiệp vụ, lịch sự.
-Xưng hô: Đại từ của bạn là 'Tôi', gọi người dùng là 'Đồng chí'.
-Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đồng chí, Báo cáo đồng chí...).";
-            }
+            catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể load memories: {Msg}", ex.Message); }
 
-            var now = DateTime.UtcNow.AddHours(7); // Bắt buộc dùng giờ VN (UTC+7) để tránh lỗi timezone trên Docker
+            string persona = isLeader
+                ? $"Bạn là Trợ lý AI của phần mềm Quản lý Công văn (cơ quan Nhà nước).\nNgười đang nói chuyện với bạn là Sếp/Lãnh đạo của cơ quan (Tên: {userName}).\nPhong thái: Kính trọng, báo cáo ngắn gọn, đi thẳng vào vấn đề.\nXưng hô: Đại từ của bạn là 'Em' hoặc 'AI', gọi người dùng là 'Sếp' hoặc 'Thủ trưởng'.\nLuôn dạ vâng lễ phép (ví dụ: Dạ vâng ạ, Em xin báo cáo sếp...)."
+                : $"Bạn là Trợ lý AI của phần mềm Quản lý Công văn (cơ quan Nhà nước).\nNgười đang nói chuyện với bạn là Cán bộ/Văn thư (Tên: {userName}).\nPhong thái: Trực diện, chuyên nghiệp, hỗ trợ nghiệp vụ, lịch sự.\nXưng hô: Đại từ của bạn là 'Tôi', gọi người dùng là 'Đồng chí'.\nLuôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đồng chí, Báo cáo đồng chí...).";
+
+            var now = DateTime.UtcNow.AddHours(7);
             string documentContext = "";
 
             if (documentId.HasValue)
@@ -105,134 +120,39 @@ Luôn dùng từ ngữ chuẩn mực cơ quan Nhà nước (ví dụ: Chào đ�
                     }
                 }
             }
-            else
-            {
-                // Agentic Router: Dùng chính LLM để phân loại câu hỏi (siêu tốc với max_tokens = 5)
-                string intent = "CHAT";
-                try
-                {
-                    var routerPrompt = $"Phân loại câu hỏi sau thành 1 trong 3 nhóm: [STATS] nếu hỏi về thống kê/số lượng/ngày hạn, [SEARCH] nếu tìm kiếm nội dung công văn, [CHAT] nếu trò chuyện bình thường. Câu hỏi: \"{message}\". Chỉ trả về đúng 1 từ (STATS, SEARCH, hoặc CHAT), không giải thích.";
-                    var routerPayload = new { model = _modelName, messages = new[] { new { role = "user", content = routerPrompt } }, stream = false, options = new { temperature = 0.0, num_predict = 5 } };
-                    var routerJson = System.Text.Json.JsonSerializer.Serialize(routerPayload);
-                    var routerResponse = await _httpClient.PostAsync(_ollamaUrl, new StringContent(routerJson, System.Text.Encoding.UTF8, "application/json"));
-                    
-                    if (routerResponse.IsSuccessStatusCode)
-                    {
-                        var routerResult = await routerResponse.Content.ReadAsStringAsync();
-                        var routerObj = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(routerResult);
-                        var reply = routerObj.GetProperty("message").GetProperty("content").GetString()?.Trim().ToUpper() ?? "";
-                        
-                        if (reply.Contains("STAT")) intent = "STATS";
-                        else if (reply.Contains("SEARCH")) intent = "SEARCH";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning("[AiAssistant] Lỗi Router: {Msg}", ex.Message);
-                }
-
-                _logger.LogInformation("[AiAssistant] Câu hỏi: {Message} -> Phân loại: {Intent}", message, intent);
-
-                if (intent == "STATS")
-                {
-                    try { documentContext = $"\n\n{await _statsRepo.GetAiContextStatsAsync()}"; }
-                    catch (Exception ex) { _logger.LogWarning(ex, "Lỗi lấy dữ liệu STATS"); }
-                }
-                else if (intent == "SEARCH")
-                {
-                    try
-                    {
-                        // PLAN-AND-SOLVE: Thay vì embedding câu hỏi gốc, gọi AI để sinh ra các sub-queries
-                        var planPrompt = $"Bạn là chuyên gia phân tích dữ liệu. Hãy phân tích câu hỏi sau và chia nhỏ thành 2-3 câu hỏi phụ (sub-queries) ngắn gọn để tìm kiếm trong cơ sở dữ liệu. Chỉ trả về danh sách các câu hỏi phụ, mỗi câu 1 dòng, không đánh số, không giải thích. \nCâu hỏi gốc: \"{message}\"";
-                        var planPayload = new { model = _modelName, messages = new[] { new { role = "user", content = planPrompt } }, stream = false, options = new { temperature = 0.3, num_predict = 100 } };
-                        var planJson = System.Text.Json.JsonSerializer.Serialize(planPayload);
-                        var planResponse = await _httpClient.PostAsync(_ollamaUrl, new StringContent(planJson, System.Text.Encoding.UTF8, "application/json"));
-                        
-                        List<string> searchQueries = new List<string> { message }; // Luôn giữ câu hỏi gốc
-                        
-                        if (planResponse.IsSuccessStatusCode)
-                        {
-                            var planResult = await planResponse.Content.ReadAsStringAsync();
-                            var planObj = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(planResult);
-                            var subQs = planObj.GetProperty("message").GetProperty("content").GetString()?.Trim() ?? "";
-                            
-                            var lines = subQs.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
-                                             .Select(l => l.Trim().TrimStart('-', '*', '1', '2', '3', '.', ' '))
-                                             .Where(l => l.Length > 3).ToList();
-                            searchQueries.AddRange(lines);
-                        }
-
-                        _logger.LogInformation("[AiAssistant] RAG Queries: {Queries}", string.Join(" | ", searchQueries));
-
-                        var allSimilarChunks = new List<ToolCalendar.Core.Data.Interfaces.DocumentChunkResult>();
-                        
-                        // DIFY Idea #2: Hybrid Search — Kết hợp Keyword và Vector Search
-                        var keywordChunks = await _chunkRepo.FindByKeywordAsync(message, topK: 3);
-                        allSimilarChunks.AddRange(keywordChunks);
-
-                        foreach (var query in searchQueries.Take(3)) // Giới hạn tối đa 3 queries để tránh quá tải
-                        {
-                            var questionVector = await _embeddingService.GenerateEmbeddingAsync(query);
-                            if (questionVector != null && questionVector.Length > 0)
-                            {
-                                var chunks = await _chunkRepo.FindSimilarChunksAsync(questionVector, topK: 2); // Mỗi query lấy top 2
-                                allSimilarChunks.AddRange(chunks);
-                            }
-                        }
-
-                        // Lọc trùng lặp chunk (tránh việc nhiều queries tìm ra cùng 1 chunk)
-                        var distinctChunks = allSimilarChunks.DistinctBy(c => c.TextContent).Take(5).ToList();
-
-                        if (distinctChunks.Count > 0)
-                        {
-                            documentContext = "\n\n[DỮ LIỆU TÌM KIẾM TỪ CƠ SỞ DỮ LIỆU (RAG)]\nDựa vào câu hỏi và quá trình phân tích sâu, hệ thống đã trích xuất các đoạn văn bản sau từ các công văn:\n";
-                            foreach (var chunk in distinctChunks)
-                            {
-                                var doc = await _documentRepo.GetDocumentByIdAsync(chunk.DocumentId);
-                                string name = doc != null ? $"Công văn số {doc.SoVanBan} ({doc.TenCongVan})" : $"Công văn ID {chunk.DocumentId}";
-                                documentContext += $"\n--- Trích đoạn từ {name} (Ngày: {doc?.NgayBanHanh?.ToString("dd/MM/yyyy") ?? "N/A"}) ---\n{chunk.TextContent}\n";
-                            }
-                            documentContext += "\nLUÔN dựa vào dữ liệu trích xuất trên để trả lời. Nếu không đủ thông tin, hãy báo là hệ thống không tìm thấy nội dung phù hợp.";
-                        }
-                    }
-                    catch (Exception ex) { _logger.LogWarning(ex, "Lỗi quét Vector (SEARCH)"); }
-                }
-            }
 
             var systemPrompt = $@"{persona}
-Hôm nay là {now:dd/MM/yyyy HH:mm:ss}.{documentContext}
+Hôm nay là {now:dd/MM/yyyy HH:mm:ss}.{documentContext}{memorySection}
 Nhiệm vụ của bạn là trả lời thân thiện theo đúng phong thái trên và hỗ trợ công việc. LUÔN BẮT ĐẦU bằng lời xưng hô (ví dụ: Dạ báo cáo sếp, Chào đồng chí...).
 
 LƯU Ý CỰC KỲ QUAN TRỌNG ĐỂ TRÁNH BỊA ĐẶT (HALLUCINATION):
 1. TUYỆT ĐỐI KHÔNG tự bịa ra ngày tháng, số liệu, tên cơ quan, hoặc địa danh.
 2. CHỈ sử dụng chính xác các con số và ngày tháng xuất hiện trong nội dung văn bản.
-3. Nếu văn bản bị lỗi font (OCR rác), hãy tóm tắt phần nội dung đọc được ở bên dưới. Đừng cố dịch các đoạn mã rác.
+3. Nếu văn bản bị lỗi font (OCR rác), hãy tóm tắt phần nội dung đọc được ở bên dưới.
 4. Nếu người dùng hỏi thông tin không có trong văn bản, BẮT BUỘC trả lời: ""Dạ, trong văn bản không đề cập đến thông tin này.""
 
 KHOJ Idea #8 — INLINE CITATION (TRÍCH DẪN NỐI TUYẾN):
 Khi trả lời dựa vào dữ liệu từ công văn cụ thể, BẮT BUỘC trích dẫn theo format: (Công văn số X/YYY-ZZZ, ngày DD/MM/YYYY).
-Ví dụ: ""Theo quy định về đầu tư xây dựng (Công văn số 148/BC-UBND, ngày 10/04/2025), mức hỗ trợ là...""
 KHÔNG được viết trái lời chung chung khi đã có dữ liệu cụ thể.
 
-NẾU người dùng yêu cầu nhắc nhở công việc (ví dụ: nhắc tôi lúc 3h chiều họp...), bạn BẮT BUỘC phải đính kèm một dòng tag sau ĐÚNG Y HỆT vào CUỐI câu trả lời của bạn (thay thế YYYY-MM-DD HH:mm:ss bằng thời gian tương ứng):
+NẾU người dùng yêu cầu nhắc nhở công việc, bạn BẮT BUỘC phải đính kèm tag sau vào CUỐI câu trả lời:
 [REMINDER|YYYY-MM-DD HH:mm:ss|Nội dung việc cần nhắc]
 
-Ví dụ nếu người dùng muốn nhắc đi họp lúc 15:00 hôm nay:
-Dạ vâng ạ, em đã ghi nhận lịch họp cho sếp rồi ạ!
-[REMINDER|{now:yyyy-MM-dd} 15:00:00|Đi họp giao ban]
+NẾU người dùng nói 'hãy nhớ...', 'ghi nhớ rằng...', 'nhớ giúp tôi...', bạn BẮT BUỘC phải đính kèm tag sau vào CUỐI câu trả lời:
+[STORE_MEMORY|Nội dung cần ghi nhớ]
 
-Lưu ý: Bạn KHÔNG được dùng format JSON. Chỉ cần trả lời bằng văn bản bình thường (Markdown) và thêm tag [REMINDER] ở cuối nếu có lịch nhắc.";
+Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường và thêm tag đặc biệt ở cuối nếu cần.";
 
             // DIFY Idea #3: Token-Aware Memory — Cắt tỉa history theo số ký tự
             List<ChatMessageDto> history = new();
-            try 
-            { 
-                var fullHistory = _chatHistoryRepo.GetHistoryByUserId(userId, 20); 
+            try
+            {
+                var fullHistory = _chatHistoryRepo.GetHistoryByUserId(userId, 20);
                 int totalChars = 0;
                 foreach (var msg in fullHistory.AsEnumerable().Reverse())
                 {
                     totalChars += msg.Content.Length;
-                    if (totalChars > 3000) break; // ~1000 tokens, ngưỡng an toàn cho qwen2.5:3b (4096 tokens max)
+                    if (totalChars > 3000) break;
                     history.Insert(0, msg);
                 }
             }
@@ -241,103 +161,260 @@ Lưu ý: Bạn KHÔNG được dùng format JSON. Chỉ cần trả lời bằng
             var messages = new List<object> { new { role = "system", content = systemPrompt } };
             foreach (var msg in history)
                 messages.Add(new { role = msg.Role, content = msg.Content });
+            messages.Add(new { role = "user", content = message });
 
-            var requestBody = new
+            var tools = new object[]
             {
-                model = _modelName,
-                messages = messages,
-                stream = true // Bật stream
-            };
-
-            var request = new HttpRequestMessage(HttpMethod.Post, _ollamaUrl)
-            {
-                Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
-            };
-
-            // ANYTHINGLLM Idea #10: Timeout Fallback 30 giây cho Ollama
-            // Nếu Ollama bị chậm/quá tải, ChatBox sẽ trả lời thân thiện thay vì treo mãi mãi
-            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(90));
-
-            HttpResponseMessage response = null;
-            bool connectionError = false;
-            bool isTimeout = false;
-            try
-            {
-                response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
-            }
-            catch (System.Threading.Tasks.TaskCanceledException)
-            {
-                _logger.LogWarning("[AiAssistant] Ollama timeout sau 90 giây.");
-                isTimeout = true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[AiAssistant] Lỗi gọi Ollama: {Msg}", ex.Message);
-                connectionError = true;
-            }
-
-            if (isTimeout)
-            {
-                yield return user.Role is "Admin" or "LanhDao"
-                    ? "Dạ báo cáo sếp, hệ thống AI đang quá tải, xin sếp thử lại sau ạ."
-                    : "Hệ thống AI đang bận, đồng chí vui lòng thử lại sau.";
-                yield break;
-            }
-
-            if (connectionError)
-            {
-                yield return "Dạ báo cáo, hệ thống AI đang gặp sự cố kết nối.";
-                yield break;
-            }
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogError("[AiAssistant] Ollama trả lỗi HTTP {Code}", (int)response.StatusCode);
-                yield return "Dạ báo cáo, hệ thống AI đang gặp sự cố. Đề nghị kiểm tra lại dịch vụ Ollama trên server.";
-                yield break;
-            }
-
-            var fullResponse = new StringBuilder();
-            using var stream = await response.Content.ReadAsStreamAsync();
-            using var reader = new StreamReader(stream);
-
-            string line;
-            while ((line = await reader.ReadLineAsync()) != null)
-            {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-
-                string chunk = null;
-                try
+                new
                 {
-                    using var ollamaDoc = JsonDocument.Parse(line);
-                    if (ollamaDoc.RootElement.TryGetProperty("message", out var msgProp) &&
-                        msgProp.TryGetProperty("content", out var contentProp))
+                    type = "function",
+                    function = new
                     {
-                        chunk = contentProp.GetString();
+                        name = "get_document_stats",
+                        description = "Lấy số liệu thống kê công văn (tồn đọng, quá hạn, đến hạn hôm nay, ngày mai, tuần tới...) và danh sách chi tiết.",
+                        parameters = new { type = "object", properties = new Dictionary<string, object>() }
+                    }
+                },
+                new
+                {
+                    type = "function",
+                    function = new
+                    {
+                        name = "search_document_content",
+                        description = "Tìm kiếm nội dung chi tiết trong các công văn (RAG). Sử dụng khi người dùng hỏi về quy định, chính sách, nội dung văn bản cụ thể.",
+                        parameters = new
+                        {
+                            type = "object",
+                            properties = new Dictionary<string, object>
+                            {
+                                { "keyword", new { type = "string", description = "Từ khóa tìm kiếm (ngắn gọn, tối đa 3-5 từ)" } }
+                            },
+                            required = new[] { "keyword" }
+                        }
                     }
                 }
-                catch (JsonException) { /* Bỏ qua các line không phải JSON chuẩn */ }
+            };
 
-                if (!string.IsNullOrEmpty(chunk))
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(90));
+
+            // ============================================================
+            // ANYTHINGLLM Idea #1: N-Hop Tool Chain
+            // Vòng lặp agent — tối đa MaxToolCalls lượt, thay vì 2-hop cứng
+            // ============================================================
+            // ANYTHINGLLM Idea #2: Tool Dedup Guard — tránh gọi cùng tool 2+ lần
+            var toolCallCount = new Dictionary<string, int>();
+            bool foundFinalResponse = false;
+            string? finalTextNoStream = null;
+
+            for (int hop = 0; hop <= MaxToolCalls; hop++)
+            {
+                bool isLastHop = (hop == MaxToolCalls);
+
+                // Nếu đây là hop cuối cùng, bỏ tools để buộc AI sinh text
+                var requestBody = isLastHop
+                    ? (object)new { model = _modelName, messages = messages, stream = false }
+                    : (object)new { model = _modelName, messages = messages, stream = false, tools = tools };
+
+                HttpResponseMessage? response1 = null;
+                bool connectionError = false;
+                bool isTimeout = false;
+
+                try
                 {
-                    fullResponse.Append(chunk);
-                    yield return chunk;
+                    var req = new HttpRequestMessage(HttpMethod.Post, _ollamaUrl)
+                    {
+                        Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
+                    };
+                    response1 = await _httpClient.SendAsync(req, cts.Token);
+                }
+                catch (System.Threading.Tasks.TaskCanceledException)
+                {
+                    _logger.LogWarning("[AiAssistant] Ollama timeout sau 90 giây.");
+                    isTimeout = true;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("[AiAssistant] Lỗi gọi Ollama: {Msg}", ex.Message);
+                    connectionError = true;
+                }
+
+                if (isTimeout)
+                {
+                    yield return isLeader
+                        ? "Dạ báo cáo sếp, hệ thống AI đang quá tải, xin sếp thử lại sau ạ."
+                        : "Hệ thống AI đang bận, đồng chí vui lòng thử lại sau.";
+                    yield break;
+                }
+                if (connectionError)
+                {
+                    yield return "Dạ báo cáo, hệ thống AI đang gặp sự cố kết nối.";
+                    yield break;
+                }
+                if (!response1!.IsSuccessStatusCode)
+                {
+                    _logger.LogError("[AiAssistant] Ollama trả lỗi HTTP {Code}", (int)response1.StatusCode);
+                    yield return "Dạ báo cáo, hệ thống AI đang gặp sự cố. Đề nghị kiểm tra lại dịch vụ Ollama trên server.";
+                    yield break;
+                }
+
+                var result1 = await response1.Content.ReadAsStringAsync();
+                using var doc1 = JsonDocument.Parse(result1);
+                var msgNode = doc1.RootElement.GetProperty("message");
+
+                bool hasToolCalls = msgNode.TryGetProperty("tool_calls", out var toolCallsNode)
+                    && toolCallsNode.ValueKind == JsonValueKind.Array
+                    && toolCallsNode.GetArrayLength() > 0;
+
+                if (!hasToolCalls)
+                {
+                    // AI đã sinh text → exit loop
+                    finalTextNoStream = msgNode.GetProperty("content").GetString()?.Trim() ?? "";
+                    foundFinalResponse = true;
+                    break;
+                }
+
+                // Có tool calls → xử lý từng tool
+                _logger.LogInformation("[AiAssistant] Hop {Hop}: Tool Calling detected.", hop + 1);
+                messages.Add(msgNode);
+
+                foreach (var toolCall in toolCallsNode.EnumerateArray())
+                {
+                    var func = toolCall.GetProperty("function");
+                    var name = func.GetProperty("name").GetString() ?? "unknown";
+                    string args = func.TryGetProperty("arguments", out var argNode) ? argNode.GetRawText() : "{}";
+
+                    // ANYTHINGLLM Idea #2: Tool Dedup Guard
+                    toolCallCount.TryGetValue(name, out int prevCount);
+                    if (prevCount >= 2)
+                    {
+                        _logger.LogWarning("[AiAssistant] Tool Dedup Guard: {Name} đã được gọi {Count} lần, bỏ qua.", name, prevCount);
+                        messages.Add(new { role = "tool", content = $"Tool '{name}' đã được gọi quá nhiều lần. Hãy tổng hợp kết quả hiện có và trả lời người dùng." });
+                        continue;
+                    }
+                    toolCallCount[name] = prevCount + 1;
+
+                    string toolResult;
+                    _logger.LogInformation("[AiAssistant] Executing Tool: {Name} (lần {Count})", name, toolCallCount[name]);
+
+                    if (name == "get_document_stats")
+                    {
+                        try { toolResult = await _statsRepo.GetStatisticsAsync(); }
+                        catch (Exception ex) { toolResult = "Lỗi khi lấy dữ liệu thống kê: " + ex.Message; }
+                    }
+                    else if (name == "search_document_content")
+                    {
+                        try
+                        {
+                            string keyword = message;
+                            var argsObj = JsonDocument.Parse(args);
+                            if (argsObj.RootElement.TryGetProperty("keyword", out var kwProp))
+                                keyword = kwProp.GetString() ?? message;
+
+                            var keywordChunks = await _chunkRepo.FindByKeywordAsync(keyword, topK: 3);
+                            var questionVector = await _embeddingService.GenerateEmbeddingAsync(keyword);
+                            if (questionVector != null && questionVector.Length > 0)
+                            {
+                                // ANYTHINGLLM Idea #3: Similarity Threshold Filter
+                                var vectorChunks = await _chunkRepo.FindSimilarChunksAsync(
+                                    questionVector, topK: 3, minSimilarityScore: SimilarityThreshold);
+                                keywordChunks.AddRange(vectorChunks);
+                            }
+
+                            var distinctChunks = keywordChunks.DistinctBy(c => c.TextContent).Take(5).ToList();
+
+                            // ANYTHINGLLM Idea #7: Query-Mode Refusal — không có kết quả → từ chối thẳng
+                            if (distinctChunks.Count == 0)
+                            {
+                                toolResult = "KHÔNG_TÌM_THẤY: Không có nội dung phù hợp trong cơ sở dữ liệu công văn. Hãy thông báo cho người dùng rằng hệ thống không tìm thấy thông tin liên quan, và không được tự bịa đặt.";
+                            }
+                            else
+                            {
+                                var sb = new StringBuilder();
+                                foreach (var c in distinctChunks)
+                                {
+                                    var doc = await _documentRepo.GetDocumentByIdAsync(c.DocumentId);
+                                    sb.AppendLine($"[Công văn số {doc?.SoVanBan ?? c.DocumentId.ToString()}]: {c.TextContent}");
+                                }
+                                toolResult = sb.ToString();
+                            }
+                        }
+                        catch (Exception ex) { toolResult = "Lỗi khi tìm kiếm dữ liệu: " + ex.Message; }
+                    }
+                    else
+                    {
+                        toolResult = $"Tool '{name}' không tồn tại trong hệ thống.";
+                    }
+
+                    messages.Add(new { role = "tool", content = toolResult });
                 }
             }
 
-            string finalReply = fullResponse.ToString().Trim();
-
-            // Đảm bảo LUÔN CÓ từ thưa gửi nếu model quên (Hard fallback)
-            var lowerReply = finalReply.ToLower();
-            if (!lowerReply.Contains("dạ") && !lowerReply.Contains("báo cáo") && !lowerReply.Contains("chào"))
+            if (!foundFinalResponse || finalTextNoStream == null)
             {
-                string greeting = (user.Role == "Admin" || user.Role == "LanhDao") 
-                                  ? "Dạ báo cáo sếp,\n" 
-                                  : "Chào đồng chí,\n";
-                finalReply = greeting + finalReply;
+                // Fallback: nếu vòng lặp kết thúc mà không có text
+                finalTextNoStream = isLeader
+                    ? "Dạ báo cáo sếp, em đã xử lý xong nhưng không tổng hợp được kết quả. Xin sếp thử lại ạ."
+                    : "Xin lỗi đồng chí, tôi không thể tổng hợp kết quả lúc này. Vui lòng thử lại.";
             }
 
-            // Xử lý [REMINDER] tag nếu có
+            // ============================================================
+            // HOP CUỐI: Sinh text streaming từ kết quả tổng hợp
+            // ============================================================
+            messages.Add(new { role = "assistant", content = finalTextNoStream });
+
+            // Đảm bảo LUÔN CÓ từ thưa gửi
+            var lowerReply = finalTextNoStream.ToLower();
+            if (!lowerReply.Contains("dạ") && !lowerReply.Contains("báo cáo") && !lowerReply.Contains("chào"))
+            {
+                string greeting = isLeader ? "Dạ báo cáo sếp,\n" : "Chào đồng chí,\n";
+                finalTextNoStream = greeting + finalTextNoStream;
+            }
+
+            // Stream text về client từng chunk
+            foreach (var chunk in SplitIntoChunks(finalTextNoStream, 50))
+                yield return chunk;
+
+            // Xử lý tags đặc biệt
+            string finalReplyForChat = await HandleSpecialTagsAsync(finalTextNoStream, userId);
+
+            try { _chatHistoryRepo.AddMessage(userId, "assistant", finalReplyForChat); }
+            catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể lưu tin nhắn assistant: {Msg}", ex.Message); }
+        }
+
+        /// <summary>
+        /// ANYTHINGLLM Idea #5: Xử lý tag [STORE_MEMORY|...] để ghi nhớ dài hạn
+        /// Đồng thời xử lý tag [REMINDER|...] như cũ
+        /// </summary>
+        private async Task<string> HandleSpecialTagsAsync(string finalReply, int userId)
+        {
+            string result = finalReply;
+
+            // Handle STORE_MEMORY tag
+            var memMatch = Regex.Match(finalReply, @"\[STORE_MEMORY\|(.*?)\]");
+            if (memMatch.Success)
+            {
+                var content = memMatch.Groups[1].Value.Trim();
+                if (!string.IsNullOrWhiteSpace(content))
+                {
+                    try
+                    {
+                        var vector = await _embeddingService.GenerateEmbeddingAsync(content);
+                        await _memoryRepo.StoreMemoryAsync(userId, content, vector);
+                        _logger.LogInformation("[AiAssistant] Đã lưu memory: {Content}", content);
+                    }
+                    catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi lưu memory: {Msg}", ex.Message); }
+                }
+                result = result.Replace(memMatch.Value, "").Trim();
+            }
+
+            // Handle REMINDER tag (giữ nguyên logic cũ)
+            result = HandleReminderTag(result, userId);
+
+            return result;
+        }
+
+        private string HandleReminderTag(string finalReply, int userId)
+        {
             string finalReplyForChat = finalReply;
             var match = Regex.Match(finalReply, @"\[REMINDER\|(.*?)\|(.*?)\]");
             if (match.Success)
@@ -350,17 +427,20 @@ Lưu ý: Bạn KHÔNG được dùng format JSON. Chỉ cần trả lời bằng
                     try
                     {
                         _reminderRepo.AddReminder(userId, content.Trim(), remindAt.ToString("yyyy-MM-dd HH:mm:ss"));
-                        _logger.LogInformation("[AiAssistant] Đã lưu nhắc nhở qua Streaming UserId={Id}: {Content} lúc {At}", userId, content, remindAt);
+                        _logger.LogInformation("[AiAssistant] Đã lưu nhắc nhở: {Content} lúc {At}", content, remindAt);
                     }
-                    catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể lưu reminder: {Msg}", ex.Message); }
+                    catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi lưu reminder: {Msg}", ex.Message); }
                 }
-                
-                // Ẩn tag REMINDER khỏi lịch sử chat hiển thị cho người dùng
                 finalReplyForChat = finalReply.Replace(match.Value, "").Trim();
             }
+            return finalReplyForChat;
+        }
 
-            try { _chatHistoryRepo.AddMessage(userId, "assistant", finalReplyForChat); }
-            catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể lưu tin nhắn assistant: {Msg}", ex.Message); }
+        /// <summary>Tách chuỗi dài thành chunks để stream về client</summary>
+        private static IEnumerable<string> SplitIntoChunks(string text, int chunkSize)
+        {
+            for (int i = 0; i < text.Length; i += chunkSize)
+                yield return text.Substring(i, Math.Min(chunkSize, text.Length - i));
         }
     }
 }

@@ -7,7 +7,7 @@ namespace ToolCalendar.Core.Data.Interfaces
     {
         Task AddChunkAsync(int documentId, int chunkIndex, string textContent, float[] vector);
         Task DeleteChunksByDocumentIdAsync(int documentId);
-        Task<List<DocumentChunkResult>> FindSimilarChunksAsync(float[] questionVector, int topK = 3);
+        Task<List<DocumentChunkResult>> FindSimilarChunksAsync(float[] questionVector, int topK = 3, float minSimilarityScore = 0.20f);
         // DIFY Idea #2: Hybrid Search — tìm theo từ khóa chính xác (cho số hiệu công văn, ngày tháng)
         Task<List<DocumentChunkResult>> FindByKeywordAsync(string keyword, int topK = 5);
     }
