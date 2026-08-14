@@ -1,3 +1,15 @@
+### [2026-08-14 11:30] feat(ai): thêm tool tìm kiếm theo hạn và cơ chế Fallback Gemini
+- **Mô tả**: Fix lỗi AI "quá tải" (timeout) khi truy vấn các yêu cầu theo ngày tháng do phải gọi RAG liên tục không tìm được kết quả. 
+  - Tạo `SearchDocumentsByConditionTool` để tra cứu trực tiếp bằng SQLite với các tham số `thoi_han`, `status`, `keyword`.
+  - Triển khai cơ chế Multi-Provider Fallback Routing trong `AiAssistantService`: khi Ollama lỗi hoặc timeout (90s), hệ thống tự động gọi API `Gemini 1.5 Flash` qua `GeminiFallbackService`.
+  - Gemini vẫn có khả năng nhận danh sách tools OpenAPI và gọi tool lấy dữ liệu hệt như Ollama.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiTools/SearchDocumentsByConditionTool.cs` (Mới)
+  - `ToolCalendar.Core/Services/GeminiFallbackService.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): them tool tim kiem theo han va co che fallback gemini"`
+
 ### [2026-08-14 10:18] fix(api): sửa lỗi ObjectDisposedException khi gọi AI Tools
 - **Mô tả**: Fix lỗi `Cannot access a disposed object` (tên object: `JsonDocument`) trong AiAssistantService. Lỗi xảy ra do đối tượng doc1 khởi tạo bằng `using var doc1 = JsonDocument.Parse()` bị dispose cuối vòng lặp (vòng lặp N-Hop), khiến `msgNode` truyền vào mảng `messages` bị vô hiệu hoá. Fix bằng cách deserialize thành đối tượng object thuần tuý.
 - **Tệp thay đổi**:

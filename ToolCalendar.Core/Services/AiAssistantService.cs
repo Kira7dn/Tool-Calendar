@@ -34,6 +34,7 @@ namespace ToolCalendar.Core.Services
         private readonly IUserMemoryRepository _memoryRepo;
         private readonly AiToolRegistry _toolRegistry;
         private readonly ILogger<AiAssistantService> _logger;
+        private readonly GeminiFallbackService _geminiFallbackService;
 
         // ANYTHINGLLM Idea #1: N-Hop Tool Chain — tối đa 5 lượt tool call liên tiếp
         private const int MaxToolCalls = 5;
@@ -52,6 +53,7 @@ namespace ToolCalendar.Core.Services
             IDocumentChunkRepository chunkRepo,
             IUserMemoryRepository memoryRepo,
             AiToolRegistry toolRegistry,
+            GeminiFallbackService geminiFallbackService,
             ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
@@ -66,6 +68,7 @@ namespace ToolCalendar.Core.Services
             _chunkRepo = chunkRepo;
             _memoryRepo = memoryRepo;
             _toolRegistry = toolRegistry;
+            _geminiFallbackService = geminiFallbackService;
             _logger = logger;
         }
 
@@ -215,22 +218,17 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
                     connectionError = true;
                 }
 
-                if (isTimeout)
+                if (isTimeout || connectionError || !response1!.IsSuccessStatusCode)
                 {
-                    yield return isLeader
-                        ? "Dạ báo cáo sếp, hệ thống AI đang quá tải, xin sếp thử lại sau ạ."
-                        : "Hệ thống AI đang bận, đồng chí vui lòng thử lại sau.";
-                    yield break;
-                }
-                if (connectionError)
-                {
-                    yield return "Dạ báo cáo, hệ thống AI đang gặp sự cố kết nối.";
-                    yield break;
-                }
-                if (!response1!.IsSuccessStatusCode)
-                {
-                    _logger.LogError("[AiAssistant] Ollama trả lỗi HTTP {Code}", (int)response1.StatusCode);
-                    yield return "Dạ báo cáo, hệ thống AI đang gặp sự cố. Đề nghị kiểm tra lại dịch vụ Ollama trên server.";
+                    if (!response1?.IsSuccessStatusCode ?? false)
+                    {
+                        _logger.LogError("[AiAssistant] Ollama trả lỗi HTTP {Code}", (int)response1!.StatusCode);
+                    }
+                    
+                    _logger.LogWarning("[AiAssistant] Ollama failed. Triggering Gemini Fallback.");
+                    
+                    var geminiResponse = await _geminiFallbackService.CallGeminiAsync(messages, systemPrompt);
+                    yield return geminiResponse;
                     yield break;
                 }
 
