@@ -2,7 +2,15 @@
 // Avatar + Dropdown menu user + Modal đổi mật khẩu (tách từ AppShell)
 /* eslint-disable */
 import React, { useState } from 'react'
-import { KeyRound, LogOut, Settings as SettingsIcon, ChevronDown, Eye, EyeOff } from 'lucide-react'
+import {
+  KeyRound,
+  LogOut,
+  Settings as SettingsIcon,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  RefreshCw,
+} from 'lucide-react'
 import { ROLES } from '../constants/roles'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -113,6 +121,16 @@ export function UserMenu({ user, onLogout, onNavigate }) {
             >
               <KeyRound className="size-4" />
               <span>Đổi mật khẩu</span>
+            </DropdownMenuItem>
+          </div>
+          <DropdownMenuSeparator className="bg-border" />
+          <div className="py-1">
+            <DropdownMenuItem
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 cursor-pointer font-bold text-sm"
+              onClick={() => window.location.reload(true)}
+            >
+              <RefreshCw className="size-4" />
+              <span>Tải lại trang (Làm mới)</span>
             </DropdownMenuItem>
           </div>
           <DropdownMenuSeparator className="bg-border" />

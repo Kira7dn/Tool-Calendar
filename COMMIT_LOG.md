@@ -2751,3 +2751,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/vite.config.js` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): fix aichatbox mobile layout overlap and force pwa auto-update"`
+
+### [2026-08-14 18:06] Thêm nút Tải lại trang (Làm mới) vào User Menu
+- **Mô tả**: Bổ sung nút "Tải lại trang (Làm mới)" vào trong menu cá nhân (User Menu - nhấn vào avatar) để người dùng PWA trên mobile (đặc biệt là iOS Add to Home Screen) có thể chủ động tải lại trang và nhận bản cập nhật Service Worker/Giao diện mới mà không cần phải vuốt tắt hoàn toàn ứng dụng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/UserMenu.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): add manual reload button to user menu"`
