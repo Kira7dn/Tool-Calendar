@@ -1,3 +1,9 @@
+### [2026-08-14 16:20] fix(ai): vô hiệu hóa proxy buffering của Nginx để luồng SSE (Server-Sent Events) hoạt động mượt mà
+- **Mô tả**: Dù backend đã stream chunk đầu tiên `(Đang phân tích yêu cầu...)` ngay lập tức, nhưng reverse proxy (Nginx) trên VNPT Server mặc định bật tính năng `proxy_buffering`. Tính năng này gom các chunk lại cho đến khi đầy buffer hoặc request kết thúc mới gửi về cho frontend, làm vô hiệu hóa hoàn toàn hiệu ứng streaming. Đã thêm HTTP Header `X-Accel-Buffering: no` ở controller để ép Nginx trả chunk ngay lập tức.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/ChatController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): add X-Accel-Buffering header to prevent Nginx from buffering SSE streams"`
+
 ### [2026-08-14 16:11] fix(ai): sửa lỗi spinner frontend không biến mất do fake stream bị chặn bởi hàm embedding
 - **Mô tả**: Dù đã thêm fake stream `(Đang phân tích yêu cầu...)` để tắt spinner của frontend, nhưng lệnh `yield return` lại bị đặt bên dưới hàm `GenerateEmbeddingAsync`. Hàm này chạy đồng bộ và block luồng, dẫn đến frontend vẫn bị treo spinner vài giây chờ Ollama tạo vector. Đã chuyển `yield return` lên ngay đầu hàm `ProcessChatStreamAsync` để giải quyết.
 - **Tệp thay đổi**:

@@ -66,6 +66,9 @@ namespace ToolCalendar.Api.Controllers
             }
 
             Response.ContentType = "text/event-stream";
+            Response.Headers.Append("Cache-Control", "no-cache");
+            Response.Headers.Append("Connection", "keep-alive");
+            Response.Headers.Append("X-Accel-Buffering", "no"); // Disable Nginx proxy buffering
             
             var stream = _aiAssistantService.ProcessChatStreamAsync(userId, request.Message, request.DocumentId);
             await foreach (var chunk in stream)
