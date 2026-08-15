@@ -21,7 +21,10 @@ jobs:
           password: ${{ secrets.VNPT_PASSWORD }}
           port: 22
           script: |
-            cd /root/Tool-Calendar || cd /root/lichcongtac || exit 1
-            git pull origin develop
-            docker compose build
-            docker compose up -d
+            cd /root/Tool-Calendar || exit 1
+            docker system prune -a -f --volumes
+            git fetch origin develop
+            git reset --hard origin/develop
+            docker compose build official-doc-backend
+            docker rm -f doc-coordination-system || true
+            docker compose up -d official-doc-backend

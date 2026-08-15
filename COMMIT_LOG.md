@@ -1,3 +1,9 @@
+### [2026-08-15 18:22] fix(infra): sửa lỗi cấu hình deploy.yml và áp dụng safety rules cho VNPT Server
+- **Mô tả**: Sửa luồng GitHub Actions `deploy.yml` để dùng lệnh deploy an toàn, chỉ khởi động lại `official-doc-backend` thay vì toàn bộ stack `docker-compose up -d` (tránh sập hệ thống chung proxy). Đồng thời thêm `git fetch` và `git reset --hard` để tránh lỗi xung đột merge giống như `deploy_to_vnpt.sh`.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): update deploy.yml to match production safety rules"`
+
 ### [2026-08-15 17:52] chore(cabinet): remove obsolete cabinet modules and heartbeat logic
 - **Mô tả**: Xóa hoàn toàn các file và cấu hình liên quan đến phân hệ "Phòng họp không giấy tờ" (Cabinet) khỏi repository Tool-Calendar (do mã nguồn đã được tách ra repository riêng `/Users/macbookpro/Cabinet`). Đã xóa các file unit test, thư mục uploads và logic heartbeat frontend.
 - **Tệp thay đổi**:
