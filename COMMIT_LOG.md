@@ -2818,3 +2818,18 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): update deploy branch to develop in github actions"`
+
+### [2026-08-15 23:54] Nâng cấp Python AI Service v2.0 từ 5 source code
+- **Mô tả**: Nghiên cứu và áp dụng kỹ thuật từ llama.cpp (Batch Queue, KV Cache, L2 Normalize), gpt-researcher (ContextCompressor, EmbeddingsFilter), anything-llm (TextSplitter, ChunkHeaderMeta), LibreChat (tool-intent). Kết quả: 5 module mới, 3 endpoint mới, C# gọi /api/compress thay vì cắt text thủ công.
+- **Tệp thay đổi**:
+  - `python-ai-service/embeddings/batch_processor.py` (Mới — AsyncBatchEmbedder từ llama.cpp)
+  - `python-ai-service/embeddings/semantic_embedder.py` (Sửa — L2 normalize, multilingual model)
+  - `python-ai-service/llm_provider/prompt_cache.py` (Mới — LRU Cache từ llama.cpp cache_prompt)
+  - `python-ai-service/rag/chunker.py` (Mới — SmartTextChunker từ anything-llm)
+  - `python-ai-service/rag/compressor.py` (Mới — ContextCompressor từ gpt-researcher)
+  - `python-ai-service/utils/json_repair.py` (Mới — JSON repair từ deep_research.py)
+  - `python-ai-service/main.py` (Sửa — v2.0 với 6 endpoints)
+  - `python-ai-service/Dockerfile` (Sửa — multilingual model)
+  - `python-ai-service/requirements.txt` (Sửa — thêm scikit-learn, json-repair)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa — gọi /api/compress cho RAG)
+- **Lệnh git commit**: `git commit -m "feat(ai): nang cap python-ai-service v2 voi batch-embed, rag-compress, prompt-cache tu llama.cpp+gpt-researcher+anything-llm"`
