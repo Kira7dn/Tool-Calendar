@@ -1,3 +1,9 @@
+### [2026-08-15 18:31] fix(infra): cập nhật tên biến GitHub Secrets trong deploy.yml
+- **Mô tả**: Đổi tên biến `VNPT_USERNAME` và `VNPT_PASSWORD` thành `VNPT_USER` và `VNPT_PASS` trong file `.github/workflows/deploy.yml` để khớp với tên Secrets mà người dùng đã tạo thực tế trên GitHub.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): update github secret variable names to match user configuration"`
+
 ### [2026-08-15 18:22] fix(infra): sửa lỗi cấu hình deploy.yml và áp dụng safety rules cho VNPT Server
 - **Mô tả**: Sửa luồng GitHub Actions `deploy.yml` để dùng lệnh deploy an toàn, chỉ khởi động lại `official-doc-backend` thay vì toàn bộ stack `docker-compose up -d` (tránh sập hệ thống chung proxy). Đồng thời thêm `git fetch` và `git reset --hard` để tránh lỗi xung đột merge giống như `deploy_to_vnpt.sh`.
 - **Tệp thay đổi**:

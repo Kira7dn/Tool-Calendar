@@ -17,8 +17,8 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VNPT_HOST }}
-          username: ${{ secrets.VNPT_USERNAME }}
-          password: ${{ secrets.VNPT_PASSWORD }}
+          username: ${{ secrets.VNPT_USER }}
+          password: ${{ secrets.VNPT_PASS }}
           port: 22
           script: |
             cd /root/Tool-Calendar || exit 1
