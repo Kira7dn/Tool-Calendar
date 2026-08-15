@@ -223,6 +223,16 @@ namespace ToolCalendar.Data
                     FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
                 )";
 
+            string createAiSemanticCacheTable = @"
+                CREATE TABLE IF NOT EXISTS AiSemanticCache (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    QuestionVectorJson TEXT NOT NULL,
+                    Response TEXT NOT NULL,
+                    CreatedAt TEXT DEFAULT (datetime('now', 'localtime')),
+                    LastAccessedAt TEXT DEFAULT (datetime('now', 'localtime')),
+                    HitCount INTEGER DEFAULT 0
+                )";
+
             new SqliteCommand(createDocumentsTable, connection).ExecuteNonQuery();
             new SqliteCommand(createUsersTable, connection).ExecuteNonQuery();
             new SqliteCommand(createDepartmentsTable, connection).ExecuteNonQuery();
@@ -238,6 +248,7 @@ namespace ToolCalendar.Data
             new SqliteCommand(createQuestionnaireTemplatesTable, connection).ExecuteNonQuery();
             new SqliteCommand(createChatMessagesTable, connection).ExecuteNonQuery();
             new SqliteCommand(createRemindersTable, connection).ExecuteNonQuery();
+            new SqliteCommand(createAiSemanticCacheTable, connection).ExecuteNonQuery();
 
             // ── Safe Column Migrations (ALTER TABLE IF NOT EXISTS column) ──────────
             // SQLite không hỗ trợ IF NOT EXISTS cho ALTER TABLE, nên dùng try/catch.
@@ -258,6 +269,9 @@ namespace ToolCalendar.Data
                 "ALTER TABLE Departments ADD COLUMN ParentId INTEGER",
                 // Reminders — fix schema mismatch (IsSent thay vì IsCompleted)
                 "ALTER TABLE Reminders ADD COLUMN IsSent INTEGER DEFAULT 0",
+                // AiSemanticCache — GPTCache LRU: thêm LastAccessedAt và HitCount cho DB cũ
+                "ALTER TABLE AiSemanticCache ADD COLUMN LastAccessedAt TEXT DEFAULT (datetime('now', 'localtime'))",
+                "ALTER TABLE AiSemanticCache ADD COLUMN HitCount INTEGER DEFAULT 0",
             };
 
             foreach (var alterSql in safeAlters)

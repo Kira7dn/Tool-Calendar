@@ -108,6 +108,8 @@ builder.Services.AddScoped<AiToolRegistry>();
 
 builder.Services.AddScoped<IAiAssistantService, AiAssistantService>();
 builder.Services.AddScoped<IAiReferenceService, AiReferenceService>();
+builder.Services.AddScoped<ISemanticRouterService, SemanticRouterService>();
+builder.Services.AddScoped<IAiSemanticCacheRepository, AiSemanticCacheRepository>();
 
 
 // ✅ ASP.NET Core Identity (Custom UserStore — không cần EF Core)

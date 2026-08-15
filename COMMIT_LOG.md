@@ -1,3 +1,22 @@
+### [2026-08-15 22:53] perf(ai): nâng cấp AiSemanticCache theo kiến trúc GPTCache (Zilliz)
+- **Mô tả**: Học và áp dụng 4 kỹ thuật từ mã nguồn GPTCache (`/Users/macbookpro/GPTCache`): (1) Hạ threshold từ 0.95 → 0.85 tăng hit rate, học từ `config.py` default; (2) Thêm LRU Eviction — cập nhật `LastAccessedAt` + `HitCount` mỗi khi cache hit, xóa entry ít dùng nhất khi vượt MaxSize 500, học từ `MemoryCacheEviction(policy="LRU")`; (3) Normalize vector trước khi tính similarity, học từ `NumpyNormEvaluation.normalize()`; (4) Dual-layer eviction: TTL 60 phút + LRU MaxSize.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IAiSemanticCacheRepository.cs` (Sửa đổi — đổi ClearOldCacheAsync → EvictAsync)
+  - `ToolCalendar.Core/Data/Repositories/AiSemanticCacheRepository.cs` (Sửa đổi — viết lại hoàn toàn)
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi — thêm LastAccessedAt, HitCount vào schema)
+- **Lệnh git commit**: `git commit -m "perf(ai): nang cap semantic cache theo kien truc gptcache lru eviction normalize vector"`
+
+
+- **Mô tả**: Tối ưu tốc độ phản hồi của AI Assistant bằng cách tích hợp `SemanticRouterService` và `AiSemanticCacheRepository`. Thay vì gọi LLM để lấy Intent (Hop 1), hệ thống so sánh vector của câu hỏi với vector của các Route Templates mẫu. Nếu tương đồng cao (>= 0.8), route/tool sẽ được thực thi ngay lập tức mà không cần LLM. Ngoài ra, thêm `AiSemanticCache` để trả về kết quả lập tức nếu câu hỏi có độ tương đồng >= 0.95 với những câu hỏi đã trả lời trước đó.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/SemanticRouterService.cs` (Mới)
+  - `ToolCalendar.Core/Data/Interfaces/IAiSemanticCacheRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/AiSemanticCacheRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): trien khai semantic router va caching de toi uu toc do tra loi"`
+
 ### [2026-08-15 18:32] fix(infra): thêm SSH keepalive options vào file deploy để chống rớt mạng
 - **Mô tả**: Đã bổ sung các cờ cấu hình SSH (`-o ServerAliveInterval=30 -o ServerAliveCountMax=5`) vào file `deploy_to_vnpt.sh`. Quá trình build docker có thể tốn thời gian dài, các tùy chọn này giúp duy trì kết nối (ping định kỳ mỗi 30 giây) tránh việc kết nối SSH bị ngắt giữa chừng do timeout.
 - **Tệp thay đổi**:

@@ -33,6 +33,8 @@ namespace ToolCalendar.Core.Services
         private readonly IDocumentChunkRepository _chunkRepo;
         private readonly IUserMemoryRepository _memoryRepo;
         private readonly AiToolRegistry _toolRegistry;
+        private readonly ISemanticRouterService _semanticRouter;
+        private readonly IAiSemanticCacheRepository _semanticCacheRepo;
         private readonly ILogger<AiAssistantService> _logger;
 
         // ANYTHINGLLM Idea #1: N-Hop Tool Chain — tối đa 5 lượt tool call liên tiếp
@@ -52,6 +54,8 @@ namespace ToolCalendar.Core.Services
             IDocumentChunkRepository chunkRepo,
             IUserMemoryRepository memoryRepo,
             AiToolRegistry toolRegistry,
+            ISemanticRouterService semanticRouter,
+            IAiSemanticCacheRepository semanticCacheRepo,
             ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
@@ -66,6 +70,8 @@ namespace ToolCalendar.Core.Services
             _chunkRepo = chunkRepo;
             _memoryRepo = memoryRepo;
             _toolRegistry = toolRegistry;
+            _semanticRouter = semanticRouter;
+            _semanticCacheRepo = semanticCacheRepo;
             _logger = logger;
         }
 
@@ -104,7 +110,33 @@ namespace ToolCalendar.Core.Services
                     memorySection = "\n\n" + sb.ToString();
                 }
             }
+            }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể load memories: {Msg}", ex.Message); }
+
+            // Semantic Caching & Routing
+            float[]? questionVector = null;
+            try 
+            {
+                questionVector = await _embeddingService.GenerateEmbeddingAsync(message);
+                if (questionVector != null && questionVector.Length > 0)
+                {
+                    // 1. Semantic Cache
+                    var cachedResponse = await _semanticCacheRepo.GetCachedResponseAsync(questionVector, 0.95f);
+                    if (!string.IsNullOrEmpty(cachedResponse))
+                    {
+                        _logger.LogInformation("[AiAssistant] CACHE HIT! Trả về từ AiSemanticCache.");
+                        string finalReplyForChatCache = await HandleSpecialTagsAsync(cachedResponse, userId);
+                        try { _chatHistoryRepo.AddMessage(userId, "assistant", finalReplyForChatCache); }
+                        catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi lưu tin nhắn assistant: {Msg}", ex.Message); }
+
+                        foreach (var chunk in SplitIntoChunks(cachedResponse, 50))
+                            yield return chunk;
+
+                        yield break;
+                    }
+                }
+            }
+            catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi xử lý Caching: {Msg}", ex.Message); }
 
             string persona = isLeader
                 ? $"Bạn là Trợ lý AI của phần mềm Quản lý Công văn (cơ quan Nhà nước).\nNgười đang nói chuyện với bạn là Sếp/Lãnh đạo của cơ quan (Tên: {userName}).\nPhong thái: Kính trọng, báo cáo ngắn gọn, đi thẳng vào vấn đề.\nXưng hô: Đại từ của bạn là 'Em' hoặc 'AI', gọi người dùng là 'Sếp' hoặc 'Thủ trưởng'.\nLuôn dạ vâng lễ phép (ví dụ: Dạ vâng ạ, Em xin báo cáo sếp...)."
@@ -172,7 +204,53 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             var messages = new List<object> { new { role = "system", content = systemPrompt } };
             foreach (var msg in history)
                 messages.Add(new { role = msg.Role, content = msg.Content });
-            messages.Add(new { role = "user", content = message });
+
+            // 2. Semantic Routing (Fast-path)
+            bool skipToolLoop = false;
+            try
+            {
+                if (questionVector != null && questionVector.Length > 0)
+                {
+                    string? routedTool = await _semanticRouter.RouteQueryAsync(questionVector);
+                    if (!string.IsNullOrEmpty(routedTool))
+                    {
+                        _logger.LogInformation("[AiAssistant] SEMANTIC ROUTING HIT: {Tool}", routedTool);
+                        
+                        // Fake user message
+                        messages.Add(new { role = "user", content = message });
+                        
+                        // Execute tool directly
+                        var dictArgs = new Dictionary<string, object>();
+                        if (routedTool == "search_documents_by_condition")
+                        {
+                            // Đẩy thẳng raw query vào keyword để search cơ bản
+                            dictArgs["keyword"] = message;
+                        }
+                        
+                        string toolResult = await _toolRegistry.ExecuteToolAsync(routedTool, dictArgs);
+                        
+                        // Thêm fake tool call và tool result vào context để AI sinh text ngay lập tức
+                        messages.Add(new { 
+                            role = "assistant", 
+                            content = "", 
+                            tool_calls = new[] { 
+                                new { 
+                                    function = new { name = routedTool, arguments = JsonSerializer.Serialize(dictArgs) } 
+                                } 
+                            } 
+                        });
+                        messages.Add(new { role = "tool", content = toolResult });
+                        
+                        skipToolLoop = true;
+                    }
+                }
+            }
+            catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi Semantic Routing: {Msg}", ex.Message); }
+
+            if (!skipToolLoop)
+            {
+                messages.Add(new { role = "user", content = message });
+            }
 
             var tools = _toolRegistry.GetToolsSchema().ToArray();
 
@@ -189,7 +267,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
 
             for (int hop = 0; hop <= MaxToolCalls; hop++)
             {
-                bool isLastHop = (hop == MaxToolCalls);
+                bool isLastHop = skipToolLoop || (hop == MaxToolCalls);
 
                 // Nếu đây là hop cuối cùng, bỏ tools để buộc AI sinh text
                 var requestBody = isLastHop
@@ -361,6 +439,17 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
 
             try { _chatHistoryRepo.AddMessage(userId, "assistant", finalReplyForChat); }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể lưu tin nhắn assistant: {Msg}", ex.Message); }
+
+            // Lưu vào Semantic Cache để tái sử dụng
+            if (questionVector != null && questionVector.Length > 0 && !string.IsNullOrWhiteSpace(finalTextNoStream))
+            {
+                try 
+                {
+                    await _semanticCacheRepo.StoreCacheAsync(questionVector, finalTextNoStream);
+                    _logger.LogInformation("[AiAssistant] Đã lưu response vào AiSemanticCache.");
+                }
+                catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi lưu Cache: {Msg}", ex.Message); }
+            }
         }
 
         /// <summary>
