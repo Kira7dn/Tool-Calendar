@@ -1,3 +1,11 @@
+### [$(date +'%Y-%m-%d %H:%M')] Tách Python AI Service
+- **Mô tả**: Tách logic sinh vector embedding sang Python service riêng (FastAPI + sentence-transformers all-MiniLM-L6-v2) để tối ưu hóa hiệu năng và chất lượng vector. Service chạy nội bộ trên port 8001. C# API đóng vai trò gọi sang REST API này thay vì trực tiếp gọi Ollama.
+- **Tệp thay đổi**:
+  - `python-ai-service/*` (Mới)
+  - `ToolCalendar.Core/Services/OllamaEmbeddingService.cs` (Sửa đổi)
+  - `docker-compose.yml` (Sửa đổi)
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): tach python-ai-service cho embedding va chat theo gpt-researcher"`
 ### [2026-08-15 22:53] perf(ai): nâng cấp AiSemanticCache theo kiến trúc GPTCache (Zilliz)
 - **Mô tả**: Học và áp dụng 4 kỹ thuật từ mã nguồn GPTCache (`/Users/macbookpro/GPTCache`): (1) Hạ threshold từ 0.95 → 0.85 tăng hit rate, học từ `config.py` default; (2) Thêm LRU Eviction — cập nhật `LastAccessedAt` + `HitCount` mỗi khi cache hit, xóa entry ít dùng nhất khi vượt MaxSize 500, học từ `MemoryCacheEviction(policy="LRU")`; (3) Normalize vector trước khi tính similarity, học từ `NumpyNormEvaluation.normalize()`; (4) Dual-layer eviction: TTL 60 phút + LRU MaxSize.
 - **Tệp thay đổi**:
