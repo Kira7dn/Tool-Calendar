@@ -1,4 +1,19 @@
 services:
+  python-ai-service:
+    build:
+      context: ./python-ai-service
+    container_name: python-ai-service
+    expose:
+      - "8001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: always
+
   official-doc-backend:
     build:
       context: .
@@ -11,6 +26,7 @@ services:
       - "59607:5000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
     # ✅ Tầng 5: Chạy container với quyền tối thiểu — chống leo thang quyền (ransomware)
     security_opt:
       - no-new-privileges:true

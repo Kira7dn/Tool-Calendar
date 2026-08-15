@@ -23,10 +23,9 @@ namespace ToolCalendar.Core.Services
         public OllamaEmbeddingService(HttpClient httpClient, IConfiguration config, ILogger<OllamaEmbeddingService> logger)
         {
             _httpClient = httpClient;
-            // Endpoint cho embedding là /api/embeddings
-            _ollamaUrl = (config.GetValue<string>("Ollama:ChatUrl") ?? "http://127.0.0.1:11434/api/chat").Replace("/api/chat", "/api/embeddings");
-            // Mặc định dùng chính model qwen2.5:3b để nhúng, hoặc nomic-embed-text nếu có
-            _modelName = config.GetValue<string>("Ollama:EmbeddingModel") ?? "nomic-embed-text";
+            // Gọi sang Python AI Service
+            _ollamaUrl = "http://python-ai-service:8001/api/embed";
+            _modelName = "";
             _logger = logger;
         }
 
@@ -39,24 +38,25 @@ namespace ToolCalendar.Core.Services
             {
                 var payload = new
                 {
-                    model = _modelName,
-                    prompt = text
+                    text = text
                 };
 
                 var json = JsonSerializer.Serialize(payload);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+                // Thêm timeout 10s cho an toàn
+                _httpClient.Timeout = System.TimeSpan.FromSeconds(10);
                 var response = await _httpClient.PostAsync(_ollamaUrl, content);
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("[OllamaEmbeddingService] Lỗi tạo vector: HTTP {StatusCode}", response.StatusCode);
+                    _logger.LogWarning("[OllamaEmbeddingService] Lỗi tạo vector từ Python: HTTP {StatusCode}", response.StatusCode);
                     return new float[0];
                 }
 
                 var responseJson = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<OllamaEmbeddingResponse>(responseJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var result = JsonSerializer.Deserialize<PythonEmbedResponse>(responseJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                return result?.Embedding ?? new float[0];
+                return result?.Vector ?? new float[0];
             }
             catch (Exception ex)
             {
@@ -64,10 +64,10 @@ namespace ToolCalendar.Core.Services
                 return new float[0];
             }
         }
+    }
 
-        private class OllamaEmbeddingResponse
-        {
-            public float[]? Embedding { get; set; }
-        }
+    public class PythonEmbedResponse
+    {
+        public float[] Vector { get; set; }
     }
 }
