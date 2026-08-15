@@ -155,11 +155,70 @@ namespace ToolCalendar.Core.Services
                 if (doc != null)
                 {
                     documentContext = $"\n\nBối cảnh quan trọng: Công văn số {doc.SoVanBan}, tên: {doc.TenCongVan}. Trích yếu: {doc.TrichYeu}.";
+
+                    // === RAG Context Compression (học từ gpt-researcher ContextCompressor) ===
+                    // Thay vì cắt thủ công 3000 ký tự, gọi Python AI Service để lấy
+                    // các đoạn liên quan nhất đến câu hỏi của user (cosine similarity >= 0.65)
                     if (!string.IsNullOrWhiteSpace(doc.FullText))
                     {
-                        var text = doc.FullText;
-                        if (text.Length > 3000) text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt]...";
-                        documentContext += $"\nNội dung toàn văn:\n\"\"\"{text}\"\"\"";
+                        try
+                        {
+                            var compressPayload = new
+                            {
+                                query = message,
+                                documents = new[]
+                                {
+                                    new
+                                    {
+                                        text = doc.FullText,
+                                        title = doc.TenCongVan ?? "",
+                                        date = doc.NgayBanHanh ?? "",
+                                        source = doc.SoVanBan ?? "",
+                                        id = doc.Id
+                                    }
+                                },
+                                max_results = 5
+                            };
+
+                            using var compressClient = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+                            var compressJson = System.Text.Json.JsonSerializer.Serialize(compressPayload);
+                            var compressContent = new StringContent(compressJson, System.Text.Encoding.UTF8, "application/json");
+                            var compressResp = await compressClient.PostAsync("http://python-ai-service:8001/api/compress", compressContent);
+
+                            if (compressResp.IsSuccessStatusCode)
+                            {
+                                var compressResult = System.Text.Json.JsonSerializer.Deserialize<CompressApiResponse>(
+                                    await compressResp.Content.ReadAsStringAsync(),
+                                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                                );
+                                if (!string.IsNullOrWhiteSpace(compressResult?.ContextString))
+                                {
+                                    documentContext += $"\n\nCác đoạn nội dung liên quan nhất:\n{compressResult.ContextString}";
+                                    _logger.LogInformation("[AiAssistant] Compressed context: {ChunkCount} chunks for doc #{DocId}", compressResult.Chunks?.Length ?? 0, doc.Id);
+                                }
+                                else
+                                {
+                                    // Fallback: dùng substring nếu compress không có kết quả
+                                    var text = doc.FullText;
+                                    if (text.Length > 3000) text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt]...";
+                                    documentContext += $"\nNội dung toàn văn:\n\"\"\"{text}\"\"\"";
+                                }
+                            }
+                            else
+                            {
+                                // Fallback
+                                var text = doc.FullText;
+                                if (text.Length > 3000) text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt]...";
+                                documentContext += $"\nNội dung toàn văn:\n\"\"\"{text}\"\"\"";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning("[AiAssistant] Compress API failed, using fallback: {Msg}", ex.Message);
+                            var text = doc.FullText;
+                            if (text.Length > 3000) text = text.Substring(0, 3000) + "\n...[Nội dung đã được cắt bớt]...";
+                            documentContext += $"\nNội dung toàn văn:\n\"\"\"{text}\"\"\"";
+                        }
                     }
                 }
             }
@@ -517,5 +576,16 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             for (int i = 0; i < text.Length; i += chunkSize)
                 yield return text.Substring(i, Math.Min(chunkSize, text.Length - i));
         }
+    }
+
+    /// <summary>
+    /// Response DTO từ Python AI Service /api/compress endpoint
+    /// Học từ gpt-researcher ContextCompressor pattern
+    /// </summary>
+    internal class CompressApiResponse
+    {
+        public object[]? Chunks { get; set; }
+        public string? ContextString { get; set; }
+        public int TotalChunksEvaluated { get; set; }
     }
 }
