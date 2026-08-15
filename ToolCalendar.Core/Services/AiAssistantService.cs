@@ -110,7 +110,6 @@ namespace ToolCalendar.Core.Services
                     memorySection = "\n\n" + sb.ToString();
                 }
             }
-            }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể load memories: {Msg}", ex.Message); }
 
             // Semantic Caching & Routing
