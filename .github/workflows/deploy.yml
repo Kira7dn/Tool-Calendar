@@ -3,7 +3,7 @@ name: Deploy to VNPT Cloud
 on:
   push:
     branches:
-      - phonghopkhonggiayto
+      - develop
 
 jobs:
   deploy:
@@ -22,6 +22,6 @@ jobs:
           port: 22
           script: |
             cd /root/Tool-Calendar || cd /root/lichcongtac || exit 1
-            git pull origin phonghopkhonggiayto
+            git pull origin develop
             docker compose build
             docker compose up -d

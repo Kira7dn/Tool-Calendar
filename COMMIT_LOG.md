@@ -2757,3 +2757,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/shell/UserMenu.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ui): add manual reload button to user menu"`
+
+### [2026-08-15 17:48] Update GitHub Actions deploy branch to develop
+- **Mô tả**: Thay đổi tên nhánh đích từ `phonghopkhonggiayto` sang `develop` trong file cấu hình GitHub Actions deploy.yml để phù hợp với nhánh làm việc hiện tại.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): update deploy branch to develop in github actions"`
