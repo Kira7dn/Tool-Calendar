@@ -172,7 +172,7 @@ namespace ToolCalendar.Core.Services
                                     {
                                         text = doc.FullText,
                                         title = doc.TenCongVan ?? "",
-                                        date = doc.NgayBanHanh ?? "",
+                                        date = doc.NgayBanHanh.HasValue ? doc.NgayBanHanh.Value.ToString("dd/MM/yyyy") : "",
                                         source = doc.SoVanBan ?? "",
                                         id = doc.Id
                                     }
