@@ -1,3 +1,9 @@
+### [2026-08-15 18:32] fix(infra): thêm SSH keepalive options vào file deploy để chống rớt mạng
+- **Mô tả**: Đã bổ sung các cờ cấu hình SSH (`-o ServerAliveInterval=30 -o ServerAliveCountMax=5`) vào file `deploy_to_vnpt.sh`. Quá trình build docker có thể tốn thời gian dài, các tùy chọn này giúp duy trì kết nối (ping định kỳ mỗi 30 giây) tránh việc kết nối SSH bị ngắt giữa chừng do timeout.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): add ssh keepalive options to deployment script"`
+
 ### [2026-08-15 18:31] fix(infra): cập nhật tên biến GitHub Secrets trong deploy.yml
 - **Mô tả**: Đổi tên biến `VNPT_USERNAME` và `VNPT_PASSWORD` thành `VNPT_USER` và `VNPT_PASS` trong file `.github/workflows/deploy.yml` để khớp với tên Secrets mà người dùng đã tạo thực tế trên GitHub.
 - **Tệp thay đổi**:
