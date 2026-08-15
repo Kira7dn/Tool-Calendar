@@ -24,6 +24,8 @@ from typing import Optional
 import numpy as np
 
 from .chunker import DocumentChunk, SmartTextChunker
+from .hybrid_retriever import HybridRetriever
+from .reranker import CrossEncoderReranker
 
 logger = logging.getLogger(__name__)
 
@@ -45,12 +47,12 @@ def cosine_similarity(vec_a: np.ndarray, vec_b: np.ndarray) -> float:
 
 class ContextCompressor:
     """
-    Lấy top-K chunks liên quan nhất từ danh sách documents dựa trên query.
+    Full RAG Pipeline — 3 bước:
+      1. Embed similarity (gpt-researcher ContextCompressor)
+      2. Hybrid rerank: BM25 + Semantic (Dify WeightRerankRunner)
+      3. CrossEncoder rerank (Khoj CrossEncoderModel)
 
-    Thay thế cho việc gửi toàn bộ full_text vào LLM (tốn token, tốn thời gian),
-    ta chỉ gửi những đoạn thực sự liên quan đến câu hỏi.
-
-    Ref: gpt-researcher ContextCompressor + EmbeddingsFilter
+    Chính xác hơn nhiều so với chỉ dùng cosine similarity đơn thuần.
     """
 
     def __init__(
@@ -59,11 +61,21 @@ class ContextCompressor:
         chunker: Optional[SmartTextChunker] = None,
         similarity_threshold: float = DEFAULT_SIMILARITY_THRESHOLD,
         max_results: int = DEFAULT_MAX_RESULTS,
+        # Pipeline options — có thể bật/tắt từng bước
+        use_hybrid: bool = True,     # Dify BM25+Semantic
+        use_reranker: bool = True,   # Khoj CrossEncoder
+        reranker: Optional[CrossEncoderReranker] = None,
+        hybrid_retriever: Optional[HybridRetriever] = None,
     ):
         self._embedder = embedder
         self._chunker = chunker or SmartTextChunker()
         self.similarity_threshold = similarity_threshold
         self.max_results = max_results
+        self.use_hybrid = use_hybrid
+        self.use_reranker = use_reranker
+        # Lazy-load để tránh load CrossEncoder khi không cần
+        self._reranker = reranker
+        self._hybrid = hybrid_retriever or (HybridRetriever() if use_hybrid else None)
 
     async def compress(
         self,
@@ -72,22 +84,17 @@ class ContextCompressor:
         max_results: Optional[int] = None,
     ) -> list[dict]:
         """
-        Tìm top-K chunks liên quan nhất đến query.
-
-        Args:
-            query: Câu hỏi của người dùng
-            documents: List dict với keys: text, title, date, source, id
-            max_results: Override số kết quả tối đa
-
-        Returns:
-            Danh sách dicts gồm content_with_header + score, sort by score DESC
+        Full RAG Pipeline 3 bước:
+          1. Embedding cosine similarity → top-(k*4) candidates
+          2. Hybrid BM25 + Semantic rerank (Dify)
+          3. CrossEncoder rerank → top-k final (Khoj)
         """
         k = max_results or self.max_results
 
         if not query or not documents:
             return []
 
-        # 1. Tạo chunks từ tất cả documents
+        # ── BƯỚC 1: Tạo chunks ──────────────────────────────────────────────
         all_chunks: list[DocumentChunk] = []
         for doc in documents:
             text = doc.get("text", "")
@@ -103,10 +110,12 @@ class ContextCompressor:
             all_chunks.extend(chunks)
 
         if not all_chunks:
-            logger.warning("[Compressor] No chunks generated from %d documents", len(documents))
+            logger.warning("[Compressor] No chunks from %d documents", len(documents))
             return []
 
-        # 2. Embed query + tất cả chunks song song (llama.cpp batch style)
+        # ── BƯỚC 2: Embedding similarity (gpt-researcher) ───────────────────
+        # Lấy top-(k*4) để có đủ candidates cho reranking
+        candidate_limit = k * 4
         chunk_texts = [c.with_header() for c in all_chunks]
         all_texts = [query] + chunk_texts
 
@@ -119,24 +128,25 @@ class ContextCompressor:
         query_vec = np.array(all_vectors_raw[0])
         chunk_vecs = [np.array(v) for v in all_vectors_raw[1:]]
 
-        # 3. Tính cosine similarity + filter (gpt-researcher EmbeddingsFilter)
         scored: list[tuple[float, DocumentChunk]] = []
         for chunk, vec in zip(all_chunks, chunk_vecs):
             score = cosine_similarity(query_vec, vec)
             if score >= self.similarity_threshold:
                 scored.append((score, chunk))
 
-        # 4. Sort by score DESC, lấy top-K
         scored.sort(key=lambda x: x[0], reverse=True)
-        top_k = scored[:k]
+        candidates = scored[:candidate_limit]
 
         logger.info(
-            "[Compressor] query='%s...' → %d/%d chunks passed threshold=%.2f, returning top-%d",
-            query[:50], len(scored), len(all_chunks), self.similarity_threshold, len(top_k)
+            "[Compressor] Step1 embed: %d/%d passed threshold=%.2f",
+            len(candidates), len(all_chunks), self.similarity_threshold
         )
 
-        # 5. Trả về kết quả với score để C# có thể debug
-        return [
+        if not candidates:
+            return []
+
+        # Convert về list[dict] chuẩn
+        result_chunks = [
             {
                 "content": chunk.with_header(),
                 "score": round(score, 4),
@@ -145,8 +155,37 @@ class ContextCompressor:
                 "doc_title": chunk.doc_title,
                 "word_count": chunk.word_count,
             }
-            for score, chunk in top_k
+            for score, chunk in candidates
         ]
+
+        # ── BƯỚC 3: Hybrid BM25 + Semantic (Dify) ───────────────────────────
+        if self.use_hybrid and self._hybrid is not None:
+            result_chunks = self._hybrid.rerank(query, result_chunks, top_n=candidate_limit)
+            logger.info("[Compressor] Step2 hybrid: %d chunks reranked", len(result_chunks))
+
+        # ── BƯỚC 4: CrossEncoder Rerank (Khoj) ──────────────────────────────
+        if self.use_reranker:
+            # Lazy-load reranker
+            if self._reranker is None:
+                try:
+                    from .reranker import get_reranker
+                    self._reranker = get_reranker()
+                except Exception as e:
+                    logger.warning("[Compressor] Reranker unavailable: %s", str(e))
+
+            if self._reranker is not None:
+                try:
+                    result_chunks = self._reranker.rerank(query, result_chunks, top_n=k)
+                    logger.info("[Compressor] Step3 rerank: %d final chunks", len(result_chunks))
+                except Exception as e:
+                    logger.warning("[Compressor] Reranker failed, using hybrid results: %s", str(e))
+                    result_chunks = result_chunks[:k]
+            else:
+                result_chunks = result_chunks[:k]
+        else:
+            result_chunks = result_chunks[:k]
+
+        return result_chunks
 
     async def compress_to_context_string(
         self,
@@ -154,14 +193,14 @@ class ContextCompressor:
         documents: list[dict],
         max_results: Optional[int] = None,
     ) -> str:
-        """
-        Shortcut: trả về context string gộp tất cả chunks liên quan.
-        Dùng thẳng vào system prompt của LLM.
-        """
+        """Shortcut: trả về context string dùng thẳng vào LLM prompt"""
         chunks = await self.compress(query, documents, max_results)
         if not chunks:
             return ""
         parts = []
         for i, chunk in enumerate(chunks, 1):
-            parts.append(f"[Đoạn {i} - Độ liên quan: {chunk['score']:.0%}]\n{chunk['content']}")
+            rerank_score = chunk.get("rerank_score")
+            hybrid_score = chunk.get("hybrid_score")
+            score_display = f"Rerank: {rerank_score:.2f}" if rerank_score else f"Score: {chunk['score']:.0%}"
+            parts.append(f"[Đoạn {i} | {score_display}]\n{chunk['content']}")
         return "\n\n---\n\n".join(parts)

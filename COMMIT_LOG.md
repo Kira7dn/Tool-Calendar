@@ -2833,3 +2833,21 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/requirements.txt` (Sửa — thêm scikit-learn, json-repair)
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa — gọi /api/compress cho RAG)
 - **Lệnh git commit**: `git commit -m "feat(ai): nang cap python-ai-service v2 voi batch-embed, rag-compress, prompt-cache tu llama.cpp+gpt-researcher+anything-llm"`
+
+### [2026-08-16 00:12] Nâng cấp Python AI Service lên v3.0 (SGLang, Docling, Khoj, Dify)
+- **Mô tả**: Tích hợp các kỹ thuật tiên tiến từ 4 repo mở để nâng cấp chất lượng RAG và OCR:
+  1. Thay LRU cache bằng RadixTree Cache (SGLang) cho prefix sharing, tiết kiệm bộ nhớ.
+  2. Thay PaddleOCR bằng Docling (DoclingExtractor) để giữ cấu trúc bảng biểu, heading từ PDF/Word.
+  3. Bổ sung CrossEncoder Reranker (Khoj) vào ContextCompressor để rerank top chunks.
+  4. Bổ sung Hybrid Search BM25 + Semantic (Dify) để tìm kiếm chính xác các số hiệu công văn.
+  5. Thêm utilities retry với tenacity (Khoj).
+- **Tệp thay đổi**:
+  - `python-ai-service/llm_provider/radix_cache.py` (Mới)
+  - `python-ai-service/rag/docling_extractor.py` (Mới)
+  - `python-ai-service/rag/reranker.py` (Mới)
+  - `python-ai-service/rag/hybrid_retriever.py` (Mới)
+  - `python-ai-service/utils/retry.py` (Mới)
+  - `python-ai-service/rag/compressor.py` (Sửa đổi)
+  - `python-ai-service/main.py` (Sửa đổi)
+  - `python-ai-service/requirements.txt` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): nâng cấp python service v3.0 tích hợp radix cache, docling và hybrid rerank"`

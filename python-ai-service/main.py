@@ -1,20 +1,27 @@
 """
-Tool-Calendar Python AI Service — v2.0
-Nâng cấp với kỹ thuật từ llama.cpp, gpt-researcher, anything-llm, LibreChat
+Tool-Calendar Python AI Service — v3.0
+Kỹ thuật từ: llama.cpp + gpt-researcher + anything-llm + SGLang + Docling + Khoj + Dify
 
 Endpoints:
-  GET  /health              — Health check + metrics
-  POST /api/embed           — Embed 1 text (với cache + L2 normalize)
-  POST /api/embed/batch     — Embed nhiều texts cùng lúc (batch inference)
-  POST /api/compress        — RAG context compression (top-K chunks)
-  POST /api/chunk           — Chia văn bản thành chunks có metadata
-  POST /api/chat            — Stream chat qua Ollama
+  GET  /health                 — Health check + RadixCache metrics
+  POST /api/embed              — Embed 1 text (RadixCache + L2 normalize)
+  POST /api/embed/batch        — Batch embed (llama.cpp server_batch)
+  POST /api/compress           — RAG pipeline 3 bước: Embed→Hybrid→Rerank
+  POST /api/chunk              — Smart chunker với metadata (anything-llm)
+  POST /api/rerank             — CrossEncoder reranker (Khoj)
+  POST /api/hybrid-search      — BM25 + Semantic hybrid (Dify)
+  POST /api/extract            — Document extractor (Docling)
+  GET  /api/cache/stats        — RadixTree cache statistics (SGLang)
+  POST /api/chat               — Stream chat qua Ollama
 
-Architecture:
-  - AsyncBatchEmbedder (llama.cpp server_batch)
-  - PromptEmbeddingCache (llama.cpp cache_prompt)
-  - ContextCompressor (gpt-researcher EmbeddingsFilter)
-  - SmartTextChunker (anything-llm TextSplitter)
+Architecture (v3.0):
+  - AsyncBatchEmbedder   (llama.cpp server_batch)
+  - RadixPrefixCache     (SGLang radix_cache + SLRU eviction)
+  - ContextCompressor    (gpt-researcher EmbeddingsFilter)
+  - SmartTextChunker     (anything-llm TextSplitter + ChunkHeaderMeta)
+  - HybridRetriever      (Dify BM25 + Semantic weighted merge)
+  - CrossEncoderReranker (Khoj mxbai-rerank, Dify score_threshold)
+  - DoclingExtractor     (Docling PDF/Word/Excel structured parse)
 """
 
 import logging
@@ -28,9 +35,12 @@ from pydantic import BaseModel
 from embeddings.batch_processor import AsyncBatchEmbedder
 from embeddings.semantic_embedder import get_embedder
 from llm_provider.ollama_client import OllamaClient
-from llm_provider.prompt_cache import get_prompt_cache
+from llm_provider.radix_cache import get_radix_cache  # SGLang RadixTree
 from rag.chunker import SmartTextChunker
 from rag.compressor import ContextCompressor
+from rag.docling_extractor import get_docling_extractor  # Docling
+from rag.hybrid_retriever import HybridRetriever  # Dify
+from rag.reranker import get_reranker  # Khoj
 
 # Configure logging
 logging.basicConfig(
@@ -45,7 +55,9 @@ _batch_embedder: Optional[AsyncBatchEmbedder] = None
 _ollama_client: Optional[OllamaClient] = None
 _chunker: Optional[SmartTextChunker] = None
 _compressor: Optional[ContextCompressor] = None
-_prompt_cache = get_prompt_cache()
+_radix_cache = get_radix_cache()  # SGLang RadixTree — thay PromptCache
+_docling = get_docling_extractor()  # Docling (lazy)
+_hybrid_retriever: Optional[HybridRetriever] = None
 
 
 @asynccontextmanager
@@ -127,6 +139,25 @@ class CompressResponse(BaseModel):
     context_string: str = ""  # Dùng thẳng vào LLM prompt
 
 
+class ExtractRequest(BaseModel):
+    file_path: str
+
+
+class RerankRequest(BaseModel):
+    query: str
+    chunks: list[dict]
+    top_n: int = 5
+    score_threshold: Optional[float] = None
+
+
+class HybridSearchRequest(BaseModel):
+    query: str
+    chunks: list[dict]
+    top_n: int = 5
+    keyword_weight: float = 0.3
+    semantic_weight: float = 0.7
+
+
 class ChunkRequest(BaseModel):
     text: str
     doc_title: str = ""
@@ -152,16 +183,21 @@ class ChatRequest(BaseModel):
 @app.get("/health")
 def health_check():
     """Health check + cache metrics — học từ llama.cpp /metrics endpoint"""
-    cache_stats = _prompt_cache.stats()
+    cache_stats = _radix_cache.stats()
     embedder = get_embedder()
     return {
         "status": "ok",
         "service": "toolcalendar-ai-service",
-        "version": "2.0.0",
+        "version": "3.0.0",
         "model": embedder.model_name,
         "embedding_dim": embedder.embedding_dim,
-        "prompt_cache": cache_stats,
+        "radix_cache": cache_stats,
     }
+
+@app.get("/api/cache/stats")
+def cache_stats():
+    """RadixTree cache statistics (SGLang)"""
+    return _radix_cache.stats()
 
 
 @app.post("/api/embed", response_model=EmbedResponse)
@@ -188,7 +224,7 @@ async def embed_text(request: EmbedRequest):
 
     # Lưu cache
     if request.use_cache:
-        _prompt_cache.put(request.text, vector)
+        _radix_cache.put(request.text, vector)
 
     return EmbedResponse(vector=vector, cached=False, dim=len(vector))
 
@@ -213,7 +249,7 @@ async def embed_batch(request: BatchEmbedRequest):
         if not text or not text.strip():
             vectors.append([])
             continue
-        cached = _prompt_cache.get(text)
+        cached = _radix_cache.get(text)
         if cached is not None:
             vectors.append(cached)
         else:
@@ -227,7 +263,7 @@ async def embed_batch(request: BatchEmbedRequest):
             new_vectors = await _batch_embedder.embed_batch(texts_to_embed, normalize=request.normalize)
             for idx, vec in zip(indices_to_embed, new_vectors):
                 vectors[idx] = vec
-                _prompt_cache.put(request.texts[idx], vec)
+                _radix_cache.put(request.texts[idx], vec)
         except Exception as e:
             logger.error("[/api/embed/batch] Error: %s", str(e))
             raise HTTPException(status_code=500, detail="Failed to generate batch embeddings")
@@ -286,6 +322,71 @@ async def compress_context(request: CompressRequest):
         total_chunks_evaluated=0,  # Filled by compressor internally
         context_string=context_string,
     )
+
+
+@app.post("/api/extract")
+def extract_document(request: ExtractRequest):
+    """
+    Document Extractor — học từ Docling.
+    Thay thế cho PaddleOCR: giữ được cấu trúc bảng biểu, heading, hỗ trợ PDF/Word/Excel.
+    """
+    if not _docling.is_available:
+        raise HTTPException(status_code=503, detail="Docling not installed")
+    
+    result = _docling.extract(request.file_path)
+    if result.error:
+        logger.error("[/api/extract] Error: %s", result.error)
+        raise HTTPException(status_code=500, detail=result.error)
+        
+    return result.to_dict()
+
+
+@app.post("/api/rerank")
+def rerank_chunks(request: RerankRequest):
+    """
+    CrossEncoder Reranker — học từ Khoj.
+    Rerank danh sách chunks dựa trên query bằng model CrossEncoder để tăng độ chính xác.
+    """
+    reranker = get_reranker()
+    try:
+        results = reranker.rerank(
+            query=request.query,
+            chunks=request.chunks,
+            top_n=request.top_n,
+            score_threshold=request.score_threshold
+        )
+        return {"chunks": results, "count": len(results)}
+    except Exception as e:
+        logger.error("[/api/rerank] Error: %s", str(e))
+        raise HTTPException(status_code=500, detail="Reranking failed")
+
+
+@app.post("/api/hybrid-search")
+def hybrid_search(request: HybridSearchRequest):
+    """
+    Hybrid Search (BM25 + Semantic) — học từ Dify.
+    Merge BM25 keyword score và semantic score để tìm kiếm tốt hơn với các identifier.
+    """
+    if not _hybrid_retriever:
+        from rag.hybrid_retriever import HybridRetriever
+        hybrid = HybridRetriever(
+            keyword_weight=request.keyword_weight,
+            semantic_weight=request.semantic_weight
+        )
+    else:
+        hybrid = _hybrid_retriever
+        
+    try:
+        results = hybrid.rerank(
+            query=request.query,
+            chunks=request.chunks,
+            top_n=request.top_n
+        )
+        return {"chunks": results, "count": len(results)}
+    except Exception as e:
+        logger.error("[/api/hybrid-search] Error: %s", str(e))
+        raise HTTPException(status_code=500, detail="Hybrid search failed")
+
 
 
 @app.post("/api/chunk", response_model=ChunkResponse)
