@@ -97,10 +97,10 @@ namespace ToolCalendar.Core.Services
             string memorySection = "";
             try
             {
-                var questionVector = await _embeddingService.GenerateEmbeddingAsync(message);
+                var memoryVector = await _embeddingService.GenerateEmbeddingAsync(message);
                 List<UserMemoryResult> memories = new();
-                if (questionVector != null && questionVector.Length > 0)
-                    memories = await _memoryRepo.RecallMemoriesAsync(userId, questionVector, topK: 5, minScore: 0.25f);
+                if (memoryVector != null && memoryVector.Length > 0)
+                    memories = await _memoryRepo.RecallMemoriesAsync(userId, memoryVector, topK: 5, minScore: 0.25f);
                 if (memories.Count == 0)
                     memories = await _memoryRepo.GetRecentMemoriesAsync(userId, limit: 3);
                 if (memories.Count > 0)
@@ -114,28 +114,33 @@ namespace ToolCalendar.Core.Services
 
             // Semantic Caching & Routing
             float[]? questionVector = null;
-            try 
+            string? cacheHitResponse = null; // CS1626 fix: không yield trong try-catch
+            try
             {
                 questionVector = await _embeddingService.GenerateEmbeddingAsync(message);
                 if (questionVector != null && questionVector.Length > 0)
                 {
                     // 1. Semantic Cache
-                    var cachedResponse = await _semanticCacheRepo.GetCachedResponseAsync(questionVector, 0.95f);
+                    var cachedResponse = await _semanticCacheRepo.GetCachedResponseAsync(questionVector, 0.85f);
                     if (!string.IsNullOrEmpty(cachedResponse))
                     {
                         _logger.LogInformation("[AiAssistant] CACHE HIT! Trả về từ AiSemanticCache.");
                         string finalReplyForChatCache = await HandleSpecialTagsAsync(cachedResponse, userId);
                         try { _chatHistoryRepo.AddMessage(userId, "assistant", finalReplyForChatCache); }
                         catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi lưu tin nhắn assistant: {Msg}", ex.Message); }
-
-                        foreach (var chunk in SplitIntoChunks(cachedResponse, 50))
-                            yield return chunk;
-
-                        yield break;
+                        cacheHitResponse = cachedResponse; // Lưu lại, yield bên ngoài try
                     }
                 }
             }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi xử lý Caching: {Msg}", ex.Message); }
+
+            // CS1626: yield phải nằm ngoài try-catch block
+            if (cacheHitResponse != null)
+            {
+                foreach (var chunk in SplitIntoChunks(cacheHitResponse, 50))
+                    yield return chunk;
+                yield break;
+            }
 
             string persona = isLeader
                 ? $"Bạn là Trợ lý AI của phần mềm Quản lý Công văn (cơ quan Nhà nước).\nNgười đang nói chuyện với bạn là Sếp/Lãnh đạo của cơ quan (Tên: {userName}).\nPhong thái: Kính trọng, báo cáo ngắn gọn, đi thẳng vào vấn đề.\nXưng hô: Đại từ của bạn là 'Em' hoặc 'AI', gọi người dùng là 'Sếp' hoặc 'Thủ trưởng'.\nLuôn dạ vâng lễ phép (ví dụ: Dạ vâng ạ, Em xin báo cáo sếp...)."
