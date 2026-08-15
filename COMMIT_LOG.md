@@ -1,3 +1,13 @@
+### [2026-08-15 17:52] chore(cabinet): remove obsolete cabinet modules and heartbeat logic
+- **Mô tả**: Xóa hoàn toàn các file và cấu hình liên quan đến phân hệ "Phòng họp không giấy tờ" (Cabinet) khỏi repository Tool-Calendar (do mã nguồn đã được tách ra repository riêng `/Users/macbookpro/Cabinet`). Đã xóa các file unit test, thư mục uploads và logic heartbeat frontend.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Tests/Cabinet/CabinetConclusionsTests.cs` (Xóa)
+  - `ToolCalendar.Tests/Cabinet/CabinetMeetingsTests.cs` (Xóa)
+  - `ToolCalendar.Tests/Cabinet/CabinetNotesTests.cs` (Xóa)
+  - `ToolCalendar.Tests/Cabinet/CabinetRoomsTests.cs` (Xóa)
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(cabinet): remove obsolete cabinet modules and heartbeat logic"`
+
 ### [2026-08-14 16:22] style(ai): sửa lỗi giao diện thanh chat AI bị che khuất trên mobile
 - **Mô tả**: Trên giao diện mobile, thanh điều hướng dưới cùng (bottom navigation bar) đè lên box chat do `z-index` thấp (`z-50` so với `z-[500]`) và lề dưới quá nhỏ (`bottom-6`). Đã nâng `z-index` lên `z-[600]` và tăng `bottom` lên `bottom-20` trên màn hình nhỏ để box chat nổi hoàn toàn trên thanh điều hướng.
 - **Tệp thay đổi**:

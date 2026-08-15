@@ -270,17 +270,6 @@ function Root() {
         return
       }
 
-      // --- Context-Aware Heartbeat Bypass ---
-      // Nếu đang trong phòng họp và tab đang mở -> Tự động thả tim cập nhật Activity
-      if (
-        window.location.pathname.startsWith('/phonghopkhonggiayto') &&
-        document.visibilityState === 'visible'
-      ) {
-        localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
-        return
-      }
-      // --------------------------------------
-
       const lastActivity = parseInt(lastActivityStr, 10)
       if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) {
         console.warn('[Root] Hết thời gian truy cập (Idle Timeout), tự động đăng xuất.')
