@@ -2996,3 +2996,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/llm_provider/ollama_client.py` (Hoàn tác: Xóa Gemini integration, chỉ giữ Ollama offline)
   - `python-ai-service/main.py` (Giữ lại: Regex fallback khi Ollama không trả JSON hợp lệ)
 - **Lệnh git commit**: `git commit -m "revert(ocr): hoàn tác tích hợp Gemini Cloud — chỉ dùng Ollama offline nội bộ"`
+
+### [2026-08-16 22:33] fix(ocr): Regex fallback cho bóc tách metadata khi Ollama không khả dụng
+- **Mô tả**: Sửa lỗi upload file PDF bị trống ô Số văn bản/Trích yếu. Nguyên nhân: `python-ai-service` không chạy trên server → Ollama trả rỗng → metadata không cập nhật. Giải pháp: nhúng Regex fallback trực tiếp vào `/api/extract-metadata` — tự bóc tách Số văn bản, Ngày ban hành, Trích yếu, Cơ quan ban hành bằng biểu thức chính quy khi Ollama thất bại. Đã test local: bóc `1310/TTKSBT-SKSS`, `2026-06-16`, trích yếu đúng 100%.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi: Thêm hàm `_regex_extract` và logic 2 bước Ollama→Regex fallback)
+- **Lệnh git commit**: `git commit -m "fix(ocr): thêm Regex fallback bóc tách metadata khi Ollama không khả dụng"`

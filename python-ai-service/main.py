@@ -663,10 +663,58 @@ KHÔNG giải thích thêm.
 
 @app.post("/api/extract-metadata", response_model=ExtractMetadataResponse)
 async def extract_metadata(request: ExtractMetadataRequest):
-    """Sử dụng Ollama để bóc tách siêu dữ liệu từ văn bản thô."""
+    """Bóc tách siêu dữ liệu từ văn bản thô. Ưu tiên Ollama, fallback Regex."""
+    import json, re
     if not request.text or not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
-        
+
+    # ── Helper: Regex fallback (100% offline, không cần Ollama) ──────────────
+    def _regex_extract(text: str) -> dict:
+        result = {
+            "SoVanBan": "", "TenCongVan": "CÔNG VĂN", "TrichYeu": "",
+            "NgayBanHanh": "", "ThoiHan": "", "CoQuanBanHanh": "",
+            "CoQuanChuQuan": "", "Priority": "Thường"
+        }
+        # Số văn bản: vd "1310/TTKSBT-SKSS" hoặc "9679/SNN&MT-QLĐĐ"
+        m = re.search(
+            r'(?:Số|SỐ)[:\s]+([0-9]+/[A-Z0-9ĐÀ-Ỵà-ỵ&]+[-/][A-Z0-9ĐÀ-Ỵà-ỵ]+)',
+            text, re.IGNORECASE)
+        if m:
+            result["SoVanBan"] = m.group(1).strip()
+
+        # Ngày ban hành
+        m = re.search(r'ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})', text, re.IGNORECASE)
+        if m:
+            d, mo, y = m.groups()
+            result["NgayBanHanh"] = f"{y}-{int(mo):02d}-{int(d):02d}"
+
+        # Trích yếu: lấy sau "V/v" hoặc "Về việc"
+        m = re.search(r'(?:V/v|Về việc)[:\s]*(.+?)(?:\n\n|\r\n\r\n|Kính gửi)', text, re.IGNORECASE | re.DOTALL)
+        if m:
+            ty = re.sub(r'\s+', ' ', m.group(1)).strip()
+            result["TrichYeu"] = ty[:500]
+
+        # Cơ quan ban hành: dòng đầu tiên không rỗng
+        lines = [l.strip() for l in text.split('\n') if l.strip() and 'CỘNG HÒA' not in l.upper()]
+        if lines:
+            result["CoQuanBanHanh"] = lines[0]
+
+        # Loại văn bản từ nội dung
+        text_upper = text.upper()
+        for vb_type in ["QUYẾT ĐỊNH", "THÔNG TƯ", "NGHỊ ĐỊNH", "BÁO CÁO", "TỜ TRÌNH", "CÔNG VĂN"]:
+            if vb_type in text_upper:
+                result["TenCongVan"] = vb_type
+                break
+
+        # Priority từ từ khóa
+        if any(k in text_upper for k in ["HỎA TỐC", "KHẨN TRƯƠNG NGAY"]):
+            result["Priority"] = "Hỏa tốc"
+        elif "KHẨN" in text_upper:
+            result["Priority"] = "Khẩn"
+
+        return result
+
+    # ── Bước 1: Thử Ollama ────────────────────────────────────────────────────
     prompt = f"""Bạn là chuyên gia bóc tách dữ liệu công văn. Hãy đọc nội dung thô dưới đây và trả về JSON chuẩn với các trường:
 - SoVanBan: Số và ký hiệu văn bản (vd: 9679/SNN&MT-QLĐĐ).
 - TenCongVan: Tên loại công văn (vd: CÔNG VĂN, QUYẾT ĐỊNH, BÁO CÁO).
@@ -680,33 +728,39 @@ Bắt buộc trả về ĐÚNG định dạng JSON, không kèm markdown hay tex
 
 Nội dung:
 {request.text[:4000]}"""
-    
+
+    ollama_ok = False
     try:
-        import json
         messages = [{"role": "user", "content": prompt}]
         response_text = await _ollama_client.chat(request.model, messages, format="json")
-        
-        try:
-            parsed = json.loads(response_text)
-            # Dùng .get() để lấy giá trị an toàn tránh lỗi thiếu key
-            return ExtractMetadataResponse(
-                SoVanBan=parsed.get("SoVanBan", ""),
-                TenCongVan=parsed.get("TenCongVan", ""),
-                TrichYeu=parsed.get("TrichYeu", ""),
-                NgayBanHanh=parsed.get("NgayBanHanh", ""),
-                ThoiHan=parsed.get("ThoiHan", ""),
-                CoQuanBanHanh=parsed.get("CoQuanBanHanh", ""),
-                CoQuanChuQuan=parsed.get("CoQuanChuQuan", ""),
-                Priority=parsed.get("Priority", "Thường")
-            )
-        except Exception as e:
-            logger.warning("[/api/extract-metadata] JSON parse error: %s, falling back to Regex", str(e))
-            fallback = fallback_extract_metadata(request.text)
-            return ExtractMetadataResponse(**fallback)
+
+        if response_text and response_text.strip():
+            try:
+                parsed = json.loads(response_text)
+                # Chỉ dùng kết quả Ollama nếu có ít nhất SoVanBan hoặc TrichYeu
+                if parsed.get("SoVanBan") or parsed.get("TrichYeu"):
+                    ollama_ok = True
+                    return ExtractMetadataResponse(
+                        SoVanBan=parsed.get("SoVanBan", ""),
+                        TenCongVan=parsed.get("TenCongVan", ""),
+                        TrichYeu=parsed.get("TrichYeu", ""),
+                        NgayBanHanh=parsed.get("NgayBanHanh", ""),
+                        ThoiHan=parsed.get("ThoiHan", ""),
+                        CoQuanBanHanh=parsed.get("CoQuanBanHanh", ""),
+                        CoQuanChuQuan=parsed.get("CoQuanChuQuan", ""),
+                        Priority=parsed.get("Priority", "Thường")
+                    )
+            except Exception:
+                pass
     except Exception as e:
-        logger.error("[/api/extract-metadata] Error: %s, falling back to Regex", str(e))
-        fallback = fallback_extract_metadata(request.text)
+        logger.warning("[/api/extract-metadata] Ollama error: %s — dùng Regex fallback", str(e))
+
+    # ── Bước 2: Regex Fallback (khi Ollama không có / trả rỗng) ──────────────
+    if not ollama_ok:
+        logger.info("[/api/extract-metadata] Ollama không khả dụng, dùng Regex fallback")
+        fallback = _regex_extract(request.text)
         return ExtractMetadataResponse(**fallback)
+
 
 
 
