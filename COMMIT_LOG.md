@@ -3051,3 +3051,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): xóa rác code cũ gây lỗi trong main.py"`
+
+### [2026-08-16 23:35] perf(ocr): Tách luồng OCR thành Fast Path (0.1s) cho native PDF
+- **Mô tả**: Tách quy trình bóc tách Metadata và OCR của Docling thành 2 phase riêng biệt:
+  1. Dùng `pypdfium2` (qua endpoint mới `/api/extract-fast`) lấy text thô siêu tốc trong 0.1s.
+  2. Bóc tách bằng Regex từ text thô, lưu DB và nhả SignalR để UI mở khóa ngay lập tức (instant response).
+  3. Docling OCR siêu nặng vẫn chạy ngầm phía sau (mất 2 phút) để nhúng Vector/RAG mà không bắt user phải đợi ở UI upload.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Mới)
+  - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ocr): xử lý upload file native pdf ngay lập tức bằng two-phase extraction"`

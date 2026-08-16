@@ -535,6 +535,34 @@ def extract_document(request: ExtractRequest):
         
     return result.to_dict()
 
+class ExtractFastResponse(BaseModel):
+    text: str
+
+@app.post("/api/extract-fast", response_model=ExtractFastResponse)
+def extract_fast(request: ExtractRequest):
+    """
+    Trích xuất text thô siêu tốc (0.1s) bằng pypdfium2.
+    Dùng để bóc tách Metadata tức thì cho UI không phải đợi Docling OCR.
+    Nếu là file ảnh scan (trả về rỗng) thì OCR phía sau sẽ lo.
+    """
+    import os
+    if not os.path.exists(request.file_path):
+        return ExtractFastResponse(text="")
+        
+    try:
+        if request.file_path.lower().endswith('.pdf'):
+            import pypdfium2 as pdfium
+            pdf = pdfium.PdfDocument(request.file_path)
+            fast_text = ""
+            for i in range(len(pdf)):
+                fast_text += pdf[i].get_textpage().get_text_bounded() + "\n"
+            pdf.close()
+            return ExtractFastResponse(text=fast_text.strip())
+    except Exception as e:
+        logger.warning("[/api/extract-fast] Error: %s", str(e))
+        
+    return ExtractFastResponse(text="")
+
 
 @app.post("/api/rerank")
 def rerank_chunks(request: RerankRequest):

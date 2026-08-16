@@ -7,6 +7,7 @@ namespace ToolCalendar.Services
     public interface IPythonAiService
     {
         Task<DoclingExtractionResult> ExtractDocumentAsync(string filePath);
+        Task<string> ExtractFastTextAsync(string filePath);
         Task<ChunkResponse> ChunkDocumentAsync(ChunkRequest request);
         Task<BatchEmbedResponse> BatchEmbedAsync(BatchEmbedRequest request);
         Task<GenerateQAResponse> GenerateQAAsync(GenerateQARequest request);
@@ -36,6 +37,23 @@ namespace ToolCalendar.Services
 
             var result = await response.Content.ReadFromJsonAsync<DoclingExtractionResult>();
             return result ?? new DoclingExtractionResult();
+        }
+
+        public async Task<string> ExtractFastTextAsync(string filePath)
+        {
+            try
+            {
+                string containerPath = filePath.StartsWith("Uploads/") ? $"/app/{filePath}" : filePath;
+                var response = await _httpClient.PostAsJsonAsync("/api/extract-fast", new { file_path = containerPath });
+                if (!response.IsSuccessStatusCode) return string.Empty;
+
+                var result = await response.Content.ReadFromJsonAsync<ExtractFastResponse>();
+                return result?.Text ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
 
         public async Task<ChunkResponse> ChunkDocumentAsync(ChunkRequest request)
@@ -276,5 +294,11 @@ namespace ToolCalendar.Services
 
         [JsonPropertyName("Priority")]
         public string Priority { get; set; } = "Thường";
+    }
+
+    public class ExtractFastResponse
+    {
+        [JsonPropertyName("text")]
+        public string Text { get; set; } = string.Empty;
     }
 }

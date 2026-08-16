@@ -237,15 +237,40 @@ namespace ToolCalendar.Services
 
             try
             {
+                // 1. LUỒNG NHANH (0.1s): Trích xuất chữ từ PDF gốc để lấy Metadata tức thì
+                var fastText = await aiService.ExtractFastTextAsync(absolutePath);
+                if (!string.IsNullOrWhiteSpace(fastText))
+                {
+                    _logger.LogInformation("[RabbitMQ Worker] Tìm thấy chữ trong PDF gốc (Native). Đang bóc tách Metadata tức thì cho DocumentId {Id}", docId);
+                    var metadata = await aiService.ExtractMetadataAsync(fastText);
+                    if (metadata != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(metadata.SoVanBan)) doc.SoVanBan = metadata.SoVanBan;
+                        if (!string.IsNullOrWhiteSpace(metadata.TenCongVan)) doc.TenCongVan = metadata.TenCongVan;
+                        if (!string.IsNullOrWhiteSpace(metadata.TrichYeu)) doc.TrichYeu = metadata.TrichYeu;
+                        if (!string.IsNullOrWhiteSpace(metadata.NgayBanHanh) && DateTime.TryParse(metadata.NgayBanHanh, out var parsedNgay)) doc.NgayBanHanh = parsedNgay;
+                        if (!string.IsNullOrWhiteSpace(metadata.ThoiHan) && DateTime.TryParse(metadata.ThoiHan, out var parsedThoiHan)) doc.ThoiHan = parsedThoiHan;
+                        if (!string.IsNullOrWhiteSpace(metadata.CoQuanBanHanh)) doc.CoQuanBanHanh = metadata.CoQuanBanHanh;
+                        if (!string.IsNullOrWhiteSpace(metadata.CoQuanChuQuan)) doc.CoQuanChuQuan = metadata.CoQuanChuQuan;
+                        if (!string.IsNullOrWhiteSpace(metadata.Priority)) doc.Priority = metadata.Priority;
+                    }
+                    
+                    // LƯU DB VÀ NOTIFY UI NGAY LẬP TỨC!
+                    doc.Status = "Chưa xử lý";
+                    await docRepo.UpdateAsync(doc);
+                    await NotifyProgressAsync(scope, docId, "Chưa xử lý"); // UI MỞ KHÓA NGAY LẬP TỨC TẠI ĐÂY
+                }
+
+                // 2. LUỒNG NẶNG (2-3 phút): Gọi Docling để lấy toàn bộ Cấu trúc (Bảng biểu, Heading) cho RAG
                 var updatedDoc = await extractor.ExtractFromFileAsync(absolutePath);
                 
-                // Cập nhật text từ Python vào DB
+                // Cập nhật text từ Docling vào DB
                 doc.FullText = updatedDoc.FullText;
                 
-                // GỌI LLM ĐỂ TRÍCH XUẤT METADATA
-                if (!string.IsNullOrWhiteSpace(doc.FullText))
+                // Nếu luồng nhanh thất bại (vì là ảnh scan), gọi lại Metadata Extraction sau khi OCR xong
+                if (string.IsNullOrWhiteSpace(fastText) && !string.IsNullOrWhiteSpace(doc.FullText))
                 {
-                    _logger.LogInformation("[RabbitMQ Worker] Đang bóc tách Metadata cho DocumentId {Id}", docId);
+                    _logger.LogInformation("[RabbitMQ Worker] File scan. Bóc tách Metadata bằng text sau OCR cho DocumentId {Id}", docId);
                     var metadata = await aiService.ExtractMetadataAsync(doc.FullText);
                     if (metadata != null)
                     {
@@ -258,11 +283,14 @@ namespace ToolCalendar.Services
                         if (!string.IsNullOrWhiteSpace(metadata.CoQuanChuQuan)) doc.CoQuanChuQuan = metadata.CoQuanChuQuan;
                         if (!string.IsNullOrWhiteSpace(metadata.Priority)) doc.Priority = metadata.Priority;
                     }
+                    doc.Status = "Chưa xử lý";
+                    await docRepo.UpdateAsync(doc);
                 }
-
-                doc.Status = "Chưa xử lý";
-
-                await docRepo.UpdateAsync(doc);
+                else
+                {
+                    // Vẫn phải lưu lại FullText của Docling vào DB (Status đã là 'Chưa xử lý' từ luồng nhanh)
+                    await docRepo.UpdateAsync(doc);
+                }
 
                 // --- BẮT ĐẦU: RAG - Chunking và Tính toán Vector ---
                 try
