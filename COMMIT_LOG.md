@@ -2927,3 +2927,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi — Đổi UI thành Trích xuất lại)
 - **Lệnh git commit**: `git commit -m "refactor(docs): xóa code OCR cũ, bật deduplication bằng SHA-256, đổi route reindex"`
 
+### [2026-08-16 09:10] Hotfix lỗi thiếu namespace (Build fail)
+- **Mô tả**: Bổ sung `using ToolCalendar.Models;` vào `IDocumentExtractorService.cs` vì gặp lỗi `CS0246` (không tìm thấy model DocumentRecord) khi deploy Docker build trên production server.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/IDocumentExtractorService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): bổ sung using ToolCalendar.Models vào IDocumentExtractorService để sửa lỗi build"`
+
