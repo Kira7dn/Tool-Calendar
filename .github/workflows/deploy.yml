@@ -28,7 +28,7 @@ jobs:
             git fetch origin develop
 
             # Kiểm tra xem python-ai-service có thay đổi không
-            PYTHON_CHANGED=$(git diff HEAD origin/develop -- python-ai-service/Dockerfile python-ai-service/requirements.txt | wc -l)
+            PYTHON_CHANGED=$(git diff HEAD origin/develop -- python-ai-service/ | wc -l)
 
             git reset --hard origin/develop
 

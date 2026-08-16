@@ -3020,3 +3020,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/llm_provider/ollama_client.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): giảm timeout kết nối ollama xuống 2s để kích hoạt regex fallback kịp thời"`
+
+### [2026-08-16 23:07] perf(infra): Cập nhật CI/CD trigger build python-ai-service khi có bất kỳ thay đổi file code nào
+- **Mô tả**: Khi chỉ thay đổi `.py` (không phải Dockerfile/requirements), container cũ chỉ restart nên không cập nhật code mới (vì không map volume). Thay đổi rule `git diff` trong `deploy.yml` sang toàn bộ thư mục `python-ai-service/`. Nhờ Docker layer caching, nếu `requirements.txt` không đổi thì thời gian build vẫn siêu nhanh (~5s).
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(infra): update cicd to rebuild python-ai-service on any code change leveraging docker cache"`
