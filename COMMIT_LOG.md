@@ -1,3 +1,9 @@
+### [2026-08-16 11:09] fix(infra): reload Nginx sau khi deploy backend để chống lỗi 502
+- **Mô tả**: Bổ sung lệnh `docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy` vào file deploy `.github/workflows/deploy.yml` để làm mới upstream IP mỗi khi container `doc-coordination-system` bị build lại. Fix lỗi 502 Bad Gateway trên VNPT Cloud.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): reload Nginx sau khi deploy backend để chống lỗi 502"`
+
 ### [$(date +'%Y-%m-%d %H:%M')] Tách Python AI Service
 - **Mô tả**: Tách logic sinh vector embedding sang Python service riêng (FastAPI + sentence-transformers all-MiniLM-L6-v2) để tối ưu hóa hiệu năng và chất lượng vector. Service chạy nội bộ trên port 8001. C# API đóng vai trò gọi sang REST API này thay vì trực tiếp gọi Ollama.
 - **Tệp thay đổi**:

@@ -28,3 +28,4 @@ jobs:
             docker compose build official-doc-backend
             docker rm -f doc-coordination-system || true
             docker compose up -d official-doc-backend
+            docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy
