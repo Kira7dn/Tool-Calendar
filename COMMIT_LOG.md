@@ -3026,3 +3026,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "perf(infra): update cicd to rebuild python-ai-service on any code change leveraging docker cache"`
+
+### [2026-08-16 23:14] fix(ocr): Loại bỏ ví dụ khỏi prompt Ollama và fix regex
+- **Mô tả**: Bỏ ví dụ hardcode `9679/SNN&MT-QLĐĐ` khỏi prompt gửi cho Ollama vì mô hình Qwen2.5-3B bị ảo giác (hallucinate) và bê nguyên ví dụ vào kết quả trả về. Bổ sung thêm lệnh chặn ảo giác: `TUYỆT ĐỐI KHÔNG bịa đặt thông tin`.
+- Cập nhật Regex `_regex_extract` để nhận dạng được khoảng trắng trước dấu gạch chéo trong Số văn bản (Vd: `3206 /SKHCN...`).
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): xóa ví dụ hardcode gây ảo giác cho ollama và cập nhật regex số văn bản"`

@@ -677,7 +677,7 @@ async def extract_metadata(request: ExtractMetadataRequest):
         }
         # Số văn bản: vd "1310/TTKSBT-SKSS" hoặc "9679/SNN&MT-QLĐĐ"
         m = re.search(
-            r'(?:Số|SỐ)[:\s]+([0-9]+/[A-Z0-9ĐÀ-Ỵà-ỵ&]+[-/][A-Z0-9ĐÀ-Ỵà-ỵ]+)',
+            r'(?:Số|SỐ)[:\s]+([0-9]+[\s]*/[A-Z0-9ĐÀ-Ỵà-ỵ&]+[-/][A-Z0-9ĐÀ-Ỵà-ỵ]+)',
             text, re.IGNORECASE)
         if m:
             result["SoVanBan"] = m.group(1).strip()
@@ -715,15 +715,17 @@ async def extract_metadata(request: ExtractMetadataRequest):
         return result
 
     # ── Bước 1: Thử Ollama ────────────────────────────────────────────────────
-    prompt = f"""Bạn là chuyên gia bóc tách dữ liệu công văn. Hãy đọc nội dung thô dưới đây và trả về JSON chuẩn với các trường:
-- SoVanBan: Số và ký hiệu văn bản (vd: 9679/SNN&MT-QLĐĐ).
-- TenCongVan: Tên loại công văn (vd: CÔNG VĂN, QUYẾT ĐỊNH, BÁO CÁO).
-- TrichYeu: Trích yếu/tóm tắt nội dung chính của công văn (rất quan trọng, bắt buộc có).
+    prompt = f"""Bạn là chuyên gia bóc tách dữ liệu công văn. Hãy đọc nội dung thô dưới đây và trả về JSON chuẩn. 
+TUYỆT ĐỐI KHÔNG bịaa đặt thông tin. CHỈ lấy thông tin có thật trong văn bản.
+Các trường cần trích xuất:
+- SoVanBan: Số và ký hiệu văn bản (trích xuất chính xác từ văn bản, ví dụ: 123/UBND-VX).
+- TenCongVan: Tên loại công văn (CÔNG VĂN, QUYẾT ĐỊNH, BÁO CÁO, KẾ HOẠCH, v.v.).
+- TrichYeu: Trích yếu hoặc tóm tắt nội dung chính của công văn (rất quan trọng, bắt buộc có).
 - NgayBanHanh: Ngày ban hành định dạng YYYY-MM-DD.
 - CoQuanBanHanh: Tên cơ quan ban hành.
 - CoQuanChuQuan: Tên cơ quan chủ quản (nếu có).
-- Priority: Chọn 1 trong 3 (Hỏa tốc, Khẩn, Thường).
-- ThoiHan: Thời hạn giải quyết/Hạn chót nếu có, định dạng YYYY-MM-DD.
+- Priority: Chọn 1 trong 3 mức độ (Hỏa tốc, Khẩn, Thường).
+- ThoiHan: Thời hạn giải quyết/Hạn chót nếu có nhắc đến trong văn bản, định dạng YYYY-MM-DD.
 Bắt buộc trả về ĐÚNG định dạng JSON, không kèm markdown hay text nào khác.
 
 Nội dung:
