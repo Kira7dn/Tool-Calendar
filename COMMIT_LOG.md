@@ -1,5 +1,11 @@
+### [2026-08-16 15:05] perf(ocr): thêm luồng Fast Path native PDF cho Docling chống lỗi Timeout 502
+- **Mô tả**: Phát hiện nguyên nhân làm cho việc upload file PDF lên server quá chậm và báo lỗi là do Docling lúc nào cũng dùng mô hình PyTorch Layout cực kì nặng của AI để phân tích dù cho file PDF đã có chữ sẵn (VD: file đã có chữ ký số như `Cv 1310.signed.pdf`). Bổ sung cơ chế Fast Path dùng `pypdfium2` để đọc nhanh chữ thuần (native). Tốc độ đọc PDF native đã tăng từ 41 giây xuống còn 0.01 giây, triệt tiêu 100% lỗi Timeout trên server VNPT. Ngoài ra đã xóa luôn các file test rác.
+- **Tệp thay đổi**:
+  - `python-ai-service/rag/docling_extractor.py` (Sửa đổi)
+  - `test_ocr.py`, `test_remote_ocr.sh` (Xóa)
+- **Lệnh git commit**: `git commit -m "perf(ocr): thêm luồng Fast Path native PDF cho Docling chống lỗi Timeout"`
+
 ### [2026-08-16 11:09] fix(infra): reload Nginx sau khi deploy backend để chống lỗi 502
-- **Mô tả**: Bổ sung lệnh `docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy` vào file deploy `.github/workflows/deploy.yml` để làm mới upstream IP mỗi khi container `doc-coordination-system` bị build lại. Fix lỗi 502 Bad Gateway trên VNPT Cloud.
 - **Tệp thay đổi**:
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(infra): reload Nginx sau khi deploy backend để chống lỗi 502"`

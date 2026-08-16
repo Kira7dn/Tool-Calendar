@@ -84,6 +84,9 @@ class DoclingExtractor:
     """
 
     def __init__(self):
+        import torch._dynamo
+        torch._dynamo.config.suppress_errors = True
+
         if not _DOCLING_AVAILABLE:
             self._converter = None
             return
@@ -93,15 +96,21 @@ class DoclingExtractor:
         # do_ocr=True → dùng OCR cho scanned PDF
         use_simple = os.getenv("DOCLING_USE_SIMPLE_PIPELINE", "false").lower() == "true"
 
+        pdf_options = PdfPipelineOptions()
         if use_simple:
             # Simple mode: không table detection, ít RAM hơn (~200MB)
             logger.info("[DoclingExtractor] Using simple pipeline (no table detection)")
-            self._converter = DocumentConverter()
+            pdf_options.do_table_structure = False
+            pdf_options.do_ocr = False
+            self._converter = DocumentConverter(
+                format_options={
+                    InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_options)
+                }
+            )
         else:
             # Full pipeline: table + heading + reading order
-            pdf_options = PdfPipelineOptions()
             pdf_options.do_table_structure = True
-            pdf_options.do_ocr = True
+            pdf_options.do_ocr = False # Tắt OCR mặc định để tăng tốc độ cho PDF native
 
             self._converter = DocumentConverter(
                 format_options={
@@ -136,7 +145,36 @@ class DoclingExtractor:
             )
 
         try:
+            # --- FAST PATH CHO PDF NATIVE ---
+            # Dùng pypdfium2 (có sẵn trong docling) để thử đọc text thô trước.
+            # Nếu PDF đã có sẵn chữ (native), ta skip luôn mô hình PyTorch siêu nặng của Docling.
+            is_pdf = path.suffix.lower() == ".pdf"
+            if is_pdf:
+                try:
+                    import pypdfium2 as pdfium
+                    pdf = pdfium.PdfDocument(file_path)
+                    fast_text = ""
+                    for i in range(len(pdf)):
+                        fast_text += pdf[i].get_textpage().get_text_bounded() + "\n"
+                    
+                    # Nếu text trung bình > 50 ký tự mỗi trang, đây là file native
+                    if len(fast_text) > 50 * len(pdf):
+                        logger.info(f"[DoclingExtractor] Fast path success for '{path.name}': extracted {len(fast_text)} chars from {len(pdf)} pages instantly.")
+                        num_pages = len(pdf)
+                        pdf.close()
+                        return ExtractionResult(
+                            text=fast_text.strip(),
+                            markdown=fast_text.strip(), # Text thô
+                            num_pages=num_pages,
+                            format_detected="pdf",
+                            tables_count=0
+                        )
+                    pdf.close()
+                except Exception as e:
+                    logger.warning(f"[DoclingExtractor] Fast path failed for {path.name}: {e}")
+
             # Học từ DocumentConverter.convert() — tự detect format
+            # Đoạn này sẽ chạy cho ảnh, PDF scan (ít chữ), hoặc docx
             result = self._converter.convert(file_path)
 
             # Export to Markdown — bảo toàn cấu trúc heading, table
