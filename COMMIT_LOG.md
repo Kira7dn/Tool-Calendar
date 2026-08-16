@@ -3008,3 +3008,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `.github/workflows/deploy.yml` (Sửa đổi: Thêm build + up python-ai-service, xóa docker system prune nguy hiểm)
 - **Lệnh git commit**: `git commit -m "fix(infra): thêm python-ai-service vào CI/CD deploy pipeline"`
+
+### [2026-08-16 22:41] perf(infra): Smart rebuild CI/CD — chỉ build python-ai-service khi thực sự cần
+- **Mô tả**: Tối ưu CI/CD: thêm logic so sánh git diff trước khi build. Nếu `Dockerfile` và `requirements.txt` của `python-ai-service` KHÔNG thay đổi thì chỉ `docker restart` container cũ (< 5 giây) thay vì build lại từ đầu (5-10 phút). Chỉ build lại khi thêm/đổi dependency mới.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi: Thêm PYTHON_CHANGED check bằng git diff, conditional build/restart)
+- **Lệnh git commit**: `git commit -m "perf(infra): smart rebuild CI/CD — chỉ build python-ai-service khi Dockerfile/requirements thay đổi"`

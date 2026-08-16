@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Cần 2 commit để so sánh thay đổi
 
       - name: Execute remote ssh commands to deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -21,23 +23,39 @@ jobs:
           password: ${{ secrets.VNPT_PASS }}
           port: 22
           script: |
+            set -e
             cd /root/Tool-Calendar || exit 1
             git fetch origin develop
+
+            # Kiểm tra xem python-ai-service có thay đổi không
+            PYTHON_CHANGED=$(git diff HEAD origin/develop -- python-ai-service/Dockerfile python-ai-service/requirements.txt | wc -l)
+
             git reset --hard origin/develop
 
-            # Build & restart C# backend
+            # ── C# Backend: luôn rebuild ──────────────────────────────────────
             docker compose build official-doc-backend
             docker rm -f doc-coordination-system || true
             docker compose up -d official-doc-backend
 
-            # Build & restart Python AI Service
-            docker compose build python-ai-service
-            docker rm -f python-ai-service || true
-            docker compose up -d python-ai-service
+            # ── Python AI Service: chỉ rebuild khi Dockerfile/requirements đổi ──
+            if [ "$PYTHON_CHANGED" -gt "0" ]; then
+              echo ">>> [Python AI] Dockerfile/requirements thay đổi — BUILD lại (mất ~5-10 phút)"
+              docker compose build python-ai-service
+              docker rm -f python-ai-service || true
+              docker compose up -d python-ai-service
+            else
+              echo ">>> [Python AI] Không có thay đổi hạ tầng — RESTART container cũ (nhanh)"
+              if docker ps | grep -q python-ai-service; then
+                docker restart python-ai-service
+              else
+                # Container không chạy, start lại từ image cũ
+                docker compose up -d python-ai-service
+              fi
+            fi
 
             # Reload Nginx để cập nhật upstream IP
             docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy
 
-            # In log để debug nếu cần
-            echo "=== Python AI Service Status ==="
-            docker ps | grep python-ai-service || echo "WARNING: python-ai-service not running!"
+            # Kiểm tra trạng thái cuối
+            echo "=== Container Status ==="
+            docker ps | grep -E "doc-coordination-system|python-ai-service" || true
