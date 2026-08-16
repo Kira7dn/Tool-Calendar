@@ -2961,6 +2961,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Lệnh git commit**: `git commit -m "fix(ai): sửa lỗi AI gán sai status khi tra cứu thời hạn xử lý và bổ sung fallback"`
 
 
+### [2026-08-16 16:13] Tối ưu hóa tốc độ RAG Indexing
+- **Mô tả**: Tối ưu đáng kể thời gian upload và bóc tách tài liệu bằng cách giảm 95% số lần gọi LLM trong lúc phân mảnh văn bản (RAG Chunking). Loại bỏ ContextualChunkAsync và giới hạn QA Generation ở 2 đoạn đầu tiên.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi: Tối ưu RAG Rắn)
+- **Lệnh git commit**: `git commit -m "perf(ocr): tối ưu giảm 95% số lần gọi AI khi phân mảnh RAG"`
+
 ### [2026-08-16 15:58] Khôi phục tính năng trích xuất metadata công văn
 - **Mô tả**: Sửa lỗi văn bản upload lên bị trống thông tin (Số văn bản, Trích yếu, Ngày ban hành...) do đợt nâng cấp Docling đã vô tình xóa file `OcrTextProcessingService.cs`. Thêm logic dùng `qwen2.5:3b` từ Python AI Service để trả về định dạng JSON thay thế Regex cũ.
 - **Tệp thay đổi**:

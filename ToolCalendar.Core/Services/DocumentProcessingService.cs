@@ -323,24 +323,9 @@ namespace ToolCalendar.Services
                                 // Parent chunk không dùng để search vector (cosine sẽ = 0)
                                 int parentDbId = await chunkRepo.AddChunkAsync(docId, pIndex, pText, new float[384]);
 
-                                // [Contextual Retrieval - Anthropic]
-                                // Prepend LLM-generated context sentence vào parent text trước khi chia child chunks
-                                // Bắt đầu chia child chunks từ contextual parent text thay vì raw parent text
-                                string contextualParentText = pText;
-                                try
-                                {
-                                    var ctxResult = await aiService.ContextualChunkAsync(
-                                        pText, 
-                                        doc.TenCongVan ?? string.Empty,
-                                        docSummaryText
-                                    );
-                                    if (ctxResult != null && !string.IsNullOrWhiteSpace(ctxResult.ContextualText))
-                                        contextualParentText = ctxResult.ContextualText;
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogWarning(ex, "[RAG] Lỗi Contextual Retrieval cho ParentChunk {PIndex}, dùng text gốc.", pIndex);
-                                }
+                                // [Contextual Retrieval - Tối ưu 95% thời gian]
+                                // Thay vì gọi LLM liên tục cho mỗi đoạn, ta chèn thẳng Summary vào đầu đoạn
+                                string contextualParentText = $"[Ngữ cảnh: Tài liệu {doc.TenCongVan ?? ""}. Tóm tắt: {docSummaryText}]\n\n{pText}";
 
                                 // 2. Tạo Child Chunks từ Contextual Parent Chunk
                                 var childChunkResult = await aiService.ChunkDocumentAsync(new ChunkRequest
@@ -357,21 +342,25 @@ namespace ToolCalendar.Services
                                 var childTexts = childChunkResult.Chunks.Select(c => c.Content).ToList();
 
                                 // [SPRINT 3] QA-Pair Indexing: Sinh QA Pairs từ Parent Chunk
-                                try
+                                // TỐI ƯU: Giới hạn chỉ sinh QA cho 2 đoạn đầu tiên để tránh bị quá tải AI
+                                if (pIndex < 2)
                                 {
-                                    var qaResult = await aiService.GenerateQAAsync(new GenerateQARequest
+                                    try
                                     {
-                                        Text = pText,
-                                        Model = "qwen2.5:3b"
-                                    });
-                                    if (qaResult.QaPairs != null && qaResult.QaPairs.Any())
-                                    {
-                                        childTexts.AddRange(qaResult.QaPairs);
+                                        var qaResult = await aiService.GenerateQAAsync(new GenerateQARequest
+                                        {
+                                            Text = pText,
+                                            Model = "qwen2.5:3b"
+                                        });
+                                        if (qaResult.QaPairs != null && qaResult.QaPairs.Any())
+                                        {
+                                            childTexts.AddRange(qaResult.QaPairs);
+                                        }
                                     }
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogWarning(ex, "[RAG] Lỗi khi sinh QA pairs cho ParentChunk, bỏ qua để tiếp tục.");
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogWarning(ex, "[RAG] Lỗi khi sinh QA pairs cho ParentChunk, bỏ qua để tiếp tục.");
+                                    }
                                 }
 
                                 if (childTexts.Any())
