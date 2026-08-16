@@ -2975,3 +2975,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi: Thêm model DocumentMetadataResult và implement ExtractMetadataAsync)
   - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi: Cập nhật luồng xử lý RabbitMQ Worker để gọi ExtractMetadataAsync sau khi có FullText)
 - **Lệnh git commit**: `git commit -m "fix(ocr): khôi phục tính năng bóc tách siêu dữ liệu công văn bằng LLM"`
+
+### [2026-08-16 17:45] Tối ưu tốc độ OCR (Bật chế độ Simple Pipeline cho Docling)
+- **Mô tả**: Do cấu hình Docling Full Pipeline chạy Deep Learning (phân tích bảng biểu) quá chậm trên server CPU nội bộ nên đã chuyển sang cấu hình `DOCLING_USE_SIMPLE_PIPELINE=true` giúp tăng tốc độ trích xuất nội dung lên 3-5 lần mà vẫn không tốn tài nguyên GPU, không phụ thuộc API Cloud.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ocr): enable DOCLING_USE_SIMPLE_PIPELINE for faster parsing"`
