@@ -704,21 +704,21 @@ async def extract_metadata(request: ExtractMetadataRequest):
             "CoQuanChuQuan": "", "Priority": "Thường"
         }
         
-        # 1. Số văn bản: vd "3206 /SKHCN-BCVT&TĐC"
+        # 1. Số văn bản: vd "3206 /SKHCN-BCVT&TĐC" (bắt buộc ở đầu dòng để tránh lẫn vào nội dung)
         m = re.search(
-            r'(?:Số|SỐ)[:\s]+([0-9]+[\s]*[/-][A-Z0-9ĐÀ-Ỵà-ỵ&]+(?:[-/][A-Z0-9ĐÀ-Ỵà-ỵ&]+)*)',
+            r'(?m)^[\s]*(?:Số|SỐ)[:\s]+([0-9]+[\s]*[/-][A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+(?:[-/][A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+)*)',
             text, re.IGNORECASE)
         if m:
             result["SoVanBan"] = m.group(1).strip().replace(" ", "")
 
-        # 2. Ngày ban hành
-        m = re.search(r'ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})', text, re.IGNORECASE)
+        # 2. Ngày ban hành (xử lý dính chữ "ngày29tháng 07")
+        m = re.search(r'ngày\s*(\d{1,2})\s*tháng\s*(\d{1,2})\s*năm\s*(\d{4})', text, re.IGNORECASE)
         if m:
             d, mo, y = m.groups()
             result["NgayBanHanh"] = f"{y}-{int(mo):02d}-{int(d):02d}"
 
         # 3. Trích yếu: lấy sau "V/v" hoặc "Về việc"
-        m = re.search(r'(?:V/v|Về việc)[:\s]*(.+?)(?=\nKính gửi|\n\n|\r\n\r\n|Kính gửi:)', text, re.IGNORECASE | re.DOTALL)
+        m = re.search(r'(?:V/v|V/v:|Về việc)[:\s]*(.+?)(?=\nKính gửi|\n\n|\r\n\r\n|Kính gửi:)', text, re.IGNORECASE | re.DOTALL)
         if m:
             ty = re.sub(r'\s+', ' ', m.group(1)).strip()
             # Loại bỏ đoạn "Quảng Ninh, ngày..." lọt vào nếu có

@@ -3062,3 +3062,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "perf(ocr): xử lý upload file native pdf ngay lập tức bằng two-phase extraction"`
+
+### [2026-08-17 00:08] fix(ocr): sửa regex bắt sai số văn bản và ngày tháng bị dính chữ
+- **Mô tả**: Regex cũ bắt lầm "Nghị định số 52/2026/NĐ" ở giữa dòng làm Số văn bản. Cập nhật regex để bắt buộc "Số:" phải nằm ở đầu dòng (`(?m)^[\s]*`). Sửa regex Ngày ban hành dùng `\s*` để hỗ trợ format dính liền chữ (vd: "ngày29tháng 07").
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): sửa regex bắt sai số văn bản và ngày tháng bị dính chữ"`
