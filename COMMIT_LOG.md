@@ -1,15 +1,9 @@
-### [2026-08-16 15:05] perf(ocr): thêm luồng Fast Path native PDF cho Docling chống lỗi Timeout 502
-- **Mô tả**: Phát hiện nguyên nhân làm cho việc upload file PDF lên server quá chậm và báo lỗi là do Docling lúc nào cũng dùng mô hình PyTorch Layout cực kì nặng của AI để phân tích dù cho file PDF đã có chữ sẵn (VD: file đã có chữ ký số như `Cv 1310.signed.pdf`). Bổ sung cơ chế Fast Path dùng `pypdfium2` để đọc nhanh chữ thuần (native). Tốc độ đọc PDF native đã tăng từ 41 giây xuống còn 0.01 giây, triệt tiêu 100% lỗi Timeout trên server VNPT. Ngoài ra đã xóa luôn các file test rác.
-- **Tệp thay đổi**:
-  - `python-ai-service/rag/docling_extractor.py` (Sửa đổi)
-  - `test_ocr.py`, `test_remote_ocr.sh` (Xóa)
-- **Lệnh git commit**: `git commit -m "perf(ocr): thêm luồng Fast Path native PDF cho Docling chống lỗi Timeout"`
-
 ### [2026-08-16 11:09] fix(infra): reload Nginx sau khi deploy backend để chống lỗi 502
+- **Mô tả**: Bổ sung lệnh `docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy` vào file deploy `.github/workflows/deploy.yml` để làm mới upstream IP mỗi khi container `doc-coordination-system` bị build lại. Fix lỗi 502 Bad Gateway trên VNPT Cloud.
 - **Tệp thay đổi**:
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(infra): reload Nginx sau khi deploy backend để chống lỗi 502"`
-
+1
 ### [$(date +'%Y-%m-%d %H:%M')] Tách Python AI Service
 - **Mô tả**: Tách logic sinh vector embedding sang Python service riêng (FastAPI + sentence-transformers all-MiniLM-L6-v2) để tối ưu hóa hiệu năng và chất lượng vector. Service chạy nội bộ trên port 8001. C# API đóng vai trò gọi sang REST API này thay vì trực tiếp gọi Ollama.
 - **Tệp thay đổi**:
@@ -2993,3 +2987,13 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `docker-compose.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "perf(ocr): enable DOCLING_USE_SIMPLE_PIPELINE for faster parsing"`
+
+## 2026-08-16
+
+### [2026-08-16 22:20] Cập nhật bóc tách siêu dữ liệu công văn (Metadata Extraction)
+- **Mô tả**: Sửa lỗi "Số văn bản" bị gán bằng tên file và không hiển thị Trích yếu khi server không cấu hình Ollama hoặc chạy quá tải. Tích hợp trực tiếp API Gemini vào `python-ai-service` để tận dụng tốc độ và độ chính xác của Cloud LLM nếu có `GEMINI_API_KEY`. Đồng thời thiết lập lớp bảo vệ thứ 3: Regex Fallback (tự bóc tách bằng lệnh Regex) khi cả Gemini và Ollama đều thất bại.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi: Thêm Regex fallback, chặn lỗi sập luồng khi parse JSON thất bại)
+  - `python-ai-service/llm_provider/ollama_client.py` (Sửa đổi: Nâng cấp thành Hybrid Client, ưu tiên gọi Gemini qua REST API nếu có key)
+  - `docker-compose.yml` (Sửa đổi: Truyền biến môi trường GEMINI_API_KEY cho khối Python)
+- **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi bóc tách metadata bằng fallback Gemini và Regex"`
