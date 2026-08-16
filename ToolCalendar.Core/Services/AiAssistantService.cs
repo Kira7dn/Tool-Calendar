@@ -290,11 +290,6 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
                         
                         // Execute tool directly
                         var dictArgs = new Dictionary<string, object>();
-                        if (routedTool == "search_documents_by_condition")
-                        {
-                            // Đẩy thẳng raw query vào keyword để search cơ bản
-                            dictArgs["keyword"] = message;
-                        }
                         
                         string toolResult = await _toolRegistry.ExecuteToolAsync(routedTool, dictArgs);
                         

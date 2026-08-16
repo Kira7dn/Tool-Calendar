@@ -57,7 +57,13 @@ namespace ToolCalendar.Core.Services.AiTools
 
                 if (!string.IsNullOrEmpty(thoiHanStr))
                 {
-                    if (DateTime.TryParse(thoiHanStr, out var parsedDate))
+                    string[] formats = { "d/M/yyyy", "dd/MM/yyyy", "d/M", "dd/MM", "yyyy-MM-dd", "dd-MM-yyyy" };
+                    if (DateTime.TryParseExact(thoiHanStr, formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsedExact))
+                    {
+                        filterFromDate = parsedExact.Date;
+                        filterToDate = parsedExact.Date;
+                    }
+                    else if (DateTime.TryParse(thoiHanStr, new System.Globalization.CultureInfo("vi-VN"), System.Globalization.DateTimeStyles.None, out var parsedDate))
                     {
                         filterFromDate = parsedDate.Date;
                         filterToDate = parsedDate.Date;

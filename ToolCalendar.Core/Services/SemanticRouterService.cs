@@ -26,13 +26,6 @@ namespace ToolCalendar.Core.Services
                 "công văn đến hạn",
                 "hôm nay có bao nhiêu",
                 "có văn bản nào quá hạn không"
-            }},
-            { "search_documents_by_condition", new List<string> {
-                "tìm cho tôi công văn",
-                "văn bản số",
-                "nội dung về",
-                "tìm công văn của",
-                "có công văn nào nhắc về"
             }}
         };
 

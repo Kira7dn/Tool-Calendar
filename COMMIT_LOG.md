@@ -2946,3 +2946,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi - Sửa `ExtractKeywordsAsync` gọi sang `http://python-ai-service:8001/api/extract-keywords`)
 - **Lệnh git commit**: `git commit -m "refactor(ai): chuyển logic extract keywords từ AiReferenceService sang python service"`
 
+### [2026-08-16 14:05] Tối ưu hóa AI: Sửa lỗi phân loại Semantic Router và parsing thời hạn
+- **Mô tả**: Sửa lỗi AI xử lý truy vấn thời hạn quá chậm do bị Semantic Router gán thẳng "thời hạn xử lý" vào từ khóa tìm kiếm (bỏ qua LLM bóc tách tham số ngày tháng). Đồng thời cập nhật `SearchDocumentsByConditionTool` để dùng `TryParseExact` đối với định dạng ngày Việt Nam chuẩn, tránh phải gọi fallback tốn thời gian (5 giây) tới python-ai-service với mỗi query đơn giản như "14/7/2026".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/SemanticRouterService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiTools/SearchDocumentsByConditionTool.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): tối ưu xử lý truy vấn AI thời hạn, sửa lỗi Semantic Router"`
