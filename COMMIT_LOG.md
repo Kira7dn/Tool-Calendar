@@ -3014,3 +3014,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `.github/workflows/deploy.yml` (Sửa đổi: Thêm PYTHON_CHANGED check bằng git diff, conditional build/restart)
 - **Lệnh git commit**: `git commit -m "perf(infra): smart rebuild CI/CD — chỉ build python-ai-service khi Dockerfile/requirements thay đổi"`
+
+### [2026-08-16 23:05] fix(ocr): Giảm timeout kết nối Ollama xuống 2s để tránh treo tiến trình
+- **Mô tả**: Phát hiện nguyên nhân khiến metadata không được trích xuất (trường Trích Yếu trống) trên production là do `httpx.AsyncClient(timeout=120.0)` kết nối tới Ollama (vốn không tồn tại trên server) bị treo trong 120s. Trong khi đó, C# `HttpClient` có timeout là 100s nên đã ngắt kết nối trước khi Python kịp chạy Regex fallback. Sửa đổi: Thêm `connect=2.0` vào `httpx.Timeout` để Python ngắt kết nối Ollama ngay sau 2s và chạy Regex fallback kịp thời trả kết quả về cho C#.
+- **Tệp thay đổi**:
+  - `python-ai-service/llm_provider/ollama_client.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): giảm timeout kết nối ollama xuống 2s để kích hoạt regex fallback kịp thời"`

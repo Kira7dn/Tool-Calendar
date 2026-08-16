@@ -20,7 +20,8 @@ class OllamaClient:
         }
         
         try:
-            async with httpx.AsyncClient(timeout=120.0) as client:
+            timeout_config = httpx.Timeout(120.0, connect=2.0)
+            async with httpx.AsyncClient(timeout=timeout_config) as client:
                 async with client.stream("POST", url, json=payload) as response:
                     response.raise_for_status()
                     async for chunk in response.aiter_lines():
@@ -49,7 +50,8 @@ class OllamaClient:
             payload["format"] = format
             
         try:
-            async with httpx.AsyncClient(timeout=120.0) as client:
+            timeout_config = httpx.Timeout(120.0, connect=2.0)
+            async with httpx.AsyncClient(timeout=timeout_config) as client:
                 response = await client.post(url, json=payload)
                 response.raise_for_status()
                 data = response.json()
