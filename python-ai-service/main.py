@@ -646,7 +646,17 @@ KHÔNG giải thích thêm.
         response_text = await _ollama_client.chat(request.model, messages, format="json")
         
         # Parse JSON
-)
+        qa_pairs = []
+        try:
+            parsed = json.loads(response_text)
+            if isinstance(parsed, list):
+                qa_pairs = [str(x) for x in parsed]
+            elif isinstance(parsed, dict) and "qa_pairs" in parsed:
+                qa_pairs = [str(x) for x in parsed["qa_pairs"]]
+        except json.JSONDecodeError:
+            pass
+            
+        return {"qa_pairs": qa_pairs}
     except Exception as e:
         logger.error("[/api/generate-qa] Error: %s", str(e))
         raise HTTPException(status_code=500, detail="Failed to generate QA pairs")

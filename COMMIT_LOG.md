@@ -3039,3 +3039,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "perf(ocr): chuyển extract metadata sang 100% regex để đạt tốc độ 0.01s và chống ảo giác"`
+
+### [2026-08-16 23:22] fix(ocr): Sửa lỗi cú pháp trong hàm generate_qa
+- **Mô tả**: Vá lỗi mất dấu đóng ngoặc và block lệnh parse JSON trong hàm `generate_qa` do lỗi thao tác cập nhật code tự động. Lỗi này gây crash service Python.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi cú pháp trong hàm generate_qa"`
