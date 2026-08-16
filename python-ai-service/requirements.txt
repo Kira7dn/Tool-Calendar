@@ -15,4 +15,4 @@ rank-bm25>=0.2.2
 # Retry với exponential backoff (Khoj embeddings.py)
 tenacity>=8.3.0
 # docling — parse PDF/Word/Excel với table detection (tùy chọn, comment nếu server ít RAM)
-# docling>=2.0.0
+docling>=2.0.0

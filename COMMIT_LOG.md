@@ -2933,3 +2933,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/IDocumentExtractorService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): bổ sung using ToolCalendar.Models vào IDocumentExtractorService để sửa lỗi build"`
 
+### [2026-08-16 09:30] Cài đặt docling cho Python AI Service
+- **Mô tả**: Bỏ comment thư viện `docling` trong `requirements.txt` để hỗ trợ giải nén PDF thành công (Sửa lỗi 503 khi C# gọi sang).
+- **Tệp thay đổi**:
+  - `python-ai-service/requirements.txt` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(rag): bỏ comment docling trong requirements.txt để sửa lỗi 503"`
+
