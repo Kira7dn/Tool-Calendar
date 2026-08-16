@@ -94,6 +94,27 @@ class ContextCompressor:
         if not query or not documents:
             return []
 
+        # ── BƯỚC 0: Compression Fast-Path (GPT-Researcher) ──────────────────
+        # Nếu tổng nội dung quá nhỏ, bỏ qua embedding/reranking để tiết kiệm CPU/GPU
+        COMPRESSION_THRESHOLD = 8000
+        total_chars = sum(len(doc.get("text", "")) for doc in documents)
+        
+        if total_chars < COMPRESSION_THRESHOLD:
+            logger.info("[Compressor] Fast-Path: Total chars %d < %d. Bypassing compression pipeline.", total_chars, COMPRESSION_THRESHOLD)
+            result_chunks = []
+            for doc in documents:
+                text = doc.get("text", "")
+                if text.strip():
+                    result_chunks.append({
+                        "content": f"Title: {doc.get('title', 'Unknown')}\n\n{text}",
+                        "score": 1.0,
+                        "chunk_index": 0,
+                        "doc_id": doc.get("id"),
+                        "doc_title": doc.get("title", ""),
+                        "word_count": len(text.split()),
+                    })
+            return result_chunks[:k]
+
         # ── BƯỚC 1: Tạo chunks ──────────────────────────────────────────────
         all_chunks: list[DocumentChunk] = []
         for doc in documents:

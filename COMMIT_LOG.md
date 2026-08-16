@@ -2851,3 +2851,79 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/main.py` (Sửa đổi)
   - `python-ai-service/requirements.txt` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ai): nâng cấp python service v3.0 tích hợp radix cache, docling và hybrid rerank"`
+### [2026-08-15 17:15] Cập nhật Backend C# để sử dụng Python AI Service thay cho PaddleOCR
+- **Mô tả**: Tái cấu trúc (refactoring) layer Backend. Xóa toàn bộ các dịch vụ liên quan đến OCR trong C# (như OcrService, OcrTextProcessingService, OcrImageProcessingService) vì chức năng này đã được chuyển sang `python-ai-service` chạy trên Python với Docling. Thêm `IPythonAiService` (HttpClient) để tương tác với Python Backend. Gỡ cài đặt các Nuget Packages dư thừa (PaddleOCR, OpenCvSharp4, PDFtoImage, SkiaSharp) khỏi `ToolCalendar.Core.csproj` giúp cho docker image nhẹ hơn. Cập nhật `OcrQueueService` để sử dụng trực tiếp các API Chunk và Embed siêu tốc của Python.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/IPythonAiService.cs` (Mới)
+  - `ToolCalendar.Core/Services/PythonAiService.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/DocumentExtractorService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/ToolCalendar.Core.csproj` (Sửa đổi)
+  - `ToolCalendar.Tests/ToolCalendar.Tests.csproj` (Sửa đổi)
+  - `ToolCalendar.Tests/Helpers/AutomationDocHelper.cs` (Xóa)
+  - `ToolCalendar.Tests/Helpers/OcrTestRuntimeHelper.cs` (Xóa)
+  - `ToolCalendar.Tests/OcrAutomationTests.cs` (Xóa)
+  - `ToolCalendar.Tests/OcrStressTests.cs` (Xóa)
+  - `ToolCalendar.Tests/RuleExtractionTests.cs` (Xóa)
+  - `ToolCalendar.Tests/RealDocumentTests.cs` (Xóa)
+- **Lệnh git commit**: `git commit -m "refactor(ocr): loại bỏ PaddleOCR và chuyển giao việc trích xuất văn bản + RAG cho Python AI Service"`
+### [2026-08-15 18:00] Hoàn thành Sprint 3: Parent-Child Indexing & QA-Pair Indexing
+- **Mô tả**: Triển khai các tính năng nâng cao nhất cho RAG:
+  1. Parent-Child Indexing: `OcrQueueService` giờ đây sẽ chia văn bản thành 2 cấp độ: Parent Chunk (1500) và Child Chunk (400). Chỉ Child Chunk được index vector, Parent Chunk chỉ dùng để lưu trữ. Khi query, `DocumentChunkRepository` sẽ tự động ghép nối và trả về nội dung của Parent Chunk.
+  2. QA-Pair Indexing: Tích hợp non-streaming Ollama chat vào Python. `OcrQueueService` gọi Python AI để sinh 3-5 cặp Question-Answer từ mỗi Parent Chunk. Các cặp QA này được đối xử như Child Chunk, tức là được embed và index vào DB. Khi matching QA, văn bản của Parent Chunk cũng được trả về.
+- **Tệp thay đổi**:
+  - `python-ai-service/llm_provider/ollama_client.py` (Sửa đổi)
+  - `python-ai-service/main.py` (Sửa đổi)
+  - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(rag): hoàn thiện tính năng parent-child indexing và qa-pair indexing"`
+
+### [2026-08-16 08:34] Sprint 3 + Nâng cấp RAG Pipeline hoàn chỉnh
+- **Mô tả**: Implement toàn bộ các kỹ thuật RAG nâng cao từ các repo nghiên cứu:
+  1. **MMR Diversification (Quivr)**: DocumentChunkRepository.FindSimilarChunksAsync và FindHybridChunksAsync giờ dùng Maximum Marginal Relevance để trả về kết quả đa dạng, tránh trùng nội dung. Dùng Jaccard token overlap làm diversity metric thay vì vector.
+  2. **Multi-Query Expansion + Vector Dedup (AnythingLLM)**: SearchDocumentContentTool sinh 3 biến thể query (gốc + rút gọn + prefix ngữ cảnh), embed song song, gom và dedup kết quả.
+  3. **HyDE — Hypothetical Document Embeddings (Khoj/GPT-Researcher)**: Python service có endpoint /api/hyde sinh ra đoạn văn giả định phù hợp với câu hỏi bằng LLM, rồi embed đoạn đó để search. Tích hợp vào SearchDocumentContentTool làm layer search thứ 4.
+  4. **Adaptive Chunk Size + Late Chunking (Dify)**: chunker.py tự điều chỉnh chunk size theo độ dài tài liệu, và gộp các đoạn quá ngắn lại sau khi chia.
+  5. **Filter parent-only chunks**: FindSimilarChunksAsync chỉ search trên child chunks (có vector thực), bỏ qua parent chunks có dummy vector.
+  6. **Keyword Search upgrade**: FindByKeywordAsync dùng SQL JOIN để trả về parent text ngay trong query, không cần load cache.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiTools/SearchDocumentContentTool.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi)
+  - `python-ai-service/main.py` (Sửa đổi)
+  - `python-ai-service/rag/chunker.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(rag): implement MMR diversification, multi-query expansion, HyDE và adaptive chunking"`
+
+### [2026-08-16 08:44] Implement Contextual Retrieval + RAPTOR Summary + Cache Clear
+- **Mô tả**: Bổ sung 3 kỹ thuật RAG mới nhất:
+  1. **Contextual Retrieval (Anthropic, Sep 2024)**: Trước khi chia child chunks, LLM sinh 1-2 câu mô tả vị trí của parent chunk trong document, prepend vào đầu text. Recall cải thiện ~49% theo benchmark. Endpoint Python: `/api/contextual-chunk`.
+  2. **RAPTOR Document Summary Index**: Khi index document, sinh tóm tắt toàn bộ tài liệu (3-5 câu), embed và lưu như "macro chunk" (chunk_index = -1, không có parent). Giúp trả lời câu hỏi rộng như "tài liệu này nói về gì?". Endpoint Python: `/api/doc-summary`.
+  3. **Embedding Cache Clear API**: Endpoint `DELETE /api/cache/clear` cho phép invalidate cache khi cần (sau khi đổi model).
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi — thêm 3 endpoints)
+  - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi — thêm DocSummaryAsync, ContextualChunkAsync)
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` (Sửa đổi — tích hợp vào RAG pipeline)
+- **Lệnh git commit**: `git commit -m "feat(rag): implement contextual retrieval (Anthropic), RAPTOR document summary và cache invalidation API"`
+
+### [2026-08-16 08:51] Đổi tên OcrQueueService → DocumentProcessingService
+- **Mô tả**: Tên OcrQueueService gây nhầm lẫn vì class này không làm OCR nữa (OCR đã chuyển sang Python). Class hiện tại chỉ là RabbitMQ consumer điều phối pipeline Python AI (Extract + Chunk + Embed + RAG index). Đổi tên thành DocumentProcessingService cho chính xác. Interface IOcrQueueService giữ nguyên để không cần đổi các file inject.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrQueueService.cs` → đổi tên thành `DocumentProcessingService.cs` (Đổi tên + Sửa đổi)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi — DI registration)
+  - `ToolCalendar.Core/Services/DocumentExtractorService.cs` (Sửa đổi — comment)
+- **Lệnh git commit**: `git commit -m "refactor(queue): đổi tên OcrQueueService thành DocumentProcessingService cho đúng ngữ nghĩa"`
+
+### [2026-08-16 09:00] Dọn dẹp OCR cũ và kích hoạt Document Deduplication
+- **Mô tả**: Xóa các file OCR cũ (Tesseract) không còn sử dụng vì đã dùng Docling Python. Kích hoạt lại tính năng chống trùng lặp tài liệu bằng SHA-256 (Document Deduplication) khi upload. Đổi API reprocess-ocr thành reindex.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/OcrRuntimeValidationService.cs` (Xóa)
+  - `ToolCalendar.Core/Models/OcrExtractionResult.cs` (Xóa)
+  - `ToolCalendar.Tests/OcrTextRegexTests.cs`, `NewRegexTest.cs` (Xóa)
+  - `ToolCalendar.Core/Models/DocumentRecord.cs` (Xóa `OcrWarnings`)
+  - `ToolCalendar.Core/Services/DocumentUploadService.cs` (Sửa đổi — Bật Deduplication)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi — reprocess-ocr -> reindex)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi — Đổi UI thành Trích xuất lại)
+- **Lệnh git commit**: `git commit -m "refactor(docs): xóa code OCR cũ, bật deduplication bằng SHA-256, đổi route reindex"`
+

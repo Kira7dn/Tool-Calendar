@@ -14,7 +14,7 @@ namespace ToolCalendar.Core.Data.Repositories
         private readonly string _connectionString;
 
         // In-Memory Vector Cache
-        private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, List<(string TextContent, float[] Vector)>> _vectorCache = new();
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, List<(int Id, string TextContent, float[] Vector, int? ParentChunkId)>> _vectorCache = new();
         private static bool _isCacheInitialized = false;
         private static readonly System.Threading.SemaphoreSlim _cacheLock = new(1, 1);
 
@@ -30,22 +30,24 @@ namespace ToolCalendar.Core.Data.Repositories
                 using var connection = new SqliteConnection(_connectionString);
                 await connection.OpenAsync();
                 using var cmd = connection.CreateCommand();
-                cmd.CommandText = "SELECT DocumentId, TextContent, VectorJson FROM DocumentChunks";
+                cmd.CommandText = "SELECT DocumentId, Id, TextContent, VectorJson, ParentChunkId FROM DocumentChunks";
 
                 using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     var documentId = reader.GetInt32(0);
-                    var textContent = reader.GetString(1);
-                    var vectorJson = reader.GetString(2);
+                    var id = reader.GetInt32(1);
+                    var textContent = reader.GetString(2);
+                    var vectorJson = reader.GetString(3);
+                    var parentChunkId = reader.IsDBNull(4) ? (int?)null : reader.GetInt32(4);
                     var vector = JsonSerializer.Deserialize<float[]>(vectorJson);
 
                     if (vector != null)
                     {
                         _vectorCache.AddOrUpdate(
                             documentId,
-                            _ => new List<(string, float[])> { (textContent, vector) },
-                            (_, list) => { list.Add((textContent, vector)); return list; }
+                            _ => new List<(int, string, float[], int?)> { (id, textContent, vector, parentChunkId) },
+                            (_, list) => { list.Add((id, textContent, vector, parentChunkId)); return list; }
                         );
                     }
                 }
@@ -76,7 +78,7 @@ namespace ToolCalendar.Core.Data.Repositories
             }
         }
 
-        public async Task AddChunkAsync(int documentId, int chunkIndex, string textContent, float[] vector)
+        public async Task<int> AddChunkAsync(int documentId, int chunkIndex, string textContent, float[] vector, int? parentChunkId = null)
         {
             var vectorJson = JsonSerializer.Serialize(vector);
             using var connection = new SqliteConnection(_connectionString);
@@ -84,30 +86,34 @@ namespace ToolCalendar.Core.Data.Repositories
 
             using var cmd = connection.CreateCommand();
             cmd.CommandText = @"
-                INSERT INTO DocumentChunks (DocumentId, ChunkIndex, TextContent, VectorJson)
-                VALUES (@DocumentId, @ChunkIndex, @TextContent, @VectorJson)";
+                INSERT INTO DocumentChunks (DocumentId, ChunkIndex, TextContent, VectorJson, ParentChunkId)
+                VALUES (@DocumentId, @ChunkIndex, @TextContent, @VectorJson, @ParentChunkId);
+                SELECT last_insert_rowid();";
             
             cmd.Parameters.AddWithValue("@DocumentId", documentId);
             cmd.Parameters.AddWithValue("@ChunkIndex", chunkIndex);
             cmd.Parameters.AddWithValue("@TextContent", textContent);
             cmd.Parameters.AddWithValue("@VectorJson", vectorJson);
+            cmd.Parameters.AddWithValue("@ParentChunkId", parentChunkId.HasValue ? (object)parentChunkId.Value : DBNull.Value);
 
-            await cmd.ExecuteNonQueryAsync();
+            var newIdObj = await cmd.ExecuteScalarAsync();
+            int newId = Convert.ToInt32(newIdObj);
 
             // Cập nhật Cache
             if (_isCacheInitialized)
             {
                 _vectorCache.AddOrUpdate(
                     documentId,
-                    _ => new List<(string, float[])> { (textContent, vector) },
+                    _ => new List<(int, string, float[], int?)> { (newId, textContent, vector, parentChunkId) },
                     (_, list) =>
                     {
-                        var newList = new List<(string, float[])>(list);
-                        newList.Add((textContent, vector));
+                        var newList = new List<(int, string, float[], int?)>(list);
+                        newList.Add((newId, textContent, vector, parentChunkId));
                         return newList;
                     }
                 );
             }
+            return newId;
         }
 
         public async Task DeleteChunksByDocumentIdAsync(int documentId)
@@ -132,22 +138,25 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             await EnsureCacheInitializedAsync();
 
-            var allChunks = _vectorCache.SelectMany(kvp => kvp.Value.Select(v => new { DocumentId = kvp.Key, v.TextContent, v.Vector }));
+            // Lọc bỏ parent-only chunks (vector zero = dummy) — chỉ search trên child chunks
+            var allChunks = _vectorCache.SelectMany(kvp => kvp.Value
+                .Where(v => v.ParentChunkId.HasValue) // Child chunks mới có vector thực
+                .Select(v => new { DocumentId = kvp.Key, v.Id, v.TextContent, v.Vector, v.ParentChunkId }));
 
-            // Calculate cosine similarity in memory
             // ANYTHINGLLM Idea #3: Similarity Threshold — loại bỏ chunk quá xa câu hỏi
-            var results = allChunks.Select(chunk => new DocumentChunkResult
+            var candidates = allChunks.Select(chunk => new DocumentChunkResult
             {
                 DocumentId = chunk.DocumentId,
-                TextContent = chunk.TextContent,
-                SimilarityScore = CosineSimilarity(questionVector, chunk.Vector)
+                TextContent = GetEffectiveTextContent(chunk.DocumentId, chunk.TextContent, chunk.ParentChunkId),
+                SimilarityScore = CosineSimilarity(questionVector, chunk.Vector),
+                ParentChunkId = chunk.ParentChunkId
             })
-            .Where(x => x.SimilarityScore >= minSimilarityScore)  // ← Threshold filter
+            .Where(x => x.SimilarityScore >= minSimilarityScore)
             .OrderByDescending(x => x.SimilarityScore)
-            .Take(topK)
             .ToList();
 
-            return results;
+            // QUIVR Idea: MMR Diversification — chọn kết quả đa dạng, tránh trùng nội dung
+            return ApplyMmrDiversification(candidates, questionVector, topK, lambda: 0.6f);
         }
 
         public async Task<List<DocumentChunkResult>> FindByKeywordAsync(string keyword, int topK = 5)
@@ -159,11 +168,13 @@ namespace ToolCalendar.Core.Data.Repositories
             await connection.OpenAsync();
 
             using var cmd = connection.CreateCommand();
-            // Đơn giản hóa Keyword Search bằng LIKE
             cmd.CommandText = @"
-                SELECT DocumentId, TextContent 
-                FROM DocumentChunks 
-                WHERE TextContent LIKE '%' || @Keyword || '%'
+                SELECT dc.DocumentId, dc.TextContent, dc.ParentChunkId,
+                       COALESCE(parent.TextContent, dc.TextContent) as EffectiveText
+                FROM DocumentChunks dc
+                LEFT JOIN DocumentChunks parent ON dc.ParentChunkId = parent.Id
+                WHERE dc.TextContent LIKE '%' || @Keyword || '%'
+                  AND dc.ParentChunkId IS NOT NULL
                 LIMIT @TopK";
             
             cmd.Parameters.AddWithValue("@Keyword", keyword);
@@ -176,8 +187,9 @@ namespace ToolCalendar.Core.Data.Repositories
                     results.Add(new DocumentChunkResult
                     {
                         DocumentId = reader.GetInt32(0),
-                        TextContent = reader.GetString(1),
-                        SimilarityScore = 1.0f // Baseline score cho keyword match
+                        TextContent = reader.IsDBNull(3) ? reader.GetString(1) : reader.GetString(3),
+                        ParentChunkId = reader.IsDBNull(2) ? (int?)null : reader.GetInt32(2),
+                        SimilarityScore = 1.0f
                     });
                 }
             }
@@ -202,13 +214,14 @@ namespace ToolCalendar.Core.Data.Repositories
                 chunk.DocumentId,
                 chunk.TextContent,
                 Vector = chunk.Vector,
+                ParentChunkId = chunk.ParentChunkId,
                 CosineScore = CosineSimilarity(questionVector, chunk.Vector)
             })
             .Where(x => x.CosineScore >= minSimilarityScore)
             .ToList();
 
             // Gộp candidates từ Keyword và Vector (đảm bảo không trùng lặp)
-            var candidateDict = new Dictionary<string, (int DocId, string Text, float Cosine, float[] Vec)>();
+            var candidateDict = new Dictionary<string, (int DocId, string Text, float Cosine, float[] Vec, int? ParentId)>();
             
             foreach (var kw in keywordResults)
             {
@@ -217,14 +230,14 @@ namespace ToolCalendar.Core.Data.Repositories
                     // Lấy vector tương ứng nếu có
                     var match = allVectorChunks.FirstOrDefault(v => v.TextContent == kw.TextContent);
                     float cosine = match != default ? CosineSimilarity(questionVector, match.Vector) : 0f;
-                    candidateDict[kw.TextContent] = (kw.DocumentId, kw.TextContent, cosine, match.Vector ?? new float[0]);
+                    candidateDict[kw.TextContent] = (kw.DocumentId, kw.TextContent, cosine, match.Vector ?? new float[0], kw.ParentChunkId);
                 }
             }
             foreach (var vec in cosineResults)
             {
                 if (!candidateDict.ContainsKey(vec.TextContent))
                 {
-                    candidateDict[vec.TextContent] = (vec.DocumentId, vec.TextContent, vec.CosineScore, vec.Vector);
+                    candidateDict[vec.TextContent] = (vec.DocumentId, vec.TextContent, vec.CosineScore, vec.Vector, vec.ParentChunkId);
                 }
             }
 
@@ -271,16 +284,90 @@ namespace ToolCalendar.Core.Data.Repositories
                 hybridResults.Add(new DocumentChunkResult
                 {
                     DocumentId = doc.DocId,
-                    TextContent = doc.Text,
-                    SimilarityScore = hybridScore
+                    TextContent = GetEffectiveTextContent(doc.DocId, doc.Text, doc.ParentId),
+                    SimilarityScore = hybridScore,
+                    ParentChunkId = doc.ParentId
                 });
             }
 
-            // DIFY Idea #3: TopK Pipeline
-            return hybridResults.OrderByDescending(x => x.SimilarityScore).Take(topK).ToList();
+            // DIFY Idea #3: TopK Pipeline + QUIVR MMR Diversification
+            return ApplyMmrDiversification(
+                hybridResults.OrderByDescending(x => x.SimilarityScore).ToList(),
+                questionVector, topK, lambda: 0.6f
+            );
         }
 
-        private async Task<List<(int DocumentId, string TextContent, float[] Vector)>> FetchVectorChunksAsync(string? soHieu = null, string? ngayBanHanh = null)
+        /// <summary>
+        /// QUIVR Idea: Maximum Marginal Relevance (MMR) Diversification.
+        /// Chọn kết quả có cả độ liên quan cao (so với query) lẫn sự đa dạng (nhỏ hơn cosine giữa các chunk).
+        /// lambda cao → ưu tiên relevance; lambda thấp → ưu tiên diversity.
+        /// </summary>
+        private List<DocumentChunkResult> ApplyMmrDiversification(
+            List<DocumentChunkResult> candidates,
+            float[] queryVector,
+            int topK,
+            float lambda = 0.6f)
+        {
+            if (candidates.Count == 0 || topK <= 0) return candidates.Take(topK).ToList();
+
+            var selected = new List<DocumentChunkResult>();
+            var remaining = candidates.ToList();
+
+            // Precompute simplified vectors from score for diversity calculation
+            // Do lúc này ta không lưu vector sau MMR, dùng text overlap làm diversity proxy
+            while (selected.Count < topK && remaining.Count > 0)
+            {
+                DocumentChunkResult? best = null;
+                float bestScore = float.MinValue;
+
+                foreach (var candidate in remaining)
+                {
+                    float relevance = candidate.SimilarityScore;
+
+                    // Diversity: max text similarity đến các item đã chọn (Jaccard token overlap)
+                    float maxSimilarityToSelected = 0f;
+                    if (selected.Count > 0)
+                    {
+                        var candidateTokens = Tokenize(candidate.TextContent);
+                        foreach (var s in selected)
+                        {
+                            var selectedTokens = Tokenize(s.TextContent);
+                            float jaccard = JaccardSimilarity(candidateTokens, selectedTokens);
+                            if (jaccard > maxSimilarityToSelected)
+                                maxSimilarityToSelected = jaccard;
+                        }
+                    }
+
+                    float mmrScore = lambda * relevance - (1 - lambda) * maxSimilarityToSelected;
+                    if (mmrScore > bestScore)
+                    {
+                        bestScore = mmrScore;
+                        best = candidate;
+                    }
+                }
+
+                if (best == null) break;
+                selected.Add(best);
+                remaining.Remove(best);
+            }
+
+            return selected;
+        }
+
+        private static HashSet<string> Tokenize(string text) =>
+            text.ToLower()
+                .Split(new[] { ' ', '.', ',', ';', ':', '!', '?', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries)
+                .ToHashSet();
+
+        private static float JaccardSimilarity(HashSet<string> a, HashSet<string> b)
+        {
+            if (a.Count == 0 || b.Count == 0) return 0f;
+            int intersectionCount = a.Count(x => b.Contains(x));
+            int unionCount = a.Count + b.Count - intersectionCount;
+            return unionCount == 0 ? 0f : (float)intersectionCount / unionCount;
+        }
+
+        private async Task<List<(int DocumentId, string TextContent, float[] Vector, int? ParentChunkId)>> FetchVectorChunksAsync(string? soHieu = null, string? ngayBanHanh = null)
         {
             await EnsureCacheInitializedAsync();
 
@@ -313,14 +400,14 @@ namespace ToolCalendar.Core.Data.Repositories
                 }
             }
 
-            var results = new List<(int DocumentId, string TextContent, float[] Vector)>();
+            var results = new List<(int DocumentId, string TextContent, float[] Vector, int? ParentChunkId)>();
             foreach (var kvp in _vectorCache)
             {
                 if (!hasFilter || allowedDocIds.Contains(kvp.Key))
                 {
                     foreach (var chunk in kvp.Value)
                     {
-                        results.Add((kvp.Key, chunk.TextContent, chunk.Vector));
+                        results.Add((kvp.Key, chunk.TextContent, chunk.Vector, chunk.ParentChunkId));
                     }
                 }
             }
@@ -360,6 +447,21 @@ namespace ToolCalendar.Core.Data.Repositories
                 return 0;
 
             return dotProduct / (float)(Math.Sqrt(magnitude1) * Math.Sqrt(magnitude2));
+        }
+
+        private string GetEffectiveTextContent(int docId, string childText, int? parentChunkId)
+        {
+            if (!parentChunkId.HasValue) return childText;
+            
+            if (_vectorCache.TryGetValue(docId, out var chunks))
+            {
+                var parent = chunks.FirstOrDefault(c => c.Id == parentChunkId.Value);
+                if (parent != default && !string.IsNullOrWhiteSpace(parent.TextContent))
+                {
+                    return parent.TextContent;
+                }
+            }
+            return childText; // Fallback
         }
     }
 }

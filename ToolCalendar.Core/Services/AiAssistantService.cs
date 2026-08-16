@@ -35,12 +35,11 @@ namespace ToolCalendar.Core.Services
         private readonly AiToolRegistry _toolRegistry;
         private readonly ISemanticRouterService _semanticRouter;
         private readonly IAiSemanticCacheRepository _semanticCacheRepo;
+        private readonly ISettingRepository _settingRepo;
         private readonly ILogger<AiAssistantService> _logger;
 
         // ANYTHINGLLM Idea #1: N-Hop Tool Chain — tối đa 5 lượt tool call liên tiếp
         private const int MaxToolCalls = 5;
-        // ANYTHINGLLM Idea #3: Similarity Threshold (0.20 = ngưỡng tối thiểu)
-        private const float SimilarityThreshold = 0.20f;
 
         public AiAssistantService(
             HttpClient httpClient,
@@ -56,6 +55,7 @@ namespace ToolCalendar.Core.Services
             AiToolRegistry toolRegistry,
             ISemanticRouterService semanticRouter,
             IAiSemanticCacheRepository semanticCacheRepo,
+            ISettingRepository settingRepo,
             ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
@@ -72,6 +72,7 @@ namespace ToolCalendar.Core.Services
             _toolRegistry = toolRegistry;
             _semanticRouter = semanticRouter;
             _semanticCacheRepo = semanticCacheRepo;
+            _settingRepo = settingRepo;
             _logger = logger;
         }
 
@@ -163,6 +164,10 @@ namespace ToolCalendar.Core.Services
                     {
                         try
                         {
+                            float simThreshold = 0.65f; // Mặc định của python-ai-service
+                            var settingVal = _settingRepo.GetAppSetting("AiSimilarityThreshold", "");
+                            if (float.TryParse(settingVal, out var t)) simThreshold = t;
+
                             var compressPayload = new
                             {
                                 query = message,
@@ -177,7 +182,8 @@ namespace ToolCalendar.Core.Services
                                         id = doc.Id
                                     }
                                 },
-                                max_results = 5
+                                max_results = 5,
+                                similarity_threshold = simThreshold
                             };
 
                             using var compressClient = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };

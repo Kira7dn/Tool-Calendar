@@ -75,6 +75,14 @@ async def lifespan(app: FastAPI):
     _batch_embedder = AsyncBatchEmbedder(embedder_model.model)
     _batch_embedder.start()
 
+    # ── Model Warm-Up (AnythingLLM, Khoj) ──
+    logger.info("Warming up embedding model...")
+    try:
+        await _batch_embedder.embed("warm up", normalize=True)
+        logger.info("Model warm-up complete.")
+    except Exception as e:
+        logger.warning("Model warm-up failed: %s", str(e))
+
     # Khởi động các services
     _ollama_client = OllamaClient()
     _chunker = SmartTextChunker(chunk_size=800, chunk_overlap=100)
@@ -177,8 +185,62 @@ class ChatRequest(BaseModel):
     model: str = "qwen2.5:3b"
     messages: list[dict]
 
+class ParseDateRequest(BaseModel):
+    text: str
+
+class ParseDateResponse(BaseModel):
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+class GenerateQARequest(BaseModel):
+    text: str
+    model: str = "qwen2.5:3b"
+
+class GenerateQAResponse(BaseModel):
+    qa_pairs: list[str]
+
+class HyDERequest(BaseModel):
+    question: str
+    model: str = "qwen2.5:3b"
+
+class HyDEResponse(BaseModel):
+    hypothetical_document: str
+    vector: list[float]
+
+class ContextualChunkRequest(BaseModel):
+    text: str               # Nội dung chunk
+    doc_title: str = ""
+    doc_summary: str = ""   # Tóm tắt document — được sinh trước
+    model: str = "qwen2.5:3b"
+
+class ContextualChunkResponse(BaseModel):
+    contextual_text: str    # chunk + context sentence ghép lại
+    context_sentence: str   # câu context LLM sinh ra
+
+class DocSummaryRequest(BaseModel):
+    text: str
+    doc_title: str = ""
+    model: str = "qwen2.5:3b"
+
+class DocSummaryResponse(BaseModel):
+    summary: str
+    summary_vector: list[float]
+
+# ===== Embedding Cache (SGLang RadixCache-inspired) =====
+_embed_cache: dict[str, list[float]] = {}
+EMBED_CACHE_MAX_SIZE = 2000  # Tối đa 2000 entries trong memory
 
 # ===== Endpoints =====
+
+@app.post("/api/parse-date", response_model=ParseDateResponse)
+def parse_date_endpoint(request: ParseDateRequest):
+    """Parse natural language date (Khoj DateFilter)"""
+    from rag.date_parser import parse_vietnamese_date
+    start_d, end_d = parse_vietnamese_date(request.text)
+    return ParseDateResponse(
+        start_date=start_d.strftime("%Y-%m-%d") if start_d else None,
+        end_date=end_d.strftime("%Y-%m-%d") if end_d else None,
+    )
 
 @app.get("/health")
 def health_check():
@@ -211,7 +273,7 @@ async def embed_text(request: EmbedRequest):
 
     # Kiểm tra cache trước (llama.cpp cache_prompt = true)
     if request.use_cache:
-        cached = _prompt_cache.get(request.text)
+        cached = _radix_cache.get(request.text)
         if cached is not None:
             return EmbedResponse(vector=cached, cached=True, dim=len(cached))
 
@@ -272,6 +334,117 @@ async def embed_batch(request: BatchEmbedRequest):
     final_vectors = [v if v is not None else [] for v in vectors]
 
     return BatchEmbedResponse(vectors=final_vectors, count=len(final_vectors))
+
+
+@app.post("/api/contextual-chunk", response_model=ContextualChunkResponse)
+async def contextual_chunk(request: ContextualChunkRequest):
+    """
+    Contextual Retrieval — học từ Anthropic blog (Sep 2024).
+
+    Vấn đề: Khi chunk riêng lẻ, nó mất đi context của document gốc.
+    VD: "Biện pháp này được thực hiện từ ngày 01/01/2024" — "biện pháp nào?" → mất context.
+
+    Giải pháp: Dùng LLM sinh 1-2 câu mô tả vị trí chunk trong document,
+    rồi prepend câu đó vào đầu chunk trước khi embed.
+
+    Kết quả: Recall tăng ~49% theo benchmark Anthropic.
+    """
+    if not request.text or not request.text.strip():
+        raise HTTPException(status_code=400, detail="Chunk text cannot be empty")
+
+    # Xây dựng prompt Contextual Retrieval
+    doc_context = f"Tài liệu: {request.doc_title}" if request.doc_title else "một công văn/tài liệu"
+    summary_context = f"\n\nTóm tắt tài liệu:\n{request.doc_summary}" if request.doc_summary else ""
+
+    prompt = f"""Bạn đang xử lý {doc_context}.{summary_context}
+
+Đây là đoạn văn bản cần xử lý:
+<chunk>
+{request.text[:1000]}
+</chunk>
+
+Hãy viết 1-2 câu ngắn gọn mô tả vị trí và nội dung của đoạn này trong bối cảnh toàn bộ tài liệu.
+Mục tiêu: giúp người đọc hiểu đoạn này thuộc phần nào của tài liệu, bàn về vấn đề gì.
+KHÔNG diễn giải lại nội dung. CHỈ mô tả context (vị trí trong tài liệu).
+Trả lời bằng tiếng Việt, ngắn gọn."""
+
+    try:
+        messages = [{"role": "user", "content": prompt}]
+        context_sentence = await _ollama_client.chat(request.model, messages, format=None)
+        if not context_sentence:
+            context_sentence = ""
+
+        # Ghép context sentence vào đầu chunk — đây là kỹ thuật Anthropic
+        contextual_text = f"{context_sentence.strip()}\n\n{request.text}" if context_sentence.strip() else request.text
+
+        return ContextualChunkResponse(
+            contextual_text=contextual_text,
+            context_sentence=context_sentence.strip()
+        )
+    except Exception as e:
+        logger.error("[/api/contextual-chunk] Error: %s", str(e))
+        # Graceful fallback — trả về chunk gốc nếu lỗi LLM
+        return ContextualChunkResponse(
+            contextual_text=request.text,
+            context_sentence=""
+        )
+
+
+@app.post("/api/doc-summary", response_model=DocSummaryResponse)
+async def doc_summary(request: DocSummaryRequest):
+    """
+    RAPTOR-inspired Document Summary Index.
+
+    Sinh tóm tắt toàn bộ document, embed nó, trả về cả summary text và vector.
+    C# dùng để:
+    1. Lưu summary như 1 special chunk (để answer broad questions về toàn document)
+    2. Dùng summary text làm doc_summary khi gọi /api/contextual-chunk
+
+    Học từ RAPTOR paper: Recursive Abstractive Processing for Tree-Organized Retrieval.
+    """
+    if not request.text or not request.text.strip():
+        raise HTTPException(status_code=400, detail="Document text cannot be empty")
+
+    # Cắt bớt nếu quá dài (LLM có context limit)
+    text_for_summary = request.text[:4000] if len(request.text) > 4000 else request.text
+    doc_context = f"'{request.doc_title}'" if request.doc_title else "tài liệu"
+
+    prompt = f"""Hãy tóm tắt ngắn gọn (3-5 câu) nội dung chính của {doc_context} sau đây.
+Tóm tắt phải bao gồm: chủ thể ban hành, mục đích chính, các nội dung/yêu cầu quan trọng.
+Viết bằng tiếng Việt, ngắn gọn súc tích.
+
+Nội dung:
+{text_for_summary}"""
+
+    try:
+        messages = [{"role": "user", "content": prompt}]
+        summary_text = await _ollama_client.chat(request.model, messages, format=None)
+        if not summary_text:
+            # Fallback: lấy 300 ký tự đầu
+            summary_text = request.text[:300].strip()
+
+        # Embed summary
+        summary_vector = await _batch_embedder.embed(summary_text, normalize=True)
+
+        return DocSummaryResponse(
+            summary=summary_text.strip(),
+            summary_vector=summary_vector
+        )
+    except Exception as e:
+        logger.error("[/api/doc-summary] Error: %s", str(e))
+        raise HTTPException(status_code=500, detail="Document summarization failed")
+
+
+@app.delete("/api/cache/clear")
+async def clear_embed_cache():
+    """Xóa Embedding Cache (dùng khi cần invalidate sau khi model thay đổi)"""
+    global _embed_cache
+    count = len(_embed_cache)
+    _embed_cache.clear()
+    # Cũng clear RadixCache
+    _radix_cache.cache.clear()
+    logger.info("[Cache] Cleared %d embedding cache entries", count)
+    return {"cleared": count, "status": "ok"}
 
 
 @app.post("/api/compress", response_model=CompressResponse)
@@ -433,6 +606,85 @@ async def chat_stream(request: ChatRequest):
         raise HTTPException(status_code=500, detail="Failed to process chat request")
 
 
+@app.post("/api/generate-qa", response_model=GenerateQAResponse)
+async def generate_qa(request: GenerateQARequest):
+    """Sử dụng Ollama để sinh câu hỏi-đáp từ đoạn văn bản."""
+    if not request.text or not request.text.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty")
+        
+    prompt = f"""Bạn là một chuyên gia phân tích công văn. Hãy đọc đoạn văn bản sau và tạo ra 3-5 cặp Câu hỏi - Câu trả lời (QA) quan trọng nhất.
+Trả về KẾT QUẢ DƯỚI DẠNG JSON MẢNG chứa các chuỗi QA theo định dạng: ["Q: Câu hỏi 1 - A: Câu trả lời 1", "Q: Câu hỏi 2 - A: Câu trả lời 2"]. 
+KHÔNG giải thích thêm.
+Đoạn văn bản:
+{request.text}"""
+    
+    try:
+        import json
+        messages = [{"role": "user", "content": prompt}]
+        response_text = await _ollama_client.chat(request.model, messages, format="json")
+        
+        # Parse JSON
+        qa_pairs = []
+        try:
+            parsed = json.loads(response_text)
+            if isinstance(parsed, list):
+                qa_pairs = [str(x) for x in parsed]
+            elif isinstance(parsed, dict) and "qa_pairs" in parsed:
+                qa_pairs = [str(x) for x in parsed["qa_pairs"]]
+            else:
+                qa_pairs = [response_text] # Fallback
+        except:
+            qa_pairs = [response_text]
+            
+        return GenerateQAResponse(qa_pairs=qa_pairs)
+    except Exception as e:
+        logger.error("[/api/generate-qa] Error: %s", str(e))
+        raise HTTPException(status_code=500, detail="Failed to generate QA pairs")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
+
+
+@app.post("/api/hyde", response_model=HyDEResponse)
+async def hyde_search(request: HyDERequest):
+    """
+    Hypothetical Document Embeddings (HyDE) — học từ Khoj / GPT-Researcher.
+
+    Thay vì embed câu hỏi → search, ta:
+    1. Dùng LLM sinh ra đoạn VĂN BẢN GIẢ ĐỊNH phù hợp với câu hỏi.
+    2. Embed đoạn văn bản giả định đó.
+    3. Dùng vector này để search → tìm được đoạn thực tế gần nghĩa hơn.
+    """
+    if not request.question or not request.question.strip():
+        raise HTTPException(status_code=400, detail="Question cannot be empty")
+
+    # Bước 1: Sinh hypothetical document
+    prompt = f"""Bạn là một chuyên gia về văn bản pháp luật và công văn hành chính Việt Nam.
+Hãy viết một đoạn văn bản ngắn (2-4 câu) có thể là nội dung của một công văn/quy định trả lời cho câu hỏi sau.
+KHÔNG giải thích, chỉ viết đoạn văn bản đó, như thể đây là trích dẫn từ tài liệu thực tế.
+
+Câu hỏi: {request.question}"""
+
+    try:
+        messages = [{"role": "user", "content": prompt}]
+        hypothetical_doc = await _ollama_client.chat(request.model, messages, format=None)
+        if not hypothetical_doc:
+            hypothetical_doc = request.question  # Fallback về câu hỏi gốc
+
+        # Bước 2: Embed hypothetical document
+        vector = await _batch_embedder.embed(hypothetical_doc, normalize=True)
+
+        return HyDEResponse(
+            hypothetical_document=hypothetical_doc,
+            vector=vector
+        )
+    except Exception as e:
+        logger.error("[/api/hyde] Error: %s", str(e))
+        # Fallback: embed câu hỏi gốc
+        try:
+            vector = await _batch_embedder.embed(request.question, normalize=True)
+            return HyDEResponse(hypothetical_document=request.question, vector=vector)
+        except Exception:
+            raise HTTPException(status_code=500, detail="HyDE generation failed")

@@ -82,16 +82,16 @@ export function DocContentTab({ doc, docId, pdfUrl, setIsFullscreenPdf }) {
           Văn bản và tài liệu tham khảo
         </h2>
         <div className="flex items-center gap-3">
-          {/* Nút Xử lý lại OCR — giữ nhỏ, ít nổi bật */}
+          {/* Nút Trích xuất lại — gọi pipeline RAG */}
           <button
             id="btn-reprocess-ocr"
             onClick={async () => {
               const btn = document.getElementById('btn-reprocess-ocr')
               btn.disabled = true
-              btn.textContent = 'Đang OCR...'
+              btn.textContent = 'Đang xử lý...'
               try {
                 const token = localStorage.getItem('auth_token')
-                await fetch(`/api/documents/${docId}/reprocess-ocr`, {
+                await fetch(`/api/documents/${docId}/reindex`, {
                   method: 'POST',
                   headers: { Authorization: `Bearer ${token}` },
                 })
@@ -109,17 +109,17 @@ export function DocContentTab({ doc, docId, pdfUrl, setIsFullscreenPdf }) {
                   } else if (tries >= 10) {
                     clearInterval(poll)
                     btn.disabled = false
-                    btn.textContent = 'OCR lại'
+                    btn.textContent = 'Trích xuất lại'
                   }
                 }, 4000)
               } catch {
                 btn.disabled = false
-                btn.textContent = 'OCR lại'
+                btn.textContent = 'Trích xuất lại'
               }
             }}
             className="text-[9px] font-bold px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded uppercase tracking-widest transition-colors disabled:opacity-50"
           >
-            OCR lại
+            Trích xuất lại
           </button>
           <button
             className="text-[10px] font-black text-red-600 hover:underline uppercase tracking-widest"

@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 
 function SectionCard({ icon, title, subtitle, children, isSaving }) {
   return (
-    <Card className="rounded-2xl border-slate-200 shadow-sm overflow-hidden border">
+    <Card className="rounded-2xl border-slate-200 shadow-sm overflow-hidden border mb-6">
       <CardHeader className="flex flex-row items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 space-y-0">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 text-red-600">{icon}</span>
@@ -94,189 +94,228 @@ export function GeneralTab({
   }
 
   return (
-    <SectionCard
-      icon={<Zap className="size-5" />}
-      title="Cấu hình chung & OCR"
-      subtitle="Cài đặt cơ bản, nhận diện văn bản và thông báo"
-      isSaving={isSaving}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-        {/* Thời gian quét */}
-        <div className="space-y-3">
-          <Label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-            <Clock className="size-3.5 text-red-500" />
-            Thời gian quét định kỳ
-          </Label>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-            <Input
-              type="time"
-              value={config.notificationScanTime || ''}
-              onChange={(e) => setConfig({ ...config, notificationScanTime: e.target.value })}
-              onBlur={() => onSave()}
-              className="w-36 h-11 px-4 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-red-300 focus:ring-red-50 shadow-none"
-            />
-            <div className="flex items-start gap-2 sm:max-w-[180px]">
-              <Info className="size-3 text-slate-400 mt-0.5 shrink-0" />
-              <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">
-                Hệ thống tự động thực hiện quét vào khung giờ này hàng ngày
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Thông báo trình duyệt */}
-        <div className="space-y-3">
-          <Label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-            <Bell className="size-3.5 text-red-500" />
-            Thông báo trình duyệt
-          </Label>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-5 py-3 h-11 rounded-2xl border border-red-100 bg-red-50/50 w-fit">
-              <span
-                className={cn(
-                  'w-2 h-2 rounded-full shadow-sm animate-pulse',
-                  pushStatus === 'granted' ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-400'
-                )}
-              />
-              <span className="text-[11px] font-black text-slate-700 uppercase tracking-widest leading-none">
-                Trạng thái:
-              </span>
-              <span
-                className={cn(
-                  'ml-3 px-2 py-0.5 rounded-lg text-white text-[9px] font-black uppercase tracking-widest',
-                  pushStatus === 'granted' ? 'bg-emerald-500' : 'bg-slate-500'
-                )}
-              >
-                {pushStatus === 'granted' ? 'Đã cấp quyền' : 'Chưa cấp quyền'}
-              </span>
-            </div>
-
-            <Button
-              variant="outline"
-              onClick={onEnablePush}
-              className="h-11 rounded-2xl font-bold text-xs shadow-sm"
-            >
-              <Monitor className="size-4 mr-2 text-slate-500" />
-              {pushStatus === 'granted' ? 'Đăng ký lại (Nếu lỗi)' : 'Bật thông báo'}
-            </Button>
-          </div>
-        </div>
-
-        {/* Từ khóa thời hạn */}
-        <div className="space-y-3">
-          <Label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-            <Scan className="size-3.5 text-red-500" />
-            Từ khóa thời hạn (Deadline)
-          </Label>
-          <div className="flex items-center gap-2 group">
-            <div className="relative flex-1">
+    <>
+      <SectionCard
+        icon={<Zap className="size-5" />}
+        title="Cấu hình chung & OCR"
+        subtitle="Cài đặt cơ bản, nhận diện văn bản và thông báo"
+        isSaving={isSaving}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+          {/* Thời gian quét */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
+              <Clock className="size-3.5 text-red-500" />
+              Thời gian quét định kỳ
+            </Label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <Input
-                value={newKeyword}
-                onChange={(e) => setNewKeyword(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === 'Enter' && handleAddTag('deadlineKeywords', newKeyword, setNewKeyword)
-                }
-                placeholder="Nhập từ khóa và nhấn Enter..."
-                className="w-full pl-4 pr-10 h-11 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-red-300 focus:ring-red-50 shadow-none placeholder:text-slate-300 placeholder:font-medium"
+                type="time"
+                value={config.notificationScanTime || ''}
+                onChange={(e) => setConfig({ ...config, notificationScanTime: e.target.value })}
+                onBlur={() => onSave()}
+                className="w-36 h-11 px-4 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-red-300 focus:ring-red-50 shadow-none"
               />
+              <div className="flex items-start gap-2 sm:max-w-[180px]">
+                <Info className="size-3 text-slate-400 mt-0.5 shrink-0" />
+                <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">
+                  Hệ thống tự động thực hiện quét vào khung giờ này hàng ngày
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Thông báo trình duyệt */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
+              <Bell className="size-3.5 text-red-500" />
+              Thông báo trình duyệt
+            </Label>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-5 py-3 h-11 rounded-2xl border border-red-100 bg-red-50/50 w-fit">
+                <span
+                  className={cn(
+                    'w-2 h-2 rounded-full shadow-sm animate-pulse',
+                    pushStatus === 'granted' ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-400'
+                  )}
+                />
+                <span className="text-[11px] font-black text-slate-700 uppercase tracking-widest leading-none">
+                  Trạng thái:
+                </span>
+                <span
+                  className={cn(
+                    'ml-3 px-2 py-0.5 rounded-lg text-white text-[9px] font-black uppercase tracking-widest',
+                    pushStatus === 'granted' ? 'bg-emerald-500' : 'bg-slate-500'
+                  )}
+                >
+                  {pushStatus === 'granted' ? 'Đã cấp quyền' : 'Chưa cấp quyền'}
+                </span>
+              </div>
+
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleAddTag('deadlineKeywords', newKeyword, setNewKeyword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-400 hover:text-red-500 transition-colors rounded-xl"
+                variant="outline"
+                onClick={onEnablePush}
+                className="h-11 rounded-2xl font-bold text-xs shadow-sm"
               >
-                <Plus className="size-4" />
+                <Monitor className="size-4 mr-2 text-slate-500" />
+                {pushStatus === 'granted' ? 'Đăng ký lại (Nếu lỗi)' : 'Bật thông báo'}
               </Button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 pt-1">
-            {config.deadlineKeywords
-              ?.split(',')
-              .map((t) => t.trim())
-              .filter(Boolean)
-              .map((tag, i) => (
-                <Tag
-                  key={i}
-                  label={tag}
-                  onRemove={() => handleRemoveTag('deadlineKeywords', tag)}
-                />
-              ))}
-          </div>
-        </div>
 
-        {/* Từ khóa loại trừ */}
-        <div className="space-y-3">
-          <Label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-            <X className="size-3.5 text-slate-400" />
-            Từ khóa loại trừ (Exclude)
-          </Label>
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Input
-                value={newExcludeKeyword}
-                onChange={(e) => setNewExcludeKeyword(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === 'Enter' &&
-                  handleAddTag('deadlineExcludeKeywords', newExcludeKeyword, setNewExcludeKeyword)
-                }
-                placeholder="Nhập từ khóa loại trừ..."
-                className="w-full pl-4 pr-10 h-11 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-slate-300 focus:ring-slate-100 shadow-none placeholder:text-slate-300 placeholder:font-medium"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() =>
-                  handleAddTag('deadlineExcludeKeywords', newExcludeKeyword, setNewExcludeKeyword)
-                }
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-400 hover:text-slate-600 transition-colors rounded-xl"
-              >
-                <Plus className="size-4" />
-              </Button>
+          {/* Từ khóa thời hạn */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
+              <Scan className="size-3.5 text-red-500" />
+              Từ khóa thời hạn (Deadline)
+            </Label>
+            <div className="flex items-center gap-2 group">
+              <div className="relative flex-1">
+                <Input
+                  value={newKeyword}
+                  onChange={(e) => setNewKeyword(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' && handleAddTag('deadlineKeywords', newKeyword, setNewKeyword)
+                  }
+                  placeholder="Nhập từ khóa và nhấn Enter..."
+                  className="w-full pl-4 pr-10 h-11 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-red-300 focus:ring-red-50 shadow-none placeholder:text-slate-300 placeholder:font-medium"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleAddTag('deadlineKeywords', newKeyword, setNewKeyword)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-400 hover:text-red-500 transition-colors rounded-xl"
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {config.deadlineKeywords
+                ?.split(',')
+                .map((t) => t.trim())
+                .filter(Boolean)
+                .map((tag, i) => (
+                  <Tag
+                    key={i}
+                    label={tag}
+                    onRemove={() => handleRemoveTag('deadlineKeywords', tag)}
+                  />
+                ))}
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 pt-1">
-            {config.deadlineExcludeKeywords
-              ?.split(',')
-              .map((t) => t.trim())
-              .filter(Boolean)
-              .map((tag, i) => (
-                <Tag
-                  key={i}
-                  label={tag}
-                  onRemove={() => handleRemoveTag('deadlineExcludeKeywords', tag)}
+
+          {/* Từ khóa loại trừ */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
+              <X className="size-3.5 text-slate-400" />
+              Từ khóa loại trừ (Exclude)
+            </Label>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Input
+                  value={newExcludeKeyword}
+                  onChange={(e) => setNewExcludeKeyword(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' &&
+                    handleAddTag('deadlineExcludeKeywords', newExcludeKeyword, setNewExcludeKeyword)
+                  }
+                  placeholder="Nhập từ khóa loại trừ..."
+                  className="w-full pl-4 pr-10 h-11 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-slate-300 focus:ring-slate-100 shadow-none placeholder:text-slate-300 placeholder:font-medium"
                 />
-              ))}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    handleAddTag('deadlineExcludeKeywords', newExcludeKeyword, setNewExcludeKeyword)
+                  }
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-400 hover:text-slate-600 transition-colors rounded-xl"
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {config.deadlineExcludeKeywords
+                ?.split(',')
+                .map((t) => t.trim())
+                .filter(Boolean)
+                .map((tag, i) => (
+                  <Tag
+                    key={i}
+                    label={tag}
+                    onRemove={() => handleRemoveTag('deadlineExcludeKeywords', tag)}
+                  />
+                ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-        <Button
-          onClick={onTriggerScan}
-          disabled={isTesting}
-          className="flex-1 sm:flex-none h-10 px-5 rounded-2xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all shadow-lg shadow-red-100 border-none"
-        >
-          {isTesting ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Play className="size-3.5 fill-current mr-2" />
-          )}
-          Kích hoạt quét ngay
-        </Button>
-        <Button
-          variant="outline"
-          onClick={onTestNotification}
-          disabled={isTesting || pushStatus !== 'granted'}
-          className="flex-1 sm:flex-none h-10 px-5 rounded-2xl bg-white text-slate-700 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 border-slate-200 active:scale-95 transition-all shadow-sm"
-        >
-          {isTesting ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Send className="size-3.5 mr-2" />
-          )}
-          Gửi thông báo thử nghiệm
-        </Button>
-      </div>
-    </SectionCard>
+        <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          <Button
+            onClick={onTriggerScan}
+            disabled={isTesting}
+            className="flex-1 sm:flex-none h-10 px-5 rounded-2xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all shadow-lg shadow-red-100 border-none"
+          >
+            {isTesting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Play className="size-3.5 fill-current mr-2" />
+            )}
+            Kích hoạt quét ngay
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onTestNotification}
+            disabled={isTesting || pushStatus !== 'granted'}
+            className="flex-1 sm:flex-none h-10 px-5 rounded-2xl bg-white text-slate-700 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 border-slate-200 active:scale-95 transition-all shadow-sm"
+          >
+            {isTesting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Send className="size-3.5 mr-2" />
+            )}
+            Gửi thông báo thử nghiệm
+          </Button>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        icon={<Monitor className="size-5" />}
+        title="Cấu hình Trợ lý AI"
+        subtitle="Cài đặt thông số cho Chatbot và công cụ tìm kiếm"
+        isSaving={isSaving}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
+              <Zap className="size-3.5 text-red-500" />
+              Ngưỡng tương tự AI (Similarity Threshold)
+            </Label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <Input
+                type="number"
+                step="0.05"
+                min="0"
+                max="1"
+                value={config.aiSimilarityThreshold || 0.2}
+                onChange={(e) =>
+                  setConfig({ ...config, aiSimilarityThreshold: parseFloat(e.target.value) || 0.2 })
+                }
+                onBlur={() => onSave()}
+                className="w-36 h-11 px-4 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-red-300 focus:ring-red-50 shadow-none"
+              />
+              <div className="flex items-start gap-2 sm:max-w-[180px]">
+                <Info className="size-3 text-slate-400 mt-0.5 shrink-0" />
+                <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">
+                  Ngưỡng đánh giá độ liên quan của nội dung (0 - 1). Càng cao càng chặt chẽ. Mặc
+                  định 0.65.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+    </>
   )
 }

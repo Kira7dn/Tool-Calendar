@@ -182,15 +182,15 @@ namespace ToolCalendar.Api.Controllers.Documents
         }
 
         [Authorize]
-        [HttpPost("{id}/reprocess-ocr")]
-        public async Task<IActionResult> ReprocessOcr(int id)
+        [HttpPost("{id}/reindex")]
+        public async Task<IActionResult> ReindexDocument(int id)
         {
             var doc = await _documentRepository.GetDocumentByIdAsync(id);
             if (doc == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
             if (string.IsNullOrEmpty(doc.FilePath) || !System.IO.File.Exists(doc.FilePath))
                 return BadRequest(ApiResponse.Fail("File gốc không tồn tại trên server."));
             await _ocrQueue.EnqueueAsync(id);
-            return Ok(ApiResponse.Ok("Đã đưa vào hàng đợi xử lý lại OCR."));
+            return Ok(ApiResponse.Ok("Đã đưa vào hàng đợi xử lý trích xuất và Index (RAG)."));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]

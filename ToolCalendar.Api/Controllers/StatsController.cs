@@ -126,6 +126,7 @@ namespace ToolCalendar.Api.Controllers
             var keywords = _settingRepo.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
             var excludeKeywords = _settingRepo.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
             var minDays = _settingRepo.GetAppSetting("Document_MinDeadlineDays", "0");
+            var aiThreshold = _settingRepo.GetAppSetting("AiSimilarityThreshold", "0.20");
 
             return Ok(ApiResponse.Ok(new
             {
@@ -133,7 +134,8 @@ namespace ToolCalendar.Api.Controllers
                 deadlineKeywords = keywords,
                 deadlineExcludeKeywords = excludeKeywords,
                 minDeadlineDays = int.Parse(minDays),
-                notificationScanTime = _settingRepo.GetAppSetting("Notification_ScanTime", "08:30")
+                notificationScanTime = _settingRepo.GetAppSetting("Notification_ScanTime", "08:30"),
+                aiSimilarityThreshold = float.Parse(aiThreshold)
             }));
         }
 
@@ -148,12 +150,14 @@ namespace ToolCalendar.Api.Controllers
                 string excludeKeywords = data.TryGetProperty("deadlineExcludeKeywords", out var exc) ? exc.ToString() : "";
                 string minDays = data.TryGetProperty("minDeadlineDays", out var mnd) ? mnd.ToString() : "0";
                 string scanTime = data.TryGetProperty("notificationScanTime", out var st) ? st.ToString() : "08:30";
+                string aiThreshold = data.TryGetProperty("aiSimilarityThreshold", out var ath) ? ath.ToString() : "0.20";
 
                 _settingRepo.SaveAppSetting("OcrSettings_MaxPagesToScan", maxPages);
                 _settingRepo.SaveAppSetting("Document_DeadlineKeywords", keywords);
                 _settingRepo.SaveAppSetting("Document_DeadlineExcludeKeywords", excludeKeywords);
                 _settingRepo.SaveAppSetting("Document_MinDeadlineDays", minDays);
                 _settingRepo.SaveAppSetting("Notification_ScanTime", scanTime);
+                _settingRepo.SaveAppSetting("AiSimilarityThreshold", aiThreshold);
 
                 // Reset chặn quét để cho phép quét lại vào giờ mới ngay trong ngày hôm nay
                 _settingRepo.SaveAppSetting("Notification_LastScanDate", "");

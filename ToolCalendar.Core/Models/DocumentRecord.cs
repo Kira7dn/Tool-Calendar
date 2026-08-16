@@ -6,12 +6,11 @@ namespace ToolCalendar.Models
     {
         public int Id { get; set; }
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
-        public List<string> OcrWarnings { get; set; } = new List<string>();
         public string SoVanBan { get; set; } = "";
         public string TenCongVan { get; set; } = "";
         public string TrichYeu { get; set; } = "";
         public string FullText { get; set; } = "";
+        /// <summary>JSON pages metadata — giữ nguyên vì là cột DB SQLite thực tế.</summary>
         public string OcrPagesJson { get; set; } = "[]";
         public DateTime? NgayBanHanh { get; set; }
         public string CoQuanBanHanh { get; set; } = "";

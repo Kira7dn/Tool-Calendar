@@ -1,0 +1,1 @@
+ALTER TABLE DocumentChunks ADD COLUMN ParentChunkId INTEGER NULL;

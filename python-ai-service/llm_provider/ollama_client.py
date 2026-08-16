@@ -36,3 +36,23 @@ class OllamaClient:
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}")
             yield f"\n[Lỗi hệ thống AI: {str(e)}]"
+
+    async def chat(self, model: str, messages: list[dict], format="json") -> str:
+        url = f"{self.base_url}/api/chat"
+        payload = {
+            "model": model,
+            "messages": messages,
+            "stream": False
+        }
+        if format:
+            payload["format"] = format
+            
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                response = await client.post(url, json=payload)
+                response.raise_for_status()
+                data = response.json()
+                return data.get("message", {}).get("content", "")
+        except Exception as e:
+            logger.error(f"Failed to generate chat response: {str(e)}")
+            return ""

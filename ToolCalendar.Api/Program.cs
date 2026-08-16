@@ -93,7 +93,6 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IReminderRepository, ReminderRepository>();
 builder.Services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();
-builder.Services.AddScoped<IOcrTextProcessingService, OcrTextProcessingService>();
 builder.Services.AddScoped<IOllamaEmbeddingService, OllamaEmbeddingService>();
 builder.Services.AddScoped<IDocumentChunkRepository, DocumentChunkRepository>();
 builder.Services.AddScoped<IUserMemoryRepository, UserMemoryRepository>(); // ANYTHINGLLM Idea #5: Long-Term Memory
@@ -144,17 +143,18 @@ builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 // Cấu hình HTTP Client cho các gọi API bên ngoài (như Gemini)
 builder.Services.AddHttpClient();
 
-// Đăng ký OCR & Extraction Services
-builder.Services.AddSingleton<IOcrService, OcrService>();
-builder.Services.AddScoped<IOcrTextProcessingService, OcrTextProcessingService>();
-builder.Services.AddScoped<IOcrImageProcessingService, OcrImageProcessingService>();
+// Đăng ký Extraction Services & Python AI
+builder.Services.AddHttpClient<IPythonAiService, PythonAiService>(client =>
+{
+    client.BaseAddress = new Uri("http://python-ai-service:8001");
+    client.Timeout = TimeSpan.FromMinutes(10); // Docling có thể chạy lâu
+});
 builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();
-// builder.Services.AddHostedService<OcrRuntimeValidationService>();
 
 // Cấu hình Hàng đợi OCR xử lý nền
-builder.Services.AddSingleton<OcrQueueService>();
-builder.Services.AddSingleton<IOcrQueueService>(sp => sp.GetRequiredService<OcrQueueService>());
-builder.Services.AddHostedService(sp => sp.GetRequiredService<OcrQueueService>());
+builder.Services.AddSingleton<DocumentProcessingService>();
+builder.Services.AddSingleton<IOcrQueueService>(sp => sp.GetRequiredService<DocumentProcessingService>());
+builder.Services.AddHostedService(sp => sp.GetRequiredService<DocumentProcessingService>());
 
 // Cấu hình Email & Thông báo tự động
 builder.Services.AddSingleton<IEmailService, EmailService>();

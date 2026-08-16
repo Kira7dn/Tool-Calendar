@@ -20,10 +20,15 @@ namespace ToolCalendar.Services
         int PendingCount { get; }
     }
 
-    public class OcrQueueService : BackgroundService, IOcrQueueService
+    /// <summary>
+    /// Document Processing Service — RabbitMQ consumer điều phối toàn bộ pipeline xử lý tài liệu.
+    /// Tên cũ là OcrQueueService, đã đổi tên vì OCR đã chuyển sang Python AI Service.
+    /// Chức năng hiện tại: lắng nghe queue ocr_document_queue, gọi Python để Extract + RAG index.
+    /// </summary>
+    public class DocumentProcessingService : BackgroundService, IOcrQueueService
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger<OcrQueueService> _logger;
+        private readonly ILogger<DocumentProcessingService> _logger;
         private readonly IConfiguration _configuration;
 
         private const string QueueName = "ocr_document_queue";
@@ -36,9 +41,9 @@ namespace ToolCalendar.Services
         private int _pendingCount = 0;
         public int PendingCount => _pendingCount;
 
-        public OcrQueueService(
+        public DocumentProcessingService(
             IServiceProvider serviceProvider, 
-            ILogger<OcrQueueService> logger,
+            ILogger<DocumentProcessingService> logger,
             IConfiguration configuration)
         {
             _serviceProvider = serviceProvider;
@@ -208,6 +213,7 @@ namespace ToolCalendar.Services
             using var scope = _serviceProvider.CreateScope();
             var extractor = scope.ServiceProvider.GetRequiredService<IDocumentExtractorService>();
             var docRepo = scope.ServiceProvider.GetRequiredService<IDocumentRepository>();
+            var aiService = scope.ServiceProvider.GetRequiredService<IPythonAiService>();
 
             var doc = await docRepo.GetDocumentByIdAsync(docId);
             if (doc == null)
@@ -223,7 +229,7 @@ namespace ToolCalendar.Services
                 return;
             }
 
-            _logger.LogInformation("[RabbitMQ Worker] Đang chạy OCR DocumentId {Id} — '{File}'", docId, Path.GetFileName(absolutePath));
+            _logger.LogInformation("[RabbitMQ Worker] Đang gọi Python AI Service để Extract DocumentId {Id} — '{File}'", docId, Path.GetFileName(absolutePath));
 
             doc.Status = "Đang xử lý";
             await docRepo.UpdateAsync(doc);
@@ -232,77 +238,147 @@ namespace ToolCalendar.Services
             try
             {
                 var updatedDoc = await extractor.ExtractFromFileAsync(absolutePath);
-                updatedDoc.Id = doc.Id;
-                updatedDoc.FilePath = doc.FilePath;
-                updatedDoc.NgayThem = doc.NgayThem;
-                updatedDoc.LabelId = doc.LabelId;
-                updatedDoc.DaTaoLich = doc.DaTaoLich;
-                updatedDoc.Status = updatedDoc.Status == "Lỗi OCR" ? "Lỗi OCR" : "Chưa xử lý";
+                
+                // Cập nhật text từ Python vào DB
+                doc.FullText = updatedDoc.FullText;
+                doc.Status = "Chưa xử lý";
 
-                await docRepo.UpdateAsync(updatedDoc);
+                await docRepo.UpdateAsync(doc);
 
                 // --- BẮT ĐẦU: RAG - Chunking và Tính toán Vector ---
                 try
                 {
                     var chunkRepo = scope.ServiceProvider.GetRequiredService<IDocumentChunkRepository>();
-                    var embedService = scope.ServiceProvider.GetRequiredService<IOllamaEmbeddingService>();
 
-                    // Xóa các chunk cũ nếu có (ví dụ khi reprocess OCR)
+                    // Xóa các chunk cũ nếu có
                     await chunkRepo.DeleteChunksByDocumentIdAsync(docId);
 
-                    if (!string.IsNullOrWhiteSpace(updatedDoc.FullText))
+                    if (!string.IsNullOrWhiteSpace(doc.FullText))
                     {
-                        _logger.LogInformation("[RAG] Đang tạo Vector cho DocumentId {Id}...", docId);
-                        
-                        var text = updatedDoc.FullText;
-                        
-                        // DIFY Idea #7: Recursive Separator Hierarchy (RecursiveCharacterTextSplitter)
-                        // Tách theo các cấp độ để giữ ngữ nghĩa thay vì tách ngẫu nhiên.
-                        var separators = new[] { "\n\n", "\r\n\r\n", "\nĐiều", "\nKhoản", "\nChương", "\n", ". ", "; ", " " };
-                        int maxWordsPerChunk = 300;
-                        
-                        var chunks = RecursiveSplit(text, separators, maxWordsPerChunk);
+                        _logger.LogInformation("[RAG] Đang gọi Python AI Service để Chunk & Embed cho DocumentId {Id}...", docId);
 
-                        // DIFY Idea #1: Chunk Overlap — lặp lại 100 từ cuối của chunk trước
-                        // Tránh mất thông tin nằm ở ranh giới 2 chunk liền nhau
-                        var overlappedChunks = new List<string>();
-                        for (int ci = 0; ci < chunks.Count; ci++)
+                        // [RAPTOR] Bước 0: Sinh Document Summary và index nó như một "macro chunk"
+                        // Giúp trả lời được câu hỏi rộng như "tài liệu này nói về gì?"
+                        string docSummaryText = "";
+                        try
                         {
-                            var chunkText = chunks[ci];
-                            if (ci > 0)
+                            var summaryResult = await aiService.DocSummaryAsync(
+                                doc.FullText, 
+                                doc.TenCongVan ?? string.Empty
+                            );
+                            if (summaryResult != null && !string.IsNullOrWhiteSpace(summaryResult.Summary))
                             {
-                                var prevWords = chunks[ci - 1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                                var overlapWords = prevWords.Skip(Math.Max(0, prevWords.Length - 100)).ToArray();
-                                chunkText = string.Join(" ", overlapWords) + " " + chunkText;
-                            }
-                            overlappedChunks.Add(chunkText);
-                        }
-
-                        // ANYTHINGLLM Idea #6: Document Header Metadata in Chunks
-                        // Mỗi chunk được prepend một header XML chuẩn giống AnythingLLM TextSplitter.stringifyHeader()
-                        // Giúp AI biết chunk đến từ tài liệu nào và trích dẫn chính xác
-                        string tenCv = !string.IsNullOrWhiteSpace(updatedDoc.TenCongVan) ? updatedDoc.TenCongVan : "Không có";
-                        string soCv = !string.IsNullOrWhiteSpace(updatedDoc.SoVanBan) ? updatedDoc.SoVanBan : "Không có";
-                        string ngayBanHanh = updatedDoc.NgayBanHanh.HasValue
-                            ? updatedDoc.NgayBanHanh.Value.ToString("dd/MM/yyyy")
-                            : "Không rõ";
-                        string coQuan = !string.IsNullOrWhiteSpace(updatedDoc.CoQuanBanHanh) ? updatedDoc.CoQuanBanHanh : "Không rõ";
-                        string header = $"<document_metadata>\nsourceDocument: {tenCv}\npublished: {ngayBanHanh}\nsoHieu: {soCv}\ncoQuan: {coQuan}\n</document_metadata>\n\n";
-
-                        int chunkIndex = 0;
-                        foreach (var chunk in overlappedChunks)
-                        {
-                            var enrichedChunk = header + chunk;
-
-                            // Tính Vector (embedding của nội dung không kèm header để tránh nhiễu embedding)
-                            var vector = await embedService.GenerateEmbeddingAsync(chunk);
-                            if (vector != null && vector.Length > 0)
-                            {
-                                await chunkRepo.AddChunkAsync(docId, chunkIndex++, enrichedChunk, vector);
+                                docSummaryText = summaryResult.Summary;
+                                // Lưu summary như một special "root chunk" (ParentChunkId = null)
+                                // Embed nó với vector thực (không phải dummy vector)
+                                var summaryVec = summaryResult.SummaryVector.ToArray();
+                                await chunkRepo.AddChunkAsync(docId, -1, $"[Tóm tắt] {summaryResult.Summary}", summaryVec);
+                                _logger.LogInformation("[RAG] Đã index Document Summary cho DocumentId {Id}", docId);
                             }
                         }
-                        _logger.LogInformation("[RAG] Đã lưu {Count} đoạn Vector (có overlap + metadata header) cho DocumentId {Id}.", chunkIndex, docId);
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "[RAG] Lỗi khi sinh Document Summary cho DocumentId {Id}, bỏ qua.", docId);
+                        }
 
+                        var parentChunkResult = await aiService.ChunkDocumentAsync(new ChunkRequest
+                        {
+                            Text = doc.FullText,
+                            DocTitle = doc.TenCongVan ?? string.Empty,
+                            DocDate = doc.NgayBanHanh?.ToString("dd/MM/yyyy") ?? string.Empty,
+                            DocSource = doc.CoQuanBanHanh ?? string.Empty,
+                            DocId = docId,
+                            ChunkSize = 1500,
+                            ChunkOverlap = 150
+                        });
+
+                        var parentChunks = parentChunkResult.Chunks.Select(c => c.Content).ToList();
+
+                        if (parentChunks.Any())
+                        {
+                            int totalChildren = 0;
+                            for (int pIndex = 0; pIndex < parentChunks.Count; pIndex++)
+                            {
+                                var pText = parentChunks[pIndex];
+                                // Lưu Parent Chunk với vector rỗng (dummy 384 dims để không lỗi schema)
+                                // Parent chunk không dùng để search vector (cosine sẽ = 0)
+                                int parentDbId = await chunkRepo.AddChunkAsync(docId, pIndex, pText, new float[384]);
+
+                                // [Contextual Retrieval - Anthropic]
+                                // Prepend LLM-generated context sentence vào parent text trước khi chia child chunks
+                                // Bắt đầu chia child chunks từ contextual parent text thay vì raw parent text
+                                string contextualParentText = pText;
+                                try
+                                {
+                                    var ctxResult = await aiService.ContextualChunkAsync(
+                                        pText, 
+                                        doc.TenCongVan ?? string.Empty,
+                                        docSummaryText
+                                    );
+                                    if (ctxResult != null && !string.IsNullOrWhiteSpace(ctxResult.ContextualText))
+                                        contextualParentText = ctxResult.ContextualText;
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning(ex, "[RAG] Lỗi Contextual Retrieval cho ParentChunk {PIndex}, dùng text gốc.", pIndex);
+                                }
+
+                                // 2. Tạo Child Chunks từ Contextual Parent Chunk
+                                var childChunkResult = await aiService.ChunkDocumentAsync(new ChunkRequest
+                                {
+                                    Text = contextualParentText,
+                                    DocTitle = doc.TenCongVan ?? string.Empty,
+                                    DocDate = doc.NgayBanHanh?.ToString("dd/MM/yyyy") ?? string.Empty,
+                                    DocSource = doc.CoQuanBanHanh ?? string.Empty,
+                                    DocId = docId,
+                                    ChunkSize = 400,
+                                    ChunkOverlap = 50
+                                });
+
+                                var childTexts = childChunkResult.Chunks.Select(c => c.Content).ToList();
+
+                                // [SPRINT 3] QA-Pair Indexing: Sinh QA Pairs từ Parent Chunk
+                                try
+                                {
+                                    var qaResult = await aiService.GenerateQAAsync(new GenerateQARequest
+                                    {
+                                        Text = pText,
+                                        Model = "qwen2.5:3b"
+                                    });
+                                    if (qaResult.QaPairs != null && qaResult.QaPairs.Any())
+                                    {
+                                        childTexts.AddRange(qaResult.QaPairs);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning(ex, "[RAG] Lỗi khi sinh QA pairs cho ParentChunk, bỏ qua để tiếp tục.");
+                                }
+
+                                if (childTexts.Any())
+                                {
+                                    // Embed Child Chunks & QA Pairs
+                                    var embedResult = await aiService.BatchEmbedAsync(new BatchEmbedRequest
+                                    {
+                                        Texts = childTexts,
+                                        Normalize = true
+                                    });
+
+                                    // 3. Lưu Child Chunks vào database
+                                    for (int cIndex = 0; cIndex < childTexts.Count; cIndex++)
+                                    {
+                                        var cText = childTexts[cIndex];
+                                        var vector = embedResult.Vectors[cIndex];
+                                        if (vector != null && vector.Count > 0)
+                                        {
+                                            await chunkRepo.AddChunkAsync(docId, (pIndex * 1000) + cIndex, cText, vector.ToArray(), parentDbId);
+                                            totalChildren++;
+                                        }
+                                    }
+                                }
+                            }
+                            _logger.LogInformation("[RAG] Đã lưu {ParentCount} Parent và {ChildCount} Child Vectors cho DocumentId {Id}.", parentChunks.Count, totalChildren, docId);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -311,16 +387,15 @@ namespace ToolCalendar.Services
                 }
                 // --- KẾT THÚC: RAG ---
 
-                await NotifyProgressAsync(scope, docId, updatedDoc.Status);
-
-                _logger.LogInformation("[RabbitMQ Worker] ✅ OCR thành công DocumentId {Id} → {Status}", docId, updatedDoc.Status);
+                await NotifyProgressAsync(scope, docId, doc.Status);
+                _logger.LogInformation("[RabbitMQ Worker] ✅ AI Service xử lý thành công DocumentId {Id}", docId);
             }
             catch (Exception ex)
             {
                 doc.Status = "Lỗi OCR";
                 await docRepo.UpdateAsync(doc);
                 await NotifyProgressAsync(scope, docId, "Lỗi OCR");
-                _logger.LogError(ex, "[RabbitMQ Worker] ❌ OCR thất bại DocumentId {Id}", docId);
+                _logger.LogError(ex, "[RabbitMQ Worker] ❌ AI Service thất bại DocumentId {Id}", docId);
                 throw; // Throw để Nack tin nhắn
             }
         }
@@ -356,74 +431,6 @@ namespace ToolCalendar.Services
             }
             catch { }
             base.Dispose();
-        }
-
-        private static List<string> RecursiveSplit(string text, string[] separators, int maxWords)
-        {
-            var finalChunks = new List<string>();
-            if (string.IsNullOrWhiteSpace(text)) return finalChunks;
-
-            // Bắt đầu đệ quy từ cấp separator đầu tiên
-            SplitText(text, separators, 0, maxWords, finalChunks);
-            return finalChunks;
-        }
-
-        private static void SplitText(string text, string[] separators, int separatorIndex, int maxWords, List<string> finalChunks)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return;
-
-            int wordCount = text.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
-
-            // Nếu đoạn text đã đủ nhỏ so với yêu cầu, thì add vào luôn
-            if (wordCount <= maxWords || separatorIndex >= separators.Length)
-            {
-                finalChunks.Add(text.Trim());
-                return;
-            }
-
-            // Thử tách theo separator hiện tại
-            var separator = separators[separatorIndex];
-            var parts = System.Text.RegularExpressions.Regex.Split(text, $"(?<={System.Text.RegularExpressions.Regex.Escape(separator)})");
-
-            var currentChunk = new System.Text.StringBuilder();
-            int currentWordCount = 0;
-
-            foreach (var part in parts)
-            {
-                if (string.IsNullOrWhiteSpace(part)) continue;
-
-                int partWordCount = part.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
-
-                // KHOJ: Nếu bản thân part vẫn còn to hơn maxWords, phải dùng separator nhỏ hơn để tách tiếp
-                if (partWordCount > maxWords)
-                {
-                    if (currentChunk.Length > 0)
-                    {
-                        finalChunks.Add(currentChunk.ToString().Trim());
-                        currentChunk.Clear();
-                        currentWordCount = 0;
-                    }
-                    // Gọi đệ quy cho cục quá to với separator cấp thấp hơn
-                    SplitText(part, separators, separatorIndex + 1, maxWords, finalChunks);
-                }
-                else
-                {
-                    if (currentWordCount > 0 && currentWordCount + partWordCount > maxWords)
-                    {
-                        finalChunks.Add(currentChunk.ToString().Trim());
-                        currentChunk.Clear();
-                        currentWordCount = 0;
-                    }
-
-                    currentChunk.Append(part);
-                    currentWordCount += partWordCount;
-                }
-            }
-
-            if (currentChunk.Length > 0)
-            {
-                finalChunks.Add(currentChunk.ToString().Trim());
-            }
         }
     }
 }

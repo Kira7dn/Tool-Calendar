@@ -28,7 +28,7 @@ namespace ToolCalendar.Core.Services.AiTools
                 thoi_han = new
                 {
                     type = "string",
-                    description = "Thời hạn (deadline) cần tìm, định dạng yyyy-MM-dd (ví dụ: '2026-08-06'). Nếu người dùng hỏi ngày mai, ngày kia, hãy tính toán ra ngày yyyy-MM-dd tương ứng. Để trống nếu không lọc theo thời hạn."
+                    description = "Thời hạn (deadline) cần tìm. Có thể là định dạng yyyy-MM-dd hoặc ngôn ngữ tự nhiên (ví dụ: 'ngày mai', 'tuần trước', 'tháng này'). Để trống nếu không lọc."
                 },
                 status = new
                 {
@@ -52,10 +52,44 @@ namespace ToolCalendar.Core.Services.AiTools
                 string status = arguments.TryGetValue("status", out var stObj) ? stObj?.ToString() ?? "" : "";
                 string thoiHanStr = arguments.TryGetValue("thoi_han", out var thObj) ? thObj?.ToString() ?? "" : "";
 
-                DateTime? filterDate = null;
-                if (!string.IsNullOrEmpty(thoiHanStr) && DateTime.TryParse(thoiHanStr, out var parsedDate))
+                DateTime? filterFromDate = null;
+                DateTime? filterToDate = null;
+
+                if (!string.IsNullOrEmpty(thoiHanStr))
                 {
-                    filterDate = parsedDate.Date;
+                    if (DateTime.TryParse(thoiHanStr, out var parsedDate))
+                    {
+                        filterFromDate = parsedDate.Date;
+                        filterToDate = parsedDate.Date;
+                    }
+                    else
+                    {
+                        // Fallback: Gọi Python API để parse natural language date (Khoj DateFilter pattern)
+                        try
+                        {
+                            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                            var payload = new { text = thoiHanStr };
+                            var json = System.Text.Json.JsonSerializer.Serialize(payload);
+                            var content = new System.Net.Http.StringContent(json, Encoding.UTF8, "application/json");
+                            var response = await client.PostAsync("http://python-ai-service:8001/api/parse-date", content);
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var respJson = await response.Content.ReadAsStringAsync();
+                                using var doc = System.Text.Json.JsonDocument.Parse(respJson);
+                                var startStr = doc.RootElement.TryGetProperty("start_date", out var sd) ? sd.GetString() : null;
+                                var endStr = doc.RootElement.TryGetProperty("end_date", out var ed) ? ed.GetString() : null;
+                                
+                                if (!string.IsNullOrEmpty(startStr) && DateTime.TryParse(startStr, out var sD))
+                                    filterFromDate = sD;
+                                if (!string.IsNullOrEmpty(endStr) && DateTime.TryParse(endStr, out var eD))
+                                    filterToDate = eD;
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            // Bỏ qua nếu lỗi
+                        }
+                    }
                 }
 
                 // Gọi Repo để lấy dữ liệu (Page 1, 10 records)
@@ -65,8 +99,8 @@ namespace ToolCalendar.Core.Services.AiTools
                     search: search, 
                     status: status, 
                     sort: "deadline_asc", 
-                    fromDate: filterDate, 
-                    toDate: filterDate
+                    fromDate: filterFromDate, 
+                    toDate: filterToDate
                 );
 
                 if (result.Items == null || result.Items.Count == 0)

@@ -12,6 +12,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    volumes:
+      - ./ToolCalendar.Api/Uploads:/app/Uploads:ro
     restart: always
 
   official-doc-backend:
@@ -59,7 +61,6 @@ services:
     volumes:
       - ./data_dump:/app/data
       - ./ToolCalendar.Api/Uploads:/app/Uploads
-      - ./ToolCalendar.Core/Models/PaddleOCR:/app/Models/PaddleOCR:ro
     logging:
       driver: "json-file"
       options:

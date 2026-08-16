@@ -36,6 +36,20 @@ VIETNAMESE_SEPARATORS = [
     "",       # Ký tự (fallback)
 ]
 
+# Adaptive Chunk Size — học từ Dify
+def compute_adaptive_chunk_size(text_length: int, base_size: int = DEFAULT_CHUNK_SIZE) -> int:
+    """
+    DIFY Idea: Adaptive Chunk Size.
+    Tài liệu ngắn → chunk nhỏ hơn (giữ nguyên ngữ cảnh).
+    Tài liệu dài → chunk lớn hơn (giảm số lượt embed).
+    """
+    if text_length < 2000:
+        return min(base_size, 400)   # Tài liệu ngắn: chia nhỏ
+    elif text_length < 10000:
+        return base_size             # Vừa: giữ nguyên
+    else:
+        return min(base_size * 2, 1500)  # Tài liệu dài: chunk lớn hơn
+
 
 class DocumentChunk:
     """Một chunk văn bản với metadata — tương đương DocumentMetadata trong anything-llm"""
@@ -174,6 +188,18 @@ class SmartTextChunker:
         if current_chunk.strip():
             chunks.append(current_chunk.strip())
 
+    def _merge_short_chunks(self, chunks: list[str], min_length: int = 80) -> list[str]:
+        """Late Chunking: gộp các chunk quá ngắn vào chunk trước nó."""
+        if not chunks:
+            return []
+        merged = [chunks[0]]
+        for chunk in chunks[1:]:
+            if len(chunk) < min_length and merged:
+                merged[-1] = merged[-1] + " " + chunk
+            else:
+                merged.append(chunk)
+        return merged
+
     def chunk_document(
         self,
         text: str,
@@ -195,7 +221,18 @@ class SmartTextChunker:
         Returns:
             Danh sách DocumentChunk
         """
-        raw_chunks = self._split_text(text)
+        # DIFY Adaptive Chunk Size
+        adaptive_size = compute_adaptive_chunk_size(len(text), self.chunk_size)
+        original_size = self.chunk_size
+        self.chunk_size = adaptive_size
+
+        try:
+            raw_chunks = self._split_text(text)
+            # Late Chunking: gộp các đoạn quá ngắn
+            raw_chunks = self._merge_short_chunks(raw_chunks, min_length=80)
+        finally:
+            self.chunk_size = original_size  # Restore
+
         result = []
         for i, chunk_text in enumerate(raw_chunks):
             result.append(DocumentChunk(
@@ -208,7 +245,7 @@ class SmartTextChunker:
             ))
 
         logger.info(
-            "[Chunker] Chunked '%s' into %d chunks (chunk_size=%d, overlap=%d)",
-            doc_title or "document", len(result), self.chunk_size, self.chunk_overlap
+            "[Chunker] Chunked '%s' into %d chunks (adaptive_size=%d, base=%d, overlap=%d)",
+            doc_title or "document", len(result), adaptive_size, self.chunk_size, self.chunk_overlap
         )
         return result
