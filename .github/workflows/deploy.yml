@@ -22,10 +22,22 @@ jobs:
           port: 22
           script: |
             cd /root/Tool-Calendar || exit 1
-            docker system prune -a -f --volumes
             git fetch origin develop
             git reset --hard origin/develop
+
+            # Build & restart C# backend
             docker compose build official-doc-backend
             docker rm -f doc-coordination-system || true
             docker compose up -d official-doc-backend
+
+            # Build & restart Python AI Service
+            docker compose build python-ai-service
+            docker rm -f python-ai-service || true
+            docker compose up -d python-ai-service
+
+            # Reload Nginx để cập nhật upstream IP
             docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy
+
+            # In log để debug nếu cần
+            echo "=== Python AI Service Status ==="
+            docker ps | grep python-ai-service || echo "WARNING: python-ai-service not running!"

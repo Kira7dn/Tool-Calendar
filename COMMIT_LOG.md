@@ -3002,3 +3002,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/main.py` (Sửa đổi: Thêm hàm `_regex_extract` và logic 2 bước Ollama→Regex fallback)
 - **Lệnh git commit**: `git commit -m "fix(ocr): thêm Regex fallback bóc tách metadata khi Ollama không khả dụng"`
+
+### [2026-08-16 22:39] fix(infra): sửa CI/CD thiếu bước build python-ai-service — nguyên nhân gốc rễ Status "Lỗi"
+- **Mô tả**: Phát hiện nguyên nhân gốc rễ: `deploy.yml` chỉ build `official-doc-backend` mà KHÔNG build/start `python-ai-service`. Kết quả là sau mỗi lần deploy, `python-ai-service` không bao giờ chạy trên server → mọi file upload đều ra Status "Lỗi". Đã thêm bước build + restart `python-ai-service` vào CI/CD pipeline. Đồng thời xóa `docker system prune -a -f --volumes` tránh mất dữ liệu volume.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi: Thêm build + up python-ai-service, xóa docker system prune nguy hiểm)
+- **Lệnh git commit**: `git commit -m "fix(infra): thêm python-ai-service vào CI/CD deploy pipeline"`
