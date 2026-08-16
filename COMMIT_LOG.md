@@ -3068,3 +3068,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): sửa regex bắt sai số văn bản và ngày tháng bị dính chữ"`
+
+### [2026-08-17 00:15] fix(ocr): chuyển từ pypdfium2 sang pypdf thuần python để tránh lỗi binary
+- **Mô tả**: `pypdfium2` dựa vào C-bindings có thể lỗi hoặc không load được trên môi trường Docker Linux (slim/alpine). Đã chuyển sang `pypdf` (pure-python) để đảm bảo độ ổn định 100% trên server production khi trích xuất text nhanh.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+  - `python-ai-service/requirements.txt` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): chuyển từ pypdfium2 sang pypdf thuần python để tránh lỗi binary"`

@@ -551,12 +551,11 @@ def extract_fast(request: ExtractRequest):
         
     try:
         if request.file_path.lower().endswith('.pdf'):
-            import pypdfium2 as pdfium
-            pdf = pdfium.PdfDocument(request.file_path)
+            import pypdf
+            reader = pypdf.PdfReader(request.file_path)
             fast_text = ""
-            for i in range(len(pdf)):
-                fast_text += pdf[i].get_textpage().get_text_bounded() + "\n"
-            pdf.close()
+            for page in reader.pages:
+                fast_text += page.extract_text() + "\n"
             return ExtractFastResponse(text=fast_text.strip())
     except Exception as e:
         logger.warning("[/api/extract-fast] Error: %s", str(e))
