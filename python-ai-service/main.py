@@ -234,6 +234,20 @@ class ExtractKeywordsRequest(BaseModel):
 class ExtractKeywordsResponse(BaseModel):
     keywords: list[str]
 
+class ExtractMetadataRequest(BaseModel):
+    text: str
+    model: str = "qwen2.5:3b"
+
+class ExtractMetadataResponse(BaseModel):
+    SoVanBan: str = ""
+    TenCongVan: str = ""
+    TrichYeu: str = ""
+    NgayBanHanh: str = ""
+    ThoiHan: str = ""
+    CoQuanBanHanh: str = ""
+    CoQuanChuQuan: str = ""
+    Priority: str = "Thường"
+
 # ===== Embedding Cache (SGLang RadixCache-inspired) =====
 _embed_cache: dict[str, list[float]] = {}
 EMBED_CACHE_MAX_SIZE = 2000  # Tối đa 2000 entries trong memory
@@ -639,15 +653,59 @@ KHÔNG giải thích thêm.
                 qa_pairs = [str(x) for x in parsed]
             elif isinstance(parsed, dict) and "qa_pairs" in parsed:
                 qa_pairs = [str(x) for x in parsed["qa_pairs"]]
-            else:
-                qa_pairs = [response_text] # Fallback
-        except:
-            qa_pairs = [response_text]
+        except json.JSONDecodeError:
+            pass
             
-        return GenerateQAResponse(qa_pairs=qa_pairs)
+        return {"qa_pairs": qa_pairs}
     except Exception as e:
         logger.error("[/api/generate-qa] Error: %s", str(e))
         raise HTTPException(status_code=500, detail="Failed to generate QA pairs")
+
+@app.post("/api/extract-metadata", response_model=ExtractMetadataResponse)
+async def extract_metadata(request: ExtractMetadataRequest):
+    """Sử dụng Ollama để bóc tách siêu dữ liệu từ văn bản thô."""
+    if not request.text or not request.text.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty")
+        
+    prompt = f"""Bạn là chuyên gia bóc tách dữ liệu công văn. Hãy đọc nội dung thô dưới đây và trả về JSON chuẩn với các trường:
+- SoVanBan: Số và ký hiệu văn bản (vd: 9679/SNN&MT-QLĐĐ).
+- TenCongVan: Tên loại công văn (vd: CÔNG VĂN, QUYẾT ĐỊNH, BÁO CÁO).
+- TrichYeu: Trích yếu/tóm tắt nội dung chính của công văn (rất quan trọng, bắt buộc có).
+- NgayBanHanh: Ngày ban hành định dạng YYYY-MM-DD.
+- CoQuanBanHanh: Tên cơ quan ban hành.
+- CoQuanChuQuan: Tên cơ quan chủ quản (nếu có).
+- Priority: Chọn 1 trong 3 (Hỏa tốc, Khẩn, Thường).
+- ThoiHan: Thời hạn giải quyết/Hạn chót nếu có, định dạng YYYY-MM-DD.
+Bắt buộc trả về ĐÚNG định dạng JSON, không kèm markdown hay text nào khác.
+
+Nội dung:
+{request.text[:4000]}"""
+    
+    try:
+        import json
+        messages = [{"role": "user", "content": prompt}]
+        response_text = await _ollama_client.chat(request.model, messages, format="json")
+        
+        try:
+            parsed = json.loads(response_text)
+            # Dùng .get() để lấy giá trị an toàn tránh lỗi thiếu key
+            return ExtractMetadataResponse(
+                SoVanBan=parsed.get("SoVanBan", ""),
+                TenCongVan=parsed.get("TenCongVan", ""),
+                TrichYeu=parsed.get("TrichYeu", ""),
+                NgayBanHanh=parsed.get("NgayBanHanh", ""),
+                ThoiHan=parsed.get("ThoiHan", ""),
+                CoQuanBanHanh=parsed.get("CoQuanBanHanh", ""),
+                CoQuanChuQuan=parsed.get("CoQuanChuQuan", ""),
+                Priority=parsed.get("Priority", "Thường")
+            )
+        except Exception as e:
+            logger.warning("[/api/extract-metadata] JSON parse error: %s", str(e))
+            return ExtractMetadataResponse()
+    except Exception as e:
+        logger.error("[/api/extract-metadata] Error: %s", str(e))
+        raise HTTPException(status_code=500, detail="Metadata extraction failed")
+
 
 
 @app.post("/api/extract-keywords", response_model=ExtractKeywordsResponse)

@@ -241,6 +241,25 @@ namespace ToolCalendar.Services
                 
                 // Cập nhật text từ Python vào DB
                 doc.FullText = updatedDoc.FullText;
+                
+                // GỌI LLM ĐỂ TRÍCH XUẤT METADATA
+                if (!string.IsNullOrWhiteSpace(doc.FullText))
+                {
+                    _logger.LogInformation("[RabbitMQ Worker] Đang bóc tách Metadata cho DocumentId {Id}", docId);
+                    var metadata = await aiService.ExtractMetadataAsync(doc.FullText);
+                    if (metadata != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(metadata.SoVanBan)) doc.SoVanBan = metadata.SoVanBan;
+                        if (!string.IsNullOrWhiteSpace(metadata.TenCongVan)) doc.TenCongVan = metadata.TenCongVan;
+                        if (!string.IsNullOrWhiteSpace(metadata.TrichYeu)) doc.TrichYeu = metadata.TrichYeu;
+                        if (!string.IsNullOrWhiteSpace(metadata.NgayBanHanh) && DateTime.TryParse(metadata.NgayBanHanh, out var parsedNgay)) doc.NgayBanHanh = parsedNgay;
+                        if (!string.IsNullOrWhiteSpace(metadata.ThoiHan) && DateTime.TryParse(metadata.ThoiHan, out var parsedThoiHan)) doc.ThoiHan = parsedThoiHan;
+                        if (!string.IsNullOrWhiteSpace(metadata.CoQuanBanHanh)) doc.CoQuanBanHanh = metadata.CoQuanBanHanh;
+                        if (!string.IsNullOrWhiteSpace(metadata.CoQuanChuQuan)) doc.CoQuanChuQuan = metadata.CoQuanChuQuan;
+                        if (!string.IsNullOrWhiteSpace(metadata.Priority)) doc.Priority = metadata.Priority;
+                    }
+                }
+
                 doc.Status = "Chưa xử lý";
 
                 await docRepo.UpdateAsync(doc);

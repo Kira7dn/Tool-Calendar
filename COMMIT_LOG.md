@@ -2960,3 +2960,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiTools/SearchDocumentsByConditionTool.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): sửa lỗi AI gán sai status khi tra cứu thời hạn xử lý và bổ sung fallback"`
 
+
+### [2026-08-16 15:58] Khôi phục tính năng trích xuất metadata công văn
+- **Mô tả**: Sửa lỗi văn bản upload lên bị trống thông tin (Số văn bản, Trích yếu, Ngày ban hành...) do đợt nâng cấp Docling đã vô tình xóa file `OcrTextProcessingService.cs`. Thêm logic dùng `qwen2.5:3b` từ Python AI Service để trả về định dạng JSON thay thế Regex cũ.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi: Thêm API `/api/extract-metadata`)
+  - `ToolCalendar.Core/Services/IPythonAiService.cs` (Sửa đổi: Khai báo ExtractMetadataAsync)
+  - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi: Thêm model DocumentMetadataResult và implement ExtractMetadataAsync)
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi: Cập nhật luồng xử lý RabbitMQ Worker để gọi ExtractMetadataAsync sau khi có FullText)
+- **Lệnh git commit**: `git commit -m "fix(ocr): khôi phục tính năng bóc tách siêu dữ liệu công văn bằng LLM"`

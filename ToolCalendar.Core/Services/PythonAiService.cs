@@ -13,6 +13,7 @@ namespace ToolCalendar.Services
         Task<HyDEResponse?> HyDEAsync(string question, string model = "qwen2.5:3b");
         Task<DocSummaryResult?> DocSummaryAsync(string text, string docTitle, string model = "qwen2.5:3b");
         Task<ContextualChunkResult?> ContextualChunkAsync(string chunkText, string docTitle, string docSummary, string model = "qwen2.5:3b");
+        Task<DocumentMetadataResult?> ExtractMetadataAsync(string text, string model = "qwen2.5:3b");
     }
 
     public class PythonAiService : IPythonAiService
@@ -106,6 +107,22 @@ namespace ToolCalendar.Services
             catch
             {
                 return null; // Optional enhancement, never block
+            }
+        }
+
+        public async Task<DocumentMetadataResult?> ExtractMetadataAsync(string text, string model = "qwen2.5:3b")
+        {
+            try
+            {
+                var request = new { text, model };
+                var response = await _httpClient.PostAsJsonAsync("/api/extract-metadata", request);
+                if (!response.IsSuccessStatusCode) return null;
+                return await response.Content.ReadFromJsonAsync<DocumentMetadataResult>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error extracting metadata: {ex.Message}");
+                return null;
             }
         }
     }
@@ -232,5 +249,32 @@ namespace ToolCalendar.Services
 
         [JsonPropertyName("context_sentence")]
         public string ContextSentence { get; set; } = string.Empty;
+    }
+
+    public class DocumentMetadataResult
+    {
+        [JsonPropertyName("SoVanBan")]
+        public string SoVanBan { get; set; } = string.Empty;
+
+        [JsonPropertyName("TenCongVan")]
+        public string TenCongVan { get; set; } = string.Empty;
+
+        [JsonPropertyName("TrichYeu")]
+        public string TrichYeu { get; set; } = string.Empty;
+
+        [JsonPropertyName("NgayBanHanh")]
+        public string NgayBanHanh { get; set; } = string.Empty;
+
+        [JsonPropertyName("ThoiHan")]
+        public string ThoiHan { get; set; } = string.Empty;
+
+        [JsonPropertyName("CoQuanBanHanh")]
+        public string CoQuanBanHanh { get; set; } = string.Empty;
+
+        [JsonPropertyName("CoQuanChuQuan")]
+        public string CoQuanChuQuan { get; set; } = string.Empty;
+
+        [JsonPropertyName("Priority")]
+        public string Priority { get; set; } = "Thường";
     }
 }
