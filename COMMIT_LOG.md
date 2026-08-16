@@ -2953,3 +2953,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiTools/SearchDocumentsByConditionTool.cs` (Sửa đổi)
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): tối ưu xử lý truy vấn AI thời hạn, sửa lỗi Semantic Router"`
+
+### [2026-08-16 15:42] Sửa lỗi AI gán sai status khi tra cứu thời hạn xử lý
+- **Mô tả**: Sửa lỗi AI trả về "không có công văn nào" khi người dùng tra cứu thời hạn xử lý (ví dụ: 14/7/2026) do LLM hiểu nhầm cụm từ "thời hạn xử lý" (tên trường Hạn chót/Deadline) thành status "Đang xử lý". Đã cập nhật ParametersSchema trong SearchDocumentsByConditionTool để lưu ý rõ ràng cho LLM, đồng thời bổ sung logic fallback trong ExecuteAsync (nếu lọc theo status cùng thoi_han bị 0 kết quả thì tự động truy vấn lại không kèm điều kiện status).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiTools/SearchDocumentsByConditionTool.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): sửa lỗi AI gán sai status khi tra cứu thời hạn xử lý và bổ sung fallback"`
+
