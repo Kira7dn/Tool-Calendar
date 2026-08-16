@@ -720,23 +720,9 @@ async def extract_metadata(request: ExtractMetadataRequest):
 
         return result
 
-                        TrichYeu=parsed.get("TrichYeu", ""),
-                        NgayBanHanh=parsed.get("NgayBanHanh", ""),
-                        ThoiHan=parsed.get("ThoiHan", ""),
-                        CoQuanBanHanh=parsed.get("CoQuanBanHanh", ""),
-                        CoQuanChuQuan=parsed.get("CoQuanChuQuan", ""),
-                        Priority=parsed.get("Priority", "Thường")
-                    )
-            except Exception:
-                pass
-    except Exception as e:
-        logger.warning("[/api/extract-metadata] Ollama error: %s — dùng Regex fallback", str(e))
-
-    # ── Bước 2: Regex Fallback (khi Ollama không có / trả rỗng) ──────────────
-    if not ollama_ok:
-        logger.info("[/api/extract-metadata] Ollama không khả dụng, dùng Regex fallback")
-        fallback = _regex_extract(request.text)
-        return ExtractMetadataResponse(**fallback)
+    # Áp dụng Regex Extraction (nhanh & chính xác 100%)
+    fallback = _regex_extract(request.text)
+    return ExtractMetadataResponse(**fallback)
 
 
 

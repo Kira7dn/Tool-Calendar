@@ -3045,3 +3045,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi cú pháp trong hàm generate_qa"`
+
+### [2026-08-16 23:23] fix(ocr): Xóa rác code cũ trong main.py
+- **Mô tả**: Xóa những đoạn code cũ (của phần xử lý JSON Ollama) bị sót lại sau khi đổi qua dùng Regex hoàn toàn, gây ra lỗi cú pháp ở cuối hàm `extract_metadata`.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): xóa rác code cũ gây lỗi trong main.py"`
