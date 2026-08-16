@@ -85,56 +85,48 @@ namespace ToolCalendar.Core.Services
         {
             try
             {
-                var textSample = fullText?.Length > 1500 ? fullText[..1500] : fullText ?? documentTitle;
-
-                var prompt = $@"Bạn là AI chuyên trích xuất từ khóa tìm kiếm (Search Query Generator) giống như các hệ thống Khoj/Perplexity. 
-Nhiệm vụ của bạn là đọc văn bản/câu hỏi sau và trích xuất ra 1-2 TỪ KHÓA (keywords) CỐT LÕI NHẤT để tra cứu trên trang Thư viện Pháp luật.
-
-QUY TẮC BẮT BUỘC (NẾU VI PHẠM SẼ BỊ PHẠT):
-- Tuyệt đối không đặt câu hỏi hoặc dùng câu dài (VD: sai: 'Nghị định nào liên quan đến...', sai: 'Tôi muốn tìm...').
-- Từ khóa phải cực kỳ ngắn gọn, tập trung vào danh từ, số hiệu, tên luật pháp (VD: 'Luật Đất đai 2024', 'Nghị định 15/2020/NĐ-CP', 'Nghị quyết 01').
-- Mỗi từ khóa trên 1 dòng, KHÔNG đánh số thứ tự, KHÔNG giải thích.
-
-Văn bản/Câu hỏi: {textSample}
-
-Từ khóa:";
-
                 var requestBody = new
                 {
-                    model = _modelName,
-                    messages = new[] { new { role = "user", content = prompt } },
-                    stream = false,
-                    options = new { temperature = 0.2, num_predict = 150 }
+                    text = fullText ?? "",
+                    doc_title = documentTitle ?? "",
+                    model = _modelName
                 };
 
                 var json = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(90));
-                var response = await _httpClient.PostAsync(_ollamaUrl, content, cts.Token);
-                var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
-
-                using var doc = JsonDocument.Parse(responseBody);
-                var aiText = doc.RootElement.GetProperty("message").GetProperty("content").GetString() ?? "";
-
-                var lines = aiText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                var keywordsList = new List<string>();
-                foreach(var line in lines)
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+                var response = await _httpClient.PostAsync("http://python-ai-service:8001/api/extract-keywords", content, cts.Token);
+                
+                if (response.IsSuccessStatusCode)
                 {
-                    var k = line.Trim().Trim('"', '\'', '.', '-', '*', '1', '2', '3');
-                    if (!string.IsNullOrWhiteSpace(k) && k.Length < 100 && !k.StartsWith("["))
+                    var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
+                    using var doc = JsonDocument.Parse(responseBody);
+                    if (doc.RootElement.TryGetProperty("keywords", out var keywordsElement))
                     {
-                        keywordsList.Add(k);
+                        var keywordsList = new List<string>();
+                        foreach(var k in keywordsElement.EnumerateArray())
+                        {
+                            var keywordStr = k.GetString();
+                            if (!string.IsNullOrWhiteSpace(keywordStr))
+                            {
+                                keywordsList.Add(keywordStr);
+                            }
+                        }
+                        if (keywordsList.Count > 0)
+                        {
+                            return keywordsList;
+                        }
                     }
                 }
-                if (keywordsList.Count > 0)
+                else
                 {
-                    return keywordsList.Take(3).ToList();
+                    _logger.LogWarning("[AiReference] Python AI service returned status: {Status}", response.StatusCode);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning("[AiReference] Ollama keyword extraction failed: {Msg}", ex.Message);
+                _logger.LogWarning("[AiReference] ExtractKeywords failed: {Msg}", ex.Message);
             }
 
             if (string.IsNullOrWhiteSpace(documentTitle) || documentTitle.Trim().ToUpper() == "CÔNG VĂN")

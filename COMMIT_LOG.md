@@ -2939,3 +2939,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/requirements.txt` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(rag): bỏ comment docling trong requirements.txt để sửa lỗi 503"`
 
+### [2026-08-16 09:39] Refactor AiReferenceService sang Python AI Service
+- **Mô tả**: Di chuyển logic trích xuất từ khóa tìm kiếm (bằng Ollama) từ C# `AiReferenceService` sang endpoint mới `/api/extract-keywords` của `python-ai-service`. Tách bạch hoàn toàn logic AI sang Python, C# chỉ gọi API và thực hiện Web Search (Tavily).
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi - Thêm schema và endpoint `/api/extract-keywords`)
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi - Sửa `ExtractKeywordsAsync` gọi sang `http://python-ai-service:8001/api/extract-keywords`)
+- **Lệnh git commit**: `git commit -m "refactor(ai): chuyển logic extract keywords từ AiReferenceService sang python service"`
+

@@ -226,6 +226,14 @@ class DocSummaryResponse(BaseModel):
     summary: str
     summary_vector: list[float]
 
+class ExtractKeywordsRequest(BaseModel):
+    text: str
+    doc_title: str = ""
+    model: str = "qwen2.5:3b"
+
+class ExtractKeywordsResponse(BaseModel):
+    keywords: list[str]
+
 # ===== Embedding Cache (SGLang RadixCache-inspired) =====
 _embed_cache: dict[str, list[float]] = {}
 EMBED_CACHE_MAX_SIZE = 2000  # Tối đa 2000 entries trong memory
@@ -640,6 +648,42 @@ KHÔNG giải thích thêm.
     except Exception as e:
         logger.error("[/api/generate-qa] Error: %s", str(e))
         raise HTTPException(status_code=500, detail="Failed to generate QA pairs")
+
+
+@app.post("/api/extract-keywords", response_model=ExtractKeywordsResponse)
+async def extract_keywords(request: ExtractKeywordsRequest):
+    """Trích xuất từ khóa tìm kiếm cho Web Search"""
+    text_sample = request.text[:1500] if request.text and len(request.text) > 1500 else request.text
+    if not text_sample:
+        text_sample = request.doc_title
+
+    prompt = f"""Bạn là AI chuyên trích xuất từ khóa tìm kiếm (Search Query Generator). 
+Nhiệm vụ của bạn là đọc văn bản/câu hỏi sau và trích xuất ra 1-3 TỪ KHÓA CỐT LÕI NHẤT để tra cứu trên trang Thư viện Pháp luật.
+QUY TẮC BẮT BUỘC:
+- Tuyệt đối không đặt câu hỏi.
+- Từ khóa ngắn gọn, tập trung vào danh từ, số hiệu, tên luật pháp.
+- Mỗi từ khóa trên 1 dòng, KHÔNG đánh số thứ tự, KHÔNG giải thích.
+Văn bản/Câu hỏi: {text_sample}
+Từ khóa:"""
+    try:
+        messages = [{"role": "user", "content": prompt}]
+        ai_text = await _ollama_client.chat(request.model, messages, format=None)
+        if not ai_text:
+            return ExtractKeywordsResponse(keywords=[request.doc_title or "văn bản pháp luật"])
+        
+        lines = ai_text.splitlines()
+        keywords_list = []
+        for line in lines:
+            k = line.strip(' "\'.*-123456789')
+            if k and len(k) < 100 and not k.startswith("["):
+                keywords_list.append(k)
+        
+        if keywords_list:
+            return ExtractKeywordsResponse(keywords=keywords_list[:3])
+        return ExtractKeywordsResponse(keywords=[request.doc_title or "văn bản pháp luật"])
+    except Exception as e:
+        logger.error("[/api/extract-keywords] Error: %s", str(e))
+        return ExtractKeywordsResponse(keywords=[request.doc_title or "văn bản pháp luật"])
 
 
 if __name__ == "__main__":
