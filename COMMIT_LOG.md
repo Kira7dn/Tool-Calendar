@@ -2990,10 +2990,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 
 ## 2026-08-16
 
-### [2026-08-16 22:20] Cập nhật bóc tách siêu dữ liệu công văn (Metadata Extraction)
-- **Mô tả**: Sửa lỗi "Số văn bản" bị gán bằng tên file và không hiển thị Trích yếu khi server không cấu hình Ollama hoặc chạy quá tải. Tích hợp trực tiếp API Gemini vào `python-ai-service` để tận dụng tốc độ và độ chính xác của Cloud LLM nếu có `GEMINI_API_KEY`. Đồng thời thiết lập lớp bảo vệ thứ 3: Regex Fallback (tự bóc tách bằng lệnh Regex) khi cả Gemini và Ollama đều thất bại.
+### [2026-08-16 22:20] Hoàn tác Gemini — giữ hệ thống bóc tách metadata 100% offline
+- **Mô tả**: Hoàn tác việc tích hợp Gemini Cloud API vào `python-ai-service`. Lý do: dữ liệu công văn nhà nước KHÔNG được gửi ra ngoài Internet. Giữ lại lớp Regex Fallback (bóc tách Số văn bản, Ngày ban hành, Trích yếu bằng biểu thức chính quy) khi Ollama nội bộ thất bại. Toàn bộ pipeline vẫn chạy offline 100% trên server VNPT.
 - **Tệp thay đổi**:
-  - `python-ai-service/main.py` (Sửa đổi: Thêm Regex fallback, chặn lỗi sập luồng khi parse JSON thất bại)
-  - `python-ai-service/llm_provider/ollama_client.py` (Sửa đổi: Nâng cấp thành Hybrid Client, ưu tiên gọi Gemini qua REST API nếu có key)
-  - `docker-compose.yml` (Sửa đổi: Truyền biến môi trường GEMINI_API_KEY cho khối Python)
-- **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi bóc tách metadata bằng fallback Gemini và Regex"`
+  - `python-ai-service/llm_provider/ollama_client.py` (Hoàn tác: Xóa Gemini integration, chỉ giữ Ollama offline)
+  - `python-ai-service/main.py` (Giữ lại: Regex fallback khi Ollama không trả JSON hợp lệ)
+- **Lệnh git commit**: `git commit -m "revert(ocr): hoàn tác tích hợp Gemini Cloud — chỉ dùng Ollama offline nội bộ"`

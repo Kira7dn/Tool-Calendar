@@ -16,7 +16,6 @@ services:
       - ./ToolCalendar.Api/Uploads:/app/Uploads:ro
     environment:
       - DOCLING_USE_SIMPLE_PIPELINE=true
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
     restart: always
 
   official-doc-backend:
