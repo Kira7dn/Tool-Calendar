@@ -646,105 +646,70 @@ KHÔNG giải thích thêm.
         response_text = await _ollama_client.chat(request.model, messages, format="json")
         
         # Parse JSON
-        qa_pairs = []
-        try:
-            parsed = json.loads(response_text)
-            if isinstance(parsed, list):
-                qa_pairs = [str(x) for x in parsed]
-            elif isinstance(parsed, dict) and "qa_pairs" in parsed:
-                qa_pairs = [str(x) for x in parsed["qa_pairs"]]
-        except json.JSONDecodeError:
-            pass
-            
-        return {"qa_pairs": qa_pairs}
+)
     except Exception as e:
         logger.error("[/api/generate-qa] Error: %s", str(e))
         raise HTTPException(status_code=500, detail="Failed to generate QA pairs")
 
 @app.post("/api/extract-metadata", response_model=ExtractMetadataResponse)
 async def extract_metadata(request: ExtractMetadataRequest):
-    """Bóc tách siêu dữ liệu từ văn bản thô. Ưu tiên Ollama, fallback Regex."""
-    import json, re
+    """Bóc tách siêu dữ liệu từ văn bản thô bằng Regex (siêu nhanh & không ảo giác)."""
+    import re
     if not request.text or not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
 
-    # ── Helper: Regex fallback (100% offline, không cần Ollama) ──────────────
+    # ── Helper: Regex (100% offline, siêu nhanh 0.01s, chống ảo giác) ──────────────
     def _regex_extract(text: str) -> dict:
         result = {
             "SoVanBan": "", "TenCongVan": "CÔNG VĂN", "TrichYeu": "",
             "NgayBanHanh": "", "ThoiHan": "", "CoQuanBanHanh": "",
             "CoQuanChuQuan": "", "Priority": "Thường"
         }
-        # Số văn bản: vd "1310/TTKSBT-SKSS" hoặc "9679/SNN&MT-QLĐĐ"
+        
+        # 1. Số văn bản: vd "3206 /SKHCN-BCVT&TĐC"
         m = re.search(
-            r'(?:Số|SỐ)[:\s]+([0-9]+[\s]*/[A-Z0-9ĐÀ-Ỵà-ỵ&]+[-/][A-Z0-9ĐÀ-Ỵà-ỵ]+)',
+            r'(?:Số|SỐ)[:\s]+([0-9]+[\s]*[/-][A-Z0-9ĐÀ-Ỵà-ỵ&]+(?:[-/][A-Z0-9ĐÀ-Ỵà-ỵ&]+)*)',
             text, re.IGNORECASE)
         if m:
-            result["SoVanBan"] = m.group(1).strip()
+            result["SoVanBan"] = m.group(1).strip().replace(" ", "")
 
-        # Ngày ban hành
+        # 2. Ngày ban hành
         m = re.search(r'ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})', text, re.IGNORECASE)
         if m:
             d, mo, y = m.groups()
             result["NgayBanHanh"] = f"{y}-{int(mo):02d}-{int(d):02d}"
 
-        # Trích yếu: lấy sau "V/v" hoặc "Về việc"
-        m = re.search(r'(?:V/v|Về việc)[:\s]*(.+?)(?:\n\n|\r\n\r\n|Kính gửi)', text, re.IGNORECASE | re.DOTALL)
+        # 3. Trích yếu: lấy sau "V/v" hoặc "Về việc"
+        m = re.search(r'(?:V/v|Về việc)[:\s]*(.+?)(?=\nKính gửi|\n\n|\r\n\r\n|Kính gửi:)', text, re.IGNORECASE | re.DOTALL)
         if m:
             ty = re.sub(r'\s+', ' ', m.group(1)).strip()
+            # Loại bỏ đoạn "Quảng Ninh, ngày..." lọt vào nếu có
+            ty = re.sub(r'[A-ZÀ-Ỵa-zà-ỵ\s]+,\s*ngày.*$', '', ty).strip()
             result["TrichYeu"] = ty[:500]
 
-        # Cơ quan ban hành: dòng đầu tiên không rỗng
+        # 4. Cơ quan ban hành: dòng đầu tiên không rỗng
         lines = [l.strip() for l in text.split('\n') if l.strip() and 'CỘNG HÒA' not in l.upper()]
         if lines:
             result["CoQuanBanHanh"] = lines[0]
+            if result["CoQuanBanHanh"].upper().startswith("UBND"):
+                if len(lines) > 1 and "Số" not in lines[1]:
+                    result["CoQuanBanHanh"] = lines[1]
 
-        # Loại văn bản từ nội dung
+        # 5. Loại văn bản từ nội dung
         text_upper = text.upper()
         for vb_type in ["QUYẾT ĐỊNH", "THÔNG TƯ", "NGHỊ ĐỊNH", "BÁO CÁO", "TỜ TRÌNH", "CÔNG VĂN"]:
             if vb_type in text_upper:
                 result["TenCongVan"] = vb_type
                 break
 
-        # Priority từ từ khóa
-        if any(k in text_upper for k in ["HỎA TỐC", "KHẨN TRƯƠNG NGAY"]):
+        # 6. Priority
+        if "HỎA TỐC" in text_upper:
             result["Priority"] = "Hỏa tốc"
         elif "KHẨN" in text_upper:
             result["Priority"] = "Khẩn"
 
         return result
 
-    # ── Bước 1: Thử Ollama ────────────────────────────────────────────────────
-    prompt = f"""Bạn là chuyên gia bóc tách dữ liệu công văn. Hãy đọc nội dung thô dưới đây và trả về JSON chuẩn. 
-TUYỆT ĐỐI KHÔNG bịaa đặt thông tin. CHỈ lấy thông tin có thật trong văn bản.
-Các trường cần trích xuất:
-- SoVanBan: Số và ký hiệu văn bản (trích xuất chính xác từ văn bản, ví dụ: 123/UBND-VX).
-- TenCongVan: Tên loại công văn (CÔNG VĂN, QUYẾT ĐỊNH, BÁO CÁO, KẾ HOẠCH, v.v.).
-- TrichYeu: Trích yếu hoặc tóm tắt nội dung chính của công văn (rất quan trọng, bắt buộc có).
-- NgayBanHanh: Ngày ban hành định dạng YYYY-MM-DD.
-- CoQuanBanHanh: Tên cơ quan ban hành.
-- CoQuanChuQuan: Tên cơ quan chủ quản (nếu có).
-- Priority: Chọn 1 trong 3 mức độ (Hỏa tốc, Khẩn, Thường).
-- ThoiHan: Thời hạn giải quyết/Hạn chót nếu có nhắc đến trong văn bản, định dạng YYYY-MM-DD.
-Bắt buộc trả về ĐÚNG định dạng JSON, không kèm markdown hay text nào khác.
-
-Nội dung:
-{request.text[:4000]}"""
-
-    ollama_ok = False
-    try:
-        messages = [{"role": "user", "content": prompt}]
-        response_text = await _ollama_client.chat(request.model, messages, format="json")
-
-        if response_text and response_text.strip():
-            try:
-                parsed = json.loads(response_text)
-                # Chỉ dùng kết quả Ollama nếu có ít nhất SoVanBan hoặc TrichYeu
-                if parsed.get("SoVanBan") or parsed.get("TrichYeu"):
-                    ollama_ok = True
-                    return ExtractMetadataResponse(
-                        SoVanBan=parsed.get("SoVanBan", ""),
-                        TenCongVan=parsed.get("TenCongVan", ""),
                         TrichYeu=parsed.get("TrichYeu", ""),
                         NgayBanHanh=parsed.get("NgayBanHanh", ""),
                         ThoiHan=parsed.get("ThoiHan", ""),

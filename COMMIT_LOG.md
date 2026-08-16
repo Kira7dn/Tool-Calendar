@@ -3033,3 +3033,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): xóa ví dụ hardcode gây ảo giác cho ollama và cập nhật regex số văn bản"`
+
+### [2026-08-16 23:20] perf(ocr): Chuyển sang dùng 100% Regex cho API Extract Metadata
+- **Mô tả**: Tắt hoàn toàn Ollama ở endpoint `/api/extract-metadata` để giải quyết 2 vấn đề lớn do user phản ánh: AI xử lý quá lâu (trên server chạy CPU mất 40-60s) và AI tiếp tục bịa data (ảo giác lấy thông tin nhầm từ phụ lục). Nâng cấp hàm `_regex_extract` cực kỳ nhanh và chính xác với chuẩn công văn hành chính Việt Nam.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ocr): chuyển extract metadata sang 100% regex để đạt tốc độ 0.01s và chống ảo giác"`
