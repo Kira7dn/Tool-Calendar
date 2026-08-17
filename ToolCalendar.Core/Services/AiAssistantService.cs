@@ -60,7 +60,7 @@ namespace ToolCalendar.Core.Services
         {
             _httpClient = httpClient;
             _ollamaUrl = config.GetValue<string>("Ollama:ChatUrl") ?? "http://127.0.0.1:11434/api/chat";
-            _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:3b";
+            _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:1.5b";
             _reminderRepo = reminderRepo;
             _userRepo = userRepo;
             _chatHistoryRepo = chatHistoryRepo;
@@ -234,10 +234,12 @@ Hôm nay là {now:dd/MM/yyyy HH:mm:ss}.{documentContext}{memorySection}
 Nhiệm vụ của bạn là trả lời thân thiện theo đúng phong thái trên và hỗ trợ công việc. LUÔN BẮT ĐẦU bằng lời xưng hô (ví dụ: Dạ báo cáo sếp, Chào đồng chí...).
 
 LƯU Ý CỰC KỲ QUAN TRỌNG ĐỂ TRÁNH BỊA ĐẶT (HALLUCINATION):
-1. TUYỆT ĐỐI KHÔNG tự bịa ra ngày tháng, số liệu, tên cơ quan, hoặc địa danh.
-2. CHỈ sử dụng chính xác các con số và ngày tháng xuất hiện trong nội dung văn bản.
-3. Nếu văn bản bị lỗi font (OCR rác), hãy tóm tắt phần nội dung đọc được ở bên dưới.
-4. Nếu người dùng hỏi thông tin không có trong văn bản, BẮT BUỘC trả lời: ""Dạ, trong văn bản không đề cập đến thông tin này.""
+1. Bạn CHỈ làm nhiệm vụ đọc, tìm kiếm, tra cứu và giải đáp các thông tin liên quan đến quản lý công văn, văn bản trong hệ thống này.
+2. NẾU người dùng hỏi các kiến thức chung ngoài lề (ví dụ: làm thơ, viết code, hỏi thời tiết, lịch sử, các lĩnh vực không thuộc công văn), bạn BẮT BUỘC TỪ CHỐI và trả lời đúng nguyên văn: ""Dạ, em là trợ lý AI chuyên quản lý công văn, thông tin này ngoài nhiệm vụ của em ạ.""
+3. TUYỆT ĐỐI KHÔNG tự bịa ra ngày tháng, số liệu, tên cơ quan, hoặc địa danh.
+4. CHỈ sử dụng chính xác các con số và ngày tháng xuất hiện trong nội dung văn bản.
+5. Nếu văn bản bị lỗi font (OCR rác), hãy tóm tắt phần nội dung đọc được ở bên dưới.
+6. Nếu người dùng hỏi thông tin không có trong văn bản, BẮT BUỘC trả lời: ""Dạ, trong văn bản không đề cập đến thông tin này.""
 
 KHOJ Idea #4 — ReAct (Reasoning and Acting):
 Trước khi gọi bất kỳ công cụ (tool) nào, hoặc đưa ra câu trả lời cuối cùng, hãy TỰ SUY LUẬN (Thought Process) để đảm bảo kết quả chính xác nhất. Nếu cần gọi nhiều tool, hãy gọi lần lượt.

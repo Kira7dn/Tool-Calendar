@@ -3106,3 +3106,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): tăng timeout gọi Ollama API lên 300s để phù hợp với CPU server"`
+
+### [2026-08-17 10:18] refactor(ai): hạ model xuống 1.5b và khóa cứng phạm vi trả lời
+- **Mô tả**: Do giới hạn CPU trên VNPT và yêu cầu thực tế AI chỉ cần giải đáp thông tin liên quan đến công văn, đã tiến hành 2 cập nhật:
+  1. Cập nhật `_modelName` mặc định từ `qwen2.5:3b` xuống `qwen2.5:1.5b` để tăng gấp đôi tốc độ sinh text, giảm tải CPU.
+  2. Bổ sung luật vào System Prompt: Bắt buộc từ chối mọi câu hỏi ngoài lề (làm thơ, code, thời tiết...) với câu trả lời "Dạ, em là trợ lý AI chuyên quản lý công văn, thông tin này ngoài nhiệm vụ của em ạ." để giúp AI tập trung hoàn toàn vào tool-calling.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(ai): hạ model xuống 1.5b và khóa cứng phạm vi trả lời vào quản lý công văn"`
