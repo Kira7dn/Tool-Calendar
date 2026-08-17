@@ -3114,3 +3114,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(ai): hạ model xuống 1.5b và khóa cứng phạm vi trả lời vào quản lý công văn"`
+### [2026-08-17 15:58] Thêm Regex Fast-Path cho tìm kiếm công văn để khắc phục lỗi 1.5b
+- **Mô tả**: LLM 1.5b không đáng tin cậy trong việc gọi tool (hallucination). Vì vậy thêm Regex Fast-Path để bắt các truy vấn như "tìm công văn số 1310" và thực thi thẳng tool SearchDocumentsByConditionTool trong 0.1 giây, bỏ qua LLM. Sửa lại _routeTemplates của SemanticRouter.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/SemanticRouterService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): add regex fast path for exact document search to bypass LLM"`

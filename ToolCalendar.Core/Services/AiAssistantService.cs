@@ -113,6 +113,23 @@ namespace ToolCalendar.Core.Services
             }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể load memories: {Msg}", ex.Message); }
 
+            // 0. Regex Fast-Path cho các câu hỏi tìm kiếm số công văn cụ thể (tránh việc LLM 1.5b bị ảo giác)
+            var matchSearch = System.Text.RegularExpressions.Regex.Match(message, @"(?:tìm|tra cứu|kiểm tra).*?(?:công văn|văn bản).*?(?:số|mã)\s*([a-zA-Z0-9/\-]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (matchSearch.Success)
+            {
+                string keyword = matchSearch.Groups[1].Value;
+                _logger.LogInformation("[AiAssistant] REGEX FAST-PATH HIT: Tìm công văn số {Keyword}", keyword);
+                var dictArgs = new Dictionary<string, object> { { "keyword", keyword } };
+                string toolResult = await _toolRegistry.ExecuteToolAsync("search_documents_by_condition", dictArgs);
+                
+                string fastReply = $"Dạ báo cáo sếp, em đã tra cứu theo yêu cầu. Kết quả:\n\n{toolResult}";
+                _chatHistoryRepo.AddMessage(userId, "assistant", fastReply);
+                
+                foreach (var chunk in SplitIntoChunks(fastReply, 50))
+                    yield return chunk;
+                yield break;
+            }
+
             // Semantic Caching & Routing
             float[]? questionVector = null;
             string? cacheHitResponse = null; // CS1626 fix: không yield trong try-catch
