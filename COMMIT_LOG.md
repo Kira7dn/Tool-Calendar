@@ -3089,3 +3089,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi khoảng trắng khi sinh regex từ khóa thời hạn"`
 
+### [2026-08-17 09:07] chore(infra): cài đặt PyTorch phiên bản CPU để tiết kiệm đĩa
+- **Mô tả**: Thay đổi Dockerfile của python-ai-service cài đặt torch bản CPU trước khi chạy pip install requirements.txt để tránh tải 5GB bản CUDA gây lỗi No space left on device.
+- **Tệp thay đổi**:
+  - `python-ai-service/Dockerfile` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): cài đặt PyTorch phiên bản CPU để tiết kiệm đĩa"`
+
