@@ -146,7 +146,8 @@ builder.Services.AddHttpClient();
 // Đăng ký Extraction Services & Python AI
 builder.Services.AddHttpClient<IPythonAiService, PythonAiService>(client =>
 {
-    client.BaseAddress = new Uri("http://python-ai-service:8001");
+    var pythonAiUrl = builder.Configuration["PythonAiServiceUrl"] ?? "http://python-ai-service:8001";
+    client.BaseAddress = new Uri(pythonAiUrl);
     client.Timeout = TimeSpan.FromMinutes(10); // Docling có thể chạy lâu
 });
 builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();

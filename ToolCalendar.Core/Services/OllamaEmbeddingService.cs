@@ -24,7 +24,8 @@ namespace ToolCalendar.Core.Services
         {
             _httpClient = httpClient;
             // Gọi sang Python AI Service
-            _ollamaUrl = "http://python-ai-service:8001/api/embed";
+            var baseUrl = config.GetValue<string>("PythonAiServiceUrl") ?? "http://python-ai-service:8001";
+            _ollamaUrl = $"{baseUrl.TrimEnd('/')}/api/embed";
             _modelName = "";
             _logger = logger;
         }
@@ -45,8 +46,8 @@ namespace ToolCalendar.Core.Services
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 // Thêm timeout 10s cho an toàn
-                _httpClient.Timeout = System.TimeSpan.FromSeconds(10);
-                var response = await _httpClient.PostAsync(_ollamaUrl, content);
+                using var cts = new System.Threading.CancellationTokenSource(System.TimeSpan.FromSeconds(10));
+                var response = await _httpClient.PostAsync(_ollamaUrl, content, cts.Token);
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("[OllamaEmbeddingService] Lỗi tạo vector từ Python: HTTP {StatusCode}", response.StatusCode);

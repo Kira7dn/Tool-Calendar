@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
 
 namespace ToolCalendar.Core.Services.AiTools
@@ -10,10 +11,12 @@ namespace ToolCalendar.Core.Services.AiTools
     public class SearchDocumentsByConditionTool : IAiTool
     {
         private readonly IDocumentRepository _documentRepo;
+        private readonly string _pythonAiUrl;
 
-        public SearchDocumentsByConditionTool(IDocumentRepository documentRepo)
+        public SearchDocumentsByConditionTool(IDocumentRepository documentRepo, IConfiguration config)
         {
             _documentRepo = documentRepo;
+            _pythonAiUrl = config.GetValue<string>("PythonAiServiceUrl") ?? "http://python-ai-service:8001";
         }
 
         public string Name => "search_documents_by_condition";
@@ -77,7 +80,7 @@ namespace ToolCalendar.Core.Services.AiTools
                             var payload = new { text = thoiHanStr };
                             var json = System.Text.Json.JsonSerializer.Serialize(payload);
                             var content = new System.Net.Http.StringContent(json, Encoding.UTF8, "application/json");
-                            var response = await client.PostAsync("http://python-ai-service:8001/api/parse-date", content);
+                            var response = await client.PostAsync($"{_pythonAiUrl.TrimEnd('/')}/api/parse-date", content);
                             if (response.IsSuccessStatusCode)
                             {
                                 var respJson = await response.Content.ReadAsStringAsync();

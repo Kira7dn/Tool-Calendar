@@ -3120,3 +3120,15 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Services/SemanticRouterService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ai): add regex fast path for exact document search to bypass LLM"`
+### [2026-08-17 16:50] Di chuyển hardcoded URL sang cấu hình
+- **Mô tả**: Loại bỏ các URL hardcode "http://python-ai-service:8001" rải rác trong source code. Đưa PythonAiServiceUrl vào appsettings.json và .env để chuẩn hóa kiến trúc Microservices và dễ dàng chạy local.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiTools/SearchDocumentsByConditionTool.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/OllamaEmbeddingService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Api/appsettings.json` (Sửa đổi)
+  - `ToolCalendar.Api/appsettings.Development.json` (Mới)
+  - `.env.example` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(api): move python ai service url to configuration for microservices architecture"`

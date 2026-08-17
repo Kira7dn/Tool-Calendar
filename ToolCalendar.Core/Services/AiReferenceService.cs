@@ -31,6 +31,7 @@ namespace ToolCalendar.Core.Services
         private readonly string _modelName;
         private readonly ILogger<AiReferenceService> _logger;
         private readonly string? _tavilyApiKey;
+        private readonly string _pythonAiUrl;
 
         private static readonly string[] PrioritySites = new[]
         {
@@ -48,6 +49,7 @@ namespace ToolCalendar.Core.Services
             _ollamaUrl = config.GetValue<string>("Ollama:ChatUrl") ?? "http://127.0.0.1:11434/api/chat";
             _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:1.5b";
             _tavilyApiKey = config.GetValue<string>("Tavily:ApiKey") ?? config.GetValue<string>("TAVILY_API_KEY");
+            _pythonAiUrl = config.GetValue<string>("PythonAiServiceUrl") ?? "http://python-ai-service:8001";
             _logger = logger;
         }
 
@@ -96,7 +98,7 @@ namespace ToolCalendar.Core.Services
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-                var response = await _httpClient.PostAsync("http://python-ai-service:8001/api/extract-keywords", content, cts.Token);
+                var response = await _httpClient.PostAsync($"{_pythonAiUrl.TrimEnd('/')}/api/extract-keywords", content, cts.Token);
                 
                 if (response.IsSuccessStatusCode)
                 {

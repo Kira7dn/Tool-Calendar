@@ -37,6 +37,7 @@ namespace ToolCalendar.Core.Services
         private readonly IAiSemanticCacheRepository _semanticCacheRepo;
         private readonly ISettingRepository _settingRepo;
         private readonly ILogger<AiAssistantService> _logger;
+        private readonly string _pythonAiUrl;
 
         // ANYTHINGLLM Idea #1: N-Hop Tool Chain — tối đa 5 lượt tool call liên tiếp
         private const int MaxToolCalls = 5;
@@ -73,6 +74,7 @@ namespace ToolCalendar.Core.Services
             _semanticRouter = semanticRouter;
             _semanticCacheRepo = semanticCacheRepo;
             _settingRepo = settingRepo;
+            _pythonAiUrl = config.GetValue<string>("PythonAiServiceUrl") ?? "http://python-ai-service:8001";
             _logger = logger;
         }
 
@@ -203,10 +205,10 @@ namespace ToolCalendar.Core.Services
                                 similarity_threshold = simThreshold
                             };
 
-                            using var compressClient = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+                            using var compressClient = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
                             var compressJson = System.Text.Json.JsonSerializer.Serialize(compressPayload);
                             var compressContent = new StringContent(compressJson, System.Text.Encoding.UTF8, "application/json");
-                            var compressResp = await compressClient.PostAsync("http://python-ai-service:8001/api/compress", compressContent);
+                            var compressResp = await compressClient.PostAsync($"{_pythonAiUrl.TrimEnd('/')}/api/compress", compressContent);
 
                             if (compressResp.IsSuccessStatusCode)
                             {
