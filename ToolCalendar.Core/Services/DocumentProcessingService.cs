@@ -214,6 +214,7 @@ namespace ToolCalendar.Services
             var extractor = scope.ServiceProvider.GetRequiredService<IDocumentExtractorService>();
             var docRepo = scope.ServiceProvider.GetRequiredService<IDocumentRepository>();
             var aiService = scope.ServiceProvider.GetRequiredService<IPythonAiService>();
+            var settingRepo = scope.ServiceProvider.GetRequiredService<ISettingRepository>();
 
             var doc = await docRepo.GetDocumentByIdAsync(docId);
             if (doc == null)
@@ -237,12 +238,19 @@ namespace ToolCalendar.Services
 
             try
             {
+                // Lấy cấu hình từ khóa thời hạn
+                var dlKeywordsStr = settingRepo.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
+                var dlExcludeStr = settingRepo.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
+                
+                var deadlineKeywords = dlKeywordsStr.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
+                var excludeKeywords = dlExcludeStr.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
+
                 // 1. LUỒNG NHANH (0.1s): Trích xuất chữ từ PDF gốc để lấy Metadata tức thì
                 var fastText = await aiService.ExtractFastTextAsync(absolutePath);
                 if (!string.IsNullOrWhiteSpace(fastText))
                 {
                     _logger.LogInformation("[RabbitMQ Worker] Tìm thấy chữ trong PDF gốc (Native). Đang bóc tách Metadata tức thì cho DocumentId {Id}", docId);
-                    var metadata = await aiService.ExtractMetadataAsync(fastText);
+                    var metadata = await aiService.ExtractMetadataAsync(fastText, deadlineKeywords, excludeKeywords);
                     if (metadata != null)
                     {
                         if (!string.IsNullOrWhiteSpace(metadata.SoVanBan)) doc.SoVanBan = metadata.SoVanBan;
@@ -271,7 +279,7 @@ namespace ToolCalendar.Services
                 if (string.IsNullOrWhiteSpace(fastText) && !string.IsNullOrWhiteSpace(doc.FullText))
                 {
                     _logger.LogInformation("[RabbitMQ Worker] File scan. Bóc tách Metadata bằng text sau OCR cho DocumentId {Id}", docId);
-                    var metadata = await aiService.ExtractMetadataAsync(doc.FullText);
+                    var metadata = await aiService.ExtractMetadataAsync(doc.FullText, deadlineKeywords, excludeKeywords);
                     if (metadata != null)
                     {
                         if (!string.IsNullOrWhiteSpace(metadata.SoVanBan)) doc.SoVanBan = metadata.SoVanBan;

@@ -3075,3 +3075,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/main.py` (Sửa đổi)
   - `python-ai-service/requirements.txt` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): chuyển từ pypdfium2 sang pypdf thuần python để tránh lỗi binary"`
+
+### [2026-08-17 08:00] feat(ocr): lấy từ khóa thời hạn từ cấu hình chung và áp dụng vào regex extraction
+- **Mô tả**: Bổ sung `deadline_keywords` và `deadline_exclude_keywords` vào quá trình extract metadata siêu tốc (Regex). Đọc giá trị từ cấu hình (`Document_DeadlineKeywords`) và truyền sang `python-ai-service`. Ở service Python, thực hiện build regex động với các từ khóa này để tìm kiếm chuỗi ngày tháng năm, hoặc dạng "trong tháng x năm y".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): lấy từ khóa thời hạn từ cấu hình chung và áp dụng vào regex"`

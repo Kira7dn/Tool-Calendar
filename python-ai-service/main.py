@@ -236,6 +236,8 @@ class ExtractKeywordsResponse(BaseModel):
 
 class ExtractMetadataRequest(BaseModel):
     text: str
+    deadline_keywords: list[str] = []
+    deadline_exclude_keywords: list[str] = []
     model: str = "qwen2.5:3b"
 
 class ExtractMetadataResponse(BaseModel):
@@ -744,6 +746,67 @@ async def extract_metadata(request: ExtractMetadataRequest):
             result["Priority"] = "Hỏa tốc"
         elif "KHẨN" in text_upper:
             result["Priority"] = "Khẩn"
+
+        # 7. Thời Hạn (Deadline) dựa trên cấu hình chung
+        if request.deadline_keywords:
+            # Tạo regex pattern OR cho các keyword, escape để an toàn
+            # ví dụ: (hoàn thành trước ngày|trước ngày|trước)
+            # Sắp xếp từ khóa theo độ dài giảm dần để match từ khóa dài trước
+            sorted_keywords = sorted(request.deadline_keywords, key=len, reverse=True)
+            kw_pattern = "|".join(map(re.escape, sorted_keywords))
+            
+            # Pattern bắt ngày tháng năm đứng ngay sau từ khóa
+            # Bắt dạng: dd/mm/yyyy hoặc ngày dd tháng mm năm yyyy
+            date_pattern = r'(?:\s+)?(?:(?:ngày\s*)?(\d{1,2})[/\-\s]+(?:tháng\s*)?(\d{1,2})[/\-\s]+(?:năm\s*)?(\d{4})|(\d{1,2})[/\-](\d{1,2})[/\-](\d{4}))'
+            
+            full_pattern = f"(?:{kw_pattern}){date_pattern}"
+            
+            matches = re.finditer(full_pattern, text, re.IGNORECASE)
+            for match in matches:
+                matched_text = match.group(0).lower()
+                
+                # Kiểm tra exclude keywords
+                is_excluded = False
+                for excl in request.deadline_exclude_keywords:
+                    if excl.lower() in matched_text:
+                        is_excluded = True
+                        break
+                        
+                if not is_excluded:
+                    groups = match.groups()
+                    # Nhóm 1,2,3 là định dạng ngày dd tháng mm năm yyyy (hoặc có slash/space)
+                    # Nhóm 4,5,6 là định dạng dd/mm/yyyy
+                    if groups[0] and groups[1] and groups[2]:
+                        d, mo, y = groups[0], groups[1], groups[2]
+                    elif groups[3] and groups[4] and groups[5]:
+                        d, mo, y = groups[3], groups[4], groups[5]
+                    else:
+                        continue
+                        
+                    try:
+                        parsed_date = f"{int(y):04d}-{int(mo):02d}-{int(d):02d}"
+                        result["ThoiHan"] = parsed_date
+                        break # Tìm thấy hạn chót đầu tiên thì dừng
+                    except ValueError:
+                        pass
+        
+        # Nếu không có ngày cụ thể, thử bắt dạng tháng (vd: trong tháng 8/2026)
+        if not result["ThoiHan"] and request.deadline_keywords:
+            month_pattern = r'(?:\s+)?(?:trong\s+tháng|tháng)\s+(\d{1,2})[/\-\s]+(?:năm\s*)?(\d{4})'
+            full_month_pattern = f"(?:{kw_pattern}){month_pattern}"
+            matches = re.finditer(full_month_pattern, text, re.IGNORECASE)
+            import calendar
+            for match in matches:
+                mo, y = match.groups()
+                try:
+                    mo_int = int(mo)
+                    y_int = int(y)
+                    # Lấy ngày cuối cùng của tháng
+                    last_day = calendar.monthrange(y_int, mo_int)[1]
+                    result["ThoiHan"] = f"{y_int:04d}-{mo_int:02d}-{last_day:02d}"
+                    break
+                except ValueError:
+                    pass
 
         return result
 

@@ -14,7 +14,7 @@ namespace ToolCalendar.Services
         Task<HyDEResponse?> HyDEAsync(string question, string model = "qwen2.5:3b");
         Task<DocSummaryResult?> DocSummaryAsync(string text, string docTitle, string model = "qwen2.5:3b");
         Task<ContextualChunkResult?> ContextualChunkAsync(string chunkText, string docTitle, string docSummary, string model = "qwen2.5:3b");
-        Task<DocumentMetadataResult?> ExtractMetadataAsync(string text, string model = "qwen2.5:3b");
+        Task<DocumentMetadataResult?> ExtractMetadataAsync(string text, List<string> deadlineKeywords, List<string> excludeKeywords, string model = "qwen2.5:3b");
     }
 
     public class PythonAiService : IPythonAiService
@@ -128,11 +128,11 @@ namespace ToolCalendar.Services
             }
         }
 
-        public async Task<DocumentMetadataResult?> ExtractMetadataAsync(string text, string model = "qwen2.5:3b")
+        public async Task<DocumentMetadataResult?> ExtractMetadataAsync(string text, List<string> deadlineKeywords, List<string> excludeKeywords, string model = "qwen2.5:3b")
         {
             try
             {
-                var request = new { text, model };
+                var request = new { text, deadline_keywords = deadlineKeywords, deadline_exclude_keywords = excludeKeywords, model };
                 var response = await _httpClient.PostAsJsonAsync("/api/extract-metadata", request);
                 if (!response.IsSuccessStatusCode) return null;
                 return await response.Content.ReadFromJsonAsync<DocumentMetadataResult>();
