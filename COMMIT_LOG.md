@@ -3101,3 +3101,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(chat): sửa css chatbox không bị khuất trên mobile"`
 
+### [2026-08-17 10:11] fix(ai): tăng timeout gọi Ollama API lên 300s
+- **Mô tả**: Máy chủ VNPT sử dụng CPU nên thời gian sinh token của mô hình Ollama (qwen2.5:3b) khá chậm (khoảng 1.1 token/s), dẫn đến quá trình xử lý tool call thường xuyên vượt quá 90 giây và bị huỷ (timeout), gây ra lỗi hiển thị "Hệ thống AI hiện đang xử lý khối lượng lớn tài liệu nên bị quá tải" trên UI. Tăng `CancellationTokenSource` lên 300 giây để giải quyết.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): tăng timeout gọi Ollama API lên 300s để phù hợp với CPU server"`

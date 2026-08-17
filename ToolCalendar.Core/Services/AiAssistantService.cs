@@ -318,7 +318,8 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
 
             var tools = _toolRegistry.GetToolsSchema().ToArray();
 
-            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(90));
+            // Tăng timeout lên 300s vì server dùng CPU-only, sinh token rất chậm (1-2 tokens/s)
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(300));
 
             // ============================================================
             // ANYTHINGLLM Idea #1: N-Hop Tool Chain
