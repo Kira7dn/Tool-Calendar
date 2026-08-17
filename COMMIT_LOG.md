@@ -3132,3 +3132,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/appsettings.Development.json` (Mới)
   - `.env.example` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(api): move python ai service url to configuration for microservices architecture"`
+
+### [2026-08-18 00:02] chore(infra): trigger deployment pipeline
+- **Mô tả**: Kích hoạt lại quy trình CI/CD deployment thông qua một commit trống nhằm mục đích kiểm tra trạng thái xanh (success) của Github Actions sau khi đã xóa file thừa gây lỗi (SearchDocumentsByConditionTool.cs) trên server.
+- **Tệp thay đổi**: Không có
+- **Lệnh git commit**: `git commit -m "chore(infra): trigger deployment pipeline to verify green build"`
+
