@@ -3083,3 +3083,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ocr): lấy từ khóa thời hạn từ cấu hình chung và áp dụng vào regex"`
+### [2026-08-17 09:03] fix(ocr): sửa lỗi khoảng trắng khi sinh regex từ khóa thời hạn
+- **Mô tả**: Thay thế `re.escape` bằng cách đổi `\ ` thành `\s+` để regex có thể xử lý linh hoạt bất kỳ khoảng trắng nào trong chuỗi từ khóa.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi khoảng trắng khi sinh regex từ khóa thời hạn"`
+

@@ -753,7 +753,8 @@ async def extract_metadata(request: ExtractMetadataRequest):
             # ví dụ: (hoàn thành trước ngày|trước ngày|trước)
             # Sắp xếp từ khóa theo độ dài giảm dần để match từ khóa dài trước
             sorted_keywords = sorted(request.deadline_keywords, key=len, reverse=True)
-            kw_pattern = "|".join(map(re.escape, sorted_keywords))
+            escaped_kws = [re.escape(k).replace(r"\ ", r"\s+") for k in sorted_keywords]
+            kw_pattern = "|".join(escaped_kws)
             
             # Pattern bắt ngày tháng năm đứng ngay sau từ khóa
             # Bắt dạng: dd/mm/yyyy hoặc ngày dd tháng mm năm yyyy
