@@ -3095,3 +3095,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/Dockerfile` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): cài đặt PyTorch phiên bản CPU để tiết kiệm đĩa"`
 
+### [2026-08-17 09:08] style(chat): sửa css chatbox không bị khuất trên mobile
+- **Mô tả**: Tăng z-index lên 99999 và điều chỉnh bottom margin tránh bị bàn phím che khuất trên các thiết bị màn hình nhỏ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(chat): sửa css chatbox không bị khuất trên mobile"`
+

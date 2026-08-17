@@ -275,13 +275,13 @@ export function AiChatbox({ currentDocId }) {
 
       {/* Chat Window */}
       <div
-        className={cn(
-          'fixed z-[9999] bg-slate-50/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform origin-bottom-right flex flex-col border border-slate-200/50',
-          isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none',
+        className={`fixed z-[99999] bg-slate-50/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ease-in-out transform origin-bottom-right flex flex-col border border-slate-200/50 ${
+          isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'
+        } ${
           isExpanded
             ? 'bottom-[5dvh] right-[5vw] w-[90vw] h-[90dvh] sm:bottom-[10vh] sm:right-[10vw] sm:w-[80vw] sm:h-[80vh] max-w-[1000px]'
-            : 'bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 right-2 sm:right-6 w-[calc(100vw-16px)] sm:w-[400px] h-[600px] max-h-[calc(100dvh-7rem-env(safe-area-inset-bottom))]'
-        )}
+            : 'bottom-[calc(6rem+env(safe-area-inset-bottom))] sm:bottom-6 right-2 sm:right-6 w-[calc(100vw-16px)] sm:w-[400px] h-[600px] max-h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))]'
+        }`}
       >
         {/* Header */}
         <div className="bg-slate-100/80 backdrop-blur-sm p-4 flex items-center justify-between border-b border-slate-200">
