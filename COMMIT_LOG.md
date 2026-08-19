@@ -1,3 +1,10 @@
+### [2026-08-19 14:57] fix(chat): di chuyển ai_icon.png về đúng vị trí wwwroot/assets/
+- **Mô tả**: Vite config dùng `publicDir: '../wwwroot'` nên static assets phải nằm trong `ToolCalendar.Api/wwwroot/assets/`, không phải `ClientApp/public/assets/`. Di chuyển `ai_icon.png` về đúng chỗ để icon robot AI hiển thị đúng trên production.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/wwwroot/assets/ai_icon.png` (Mới — đúng vị trí)
+  - `ToolCalendar.Api/ClientApp/public/assets/ai_icon.png` (Xóa — sai vị trí)
+- **Lệnh git commit**: `git commit -m "fix(chat): di chuyen ai_icon ve dung vi tri wwwroot/assets"`
+
 ### [2026-08-19 14:07] fix(auth): fix idle timeout mobile + style(chat): thay icon AI robot chuyên nghiệp
 - **Mô tả**:
   1. Fix Bug #4 idle timeout mobile: thêm `visibilitychange` listener để checkIdle() chạy NGAY KHI màn hình sáng lại, trước khi touchstart kịp reset lastActivity. Đảm bảo auto-logout đúng sau khi để điện thoại qua đêm.
