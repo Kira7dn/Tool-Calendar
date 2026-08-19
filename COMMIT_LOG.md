@@ -1,3 +1,9 @@
+### [2026-08-19 16:34] chore(infra): tăng RAM giới hạn python-ai-service lên 2.5 GB
+- **Mô tả**: Tăng `mem_limit` của `python-ai-service` từ 1.5 GB lên 2.5 GB để AI xử lý tốt hơn khi có nhiều request embedding/OCR đồng thời. Server VNPT có 7.8 GB RAM, hiện chỉ dùng 2.4 GB — còn đủ dư địa.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi — mem_limit 1536m → 2560m)
+- **Lệnh git commit**: `git commit -m "chore(infra): tang RAM gioi han python-ai-service len 2.5 GB"`
+
 ### [2026-08-19 16:32] fix(infra): đổi deploy.resources sang mem_limit để giới hạn RAM hoạt động đúng
 - **Mô tả**: `deploy.resources` trong docker-compose chỉ hoạt động với Docker Swarm mode, không áp dụng khi dùng `docker compose` thông thường. Đổi sang `mem_limit` + `memswap_limit` — cú pháp tương thích trực tiếp với docker compose v2/v3 không cần Swarm. python-ai-service: 1536m, official-doc-backend: 512m.
 - **Tệp thay đổi**:

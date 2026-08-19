@@ -16,8 +16,8 @@ services:
       - ./ToolCalendar.Api/Uploads:/app/Uploads:ro
     environment:
       - DOCLING_USE_SIMPLE_PIPELINE=true
-    mem_limit: 1536m
-    memswap_limit: 1536m
+    mem_limit: 2560m
+    memswap_limit: 2560m
     restart: always
 
   official-doc-backend:
