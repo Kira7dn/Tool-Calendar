@@ -1,3 +1,10 @@
+### [2026-08-19 17:39] fix(infra): install curl in docker images for healthchecks
+- **Mô tả**: Bổ sung package `curl` vào Dockerfile của `official-doc-backend` và `python-ai-service` để Docker có thể thực thi lệnh curl trong container khi chạy healthcheck.
+- **Tệp thay đổi**:
+  - `Dockerfile` (Sửa đổi)
+  - `python-ai-service/Dockerfile` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): install curl in docker images for healthchecks"`
+
 ### [2026-08-19 17:37] fix(infra): fix service name in docker compose up command
 - **Mô tả**: Sửa tên service `nginx-proxy` thành `nginx` trong lệnh `docker compose up` ở cuối script deploy.
 - **Tệp thay đổi**:
