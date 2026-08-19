@@ -1,3 +1,9 @@
+### [2026-08-19 16:32] fix(infra): đổi deploy.resources sang mem_limit để giới hạn RAM hoạt động đúng
+- **Mô tả**: `deploy.resources` trong docker-compose chỉ hoạt động với Docker Swarm mode, không áp dụng khi dùng `docker compose` thông thường. Đổi sang `mem_limit` + `memswap_limit` — cú pháp tương thích trực tiếp với docker compose v2/v3 không cần Swarm. python-ai-service: 1536m, official-doc-backend: 512m.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi — thay deploy.resources bằng mem_limit/memswap_limit)
+- **Lệnh git commit**: `git commit -m "fix(infra): doi deploy.resources sang mem_limit de gioi han RAM hoat dong dung"`
+
 ### [2026-08-19 16:30] chore(infra): build tuần tự, giới hạn RAM container, skip build AI khi không đổi requirements
 - **Mô tả**: 3 cải tiến cho deploy script và docker-compose để tránh OOM kill service khác khi deploy:
   1. **Build tuần tự** — thay vì `build A B` song song (spike RAM ~3GB), nay build `python-ai-service` trước rồi mới `official-doc-backend` để tránh cộng dồn RAM.
