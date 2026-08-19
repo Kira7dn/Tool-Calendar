@@ -1,3 +1,9 @@
+### [2026-08-19 16:08] chore(infra): bỏ docker system prune để giữ cache layer pip install cho python-ai-service
+- **Mô tả**: Lệnh `docker system prune -a -f --volumes` trong `deploy_to_vnpt.sh` đang xóa toàn bộ image cache trước mỗi lần build, khiến Docker phải cài lại 80+ thư viện AI (torch, docling, transformers, sentence-transformers...) từ đầu — tốn ~135 giây mỗi lần deploy. Thay bằng `docker container prune -f` (chỉ xóa container stopped) và `docker image prune -f` (chỉ xóa dangling image), giữ nguyên layer cache. Dockerfile python-ai-service đã đúng pattern (copy requirements.txt trước, pip install, rồi mới COPY source), nên từ lần sau nếu requirements.txt không đổi thì pip install được cache hoàn toàn — build chỉ còn vài giây.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi — thay prune -a bằng targeted prune)
+- **Lệnh git commit**: `git commit -m "chore(infra): bo docker system prune de giu cache layer pip install python-ai-service"`
+
 ### [2026-08-19 15:54] style(chat): xóa cảnh báo AI, nâng cấp nút Lightbulb thành hover tooltip gợi ý câu hỏi
 - **Mô tả**: Xóa dòng cảnh báo "Trợ lý AI là AI và có thể trả lời không chính xác." ở footer chatbox vì gây cảm giác không chuyên nghiệp. Thay thế hành vi click-toggle của nút Lightbulb bằng hover tooltip dropdown hiển thị tiêu đề "Gợi ý câu hỏi trong hệ thống:" kèm 5 câu hỏi mẫu thực tế; click vào câu hỏi bất kỳ sẽ tự động gửi câu hỏi đó vào chat. Tooltip dùng delay 200ms khi rời chuột để tránh đóng vô tình.
 - **Tệp thay đổi**:
