@@ -260,8 +260,8 @@ function Root() {
       }
     }, 2000) // Chỉ cập nhật tối đa 1 lần mỗi 2 giây
 
-    // Heartbeat kiểm tra mỗi 10 giây xem đã quá hạn 30 phút chưa
-    const checkIdleInterval = setInterval(() => {
+    // ─── Hàm kiểm tra idle — dùng chung cho cả interval và visibilitychange ───
+    const checkIdle = () => {
       if (!localStorage.getItem('auth_token')) return
 
       const lastActivityStr = localStorage.getItem(LAST_ACTIVITY_KEY)
@@ -285,7 +285,20 @@ function Root() {
         setIsAuthenticated(false)
         setIsSessionExpired(true)
       }
-    }, 10000)
+    }
+
+    // Heartbeat kiểm tra mỗi 10 giây (cho desktop/tab đang active)
+    const checkIdleInterval = setInterval(checkIdle, 10000)
+
+    // 📱 FIX MOBILE: Kiểm tra idle NGAY KHI màn hình sáng lại / tab active trở lại
+    // Điện thoại sleep → JS timer bị đóng băng → khi mở lại, visibilitychange
+    // fires TRƯỚC touchstart → checkIdle chạy trước updateActivity → đúng logic
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkIdle()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
     activityEvents.forEach((evt) => window.addEventListener(evt, updateActivity, { passive: true }))
@@ -302,6 +315,7 @@ function Root() {
     return () => {
       clearInterval(checkIdleInterval)
       activityEvents.forEach((evt) => window.removeEventListener(evt, updateActivity))
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('storage', handleStorageChange)
       document.removeEventListener('auth:unauthorized', handleUnauthorized)
       document.removeEventListener('auth:kicked', handleKicked)

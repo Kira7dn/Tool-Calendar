@@ -1,7 +1,7 @@
 /* global TextDecoder */
 import PropTypes from 'prop-types'
 import { useState, useRef, useEffect } from 'react'
-import { Bot, X, Maximize2, Minimize2, Lightbulb, Trash2, FileText } from 'lucide-react'
+import { X, Maximize2, Minimize2, Lightbulb, Trash2, FileText } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 export function AiChatbox({ currentDocId }) {
@@ -260,17 +260,34 @@ export function AiChatbox({ currentDocId }) {
         style={{
           transform: `translate(${position.x}px, ${position.y}px) ${isOpen ? 'scale(0)' : 'scale(1)'}`,
           touchAction: 'none',
+          willChange: 'transform',
+          transition: isDragging
+            ? 'none'
+            : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease',
         }}
         className={cn(
-          'fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 right-6 z-[9999] p-4 rounded-full shadow-[0_0_20px_rgba(251,146,60,0.4)] transition-all',
-          !isDragging && 'duration-300 hover:scale-110',
-          'bg-[#1c3a6b] text-white overflow-hidden',
-          isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
+          'fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 right-6 z-[9999]',
+          'w-16 h-16 rounded-full',
+          'shadow-[0_8px_32px_rgba(28,58,107,0.45),0_0_0_3px_rgba(255,255,255,0.15)]',
+          'hover:shadow-[0_12px_40px_rgba(28,58,107,0.6),0_0_0_4px_rgba(255,255,255,0.25)]',
+          isOpen ? 'opacity-0 pointer-events-none scale-0' : 'opacity-100',
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         )}
       >
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-[shimmer_2s_infinite]" />
-        <Bot className="w-8 h-8 pointer-events-none relative z-10 animate-[bounce_3s_infinite]" />
+        {/* Pulse ring animation */}
+        <span
+          className={cn(
+            'absolute inset-0 rounded-full bg-[#1c3a6b]/30 animate-ping',
+            isDragging && 'hidden'
+          )}
+        />
+        {/* Icon image */}
+        <img
+          src="/assets/ai_icon.png"
+          alt="AI Assistant"
+          draggable={false}
+          className="w-full h-full rounded-full object-cover pointer-events-none select-none"
+        />
       </button>
 
       {/* Chat Window */}
@@ -286,8 +303,12 @@ export function AiChatbox({ currentDocId }) {
         {/* Header */}
         <div className="bg-slate-100/80 backdrop-blur-sm p-4 flex items-center justify-between border-b border-slate-200">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="relative w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-blue-700 shadow-sm border border-slate-100">
-              AI
+            <div className="relative w-12 h-12 flex-shrink-0">
+              <img
+                src="/assets/ai_icon.png"
+                alt="AI"
+                className="w-full h-full rounded-full object-cover shadow-md"
+              />
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
             </div>
             <div className="min-w-0 flex-1">
@@ -365,8 +386,8 @@ export function AiChatbox({ currentDocId }) {
               )}
             >
               {msg.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 border border-blue-200">
-                  <span className="text-xs font-bold text-blue-700">AI</span>
+                <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden border border-blue-200 shadow-sm">
+                  <img src="/assets/ai_icon.png" alt="AI" className="w-full h-full object-cover" />
                 </div>
               )}
               <div
@@ -383,8 +404,8 @@ export function AiChatbox({ currentDocId }) {
           ))}
           {isLoading && (
             <div className="flex items-end gap-2 max-w-[85%]">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 border border-blue-200">
-                <span className="text-xs font-bold text-blue-700">AI</span>
+              <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden border border-blue-200 shadow-sm">
+                <img src="/assets/ai_icon.png" alt="AI" className="w-full h-full object-cover" />
               </div>
               <div className="p-4 rounded-2xl bg-white border border-slate-100 rounded-bl-sm shadow-sm flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
@@ -428,17 +449,6 @@ export function AiChatbox({ currentDocId }) {
           </div>
         </form>
       </div>
-
-      {/* Thêm CSS cho shimmer animation */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @keyframes shimmer {
-          100% { transform: translateX(100%); }
-        }
-      `,
-        }}
-      />
     </>
   )
 }

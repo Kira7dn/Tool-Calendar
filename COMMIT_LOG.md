@@ -1,4 +1,17 @@
+### [2026-08-19 14:07] fix(auth): fix idle timeout mobile + style(chat): thay icon AI robot chuyên nghiệp
+- **Mô tả**:
+  1. Fix Bug #4 idle timeout mobile: thêm `visibilitychange` listener để checkIdle() chạy NGAY KHI màn hình sáng lại, trước khi touchstart kịp reset lastActivity. Đảm bảo auto-logout đúng sau khi để điện thoại qua đêm.
+  2. Fix AiChatbox floating button bị khuyết do `overflow-hidden` cắt icon. Đổi sang `w-16 h-16` cố định, bỏ padding.
+  3. Cải thiện drag smoothness: thêm `willChange: transform`, tắt transition khi đang kéo, dùng spring `cubic-bezier`.
+  4. Thay icon AI bằng ảnh robot 3D chuyên nghiệp (headset + laptop) dùng nhất quán ở floating button, header chat, message avatar, loading state.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi — thêm visibilitychange idle check)
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi — fix icon, drag, robot image)
+  - `ToolCalendar.Api/ClientApp/public/assets/ai_icon.png` (Mới — robot AI icon 3D)
+- **Lệnh git commit**: `git commit -m "fix(auth): fix idle timeout mobile dung visibilitychange; style(chat): thay icon AI robot chuyen nghiep"`
+
 ### [2026-08-16 11:09] fix(infra): reload Nginx sau khi deploy backend để chống lỗi 502
+
 - **Mô tả**: Bổ sung lệnh `docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy` vào file deploy `.github/workflows/deploy.yml` để làm mới upstream IP mỗi khi container `doc-coordination-system` bị build lại. Fix lỗi 502 Bad Gateway trên VNPT Cloud.
 - **Tệp thay đổi**:
   - `.github/workflows/deploy.yml` (Sửa đổi)
