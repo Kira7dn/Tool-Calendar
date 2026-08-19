@@ -54,6 +54,9 @@ sshpass -p "$VNPT_PASS" ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=3
 
   echo ">>> Deploy hoàn tất!"
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+  echo ">>> Reloading Nginx to update upstream IPs..."
+  docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy
 EOF
 
 echo "Triển khai hoàn tất!"

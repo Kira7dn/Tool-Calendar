@@ -1,3 +1,9 @@
+### [2026-08-19 18:23] fix(infra): add nginx reload to deploy_to_vnpt.sh to prevent 502 Bad Gateway
+- **Mô tả**: Khi chạy `docker compose up -d --no-deps`, IP của container `doc-coordination-system` có thể thay đổi. Nginx cache IP này nên sẽ bị lỗi 502 Bad Gateway. Bổ sung lệnh `nginx -s reload` vào cuối `deploy_to_vnpt.sh` để cập nhật lại upstream IP.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): add nginx reload to deploy_to_vnpt.sh to prevent 502 Bad Gateway"`
+
 ### [2026-08-19 17:58] feat(infra): add uptime-kuma for monitoring dashboard
 - **Mô tả**: Cấu hình thêm Uptime Kuma vào `docker-compose.yml` theo yêu cầu Monitoring dashboard và cập nhật `deploy_to_vnpt.sh` để start container này.
 - **Tệp thay đổi**:
