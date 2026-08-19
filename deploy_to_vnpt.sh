@@ -27,6 +27,14 @@ spawn ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCo
   git fetch --all --force
   git reset --hard origin/develop
 
+  # --- Bước 2.5: Backup DB ---
+  echo '>>> Backup DB...'
+  mkdir -p /root/Tool-Calendar/data/backups
+  if [ -f "/root/Tool-Calendar/data/documents.db" ]; then
+      cp /root/Tool-Calendar/data/documents.db "/root/Tool-Calendar/data/backups/documents.db.bak.\\\$(date +%Y%m%d%H%M)"
+      echo '>>> Backup DB thành công'
+  fi
+
   # --- Bước 3: Kiểm tra requirements.txt có đổi không ---
   HASH_NEW=\\\$(sha256sum python-ai-service/requirements.txt | cut -d' ' -f1)
   HASH_OLD=\\\$(cat /tmp/.python_ai_req_hash 2>/dev/null || echo 'none')
@@ -43,9 +51,9 @@ spawn ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCo
   echo '>>> Build official-doc-backend...'
   docker compose build official-doc-backend
 
-  # --- Bước 5: Restart containers ---
-  docker rm -f doc-coordination-system python-ai-service 2>/dev/null || true
-  docker compose up -d official-doc-backend python-ai-service
+  # --- Bước 5: Restart containers (Zero-downtime) ---
+  echo '>>> Deploying containers with zero-downtime...'
+  docker compose up -d --no-deps --build official-doc-backend python-ai-service
 
   echo '>>> Deploy hoàn tất!'
   docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'

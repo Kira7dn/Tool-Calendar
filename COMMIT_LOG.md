@@ -1,5 +1,17 @@
+### [2026-08-19 17:25] chore(infra): implement Multi-project DevOps best practices
+- **Mô tả**: Triển khai các best practices DevOps cho việc chạy nhiều dự án trên 1 server:
+  1. **Network Cô lập**: Thêm mạng `tool-calendar-net` vào tất cả các service trong docker-compose.yml.
+  2. **CPU Limits**: Giới hạn CPU 1.5 core cho python-ai-service và 1.0 core cho official-doc-backend.
+  3. **Health Checks**: Thêm healthcheck cho python-ai-service, official-doc-backend và rabbitmq.
+  4. **Restart Policy**: Đổi restart: always thành unless-stopped.
+  5. **Zero-downtime Deploy**: Đổi script deploy dùng `docker compose up -d --no-deps --build` thay vì rm container cũ.
+  6. **Auto Backup DB**: Thêm bước tự động copy file documents.db ra thư mục backups trước khi build lại.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): implement multi-project devops best practices"`
+
 ### [2026-08-19 16:55] feat(ai): continuous batching — FCFS queue + Ollama parallel mode cho 100 user đồng thời
-- **Mô tả**: Áp dụng kỹ thuật học từ vLLM source (FCFSRequestQueue, Scheduler.max_num_running_reqs) để hỗ trợ 100 user chat đồng thời mà không bị hàng đợi serial. Hai thay đổi:
   1. **Server**: Bật `OLLAMA_NUM_PARALLEL=4` + `OLLAMA_MAX_QUEUE=100` trong `/etc/systemd/system/ollama.service.d/override.conf` — Ollama giờ xử lý 4 request song song thay vì 1.
   2. **Code**: Implement `ChatQueueManager` (asyncio.Semaphore giới hạn 4 concurrent + FCFS deque queue) trong `ollama_client.py`. Nếu queue > 100 → 503 ngay thay vì chờ vô hạn. Release semaphore trong `finally` để tránh deadlock. Health endpoint `/health` trả thêm `chat_queue.waiting` để monitoring real-time.
 - **Tệp thay đổi**:
