@@ -161,8 +161,20 @@ services:
     networks:
       - tool-calendar-net
 
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    volumes:
+      - uptime-kuma-data:/app/data
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    networks:
+      - tool-calendar-net
+
 volumes:
   clamav-db:  # Named volume — ClamAV virus database tồn tại giữa các lần restart
+  uptime-kuma-data:
 
 networks:
   tool-calendar-net:

@@ -50,7 +50,7 @@ sshpass -p "$VNPT_PASS" ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=3
 
   # --- Bước 5: Restart containers (Zero-downtime) ---
   echo ">>> Deploying containers with zero-downtime..."
-  docker compose up -d --no-deps --build official-doc-backend python-ai-service nginx rabbitmq clamav
+  docker compose up -d --no-deps --build official-doc-backend python-ai-service nginx rabbitmq clamav uptime-kuma
 
   echo ">>> Deploy hoàn tất!"
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

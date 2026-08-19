@@ -1,3 +1,10 @@
+### [2026-08-19 17:58] feat(infra): add uptime-kuma for monitoring dashboard
+- **Mô tả**: Cấu hình thêm Uptime Kuma vào `docker-compose.yml` theo yêu cầu Monitoring dashboard và cập nhật `deploy_to_vnpt.sh` để start container này.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(infra): add uptime-kuma for monitoring dashboard"`
+
 ### [2026-08-19 17:39] fix(infra): install curl in docker images for healthchecks
 - **Mô tả**: Bổ sung package `curl` vào Dockerfile của `official-doc-backend` và `python-ai-service` để Docker có thể thực thi lệnh curl trong container khi chạy healthcheck.
 - **Tệp thay đổi**:
