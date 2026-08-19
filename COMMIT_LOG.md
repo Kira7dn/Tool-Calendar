@@ -1,3 +1,18 @@
+### [2026-08-19 15:54] style(chat): xóa cảnh báo AI, nâng cấp nút Lightbulb thành hover tooltip gợi ý câu hỏi
+- **Mô tả**: Xóa dòng cảnh báo "Trợ lý AI là AI và có thể trả lời không chính xác." ở footer chatbox vì gây cảm giác không chuyên nghiệp. Thay thế hành vi click-toggle của nút Lightbulb bằng hover tooltip dropdown hiển thị tiêu đề "Gợi ý câu hỏi trong hệ thống:" kèm 5 câu hỏi mẫu thực tế; click vào câu hỏi bất kỳ sẽ tự động gửi câu hỏi đó vào chat. Tooltip dùng delay 200ms khi rời chuột để tránh đóng vô tình.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi — xóa warning, thêm hover tooltip suggestions)
+- **Lệnh git commit**: `git commit -m "style(chat): xoa canh bao AI, nang cap lightbulb thanh hover tooltip goi y cau hoi"`
+
+### [2026-08-19 15:14] chore(assets): xóa file ảnh thừa, dọn dẹp cấu trúc project
+- **Mô tả**: Xóa các file ảnh không được sử dụng trong source code: thư mục `/image/` (9 file ảnh thiết kế), thư mục `/assets/` ở root (bản copy thừa của wwwroot), `wwwroot/assets/logo_bcp.png` (chỉ còn trong build cũ, không có trong source), `wwwroot/assets/LINK STRATEGY.png` (không phải image dùng trong UI). Giữ lại: `logo.png`, `logo_campha.jpg`, `ai_icon.png`, `tests/assets/`.
+- **Tệp thay đổi**:
+  - `image/` (Xóa — 9 file ảnh thiết kế cũ)
+  - `assets/` root (Xóa — bản copy thừa)
+  - `ToolCalendar.Api/wwwroot/assets/logo_bcp.png` (Xóa — không còn dùng)
+  - `ToolCalendar.Api/wwwroot/assets/LINK STRATEGY.png` (Xóa — không phải image UI)
+- **Lệnh git commit**: `git commit -m "chore(assets): xoa file anh thua don dep cau truc project"`
+
 ### [2026-08-19 14:57] fix(chat): di chuyển ai_icon.png về đúng vị trí wwwroot/assets/
 - **Mô tả**: Vite config dùng `publicDir: '../wwwroot'` nên static assets phải nằm trong `ToolCalendar.Api/wwwroot/assets/`, không phải `ClientApp/public/assets/`. Di chuyển `ai_icon.png` về đúng chỗ để icon robot AI hiển thị đúng trên production.
 - **Tệp thay đổi**:

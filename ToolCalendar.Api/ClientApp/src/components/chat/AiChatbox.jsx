@@ -216,11 +216,24 @@ export function AiChatbox({ currentDocId }) {
     }
   }
 
+  const [showSuggestionTooltip, setShowSuggestionTooltip] = useState(false)
+  const tooltipTimeout = useRef(null)
+
+  const handleTooltipEnter = () => {
+    clearTimeout(tooltipTimeout.current)
+    setShowSuggestionTooltip(true)
+  }
+
+  const handleTooltipLeave = () => {
+    tooltipTimeout.current = setTimeout(() => setShowSuggestionTooltip(false), 200)
+  }
+
   const suggestions = [
-    'Tóm tắt cho tôi văn bản này',
-    'Hôm nay có bao nhiêu văn bản quá hạn',
-    'Nhắc tôi 5 phút nữa đi họp',
-    'Giải quyết, phê duyệt phân tích từ các phòng ban',
+    'Hôm nay có bao nhiêu văn bản quá hạn?',
+    'Tóm tắt nội dung văn bản này cho tôi',
+    'Văn bản nào sắp đến hạn trong tuần này?',
+    'Nhắc tôi 30 phút nữa có cuộc họp',
+    'Có bao nhiêu văn bản chưa được xử lý?',
   ]
 
   /* eslint-disable react/no-array-index-key */
@@ -321,18 +334,51 @@ export function AiChatbox({ currentDocId }) {
             </div>
           </div>
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
-            <button
-              onClick={() => setShowSuggestions(!showSuggestions)}
-              title="Gợi ý câu hỏi"
-              className={cn(
-                'p-2 rounded-full shadow-sm transition-colors',
-                showSuggestions
-                  ? 'bg-yellow-100 text-yellow-600'
-                  : 'bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              )}
+            {/* Lightbulb suggestion button with hover tooltip */}
+            <div
+              className="relative"
+              onMouseEnter={handleTooltipEnter}
+              onMouseLeave={handleTooltipLeave}
             >
-              <Lightbulb className="w-4 h-4" />
-            </button>
+              <button
+                title="Gợi ý câu hỏi"
+                className="p-2 bg-yellow-50 text-yellow-500 hover:bg-yellow-100 hover:text-yellow-600 rounded-full shadow-sm transition-colors"
+              >
+                <Lightbulb className="w-4 h-4" />
+              </button>
+
+              {/* Tooltip dropdown */}
+              {showSuggestionTooltip && (
+                <div
+                  className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 z-10 overflow-hidden"
+                  onMouseEnter={handleTooltipEnter}
+                  onMouseLeave={handleTooltipLeave}
+                >
+                  <div className="px-4 py-2.5 bg-yellow-50 border-b border-yellow-100 flex items-center gap-2">
+                    <Lightbulb className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
+                    <span className="text-xs font-semibold text-yellow-700">
+                      Gợi ý câu hỏi trong hệ thống:
+                    </span>
+                  </div>
+                  <div className="py-1">
+                    {suggestions.map((sug) => (
+                      <button
+                        key={sug}
+                        onClick={() => {
+                          handleSend(null, sug)
+                          setShowSuggestionTooltip(false)
+                          setShowSuggestions(false)
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-[#1c3a6b] transition-colors flex items-start gap-2"
+                      >
+                        <span className="text-blue-400 mt-0.5 shrink-0">›</span>
+                        <span>{sug}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               onClick={handleClearHistory}
               title="Xóa lịch sử trò chuyện"
@@ -415,14 +461,6 @@ export function AiChatbox({ currentDocId }) {
             </div>
           )}
           <div ref={messagesEndRef} />
-        </div>
-
-        {/* Warning Text */}
-        <div className="bg-slate-50/50 py-2 text-center border-t border-slate-100">
-          <p className="text-[11px] text-slate-500 flex items-center justify-center gap-1">
-            <span className="text-yellow-500">⚠️</span> Trợ lý AI là AI và có thể trả lời không
-            chính xác.
-          </p>
         </div>
 
         {/* Input */}
