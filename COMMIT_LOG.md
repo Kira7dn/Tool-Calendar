@@ -1,4 +1,9 @@
-### [2026-08-19 17:34] fix(api): add /health endpoint cho Docker healthcheck
+### [2026-08-19 17:35] fix(infra): fix quote syntax error in deploy script
+- **Mô tả**: Sửa lỗi cú pháp khi dùng `expect` trong script `deploy_to_vnpt.sh`. Sử dụng nháy đơn thay cho nháy kép được escape để tránh lỗi "extra characters after close-quote".
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): fix quote syntax error in deploy script"`
+
 - **Mô tả**: Bổ sung endpoint `/health` vào Program.cs (sử dụng AddHealthChecks và MapHealthChecks) để Docker có thể kiểm tra tình trạng của container `official-doc-backend`. Trước đó container bị đánh dấu là `unhealthy` vì thiếu endpoint này.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Program.cs` (Sửa đổi)

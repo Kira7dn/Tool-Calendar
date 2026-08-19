@@ -30,8 +30,8 @@ spawn ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCo
   # --- Bước 2.5: Backup DB ---
   echo '>>> Backup DB...'
   mkdir -p /root/Tool-Calendar/data/backups
-  if [ -f "/root/Tool-Calendar/data/documents.db" ]; then
-      cp /root/Tool-Calendar/data/documents.db "/root/Tool-Calendar/data/backups/documents.db.bak.\\\$(date +%Y%m%d%H%M)"
+  if [ -f '/root/Tool-Calendar/data/documents.db' ]; then
+      cp '/root/Tool-Calendar/data/documents.db' '/root/Tool-Calendar/data/backups/documents.db.bak.\\\$(date +%Y%m%d%H%M)'
       echo '>>> Backup DB thành công'
   fi
 
