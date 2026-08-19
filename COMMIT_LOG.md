@@ -1,3 +1,13 @@
+### [2026-08-19 16:30] chore(infra): build tuần tự, giới hạn RAM container, skip build AI khi không đổi requirements
+- **Mô tả**: 3 cải tiến cho deploy script và docker-compose để tránh OOM kill service khác khi deploy:
+  1. **Build tuần tự** — thay vì `build A B` song song (spike RAM ~3GB), nay build `python-ai-service` trước rồi mới `official-doc-backend` để tránh cộng dồn RAM.
+  2. **Skip build python-ai-service** — lưu SHA256 của `requirements.txt` vào `/tmp/.python_ai_req_hash` trên server; nếu file không đổi thì bỏ qua hoàn toàn bước build AI (~135 giây) và dùng image cũ.
+  3. **Giới hạn RAM container** trong `docker-compose.yml`: `python-ai-service` tối đa 1.5 GB, `official-doc-backend` tối đa 512 MB — ngăn một container bị leak RAM làm sập các service còn lại.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi — build tuần tự + hash check requirements.txt)
+  - `docker-compose.yml` (Sửa đổi — thêm memory limits/reservations)
+- **Lệnh git commit**: `git commit -m "chore(infra): build tuan tu, gioi han RAM container, skip build AI khi khong doi requirements"`
+
 ### [2026-08-19 16:08] chore(infra): bỏ docker system prune để giữ cache layer pip install cho python-ai-service
 - **Mô tả**: Lệnh `docker system prune -a -f --volumes` trong `deploy_to_vnpt.sh` đang xóa toàn bộ image cache trước mỗi lần build, khiến Docker phải cài lại 80+ thư viện AI (torch, docling, transformers, sentence-transformers...) từ đầu — tốn ~135 giây mỗi lần deploy. Thay bằng `docker container prune -f` (chỉ xóa container stopped) và `docker image prune -f` (chỉ xóa dangling image), giữ nguyên layer cache. Dockerfile python-ai-service đã đúng pattern (copy requirements.txt trước, pip install, rồi mới COPY source), nên từ lần sau nếu requirements.txt không đổi thì pip install được cache hoàn toàn — build chỉ còn vài giây.
 - **Tệp thay đổi**:

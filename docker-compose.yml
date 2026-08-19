@@ -16,6 +16,12 @@ services:
       - ./ToolCalendar.Api/Uploads:/app/Uploads:ro
     environment:
       - DOCLING_USE_SIMPLE_PIPELINE=true
+    deploy:
+      resources:
+        limits:
+          memory: 1536m   # Tối đa 1.5 GB — AI model cần nhiều RAM
+        reservations:
+          memory: 512m
     restart: always
 
   official-doc-backend:
@@ -68,6 +74,12 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 512m    # Tối đa 512 MB — .NET backend nhẹ hơn
+        reservations:
+          memory: 128m
     restart: always
 
   rabbitmq:
