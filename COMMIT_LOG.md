@@ -1,3 +1,9 @@
+### [2026-08-19 17:34] fix(api): add /health endpoint cho Docker healthcheck
+- **Mô tả**: Bổ sung endpoint `/health` vào Program.cs (sử dụng AddHealthChecks và MapHealthChecks) để Docker có thể kiểm tra tình trạng của container `official-doc-backend`. Trước đó container bị đánh dấu là `unhealthy` vì thiếu endpoint này.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): add /health endpoint cho Docker healthcheck"`
+
 ### [2026-08-19 17:25] chore(infra): implement Multi-project DevOps best practices
 - **Mô tả**: Triển khai các best practices DevOps cho việc chạy nhiều dự án trên 1 server:
   1. **Network Cô lập**: Thêm mạng `tool-calendar-net` vào tất cả các service trong docker-compose.yml.

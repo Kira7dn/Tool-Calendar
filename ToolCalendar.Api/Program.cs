@@ -29,6 +29,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMemoryCache(); // ✅ Dashboard stats caching
+builder.Services.AddHealthChecks(); // ✅ Thêm HealthChecks cho Docker Monitoring
 
 
 
@@ -406,6 +407,7 @@ app.UseAuthorization();
 // Áp dụng Rate Limiter "fixed" làm mặc định cho tất cả Controllers và Hub
 app.MapControllers().RequireRateLimiting("fixed");
 app.MapHub<NotificationHub>("/notificationHub").RequireRateLimiting("fixed");
+app.MapHealthChecks("/health"); // ✅ Endpoint healthcheck cho Docker
 app.MapFallbackToFile("index.html");
 
 
