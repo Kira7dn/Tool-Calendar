@@ -1,3 +1,13 @@
+### [2026-08-19 16:55] feat(ai): continuous batching — FCFS queue + Ollama parallel mode cho 100 user đồng thời
+- **Mô tả**: Áp dụng kỹ thuật học từ vLLM source (FCFSRequestQueue, Scheduler.max_num_running_reqs) để hỗ trợ 100 user chat đồng thời mà không bị hàng đợi serial. Hai thay đổi:
+  1. **Server**: Bật `OLLAMA_NUM_PARALLEL=4` + `OLLAMA_MAX_QUEUE=100` trong `/etc/systemd/system/ollama.service.d/override.conf` — Ollama giờ xử lý 4 request song song thay vì 1.
+  2. **Code**: Implement `ChatQueueManager` (asyncio.Semaphore giới hạn 4 concurrent + FCFS deque queue) trong `ollama_client.py`. Nếu queue > 100 → 503 ngay thay vì chờ vô hạn. Release semaphore trong `finally` để tránh deadlock. Health endpoint `/health` trả thêm `chat_queue.waiting` để monitoring real-time.
+- **Tệp thay đổi**:
+  - `python-ai-service/llm_provider/ollama_client.py` (Sửa đổi — thêm ChatQueueManager, get_chat_queue_manager)
+  - `python-ai-service/main.py` (Sửa đổi — import get_chat_queue_manager, thêm chat_queue stats vào /health, version 3.1.0)
+- **Server change** (không phải code): `/etc/systemd/system/ollama.service.d/override.conf` — OLLAMA_NUM_PARALLEL=4
+- **Lệnh git commit**: `git commit -m "feat(ai): continuous batching FCFS queue + Ollama parallel mode cho 100 user dong thoi"`
+
 ### [2026-08-19 16:34] chore(infra): tăng RAM giới hạn python-ai-service lên 2.5 GB
 - **Mô tả**: Tăng `mem_limit` của `python-ai-service` từ 1.5 GB lên 2.5 GB để AI xử lý tốt hơn khi có nhiều request embedding/OCR đồng thời. Server VNPT có 7.8 GB RAM, hiện chỉ dùng 2.4 GB — còn đủ dư địa.
 - **Tệp thay đổi**:

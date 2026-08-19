@@ -34,7 +34,7 @@ from pydantic import BaseModel
 
 from embeddings.batch_processor import AsyncBatchEmbedder
 from embeddings.semantic_embedder import get_embedder
-from llm_provider.ollama_client import OllamaClient
+from llm_provider.ollama_client import OllamaClient, get_chat_queue_manager
 from llm_provider.radix_cache import get_radix_cache  # SGLang RadixTree
 from rag.chunker import SmartTextChunker
 from rag.compressor import ContextCompressor
@@ -268,16 +268,23 @@ def parse_date_endpoint(request: ParseDateRequest):
 
 @app.get("/health")
 def health_check():
-    """Health check + cache metrics — học từ llama.cpp /metrics endpoint"""
+    """Health check + cache metrics + chat queue stats"""
     cache_stats = _radix_cache.stats()
     embedder = get_embedder()
+    queue_mgr = get_chat_queue_manager()
     return {
         "status": "ok",
         "service": "toolcalendar-ai-service",
-        "version": "3.0.0",
+        "version": "3.1.0",
         "model": embedder.model_name,
         "embedding_dim": embedder.embedding_dim,
         "radix_cache": cache_stats,
+        # Continuous batching queue stats (vİLLM-inspired)
+        "chat_queue": {
+            "waiting": queue_mgr.queue_depth,
+            "max_concurrent": 4,
+            "max_queue": 100,
+        },
     }
 
 @app.get("/api/cache/stats")
