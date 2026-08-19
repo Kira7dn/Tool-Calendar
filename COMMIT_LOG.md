@@ -1,3 +1,9 @@
+### [2026-08-19 17:36] refactor(infra): rewrite deploy_to_vnpt.sh to use sshpass directly
+- **Mô tả**: Viết lại script deploy, bỏ sử dụng `expect` thay bằng `sshpass` và `Here-Doc` (<< 'EOF') để giải quyết triệt để lỗi parse chuỗi, biến, và dấu nháy phức tạp.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(infra): rewrite deploy script to use sshpass without expect"`
+
 ### [2026-08-19 17:35] fix(infra): fix quote syntax error in deploy script
 - **Mô tả**: Sửa lỗi cú pháp khi dùng `expect` trong script `deploy_to_vnpt.sh`. Sử dụng nháy đơn thay cho nháy kép được escape để tránh lỗi "extra characters after close-quote".
 - **Tệp thay đổi**:
