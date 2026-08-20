@@ -3343,3 +3343,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/NavBar.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): thu gọn nền xanh của navbar để đồng bộ với khung max-width"`
+
+### [2026-08-20 11:20] Thu gọn đường viền đỏ của Header trang Lịch công tác
+- **Mô tả**: Đường gạch màu đỏ bên dưới Header cũng bị tình trạng kéo dài tràn viền màn hình giống NavBar. Đã di chuyển thuộc tính border vào thẻ div bên trong (max-w-6xl) để đường đỏ bị cắt đi ở 2 bên mép, đồng bộ khối hiển thị.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/Header.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): thu gọn đường viền đỏ của header để đồng bộ với khung max-width"`
