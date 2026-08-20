@@ -3361,3 +3361,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): thu gọn footer và xoá text LinkStrategy"`
+
+### [2026-08-20 11:30] Đẩy Footer xuống đáy màn hình
+- **Mô tả**: Khi trang có ít dữ liệu, footer bị treo lơ lửng ở giữa màn hình. Đã bổ sung cấu trúc `flex flex-col` cho trang và `flex-1` cho phần nội dung chính (main) để nó tự động giãn ra chiếm hết khoảng trống, ép footer luôn nằm sát đáy màn hình.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): ép footer luôn nằm ở đáy màn hình khi trang ngắn"`

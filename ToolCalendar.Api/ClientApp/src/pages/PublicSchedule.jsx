@@ -47,7 +47,7 @@ export default function PublicSchedule() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-white font-sans">
+      <div className="min-h-screen bg-white font-sans flex flex-col">
         {isLoggingOut && (
           <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 animate-in fade-in duration-300">
             <div className="relative mb-8">
@@ -95,7 +95,7 @@ export default function PublicSchedule() {
         <Header user={user} onLogout={handleLogout} onOpenLogin={() => setIsLoginModalOpen(true)} />
         <NavBar />
 
-        <main className="max-w-6xl mx-auto px-4 py-8">
+        <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8">
           {error ? (
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
               <ErrorState onRetry={fetchSchedule} />
