@@ -3329,3 +3329,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/Header.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/NavBar.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): mở rộng giao diện trang lịch công tác ra toàn màn hình"`
+
+### [2026-08-20 11:15] Khôi phục giao diện màn hình Public Schedule
+- **Mô tả**: Giao diện full-width trên màn hình to nhìn bị "bẹt" và phân tán sự chú ý, do đó đã khôi phục lại cấu trúc `max-w-6xl mx-auto` để nội dung được căn giữa gọn gàng và dễ nhìn hơn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/Header.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/NavBar.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): khôi phục giới hạn max-width để giao diện không bị bẹt ngang"`

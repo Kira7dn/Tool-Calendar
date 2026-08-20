@@ -22,7 +22,7 @@ export function Header({ user, onLogout, onOpenLogin }) {
 
   return (
     <header className="bg-white border-b-4 border-[#c8102e]">
-      <div className="w-full px-8 py-4 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg border border-gray-100 overflow-hidden shrink-0">
             <img
