@@ -3373,3 +3373,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): giới hạn chiều rộng footer đối xứng với header"`
+
+### [2026-08-20 15:43] Thêm giới hạn tài nguyên Docker
+- **Mô tả**: Bổ sung  và  cho rabbitmq, clamav, nginx, uptime-kuma để chống OOM server.
+- **Tệp thay đổi**:
+  -  (Sửa đổi)
+- **Lệnh git commit**: 
