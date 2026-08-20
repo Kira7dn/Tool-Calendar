@@ -3279,3 +3279,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): nâng cấp regex trích xuất metadata xử lý văn bản bị đảo lộn thứ tự"`
+
+### [2026-08-20 09:00] Bật lại AI (Ollama) cho trích xuất Metadata
+- **Mô tả**: Theo yêu cầu của user, bật lại luồng AI (Ollama) để quét văn bản trong `/api/extract-metadata`. Thuật toán sẽ dùng Regex làm base (xử lý siêu tốc), sau đó gọi Ollama để trích xuất thông tin, và dùng kết quả của Ollama đè lên Regex nếu AI tìm ra thông tin tốt hơn. Chấp nhận rủi ro AI xử lý chậm trên CPU (40-60s) để tối đa hoá độ chính xác cho văn bản lộn xộn.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ocr): bật lại tính năng dùng ollama ai để bóc tách siêu dữ liệu theo yêu cầu"`

@@ -712,10 +712,9 @@ async def extract_metadata(request: ExtractMetadataRequest):
             "CoQuanChuQuan": "", "Priority": "Thường"
         }
         
-        # 1. Số văn bản: không bắt buộc ở đầu dòng, bắt buộc dấu ':'
-        # Cho phép khuyết số ở đầu (vd "/SGDĐT-KHTC") để lấy được thông tin dù OCR sót số
+        # 1. Số văn bản: vd "3206 /SKHCN-BCVT&TĐC" (bắt buộc ở đầu dòng để tránh lẫn vào nội dung)
         m = re.search(
-            r'(?:Số|SỐ):\s*([0-9]*[\s]*[/-][A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+(?:[-/][A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+)*)',
+            r'(?m)^[\s]*(?:Số|SỐ)[:\s]+([0-9]+[\s]*[/-][A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+(?:[-/][A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+)*)',
             text, re.IGNORECASE)
         if m:
             result["SoVanBan"] = m.group(1).strip().replace(" ", "")
@@ -726,35 +725,21 @@ async def extract_metadata(request: ExtractMetadataRequest):
             d, mo, y = m.groups()
             result["NgayBanHanh"] = f"{y}-{int(mo):02d}-{int(d):02d}"
 
-        # 3. Trích yếu: lấy sau "V/v" hoặc "Về việc", thêm các điểm dừng (lookahead) linh hoạt
-        m = re.search(r'(?:V/v|V/v:|Về việc)[:\s]*(.+?)(?=\nKính gửi|\nCỘNG HOÀ|\nĐộc lập|\nQuảng Ninh|\nNơi nhận|\n\n|\r\n\r\n|Kính gửi:|$)', text, re.IGNORECASE | re.DOTALL)
+        # 3. Trích yếu: lấy sau "V/v" hoặc "Về việc"
+        m = re.search(r'(?:V/v|V/v:|Về việc)[:\s]*(.+?)(?=\nKính gửi|\n\n|\r\n\r\n|Kính gửi:)', text, re.IGNORECASE | re.DOTALL)
         if m:
             ty = re.sub(r'\s+', ' ', m.group(1)).strip()
             # Loại bỏ đoạn "Quảng Ninh, ngày..." lọt vào nếu có
             ty = re.sub(r'[A-ZÀ-Ỵa-zà-ỵ\s]+,\s*ngày.*$', '', ty).strip()
             result["TrichYeu"] = ty[:500]
 
-        # 4. Cơ quan ban hành: tự động dò ngược 2 dòng từ vị trí của chữ "Số:"
-        lines = [l.strip() for l in text.split('\n') if l.strip()]
-        
-        so_idx = -1
-        for i, line in enumerate(lines):
-            if re.match(r'^(?:Số|SỐ)[:\s]', line, re.IGNORECASE):
-                so_idx = i
-                break
-                
-        if so_idx > 0:
-            result["CoQuanBanHanh"] = lines[so_idx - 1]
-            if so_idx > 1 and "CỘNG" not in lines[so_idx - 2].upper() and "ĐỘC LẬP" not in lines[so_idx - 2].upper():
-                result["CoQuanChuQuan"] = lines[so_idx - 2]
-        else:
-            # Fallback cũ nếu không tìm thấy chữ Số:
-            normal_lines = [l for l in lines if 'CỘNG HÒA' not in l.upper() and 'CỘNG HOÀ' not in l.upper()]
-            if normal_lines:
-                result["CoQuanBanHanh"] = normal_lines[0]
-                if result["CoQuanBanHanh"].upper().startswith("UBND"):
-                    if len(normal_lines) > 1 and "Số" not in normal_lines[1]:
-                        result["CoQuanBanHanh"] = normal_lines[1]
+        # 4. Cơ quan ban hành: dòng đầu tiên không rỗng
+        lines = [l.strip() for l in text.split('\n') if l.strip() and 'CỘNG HÒA' not in l.upper()]
+        if lines:
+            result["CoQuanBanHanh"] = lines[0]
+            if result["CoQuanBanHanh"].upper().startswith("UBND"):
+                if len(lines) > 1 and "Số" not in lines[1]:
+                    result["CoQuanBanHanh"] = lines[1]
 
         # 5. Loại văn bản từ nội dung
         text_upper = text.upper()
@@ -833,8 +818,34 @@ async def extract_metadata(request: ExtractMetadataRequest):
 
         return result
 
-    # Áp dụng Regex Extraction (nhanh & chính xác 100%)
+    # Áp dụng Regex Extraction (nhanh) làm base
     fallback = _regex_extract(request.text)
+    
+    # Theo yêu cầu của user, chạy AI để quét văn bản (có thể chậm 40-60s trên CPU)
+    try:
+        import json
+        prompt = f"""Bạn là chuyên gia phân tích công văn hành chính. Trích xuất thông tin từ văn bản sau.
+TRẢ VỀ JSON VỚI CÁC KEY: SoVanBan, TenCongVan, TrichYeu, NgayBanHanh (YYYY-MM-DD), ThoiHan (YYYY-MM-DD), CoQuanBanHanh, CoQuanChuQuan, Priority (Thường/Khẩn/Hỏa tốc).
+TUYỆT ĐỐI KHÔNG BỊA ĐẶT THÔNG TIN. NẾU KHÔNG THẤY, ĐỂ RỖNG "".
+Văn bản:
+{request.text}"""
+        messages = [{"role": "user", "content": prompt}]
+        
+        # Gọi Ollama, parse JSON
+        response_text = await _ollama_client.chat(request.model, messages, format="json")
+        parsed = json.loads(response_text)
+        
+        # Ghi đè kết quả Regex bằng kết quả AI (nếu AI có dữ liệu hợp lệ)
+        for k in fallback.keys():
+            if k in parsed and parsed[k] and str(parsed[k]).strip():
+                val = str(parsed[k]).strip()
+                # Ưu tiên AI trừ khi nó bịa data rác
+                if val.lower() not in ["none", "null", "không có", "không đề cập"]:
+                    fallback[k] = val
+                    
+    except Exception as e:
+        logger.warning("[/api/extract-metadata] Lỗi AI, sử dụng Regex: %s", str(e))
+
     return ExtractMetadataResponse(**fallback)
 
 
