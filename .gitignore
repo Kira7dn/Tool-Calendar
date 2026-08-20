@@ -62,4 +62,11 @@ ToolCalendar.Core/Models/PaddleOCR/
 Models/PaddleOCR/
 scratch/
 
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
 .deploy.env

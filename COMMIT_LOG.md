@@ -1,3 +1,10 @@
+### [2026-08-20 08:30] fix(docs): thêm điều kiện myRouting.status !== 'Từ chối' vào nút HUỶ TIẾP NHẬN và cleanup Python cache
+- **Mô tả**: Điều tra bug Phạm Ngọc Hợp không có nút "HUỶ TIẾP NHẬN" — phát hiện routing của anh ta thực ra đã ở trạng thái "Từ chối" (đã huỷ trước đó). Bổ sung điều kiện `myRouting.status !== 'Từ chối'` vào nút HUỶ để rõ ràng hơn về logic. Đồng thời thêm rule `__pycache__` vào `.gitignore` và xóa toàn bộ `.pyc` binary khỏi git tracking.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi — thêm guard `status !== 'Từ chối'`)
+  - `.gitignore` (Sửa đổi — thêm `__pycache__/`, `*.pyc`, `*.pyo`, `*.pyd`)
+- **Lệnh git commit**: `git commit -m "fix(docs): thêm guard từ chối vào nút huỷ tiếp nhận và cleanup python cache khỏi git"`
+
 ### [2026-08-19 18:23] fix(infra): add nginx reload to deploy_to_vnpt.sh to prevent 502 Bad Gateway
 - **Mô tả**: Khi chạy `docker compose up -d --no-deps`, IP của container `doc-coordination-system` có thể thay đổi. Nginx cache IP này nên sẽ bị lỗi 502 Bad Gateway. Bổ sung lệnh `nginx -s reload` vào cuối `deploy_to_vnpt.sh` để cập nhật lại upstream IP.
 - **Tệp thay đổi**:

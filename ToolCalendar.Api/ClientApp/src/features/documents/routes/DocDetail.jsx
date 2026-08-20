@@ -194,10 +194,10 @@ export default function DocDetail({ docId, onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-          {/* Nút HỦY TIẾ́P NHẠN — chỉ hiện với Cấp 2 khi routing là Chưa xử lý */}
           {isLevel2 &&
             myRouting &&
             (myRouting.status === 'Chưa xử lý' || myRouting.status === 'Đang xử lý') &&
+            myRouting.status !== 'Từ chối' &&
             doc.status !== DOCUMENT_STATUS.DA_XU_LY &&
             doc.status !== 'Hoàn thành' && (
               <button
