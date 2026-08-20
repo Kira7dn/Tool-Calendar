@@ -242,9 +242,8 @@ export default function PublicSchedule() {
           onSuccess={handleLoginSuccess}
         />
 
-        <footer className="mt-12 bg-gray-800 text-gray-400 py-8 px-4 text-center text-xs">
-          <p className="mb-2">© 2026 Bản quyền thuộc về UBND phường Cẩm Phả</p>
-          <p>Hệ thống được phát triển bởi LinkStrategy</p>
+        <footer className="mt-12 bg-gray-800 text-gray-400 py-3 px-4 text-center text-xs">
+          <p>© 2026 Bản quyền thuộc về UBND phường Cẩm Phả</p>
         </footer>
       </div>
     </TooltipProvider>

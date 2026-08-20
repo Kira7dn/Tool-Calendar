@@ -3355,3 +3355,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): đồng bộ nền trắng cho toàn trang để xoá vệt xám 2 bên"`
+
+### [2026-08-20 11:28] Thu gọn Footer trang Public Schedule
+- **Mô tả**: Xoá dòng chữ "Hệ thống được phát triển bởi LinkStrategy" theo yêu cầu, đồng thời giảm độ dày (padding) của footer để khối chân trang trông nhỏ gọn và tinh tế hơn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): thu gọn footer và xoá text LinkStrategy"`
