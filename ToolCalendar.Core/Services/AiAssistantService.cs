@@ -295,8 +295,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             foreach (var msg in history)
                 messages.Add(new { role = msg.Role, content = msg.Content });
 
-            // 2. Semantic Routing (Fast-path)
-            bool skipToolLoop = false;
+            // 2. Semantic Routing (Tool Hint)
             try
             {
                 if (questionVector != null && questionVector.Length > 0)
@@ -305,37 +304,13 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
                     if (!string.IsNullOrEmpty(routedTool))
                     {
                         _logger.LogInformation("[AiAssistant] SEMANTIC ROUTING HIT: {Tool}", routedTool);
-                        
-                        // Fake user message
-                        messages.Add(new { role = "user", content = message });
-                        
-                        // Execute tool directly
-                        var dictArgs = new Dictionary<string, object>();
-                        
-                        string toolResult = await _toolRegistry.ExecuteToolAsync(routedTool, dictArgs);
-                        
-                        // Thêm fake tool call và tool result vào context để AI sinh text ngay lập tức
-                        messages.Add(new { 
-                            role = "assistant", 
-                            content = "", 
-                            tool_calls = new[] { 
-                                new { 
-                                    function = new { name = routedTool, arguments = JsonSerializer.Serialize(dictArgs) } 
-                                } 
-                            } 
-                        });
-                        messages.Add(new { role = "tool", content = toolResult });
-                        
-                        skipToolLoop = true;
+                        messages.Add(new { role = "system", content = $"GỢI Ý TỪ HỆ THỐNG: Dựa trên ý định của người dùng, bạn HÃY ƯU TIÊN sử dụng công cụ '{routedTool}'. Đảm bảo trích xuất đúng các tham số (ví dụ: status, thoi_han) từ câu hỏi trước khi gọi." });
                     }
                 }
             }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi Semantic Routing: {Msg}", ex.Message); }
 
-            if (!skipToolLoop)
-            {
-                messages.Add(new { role = "user", content = message });
-            }
+            messages.Add(new { role = "user", content = message });
 
             var tools = _toolRegistry.GetToolsSchema().ToArray();
 
@@ -353,7 +328,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
 
             for (int hop = 0; hop <= MaxToolCalls; hop++)
             {
-                bool isLastHop = skipToolLoop || (hop == MaxToolCalls);
+                bool isLastHop = (hop == MaxToolCalls);
 
                 // Nếu đây là hop cuối cùng, bỏ tools để buộc AI sinh text
                 var requestBody = isLastHop

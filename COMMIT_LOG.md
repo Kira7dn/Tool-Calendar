@@ -3291,3 +3291,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi popup gợi ý câu hỏi bị cắt viền do overflow-hidden trong chatbox"`
+
+### [2026-08-20 09:30] Sửa lỗi Semantic Routing gây ảo giác cho LLM
+- **Mô tả**: Khi người dùng hỏi "Có bao nhiêu văn bản chưa xử lý", Semantic Router bắt được ý định và tự động gọi tool `search_documents_by_condition` với các tham số rỗng (trống rỗng), khiến nó trả về danh sách ngẫu nhiên 15 văn bản. LLM 3B do nhận được data rác này nên sinh ảo giác (bác sĩ, người bệnh). Sửa bằng cách không gọi tool trực tiếp nữa, mà chèn một câu prompt nhắc nhở để LLM tự gọi tool với đúng tham số.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): sửa lỗi semantic router gọi tool với tham số rỗng gây ảo giác"`
