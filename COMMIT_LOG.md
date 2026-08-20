@@ -3337,3 +3337,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/Header.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/NavBar.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): khôi phục giới hạn max-width để giao diện không bị bẹt ngang"`
+
+### [2026-08-20 11:18] Thu gọn dải màu xanh của NavBar trang Lịch công tác
+- **Mô tả**: Thay vì để dải màu xanh lá của thanh điều hướng (NavBar) kéo dài vô tận sang hai bên mép màn hình, đã chuyển màu nền và bóng đổ vào bộ khung max-width bên trong để thanh menu này vừa khít với bề ngang của nội dung trang.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/NavBar.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): thu gọn nền xanh của navbar để đồng bộ với khung max-width"`

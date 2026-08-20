@@ -18,8 +18,8 @@ export function NavBar() {
   }
 
   return (
-    <nav className="bg-[#2c6e49] w-full shadow-md">
-      <div className="max-w-6xl mx-auto flex items-center">
+    <nav className="w-full">
+      <div className="max-w-6xl mx-auto flex items-center bg-[#2c6e49] shadow-md">
         {navItems.map((item) => (
           <button
             key={item}
