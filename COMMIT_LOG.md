@@ -3385,3 +3385,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `nginx/conf.d/lichcongtacvp.conf` (Mới)
 - **Lệnh git commit**: `git commit -m "feat(nginx): add lichcongtacvp.conf with SSL and host.docker.internal"`
+
+### [2026-08-20 16:53] Cài đặt AlphaSSL Wildcard
+- **Mô tả**: Thay đổi cấu hình Nginx để sử dụng chứng chỉ AlphaSSL Wildcard (STAR_vpdtcampha_vn) trả phí thay cho Let's Encrypt cũ.
+- **Tệp thay đổi**:
+  - `nginx/conf.d/lichcongtacvp.conf` (Sửa đổi)
+  - `nginx/conf.d/default.conf` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(ssl): setup AlphaSSL wildcard for all subdomains"`
