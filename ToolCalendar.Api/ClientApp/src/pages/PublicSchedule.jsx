@@ -47,7 +47,7 @@ export default function PublicSchedule() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-[#f4f7f6] font-sans">
+      <div className="min-h-screen bg-white font-sans">
         {isLoggingOut && (
           <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 animate-in fade-in duration-300">
             <div className="relative mb-8">

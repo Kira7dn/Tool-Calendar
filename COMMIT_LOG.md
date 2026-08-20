@@ -3349,3 +3349,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/Header.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): thu gọn đường viền đỏ của header để đồng bộ với khung max-width"`
+
+### [2026-08-20 11:24] Đồng bộ màu nền trang Public Schedule thành màu trắng
+- **Mô tả**: Thay đổi màu nền của toàn bộ trang (từ `#f4f7f6` xám nhạt thành `bg-white`) để khắc phục tình trạng hai bên mép màn hình bị chia làm hai nửa màu (trắng của header và xám của thân trang). Giờ đây giao diện liền mạch hoàn toàn giống như hệ thống cũ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): đồng bộ nền trắng cho toàn trang để xoá vệt xám 2 bên"`
