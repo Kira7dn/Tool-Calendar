@@ -3273,3 +3273,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**: Không có
 - **Lệnh git commit**: `git commit -m "chore(infra): trigger deployment pipeline to verify green build"`
 
+
+### [2026-08-20 08:58] Cập nhật bộ Regex xử lý văn bản bị lỗi OCR lộn xộn
+- **Mô tả**: Khi người dùng upload văn bản scan có đóng dấu đỏ (bị mất số hiệu và làm chữ lộn xộn đẩy Header xuống cuối), bộ Regex cũ bị thất bại do yêu cầu "Số:" phải ở đầu file và bắt buộc phải có con số. Đã nâng cấp `_regex_extract` để: cho phép lấy số khuyết, tự động dò ngược lên 2 dòng từ "Số:" để lấy đúng Cơ quan ban hành, và thêm lookahead linh hoạt cho Trích yếu.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): nâng cấp regex trích xuất metadata xử lý văn bản bị đảo lộn thứ tự"`
