@@ -3379,3 +3379,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   -  (Sửa đổi)
 - **Lệnh git commit**: 
+
+### [2026-08-20 16:01] Cấu hình Nginx SSL và Proxy cho lichcongtacvp
+- **Mô tả**: Thêm file cấu hình lichcongtacvp.conf để chặn cổng 80 chuyển hướng sang 443, cấp SSL Let's Encrypt cho tên miền lichcongtacvp.vpdtcampha.vn, và đổi proxy_pass từ IP Public sang host.docker.internal để sửa lỗi 502 Bad Gateway.
+- **Tệp thay đổi**:
+  - `nginx/conf.d/lichcongtacvp.conf` (Mới)
+- **Lệnh git commit**: `git commit -m "feat(nginx): add lichcongtacvp.conf with SSL and host.docker.internal"`
