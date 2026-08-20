@@ -3315,3 +3315,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ui): tự động ẩn panel tải file khi đã có dữ liệu để mở rộng bảng rà soát"`
+
+### [2026-08-20 10:38] Sửa lỗi giao diện bị cắt xén trên màn hình nhỏ
+- **Mô tả**: Trên một số màn hình laptop độ phân giải thấp, panel bên trái (UploadDropzone & Trạng thái) bị ẩn mất phần dưới do quá dài. Thêm khả năng cuộn độc lập cho panel này để khắc phục.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): thêm scrollbar cho panel tải file trên màn hình thấp"`

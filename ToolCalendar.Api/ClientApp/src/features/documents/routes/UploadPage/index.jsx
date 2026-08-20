@@ -179,7 +179,7 @@ export function UploadPage() {
 
       <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-y-auto lg:overflow-hidden min-h-0">
         {(batchItems.length === 0 || isGlobalProcessing) && (
-          <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-3">
+          <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-3 lg:overflow-y-auto lg:pb-2 min-h-0">
             <UploadDropzone
               isDragging={isDragging}
               setIsDragging={setIsDragging}
