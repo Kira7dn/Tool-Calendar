@@ -3309,3 +3309,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi vỡ layout bảng tải văn bản do co rúm cột trên Edge Windows"`
+
+### [2026-08-20 10:22] Tối ưu UX giao diện Upload
+- **Mô tả**: Ẩn panel tải lên (bên trái) khi đã có văn bản hoàn tất OCR để mở rộng không gian cho bảng dữ liệu, giúp người dùng tập trung vào việc rà soát và ấn "Lưu & Phân công".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): tự động ẩn panel tải file khi đã có dữ liệu để mở rộng bảng rà soát"`

@@ -178,74 +178,76 @@ export function UploadPage() {
       />
 
       <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-y-auto lg:overflow-hidden min-h-0">
-        <div className="w-full lg:w-64 flex-shrink-0 flex flex-col gap-3">
-          <UploadDropzone
-            isDragging={isDragging}
-            setIsDragging={setIsDragging}
-            handleFileUpload={handleFileUpload}
-          />
+        {(batchItems.length === 0 || isGlobalProcessing) && (
+          <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-3">
+            <UploadDropzone
+              isDragging={isDragging}
+              setIsDragging={setIsDragging}
+              handleFileUpload={handleFileUpload}
+            />
 
-          {isProcessing && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+            {isProcessing && (
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    Đang xử lý OCR
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Ring pct={overallProgress} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-slate-800 truncate">{currentFileName}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Đang nhận diện văn bản...</p>
+                  </div>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
+                    style={{ width: `${overallProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                  Đang xử lý OCR
+                  Trạng thái đợt tải
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <Ring pct={overallProgress} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-slate-800 truncate">{currentFileName}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Đang nhận diện văn bản...</p>
-                </div>
-              </div>
-              <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
-                  style={{ width: `${overallProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-100">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                Trạng thái đợt tải
-              </p>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {[
-                { label: 'Đang OCR', count: statCounts.ocr, color: 'blue', icon: <ClockIcon /> },
-                {
-                  label: 'Đã lưu',
-                  count: statCounts.saved,
-                  color: 'emerald',
-                  icon: <CheckCircleIcon />,
-                },
-                {
-                  label: 'Chờ rà soát',
-                  count: statCounts.pending,
-                  color: 'slate',
-                  icon: <XCircleIcon />,
-                },
-              ].map((row) => (
-                <div key={row.label} className="flex items-center justify-between px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    {row.icon}
-                    <span className="text-xs font-medium text-slate-600">{row.label}</span>
+              <div className="divide-y divide-slate-100">
+                {[
+                  { label: 'Đang OCR', count: statCounts.ocr, color: 'blue', icon: <ClockIcon /> },
+                  {
+                    label: 'Đã lưu',
+                    count: statCounts.saved,
+                    color: 'emerald',
+                    icon: <CheckCircleIcon />,
+                  },
+                  {
+                    label: 'Chờ rà soát',
+                    count: statCounts.pending,
+                    color: 'slate',
+                    icon: <XCircleIcon />,
+                  },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {row.icon}
+                      <span className="text-xs font-medium text-slate-600">{row.label}</span>
+                    </div>
+                    <span
+                      className={`min-w-[24px] h-6 px-2 flex items-center justify-center rounded-full text-xs font-bold ${row.color === 'blue' ? 'bg-blue-50 text-blue-700' : row.color === 'emerald' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}
+                    >
+                      {row.count}
+                    </span>
                   </div>
-                  <span
-                    className={`min-w-[24px] h-6 px-2 flex items-center justify-center rounded-full text-xs font-bold ${row.color === 'blue' ? 'bg-blue-50 text-blue-700' : row.color === 'emerald' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}
-                  >
-                    {row.count}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <UploadTable
           batchItems={batchItems}
