@@ -305,7 +305,7 @@ export function AiChatbox({ currentDocId }) {
 
       {/* Chat Window */}
       <div
-        className={`fixed z-[99999] bg-slate-50/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ease-in-out transform origin-bottom-right flex flex-col border border-slate-200/50 ${
+        className={`fixed z-[99999] bg-slate-50/90 backdrop-blur-md rounded-2xl shadow-2xl transition-all duration-300 ease-in-out transform origin-bottom-right flex flex-col border border-slate-200/50 ${
           isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'
         } ${
           isExpanded
@@ -314,7 +314,7 @@ export function AiChatbox({ currentDocId }) {
         }`}
       >
         {/* Header */}
-        <div className="bg-slate-100/80 backdrop-blur-sm p-4 flex items-center justify-between border-b border-slate-200">
+        <div className="bg-slate-100/80 backdrop-blur-sm p-4 flex items-center justify-between border-b border-slate-200 rounded-t-2xl">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="relative w-12 h-12 flex-shrink-0">
               <img
@@ -466,7 +466,7 @@ export function AiChatbox({ currentDocId }) {
         {/* Input */}
         <form
           onSubmit={(e) => handleSend(e, message)}
-          className="p-4 bg-white border-t border-slate-200"
+          className="p-4 bg-white border-t border-slate-200 rounded-b-2xl"
         >
           <div className="relative flex items-center gap-2">
             <input

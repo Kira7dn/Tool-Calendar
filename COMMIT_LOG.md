@@ -3285,3 +3285,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ocr): bật lại tính năng dùng ollama ai để bóc tách siêu dữ liệu theo yêu cầu"`
+
+### [2026-08-20 09:25] fix(ui): sửa lỗi popup gợi ý câu hỏi bị cắt viền do overflow-hidden trong chatbox
+- **Mô tả**: Trình đơn gợi ý câu hỏi (bóng đèn) bị cắt viền ở bên trái do thẻ `div` chứa Chatbox cha có thuộc tính `overflow-hidden`. Xóa `overflow-hidden` khỏi thẻ cha và thêm `rounded-t-2xl`, `rounded-b-2xl` vào Header và Form input để giữ nguyên góc bo tròn mà không cần cắt nội dung tràn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/chat/AiChatbox.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi popup gợi ý câu hỏi bị cắt viền do overflow-hidden trong chatbox"`
