@@ -34,19 +34,19 @@ jobs:
 
             # ── C# Backend: luôn rebuild ──────────────────────────────────────
             docker compose build official-doc-backend
-            docker rm -f doc-coordination-system || true
+            docker rm -f $(docker ps -aq -f "name=doc-coordination-system") || true
             docker compose up -d official-doc-backend
 
             # ── Python AI Service: chỉ rebuild khi Dockerfile/requirements đổi ──
             if [ "$PYTHON_CHANGED" -gt "0" ]; then
               echo ">>> [Python AI] Dockerfile/requirements thay đổi — BUILD lại (mất ~5-10 phút)"
               docker compose build python-ai-service
-              docker rm -f python-ai-service || true
+              docker rm -f $(docker ps -aq -f "name=python-ai-service") || true
               docker compose up -d python-ai-service
             else
               echo ">>> [Python AI] Không có thay đổi hạ tầng — RESTART container cũ (nhanh)"
               if docker ps | grep -q python-ai-service; then
-                docker restart python-ai-service
+                docker restart $(docker ps -q -f "name=python-ai-service")
               else
                 # Container không chạy, start lại từ image cũ
                 docker compose up -d python-ai-service

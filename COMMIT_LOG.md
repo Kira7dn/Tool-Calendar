@@ -3297,3 +3297,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): sửa lỗi semantic router gọi tool với tham số rỗng gây ảo giác"`
+
+### [2026-08-20 09:41] Sửa lỗi CI/CD không nhận diện đúng tên container
+- **Mô tả**: CI/CD (Github Actions) bị lỗi do dùng tên cứng `python-ai-service` để xoá/khởi động lại container, trong khi các hệ thống quản lý như Coolify thường tự thêm tiền tố (VD: `fb1a_...`). Đã sửa thành cách tìm kiếm linh động qua `docker ps -q -f "name=..."`.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): sửa lỗi pipeline deploy bị crash do sai tên container trên server"`
