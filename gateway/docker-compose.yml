@@ -26,5 +26,5 @@ services:
 
 networks:
   tool-calendar-net:
-    name: toolcalendar_tool-calendar-net
+    name: tool-calendar_tool-calendar-net
     external: true

@@ -3401,3 +3401,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `deploy_gateway.sh` (Mới)
   - `gateway/` (Mới)
 - **Lệnh git commit**: `git commit -m "refactor(infra): extract Nginx to independent api-gateway"`
+
+### [2026-08-20 17:04] Fix API Gateway network
+- **Mô tả**: Sửa tên external network cho API Gateway từ `toolcalendar_...` thành `tool-calendar_...` để nối mạng đúng với hệ thống gốc.
+- **Tệp thay đổi**:
+  - `gateway/docker-compose.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): correct network name in gateway"`
