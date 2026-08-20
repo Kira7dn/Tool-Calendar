@@ -3321,3 +3321,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): thêm scrollbar cho panel tải file trên màn hình thấp"`
+
+### [2026-08-20 11:10] Mở rộng giao diện Public Schedule ra toàn màn hình
+- **Mô tả**: Xoá giới hạn chiều rộng (max-w-6xl) ở Header, NavBar và phần main content của trang danh sách văn bản đến hạn (Public Schedule). Chuyển sang sử dụng `w-full px-8` để giao diện trải dài ra hai bên màn hình tương tự như hệ thống cũ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/Header.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/routes/PublicSchedule/components/NavBar.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): mở rộng giao diện trang lịch công tác ra toàn màn hình"`

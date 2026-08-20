@@ -95,7 +95,7 @@ export default function PublicSchedule() {
         <Header user={user} onLogout={handleLogout} onOpenLogin={() => setIsLoginModalOpen(true)} />
         <NavBar />
 
-        <main className="max-w-6xl mx-auto px-4 py-8">
+        <main className="w-full px-8 py-8">
           {error ? (
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
               <ErrorState onRetry={fetchSchedule} />
