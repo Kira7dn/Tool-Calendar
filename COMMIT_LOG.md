@@ -3303,3 +3303,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(infra): sửa lỗi pipeline deploy bị crash do sai tên container trên server"`
+
+### [2026-08-20 09:48] Sửa lỗi vỡ layout bảng văn bản tải lên trên Edge/Windows
+- **Mô tả**: Bảng danh sách văn bản tải lên bị co rúm, các cột đè lên nhau trên trình duyệt Edge/Windows. Đã chuyển bảng sang dạng `table-fixed`, thiết lập chiều rộng cố định cho từng cột `<th>`, và thêm class `w-full` cho các ô input/select bên trong.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi vỡ layout bảng tải văn bản do co rúm cột trên Edge Windows"`

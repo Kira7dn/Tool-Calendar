@@ -99,7 +99,7 @@ export function UploadTable({
         className="flex-1 overflow-auto"
         onScroll={(e) => setTableScrollTop(e.currentTarget.scrollTop)}
       >
-        <table className="w-full text-xs border-collapse min-w-[800px]">
+        <table className="w-full text-xs border-collapse min-w-[900px] table-fixed">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
               <th className="pl-4 pr-2 py-2 w-8">
@@ -113,12 +113,23 @@ export function UploadTable({
                   className="w-3.5 h-3.5 rounded accent-blue-600 cursor-pointer"
                 />
               </th>
-              {['Tên tệp', 'Số hiệu', 'Thời hạn', 'Đơn vị', 'Cán bộ', 'Trạng thái', ''].map((h) => (
+              {[
+                { label: 'Tên tệp', width: 'w-[220px]' },
+                { label: 'Số hiệu', width: 'w-[100px]' },
+                { label: 'Thời hạn', width: 'w-[110px]' },
+                { label: 'Đơn vị', width: 'w-[140px]' },
+                { label: 'Cán bộ', width: 'w-[140px]' },
+                { label: 'Trạng thái', width: 'w-[100px]' },
+                { label: '', width: 'w-[90px]' },
+              ].map((h) => (
                 <th
-                  key={h}
-                  className="px-3 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap"
+                  key={h.label}
+                  className={cn(
+                    'px-3 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap',
+                    h.width
+                  )}
                 >
-                  {h}
+                  {h.label}
                 </th>
               ))}
             </tr>
@@ -176,7 +187,7 @@ export function UploadTable({
                       onChange={(e) => updateItem(row.id, 'soVanBan', e.target.value)}
                       disabled={row.status === 'processing'}
                       placeholder="Số hiệu..."
-                      className="w-24 text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white placeholder-slate-300 transition-all font-bold text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full text-xs border border-slate-200 rounded-md px-2 py-1.5 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white placeholder-slate-300 transition-all font-bold text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </td>
                   <td className="px-3 py-2">
@@ -185,7 +196,7 @@ export function UploadTable({
                       value={row.thoiHan}
                       onChange={(e) => updateItem(row.id, 'thoiHan', e.target.value)}
                       disabled={row.status === 'processing'}
-                      className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full text-xs border border-slate-200 rounded-md px-2 py-1.5 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </td>
                   <td className="px-3 py-2">
@@ -202,7 +213,7 @@ export function UploadTable({
                           )
                         )
                       }}
-                      className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full text-xs border border-slate-200 rounded-md px-2 py-1.5 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="">Chọn đơn vị</option>
                       {departments
@@ -225,7 +236,7 @@ export function UploadTable({
                           e.target.value ? [parseInt(e.target.value)] : []
                         )
                       }
-                      className="text-xs border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full text-xs border border-slate-200 rounded-md px-2 py-1.5 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-slate-50 focus:bg-white transition-all text-slate-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="">Chọn cán bộ</option>
                       {(row.departmentIds[0]
