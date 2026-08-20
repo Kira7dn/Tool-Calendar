@@ -3392,3 +3392,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `nginx/conf.d/lichcongtacvp.conf` (Sửa đổi)
   - `nginx/conf.d/default.conf` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(ssl): setup AlphaSSL wildcard for all subdomains"`
+
+### [2026-08-20 17:03] Tách API Gateway độc lập
+- **Mô tả**: Đưa Nginx ra khỏi `Tool-Calendar` thành hệ thống `vp-gateway` độc lập. Bất kỳ thay đổi hoặc lỗi gì ở Tool-Calendar cũng không còn làm chết kết nối mạng (downtime) của các dự án khác.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi: Xóa nginx)
+  - `deploy_to_vnpt.sh` (Sửa đổi: Bỏ restart nginx)
+  - `deploy_gateway.sh` (Mới)
+  - `gateway/` (Mới)
+- **Lệnh git commit**: `git commit -m "refactor(infra): extract Nginx to independent api-gateway"`
