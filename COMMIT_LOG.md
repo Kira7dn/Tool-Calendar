@@ -3367,3 +3367,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "style(ui): ép footer luôn nằm ở đáy màn hình khi trang ngắn"`
+
+### [2026-08-20 11:32] Căn chỉnh Footer Public Schedule
+- **Mô tả**: Giới hạn độ rộng của footer (thêm `max-w-6xl mx-auto`) để thanh màu đen bo gọn lại, đối xứng hoàn toàn với Header và NavBar phía trên, thay vì trải dài vô cực sang hai bên.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/pages/PublicSchedule.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): giới hạn chiều rộng footer đối xứng với header"`

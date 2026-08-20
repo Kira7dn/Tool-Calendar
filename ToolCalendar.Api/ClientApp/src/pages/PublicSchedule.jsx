@@ -242,7 +242,7 @@ export default function PublicSchedule() {
           onSuccess={handleLoginSuccess}
         />
 
-        <footer className="mt-12 bg-gray-800 text-gray-400 py-3 px-4 text-center text-xs">
+        <footer className="mt-12 bg-gray-800 text-gray-400 py-3 px-4 text-center text-xs max-w-6xl mx-auto w-full">
           <p>© 2026 Bản quyền thuộc về UBND phường Cẩm Phả</p>
         </footer>
       </div>
