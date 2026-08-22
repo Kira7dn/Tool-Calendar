@@ -1,3 +1,9 @@
+### [2026-08-22 21:59] docs(ocr): cập nhật tài liệu thay thế PaddleOCR bằng Docling
+- **Mô tả**: Sửa mục 4.2 trong SYSTEM_FEATURES.md vì hệ thống đã loại bỏ hoàn toàn PaddleOCR và chuyển sang sử dụng Docling / pypdfium2 trong Python AI Service từ ngày 15/08/2026.
+- **Tệp thay đổi**:
+  - `SYSTEM_FEATURES.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "docs(ocr): cập nhật tài liệu thay thế PaddleOCR bằng Docling"`
+
 ### [2026-08-20 08:30] fix(docs): thêm điều kiện myRouting.status !== 'Từ chối' vào nút HUỶ TIẾP NHẬN và cleanup Python cache
 - **Mô tả**: Điều tra bug Phạm Ngọc Hợp không có nút "HUỶ TIẾP NHẬN" — phát hiện routing của anh ta thực ra đã ở trạng thái "Từ chối" (đã huỷ trước đó). Bổ sung điều kiện `myRouting.status !== 'Từ chối'` vào nút HUỶ để rõ ràng hơn về logic. Đồng thời thêm rule `__pycache__` vào `.gitignore` và xóa toàn bộ `.pyc` binary khỏi git tracking.
 - **Tệp thay đổi**:

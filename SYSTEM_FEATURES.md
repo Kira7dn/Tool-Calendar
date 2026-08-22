@@ -88,7 +88,7 @@ Hệ thống giám sát hạn chót (`ThoiHan`) của công văn và phân loạ
 1. User upload file (PDF/Img) -> `DocumentsController`.
 2. Controller lưu file, lưu DB với `Status = 'Đang xử lý OCR'`, bắn message vào **RabbitMQ**.
 3. `OcrQueueService` (BackgroundService) nhận message -> Gọi `DocumentExtractorService`.
-4. Extractor convert PDF thành Img -> Gọi Python PaddleOCR qua HTTP -> Lấy full text.
+4. Gửi file sang Python AI Service qua HTTP -> Python dùng `pypdfium2` (cho PDF chuẩn) hoặc `Docling` (để OCR file ảnh/scan) -> Lấy full text.
 5. Chạy Regex bóc tách: *Số hiệu, Trích yếu, Ngày tháng, Đơn vị ban hành*.
 6. Cập nhật DB, đổi Status thành `Chưa xử lý` -> Bắn SignalR báo cho Client.
 
