@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     chunk_overlap: int = 100
     similarity_threshold: float = 0.65
     compression_fastpath_chars: int = 0    # 0 = tắt fast-path
-    metadata_use_llm: bool = False
+    metadata_use_llm: bool = True
     metadata_max_chars: int = 6000
     tz: str = "Asia/Ho_Chi_Minh"
 

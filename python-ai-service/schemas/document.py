@@ -10,7 +10,7 @@ class ExtractFastResponse(BaseModel):
 class ExtractKeywordsRequest(BaseModel):
     text: str
     doc_title: str = ""
-    model: str = "qwen2.5:3b"
+    model: str = "qwen2.5:0.5b"
 
 class ExtractKeywordsResponse(BaseModel):
     keywords: list[str]
@@ -19,7 +19,7 @@ class ExtractMetadataRequest(BaseModel):
     text: str
     deadline_keywords: list[str] = []
     deadline_exclude_keywords: list[str] = []
-    model: str = "qwen2.5:3b"
+    model: str = "qwen2.5:0.5b"
 
 class ExtractMetadataResponse(BaseModel):
     SoVanBan: str = ""

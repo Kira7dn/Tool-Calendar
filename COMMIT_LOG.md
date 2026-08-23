@@ -3492,3 +3492,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): remove undefined XCircleIcon from StatusBadge"`
+
+### [2026-08-23 23:10] Triển khai Ollama với model nhẹ (qwen2.5:0.5b)
+- **Mô tả**: Tích hợp Ollama vào docker-compose trên server VNPT để chạy tính năng trích xuất metadata bằng LLM. Do giới hạn RAM của server (8GB), đổi model mặc định từ qwen2.5:3b xuống qwen2.5:0.5b và giới hạn RAM của container ollama ở mức 1024m. Bật lại metadata_use_llm trong config.py.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi: Thêm service ollama, sửa Ollama__ChatUrl)
+  - `python-ai-service/config.py` (Sửa đổi: Bật metadata_use_llm=True)
+  - `python-ai-service/schemas/document.py` (Sửa đổi: model=qwen2.5:0.5b)
+  - `python-ai-service/schemas/llm.py` (Sửa đổi: model=qwen2.5:0.5b)
+- **Lệnh git commit**: `git commit -m "feat(ai): integrate lightweight ollama qwen2.5:0.5b for vnpt server"`

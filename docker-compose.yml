@@ -50,7 +50,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - DB_PATH=/app/data/documents.db
       - TZ=Asia/Ho_Chi_Minh
-      - Ollama__ChatUrl=http://host.docker.internal:11434/api/chat
+      - Ollama__ChatUrl=http://ollama:11434/api/chat
       - JWT_SECRET=${JWT_SECRET}
       - PUBLIC_ID_SECRET=${PUBLIC_ID_SECRET}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
@@ -157,9 +157,21 @@ services:
     networks:
       - tool-calendar-net
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    volumes:
+      - ollama-data:/root/.ollama
+    mem_limit: 1024m
+    cpus: "1.0"
+    restart: unless-stopped
+    networks:
+      - tool-calendar-net
+
 volumes:
   clamav-db:  # Named volume — ClamAV virus database tồn tại giữa các lần restart
   uptime-kuma-data:
+  ollama-data:
 
 networks:
   tool-calendar-net:
