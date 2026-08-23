@@ -3481,6 +3481,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/schemas/__init__.py` (Mới/Bắt buộc)
 - **Lệnh git commit**: `git commit -m "fix(ai): force add missing __init__.py files ignored by global gitignore"`
 
+### [2026-08-23 23:00] Disable LLM metadata extraction to fix 5-minute OCR timeout
+- **Mô tả**: Tắt tính năng `metadata_use_llm` trong `config.py` của AI Service. Do server VNPT hiện tại không có container `ollama` chạy ngầm, việc gọi LLM bị treo cho đến khi timeout (mặc định 5 phút của `aiohttp`), khiến người dùng phải chờ rất lâu ở trạng thái "Đang OCR". Đưa hệ thống về lại chế độ trích xuất Regex siêu tốc mặc định.
+- **Tệp thay đổi**:
+  - `python-ai-service/config.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): disable llm metadata extraction to prevent connection timeout on vnpt server"`
+
 ### [2026-08-23 22:36] Fix XCircleIcon not defined error in UploadTable
 - **Mô tả**: Sửa lỗi React "XCircleIcon is not defined" do nhầm lẫn import khi thêm icon vào `StatusBadge`. Thay thế bằng inline HTML/CSS element.
 - **Tệp thay đổi**:
