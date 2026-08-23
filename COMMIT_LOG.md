@@ -3471,6 +3471,16 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): restore error parsing on failed upload and display error in tooltip"`
 
+### [2026-08-23 22:54] Force add __init__.py files ignored by global gitignore
+- **Mô tả**: Sửa lỗi AI Service bị sập trên Production do các file `__init__.py` vô tình bị chặn bởi `.gitignore_global` của server (trên máy dev không bị). Việc thiếu `__init__.py` làm hỏng cấu trúc module của Python, gây ra lỗi `ImportError: cannot import name 'EmbedRequest' from 'schemas'`.
+- **Tệp thay đổi**:
+  - `python-ai-service/embeddings/__init__.py` (Mới/Bắt buộc)
+  - `python-ai-service/llm_provider/__init__.py` (Mới/Bắt buộc)
+  - `python-ai-service/utils/__init__.py` (Mới/Bắt buộc)
+  - `python-ai-service/rag/__init__.py` (Mới/Bắt buộc)
+  - `python-ai-service/schemas/__init__.py` (Mới/Bắt buộc)
+- **Lệnh git commit**: `git commit -m "fix(ai): force add missing __init__.py files ignored by global gitignore"`
+
 ### [2026-08-23 22:36] Fix XCircleIcon not defined error in UploadTable
 - **Mô tả**: Sửa lỗi React "XCircleIcon is not defined" do nhầm lẫn import khi thêm icon vào `StatusBadge`. Thay thế bằng inline HTML/CSS element.
 - **Tệp thay đổi**:
