@@ -3487,6 +3487,15 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/config.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): disable llm metadata extraction to prevent connection timeout on vnpt server"`
 
+### [2026-08-23 23:25] Fix 5 critical risks in Python AI Service (OCR, RAG, Metadata)
+- **Mô tả**: Sửa toàn diện 5 điểm nghẽn của Python AI Service dựa theo báo cáo phân tích. 1) Bật OCR cho PDF scan bằng cách cài `DOCLING_USE_SIMPLE_PIPELINE=false`. 2) Giới hạn input metadata LLM xuống 1500 ký tự và không cho phép ghi đè các trường Regex đã tìm thấy nhằm tăng tốc độ xử lý và chống ảo giác. 3) Kích hoạt lại RAG pipeline cho file > 1500 ký tự và tắt hoàn toàn Reranker tiếng Anh để tăng tốc độ và độ chính xác cho tiếng Việt. 4) Cập nhật lại config.py cho phù hợp.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+  - `python-ai-service/config.py` (Sửa đổi)
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+  - `python-ai-service/rag/compressor.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): repair ocr, enable rag pipeline and optimize metadata extraction"`
+
 ### [2026-08-23 22:36] Fix XCircleIcon not defined error in UploadTable
 - **Mô tả**: Sửa lỗi React "XCircleIcon is not defined" do nhầm lẫn import khi thêm icon vào `StatusBadge`. Thay thế bằng inline HTML/CSS element.
 - **Tệp thay đổi**:

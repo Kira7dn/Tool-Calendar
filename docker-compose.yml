@@ -15,7 +15,7 @@ services:
     volumes:
       - ./ToolCalendar.Api/Uploads:/app/Uploads:ro
     environment:
-      - DOCLING_USE_SIMPLE_PIPELINE=true
+      - DOCLING_USE_SIMPLE_PIPELINE=false
       - TZ=Asia/Ho_Chi_Minh
     mem_limit: 2560m
     memswap_limit: 2560m

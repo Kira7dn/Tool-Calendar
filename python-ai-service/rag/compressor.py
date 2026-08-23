@@ -64,7 +64,7 @@ class ContextCompressor:
         max_results: int = DEFAULT_MAX_RESULTS,
         # Pipeline options — có thể bật/tắt từng bước
         use_hybrid: bool = True,     # Dify BM25+Semantic
-        use_reranker: bool = True,   # Khoj CrossEncoder
+        use_reranker: bool = False,  # R-P05: TẮT Reranker vì nó dùng model tiếng Anh và tải lén Internet
         reranker: Optional[CrossEncoderReranker] = None,
         hybrid_retriever: Optional[HybridRetriever] = None,
     ):
@@ -96,9 +96,9 @@ class ContextCompressor:
             return []
 
         # ── BƯỚC 0: Compression Fast-Path (GPT-Researcher) ──────────────────
-        # Mặc định TẮT (COMPRESSION_FASTPATH_CHARS=0).
-        # Bật lại bằng env: COMPRESSION_FASTPATH_CHARS=8000 (chỉ khi cần tiết kiệm CPU)
-        COMPRESSION_THRESHOLD = int(os.getenv("COMPRESSION_FASTPATH_CHARS", "0"))
+        # Mặc định 1500 ký tự (R-P02). Nếu ngắn hơn 1500 ký tự (khoảng 1 trang), bỏ qua RAG để tăng tốc.
+        # Các file văn bản > 1500 ký tự SẼ bắt buộc phải chạy qua RAG.
+        COMPRESSION_THRESHOLD = int(os.getenv("COMPRESSION_FASTPATH_CHARS", "1500"))
         total_chars = sum(len(doc.get("text", "")) for doc in documents)
 
         if COMPRESSION_THRESHOLD > 0 and total_chars < COMPRESSION_THRESHOLD:

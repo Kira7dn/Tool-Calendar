@@ -121,7 +121,7 @@ class DocumentService:
         fallback = _regex_extract(request.text)
 
         USE_LLM_METADATA = self.settings.metadata_use_llm if self.settings else True
-        MAX_METADATA_CHARS = self.settings.metadata_max_chars if self.settings else 6000
+        MAX_METADATA_CHARS = 1500  # R-P04: Chỉ đọc 1500 ký tự đầu tiên để tránh ngợp & giảm độ trễ
 
         STRUCTURED_FIELDS = {"SoVanBan", "NgayBanHanh", "ThoiHan"}
         JUNK_VALUES = {"none", "null", "không có", "không đề cập", "", "n/a"}
@@ -150,9 +150,9 @@ class DocumentService:
                     ai_val = str(parsed[k]).strip()
                     if ai_val.lower() in JUNK_VALUES:
                         continue
-                    if k in STRUCTURED_FIELDS and fallback[k]:
-                        continue
-                    fallback[k] = ai_val
+                    # R-P04: AI chỉ được điền khi Regex thất bại (giá trị hiện tại đang rỗng)
+                    if not fallback[k]:
+                        fallback[k] = ai_val
 
             except Exception as e:
                 logger.warning("[DocumentService.extract_metadata] Lỗi AI, sử dụng Regex: %s", str(e))
