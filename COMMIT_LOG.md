@@ -1,3 +1,9 @@
+### [2026-08-23 20:56] chore: dọn dẹp các file script test và bash tạm thời khỏi thư mục gốc
+- **Mô tả**: Xóa bỏ các file test Python rác (test_ai.py, test_chat.py, test_regex.py, v.v.) và các script bash dùng 1 lần (check_logs.sh, run_docker_python.sh, v.v.) ở thư mục gốc của dự án để giữ workspace sạch sẽ.
+- **Tệp thay đổi**:
+  - Các file .py và .sh ở thư mục gốc (Xóa)
+- **Lệnh git commit**: `git commit -m "chore: dọn dẹp các file script test và bash tạm thời khỏi thư mục gốc"`
+
 ### [2026-08-22 21:59] docs(ocr): cập nhật tài liệu thay thế PaddleOCR bằng Docling
 - **Mô tả**: Sửa mục 4.2 trong SYSTEM_FEATURES.md vì hệ thống đã loại bỏ hoàn toàn PaddleOCR và chuyển sang sử dụng Docling / pypdfium2 trong Python AI Service từ ngày 15/08/2026.
 - **Tệp thay đổi**:
