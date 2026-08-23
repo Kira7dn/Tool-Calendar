@@ -19,6 +19,7 @@ Học từ:
 
 import asyncio
 import logging
+import os
 from typing import Optional
 
 import numpy as np
@@ -95,11 +96,12 @@ class ContextCompressor:
             return []
 
         # ── BƯỚC 0: Compression Fast-Path (GPT-Researcher) ──────────────────
-        # Nếu tổng nội dung quá nhỏ, bỏ qua embedding/reranking để tiết kiệm CPU/GPU
-        COMPRESSION_THRESHOLD = 8000
+        # Mặc định TẮT (COMPRESSION_FASTPATH_CHARS=0).
+        # Bật lại bằng env: COMPRESSION_FASTPATH_CHARS=8000 (chỉ khi cần tiết kiệm CPU)
+        COMPRESSION_THRESHOLD = int(os.getenv("COMPRESSION_FASTPATH_CHARS", "0"))
         total_chars = sum(len(doc.get("text", "")) for doc in documents)
-        
-        if total_chars < COMPRESSION_THRESHOLD:
+
+        if COMPRESSION_THRESHOLD > 0 and total_chars < COMPRESSION_THRESHOLD:
             logger.info("[Compressor] Fast-Path: Total chars %d < %d. Bypassing compression pipeline.", total_chars, COMPRESSION_THRESHOLD)
             result_chunks = []
             for doc in documents:
@@ -108,12 +110,14 @@ class ContextCompressor:
                     result_chunks.append({
                         "content": f"Title: {doc.get('title', 'Unknown')}\n\n{text}",
                         "score": 1.0,
+                        "is_raw": True,  # đánh dấu để tránh hiển thị "Liên quan: 100%" sai sự thật
                         "chunk_index": 0,
                         "doc_id": doc.get("id"),
                         "doc_title": doc.get("title", ""),
                         "word_count": len(text.split()),
                     })
             return result_chunks[:k]
+
 
         # ── BƯỚC 1: Tạo chunks ──────────────────────────────────────────────
         all_chunks: list[DocumentChunk] = []

@@ -99,7 +99,8 @@ class DoclingExtractor:
         pdf_options = PdfPipelineOptions()
         if use_simple:
             # Simple mode: không table detection, ít RAM hơn (~200MB)
-            logger.info("[DoclingExtractor] Using simple pipeline (no table detection)")
+            # Nhánh này dùng khi DOCLING_USE_SIMPLE_PIPELINE=true (production mặc định)
+            logger.info("[DoclingExtractor] Using simple pipeline (no table detection, no OCR)")
             pdf_options.do_table_structure = False
             pdf_options.do_ocr = False
             self._converter = DocumentConverter(
@@ -108,16 +109,25 @@ class DoclingExtractor:
                 }
             )
         else:
-            # Full pipeline: table + heading + reading order
+            # Full pipeline: table + heading + OCR
+            # Nhánh này chạy khi fast-path (pypdfium2) THẤT BẠI → tức là PDF scan/ảnh → CẦN OCR
+            # Engine: rapidocr-onnxruntime (không cần GPU, ~90MB, hỗ trợ tiếng Việt)
             pdf_options.do_table_structure = True
-            pdf_options.do_ocr = False # Tắt OCR mặc định để tăng tốc độ cho PDF native
+            pdf_options.do_ocr = True  # ← bật OCR cho PDF scan/ảnh
+            try:
+                from docling.datamodel.pipeline_options import RapidOcrOptions
+                pdf_options.ocr_options = RapidOcrOptions()
+                logger.info("[DoclingExtractor] OCR engine: rapidocr-onnxruntime")
+            except ImportError:
+                # Nếu rapidocr chưa được cài, Docling sẽ dùng engine mặc định
+                logger.warning("[DoclingExtractor] rapidocr not available, using Docling default OCR")
 
             self._converter = DocumentConverter(
                 format_options={
                     InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_options)
                 }
             )
-            logger.info("[DoclingExtractor] Full pipeline (table + OCR) initialized")
+            logger.info("[DoclingExtractor] Full pipeline with OCR initialized")
 
     def extract(self, file_path: str) -> ExtractionResult:
         """

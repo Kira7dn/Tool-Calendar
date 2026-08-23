@@ -30,7 +30,7 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 from embeddings.batch_processor import AsyncBatchEmbedder
 from embeddings.semantic_embedder import get_embedder
@@ -167,13 +167,20 @@ class HybridSearchRequest(BaseModel):
 
 
 class ChunkRequest(BaseModel):
-    text: str
+    text: str = Field(..., max_length=2_000_000)
     doc_title: str = ""
     doc_date: str = ""
     doc_source: str = ""
     doc_id: Optional[int] = None
-    chunk_size: int = 800
-    chunk_overlap: int = 100
+    chunk_size: int = Field(800, ge=100, le=4000)
+    chunk_overlap: int = Field(100, ge=0, le=1000)
+    adaptive: bool = False  # mặc định TẮFT — chỉ bật khi caller yêu cầu
+
+    @model_validator(mode="after")
+    def _check_overlap(self):
+        if self.chunk_overlap >= self.chunk_size:
+            raise ValueError("chunk_overlap phải nhỏ hơn chunk_size")
+        return self
 
 
 class ChunkResponse(BaseModel):
@@ -469,13 +476,10 @@ Nội dung:
 @app.delete("/api/cache/clear")
 async def clear_embed_cache():
     """Xóa Embedding Cache (dùng khi cần invalidate sau khi model thay đổi)"""
-    global _embed_cache
-    count = len(_embed_cache)
-    _embed_cache.clear()
-    # Cũng clear RadixCache
-    _radix_cache.cache.clear()
-    logger.info("[Cache] Cleared %d embedding cache entries", count)
-    return {"cleared": count, "status": "ok"}
+    # Sửa lỗi R-C01: _radix_cache.cache không tồn tại — dùng method .clear() trực tiếp
+    _radix_cache.clear()
+    logger.info("[Cache] Cleared all embedding cache entries")
+    return {"status": "ok", "message": "Cache cleared"}
 
 
 @app.post("/api/compress", response_model=CompressResponse)
@@ -514,9 +518,13 @@ async def compress_context(request: CompressRequest):
     if chunks:
         context_parts = []
         for i, chunk in enumerate(chunks, 1):
-            context_parts.append(
-                f"[Đoạn {i} - Liên quan: {chunk['score']:.0%}]\n{chunk['content']}"
-            )
+            if chunk.get("is_raw"):
+                # Chunk từ fast-path — không hiển thị ""Liên quan: 100%"" giả sự thật
+                context_parts.append(f"[Đoạn {i} | Nguyên văn]\n{chunk['content']}")
+            else:
+                context_parts.append(
+                    f"[Đoạn {i} | Điểm: {chunk['score']:.0%}]\n{chunk['content']}"
+                )
         context_string = "\n\n---\n\n".join(context_parts)
     else:
         context_string = ""
@@ -788,63 +796,59 @@ async def extract_metadata(request: ExtractMetadataRequest):
                         d, mo, y = groups[0], groups[1], groups[2]
                     elif groups[3] and groups[4] and groups[5]:
                         d, mo, y = groups[3], groups[4], groups[5]
-                    else:
-                        continue
-                        
+                    else: continue
                     try:
                         parsed_date = f"{int(y):04d}-{int(mo):02d}-{int(d):02d}"
                         result["ThoiHan"] = parsed_date
-                        break # Tìm thấy hạn chót đầu tiên thì dừng
-                    except ValueError:
-                        pass
-        
-        # Nếu không có ngày cụ thể, thử bắt dạng tháng (vd: trong tháng 8/2026)
-        if not result["ThoiHan"] and request.deadline_keywords:
-            month_pattern = r'(?:\s+)?(?:trong\s+tháng|tháng)\s+(\d{1,2})[/\-\s]+(?:năm\s*)?(\d{4})'
-            full_month_pattern = f"(?:{kw_pattern}){month_pattern}"
-            matches = re.finditer(full_month_pattern, text, re.IGNORECASE)
-            import calendar
-            for match in matches:
-                mo, y = match.groups()
-                try:
-                    mo_int = int(mo)
-                    y_int = int(y)
-                    # Lấy ngày cuối cùng của tháng
-                    last_day = calendar.monthrange(y_int, mo_int)[1]
-                    result["ThoiHan"] = f"{y_int:04d}-{mo_int:02d}-{last_day:02d}"
-                    break
-                except ValueError:
-                    pass
-
+                        break
+                    except ValueError: pass
         return result
 
-    # Áp dụng Regex Extraction (nhanh) làm base
     fallback = _regex_extract(request.text)
-    
-    # Theo yêu cầu của user, chạy AI để quét văn bản (có thể chậm 40-60s trên CPU)
-    try:
-        import json
-        prompt = f"""Bạn là chuyên gia phân tích công văn hành chính. Trích xuất thông tin từ văn bản sau.
-TRẢ VỀ JSON VỚI CÁC KEY: SoVanBan, TenCongVan, TrichYeu, NgayBanHanh (YYYY-MM-DD), ThoiHan (YYYY-MM-DD), CoQuanBanHanh, CoQuanChuQuan, Priority (Thường/Khẩn/Hỏa tốc).
-TUYỆT ĐỐI KHÔNG BỊA ĐẶT THÔNG TIN. NẾU KHÔNG THẤY, ĐỂ RỖNG "".
-Văn bản:
-{request.text}"""
-        messages = [{"role": "user", "content": prompt}]
-        
-        # Gọi Ollama, parse JSON
-        response_text = await _ollama_client.chat(request.model, messages, format="json")
-        parsed = json.loads(response_text)
-        
-        # Ghi đè kết quả Regex bằng kết quả AI (nếu AI có dữ liệu hợp lệ)
-        for k in fallback.keys():
-            if k in parsed and parsed[k] and str(parsed[k]).strip():
-                val = str(parsed[k]).strip()
-                # Ưu tiên AI trừ khi nó bịa data rác
-                if val.lower() not in ["none", "null", "không có", "không đề cập"]:
-                    fallback[k] = val
-                    
-    except Exception as e:
-        logger.warning("[/api/extract-metadata] Lỗi AI, sử dụng Regex: %s", str(e))
+
+    # Chạy AI để bổ khuyết các trường mà regex để rỗng
+    # Kiểm soát qua env: METADATA_USE_LLM=false để tắt khi tải cao (rollback tức thì về 0.01s)
+    USE_LLM_METADATA = os.getenv("METADATA_USE_LLM", "true").lower() == "true"
+    MAX_METADATA_CHARS = int(os.getenv("METADATA_MAX_CHARS", "6000"))
+
+    # Các trường có cấu trúc chặt — regex đọc được từ chính văn bản → không cho AI ghi đè
+    STRUCTURED_FIELDS = {"SoVanBan", "NgayBanHanh", "ThoiHan"}
+    JUNK_VALUES = {"none", "null", "không có", "không đề cập", "", "n/a"}
+
+    if USE_LLM_METADATA:
+        try:
+            import json
+            # Cắt input — tránh tràn context LLM và latency 40-60s với văn bản dài
+            text_for_llm = request.text[:MAX_METADATA_CHARS]
+            prompt = (
+                "Bạn là chuyên gia phân tích công văn hành chính. Trích xuất thông tin từ văn bản sau.\n"
+                "TRẢ VỀ JSON VỚI CÁC KEY: SoVanBan, TenCongVan, TrichYeu, NgayBanHanh (YYYY-MM-DD), "
+                "ThoiHan (YYYY-MM-DD), CoQuanBanHanh, CoQuanChuQuan, Priority (Thường/Khẩn/Hỏa tốc).\n"
+                "TUYỆT ĐỐI KHÔNG BỊA ĐẶT THÔNG TIN. NẾU KHÔNG THẤY, ĐỂ RỖNG \"\".\n"
+                f"Văn bản:\n{text_for_llm}"
+            )
+            messages = [{"role": "user", "content": prompt}]
+
+            response_text = await _ollama_client.chat(request.model, messages, format="json")
+            try:
+                parsed = json.loads(response_text)
+            except json.JSONDecodeError:
+                parsed = {}
+
+            # AI chỉ được bổ sung trường mà regex để rỗng — KHÔNG ghi đè trường cấu trúc đã có giá trị
+            for k in fallback.keys():
+                if k not in parsed:
+                    continue
+                ai_val = str(parsed[k]).strip()
+                if ai_val.lower() in JUNK_VALUES:
+                    continue
+                # Regex thắng ở các trường có cấu trúc chặt nếu đã đọc được
+                if k in STRUCTURED_FIELDS and fallback[k]:
+                    continue
+                fallback[k] = ai_val
+
+        except Exception as e:
+            logger.warning("[/api/extract-metadata] Lỗi AI, sử dụng Regex: %s", str(e))
 
     return ExtractMetadataResponse(**fallback)
 

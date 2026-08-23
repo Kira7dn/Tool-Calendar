@@ -1,3 +1,15 @@
+### [2026-08-23 21:15] fix(ocr): P0 Hotfix python-ai-service — 6 lỗi nghiêm trọng
+- **Mô tả**: Sửa 6 nhóm lỗi quan trọng nhất (giai đoạn P0) dựa trên tài liệu phân tích `docs/legacy/PYTHON-AI-SERVICE-ANALYSIS.md`. Giải quyết: (1) OCR bị tắt hoàn toàn khiến PDF scan treo vĩnh viễn, (2) RAG pipeline bị bypass với đa số công văn, (3) extract-metadata không giới hạn input gây latency 40-60s, (4) `/api/cache/clear` crash 100% do AttributeError, (5) date_parser dùng UTC sai múi giờ Việt Nam, (6) chunker ghi đè chunk_size caller phá hợp đồng.
+- **Tệp thay đổi**:
+  - `python-ai-service/rag/docling_extractor.py` (Sửa đổi — bật `do_ocr=True` với rapidocr-onnxruntime ở nhánh full pipeline)
+  - `python-ai-service/requirements.txt` (Sửa đổi — thêm `rapidocr-onnxruntime>=1.3.0`, xóa phụ thuộc ma)
+  - `python-ai-service/rag/compressor.py` (Sửa đổi — fast-path mặc định tắt qua env `COMPRESSION_FASTPATH_CHARS=0`)
+  - `python-ai-service/main.py` (Sửa đổi — sửa cache/clear crash R-C01, cắt input metadata 6000 ký tự, regex thắng ở SoVanBan/NgayBanHanh/ThoiHan, validate ChunkRequest overlap<size)
+  - `python-ai-service/rag/chunker.py` (Sửa đổi — thêm tham số `adaptive=False`, không ghi đè chunk_size caller mặc định)
+  - `python-ai-service/rag/date_parser.py` (Sửa đổi — dùng `ZoneInfo("Asia/Ho_Chi_Minh")` thay UTC, thêm "tháng sau"/"năm sau")
+  - `docker-compose.yml` (Sửa đổi — thêm `TZ=Asia/Ho_Chi_Minh` cho python-ai-service)
+- **Lệnh git commit**: `git commit -m "fix(ocr): P0 hotfix python-ai-service — OCR, compress, metadata, cache, timezone, chunker"`
+
 ### [2026-08-23 20:56] chore: dọn dẹp các file script test và bash tạm thời khỏi thư mục gốc
 - **Mô tả**: Xóa bỏ các file test Python rác (test_ai.py, test_chat.py, test_regex.py, v.v.) và các script bash dùng 1 lần (check_logs.sh, run_docker_python.sh, v.v.) ở thư mục gốc của dự án để giữ workspace sạch sẽ.
 - **Tệp thay đổi**:

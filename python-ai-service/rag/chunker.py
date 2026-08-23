@@ -207,6 +207,7 @@ class SmartTextChunker:
         doc_date: str = "",
         doc_source: str = "",
         doc_id: Optional[int] = None,
+        adaptive: bool = False,
     ) -> list[DocumentChunk]:
         """
         Chia một văn bản thành danh sách chunks có metadata.
@@ -217,21 +218,27 @@ class SmartTextChunker:
             doc_date: Ngày ban hành
             doc_source: Số hiệu công văn
             doc_id: ID trong DB
+            adaptive: Bật DIFY Adaptive Chunk Size — thay đổi chunk_size theo độ dài văn bản
 
         Returns:
             Danh sách DocumentChunk
         """
-        # DIFY Adaptive Chunk Size
-        adaptive_size = compute_adaptive_chunk_size(len(text), self.chunk_size)
+        # DIFY Adaptive Chunk Size — chỉ bật khi adaptive=True (tôn trọng hợp đồng caller)
+        if adaptive:
+            chunk_size_to_use = compute_adaptive_chunk_size(len(text), self.chunk_size)
+        else:
+            chunk_size_to_use = self.chunk_size
+
+        # Tạm thời set chunk_size cho lần split này (thread-safe nếu dùng một instance)
         original_size = self.chunk_size
-        self.chunk_size = adaptive_size
+        self.chunk_size = chunk_size_to_use
 
         try:
             raw_chunks = self._split_text(text)
             # Late Chunking: gộp các đoạn quá ngắn
             raw_chunks = self._merge_short_chunks(raw_chunks, min_length=80)
         finally:
-            self.chunk_size = original_size  # Restore
+            self.chunk_size = original_size  # Restore luôn — dù adaptive hay không
 
         result = []
         for i, chunk_text in enumerate(raw_chunks):
@@ -245,7 +252,7 @@ class SmartTextChunker:
             ))
 
         logger.info(
-            "[Chunker] Chunked '%s' into %d chunks (adaptive_size=%d, base=%d, overlap=%d)",
-            doc_title or "document", len(result), adaptive_size, self.chunk_size, self.chunk_overlap
+            "[Chunker] Chunked '%s' into %d chunks (size=%d, overlap=%d, adaptive=%s)",
+            doc_title or "document", len(result), chunk_size_to_use, self.chunk_overlap, adaptive
         )
         return result
