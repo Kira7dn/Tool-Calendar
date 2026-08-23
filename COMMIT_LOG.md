@@ -3431,3 +3431,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `gateway/docker-compose.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(infra): correct network name in gateway"`
+
+### [2026-08-23 21:30] Refactor Python AI Service architecture
+- **Mô tả**: Tái cấu trúc (refactor) kiến trúc của `python-ai-service` từ một monolithic router (tất cả API trong `main.py`) sang mô hình service & thin routers để dễ bảo trì và tuân thủ SOLID. Bóc tách logic ra các modules: `embed`, `rag`, `document`, và `llm`. 
+- **Tệp thay đổi**:
+  - `python-ai-service/config.py` (Mới)
+  - `python-ai-service/exceptions.py` (Mới)
+  - `python-ai-service/schemas/*.py` (Mới/Sửa đổi)
+  - `python-ai-service/api/*.py` (Mới)
+  - `python-ai-service/services/*.py` (Mới)
+  - `python-ai-service/main.py` (Sửa đổi: dọn dẹp)
+- **Lệnh git commit**: `git commit -m "refactor(ai): implement thin routers and modular service architecture for python-ai-service"`
