@@ -47,7 +47,7 @@ namespace ToolCalendar.Core.Services
             _httpClient = httpClient;
             _httpClient.Timeout = TimeSpan.FromSeconds(100);
             _ollamaUrl = config.GetValue<string>("Ollama:ChatUrl") ?? "http://127.0.0.1:11434/api/chat";
-            _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:1.5b";
+            _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:0.5b";
             _tavilyApiKey = config.GetValue<string>("Tavily:ApiKey") ?? config.GetValue<string>("TAVILY_API_KEY");
             _pythonAiUrl = config.GetValue<string>("PythonAiServiceUrl") ?? "http://python-ai-service:8001";
             _logger = logger;

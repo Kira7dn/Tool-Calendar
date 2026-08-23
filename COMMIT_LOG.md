@@ -3501,3 +3501,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/schemas/document.py` (Sửa đổi: model=qwen2.5:0.5b)
   - `python-ai-service/schemas/llm.py` (Sửa đổi: model=qwen2.5:0.5b)
 - **Lệnh git commit**: `git commit -m "feat(ai): integrate lightweight ollama qwen2.5:0.5b for vnpt server"`
+
+### [2026-08-23 23:17] Loại bỏ hardcode qwen2.5:3b và qwen2.5:1.5b trong C# backend
+- **Mô tả**: Phát hiện một số file service trong backend (C#) vẫn còn hardcode tên model cũ (`qwen2.5:3b` và `qwen2.5:1.5b`). Đã cập nhật toàn bộ sang `qwen2.5:0.5b` để đồng bộ với Python AI Service và giảm tải cho server. Các file bị ảnh hưởng: `PythonAiService.cs`, `AiReferenceService.cs`, `DocumentProcessingService.cs`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): remove hardcoded heavy qwen models in csharp services"`

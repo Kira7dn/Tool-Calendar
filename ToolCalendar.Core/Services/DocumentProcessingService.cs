@@ -391,7 +391,7 @@ namespace ToolCalendar.Services
                                         var qaResult = await aiService.GenerateQAAsync(new GenerateQARequest
                                         {
                                             Text = pText,
-                                            Model = "qwen2.5:3b"
+                                            Model = "qwen2.5:0.5b"
                                         });
                                         if (qaResult.QaPairs != null && qaResult.QaPairs.Any())
                                         {
