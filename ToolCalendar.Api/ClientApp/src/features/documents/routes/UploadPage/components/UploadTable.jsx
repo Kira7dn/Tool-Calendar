@@ -60,7 +60,8 @@ function StatusBadge({ status, error }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100 cursor-help">
-              <XCircleIcon /> Lỗi
+              <span className="w-1 h-1 rounded-full bg-red-500" />
+              Lỗi
             </span>
           </TooltipTrigger>
           {error && (

@@ -3470,3 +3470,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/contexts/DocumentUploadContext.jsx` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): restore error parsing on failed upload and display error in tooltip"`
+
+### [2026-08-23 22:36] Fix XCircleIcon not defined error in UploadTable
+- **Mô tả**: Sửa lỗi React "XCircleIcon is not defined" do nhầm lẫn import khi thêm icon vào `StatusBadge`. Thay thế bằng inline HTML/CSS element.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): remove undefined XCircleIcon from StatusBadge"`
