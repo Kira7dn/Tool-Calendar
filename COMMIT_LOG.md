@@ -3442,3 +3442,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/services/*.py` (Mới)
   - `python-ai-service/main.py` (Sửa đổi: dọn dẹp)
 - **Lệnh git commit**: `git commit -m "refactor(ai): implement thin routers and modular service architecture for python-ai-service"`
+
+### [2026-08-23 21:46] Rewrite SYSTEM_FEATURES.md & fix python-ai-service
+- **Mô tả**: Nâng cấp `SYSTEM_FEATURES.md` từ 105 dòng lên đầy đủ (~300 dòng) dựa trên phân tích từ `docs/legacy/ARCHITECTURE.md`. Bổ sung: DB schema đầy đủ (DocumentChunks, UserMemories, AiSemanticCache...), API list cả .NET và Python, business rules Two-Speed OCR, Agent loop, RAG indexing, 6 lớp bảo mật, bảng NFR. Đồng thời fix `parse_date` trong `llm_service.py` (chuyển `date` object sang ISO string trước khi trả về `ParseDateResponse`).
+- **Tệp thay đổi**:
+  - `SYSTEM_FEATURES.md` (Sửa đổi: rewrite toàn bộ)
+  - `python-ai-service/services/llm_service.py` (Sửa đổi: fix parse_date strftime)
+- **Lệnh git commit**: `git commit -m "docs: rewrite SYSTEM_FEATURES.md and fix parse_date in llm_service"`

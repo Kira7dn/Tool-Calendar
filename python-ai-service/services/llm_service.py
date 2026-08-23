@@ -30,7 +30,10 @@ class LlmService:
     def parse_date(self, request):
         from rag.date_parser import parse_vietnamese_date
         start_d, end_d = parse_vietnamese_date(request.text)
-        return ParseDateResponse(start_date=start_d, end_date=end_d)
+        return ParseDateResponse(
+            start_date=start_d.strftime("%Y-%m-%d") if start_d else None,
+            end_date=end_d.strftime("%Y-%m-%d") if end_d else None,
+        )
 
     async def generate_qa(self, request):
         if not request.text or not request.text.strip():
