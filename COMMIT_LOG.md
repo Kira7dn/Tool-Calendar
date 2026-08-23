@@ -3544,3 +3544,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(core): remove AND prefix from GetRlsFilter to fix SQL syntax error in GetPagedAsync"`
+
+### [2026-08-24 00:55] Sửa lỗi lệch số liệu thống kê Dashboard (Hiển thị Đang xử lý: 1 nhưng danh sách trống)
+- **Mô tả**: Phát hiện `StatsRepository` đếm cả các công văn nháp (`Chờ lưu`) và đang xử lý nền (`Đang OCR`, `Lỗi OCR`) vào tổng số "Chưa hoàn thành" và "Quá hạn", trong khi `DocumentRepository` loại trừ các trạng thái này khỏi danh sách. Dẫn đến giao diện hiển thị có số lượng ở biểu đồ nhưng danh sách bên dưới báo trống. Đã sửa lại câu SQL trong `StatsRepository` để loại trừ thống nhất.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/StatsRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(stats): exclude draft and OCR statuses from dashboard counters to match document list"`

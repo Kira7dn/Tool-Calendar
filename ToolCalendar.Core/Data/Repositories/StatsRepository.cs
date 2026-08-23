@@ -39,16 +39,16 @@ namespace ToolCalendar.Core.Data.Repositories
 
             using (var cmdCounters = new SqliteCommand(@"
                 SELECT
-                    COUNT(*) AS Total,
+                    SUM(CASE WHEN Status NOT IN ('Đã xử lý', 'Chờ lưu', 'Đang OCR', 'Lỗi OCR') THEN 1 ELSE 0 END) AS Total,
                     SUM(CASE WHEN ThoiHan IS NOT NULL
                               AND ThoiHan < date('now')
-                              AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS Overdue,
+                              AND Status NOT IN ('Đã xử lý', 'Chờ lưu', 'Đang OCR', 'Lỗi OCR') THEN 1 ELSE 0 END) AS Overdue,
                     SUM(CASE WHEN ThoiHan >= date('now')
                               AND ThoiHan < date('now', '+1 day')
-                              AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS Today,
+                              AND Status NOT IN ('Đã xử lý', 'Chờ lưu', 'Đang OCR', 'Lỗi OCR') THEN 1 ELSE 0 END) AS Today,
                     SUM(CASE WHEN ThoiHan >= date('now')
                               AND ThoiHan <= date('now', '+7 days')
-                              AND Status != 'Đã xử lý' THEN 1 ELSE 0 END) AS Urgent
+                              AND Status NOT IN ('Đã xử lý', 'Chờ lưu', 'Đang OCR', 'Lỗi OCR') THEN 1 ELSE 0 END) AS Urgent
                 FROM Documents
             ", connection))
             {
@@ -93,7 +93,7 @@ namespace ToolCalendar.Core.Data.Repositories
 
             using (var cmdTop = new SqliteCommand(@"
                 SELECT Id, SoVanBan, TenCongVan, TrichYeu, ThoiHan FROM Documents
-                WHERE Status != 'Đã xử lý'
+                WHERE Status NOT IN ('Đã xử lý', 'Chờ lưu', 'Đang OCR', 'Lỗi OCR')
                 ORDER BY CASE WHEN ThoiHan IS NULL THEN 1 ELSE 0 END, ThoiHan ASC
                 LIMIT 3
             ", connection))
@@ -140,7 +140,7 @@ namespace ToolCalendar.Core.Data.Repositories
                     CASE WHEN ThoiHan < @today THEN '__overdue__' ELSE ThoiHan END AS Bucket,
                     COUNT(*) AS Cnt
                 FROM Documents
-                WHERE Status != 'Đã xử lý'
+                WHERE Status NOT IN ('Đã xử lý', 'Chờ lưu', 'Đang OCR', 'Lỗi OCR')
                   AND ThoiHan IS NOT NULL
                   AND ThoiHan < @endDate
                 GROUP BY Bucket
