@@ -3463,3 +3463,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): prevent left sidebar from disappearing after upload finishes"`
+
+### [2026-08-23 22:33] Fix missing error parsing on failed upload in DocumentUploadContext
+- **Mô tả**: Khôi phục lại khối `else` đã bị xóa nhầm trong hàm xử lý phản hồi khi tải lên file (ví dụ lỗi 400 do trùng lặp file bằng mã băm SHA-256). Đã thêm logic trích xuất thông báo lỗi từ backend và cập nhật `StatusBadge` trong `UploadTable.jsx` để hiển thị tooltip thông báo lỗi chi tiết khi di chuột vào chữ "Lỗi", giúp người dùng biết được nguyên nhân tải lên thất bại.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/contexts/DocumentUploadContext.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): restore error parsing on failed upload and display error in tooltip"`

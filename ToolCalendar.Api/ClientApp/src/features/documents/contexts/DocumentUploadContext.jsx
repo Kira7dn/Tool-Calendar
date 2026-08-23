@@ -103,10 +103,27 @@ export function DocumentUploadProvider({ children }) {
                   : 'ready',
           }
           setBatchItems((prev) => prev.map((b) => (b.id === item.id ? mapped : b)))
+        } else {
+          let errMsg = 'Lỗi không xác định'
+          try {
+            const errJson = await response.json()
+            errMsg = errJson.message || errMsg
+          } catch {
+            // ignore
+          }
+          setBatchItems((prev) =>
+            prev.map((b) =>
+              b.id === item.id ? { ...b, status: 'error', error: errMsg, _tempFile: undefined } : b
+            )
+          )
         }
-      } catch {
+      } catch (err) {
         setBatchItems((prev) =>
-          prev.map((b) => (b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b))
+          prev.map((b) =>
+            b.id === item.id
+              ? { ...b, status: 'error', error: 'Lỗi mạng hoặc server', _tempFile: undefined }
+              : b
+          )
         )
       } finally {
         completedCount++

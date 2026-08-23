@@ -36,7 +36,7 @@ const EyeIcon = () => (
   </Svg>
 )
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, error }) {
   const map = {
     processing: (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
@@ -56,9 +56,20 @@ function StatusBadge({ status }) {
       </span>
     ),
     error: (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
-        Lỗi
-      </span>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100 cursor-help">
+              <XCircleIcon /> Lỗi
+            </span>
+          </TooltipTrigger>
+          {error && (
+            <TooltipContent className="bg-red-600 text-white font-bold text-xs border-none">
+              {error}
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
     ),
   }
   return (
@@ -253,7 +264,7 @@ export function UploadTable({
                     </select>
                   </td>
                   <td className="px-3 py-2">
-                    <StatusBadge status={row.status} />
+                    <StatusBadge status={row.status} error={row.error} />
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1">
