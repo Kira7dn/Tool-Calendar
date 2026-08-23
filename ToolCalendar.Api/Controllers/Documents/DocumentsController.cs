@@ -71,7 +71,13 @@ namespace ToolCalendar.Api.Controllers.Documents
             [FromQuery] DateTime? addFromDate = null,
             [FromQuery] DateTime? addToDate = null)
         {
-            var (items, totalCount) = await _documentRepository.GetPagedAsync(page, size, search, status, sort, fromDate, toDate, addFromDate, addToDate);
+            var userIdStr = User.FindFirstValue("uid") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int.TryParse(userIdStr, out int userId);
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var deptIdStr = User.FindFirstValue("DepartmentId");
+            int? deptId = int.TryParse(deptIdStr, out int d) ? d : null;
+
+            var (items, totalCount) = await _documentRepository.GetPagedAsync(page, size, search, status, sort, fromDate, toDate, addFromDate, addToDate, userId, role, deptId);
             var totalPages = (int)Math.Ceiling((double)totalCount / size);
 
             return Ok(ApiResponse.Ok(new
@@ -96,7 +102,13 @@ namespace ToolCalendar.Api.Controllers.Documents
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var data = await _documentRepository.GetDocumentByIdAsync(id);
+            var userIdStr = User.FindFirstValue("uid") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int.TryParse(userIdStr, out int userId);
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var deptIdStr = User.FindFirstValue("DepartmentId");
+            int? deptId = int.TryParse(deptIdStr, out int d) ? d : null;
+
+            var data = await _documentRepository.GetDocumentByIdAsync(id, userId, role, deptId);
             if (data == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
             return Ok(ApiResponse.Ok(data));
         }

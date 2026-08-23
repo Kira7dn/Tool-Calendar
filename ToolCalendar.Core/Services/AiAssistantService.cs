@@ -141,7 +141,7 @@ namespace ToolCalendar.Core.Services
                 if (questionVector != null && questionVector.Length > 0)
                 {
                     // 1. Semantic Cache
-                    var cachedResponse = await _semanticCacheRepo.GetCachedResponseAsync(questionVector, 0.85f);
+                    var cachedResponse = await _semanticCacheRepo.GetCachedResponseAsync(questionVector, userId, 0.85f);
                     if (!string.IsNullOrEmpty(cachedResponse))
                     {
                         _logger.LogInformation("[AiAssistant] CACHE HIT! Trả về từ AiSemanticCache.");
@@ -506,7 +506,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             {
                 try 
                 {
-                    await _semanticCacheRepo.StoreCacheAsync(questionVector, finalTextNoStream);
+                    await _semanticCacheRepo.StoreCacheAsync(questionVector, finalTextNoStream, userId);
                     _logger.LogInformation("[AiAssistant] Đã lưu response vào AiSemanticCache.");
                 }
                 catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi lưu Cache: {Msg}", ex.Message); }

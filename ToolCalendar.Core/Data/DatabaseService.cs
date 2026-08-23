@@ -226,6 +226,7 @@ namespace ToolCalendar.Data
             string createAiSemanticCacheTable = @"
                 CREATE TABLE IF NOT EXISTS AiSemanticCache (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    UserId INTEGER DEFAULT 0,
                     QuestionVectorJson TEXT NOT NULL,
                     Response TEXT NOT NULL,
                     CreatedAt TEXT DEFAULT (datetime('now', 'localtime')),
@@ -272,6 +273,7 @@ namespace ToolCalendar.Data
                 // AiSemanticCache — GPTCache LRU: thêm LastAccessedAt và HitCount cho DB cũ
                 "ALTER TABLE AiSemanticCache ADD COLUMN LastAccessedAt TEXT DEFAULT (datetime('now', 'localtime'))",
                 "ALTER TABLE AiSemanticCache ADD COLUMN HitCount INTEGER DEFAULT 0",
+                "ALTER TABLE AiSemanticCache ADD COLUMN UserId INTEGER DEFAULT 0",
             };
 
             foreach (var alterSql in safeAlters)

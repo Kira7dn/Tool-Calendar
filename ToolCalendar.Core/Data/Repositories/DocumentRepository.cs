@@ -316,13 +316,16 @@ namespace ToolCalendar.Core.Data.Repositories
             return s;
         }
 
-        public async Task<List<DocumentRecord>> GetAllAsync()
+        public async Task<List<DocumentRecord>> GetAllAsync(int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null)
         {
             var records = new List<DocumentRecord>();
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            string sql = "SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id LEFT JOIN Users u ON doc.UploadedByUserId = u.Id ORDER BY doc.ThoiHan ASC NULLS LAST";
+            string rlsFilter = GetRlsFilter(currentUserId, currentUserRole, currentDepartmentId);
+            string whereClause = string.IsNullOrEmpty(rlsFilter) ? "" : $"WHERE {rlsFilter}";
+
+            string sql = $"SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id LEFT JOIN Users u ON doc.UploadedByUserId = u.Id {whereClause} ORDER BY doc.ThoiHan ASC NULLS LAST";
             using var cmd = new SqliteCommand(sql, connection);
             using var reader = await cmd.ExecuteReaderAsync();
 
@@ -332,12 +335,15 @@ namespace ToolCalendar.Core.Data.Repositories
             return records;
         }
 
-        public async Task<DocumentRecord?> GetDocumentByIdAsync(int id)
+        public async Task<DocumentRecord?> GetDocumentByIdAsync(int id, int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            string sql = "SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, doc.FullText, doc.OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id LEFT JOIN Users u ON doc.UploadedByUserId = u.Id WHERE doc.Id = @id";
+            string rlsFilter = GetRlsFilter(currentUserId, currentUserRole, currentDepartmentId);
+            string extraWhere = string.IsNullOrEmpty(rlsFilter) ? "" : $"AND {rlsFilter}";
+
+            string sql = $"SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, doc.FullText, doc.OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id LEFT JOIN Users u ON doc.UploadedByUserId = u.Id WHERE doc.Id = @id {extraWhere}";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -352,12 +358,14 @@ namespace ToolCalendar.Core.Data.Repositories
         /// Server-side pagination: returns one page of documents + total count for pagination UI.
         /// <para>search is matched against SoVanBan, TrichYeu, CoQuanChuQuan (case-insensitive LIKE).</para>
         /// </summary>
-        public async Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null, DateTime? addFromDate = null, DateTime? addToDate = null)
+        public async Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null, DateTime? addFromDate = null, DateTime? addToDate = null, int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
 
             var filters = new List<string>();
+            string rlsFilter = GetRlsFilter(currentUserId, currentUserRole, currentDepartmentId);
+            if (!string.IsNullOrEmpty(rlsFilter)) filters.Add(rlsFilter);
             bool hasSearch = !string.IsNullOrWhiteSpace(search);
             bool hasStatus = !string.IsNullOrWhiteSpace(status);
 
@@ -855,6 +863,27 @@ namespace ToolCalendar.Core.Data.Repositories
             return value;
         }
 
+        private string GetRlsFilter(int? currentUserId, string? currentUserRole, int? currentDepartmentId)
+        {
+            if (currentUserRole == "CanBo" && currentUserId.HasValue)
+            {
+                string deptFilter = currentDepartmentId.HasValue 
+                    ? $"doc.DepartmentId = {currentDepartmentId.Value} OR doc.AssignedDepartmentIds LIKE '%[{currentDepartmentId.Value}]%' OR doc.AssignedDepartmentIds LIKE '%[{currentDepartmentId.Value},%' OR doc.AssignedDepartmentIds LIKE '%,{currentDepartmentId.Value}]%' OR doc.AssignedDepartmentIds LIKE '%,{currentDepartmentId.Value},%'"
+                    : "0=1";
+                    
+                return $@"(
+                    doc.UploadedByUserId = {currentUserId.Value} OR
+                    doc.AssignedTo = {currentUserId.Value} OR
+                    doc.AssignedUserIds = '[{currentUserId.Value}]' OR
+                    doc.AssignedUserIds LIKE '[{currentUserId.Value},%' OR
+                    doc.AssignedUserIds LIKE '%,{currentUserId.Value}]%' OR
+                    doc.AssignedUserIds LIKE '%,{currentUserId.Value},%' OR
+                    {deptFilter} OR
+                    EXISTS (SELECT 1 FROM DocumentRoutings r WHERE r.DocumentId = doc.Id AND (r.SenderId = {currentUserId.Value} OR r.ReceiverId = {currentUserId.Value}))
+                )";
+            }
+            return "";
+        }
     }
 }
 

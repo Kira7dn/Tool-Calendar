@@ -3518,3 +3518,15 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): remove hardcoded heavy qwen models in csharp services"`
+
+### [2026-08-23 23:45] Vá lỗ hổng bảo mật R-01 (AiSemanticCache) và R-02 (Row-Level Security)
+- **Mô tả**: Vá hai lỗ hổng kiến trúc nghiêm trọng: Rò rỉ dữ liệu qua Semantic Cache (chưa phân biệt UserId) và chưa có Row-Level Security (RLS) cho phép Cán Bộ xem trộm công văn toàn cơ quan.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi: Thêm cột UserId vào schema AiSemanticCache)
+  - `ToolCalendar.Core/Data/Interfaces/IAiSemanticCacheRepository.cs` (Sửa đổi: Thêm param UserId)
+  - `ToolCalendar.Core/Data/Repositories/AiSemanticCacheRepository.cs` (Sửa đổi: Lưu và query cache theo UserId)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi: Truyền UserId vào cache logic)
+  - `ToolCalendar.Core/Data/Interfaces/IDocumentRepository.cs` (Sửa đổi: Thêm RLS params currentUserId, currentUserRole, currentDepartmentId)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi: Thêm hàm GetRlsFilter và tiêm filter vào GetPagedAsync, GetAllAsync, GetDocumentByIdAsync)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi: Lấy JWT claims và truyền xuống repository)
+- **Lệnh git commit**: `git commit -m "security(core): vá lỗi rò rỉ dữ liệu AiSemanticCache và bổ sung RLS cho Cán bộ"`

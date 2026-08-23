@@ -48,7 +48,7 @@ namespace ToolCalendar.Core.Data.Repositories
         /// Lưu cache mới. Tự động chạy LRU Eviction nếu vượt MaxCacheSize.
         /// Học từ GPTCache: EvictionManager.soft_evict() + auto_flush every N inserts.
         /// </summary>
-        public async Task StoreCacheAsync(float[] questionVector, string response)
+        public async Task StoreCacheAsync(float[] questionVector, string response, int userId)
         {
             var vectorJson = JsonSerializer.Serialize(questionVector);
             using var connection = new SqliteConnection(_connectionString);
@@ -56,11 +56,12 @@ namespace ToolCalendar.Core.Data.Repositories
 
             using var cmd = connection.CreateCommand();
             cmd.CommandText = @"
-                INSERT INTO AiSemanticCache (QuestionVectorJson, Response, CreatedAt, LastAccessedAt, HitCount)
-                VALUES (@VectorJson, @Response, datetime('now'), datetime('now'), 0)";
+                INSERT INTO AiSemanticCache (QuestionVectorJson, Response, CreatedAt, LastAccessedAt, HitCount, UserId)
+                VALUES (@VectorJson, @Response, datetime('now'), datetime('now'), 0, @UserId)";
 
             cmd.Parameters.AddWithValue("@VectorJson", vectorJson);
             cmd.Parameters.AddWithValue("@Response", response);
+            cmd.Parameters.AddWithValue("@UserId", userId);
             await cmd.ExecuteNonQueryAsync();
 
             // GPTCache EvictionManager: kiểm tra size sau mỗi lần insert
@@ -71,7 +72,7 @@ namespace ToolCalendar.Core.Data.Repositories
         /// Tìm cache với Cosine Similarity. Nếu hit → cập nhật LastAccessedAt + HitCount (LRU tracking).
         /// Normalize vector trước khi tính — học từ GPTCache NumpyNormEvaluation.normalize().
         /// </summary>
-        public async Task<string?> GetCachedResponseAsync(float[] questionVector, float minSimilarityScore = DefaultSimilarityThreshold)
+        public async Task<string?> GetCachedResponseAsync(float[] questionVector, int userId, float minSimilarityScore = DefaultSimilarityThreshold)
         {
             // Normalize vector câu hỏi (GPTCache NumpyNormEvaluation)
             var normalizedQuery = Normalize(questionVector);
@@ -80,14 +81,16 @@ namespace ToolCalendar.Core.Data.Repositories
             await connection.OpenAsync();
 
             using var cmd = connection.CreateCommand();
-            // Chỉ lấy cache còn trong TTL (60 phút) — dual-layer: LRU + TTL
+            // Chỉ lấy cache còn trong TTL (60 phút) và thuộc về người dùng hiện tại (hoặc hệ thống UserId=0)
             cmd.CommandText = @"
                 SELECT Id, QuestionVectorJson, Response 
                 FROM AiSemanticCache 
                 WHERE LastAccessedAt >= datetime('now', '-' || @Ttl || ' minutes')
+                  AND (UserId = @UserId OR UserId = 0)
                 ORDER BY LastAccessedAt DESC
                 LIMIT 200";
             cmd.Parameters.AddWithValue("@Ttl", TtlMinutes);
+            cmd.Parameters.AddWithValue("@UserId", userId);
 
             string? bestResponse = null;
             int bestId = -1;
