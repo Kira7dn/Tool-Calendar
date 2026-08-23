@@ -232,8 +232,11 @@ namespace ToolCalendar.Services
 
             _logger.LogInformation("[RabbitMQ Worker] Đang gọi Python AI Service để Extract DocumentId {Id} — '{File}'", docId, Path.GetFileName(absolutePath));
 
-            doc.Status = "Đang xử lý";
-            await docRepo.UpdateAsync(doc);
+            var originalStatus = doc.Status;
+            if (originalStatus != "Đã xử lý") {
+                doc.Status = "Đang xử lý";
+                await docRepo.UpdateAsync(doc);
+            }
             await NotifyProgressAsync(scope, docId, "Đang xử lý");
 
             try
@@ -264,7 +267,8 @@ namespace ToolCalendar.Services
                     }
                     
                     // LƯU DB VÀ NOTIFY UI NGAY LẬP TỨC!
-                    doc.Status = "Chưa xử lý";
+                    if (originalStatus == "Đang xử lý" || originalStatus == "Chờ lưu") doc.Status = "Chờ lưu";
+                    else if (originalStatus != "Đã xử lý") doc.Status = originalStatus;
                     await docRepo.UpdateAsync(doc);
                     await NotifyProgressAsync(scope, docId, "Chưa xử lý"); // UI MỞ KHÓA NGAY LẬP TỨC TẠI ĐÂY
                 }
@@ -291,7 +295,8 @@ namespace ToolCalendar.Services
                         if (!string.IsNullOrWhiteSpace(metadata.CoQuanChuQuan)) doc.CoQuanChuQuan = metadata.CoQuanChuQuan;
                         if (!string.IsNullOrWhiteSpace(metadata.Priority)) doc.Priority = metadata.Priority;
                     }
-                    doc.Status = "Chưa xử lý";
+                    if (originalStatus == "Đang xử lý" || originalStatus == "Chờ lưu") doc.Status = "Chờ lưu";
+                    else if (originalStatus != "Đã xử lý") doc.Status = originalStatus;
                     await docRepo.UpdateAsync(doc);
                 }
                 else

@@ -103,11 +103,6 @@ export function DocumentUploadProvider({ children }) {
                   : 'ready',
           }
           setBatchItems((prev) => prev.map((b) => (b.id === item.id ? mapped : b)))
-          setBatchItems((prev) =>
-            prev.map((b) =>
-              b.id === item.id ? { ...b, status: 'error', _tempFile: undefined } : b
-            )
-          )
         }
       } catch {
         setBatchItems((prev) =>

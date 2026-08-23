@@ -3449,3 +3449,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `SYSTEM_FEATURES.md` (Sửa đổi: rewrite toàn bộ)
   - `python-ai-service/services/llm_service.py` (Sửa đổi: fix parse_date strftime)
 - **Lệnh git commit**: `git commit -m "docs: rewrite SYSTEM_FEATURES.md and fix parse_date in llm_service"`
+
+### [2026-08-23 22:25] Fix frontend fake OCR error and premature display of pending documents
+- **Mô tả**: Fix lỗi cực kỳ nghiêm trọng trên Frontend khiến văn bản upload luôn hiển thị chữ "Lỗi" do duplicate `setBatchItems` ghi đè status trong `DocumentUploadContext.jsx`. Khắc phục logic backend: `DocumentUploadService` và `DocumentProcessingService` bảo lưu status "Chờ lưu" đối với văn bản vừa upload thay vì gán ép "Chưa xử lý", đồng thời bổ sung logic trong `DocumentRepository.GetPagedAsync` để loại trừ các văn bản "Chờ lưu" hoặc "Đang xử lý" khỏi danh sách chính, giúp văn bản không bị hiển thị trước khi người dùng thực sự bấm "Lưu & Phân công".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/contexts/DocumentUploadContext.jsx` (Sửa đổi)
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): fix fake OCR error UI and prevent pending uploads from showing in main list"`
