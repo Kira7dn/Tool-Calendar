@@ -3530,3 +3530,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi: Thêm hàm GetRlsFilter và tiêm filter vào GetPagedAsync, GetAllAsync, GetDocumentByIdAsync)
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi: Lấy JWT claims và truyền xuống repository)
 - **Lệnh git commit**: `git commit -m "security(core): vá lỗi rò rỉ dữ liệu AiSemanticCache và bổ sung RLS cho Cán bộ"`
+
+### [2026-08-24 00:45] Tách trạng thái "Đang OCR" khỏi "Đang xử lý" để sửa lỗi filter
+- **Mô tả**: Phát hiện lỗi nghiêm trọng khiến toàn bộ công văn đang trong luồng (có trạng thái "Đang xử lý") bị biến mất khỏi danh sách chính. Nguyên nhân do trước đó dùng chung chuỗi "Đang xử lý" cho cả việc báo hiệu OCR đang chạy và trạng thái luân chuyển công văn. Đã đổi trạng thái OCR thành "Đang OCR" để filter chính xác.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/DocumentUploadService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): separate OCR status from in-progress status to fix missing documents in main list"`

@@ -126,7 +126,7 @@ public class DocumentUploadService : IDocumentUploadService
         {
             SoVanBan = Path.GetFileNameWithoutExtension(safeFileName),
             FilePath = $"Uploads/Documents/{finalFileName}",
-            Status = "Đang xử lý",
+            Status = "Đang OCR",
             NgayThem = DateTime.Now,
             FullText = "Đang trích xuất tự động...",
             UploadedByUserId = uploadedByUserId,

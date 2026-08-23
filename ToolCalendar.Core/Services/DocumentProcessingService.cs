@@ -234,10 +234,10 @@ namespace ToolCalendar.Services
 
             var originalStatus = doc.Status;
             if (originalStatus != "Đã xử lý") {
-                doc.Status = "Đang xử lý";
+                doc.Status = "Đang OCR";
                 await docRepo.UpdateAsync(doc);
             }
-            await NotifyProgressAsync(scope, docId, "Đang xử lý");
+            await NotifyProgressAsync(scope, docId, "Đang OCR");
 
             try
             {
@@ -267,7 +267,7 @@ namespace ToolCalendar.Services
                     }
                     
                     // LƯU DB VÀ NOTIFY UI NGAY LẬP TỨC!
-                    if (originalStatus == "Đang xử lý" || originalStatus == "Chờ lưu") doc.Status = "Chờ lưu";
+                    if (originalStatus == "Đang OCR" || originalStatus == "Chờ lưu") doc.Status = "Chờ lưu";
                     else if (originalStatus != "Đã xử lý") doc.Status = originalStatus;
                     await docRepo.UpdateAsync(doc);
                     await NotifyProgressAsync(scope, docId, "Chưa xử lý"); // UI MỞ KHÓA NGAY LẬP TỨC TẠI ĐÂY
@@ -295,7 +295,7 @@ namespace ToolCalendar.Services
                         if (!string.IsNullOrWhiteSpace(metadata.CoQuanChuQuan)) doc.CoQuanChuQuan = metadata.CoQuanChuQuan;
                         if (!string.IsNullOrWhiteSpace(metadata.Priority)) doc.Priority = metadata.Priority;
                     }
-                    if (originalStatus == "Đang xử lý" || originalStatus == "Chờ lưu") doc.Status = "Chờ lưu";
+                    if (originalStatus == "Đang OCR" || originalStatus == "Chờ lưu") doc.Status = "Chờ lưu";
                     else if (originalStatus != "Đã xử lý") doc.Status = originalStatus;
                     await docRepo.UpdateAsync(doc);
                 }

@@ -370,9 +370,9 @@ namespace ToolCalendar.Core.Data.Repositories
             bool hasStatus = !string.IsNullOrWhiteSpace(status);
 
             // Bỏ qua các văn bản đang chờ xử lý OCR hoặc chưa được người dùng lưu ở màn hình upload
-            if (!hasStatus || (status.ToLower() != "đang xử lý" && status.ToLower() != "chờ lưu"))
+            if (!hasStatus || (status.ToLower() != "đang ocr" && status.ToLower() != "chờ lưu"))
             {
-                filters.Add("doc.Status NOT IN ('Đang xử lý', 'Chờ lưu')");
+                filters.Add("doc.Status NOT IN ('Đang OCR', 'Chờ lưu')");
             }
 
             if (hasSearch)
