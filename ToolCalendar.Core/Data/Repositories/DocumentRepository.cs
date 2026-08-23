@@ -341,9 +341,9 @@ namespace ToolCalendar.Core.Data.Repositories
             await connection.OpenAsync();
 
             string rlsFilter = GetRlsFilter(currentUserId, currentUserRole, currentDepartmentId);
-            string extraWhere = string.IsNullOrEmpty(rlsFilter) ? "" : $"AND {rlsFilter}";
+            string whereClause = string.IsNullOrEmpty(rlsFilter) ? "" : $"AND {rlsFilter}";
 
-            string sql = $"SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, doc.FullText, doc.OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id LEFT JOIN Users u ON doc.UploadedByUserId = u.Id WHERE doc.Id = @id {extraWhere}";
+            string sql = $"SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, doc.FullText, doc.OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id LEFT JOIN Users u ON doc.UploadedByUserId = u.Id WHERE doc.Id = @id {whereClause}";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
             using var reader = await cmd.ExecuteReaderAsync();

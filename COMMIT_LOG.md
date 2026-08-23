@@ -3538,3 +3538,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): separate OCR status from in-progress status to fix missing documents in main list"`
+
+### [2026-08-24 00:50] Vá lỗi cú pháp SQL (WHERE AND) trong GetRlsFilter
+- **Mô tả**: Phát hiện hàm GetRlsFilter trả về chuỗi bắt đầu bằng ` AND (...)`, dẫn đến lỗi cú pháp SQL (`WHERE AND (...)`) trong `GetPagedAsync` và `GetAllAsync`. Hệ quả là frontend gặp lỗi 500 khi gọi danh sách công văn. Đã sửa hàm trả về chuỗi `(...)` thuần túy và xử lý tiền tố tại nơi gọi.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(core): remove AND prefix from GetRlsFilter to fix SQL syntax error in GetPagedAsync"`
