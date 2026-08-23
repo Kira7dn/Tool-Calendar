@@ -3457,3 +3457,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): fix fake OCR error UI and prevent pending uploads from showing in main list"`
+
+### [2026-08-23 22:26] Fix left sidebar disappearing in UploadPage
+- **Mô tả**: Sửa lỗi UI nghiêm trọng khiến thanh sidebar bên trái (chứa ô upload và thống kê trạng thái) bị biến mất hoàn toàn ngay sau khi văn bản tải lên hoàn tất. Nguyên nhân do điều kiện render sai: `(batchItems.length === 0 || isGlobalProcessing)`. Đã tháo bỏ điều kiện này để sidebar luôn hiển thị, cho phép người dùng tiếp tục upload thêm file ngay cả khi đang có file chờ rà soát.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): prevent left sidebar from disappearing after upload finishes"`
