@@ -29,10 +29,13 @@ window.fetch = async (...args) => {
           }
         }
 
+        const newHeaders = new Headers(response.headers)
+        newHeaders.delete('content-length')
+
         const newResponse = new Response(JSON.stringify(unwrappedData), {
           status: response.status,
           statusText: response.statusText,
-          headers: response.headers,
+          headers: newHeaders,
         })
 
         Object.defineProperty(newResponse, 'url', { value: response.url })

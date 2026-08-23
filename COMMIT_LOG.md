@@ -3550,3 +3550,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Data/Repositories/StatsRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(stats): exclude draft and OCR statuses from dashboard counters to match document list"`
+
+### [2026-08-24 01:00] Vá lỗi không tải được dữ liệu danh sách công văn (Lỗi Content-Length)
+- **Mô tả**: Khi chuyển sang dùng `ApiResponse` wrapper ở backend, `fetch` interceptor ở frontend `main.jsx` đã tự động gỡ (unwrap) cục JSON, khiến kích thước body response bị thay đổi (nhỏ hơn ban đầu). Tuy nhiên, interceptor vẫn giữ nguyên header `Content-Length` cũ. Điều này khiến trình duyệt hiểu sai kích thước file, dẫn đến lỗi `SyntaxError: Unexpected end of JSON input` khi gọi `response.json()` ở `useDocumentsList.js`. Đã sửa bằng cách xóa header `content-length` trước khi tạo `new Response`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): delete content-length header in fetch interceptor to prevent JSON parse errors"`
