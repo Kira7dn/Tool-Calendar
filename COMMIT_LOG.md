@@ -1,3 +1,9 @@
+### [2026-08-24 23:13] docs(rules): bổ sung bài học SSH Fail2ban lock vào tc-rule-bloody-lessons.md
+- **Mô tả**: Bổ sung chi tiết lỗi và bài học về việc SSH sai hoặc thiếu mật khẩu/sshpass dẫn đến việc Fail2ban chặn IP cục bộ làm sập script deploy tự động.
+- **Tệp thay đổi**:
+  - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "docs(rules): bo sung bai hoc SSH Fail2ban lock vao tc-rule-bloody-lessons.md"`
+
 ### [2026-08-24 23:07] chore(infra): tăng giới hạn Nginx và ClamAV lên 500MB, tự động reload Nginx khi deploy
 - **Mô tả**: Mặc dù đã tăng giới hạn Kestrel lên 500MB, người dùng vẫn gặp lỗi khi tải file > 50MB do cấu hình `client_max_body_size` của Nginx Proxy vẫn ở mức 50MB, và ClamAV giới hạn 100MB. Đã sửa cấu hình Nginx trong `gateway/nginx/conf.d/default.conf` và cấu hình ClamAV trong `docker-compose.yml` lên 500MB. Cập nhật `deploy_to_vnpt.sh` để tự động chạy lệnh `nginx -s reload` nhằm áp dụng cấu hình mới nhất cho container `nginx-proxy` đang chạy.
 - **Tệp thay đổi**:

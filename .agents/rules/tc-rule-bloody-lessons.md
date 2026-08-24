@@ -75,6 +75,14 @@ Tài liệu này tổng hợp các "bài học máu xương" (Bloody Lessons) �
     - Bắt buộc phải thêm `client_max_body_size 100M;` (hoặc cao hơn) vào cấu hình `nginx.conf` của Nginx Proxy dùng chung.
     - Tại endpoint `[HttpPost("upload")]` trong `DocumentsController.cs` (và các endpoint nhận file khác), bắt buộc phải dùng `[DisableRequestSizeLimit]` và cấu hình giới hạn cực lớn (ví dụ: `536870912` = 500MB) cho `[RequestFormLimits(MultipartBodyLengthLimit = ...)]`.
     - Phải cấu hình cả `builder.WebHost.ConfigureKestrel` và `builder.Services.Configure<FormOptions>` trong `Program.cs` để bảo hiểm 2 lớp, tránh tình trạng Kestrel hay Model Binding âm thầm drop request. Mặc định của framework KHÔNG BAO GIỜ đủ cho tính năng tải lên thư mục/tài liệu hạng nặng của doanh nghiệp.
+
+## 9. Hạ tầng & Triển khai (Infrastructure & Deployment Gotchas)
+
+- **[LỖI KHÓA IP SSH - FAIL2BAN] Từ chối kết nối SSH khi deploy hoặc xem log:** Khi cố gắng chạy các lệnh shell kiểm tra/log (vd: `ssh root@<IP>`) mà quên truyền password/key qua `sshpass` hoặc sai password nhiều lần.
+  - **Hậu quả:** Tường lửa của Server (như Fail2ban) sẽ lập tức ban/chặn IP của máy Local. Tất cả lệnh `ssh` hoặc chạy script `./deploy_to_vnpt.sh` sau đó đều sẽ thất bại ngay lập tức với lỗi `Connection refused`.
+  - **Bài học:** 
+    - Luôn bọc lệnh SSH tự động bằng `sshpass -p "$PASSWORD"` hoặc sử dụng SSH key đã được authorized trước khi chạy bất kỳ câu lệnh check/log nào lên server production.
+    - Nếu lỡ bị ban IP, hãy chuyển kết nối mạng sang 4G/Hotspot trên điện thoại để lấy IP mới khác và tiếp tục deploy/work.
 ---
 **Status:** ACTIVE  
 **Priority:** CAUTION — Những bài học phải ghi nhớ để tránh "đổ máu" lần 2.
