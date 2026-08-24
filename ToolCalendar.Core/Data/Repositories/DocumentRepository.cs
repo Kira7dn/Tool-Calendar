@@ -417,7 +417,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 }
                 else
                 {
-                    filters.Add("LOWER(doc.Status) = @status");
+                    filters.Add("doc.Status = @status");
                 }
             }
 
@@ -463,7 +463,7 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             if (hasStatus && status.ToLower() != "overdue")
             {
-                countCmd.Parameters.AddWithValue("@status", status.ToLower());
+                countCmd.Parameters.AddWithValue("@status", status);
             }
             if (fromDate.HasValue) countCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
             if (toDate.HasValue) countCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
@@ -491,7 +491,7 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             if (hasStatus && status.ToLower() != "overdue")
             {
-                dataCmd.Parameters.AddWithValue("@status", status.ToLower());
+                dataCmd.Parameters.AddWithValue("@status", status);
             }
             if (fromDate.HasValue) dataCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
             if (toDate.HasValue) dataCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));

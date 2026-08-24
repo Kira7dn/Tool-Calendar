@@ -3674,3 +3674,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/hooks/useDocDetail.js` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(docs): simplify status filter and add button loading state for document actions"`
+### [2026-08-25 00:20] Fix SQLite case sensitivity issue for status filtering
+- **Mô tả**: Fix lỗi 0 kết quả khi chọn bộ lọc "Đã xử lý" do hàm LOWER(doc.Status) của SQLite không hỗ trợ chuyển chữ hoa "Đ" thành "đ", dẫn đến sai lệch khi compare với status.ToLower() từ C#. Đổi lại query thành so khớp chính xác doc.Status = @status.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(db): fix sqlite status filter case sensitivity for unicode strings"`
