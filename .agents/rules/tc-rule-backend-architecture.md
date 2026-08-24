@@ -1,5 +1,5 @@
 ---
-trigger: on_demand
+trigger: always_on
 description: "Kiến trúc bắt buộc cho Backend ASP.NET Core — ADO.NET, ApiResponse, Middleware."
 ---
 
@@ -39,6 +39,11 @@ await _conn.QueryAsync<Document>("SELECT ...");
 - Luôn dùng **parameterized queries** (`@Param`) — không bao giờ string interpolation.
 - Mọi column JSON (như `AssignedUserIds`, `EvidencePaths`) phải serialize/deserialize thủ công qua `System.Text.Json`.
 - Không dùng `SELECT *` — luôn liệt kê cột cụ thể.
+
+### Quy tắc SQLite Transaction (Quan trọng):
+- Mọi Transaction ghi (`connection.BeginTransaction()`) **phải hoàn toàn đồng bộ (Synchronous)**.
+- **TUYỆT ĐỐI KHÔNG** dùng `await`, `ExecuteNonQueryAsync()`, `ExecuteScalarAsync()`, hay `ReadAsync()` bên trong block của `BeginTransaction()`. Chỉ dùng các hàm đồng bộ (`ExecuteNonQuery`, `ExecuteScalar`, `Read`) để đảm bảo Transaction nhả khóa nhanh nhất có thể.
+- Mọi việc chuẩn bị bất đồng bộ (gọi mạng, I/O) phải làm xong TRƯỚC khi gọi `BeginTransaction()`.
 
 ---
 

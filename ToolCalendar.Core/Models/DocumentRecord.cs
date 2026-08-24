@@ -6,12 +6,11 @@ namespace ToolCalendar.Models
     {
         public int Id { get; set; }
 
-        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
-        public List<string> OcrWarnings { get; set; } = new List<string>();
         public string SoVanBan { get; set; } = "";
         public string TenCongVan { get; set; } = "";
         public string TrichYeu { get; set; } = "";
         public string FullText { get; set; } = "";
+        /// <summary>JSON pages metadata — giữ nguyên vì là cột DB SQLite thực tế.</summary>
         public string OcrPagesJson { get; set; } = "[]";
         public DateTime? NgayBanHanh { get; set; }
         public string CoQuanBanHanh { get; set; } = "";
@@ -19,7 +18,7 @@ namespace ToolCalendar.Models
         public DateTime? ThoiHan { get; set; }
         public string DonViChiDao { get; set; } = "";    // Đơn vị/phòng bị chỉ đạo
         public string FilePath { get; set; } = "";
-        public string Status { get; set; } = "Chưa xử lý"; // Chưa xử lý, Đang xử lý, Đã hoàn thành, Quá hạn
+        public string Status { get; set; } = "Chưa xử lý"; // Chưa xử lý, Đang xử lý, Đã xử lý, Quá hạn
         public string Priority { get; set; } = "Thường"; // Thường, Khẩn, Hỏa tốc
         public int? DepartmentId { get; set; }
         public string? DepartmentName { get; set; }
@@ -33,6 +32,7 @@ namespace ToolCalendar.Models
         public DateTime NgayThem { get; set; } = DateTime.Now;
         public bool DaTaoLich { get; set; } = false;
         public int UploadedByUserId { get; set; } = 1;
+        public string? UploadedByFullName { get; set; }
 
         /// <summary>
         /// SHA-256 hash (hex string) của nội dung file gốc.
@@ -46,7 +46,7 @@ namespace ToolCalendar.Models
         {
             get
             {
-                if (Status == "Đã hoàn thành") return 9999; // Mã đặc biệt cho việc đã hoàn thành
+                if (Status == "Đã xử lý") return 9999; // Mã đặc biệt cho việc đã hoàn thành
                 if (ThoiHan == null) return int.MaxValue;
                 return (int)(ThoiHan.Value.Date - DateTime.Today).TotalDays;
             }
@@ -57,7 +57,7 @@ namespace ToolCalendar.Models
         {
             get
             {
-                if (Status == "Đã hoàn thành") return "✅ Đã hoàn thành";
+                if (Status == "Đã xử lý") return "✅ Đã xử lý";
                 if (ThoiHan == null) return "Chưa xác định";
 
                 int days = SoNgayConLai;

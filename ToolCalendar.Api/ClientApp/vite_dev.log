@@ -1,0 +1,15 @@
+
+> toolcalendar-client@0.0.4 dev
+> vite --host 0.0.0.0 --host 0.0.0.0
+
+
+  VITE v7.3.2  ready in 191 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.1.38:5173/
+  ➜  Network: http://169.254.166.139:5173/
+11:38:29 AM [vite] (client) page reload /Users/macbookpro/Tool-Calendar/ToolCalendar.Api/wwwroot/index.html
+1:44:36 PM [vite] (client) page reload /Users/macbookpro/Tool-Calendar/ToolCalendar.Api/wwwroot/index.html
+5:30:42 PM [vite] (client) page reload /Users/macbookpro/Tool-Calendar/ToolCalendar.Api/wwwroot/index.html
+5:43:11 PM [vite] (client) page reload /Users/macbookpro/Tool-Calendar/ToolCalendar.Api/wwwroot/index.html
+5:43:12 PM [vite] (client) page reload /Users/macbookpro/Tool-Calendar/ToolCalendar.Api/wwwroot/index.html

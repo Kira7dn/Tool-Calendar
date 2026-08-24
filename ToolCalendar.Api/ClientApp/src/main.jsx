@@ -1,53 +1,147 @@
-import React, { useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+/* eslint-disable */
+/* global Response */
+import React, { useEffect, useState } from 'react'
+import { createRoot } from 'react-dom/client'
 
 // ─── Global Fetch Interceptor for standardized ApiResponse ────────────────
-const originalFetch = window.fetch;
+const originalFetch = window.fetch
 window.fetch = async (...args) => {
-  const response = await originalFetch(...args);
-  const contentType = response.headers.get("content-type");
-  if (contentType && contentType.includes("application/json")) {
-    const clone = response.clone();
+  const response = await originalFetch(...args)
+  const contentType = response.headers.get('content-type')
+  if (contentType && contentType.includes('application/json')) {
+    const clone = response.clone()
     try {
-      const json = await clone.json();
-      if (json && typeof json === 'object' && 'success' in json && ('data' in json || 'errors' in json)) {
-        let unwrappedData;
+      const json = await clone.json()
+      if (
+        json &&
+        typeof json === 'object' &&
+        'success' in json &&
+        ('data' in json || 'errors' in json)
+      ) {
+        let unwrappedData
         if (json.success) {
-          unwrappedData = json.data !== null ? json.data : { message: json.message };
+          unwrappedData = json.data !== null ? json.data : { message: json.message }
         } else {
-          unwrappedData = { 
-            message: json.message, 
-            error: json.message, 
-            errors: json.errors 
-          };
+          unwrappedData = {
+            message: json.message,
+            error: json.message,
+            errors: json.errors,
+          }
         }
-        
+
+        const newHeaders = new Headers(response.headers)
+        newHeaders.delete('content-length')
+
         const newResponse = new Response(JSON.stringify(unwrappedData), {
           status: response.status,
           statusText: response.statusText,
-          headers: response.headers
-        });
-        
-        Object.defineProperty(newResponse, 'url', { value: response.url });
-        return newResponse;
+          headers: newHeaders,
+        })
+
+        Object.defineProperty(newResponse, 'url', { value: response.url })
+        return newResponse
       }
     } catch (e) {
       // Ignore parsing error
     }
   }
-  return response;
-};
-import { AppShell } from './shell/AppShell.jsx';
-import { LoginPage } from './pages/Login.jsx';
-import PublicSchedule from './pages/PublicSchedule.jsx';
-import './styles/globals.css';
+  if (response.status === 401) {
+    // Không tự động refresh nếu là API login (tránh tình trạng login sai nhưng lại lấy token cũ)
+    if (args[0] && typeof args[0] === 'string' && args[0].includes('/api/auth/login')) {
+      return response
+    }
 
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { ShieldAlert, LogOut } from 'lucide-react';
+    // Tránh vòng lặp vô hạn nếu chính API refresh bị 401
+    if (args[0] && typeof args[0] === 'string' && args[0].includes('/api/auth/refresh')) {
+      document.dispatchEvent(new CustomEvent('auth:unauthorized'))
+      return response
+    }
+
+    // Không cần check refresh_token ở localStorage vì nó đã nằm trong HttpOnly Cookie
+    // Chỉ cần gọi /api/auth/refresh, trình duyệt sẽ tự đính kèm cookie
+    try {
+      const refreshResponse = await originalFetch('/api/auth/refresh', {
+        method: 'POST',
+        // Không truyền body, cookies (jwt_cookie, refresh_cookie) sẽ tự động gửi đi
+      })
+
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json()
+        if (refreshData.data && refreshData.data.token) {
+          localStorage.setItem('auth_token', refreshData.data.token)
+        }
+
+        // Gửi lại request ban đầu với token mới (nếu gửi qua Header)
+        const newOptions = args[1] || {}
+        if (newOptions.headers && newOptions.headers['Authorization']) {
+          newOptions.headers['Authorization'] = `Bearer ${refreshData.data.token}`
+        }
+        args[1] = newOptions
+
+        return window.fetch(...args) // GỌi lại qua interceptor để unwrap data
+      }
+    } catch (err) {
+      console.error('[Auth] Silent refresh failed', err)
+    }
+
+    // Nếu không có refresh token hoặc refresh thất bại
+    document.dispatchEvent(new CustomEvent('auth:unauthorized'))
+  }
+  return response
+}
+import { AppShell } from './shell/AppShell.jsx'
+import { LoginPage } from './pages/Login.jsx'
+import PublicSchedule from './pages/PublicSchedule.jsx'
+import { DocumentUploadProvider } from './features/documents/contexts/DocumentUploadContext.jsx'
+
+import './styles/globals.css'
+
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { ShieldAlert, LogOut, RefreshCw, AlertTriangle, Clock } from 'lucide-react'
+
+// ─── Error Boundary — bắt mọi crash render, hiện thông báo thay vì màn hình trắng ──
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error, info) {
+    console.error('[ErrorBoundary] Caught crash:', error, info)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={32} className="text-[#c8102e]" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 mb-2">Có lỗi xảy ra</h2>
+            <p className="text-sm text-gray-500 mb-1">
+              {this.state.error?.message || 'Lỗi không xác định'}
+            </p>
+            <p className="text-xs text-gray-400 mb-6">Vui lòng tải lại trang để tiếp tục.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-[#c8102e] hover:bg-[#a50e27] text-white rounded-lg text-sm font-semibold transition"
+            >
+              <RefreshCw size={14} />
+              Tải lại trang
+            </button>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 // ─── Modal cảnh báo bị đá phiên (toàn hệ thống) ───────────────────────────
 function KickedModal({ isOpen, onConfirm }) {
-  if (!isOpen) return null;
+  if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 fade-in duration-300">
@@ -83,74 +177,186 @@ function KickedModal({ isOpen, onConfirm }) {
         </div>
       </div>
     </div>
-  );
+  )
+}
+
+// ─── Modal cảnh báo hết hạn phiên ───────────────────────────────────────────
+function SessionExpiredModal({ isOpen, onConfirm }) {
+  if (!isOpen) return null
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-8 text-center">
+          <div className="size-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
+            <Clock className="text-white" size={40} />
+          </div>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Hết hạn phiên</h2>
+          <p className="text-white/80 text-sm font-semibold mt-3 leading-relaxed">
+            Bạn đã không hoạt động trong một thời gian dài.
+            <br />
+            Phiên đăng nhập đã tự động kết thúc để bảo mật.
+          </p>
+        </div>
+
+        <div className="p-6 space-y-3">
+          <button
+            onClick={onConfirm}
+            className="w-full py-4 bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
+          >
+            <LogOut size={16} /> Đăng nhập lại
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ─── Root Component ─────────────────────────────────────────────────────────
 function Root() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('auth_token'));
-  const [isKicked, setIsKicked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('auth_token'))
+  const [isKicked, setIsKicked] = useState(false)
+  const [isSessionExpired, setIsSessionExpired] = useState(false)
 
   useEffect(() => {
-    document.body.classList.add('app-booting');
+    document.body.classList.add('app-booting')
 
     // Lắng nghe thay đổi localStorage (đăng xuất từ tab khác)
     const handleStorageChange = () => {
-      setIsAuthenticated(!!localStorage.getItem('auth_token'));
-    };
+      setIsAuthenticated(!!localStorage.getItem('auth_token'))
+    }
 
     // Lắng nghe sự kiện unauthorized từ bất kỳ đâu
     const handleUnauthorized = () => {
-      localStorage.removeItem('auth_token');
-      setIsAuthenticated(false);
-    };
+      localStorage.removeItem('auth_token')
+      setIsAuthenticated(false)
+    }
 
     // 🔴 Lắng nghe sự kiện bị đá (từ signalr.js)
     const handleKicked = (e) => {
-      console.warn("[Root] Nhận sự kiện auth:kicked:", e.detail);
-      setIsKicked(true);
-      setIsAuthenticated(false);
-    };
+      console.warn('[Root] Nhận sự kiện auth:kicked:', e.detail)
+      setIsKicked(true)
+      setIsAuthenticated(false)
+    }
 
-    window.addEventListener('storage', handleStorageChange);
-    document.addEventListener('auth:unauthorized', handleUnauthorized);
-    document.addEventListener('auth:kicked', handleKicked);
+    // 🟢 HỆ THỐNG IDLE TIMEOUT CHUẨN ENTERPRISE (Auto Logout)
+    const IDLE_TIMEOUT_MS = 30 * 60 * 1000 // 30 phút
+    const LAST_ACTIVITY_KEY = 'last_activity_time'
+
+    // Hàm throttle để giới hạn số lần bắn sự kiện (giảm tải CPU)
+    const throttle = (func, limit) => {
+      let inThrottle
+      return function () {
+        const args = arguments
+        const context = this
+        if (!inThrottle) {
+          func.apply(context, args)
+          inThrottle = true
+          setTimeout(() => (inThrottle = false), limit)
+        }
+      }
+    }
+
+    // Cập nhật thời gian tương tác vào localStorage để đồng bộ đa Tab
+    const updateActivity = throttle(() => {
+      if (localStorage.getItem('auth_token')) {
+        localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
+      }
+    }, 2000) // Chỉ cập nhật tối đa 1 lần mỗi 2 giây
+
+    // ─── Hàm kiểm tra idle — dùng chung cho cả interval và visibilitychange ───
+    const checkIdle = () => {
+      if (!localStorage.getItem('auth_token')) return
+
+      const lastActivityStr = localStorage.getItem(LAST_ACTIVITY_KEY)
+      if (!lastActivityStr) {
+        localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
+        return
+      }
+
+      const lastActivity = parseInt(lastActivityStr, 10)
+      if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) {
+        console.warn('[Root] Hết thời gian truy cập (Idle Timeout), tự động đăng xuất.')
+
+        // Gọi API Logout để xóa Cookie HttpOnly trên Backend (chuẩn bảo mật)
+        fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+        }).catch(() => {})
+
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem(LAST_ACTIVITY_KEY)
+        setIsAuthenticated(false)
+        setIsSessionExpired(true)
+      }
+    }
+
+    // Heartbeat kiểm tra mỗi 10 giây (cho desktop/tab đang active)
+    const checkIdleInterval = setInterval(checkIdle, 10000)
+
+    // 📱 FIX MOBILE: Kiểm tra idle NGAY KHI màn hình sáng lại / tab active trở lại
+    // Điện thoại sleep → JS timer bị đóng băng → khi mở lại, visibilitychange
+    // fires TRƯỚC touchstart → checkIdle chạy trước updateActivity → đúng logic
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkIdle()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
+    activityEvents.forEach((evt) => window.addEventListener(evt, updateActivity, { passive: true }))
+
+    // Khởi tạo thời gian lúc mới vào app
+    if (localStorage.getItem('auth_token')) {
+      localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    document.addEventListener('auth:unauthorized', handleUnauthorized)
+    document.addEventListener('auth:kicked', handleKicked)
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      document.removeEventListener('auth:unauthorized', handleUnauthorized);
-      document.removeEventListener('auth:kicked', handleKicked);
-    };
-  }, []);
+      clearInterval(checkIdleInterval)
+      activityEvents.forEach((evt) => window.removeEventListener(evt, updateActivity))
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('storage', handleStorageChange)
+      document.removeEventListener('auth:unauthorized', handleUnauthorized)
+      document.removeEventListener('auth:kicked', handleKicked)
+    }
+  }, [])
 
   const handleLoginSuccess = () => {
-    setIsKicked(false);
-    setIsAuthenticated(true);
-  };
+    setIsKicked(false)
+    setIsAuthenticated(true)
+  }
 
   // Hỗ trợ đường dẫn công khai (không cần đăng nhập)
-  const isPublicRoute = window.location.pathname === "/campha";
+  const isPublicRoute = window.location.pathname === '/campha'
 
   if (isPublicRoute) {
-    return <PublicSchedule />;
+    return <PublicSchedule />
   }
 
   return (
     <>
-      {/* Modal bị đá - hiển thị trên tất cả màn hình */}
-      <KickedModal
-        isOpen={isKicked}
-        onConfirm={() => setIsKicked(false)}
-      />
-
       <TooltipProvider>
-        {!isAuthenticated
-          ? <LoginPage onLoginSuccess={handleLoginSuccess} />
-          : <AppShell />
-        }
+        <DocumentUploadProvider>
+          {!isAuthenticated ? <LoginPage onLoginSuccess={handleLoginSuccess} /> : <AppShell />}
+
+          {/* Auth Modals */}
+          <KickedModal isOpen={isKicked} onConfirm={() => setIsKicked(false)} />
+          <SessionExpiredModal
+            isOpen={isSessionExpired}
+            onConfirm={() => setIsSessionExpired(false)}
+          />
+        </DocumentUploadProvider>
       </TooltipProvider>
     </>
-  );
+  )
 }
 
-createRoot(document.getElementById('root')).render(<Root />);
+createRoot(document.getElementById('root')).render(
+  <ErrorBoundary>
+    <Root />
+  </ErrorBoundary>
+)

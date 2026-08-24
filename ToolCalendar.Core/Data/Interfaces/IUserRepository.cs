@@ -21,5 +21,9 @@ namespace ToolCalendar.Core.Data.Interfaces
         void UpdateLockout(int userId, int accessFailedCount, DateTimeOffset? lockoutEnd);
         // Reset bộ đếm sai sau khi đăng nhập thành công
         void ResetAccessFailedCount(int userId);
+        
+        // Cập nhật Refresh Token
+        void UpdateRefreshToken(int userId, string? refreshToken, DateTime? expiryTime);
+        User? GetUserByRefreshToken(string refreshToken);
     }
 }

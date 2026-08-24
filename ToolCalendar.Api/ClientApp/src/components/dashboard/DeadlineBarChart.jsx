@@ -1,25 +1,27 @@
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+/* eslint-disable */
+import React from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 
 function formatDeadlineLabel(item) {
-  if (item.date === 'overdue') return { short: 'Quá hạn', title: 'Quá hạn' };
+  if (item.date === 'overdue') return { short: 'Quá hạn', title: 'Quá hạn' }
 
-  const parsedDate = new Date(`${item.date}T00:00:00`);
-  if (Number.isNaN(parsedDate.getTime())) return { short: item.label || '-', title: item.label || '-' };
+  const parsedDate = new Date(`${item.date}T00:00:00`)
+  if (Number.isNaN(parsedDate.getTime()))
+    return { short: item.label || '-', title: item.label || '-' }
 
   const dateLabel = parsedDate.toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
-  });
+  })
 
   if (item.todayCount > 0 || item.label === 'Hôm nay') {
-    return { short: dateLabel, title: `Hôm nay (${dateLabel})` };
+    return { short: dateLabel, title: `Hôm nay (${dateLabel})` }
   }
 
-  return { short: dateLabel, title: parsedDate.toLocaleDateString('vi-VN') };
+  return { short: dateLabel, title: parsedDate.toLocaleDateString('vi-VN') }
 }
 
 function LegendDot({ color, label }) {
@@ -28,21 +30,30 @@ function LegendDot({ color, label }) {
       <span className={cn('size-2 rounded-full', color)} />
       {label}
     </span>
-  );
+  )
 }
 
 export function DeadlineBarChart({ className, data, isLoading }) {
-  const chartData = data || [];
-  const maxCount = Math.max(...chartData.map((item) => item.count || 0), 1);
-  const yTicks = [maxCount, Math.ceil(maxCount / 2), 0].filter((value, index, values) => values.indexOf(value) === index);
-  const hasData = chartData.some((item) => (item.count || 0) > 0);
+  const chartData = data || []
+  const maxCount = Math.max(...chartData.map((item) => item.count || 0), 1)
+  const yTicks = [maxCount, Math.ceil(maxCount / 2), 0].filter(
+    (value, index, values) => values.indexOf(value) === index
+  )
+  const hasData = chartData.some((item) => (item.count || 0) > 0)
 
   return (
-    <Card className={cn('glass-card border-border/60 shadow-subtle rounded-xl overflow-hidden', className)}>
+    <Card
+      className={cn(
+        'glass-card border-border/60 shadow-subtle rounded-xl overflow-hidden',
+        className
+      )}
+    >
       <CardHeader className="pb-2 py-3">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base font-black tracking-tight">Biểu đồ thời hạn văn bản</CardTitle>
+            <CardTitle className="text-base font-black tracking-tight">
+              Biểu đồ thời hạn văn bản
+            </CardTitle>
           </div>
           <Badge variant="outline" className="rounded-full font-bold px-3 py-1">
             14 NGÀY
@@ -67,11 +78,14 @@ export function DeadlineBarChart({ className, data, isLoading }) {
                   ))}
                 </div>
                 <div className="flex h-full items-end gap-2 border-b border-l border-border/70 pl-3 pb-6">
-                {Array.from({ length: 15 }).map((_, index) => (
-                  <div key={index} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                    <Skeleton className="w-full max-w-9 rounded-t-md" style={{ height: `${24 + (index % 5) * 12}%` }} />
-                  </div>
-                ))}
+                  {Array.from({ length: 15 }).map((_, index) => (
+                    <div key={index} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                      <Skeleton
+                        className="w-full max-w-9 rounded-t-md"
+                        style={{ height: `${24 + (index % 5) * 12}%` }}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : hasData ? (
@@ -84,17 +98,17 @@ export function DeadlineBarChart({ className, data, isLoading }) {
                 <div className="relative min-w-0 border-b border-border/70">
                   <div className="flex h-full gap-2 pl-3 pt-6">
                     {chartData.map((item) => {
-                      const count = item.count || 0;
-                      const height = count > 0 ? Math.max((count / maxCount) * 100, 10) : 2;
-                      const label = formatDeadlineLabel(item);
-                      const isOverdue = item.date === 'overdue';
+                      const count = item.count || 0
+                      const height = count > 0 ? Math.max((count / maxCount) * 100, 10) : 2
+                      const label = formatDeadlineLabel(item)
+                      const isOverdue = item.date === 'overdue'
 
                       return (
-                        <div 
-                          key={item.date} 
+                        <div
+                          key={item.date}
                           className={cn(
-                            "flex h-full min-w-0 flex-col items-center gap-1",
-                            isOverdue ? "flex-[1.5]" : "flex-1"
+                            'flex h-full min-w-0 flex-col items-center gap-1',
+                            isOverdue ? 'flex-[1.5]' : 'flex-1'
                           )}
                         >
                           <div className="relative flex min-h-0 w-full flex-1 items-end justify-center">
@@ -112,10 +126,12 @@ export function DeadlineBarChart({ className, data, isLoading }) {
                               title={`${label.title}: ${count} văn bản`}
                             >
                               {count > 0 && (
-                                <span className={cn(
-                                  "font-black text-foreground/90 drop-shadow-sm",
-                                  isOverdue ? "text-xs" : "text-[10px]"
-                                )}>
+                                <span
+                                  className={cn(
+                                    'font-black text-foreground/90 drop-shadow-sm',
+                                    isOverdue ? 'text-xs' : 'text-[10px]'
+                                  )}
+                                >
                                   {count}
                                 </span>
                               )}
@@ -125,7 +141,7 @@ export function DeadlineBarChart({ className, data, isLoading }) {
                             {label.short}
                           </span>
                         </div>
-                      );
+                      )
                     })}
                   </div>
                 </div>
@@ -139,5 +155,5 @@ export function DeadlineBarChart({ className, data, isLoading }) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

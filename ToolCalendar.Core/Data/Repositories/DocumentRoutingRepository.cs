@@ -7,8 +7,12 @@ namespace ToolCalendar.Data.Repositories
     public interface IDocumentRoutingRepository
     {
         Task<List<DocumentRoutingRecord>> GetTreeByDocumentIdAsync(int documentId);
+        Task<DocumentRoutingRecord?> GetByIdAsync(int id);
         Task<int> CreateRoutingAsync(DocumentRoutingRecord routing);
         Task UpdateStatusAsync(int id, string status, string processingContent);
+        Task UpdateStatusByDocumentAndReceiverAsync(int documentId, int receiverId, string status, string processingContent);
+        Task DowngradeRoleAsync(int documentId, string oldRole, string newRole);
+        Task<bool> AreAllRoutingsFinishedAsync(int documentId);
     }
 
     public class DocumentRoutingRepository : IDocumentRoutingRepository
@@ -93,6 +97,37 @@ namespace ToolCalendar.Data.Repositories
             return rootNodes;
         }
 
+        public async Task<DocumentRoutingRecord?> GetByIdAsync(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            string sql = @"
+                SELECT Id, DocumentId, SenderId, ReceiverId, ParentRoutingId,
+                       Role, ForwardDate, Deadline, Comment, ProcessingContent, Status, CreatedAt
+                FROM DocumentRoutings
+                WHERE Id = @Id";
+
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@Id", id);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            return new DocumentRoutingRecord
+            {
+                Id            = Convert.ToInt32(reader["Id"]),
+                DocumentId    = Convert.ToInt32(reader["DocumentId"]),
+                SenderId      = Convert.ToInt32(reader["SenderId"]),
+                ReceiverId    = Convert.ToInt32(reader["ReceiverId"]),
+                ParentRoutingId = reader["ParentRoutingId"] != DBNull.Value ? Convert.ToInt32(reader["ParentRoutingId"]) : null,
+                Role          = reader["Role"].ToString() ?? "Chủ trì",
+                Status        = reader["Status"].ToString() ?? "Chưa xử lý",
+                ProcessingContent = reader["ProcessingContent"].ToString() ?? "",
+                CreatedAt     = DateTime.Parse(reader["CreatedAt"].ToString()!),
+            };
+        }
+
         public async Task<int> CreateRoutingAsync(DocumentRoutingRecord routing)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -137,6 +172,53 @@ namespace ToolCalendar.Data.Repositories
             cmd.Parameters.AddWithValue("@Status", status);
             cmd.Parameters.AddWithValue("@ProcessingContent", processingContent);
             await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task UpdateStatusByDocumentAndReceiverAsync(int documentId, int receiverId, string status, string processingContent)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            
+            string sql = @"
+                UPDATE DocumentRoutings
+                SET Status = @Status, ProcessingContent = @ProcessingContent
+                WHERE DocumentId = @DocumentId AND ReceiverId = @ReceiverId AND Status != 'Đã xử lý' AND Status != 'Hoàn thành' AND Status != 'Từ chối'";
+
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@DocumentId", documentId);
+            cmd.Parameters.AddWithValue("@ReceiverId", receiverId);
+            cmd.Parameters.AddWithValue("@Status", status);
+            cmd.Parameters.AddWithValue("@ProcessingContent", processingContent);
+            await cmd.ExecuteNonQueryAsync();
+        }
+        public async Task DowngradeRoleAsync(int documentId, string oldRole, string newRole)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            
+            string sql = @"
+                UPDATE DocumentRoutings
+                SET Role = @NewRole
+                WHERE DocumentId = @DocumentId AND Role = @OldRole";
+
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@DocumentId", documentId);
+            cmd.Parameters.AddWithValue("@OldRole", oldRole);
+            cmd.Parameters.AddWithValue("@NewRole", newRole);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task<bool> AreAllRoutingsFinishedAsync(int documentId)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            string sql = @"
+                SELECT COUNT(*) FROM DocumentRoutings
+                WHERE DocumentId = @documentId AND Status NOT IN ('Đã xử lý', 'Hoàn thành', 'Từ chối')";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@DocumentId", documentId);
+            var count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            return count == 0;
         }
     }
 }

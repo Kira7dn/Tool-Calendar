@@ -24,7 +24,9 @@ namespace ToolCalendar.Api.Security
         public string HashPassword(User user, string password)
         {
             // Tất cả mật khẩu mới đều dùng PBKDF2 V3 của Identity
-            return _identityHasher.HashPassword(user, password);
+            var hash = _identityHasher.HashPassword(user, password);
+            Console.WriteLine($"[HybridPasswordHasher] HashPassword called. Hash length: {hash?.Length}, Hash: {hash}");
+            return hash;
         }
 
         /// <summary>

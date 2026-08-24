@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
 FROM node:22-alpine AS client-build
 WORKDIR /src/ToolCalendar.Api/ClientApp
 COPY ["ToolCalendar.Api/ClientApp/package.json", "ToolCalendar.Api/ClientApp/package-lock.json", "./"]
-RUN npm install --legacy-peer-deps
+RUN npm config set registry https://registry.npmmirror.com && npm install --legacy-peer-deps
 COPY ["ToolCalendar.Api/ClientApp/", "./"]
 COPY ["ToolCalendar.Api/wwwroot/", "../wwwroot/"]
 RUN npm run build
@@ -52,6 +52,7 @@ RUN apt-get update && apt-get install -y \
     libsm6 \
     libxext6 \
     libxrender-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=publish /app/publish .
 

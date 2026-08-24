@@ -1,37 +1,23 @@
-import React, { useEffect, useState } from 'react';
+/* eslint-disable */
+import React, { useState } from 'react'
 import {
   Plus,
   UserPlus,
   Search,
   Edit,
   Trash2,
-  User,
-  Loader2,
-  Lock,
   Mail,
   Phone,
-  Check,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  EyeOff
-} from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { ConfirmationModal } from '@/components/ui/confirmation-modal';
-import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Loader2,
+} from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import {
   Table,
   TableBody,
@@ -39,246 +25,69 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { cn } from '@/lib/utils';
+} from '@/components/ui/table'
+import { cn } from '@/lib/utils'
+import { ROLES } from '@/constants/roles'
+import { useUsers } from '@/features/users/hooks/useUsers'
+import { UserModal } from '@/features/users/components/UserModal'
 
 export function Users() {
-  const [users, setUsers] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const {
+    users,
+    departments,
+    isLoading,
+    search,
+    setSearch,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    deleteConfirm,
+    setDeleteConfirm,
+    handleDeleteUser,
+    executeDelete,
+    fetchUsers,
+  } = useUsers()
 
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [showModalPassword, setShowModalPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    fullName: '',
-    email: '',
-    phoneNumber: '',
-    role: 'CanBo',
-    departmentId: ''
-  });
-  const [errors, setErrors] = useState({
-    email: '',
-    phoneNumber: ''
-  });
-
-  const validateEmail = (email) => {
-    if (!email) return true; // Cho phép để trống nếu không bắt buộc
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-
-  const validatePhone = (phone) => {
-    if (!phone) return true; // Cho phép để trống
-    const re = /^0[0-9]{9}$/; // 10 số, bắt đầu bằng 0
-    return re.test(phone);
-  };
-
-  useEffect(() => {
-    fetchUsers();
-    fetchDepartments();
-  }, []);
-
-  const fetchUsers = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/users', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      if (response.ok) {
-        setUsers(await response.json());
-      }
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchDepartments = async () => {
-    try {
-      const response = await fetch('/api/admin/departments', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      if (response.ok) {
-        setDepartments(await response.json());
-      }
-    } catch (e) { }
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
 
   const handleOpenModal = (user = null) => {
-    if (user) {
-      setEditingUser(user);
-      setFormData({
-        username: user.username || '',
-        password: '', // Leave blank for edit
-        fullName: user.fullName || '',
-        email: user.email || '',
-        phoneNumber: user.phoneNumber || '',
-        role: user.role || 'CanBo',
-        departmentId: user.departmentId ? user.departmentId.toString() : "0"
-      });
-      setErrors({ email: '', phoneNumber: '' });
-    } else {
-      setEditingUser(null);
-      setFormData({
-        username: '',
-        password: '',
-        fullName: '',
-        email: '',
-        phoneNumber: '',
-        role: 'CanBo',
-        departmentId: "0"
-      });
-      setErrors({ email: '', phoneNumber: '' });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleSubmit = async () => {
-    if (!formData.fullName || (!editingUser && !formData.username) || (!editingUser && !formData.password)) {
-      toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
-      return;
-    }
-
-    if (formData.email && !validateEmail(formData.email)) {
-      toast.error('Email không đúng định dạng');
-      return;
-    }
-
-    if (formData.phoneNumber && !validatePhone(formData.phoneNumber)) {
-      toast.error('Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users';
-      const method = editingUser ? 'PUT' : 'POST';
-
-      const payload = {
-        fullName: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        role: formData.role,
-        departmentId: (formData.departmentId && formData.departmentId !== "0") ? parseInt(formData.departmentId) : null
-      };
-
-      if (!editingUser) {
-        payload.username = formData.username;
-        payload.passwordHash = formData.password;
-      } else if (formData.password) {
-        payload.passwordHash = formData.password;
-      }
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        setIsModalOpen(false);
-        toast.success(editingUser ? 'Cập nhật tài khoản thành công' : 'Tạo tài khoản thành công');
-        fetchUsers();
-      } else {
-        const err = await response.json();
-        toast.error(err.message || 'Lỗi khi lưu người dùng');
-      }
-    } catch (error) {
-      console.error('Submit user failed:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, user: null });
-
-  const handleDeleteUser = async (user) => {
-    if (user.username === 'admin') {
-      toast.error('Không thể xóa tài khoản Quản trị cấp cao (admin)');
-      return;
-    }
-    setDeleteConfirm({ open: true, user });
-  };
-
-  const executeDelete = async () => {
-    const user = deleteConfirm.user;
-    if (!user) return;
-
-    try {
-      const response = await fetch(`/api/users/${user.id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      if (response.ok) {
-        toast.success(`Đã xóa người dùng ${user.fullName}`);
-        fetchUsers();
-      }
-    } catch (e) {
-      toast.error('Có lỗi xảy ra khi xóa');
-    } finally {
-      setDeleteConfirm({ open: false, user: null });
-    }
-  };
+    setEditingUser(user)
+    setIsModalOpen(true)
+  }
 
   const getRoleBadge = (role) => {
-    let color = 'bg-muted/50 text-muted-foreground';
-    if (role === 'Admin') color = 'bg-info/15 text-info border-info/30';
-    else if (role === 'LanhDao') color = 'bg-primary/15 text-primary border-primary/30';
-    else if (role === 'VanThu') color = 'bg-warning/15 text-warning border-warning/30';
-    else if (role === 'CanBo') color = 'bg-success/15 text-success border-success/30';
+    let color = 'bg-muted/50 text-muted-foreground'
+    if (role === ROLES.ADMIN) color = 'bg-info/15 text-info border-info/30'
+    else if (role === ROLES.LANH_DAO) color = 'bg-primary/15 text-primary border-primary/30'
+    else if (role === ROLES.VAN_THU) color = 'bg-warning/15 text-warning border-warning/30'
+    else if (role === ROLES.CAN_BO) color = 'bg-success/15 text-success border-success/30'
 
     return (
-      <Badge variant="outline" className={cn("font-bold text-[10px] uppercase tracking-tighter", color)}>
-        {role === 'Admin' ? 'Quản trị viên' :
-          role === 'LanhDao' ? 'Lãnh đạo' :
-            role === 'VanThu' ? 'Văn thư' : 'Cán bộ'}
+      <Badge
+        variant="outline"
+        className={cn('font-bold text-[10px] uppercase tracking-tighter', color)}
+      >
+        {role === ROLES.ADMIN
+          ? 'Quản trị viên'
+          : role === ROLES.LANH_DAO
+            ? 'Lãnh đạo'
+            : role === ROLES.VAN_THU
+              ? 'Văn thư'
+              : 'Cán bộ'}
       </Badge>
-    );
-  };
-
-  const removeVietnameseTones = (str) => {
-    if (!str) return '';
-    str = str.toLowerCase();
-    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-    str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-    str = str.replace(/đ/g, "d");
-    str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, "");
-    str = str.replace(/\u02C6|\u0306|\u031B/g, "");
-    return str.trim();
-  };
-
-  const searchTerm = removeVietnameseTones(search);
-  const filteredUsers = users.filter(user => {
-    const name = removeVietnameseTones(user.fullName);
-    const uname = removeVietnameseTones(user.username);
-    const mail = removeVietnameseTones(user.email);
-    return name.includes(searchTerm) || uname.includes(searchTerm) || mail.includes(searchTerm);
-  });
-
-  const totalPages = Math.ceil(filteredUsers.length / pageSize);
-  const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    )
+  }
 
   return (
     <div className="space-y-[var(--space-page)] flex flex-col h-full animate-in slide-in-from-bottom-4 duration-700 fill-mode-both">
       <div className="flex flex-col gap-0 border-l-4 border-primary pl-3 py-0.5">
         <h2 className="text-xl">Quản lý người dùng</h2>
-        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">Access Control & Staff Management</p>
+        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">
+          Access Control & Staff Management
+        </p>
       </div>
 
       <Card className="glass-card shadow-2xl flex-1 flex flex-col overflow-hidden gap-2 px-2 py-0">
@@ -290,10 +99,7 @@ export function Users() {
                 placeholder="Tìm theo tên, email..."
                 className="pl-9 h-11 bg-muted/50 focus:bg-card"
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => setSearch(e.target.value)}
                 autoComplete="off"
               />
             </div>
@@ -311,12 +117,24 @@ export function Users() {
             <Table className="table-fixed w-full">
               <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
                 <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground text-center w-12">STT</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground">Người dùng</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-44">Liên hệ</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-36">Phòng ban</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-28">Vai trò</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground text-right w-24">Thao tác</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground text-center w-12">
+                    STT
+                  </TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground">
+                    Người dùng
+                  </TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-44">
+                    Liên hệ
+                  </TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-36">
+                    Phòng ban
+                  </TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-28">
+                    Vai trò
+                  </TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground text-right w-24">
+                    Thao tác
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="relative">
@@ -327,14 +145,18 @@ export function Users() {
                         <Loader2 className="size-10 text-primary animate-spin" strokeWidth={2.5} />
                         <div className="absolute inset-0 size-10 border-4 border-primary/10 rounded-full" />
                       </div>
-                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">Đang tải người dùng...</span>
+                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">
+                        Đang tải người dùng...
+                      </span>
                     </div>
                   </div>
                 )}
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i} className="h-[64px]">
-                      <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
+                      <TableCell className="text-center">
+                        <Skeleton className="h-4 w-4 mx-auto" />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Skeleton className="size-10 rounded-full" />
@@ -344,39 +166,58 @@ export function Users() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3"><Skeleton className="h-4 w-40" /></TableCell>
-                      <TableCell className="py-3"><Skeleton className="h-4 w-32" /></TableCell>
-                      <TableCell className="py-3"><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
-                      <TableCell className="text-right"><Skeleton className="h-8 w-24 rounded-xl ml-auto" /></TableCell>
+                      <TableCell className="py-3">
+                        <Skeleton className="h-4 w-40" />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <Skeleton className="h-4 w-32" />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <Skeleton className="h-6 w-24 rounded-full" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Skeleton className="h-8 w-24 rounded-xl ml-auto" />
+                      </TableCell>
                     </TableRow>
                   ))
-                ) : paginatedUsers.length > 0 ? (
-                  paginatedUsers.map((user, index) => (
+                ) : users.length > 0 ? (
+                  users.map((user, index) => (
                     <TableRow key={user.id} className="group transition-colors h-[64px]">
-                      <TableCell className="text-center text-muted-foreground font-bold text-xs">{(currentPage - 1) * pageSize + index + 1}</TableCell>
+                      <TableCell className="text-center text-muted-foreground font-bold text-xs">
+                        {(currentPage - 1) * pageSize + index + 1}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-4">
                           <div className="size-10 rounded-2xl bg-primary/5 flex items-center justify-center text-primary font-black group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                             {user.fullName?.charAt(0) || 'U'}
                           </div>
                           <div className="truncate">
-                            <div className="font-black text-foreground text-sm truncate">{user.fullName}</div>
-                            <div className="text-xs text-muted-foreground font-bold">@{user.username}</div>
+                            <div className="font-black text-foreground text-sm truncate">
+                              {user.fullName}
+                            </div>
+                            <div className="text-xs text-muted-foreground font-bold">
+                              @{user.username}
+                            </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="truncate">
                         <div className="flex flex-col gap-1 truncate">
                           <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground truncate">
-                            <Mail className="size-3 text-muted-foreground/30 shrink-0" /> <span className="truncate">{user.email || '-'}</span>
+                            <Mail className="size-3 text-muted-foreground/30 shrink-0" />{' '}
+                            <span className="truncate">{user.email || '-'}</span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground truncate">
-                            <Phone className="size-3 text-muted-foreground/30 shrink-0" /> <span className="truncate">{user.phoneNumber || '-'}</span>
+                            <Phone className="size-3 text-muted-foreground/30 shrink-0" />{' '}
+                            <span className="truncate">{user.phoneNumber || '-'}</span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="truncate">
-                        <Badge variant="default" className="bg-muted/50 text-muted-foreground font-bold text-[10px] truncate max-w-full">
+                        <Badge
+                          variant="default"
+                          className="bg-muted/50 text-muted-foreground font-bold text-[10px] truncate max-w-full"
+                        >
                           {user.departmentName || 'Chưa phân phòng'}
                         </Badge>
                       </TableCell>
@@ -421,16 +262,14 @@ export function Users() {
           <div className="p-4 border-t border-border flex items-center justify-between bg-card/50">
             <div className="flex items-center gap-4">
               <p className="text-xs text-muted-foreground font-medium">
-                Trang <span className="text-foreground">{currentPage}</span> / <span className="text-foreground">{totalPages || 1}</span>
+                Trang <span className="text-foreground">{currentPage}</span> /{' '}
+                <span className="text-foreground">{totalPages || 1}</span>
               </p>
               <div className="flex items-center gap-2">
                 <p className="text-xs text-muted-foreground font-medium">Hiển thị:</p>
                 <select
                   value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
                   className="text-xs bg-muted border border-border rounded px-2 py-1 focus:outline-none"
                 >
                   <option value={10}>10</option>
@@ -445,7 +284,7 @@ export function Users() {
                 variant="outline"
                 size="sm"
                 disabled={currentPage === 1 || isLoading}
-                onClick={() => setCurrentPage(p => p - 1)}
+                onClick={() => setCurrentPage((p) => p - 1)}
                 className="h-8 text-xs font-semibold px-3"
               >
                 <ChevronLeft className="size-4 mr-1" /> Trước
@@ -454,7 +293,7 @@ export function Users() {
                 variant="outline"
                 size="sm"
                 disabled={currentPage === totalPages || totalPages === 0 || isLoading}
-                onClick={() => setCurrentPage(p => p + 1)}
+                onClick={() => setCurrentPage((p) => p + 1)}
                 className="h-8 text-xs font-semibold px-3"
               >
                 Tiếp <ChevronRight className="size-4 ml-1" />
@@ -464,160 +303,17 @@ export function Users() {
         </CardContent>
       </Card>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-xl w-[95vw] p-0 border-none shadow-2xl glass-card flex flex-col max-h-[95vh] overflow-hidden">
-          <DialogHeader className="p-5 md:p-8 bg-red-600 text-white relative shrink-0">
-            <DialogTitle className="text-xl font-extrabold flex items-center gap-3 text-white">
-              <div className="p-2 rounded-xl bg-white/10 backdrop-blur-md">
-                {editingUser ? <Edit className="size-5 text-white" /> : <UserPlus className="size-5 text-white" />}
-              </div>
-              <span className="drop-shadow-sm">{editingUser ? 'Cập nhật tài khoản' : 'Tạo tài khoản mới'}</span>
-            </DialogTitle>
-            <DialogDescription className="text-white/80 font-medium mt-2">
-              Thiết lập thông tin đăng nhập và vai trò cho cán bộ
-            </DialogDescription>
-          </DialogHeader>
+      <UserModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        user={editingUser}
+        departments={departments}
+        onSuccess={fetchUsers}
+      />
 
-          <div className="p-5 md:p-8 flex-1 overflow-y-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tên đăng nhập</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input
-                    placeholder="vd: canbo.dv"
-                    value={formData.username}
-                    onChange={e => !editingUser && setFormData({ ...formData, username: e.target.value })}
-                    className="pl-10 rounded-xl bg-muted/50 border-none h-11 font-bold disabled:opacity-50"
-                    disabled={!!editingUser}
-                    autoComplete="username"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  {editingUser ? 'Mật khẩu mới (Để trống nếu không đổi)' : 'Mật khẩu'}
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input
-                    type={showModalPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={e => setFormData({ ...formData, password: e.target.value })}
-                    className="pl-10 pr-10 rounded-xl bg-muted/50 border-none h-11 font-bold"
-                    autoComplete="new-password"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 size-8 text-muted-foreground hover:bg-transparent"
-                    onClick={() => setShowModalPassword(!showModalPassword)}
-                  >
-                    {showModalPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Họ và tên</Label>
-                <Input
-                  placeholder="Nguyễn Văn A"
-                  value={formData.fullName}
-                  onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-                  className="rounded-xl bg-muted/50 border-none h-11 font-black text-foreground"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input
-                    placeholder="email@vidu.com"
-                    value={formData.email}
-                    onChange={e => {
-                      const val = e.target.value;
-                      setFormData({ ...formData, email: val });
-                      if (val && !validateEmail(val)) {
-                        setErrors(prev => ({ ...prev, email: 'Email không hợp lệ (vd: abc@gmail.com)' }));
-                      } else {
-                        setErrors(prev => ({ ...prev, email: '' }));
-                      }
-                    }}
-                    className={cn("pl-10 h-11 font-medium", errors.email ? "border-red-500 bg-red-50" : "bg-muted/50 border-none")}
-                  />
-                </div>
-                {errors.email && <p className="text-[10px] text-red-500 font-bold ml-1 mt-1">{errors.email}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Số điện thoại</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input
-                    placeholder="09xx..."
-                    value={formData.phoneNumber}
-                    onChange={e => {
-                      const val = e.target.value;
-                      setFormData({ ...formData, phoneNumber: val });
-                      if (val && !validatePhone(val)) {
-                        setErrors(prev => ({ ...prev, phoneNumber: 'SĐT phải có 10 số, bắt đầu bằng 0' }));
-                      } else {
-                        setErrors(prev => ({ ...prev, phoneNumber: '' }));
-                      }
-                    }}
-                    className={cn("pl-10 rounded-xl h-11 font-medium", errors.phoneNumber ? "border-red-500 bg-red-50" : "bg-muted/50 border-none")}
-                  />
-                </div>
-                {errors.phoneNumber && <p className="text-[10px] text-red-500 font-bold ml-1 mt-1">{errors.phoneNumber}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phòng ban</Label>
-                <select
-                  value={formData.departmentId}
-                  onChange={e => setFormData({ ...formData, departmentId: e.target.value })}
-                  className="w-full px-4 h-11 rounded-xl bg-muted/50 border-none text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
-                >
-                  <option value="0">Chưa phân phòng</option>
-                  {departments.map(d => <option key={d.id} value={d.id.toString()}>{d.name}</option>)}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vai trò</Label>
-                <select
-                  value={formData.role}
-                  onChange={e => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full px-4 h-11 rounded-xl bg-muted/50 border-none text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
-                >
-                  <option value="CanBo">Cán bộ xử lý</option>
-                  <option value="VanThu">Văn thư</option>
-                  <option value="LanhDao">Lãnh đạo</option>
-                  <option value="Admin">Quản trị viên</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="p-4 md:p-6 bg-slate-50 flex items-center justify-end gap-3 border-t border-slate-100 shrink-0">
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-bold text-slate-500">Hủy bỏ</Button>
-            <Button
-              className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-black px-8 md:px-10 shadow-lg shadow-red-100 transition-all active:scale-95 disabled:bg-slate-300 disabled:shadow-none"
-              onClick={handleSubmit}
-              disabled={isSubmitting || !!errors.email || !!errors.phoneNumber}
-            >
-              {isSubmitting ? <Loader2 className="size-4 animate-spin mr-2" /> : <Check className="size-4 mr-2" />}
-              {editingUser ? 'Lưu thay đổi' : 'Tạo tài khoản'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       <ConfirmationModal
         open={deleteConfirm.open}
-        onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}
+        onOpenChange={(open) => setDeleteConfirm((prev) => ({ ...prev, open }))}
         title="Xác nhận xóa?"
         description={`Bạn có chắc chắn muốn xóa tài khoản "${deleteConfirm.user?.fullName}"? Thao tác này không thể hoàn tác.`}
         confirmLabel="XÓA NGAY"
@@ -625,5 +321,5 @@ export function Users() {
         variant="destructive"
       />
     </div>
-  );
+  )
 }

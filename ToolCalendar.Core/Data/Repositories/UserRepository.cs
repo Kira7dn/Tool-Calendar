@@ -60,6 +60,9 @@ namespace ToolCalendar.Core.Data.Repositories
                 FailedLoginCount = reader["FailedLoginCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["FailedLoginCount"]),
                 LockoutUntil     = ParseNullableDateTime(reader["LockoutUntil"]?.ToString()),
 
+                RefreshToken     = HasColumn(reader, "RefreshToken") ? reader["RefreshToken"]?.ToString() : null,
+                RefreshTokenExpiryTime = HasColumn(reader, "RefreshTokenExpiryTime") ? ParseNullableDateTime(reader["RefreshTokenExpiryTime"]?.ToString()) : null,
+
                 // --- Identity columns mới — dùng HasColumn() đề phòng migration chưa chạy ---
                 SecurityStamp       = HasColumn(reader, "SecurityStamp")
                                         ? (reader["SecurityStamp"]?.ToString() ?? Guid.NewGuid().ToString())
@@ -337,8 +340,8 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@pn",    (object?)user.PhoneNumber ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@r",     (object?)user.Role ?? "Guest");
             cmd.Parameters.AddWithValue("@d",     (object?)user.DepartmentId ?? DBNull.Value);
-            // Tạo SecurityStamp mới mỗi khi thông tin user thay đổi (invalidate token cũ)
-            cmd.Parameters.AddWithValue("@stamp", Guid.NewGuid().ToString());
+            // Sử dụng SecurityStamp từ object để đồng bộ với Identity (tránh lỗi desync)
+            cmd.Parameters.AddWithValue("@stamp", string.IsNullOrEmpty(user.SecurityStamp) ? Guid.NewGuid().ToString() : user.SecurityStamp);
             cmd.Parameters.AddWithValue("@ph",    user.PasswordHash ?? "");
             cmd.Parameters.AddWithValue("@id",    user.Id);
             cmd.ExecuteNonQuery();
@@ -425,6 +428,37 @@ namespace ToolCalendar.Core.Data.Repositories
                 WHERE Id = @id", connection);
             cmd.Parameters.AddWithValue("@id", userId);
             cmd.ExecuteNonQuery();
+        }
+
+        public void UpdateRefreshToken(int userId, string? refreshToken, DateTime? expiryTime)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                UPDATE Users 
+                SET RefreshToken = @rt, RefreshTokenExpiryTime = @exp 
+                WHERE Id = @id";
+            cmd.Parameters.AddWithValue("@rt", string.IsNullOrEmpty(refreshToken) ? DBNull.Value : refreshToken);
+            cmd.Parameters.AddWithValue("@exp", expiryTime.HasValue ? expiryTime.Value.ToString("O") : DBNull.Value);
+            cmd.Parameters.AddWithValue("@id", userId);
+            cmd.ExecuteNonQuery();
+        }
+        public User? GetUserByRefreshToken(string refreshToken)
+        {
+            if (string.IsNullOrEmpty(refreshToken)) return null;
+
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            string sql = "SELECT * FROM Users WHERE RefreshToken = @rt";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@rt", refreshToken);
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return MapUser(reader);
+            }
+            return null;
         }
     }
 }

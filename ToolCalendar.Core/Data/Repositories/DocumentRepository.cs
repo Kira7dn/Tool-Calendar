@@ -79,19 +79,19 @@ namespace ToolCalendar.Core.Data.Repositories
                 using var cmd = connection.CreateCommand();
                 cmd.Transaction = transaction;
 
-                // 1. KiÃ¡Â»Æ’m tra quyÃ¡Â»Ân xÃƒÂ³a vÃƒÂ  xÃƒÂ³a cÃƒÂ¡c Reaction liÃƒÂªn quan trÃ†Â°Ã¡Â»â€ºc
+                // 1. Kiểm tra quyền xóa và xóa các Reaction liên quan trước
                 cmd.CommandText = isAdmin
                     ? "DELETE FROM CommentReactions WHERE CommentId = @id"
                     : "DELETE FROM CommentReactions WHERE CommentId = @id AND CommentId IN (SELECT Id FROM Comments WHERE UserId = @uid)";
                 cmd.Parameters.AddWithValue("@id", commentId);
                 if (!isAdmin) cmd.Parameters.AddWithValue("@uid", requestingUserId);
-                await cmd.ExecuteNonQueryAsync();
+                cmd.ExecuteNonQuery();
 
-                // 2. XÃƒÂ³a bÃƒÂ¬nh luÃ¡ÂºÂ­n
+                // 2. Xóa bình luận
                 cmd.CommandText = isAdmin
                     ? "DELETE FROM Comments WHERE Id = @id"
                     : "DELETE FROM Comments WHERE Id = @id AND UserId = @uid";
-                await cmd.ExecuteNonQueryAsync();
+                cmd.ExecuteNonQuery();
 
                 transaction.Commit();
             }
@@ -130,36 +130,53 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-
-            // Check existing
-            using var checkCmd = new SqliteCommand("SELECT ReactionType FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid", connection);
-            checkCmd.Parameters.AddWithValue("@cid", commentId);
-            checkCmd.Parameters.AddWithValue("@uid", userId);
-            var existing = checkCmd.ExecuteScalar()?.ToString();
-
-            if (existing == reactionType)
+            using var tx = connection.BeginTransaction();
+            try
             {
-                // Remove reaction (toggle off)
-                using var delCmd = new SqliteCommand("DELETE FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid", connection);
-                delCmd.Parameters.AddWithValue("@cid", commentId);
-                delCmd.Parameters.AddWithValue("@uid", userId);
-                await delCmd.ExecuteNonQueryAsync();
-                return "removed";
+                // Check existing — dùng lệnh đồng bộ để transaction nhả khóa nhanh nhất
+                using var checkCmd = new SqliteCommand(
+                    "SELECT ReactionType FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid",
+                    connection, tx);
+                checkCmd.Parameters.AddWithValue("@cid", commentId);
+                checkCmd.Parameters.AddWithValue("@uid", userId);
+                var existing = (checkCmd.ExecuteScalar())?.ToString();
+
+                string result;
+                if (existing == reactionType)
+                {
+                    // Remove reaction (toggle off)
+                    using var delCmd = new SqliteCommand(
+                        "DELETE FROM CommentReactions WHERE CommentId=@cid AND UserId=@uid",
+                        connection, tx);
+                    delCmd.Parameters.AddWithValue("@cid", commentId);
+                    delCmd.Parameters.AddWithValue("@uid", userId);
+                    delCmd.ExecuteNonQuery();
+                    result = "removed";
+                }
+                else
+                {
+                    // Upsert to new reaction type
+                    using var upsertCmd = new SqliteCommand(@"
+                        INSERT INTO CommentReactions (CommentId, UserId, Username, ReactionType, CreatedAt)
+                        VALUES (@cid, @uid, @uname, @type, @now)
+                        ON CONFLICT(CommentId, UserId) DO UPDATE SET ReactionType=@type, CreatedAt=@now",
+                        connection, tx);
+                    upsertCmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
+                    upsertCmd.Parameters.AddWithValue("@cid", commentId);
+                    upsertCmd.Parameters.AddWithValue("@uid", userId);
+                    upsertCmd.Parameters.AddWithValue("@uname", username);
+                    upsertCmd.Parameters.AddWithValue("@type", reactionType);
+                    upsertCmd.ExecuteNonQuery();
+                    result = reactionType;
+                }
+
+                tx.Commit();
+                return result;
             }
-            else
+            catch
             {
-                // Upsert to new reaction type
-                using var upsertCmd = new SqliteCommand(@"
-                    INSERT INTO CommentReactions (CommentId, UserId, Username, ReactionType, CreatedAt)
-                    VALUES (@cid, @uid, @uname, @type, @now)
-                    ON CONFLICT(CommentId, UserId) DO UPDATE SET ReactionType=@type, CreatedAt=@now", connection);
-                upsertCmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
-                upsertCmd.Parameters.AddWithValue("@cid", commentId);
-                upsertCmd.Parameters.AddWithValue("@uid", userId);
-                upsertCmd.Parameters.AddWithValue("@uname", username);
-                upsertCmd.Parameters.AddWithValue("@type", reactionType);
-                await upsertCmd.ExecuteNonQueryAsync();
-                return reactionType;
+                tx.Rollback();
+                throw;
             }
         }
         public async Task<List<CommentReaction>> GetReactionsForCommentsAsync(IEnumerable<int> commentIds)
@@ -202,23 +219,36 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            // LIKE '%"userId"%' bắt được cả AssignedUserIds dạng JSON array
+            // FIX: Dùng 4 pattern chính xác để khớp userId trong JSON array.
+            // Tránh false-positive: userId=31 LIKE '%31%' sẽ match nhầm 131, 310, 1310...
+            // JSON array có 4 dạng: [31], [31,x], [x,31], [x,31,y]
             string sql = @"
                 SELECT Id, SoVanBan, TenCongVan, TrichYeu, '' AS FullText, '[]' AS OcrPagesJson,
                        NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath,
                        Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds,
-                       EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich
+                       EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich, UploadedByUserId
                 FROM Documents
-                WHERE Status != 'Đã hoàn thành'
+                WHERE Status != 'Đã xử lý'
                   AND (
                       AssignedTo = @userId
-                      OR AssignedUserIds LIKE @pattern
+                      OR AssignedUserIds = @exactSingle
+                      OR AssignedUserIds LIKE @patternStart
+                      OR AssignedUserIds LIKE @patternEnd
+                      OR AssignedUserIds LIKE @patternMiddle
+                      OR EXISTS (
+                          SELECT 1 FROM DocumentRoutings r 
+                          WHERE r.DocumentId = Documents.Id 
+                            AND r.ReceiverId = @userId
+                      )
                   )
                 ORDER BY ThoiHan ASC NULLS LAST";
 
             using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@userId", userId);
-            cmd.Parameters.AddWithValue("@pattern", $"%{userId}%");
+            cmd.Parameters.AddWithValue("@userId",       userId);
+            cmd.Parameters.AddWithValue("@exactSingle",   $"[{userId}]");
+            cmd.Parameters.AddWithValue("@patternStart",  $"[{userId},%");
+            cmd.Parameters.AddWithValue("@patternEnd",    $"%,{userId}]");
+            cmd.Parameters.AddWithValue("@patternMiddle", $"%,{userId},%");
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
                 records.Add(MapRecord(reader));
@@ -258,7 +288,7 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             var sb = new System.Text.StringBuilder();
             sb.Append('\uFEFF');
-            sb.AppendLine("ID,Sá»‘ VÄƒn Báº£n,TÃªn CÃ´ng VÄƒn,TrÃ­ch Yáº¿u,NgÃ y Ban HÃ nh,CÆ¡ Quan Ban HÃ nh,Thá»i Háº¡n,Tráº¡ng ThÃ¡i,Äá»™ Kháº©n,NgÃ y ThÃªm");
+            sb.AppendLine("ID,Số Văn Bản,Tên Công Văn,Trích Yếu,Ngày Ban Hành,Cơ Quan Ban Hành,Thời Hạn,Trạng Thái,Độ Khẩn,Ngày Thêm");
 
             var docs = await GetAllAsync();
             foreach (var d in docs)
@@ -286,13 +316,16 @@ namespace ToolCalendar.Core.Data.Repositories
             return s;
         }
 
-        public async Task<List<DocumentRecord>> GetAllAsync()
+        public async Task<List<DocumentRecord>> GetAllAsync(int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null)
         {
             var records = new List<DocumentRecord>();
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            string sql = "SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, dep.Name AS DepartmentName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id ORDER BY doc.ThoiHan ASC NULLS LAST";
+            string rlsFilter = GetRlsFilter(currentUserId, currentUserRole, currentDepartmentId);
+            string whereClause = string.IsNullOrEmpty(rlsFilter) ? "" : $"WHERE {rlsFilter}";
+
+            string sql = $"SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id LEFT JOIN Users u ON doc.UploadedByUserId = u.Id {whereClause} ORDER BY doc.ThoiHan ASC NULLS LAST";
             using var cmd = new SqliteCommand(sql, connection);
             using var reader = await cmd.ExecuteReaderAsync();
 
@@ -302,12 +335,15 @@ namespace ToolCalendar.Core.Data.Repositories
             return records;
         }
 
-        public async Task<DocumentRecord?> GetDocumentByIdAsync(int id)
+        public async Task<DocumentRecord?> GetDocumentByIdAsync(int id, int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            string sql = "SELECT doc.*, dep.Name AS DepartmentName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id WHERE doc.Id = @id";
+            string rlsFilter = GetRlsFilter(currentUserId, currentUserRole, currentDepartmentId);
+            string whereClause = string.IsNullOrEmpty(rlsFilter) ? "" : $"AND {rlsFilter}";
+
+            string sql = $"SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, doc.FullText, doc.OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id LEFT JOIN Users u ON doc.UploadedByUserId = u.Id WHERE doc.Id = @id {whereClause}";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -322,14 +358,22 @@ namespace ToolCalendar.Core.Data.Repositories
         /// Server-side pagination: returns one page of documents + total count for pagination UI.
         /// <para>search is matched against SoVanBan, TrichYeu, CoQuanChuQuan (case-insensitive LIKE).</para>
         /// </summary>
-        public async Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null, DateTime? addFromDate = null, DateTime? addToDate = null)
+        public async Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null, DateTime? addFromDate = null, DateTime? addToDate = null, int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
 
             var filters = new List<string>();
+            string rlsFilter = GetRlsFilter(currentUserId, currentUserRole, currentDepartmentId);
+            if (!string.IsNullOrEmpty(rlsFilter)) filters.Add(rlsFilter);
             bool hasSearch = !string.IsNullOrWhiteSpace(search);
             bool hasStatus = !string.IsNullOrWhiteSpace(status);
+
+            // Bỏ qua các văn bản đang chờ xử lý OCR hoặc chưa được người dùng lưu ở màn hình upload
+            if (!hasStatus || (status.ToLower() != "đang ocr" && status.ToLower() != "chờ lưu"))
+            {
+                filters.Add("doc.Status NOT IN ('Đang OCR', 'Chờ lưu')");
+            }
 
             if (hasSearch)
             {
@@ -343,37 +387,37 @@ namespace ToolCalendar.Core.Data.Repositories
 
             if (hasStatus)
             {
-                var s = status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower();
+                var s = status.ToLower();
                 if (s == "overdue")
                 {
                     // Công thức chuẩn từ Dashboard Overdue
-                    filters.Add("doc.ThoiHan < date('now') AND doc.Status != 'Đã hoàn thành' AND doc.ThoiHan IS NOT NULL");
+                    filters.Add("doc.ThoiHan < date('now') AND doc.Status != 'Đã xử lý' AND doc.ThoiHan IS NOT NULL");
                 }
                 else if (s == "urgent")
                 {
                     // Công thức chuẩn từ Dashboard Sắp hết hạn (7 ngày tới)
-                    filters.Add("doc.ThoiHan >= date('now') AND doc.ThoiHan <= date('now', '+7 days') AND doc.Status != 'Đã hoàn thành'");
+                    filters.Add("doc.ThoiHan >= date('now') AND doc.ThoiHan <= date('now', '+7 days') AND doc.Status != 'Đã xử lý'");
                 }
                 else if (s == "processing_ontime")
                 {
-                    filters.Add("doc.Status != 'Đã hoàn thành' AND (doc.ThoiHan IS NULL OR date(doc.ThoiHan) >= date('now'))");
+                    filters.Add("doc.Status != 'Đã xử lý' AND (doc.ThoiHan IS NULL OR date(doc.ThoiHan) >= date('now'))");
                 }
                 else if (s == "completed_ontime")
                 {
-                    filters.Add("doc.Status = 'Đã hoàn thành' AND (doc.ThoiHan IS NULL OR doc.CompletionDate IS NULL OR date(doc.CompletionDate) <= date(doc.ThoiHan))");
+                    filters.Add("doc.Status = 'Đã xử lý' AND (doc.ThoiHan IS NULL OR doc.CompletionDate IS NULL OR date(doc.CompletionDate) <= date(doc.ThoiHan))");
                 }
                 else if (s == "completed_overdue")
                 {
-                    filters.Add("doc.Status = 'Đã hoàn thành' AND doc.ThoiHan IS NOT NULL AND doc.CompletionDate IS NOT NULL AND date(doc.CompletionDate) > date(doc.ThoiHan)");
+                    filters.Add("doc.Status = 'Đã xử lý' AND doc.ThoiHan IS NOT NULL AND doc.CompletionDate IS NOT NULL AND date(doc.CompletionDate) > date(doc.ThoiHan)");
                 }
                 else if (s == "today")
                 {
                     // Công thức chuẩn từ Dashboard Đến hạn hôm nay
-                    filters.Add("date(doc.ThoiHan) = date('now') AND doc.Status != 'Đã hoàn thành'");
+                    filters.Add("date(doc.ThoiHan) = date('now') AND doc.Status != 'Đã xử lý'");
                 }
                 else
                 {
-                    filters.Add("(LOWER(doc.Status) = @status OR LOWER(doc.Status) = @statusClean)");
+                    filters.Add("LOWER(doc.Status) = @status");
                 }
             }
 
@@ -420,21 +464,22 @@ namespace ToolCalendar.Core.Data.Repositories
             if (hasStatus && status.ToLower() != "overdue")
             {
                 countCmd.Parameters.AddWithValue("@status", status.ToLower());
-                countCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
             }
             if (fromDate.HasValue) countCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
             if (toDate.HasValue) countCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
             if (addFromDate.HasValue) countCmd.Parameters.AddWithValue("@addFromDate", addFromDate.Value.ToString("yyyy-MM-dd"));
             if (addToDate.HasValue) countCmd.Parameters.AddWithValue("@addToDate", addToDate.Value.ToString("yyyy-MM-dd"));
 
-            int totalCount = Convert.ToInt32(countCmd.ExecuteScalar());
+            // Dùng await để không block thread server
+            int totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
             // 2. Paged data
             int offset = (page - 1) * pageSize;
             string dataSql = $@"
-                SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, dep.Name AS DepartmentName
+                SELECT doc.Id, doc.SoVanBan, doc.TenCongVan, doc.TrichYeu, '' AS FullText, '[]' AS OcrPagesJson, doc.NgayBanHanh, doc.CoQuanBanHanh, doc.CoQuanChuQuan, doc.ThoiHan, doc.DonViChiDao, doc.FilePath, doc.Status, doc.Priority, doc.DepartmentId, doc.AssignedTo, doc.AssignedUserIds, doc.AssignedDepartmentIds, doc.EvidencePaths, doc.EvidenceNotes, doc.CompletionDate, doc.LabelId, doc.NgayThem, doc.DaTaoLich, doc.UploadedByUserId, dep.Name AS DepartmentName, u.FullName AS UploadedByFullName
                 FROM Documents doc
                 LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id
+                LEFT JOIN Users u ON doc.UploadedByUserId = u.Id
                 {searchFilter}
                 ORDER BY {orderBy} 
                 LIMIT @pageSize OFFSET @offset";
@@ -447,7 +492,6 @@ namespace ToolCalendar.Core.Data.Repositories
             if (hasStatus && status.ToLower() != "overdue")
             {
                 dataCmd.Parameters.AddWithValue("@status", status.ToLower());
-                dataCmd.Parameters.AddWithValue("@statusClean", status.Replace("📦 ", "").Replace("⭐ ", "").Replace("🔥 ", "").Replace("✅ ", "").Replace("⚠️ ", "").Replace("⛔ ", "").ToLower());
             }
             if (fromDate.HasValue) dataCmd.Parameters.AddWithValue("@fromDate", fromDate.Value.ToString("yyyy-MM-dd"));
             if (toDate.HasValue) dataCmd.Parameters.AddWithValue("@toDate", toDate.Value.ToString("yyyy-MM-dd"));
@@ -492,12 +536,13 @@ namespace ToolCalendar.Core.Data.Repositories
             try
             {
                 string sql = @"
-                    INSERT INTO Documents (SoVanBan, TenCongVan, TrichYeu, FullText, OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich, ContentHash)
-                    VALUES (@SoVanBan, @TenCongVan, @TrichYeu, @FullText, @OcrPagesJson, @NgayBanHanh, @CoQuanBanHanh, @CoQuanChuQuan, @ThoiHan, @DonViChiDao, @FilePath, @Status, @Priority, @DepartmentId, @AssignedTo, @AssignedUserIds, @AssignedDepartmentIds, @EvidencePaths, @EvidenceNotes, @CompletionDate, @LabelId, @NgayThem, @DaTaoLich, @ContentHash);
+                    INSERT INTO Documents (SoVanBan, TenCongVan, TrichYeu, FullText, OcrPagesJson, NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath, Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds, EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich, ContentHash, UploadedByUserId)
+                    VALUES (@SoVanBan, @TenCongVan, @TrichYeu, @FullText, @OcrPagesJson, @NgayBanHanh, @CoQuanBanHanh, @CoQuanChuQuan, @ThoiHan, @DonViChiDao, @FilePath, @Status, @Priority, @DepartmentId, @AssignedTo, @AssignedUserIds, @AssignedDepartmentIds, @EvidencePaths, @EvidenceNotes, @CompletionDate, @LabelId, @NgayThem, @DaTaoLich, @ContentHash, @UploadedByUserId);
                     SELECT last_insert_rowid();";
 
                 using var cmd = new SqliteCommand(sql, connection, transaction);
                 AddParams(cmd, record);
+                // Dùng lệnh đồng bộ trong transaction
                 int id = Convert.ToInt32(cmd.ExecuteScalar());
                 transaction.Commit();
                 return id;
@@ -576,6 +621,18 @@ namespace ToolCalendar.Core.Data.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        public async Task UpdateHandlerAsync(int docId, int receiverId, int? departmentId)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            string sql = "UPDATE Documents SET AssignedTo=@receiverId, DepartmentId=@deptId, Status='Chưa xử lý' WHERE Id=@docId";
+            using var cmd = new SqliteCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@receiverId", receiverId);
+            cmd.Parameters.AddWithValue("@deptId", (object?)departmentId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@docId", docId);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
         public async Task SubmitEvidenceAsync(int docId, string evidenceJson, string notes)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -583,9 +640,7 @@ namespace ToolCalendar.Core.Data.Repositories
             string sql = @"
                 UPDATE Documents SET 
                     EvidencePaths=@paths, 
-                    EvidenceNotes=@notes, 
-                    Status='Đã hoàn thành', 
-                    CompletionDate=datetime('now', 'localtime') 
+                    EvidenceNotes=@notes
                 WHERE Id=@docId";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@paths", evidenceJson);
@@ -608,15 +663,23 @@ namespace ToolCalendar.Core.Data.Repositories
                 // 1. Xóa cảm xúc của các bình luận thuộc văn bản này
                 cmd.CommandText = "DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId=@Id)";
                 cmd.Parameters.AddWithValue("@Id", id);
-                await cmd.ExecuteNonQueryAsync();
+                cmd.ExecuteNonQuery();
 
                 // 2. Xóa các bình luận của văn bản này
                 cmd.CommandText = "DELETE FROM Comments WHERE DocumentId=@Id";
-                await cmd.ExecuteNonQueryAsync();
+                cmd.ExecuteNonQuery();
 
-                // 3. Xóa chính văn bản đó
+                // 3. Xóa các bản ghi luân chuyển
+                cmd.CommandText = "DELETE FROM DocumentRoutings WHERE DocumentId=@Id";
+                cmd.ExecuteNonQuery();
+
+                // 4. Xóa các thông báo liên quan đến văn bản
+                cmd.CommandText = "DELETE FROM Notifications WHERE DocId=@Id";
+                cmd.ExecuteNonQuery();
+
+                // 5. Xóa chính văn bản đó
                 cmd.CommandText = "DELETE FROM Documents WHERE Id=@Id";
-                await cmd.ExecuteNonQueryAsync();
+                cmd.ExecuteNonQuery();
 
                 transaction.Commit(); // Mọi thứ ổn, chốt dữ liệu
             }
@@ -650,19 +713,38 @@ namespace ToolCalendar.Core.Data.Repositories
             if (ids == null || ids.Count == 0) return;
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
+            using var tx = connection.BeginTransaction();
+            try
+            {
+                // Parameterized IN clause (@p0, @p1, ...) — ADO.NET best practice
+                var paramNames = ids.Select((_, i) => $"@p{i}").ToList();
+                var inClause = string.Join(",", paramNames);
 
-            // Parameterized IN clause (@p0, @p1, ...) — ADO.NET best practice
-            var paramNames = ids.Select((_, i) => $"@p{i}").ToList();
-            var inClause = string.Join(",", paramNames);
-            string sql = $@"
-                DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({inClause}));
-                DELETE FROM Comments WHERE DocumentId IN ({inClause});
-                DELETE FROM Documents WHERE Id IN ({inClause});
-            ";
-            using var cmd = new SqliteCommand(sql, connection);
-            for (int i = 0; i < ids.Count; i++)
-                cmd.Parameters.AddWithValue($"@p{i}", ids[i]);
-            await cmd.ExecuteNonQueryAsync();
+                // Xóa lần lượt từng bảng theo đúng thứ tự phụ thuộc
+                string[] deleteQueries = 
+                [
+                    $"DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({inClause}))",
+                    $"DELETE FROM Comments WHERE DocumentId IN ({inClause})",
+                    $"DELETE FROM DocumentRoutings WHERE DocumentId IN ({inClause})",
+                    $"DELETE FROM Notifications WHERE DocId IN ({inClause})",
+                    $"DELETE FROM Documents WHERE Id IN ({inClause})"
+                ];
+
+                foreach (var query in deleteQueries)
+                {
+                    using var cmd = new SqliteCommand(query, connection, tx);
+                    for (int i = 0; i < ids.Count; i++)
+                        cmd.Parameters.AddWithValue($"@p{i}", ids[i]);
+                    cmd.ExecuteNonQuery();
+                }
+
+                tx.Commit();
+            }
+            catch
+            {
+                tx.Rollback(); // Hoàn tác toàn bộ nếu xóa bị gián đoạn
+                throw;
+            }
         }
 
         /// <summary>
@@ -679,7 +761,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 SELECT Id, SoVanBan, TenCongVan, TrichYeu, '' AS FullText, '[]' AS OcrPagesJson,
                        NgayBanHanh, CoQuanBanHanh, CoQuanChuQuan, ThoiHan, DonViChiDao, FilePath,
                        Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds,
-                       EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich, ContentHash
+                       EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich, ContentHash, UploadedByUserId
                 FROM Documents
                 WHERE ContentHash = @hash
                 LIMIT 1";
@@ -723,6 +805,8 @@ namespace ToolCalendar.Core.Data.Repositories
                 LabelId = r["LabelId"] == DBNull.Value ? null : Convert.ToInt32(r["LabelId"]),
                 NgayThem = DateTime.Parse(r["NgayThem"]?.ToString() ?? DateTime.UtcNow.AddHours(7).ToString()),
                 DaTaoLich = r["DaTaoLich"] != DBNull.Value && Convert.ToInt32(r["DaTaoLich"]) > 0,
+                UploadedByUserId = r.HasColumn("UploadedByUserId") && r["UploadedByUserId"] != DBNull.Value ? Convert.ToInt32(r["UploadedByUserId"]) : 1,
+                UploadedByFullName = r.HasColumn("UploadedByFullName") && r["UploadedByFullName"] != DBNull.Value ? r["UploadedByFullName"].ToString() : "Hệ thống",
                 ContentHash = r.HasColumn("ContentHash") && r["ContentHash"] != DBNull.Value
                     ? r["ContentHash"].ToString()
                     : null
@@ -755,6 +839,7 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@NgayThem", r.NgayThem.ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.Parameters.AddWithValue("@DaTaoLich", r.DaTaoLich ? 1 : 0);
             cmd.Parameters.AddWithValue("@ContentHash", (object?)r.ContentHash ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@UploadedByUserId", r.UploadedByUserId);
         }
 
         private DateTime? TryParseDate(string? value)
@@ -769,7 +854,7 @@ namespace ToolCalendar.Core.Data.Repositories
             if (string.IsNullOrEmpty(value)) return value;
             
             // Map common mangled patterns back to correct Vietnamese
-            if (value.Contains("hoÃ") || value.Contains("ho\u00c3")) return "Đã hoàn thành";
+            if (value.Contains("hoÃ") || value.Contains("ho\u00c3")) return "Đã xử lý";
             if (value.Contains("ChÆ") || value.Contains("Ch\u00c6")) return "Chưa xử lý";
             if (value.Contains("ThÆ") || value.Contains("Th\u00c6")) return "Thường";
             if (value.Contains("Kháº") || value.Contains("Kh\u1ea7")) return "Khẩn";
@@ -778,6 +863,27 @@ namespace ToolCalendar.Core.Data.Repositories
             return value;
         }
 
+        private string GetRlsFilter(int? currentUserId, string? currentUserRole, int? currentDepartmentId)
+        {
+            if (currentUserRole == "CanBo" && currentUserId.HasValue)
+            {
+                string deptFilter = currentDepartmentId.HasValue 
+                    ? $"doc.DepartmentId = {currentDepartmentId.Value} OR doc.AssignedDepartmentIds LIKE '%[{currentDepartmentId.Value}]%' OR doc.AssignedDepartmentIds LIKE '%[{currentDepartmentId.Value},%' OR doc.AssignedDepartmentIds LIKE '%,{currentDepartmentId.Value}]%' OR doc.AssignedDepartmentIds LIKE '%,{currentDepartmentId.Value},%'"
+                    : "0=1";
+                    
+                return $@"(
+                    doc.UploadedByUserId = {currentUserId.Value} OR
+                    doc.AssignedTo = {currentUserId.Value} OR
+                    doc.AssignedUserIds = '[{currentUserId.Value}]' OR
+                    doc.AssignedUserIds LIKE '[{currentUserId.Value},%' OR
+                    doc.AssignedUserIds LIKE '%,{currentUserId.Value}]%' OR
+                    doc.AssignedUserIds LIKE '%,{currentUserId.Value},%' OR
+                    {deptFilter} OR
+                    EXISTS (SELECT 1 FROM DocumentRoutings r WHERE r.DocumentId = doc.Id AND (r.SenderId = {currentUserId.Value} OR r.ReceiverId = {currentUserId.Value}))
+                )";
+            }
+            return "";
+        }
     }
 }
 

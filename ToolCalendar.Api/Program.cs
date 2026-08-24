@@ -8,6 +8,9 @@ using System.Text;
 using ToolCalendar.Api.Security;          // ✅ CustomUserStore, HybridPasswordHasher
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Core.Data.Repositories;
+using ToolCalendar.Core.Services;
+using ToolCalendar.Core.Services.AiTools;
+
 using ToolCalendar.Data;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
@@ -26,6 +29,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMemoryCache(); // ✅ Dashboard stats caching
+builder.Services.AddHealthChecks(); // ✅ Thêm HealthChecks cho Docker Monitoring
 
 
 
@@ -37,39 +41,76 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    // Policy chung toàn hệ thống: 50 request / 10 giây
-    options.AddFixedWindowLimiter("fixed", opt =>
-    {
-        opt.Window = TimeSpan.FromSeconds(10);
-        opt.PermitLimit = 50;
-        opt.QueueLimit = 0;
-    });
+    // Policy chung toàn hệ thống: 50 request / 10 giây / IP
+    options.AddPolicy("fixed", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 50,
+                QueueLimit = 0,
+                Window = TimeSpan.FromSeconds(10)
+            }));
 
     // Policy STRICT cho Login: tối đa 5 lần thử / 60 giây / mỗi IP → chống Brute Force
-    options.AddSlidingWindowLimiter("login-policy", opt =>
-    {
-        opt.Window = TimeSpan.FromSeconds(60);
-        opt.PermitLimit = 5;
-        opt.SegmentsPerWindow = 6;
-        opt.QueueLimit = 0;
-        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-    });
+    options.AddPolicy("login-policy", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: partition => new SlidingWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 5,
+                SegmentsPerWindow = 6,
+                QueueLimit = 0,
+                Window = TimeSpan.FromSeconds(60)
+            }));
 
-    // Policy cho Upload: tối đa 200 file / 60 giây / mỗi user
-    // Tăng từ 10 → 200 để hỗ trợ tải hàng loạt (batch upload 1000+ file)
-    options.AddFixedWindowLimiter("upload-limit", opt =>
-    {
-        opt.Window = TimeSpan.FromSeconds(60);
-        opt.PermitLimit = 1000;
-        opt.QueueLimit = 100; // Cho phép chờ thêm 100 request trong queue
-        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-    });
+    // Policy cho Upload: tối đa 1000 request / 60 giây / mỗi user (Dựa vào User Claim, nếu không có fallback về IP)
+    options.AddPolicy("upload-limit", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 1000,
+                QueueLimit = 100, // Cho phép chờ thêm 100 request trong queue
+                Window = TimeSpan.FromSeconds(60),
+                QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst
+            }));
 });
 
 // Đăng ký Repositories (Clean Architecture)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<ToolCalendar.Data.Repositories.IDocumentRoutingRepository, ToolCalendar.Data.Repositories.DocumentRoutingRepository>();
+
+
+// Refactored Repositories
+builder.Services.AddScoped<IStatsRepository, StatsRepository>();
+builder.Services.AddScoped<ISettingRepository, SettingRepository>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IReminderRepository, ReminderRepository>();
+builder.Services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();
+builder.Services.AddScoped<IOllamaEmbeddingService, OllamaEmbeddingService>();
+builder.Services.AddScoped<IDocumentChunkRepository, DocumentChunkRepository>();
+builder.Services.AddScoped<IUserMemoryRepository, UserMemoryRepository>(); // ANYTHINGLLM Idea #5: Long-Term Memory
+
+// Đăng ký AI Tools (Khoj Architecture)
+builder.Services.AddScoped<IAiTool, GetDocumentStatsTool>();
+builder.Services.AddScoped<IAiTool, SearchDocumentContentTool>();
+builder.Services.AddScoped<IAiTool, SearchDocumentsByConditionTool>();
+builder.Services.AddScoped<IAiTool, WebSearchTool>();
+builder.Services.AddScoped<IAiTool, ChartGeneratorTool>();
+builder.Services.AddScoped<AiToolRegistry>();
+
+builder.Services.AddScoped<IAiAssistantService, AiAssistantService>();
+builder.Services.AddScoped<IAiReferenceService, AiReferenceService>();
+builder.Services.AddScoped<ISemanticRouterService, SemanticRouterService>();
+builder.Services.AddScoped<IAiSemanticCacheRepository, AiSemanticCacheRepository>();
+
 
 // ✅ ASP.NET Core Identity (Custom UserStore — không cần EF Core)
 // Toàn bộ dữ liệu vẫn lưu trong SQLite hiện có, không mất dữ liệu cũ
@@ -100,17 +141,22 @@ builder.Services.AddScoped<IPasswordHasher<User>, HybridPasswordHasher>();
 // Đăng ký Upload Service (tách logic upload ra khỏi Controller)
 builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 
-// Đăng ký OCR & Extraction Services
-builder.Services.AddSingleton<IOcrService, OcrService>();
-builder.Services.AddScoped<IOcrTextProcessingService, OcrTextProcessingService>();
-builder.Services.AddScoped<IOcrImageProcessingService, OcrImageProcessingService>();
+// Cấu hình HTTP Client cho các gọi API bên ngoài (như Gemini)
+builder.Services.AddHttpClient();
+
+// Đăng ký Extraction Services & Python AI
+builder.Services.AddHttpClient<IPythonAiService, PythonAiService>(client =>
+{
+    var pythonAiUrl = builder.Configuration["PythonAiServiceUrl"] ?? "http://python-ai-service:8001";
+    client.BaseAddress = new Uri(pythonAiUrl);
+    client.Timeout = TimeSpan.FromMinutes(10); // Docling có thể chạy lâu
+});
 builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();
-// builder.Services.AddHostedService<OcrRuntimeValidationService>();
 
 // Cấu hình Hàng đợi OCR xử lý nền
-builder.Services.AddSingleton<OcrQueueService>();
-builder.Services.AddSingleton<IOcrQueueService>(sp => sp.GetRequiredService<OcrQueueService>());
-builder.Services.AddHostedService(sp => sp.GetRequiredService<OcrQueueService>());
+builder.Services.AddSingleton<DocumentProcessingService>();
+builder.Services.AddSingleton<IOcrQueueService>(sp => sp.GetRequiredService<DocumentProcessingService>());
+builder.Services.AddHostedService(sp => sp.GetRequiredService<DocumentProcessingService>());
 
 // Cấu hình Email & Thông báo tự động
 builder.Services.AddSingleton<IEmailService, EmailService>();
@@ -118,6 +164,8 @@ builder.Services.AddSingleton<IVapidService, VapidService>();
 builder.Services.AddScoped<INotificationManager, NotificationManager>();
 builder.Services.AddSingleton<DeadlineWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DeadlineWorker>());
+builder.Services.AddHostedService<ReminderWorker>();
+
 
 // ✅ Security Services
 builder.Services.AddSingleton<IClamAvService, ClamAvService>();  // Virus scanning
@@ -166,6 +214,11 @@ builder.Services.AddAuthentication(x =>
             // 1. Chỉ SignalR mới được dùng query string auth
             if (!string.IsNullOrEmpty(accessToken) && 
                 path.StartsWithSegments("/notificationHub"))
+            {
+                context.Token = accessToken;
+            }
+            // Cho phép PDF viewer lấy token qua query string
+            else if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/documents") && path.Value.EndsWith("/file"))
             {
                 context.Token = accessToken;
             }
@@ -276,7 +329,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         policy => policy
-            // Cho phép: localhost (dev), ngrok/localtunnel (staging), và IP LAN nội bộ
+            // Cho phép: localhost (dev) và IP LAN nội bộ
             .SetIsOriginAllowed(origin =>
             {
                 if (string.IsNullOrEmpty(origin)) return false;
@@ -284,11 +337,7 @@ builder.Services.AddCors(options =>
                 return
                     uri.Host == "localhost" ||
                     uri.Host == "127.0.0.1" ||
-                    uri.Host.StartsWith("192.168.") ||  // LAN nội bộ
-                    uri.Host.EndsWith(".ngrok-free.dev") ||
-                    uri.Host.EndsWith(".ngrok.io") ||
-                    uri.Host.EndsWith(".loca.lt") ||    // localtunnel
-                    uri.Host.EndsWith(".trycloudflare.com"); // cloudflare tunnel
+                    uri.Host.StartsWith("192.168."); // LAN nội bộ
             })
             .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .WithHeaders("Authorization", "Content-Type", "Accept", "Origin", "User-Agent", "X-Requested-With", "x-hub-protocol", "x-signalr-user-agent")
@@ -299,12 +348,12 @@ var app = builder.Build();
 
 app.UseMiddleware<ToolCalendar.Api.Middleware.GlobalExceptionMiddleware>();
 
-// Cấu hình để nhận diện HTTPS từ Nginx/Ngrok Proxy (Quan trọng khi dùng ngrok)
+// Cấu hình để nhận diện HTTPS từ Nginx Proxy
 var forwardedOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 };
-forwardedOptions.KnownNetworks.Clear(); // Tin tưởng mọi mạng (cần thiết cho ngrok/proxy bên ngoài)
+forwardedOptions.KnownNetworks.Clear(); // Tin tưởng mọi mạng (cần thiết cho Nginx proxy)
 forwardedOptions.KnownProxies.Clear();   // Tin tưởng mọi proxy
 app.UseForwardedHeaders(forwardedOptions);
 
@@ -327,6 +376,22 @@ app.UseRateLimiter(); // Kích hoạt Rate Limiting
 app.UseWebSockets();
 
 
+// Middleware chống cache cho HTML (index.html) để đảm bảo luôn tải JS mới nhất
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        if (context.Response.ContentType?.StartsWith("text/html") == true)
+        {
+            context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            context.Response.Headers["Pragma"] = "no-cache";
+            context.Response.Headers["Expires"] = "0";
+        }
+        return Task.CompletedTask;
+    });
+    await next();
+});
+
 // Serve static files (chỉ wwwroot - giao diện web, KHÔNG phải Uploads)
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -339,8 +404,10 @@ if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
-app.MapHub<NotificationHub>("/notificationHub");
+// Áp dụng Rate Limiter "fixed" làm mặc định cho tất cả Controllers và Hub
+app.MapControllers().RequireRateLimiting("fixed");
+app.MapHub<NotificationHub>("/notificationHub").RequireRateLimiting("fixed");
+app.MapHealthChecks("/health"); // ✅ Endpoint healthcheck cho Docker
 app.MapFallbackToFile("index.html");
 
 

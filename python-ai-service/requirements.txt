@@ -1,0 +1,15 @@
+fastapi==0.111.0
+uvicorn==0.30.1
+sentence-transformers==3.0.1
+httpx==0.27.0
+pydantic==2.7.4
+# === Core AI/ML ===
+numpy>=1.24.0
+# === OCR Engine (rapidocr-onnxruntime: ~90MB, không cần GPU, hỗ trợ tiếng Việt) ===
+rapidocr-onnxruntime>=1.3.0
+# === Từ Dify / Khoj / SGLang ===
+# Retry với exponential backoff (Khoj embeddings.py)
+tenacity>=8.3.0
+# docling — parse PDF/Word/Excel với table detection + OCR
+docling>=2.0.0
+pypdfium2>=4.0.0

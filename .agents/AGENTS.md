@@ -12,6 +12,19 @@ Bạn là **AI Agent** đang làm việc trong dự án **Tool-Calendar** — H�
 4. **Response-Contract:** Mọi API endpoint **phải** trả về lớp `ApiResponse<T>` chuẩn hóa. Không được trả về object thô.
 5. **Zero-Secret:** Tuyệt đối không commit API key, password, connection string, JWT secret vào Git. Dùng `.env` hoặc `appsettings.json` (không track bởi Git).
 6. **Conventional-Commits:** Mọi commit message phải đúng chuẩn `<type>(<scope>): <mô tả>`. Xem Chốt Commit ở `CODE_QUALITY.md`.
+7. **No-Temporary-Files:** Yêu cầu AI tự động xóa các file tạm sinh ra trong quá trình kiểm tra tài khoản, lỗi, dump,... ngay sau khi hoàn thành. Xem chi tiết tại `tc-rule-no-temporary-files.md`.
+8. **AI Behavior Standard:** AI phải tuân thủ nghiêm ngặt tiêu chuẩn code tinh gọn, bằng chứng toàn diện và giao tiếp cộc lốc theo chuẩn OpenClaw. Xem chi tiết tại `tc-rule-ai-behavior.md`.
+9. **🚨 PRODUCTION-SAFETY — BẮT BUỘC TRƯỚC MỌI LỆNH DOCKER TRÊN SERVER VNPT:** Kiến trúc server `14.225.172.225` có **2 hệ thống độc lập dùng chung 1 nginx**. **TUYỆT ĐỐI KHÔNG** chạy `docker compose down`, `docker rm`, hay bất kỳ lệnh nào ảnh hưởng đến `nginx-proxy` hoặc `lichcongtac-backend` khi deploy Tool-Calendar. Phải chạy `docker ps` để kiểm tra topology **TRƯỚC KHI** hành động. Vi phạm = sập toàn bộ hệ thống production liên quan đến con người.
+
+```
+VNPT SERVER (14.225.172.225) — TOPOLOGY:
+  /root/docker-compose.yml  → nginx-proxy (port 80/443) — DÙNG CHUNG
+                            → doc-coordination-system (Tool-Calendar backend)
+  /root/lichcongtac/        → lichcongtac-backend (port 59608)
+
+  DEPLOY TOOL-CALENDAR: chỉ restart "official-doc-backend" — KHÔNG docker compose down
+  DEPLOY LỊCH CÔNG TÁC: chỉ restart "lichcongtac-backend" — KHÔNG docker compose down
+```
 
 ---
 
@@ -44,7 +57,6 @@ Tool-Calendar/
 │   ├── ClientApp/                ← React frontend
 │   │   └── src/
 │   │       ├── main.jsx          ← Global Fetch Interceptor ở đây
-│   │       └── ...
 │   └── Program.cs                ← DI registration, middleware pipeline
 ├── ToolCalendar.Core/
 │   ├── Models/ApiResponse.cs     ← Response contract bắt buộc
@@ -94,7 +106,7 @@ Tool-Calendar/
 3. **Implement** → Viết code tuân thủ Tech Stack và Architecture
 4. **Test** → Thêm/cập nhật Unit Tests trong `ToolCalendar.Tests/`
 5. **Log** → Cập nhật `COMMIT_LOG.md` với đầy đủ thông tin
-6. **Commit** → Dùng đúng chuẩn Conventional Commits
+6. **Commit & Deploy** → Dùng đúng chuẩn Conventional Commits, tự động deploy lên VNPT server, và xóa file rác (Xem `tc-rule-auto-deploy.md`)
 
 ### Khi debug/sửa lỗi:
 1. Đọc `COMMIT_LOG.md` để hiểu ngữ cảnh thay đổi gần nhất
@@ -117,6 +129,6 @@ Tool-Calendar/
 ---
 
 **Status:** ACTIVE — TOOL-CALENDAR PROJECT RULES  
-**Version:** 2.0  
-**Last Updated:** 2026-06-22  
-**See also:** [SYSTEM_FEATURES.md](../SYSTEM_FEATURES.md) | [COMMIT_LOG.md](../COMMIT_LOG.md) | [CODE_QUALITY.md](../CODE_QUALITY.md)
+**Version:** 2.2 (Bổ sung Auto Deploy)  
+**Last Updated:** 2026-08-07  
+**See also:** [SYSTEM_FEATURES.md](../SYSTEM_FEATURES.md) | [COMMIT_LOG.md](../COMMIT_LOG.md) | [CODE_QUALITY.md](../CODE_QUALITY.md) | [tc-rule-ai-behavior.md](rules/tc-rule-ai-behavior.md) | [tc-rule-magic-strings.md](rules/tc-rule-magic-strings.md) | [tc-rule-auto-deploy.md](rules/tc-rule-auto-deploy.md)

@@ -4,7 +4,7 @@ description: "Quy trình chuẩn để commit và push code lên repository."
 
 # TC-WORKFLOW-GIT-PUSH
 
-Quy trình này là đường commit chuẩn bắt buộc cho mọi Developer và AI Agent trong dự án Tool-Calendar.
+Quy trình này là đường commit chuẩn bắt buộc cho mọi Developer và AI Agent trong dự án Cabinet.
 
 ## Bước 1 — Nạp Ngữ cảnh (Context Loading)
 
@@ -23,12 +23,6 @@ chmod +x .githooks/pre-commit
 chmod +x .githooks/commit-msg
 ```
 
-Kiểm tra hooks đang hoạt động:
-```bash
-git config core.hooksPath
-# Phải in ra: .githooks
-```
-
 ## Bước 3 — Kiểm tra Chất lượng Thủ công
 
 Chạy trước khi commit để tránh bị chặn bởi hooks:
@@ -38,19 +32,19 @@ Chạy trước khi commit để tránh bị chặn bởi hooks:
 dotnet format --verify-no-changes
 
 # Kiểm tra ESLint
-cd ToolCalendar.Api/ClientApp && npx eslint src/
+cd Cabinet.Api/ClientApp && npx eslint src/
 
 # Kiểm tra Prettier
-cd ToolCalendar.Api/ClientApp && npx prettier --check .
+cd Cabinet.Api/ClientApp && npx prettier --check .
 
 # Chạy Unit Tests
-dotnet test ToolCalendar.Tests/
+dotnet test Cabinet.Tests/
 ```
 
 **Nếu có lỗi, tự động sửa:**
 ```bash
 dotnet format
-cd ToolCalendar.Api/ClientApp && npx eslint src/ --fix && npx prettier --write .
+cd Cabinet.Api/ClientApp && npx eslint src/ --fix && npx prettier --write .
 ```
 
 ## Bước 4 — Cập nhật COMMIT_LOG.md
@@ -79,14 +73,14 @@ git commit -m "feat(docs): thêm tính năng tìm kiếm toàn văn"
 # Nếu bị hook chặn, đọc error message và sửa theo hướng dẫn
 ```
 
-## Bước 6 — Push
+## Bước 6 — Push và Deploy
 
 ```bash
 # Push lên branch hiện tại
-git push origin main
+git push origin phonghopkhonggiayto
 
-# Hoặc push lên feature branch (nếu dùng)
-git push origin feat/ten-tinh-nang
+# Sau khi push, CHẠY LỆNH NÀY ĐỂ DEPLOY LÊN VNPT SERVER
+./deploy_to_vnpt.sh
 ```
 
 ## Xử lý Lỗi Thường Gặp

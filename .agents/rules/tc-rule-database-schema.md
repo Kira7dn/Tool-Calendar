@@ -1,5 +1,5 @@
 ---
-trigger: on_demand
+trigger: always_on
 description: "Quy tắc DB Schema — cấu trúc bảng SQLite và quy định thay đổi schema."
 ---
 
@@ -85,6 +85,8 @@ CREATE TABLE DocumentRoutings (
 - `PushSubscriptions` — Web Push subscriptions
 - `Notifications` — Thông báo in-app
 - `AuditLogs`, `LoginAuditLog` — Nhật ký hệ thống
+
+
 
 ## 2. Quy trình Thay đổi Schema
 

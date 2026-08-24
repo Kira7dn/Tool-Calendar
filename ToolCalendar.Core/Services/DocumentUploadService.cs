@@ -39,6 +39,22 @@ public class DocumentUploadService : IDocumentUploadService
 
         using var fileStream = file.OpenReadStream();
 
+        // ─── Tầng 1.5: SHA-256 Deduplication (Chống trùng lặp nội dung) ─────
+        string contentHash;
+        using (var sha256 = SHA256.Create())
+        {
+            var hashBytes = await sha256.ComputeHashAsync(fileStream);
+            contentHash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+        }
+        fileStream.Seek(0, SeekOrigin.Begin);
+
+        var existingDoc = await _documentRepository.GetByContentHashAsync(contentHash);
+        if (existingDoc != null)
+        {
+            string docName = !string.IsNullOrEmpty(existingDoc.SoVanBan) ? existingDoc.SoVanBan : existingDoc.TenCongVan;
+            return UploadResult.Failure($"Tài liệu này đã tồn tại trong hệ thống (Trùng lặp nội dung với: {docName}).");
+        }
+
         // ─── Tầng 2: Magic Bytes + Extension whitelist + Size limit ─────────
         var (isValidSignature, signatureError) = FileSignatureValidator.Validate(
             fileStream, file.FileName, file.Length);
@@ -69,7 +85,7 @@ public class DocumentUploadService : IDocumentUploadService
             await fileStream.CopyToAsync(fs);
         }
 
-        // Đã bỏ tính SHA-256 và tra cứu trùng lặp (deduplication) để tiết kiệm tài nguyên CPU.
+        // (Hash check đã thực hiện ở trên cùng để fail-fast, không cần tính lại ở đây)
 
         // ─── Tầng 4: ClamAV Virus Scan ──────────────────────────────────────
         ClamAvScanResult scanResult;
@@ -98,10 +114,10 @@ public class DocumentUploadService : IDocumentUploadService
         }
 
         // ─── File đã qua kiểm tra → chuyển vào Uploads chính thức ──────────
-        var uploadsDir = Path.Combine(_env.ContentRootPath, "Uploads");
+        var uploadsDir = Path.Combine(_env.ContentRootPath, "Uploads", "Documents");
         Directory.CreateDirectory(uploadsDir);
 
-        var finalFileName = $"{Guid.NewGuid()}_{safeFileName}";
+        var finalFileName = $"{Guid.NewGuid()}_{safeFileName}{ext}";
         var finalPath = Path.Combine(uploadsDir, finalFileName);
         File.Move(quarantinePath, finalPath);
 
@@ -109,12 +125,12 @@ public class DocumentUploadService : IDocumentUploadService
         var record = new DocumentRecord
         {
             SoVanBan = Path.GetFileNameWithoutExtension(safeFileName),
-            FilePath = $"Uploads/{finalFileName}",
-            Status = "Đang xử lý",
+            FilePath = $"Uploads/Documents/{finalFileName}",
+            Status = "Đang OCR",
             NgayThem = DateTime.Now,
             FullText = "Đang trích xuất tự động...",
             UploadedByUserId = uploadedByUserId,
-            ContentHash = string.Empty // Không còn dùng hash để tiết kiệm CPU
+            ContentHash = contentHash // Lưu hash vào DB để check trùng lặp lần sau
         };
 
         int id = 0;

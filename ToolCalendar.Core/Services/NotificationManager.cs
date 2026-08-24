@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using ToolCalendar.Data;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
+using ToolCalendar.Core.Data.Interfaces;
 
 namespace ToolCalendar.Services
 {
@@ -18,22 +18,31 @@ namespace ToolCalendar.Services
         private readonly IVapidService _vapidService;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly ILogger<NotificationManager> _logger;
+        private readonly IUserRepository _userRepo;
+        private readonly INotificationRepository _notificationRepo;
+        private readonly IAuditLogRepository _auditRepo;
 
         public NotificationManager(
             IEmailService emailService,
             IVapidService vapidService,
             IHubContext<NotificationHub> hubContext,
-            ILogger<NotificationManager> logger)
+            ILogger<NotificationManager> logger,
+            IUserRepository userRepo,
+            INotificationRepository notificationRepo,
+            IAuditLogRepository auditRepo)
         {
             _emailService = emailService;
             _vapidService = vapidService;
             _hubContext = hubContext;
             _logger = logger;
+            _userRepo = userRepo;
+            _notificationRepo = notificationRepo;
+            _auditRepo = auditRepo;
         }
 
         public async Task SendToUserAsync(int userId, string title, string body, object? data = null)
         {
-            var user = DatabaseService.GetUserById(userId);
+            var user = _userRepo.GetUserById(userId);
             if (user == null)
             {
                 _logger.LogWarning($"[NotificationManager] Không tìm thấy user ID {userId} để gửi thông báo.");
@@ -54,7 +63,7 @@ namespace ToolCalendar.Services
             }
 
             // 2. Gửi Web Push (nếu có subscription)
-            var subscriptions = DatabaseService.GetPushSubscriptions(userId);
+            var subscriptions = _notificationRepo.GetPushSubscriptions(userId);
             if (subscriptions.Any())
             {
                 string? url = null;
@@ -103,7 +112,7 @@ namespace ToolCalendar.Services
                 } catch { /* Bỏ qua lỗi parse data */ }
             }
 
-            DatabaseService.InsertNotification(new Core.Models.NotificationRecord
+            _notificationRepo.InsertNotification(new Core.Models.NotificationRecord
             {
                 UserId = userId,
                 Title = title,
@@ -129,7 +138,7 @@ namespace ToolCalendar.Services
             }
 
             // 5. Log vào AuditLog (Tối giản để tránh phình DB)
-            DatabaseService.InsertAuditLog(userId, $"Thông báo: {title}");
+            _auditRepo.InsertAuditLog(userId, $"Thông báo: {title}");
         }
     }
 }

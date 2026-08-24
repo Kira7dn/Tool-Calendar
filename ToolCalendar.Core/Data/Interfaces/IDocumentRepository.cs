@@ -4,17 +4,21 @@ namespace ToolCalendar.Core.Data.Interfaces
 {
     public interface IDocumentRepository
     {
-        Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null, DateTime? addFromDate = null, DateTime? addToDate = null);
+        Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null, DateTime? addFromDate = null, DateTime? addToDate = null, int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null);
         Task<List<string>> GetUniqueStatusesAsync();
-        Task<DocumentRecord?> GetDocumentByIdAsync(int id);
+        Task<DocumentRecord?> GetDocumentByIdAsync(int id, int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null);
         Task<int> InsertAsync(DocumentRecord record);
         Task UpdateAsync(DocumentRecord record);
         Task AssignDocumentAsync(int docId, string departmentIds, string userIds);
+        /// <summary>
+        /// Cập nhật cán bộ xử lý và đơn vị chủ trì khi có routing mới (luân chuyển công văn).
+        /// </summary>
+        Task UpdateHandlerAsync(int docId, int receiverId, int? departmentId);
         Task SubmitEvidenceAsync(int docId, string evidenceJson, string notes);
         Task DeleteAsync(int id);
         Task BulkUpdateStatusAsync(List<int> ids, string status);
         Task BulkDeleteAsync(List<int> ids);
-        Task<List<DocumentRecord>> GetAllAsync();
+        Task<List<DocumentRecord>> GetAllAsync(int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null);
         Task<byte[]> ExportDocumentsToCsvAsync();
 
         // Comment Management
