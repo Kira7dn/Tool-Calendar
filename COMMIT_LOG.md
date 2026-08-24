@@ -1,3 +1,10 @@
+### [2026-08-24 22:56] docs(agents): tạo rule auto-commit ngay sau khi hoàn thành code
+- **Mô tả**: Tạo mới file rule `.agents/rules/tc-rule-auto-commit.md` để quy định bắt buộc AI Agent phải tự động commit và push code lên Git ngay sau khi viết xong và test thành công, tránh tình trạng mất ngữ cảnh hoặc đè code ở các phiên làm việc sau. Đã thêm liên kết vào `AGENTS.md`.
+- **Tệp thay đổi**:
+  - `.agents/rules/tc-rule-auto-commit.md` (Mới)
+  - `.agents/AGENTS.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "docs(agents): tao rule auto-commit ngay sau khi hoan thanh code"`
+
 ### [2026-08-24 22:52] fix(api): bổ sung RequestSizeLimit cho API upload file và tạo rule tc-rule-bug-logging.md
 - **Mô tả**: Sửa lỗi Kestrel báo lỗi 413 (Payload Too Large) khi upload file PDF dung lượng lớn hoặc tải thư mục bằng cách bổ sung `[RequestSizeLimit(104857600)]` và `[RequestFormLimits(MultipartBodyLengthLimit = 104857600)]` vào `Upload` endpoint của `DocumentsController`. Đồng thời, tạo mới file rule `.agents/rules/tc-rule-bug-logging.md` để quy định bắt buộc ghi nhận mọi lỗi phát hiện được vào sổ tay `tc-rule-bloody-lessons.md`.
 - **Tệp thay đổi**:

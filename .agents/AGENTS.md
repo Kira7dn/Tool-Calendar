@@ -131,4 +131,4 @@ Tool-Calendar/
 **Status:** ACTIVE — TOOL-CALENDAR PROJECT RULES  
 **Version:** 2.2 (Bổ sung Auto Deploy)  
 **Last Updated:** 2026-08-07  
-**See also:** [SYSTEM_FEATURES.md](../SYSTEM_FEATURES.md) | [COMMIT_LOG.md](../COMMIT_LOG.md) | [CODE_QUALITY.md](../CODE_QUALITY.md) | [tc-rule-ai-behavior.md](rules/tc-rule-ai-behavior.md) | [tc-rule-magic-strings.md](rules/tc-rule-magic-strings.md) | [tc-rule-auto-deploy.md](rules/tc-rule-auto-deploy.md) | [tc-rule-bloody-lessons.md](rules/tc-rule-bloody-lessons.md)
+**See also:** [SYSTEM_FEATURES.md](../SYSTEM_FEATURES.md) | [COMMIT_LOG.md](../COMMIT_LOG.md) | [CODE_QUALITY.md](../CODE_QUALITY.md) | [tc-rule-ai-behavior.md](rules/tc-rule-ai-behavior.md) | [tc-rule-magic-strings.md](rules/tc-rule-magic-strings.md) | [tc-rule-auto-deploy.md](rules/tc-rule-auto-deploy.md) | [tc-rule-bloody-lessons.md](rules/tc-rule-bloody-lessons.md) | [tc-rule-auto-commit.md](rules/tc-rule-auto-commit.md)
