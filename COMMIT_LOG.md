@@ -1,3 +1,11 @@
+### [2026-08-24 23:03] fix(api): tăng giới hạn tải tệp lên 500MB và sửa lỗi 400 Bad Request âm thầm
+- **Mô tả**: Phát hiện ra lỗi "nhanh" không phải 413 mà là 400 Bad Request (144 bytes) do `FormOptions.MultipartBodyLengthLimit` mặc định giới hạn quá trình Model Binding. Đã sửa cấu hình Kestrel và FormOptions trong `Program.cs` thành 500MB để đảm bảo tải các file PDF cực nặng (ví dụ: Cv 1310.signed.pdf) không bị crash âm thầm. Đã bổ sung chi tiết lỗi này vào sổ tay `tc-rule-bloody-lessons.md`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+  - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): tang gioi han tai tep len 500MB va sua loi 400 Bad Request am tham"`
+
 ### [2026-08-24 22:56] docs(agents): tạo rule auto-commit ngay sau khi hoàn thành code
 - **Mô tả**: Tạo mới file rule `.agents/rules/tc-rule-auto-commit.md` để quy định bắt buộc AI Agent phải tự động commit và push code lên Git ngay sau khi viết xong và test thành công, tránh tình trạng mất ngữ cảnh hoặc đè code ở các phiên làm việc sau. Đã thêm liên kết vào `AGENTS.md`.
 - **Tệp thay đổi**:

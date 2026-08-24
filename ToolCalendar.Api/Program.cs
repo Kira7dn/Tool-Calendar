@@ -24,6 +24,18 @@ using Microsoft.Extensions.Caching.Memory; // ✅ IMemoryCache extension methods
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Cấu hình vô hiệu hoá hoàn toàn giới hạn kích thước tệp tải lên (Dùng cho các file PDF siêu nặng > 100MB)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = null; // Unlimited
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 536870912; // 500 MB
+    options.ValueLengthLimit = 536870912; // 500 MB
+});
+
 // 1. Cấu hình dịch vụ
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

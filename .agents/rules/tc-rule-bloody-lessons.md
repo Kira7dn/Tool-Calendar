@@ -68,11 +68,13 @@ Tài liệu này tổng hợp các "bài học máu xương" (Bloody Lessons) �
 - **[LỖI NHANH 413 PAYLOAD TOO LARGE] Tải tệp/thư mục bị lỗi ngay lập tức:** Khi người dùng sử dụng chức năng "Tải cả thư mục" hoặc tải một file PDF có dung lượng lớn (chỉ cần > 1MB hoặc > 30MB), file bị báo lỗi "• Lỗi" ngay lập tức mà không rõ nguyên nhân (Frontend bắt lỗi JSON parse vì Server trả về HTML error page). 
   - **Nguyên nhân cốt lõi:**
     1. **Nginx Proxy Limit:** Nginx mặc định giới hạn `client_max_body_size` là 1MB. Mọi request lớn hơn 1MB sẽ bị chặn đứng ngay ở cổng Nginx và trả về lỗi `413 Request Entity Too Large`.
-    2. **Kestrel & Form Limit:** ASP.NET Core Kestrel có giới hạn mặc định `MaxRequestBodySize` là ~30MB (28.6MB). Cùng với đó, `FormOptions.MultipartBodyLengthLimit` cũng bị giới hạn mặc định. Nếu không cấu hình rõ ràng trong Controller, file > 30MB sẽ làm crash Kestrel ngay lập tức.
+    2. **Kestrel & Form Limit:** ASP.NET Core Kestrel có giới hạn mặc định `MaxRequestBodySize` là ~30MB (28.6MB). Cùng với đó, `FormOptions.MultipartBodyLengthLimit` (mặc định 128MB) cũng là một chốt chặn.
+      - Nếu vượt qua giới hạn của Kestrel, server sẽ trả về lỗi `413 Payload Too Large`.
+      - Ngay cả khi đã mở giới hạn Kestrel, nếu file vượt qua `MultipartBodyLengthLimit`, ASP.NET Core sẽ âm thầm ném `InvalidDataException` trong quá trình Model Binding (`IFormFile file`) và tự động trả về lỗi `400 Bad Request` với response body 144 bytes (`{"status":400,"errors":{"file":["The file field is required."]}}`) mà KHÔNG HỀ in ra exception trong console log của server! Điều này cực kỳ khó debug.
   - **Bài học:** 
     - Bắt buộc phải thêm `client_max_body_size 100M;` (hoặc cao hơn) vào cấu hình `nginx.conf` của Nginx Proxy dùng chung.
-    - Tại endpoint `[HttpPost("upload")]` trong `DocumentsController.cs` (và các endpoint nhận file khác), bắt buộc phải thêm thuộc tính `[RequestSizeLimit(104857600)]` (100MB) và `[RequestFormLimits(MultipartBodyLengthLimit = 104857600)]`. Mặc định của framework KHÔNG BAO GIỜ đủ cho tính năng tải lên thư mục/tài liệu của doanh nghiệp.
-
+    - Tại endpoint `[HttpPost("upload")]` trong `DocumentsController.cs` (và các endpoint nhận file khác), bắt buộc phải dùng `[DisableRequestSizeLimit]` và cấu hình giới hạn cực lớn (ví dụ: `536870912` = 500MB) cho `[RequestFormLimits(MultipartBodyLengthLimit = ...)]`.
+    - Phải cấu hình cả `builder.WebHost.ConfigureKestrel` và `builder.Services.Configure<FormOptions>` trong `Program.cs` để bảo hiểm 2 lớp, tránh tình trạng Kestrel hay Model Binding âm thầm drop request. Mặc định của framework KHÔNG BAO GIỜ đủ cho tính năng tải lên thư mục/tài liệu hạng nặng của doanh nghiệp.
 ---
 **Status:** ACTIVE  
 **Priority:** CAUTION — Những bài học phải ghi nhớ để tránh "đổ máu" lần 2.
