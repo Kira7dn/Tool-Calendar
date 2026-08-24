@@ -3729,3 +3729,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `docker-compose.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): bump ollama ram limit to 2560m"`
 
+### [2026-08-25 01:12] chore(infra): add ollama to deploy_to_vnpt.sh
+- **Mô tả**: Bổ sung ollama vào danh sách các container được restart lại trong script deploy_to_vnpt.sh để áp dụng RAM limit mới.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): update deploy_to_vnpt.sh to restart ollama"`
+

@@ -50,7 +50,7 @@ sshpass -p "$VNPT_PASS" ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=
 
   # --- Bước 5: Restart containers (Zero-downtime) ---
   echo ">>> Deploying containers with zero-downtime..."
-  docker compose up -d --no-deps --build official-doc-backend python-ai-service rabbitmq clamav uptime-kuma
+  docker compose up -d --no-deps --build official-doc-backend python-ai-service rabbitmq clamav uptime-kuma ollama
 
   # --- Bước 5.5: Reload Nginx (Áp dụng cấu hình client_max_body_size mới) ---
   echo ">>> Reloading Nginx proxy..."
