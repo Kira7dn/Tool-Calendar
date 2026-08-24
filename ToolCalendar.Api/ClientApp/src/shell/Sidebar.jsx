@@ -87,8 +87,7 @@ export function AppSidebar({ activeTab, setActiveTab, setCurrentDocId, setIsRevi
                 // Role-based filtering
                 const role = localStorage.getItem('user_role') || ROLES.CAN_BO
                 if (item.tab === 'users' && role !== ROLES.ADMIN) return null
-                if (item.tab === 'my-tasks' && role !== ROLES.CAN_BO && role !== ROLES.VAN_THU)
-                  return null
+
                 if (item.tab === 'upload' && role !== ROLES.ADMIN && role !== ROLES.VAN_THU)
                   return null
                 if (item.tab === 'settings' && role !== ROLES.ADMIN) return null

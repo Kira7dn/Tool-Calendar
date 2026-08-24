@@ -3679,3 +3679,17 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(db): fix sqlite status filter case sensitivity for unicode strings"`
+### [2026-08-25 00:21] Remove unused document statuses
+- **Mô tả**: Xoá bỏ các trạng thái không sử dụng (DA_RA_SOAT, COMPLETED_ON_TIME, COMPLETED_OVERDUE, PROCESSING_ON_TIME, PROCESSING_OVERDUE) khỏi DOC_STATUS theo yêu cầu, chỉ giữ lại các trạng thái chính.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/lib/constants.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(docs): remove unused statuses from DOC_STATUS"`
+### [2026-08-25 00:36] feat(docs): show my tasks for admin and add filter tabs
+- **Mô tả**: Mở khóa menu "Công việc của tôi" cho Admin và Lãnh đạo. Bổ sung các tab lọc nhanh "Tất cả", "Giao cho tôi", "Tôi tải lên" ngay trong trang Quản lý Văn bản để dễ dàng tra cứu.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/Sidebar.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/useDocumentsList.js` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): show my tasks for admin and add filter tabs"`

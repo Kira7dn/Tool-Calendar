@@ -37,6 +37,9 @@ import { ROLES } from '@/constants/roles'
 import { useDocumentsList } from '@/features/documents/hooks/useDocumentsList'
 
 export function Documents({ onTabChange, filters }) {
+  const currentUserId = parseInt(localStorage.getItem('user_id') || '0', 10)
+  const role = localStorage.getItem('user_role') || ROLES.CAN_BO
+
   const {
     documents,
     page,
@@ -53,6 +56,8 @@ export function Documents({ onTabChange, filters }) {
     setStatus,
     sort,
     setSort,
+    activeTab,
+    setActiveTab,
     deleteConfirm,
     setDeleteConfirm,
     executeDelete,
@@ -106,6 +111,39 @@ export function Documents({ onTabChange, filters }) {
             >
               <Plus className="size-4 mr-1" /> Thêm mới
             </Button>
+
+            <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-full border border-border/50 max-md:hidden">
+              <Button
+                variant={activeTab === 'all' ? 'default' : 'ghost'}
+                size="sm"
+                className={`rounded-full h-7 px-4 text-xs font-semibold transition-all ${activeTab === 'all' ? 'shadow-sm' : ''}`}
+                onClick={() => {
+                  setActiveTab('all')
+                }}
+              >
+                Tất cả
+              </Button>
+              <Button
+                variant={activeTab === 'assigned_to_me' ? 'default' : 'ghost'}
+                size="sm"
+                className={`rounded-full h-7 px-4 text-xs font-semibold transition-all ${activeTab === 'assigned_to_me' ? 'shadow-sm' : ''}`}
+                onClick={() => {
+                  setActiveTab('assigned_to_me')
+                }}
+              >
+                Giao cho tôi
+              </Button>
+              <Button
+                variant={activeTab === 'uploaded_by_me' ? 'default' : 'ghost'}
+                size="sm"
+                className={`rounded-full h-7 px-4 text-xs font-semibold transition-all ${activeTab === 'uploaded_by_me' ? 'shadow-sm' : ''}`}
+                onClick={() => {
+                  setActiveTab('uploaded_by_me')
+                }}
+              >
+                Tôi tải lên
+              </Button>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -235,13 +273,36 @@ export function Documents({ onTabChange, filters }) {
                         className="text-foreground/80 truncate text-xs"
                         title={doc.trichYeu}
                       >
-                        {doc.trichYeu || '-'}
+                        <div className="flex flex-col gap-1">
+                          <span className="truncate">{doc.trichYeu || '-'}</span>
+                          {(() => {
+                            let assigned = false
+                            if (doc.assignedTo === currentUserId) assigned = true
+                            try {
+                              const ids = JSON.parse(doc.assignedUserIds || '[]')
+                              if (ids.includes(currentUserId)) assigned = true
+                            } catch (e) {}
+                            if (assigned) {
+                              return (
+                                <span className="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-[4px] text-[10px] font-semibold w-max border border-blue-100">
+                                  Giao cho tôi
+                                </span>
+                              )
+                            }
+                            return null
+                          })()}
+                        </div>
                       </TableCell>
                       <TableCell
                         className="text-muted-foreground w-32 truncate text-xs"
                         title={doc.uploadedByFullName}
                       >
                         {doc.uploadedByFullName || '-'}
+                        {doc.uploadedByUserId === currentUserId && (
+                          <span className="text-primary font-bold ml-1" title="Tôi tải lên">
+                            (Tôi)
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-muted-foreground w-32 truncate text-xs">
                         {doc.coQuanChuQuan || '-'}

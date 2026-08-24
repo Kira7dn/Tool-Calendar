@@ -14,6 +14,7 @@ export function useDocumentsList(filters) {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [status, setStatus] = useState(filters?.status || '')
   const [sort, setSort] = useState(filters?.sort || 'newest')
+  const [activeTab, setActiveTab] = useState('all')
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, doc: null })
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export function useDocumentsList(filters) {
     setIsLoading(true)
     setError(false)
     try {
-      const url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(debouncedSearch)}&status=${status}&sort=${sort}`
+      const url = `/api/documents?page=${page}&size=${pageSize}&search=${encodeURIComponent(debouncedSearch)}&status=${status}&sort=${sort}&activeTab=${activeTab}`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -109,6 +110,8 @@ export function useDocumentsList(filters) {
     setStatus,
     sort,
     setSort,
+    activeTab,
+    setActiveTab,
     deleteConfirm,
     setDeleteConfirm,
     fetchDocuments,

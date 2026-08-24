@@ -358,7 +358,7 @@ namespace ToolCalendar.Core.Data.Repositories
         /// Server-side pagination: returns one page of documents + total count for pagination UI.
         /// <para>search is matched against SoVanBan, TrichYeu, CoQuanChuQuan (case-insensitive LIKE).</para>
         /// </summary>
-        public async Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null, DateTime? addFromDate = null, DateTime? addToDate = null, int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null)
+        public async Task<(List<DocumentRecord> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string search = "", string status = "", string sort = "deadline_asc", DateTime? fromDate = null, DateTime? toDate = null, DateTime? addFromDate = null, DateTime? addToDate = null, int? currentUserId = null, string? currentUserRole = null, int? currentDepartmentId = null, string activeTab = "")
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
@@ -368,6 +368,15 @@ namespace ToolCalendar.Core.Data.Repositories
             if (!string.IsNullOrEmpty(rlsFilter)) filters.Add(rlsFilter);
             bool hasSearch = !string.IsNullOrWhiteSpace(search);
             bool hasStatus = !string.IsNullOrWhiteSpace(status);
+
+            if (activeTab == "assigned_to_me" && currentUserId.HasValue)
+            {
+                filters.Add($"(doc.AssignedTo = {currentUserId.Value} OR doc.AssignedUserIds = '[{currentUserId.Value}]' OR doc.AssignedUserIds LIKE '[{currentUserId.Value},%' OR doc.AssignedUserIds LIKE '%,{currentUserId.Value}]%' OR doc.AssignedUserIds LIKE '%,{currentUserId.Value},%')");
+            }
+            else if (activeTab == "uploaded_by_me" && currentUserId.HasValue)
+            {
+                filters.Add($"(doc.UploadedByUserId = {currentUserId.Value})");
+            }
 
             // Bỏ qua các văn bản đang chờ xử lý OCR hoặc chưa được người dùng lưu ở màn hình upload
             if (!hasStatus || (status.ToLower() != "đang ocr" && status.ToLower() != "chờ lưu"))

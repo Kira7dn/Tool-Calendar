@@ -69,7 +69,8 @@ namespace ToolCalendar.Api.Controllers.Documents
             [FromQuery] DateTime? fromDate = null,
             [FromQuery] DateTime? toDate = null,
             [FromQuery] DateTime? addFromDate = null,
-            [FromQuery] DateTime? addToDate = null)
+            [FromQuery] DateTime? addToDate = null,
+            [FromQuery] string activeTab = "")
         {
             var userIdStr = User.FindFirstValue("uid") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
             int.TryParse(userIdStr, out int userId);
@@ -77,7 +78,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             var deptIdStr = User.FindFirstValue("DepartmentId");
             int? deptId = int.TryParse(deptIdStr, out int d) ? d : null;
 
-            var (items, totalCount) = await _documentRepository.GetPagedAsync(page, size, search, status, sort, fromDate, toDate, addFromDate, addToDate, userId, role, deptId);
+            var (items, totalCount) = await _documentRepository.GetPagedAsync(page, size, search, status, sort, fromDate, toDate, addFromDate, addToDate, userId, role, deptId, activeTab);
             var totalPages = (int)Math.Ceiling((double)totalCount / size);
 
             return Ok(ApiResponse.Ok(new
