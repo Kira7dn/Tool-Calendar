@@ -87,5 +87,8 @@ Tài liệu này tổng hợp các "bài học máu xương" (Bloody Lessons) �
     - Luôn bọc lệnh SSH tự động bằng `sshpass -p "$PASSWORD"` hoặc sử dụng SSH key đã được authorized trước khi chạy bất kỳ câu lệnh check/log nào lên server production.
     - Nếu lỡ bị ban IP, hãy chuyển kết nối mạng sang 4G/Hotspot trên điện thoại để lấy IP mới khác và tiếp tục deploy/work.
 ---
+**LƯU Ý:** Do file này đã quá dài, các bài học từ số 10 trở đi được ghi chép tại **[Phần 2: tc-rule-bloody-lessons-v2.md](tc-rule-bloody-lessons-v2.md)**. Vui lòng tham khảo file đó để biết thêm chi tiết.
+
+---
 **Status:** ACTIVE  
 **Priority:** CAUTION — Những bài học phải ghi nhớ để tránh "đổ máu" lần 2.

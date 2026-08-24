@@ -5,7 +5,15 @@
   - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): tang gioi han kich thuoc tep PDF trong FileSignatureValidator len 500MB"`
 
-### [2026-08-24 23:31] fix(security): cho phép signature %PDF nằm trong 1024 bytes đầu tiên
+### [2026-08-24 23:33] docs(rules): tạo tc-rule-bloody-lessons-v2.md và ghi nhận bài học Magic Bytes
+- **Mô tả**: File `tc-rule-bloody-lessons.md` đã vượt quá độ dài, tiến hành tạo file `tc-rule-bloody-lessons-v2.md` làm phần 2. Đã thêm bài học số 10 về việc các phần mềm ký số đẩy lùi chuỗi `%PDF` xuống dưới (do bọc CMS envelope hoặc UTF-8 BOM), khiến thuật toán kiểm tra Magic Bytes cũ bị sai.
+- **Tệp thay đổi**:
+  - `.agents/rules/tc-rule-bloody-lessons-v2.md` (Mới)
+  - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
+  - `.agents/AGENTS.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "docs(rules): tao tc-rule-bloody-lessons-v2.md va ghi nhan bai hoc Magic Bytes"`
+
+
 - **Mô tả**: Sửa lỗi "File có nội dung không khớp với định dạng .pdf" khi upload các file PDF đã được ký số (ví dụ: .signed.pdf). Các phần mềm ký số thường bọc file PDF vào envelope CMS hoặc thêm BOM ở đầu file, khiến chuỗi `%PDF` bị đẩy lùi xuống dưới. Việc nới lỏng kiểm tra Magic Bytes cho PDF trong 1024 bytes đầu (theo chuẩn Adobe) giúp giải quyết vấn đề này.
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/Security/FileSignatureValidator.cs` (Sửa đổi)
