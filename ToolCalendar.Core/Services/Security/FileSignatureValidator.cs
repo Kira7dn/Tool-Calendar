@@ -39,14 +39,14 @@ public static class FileSignatureValidator
     // ─── Kích thước file tối đa cho từng loại ────────────────────────────────
     private static readonly Dictionary<string, long> MaxFileSizes = new(StringComparer.OrdinalIgnoreCase)
     {
-        [".pdf"]  = 50 * 1024 * 1024,   // 50MB
-        [".doc"]  = 30 * 1024 * 1024,   // 30MB
-        [".docx"] = 30 * 1024 * 1024,   // 30MB
-        [".xls"]  = 20 * 1024 * 1024,   // 20MB
-        [".xlsx"] = 20 * 1024 * 1024,   // 20MB
-        [".png"]  = 10 * 1024 * 1024,   // 10MB
-        [".jpg"]  = 10 * 1024 * 1024,   // 10MB
-        [".jpeg"] = 10 * 1024 * 1024,   // 10MB
+        [".pdf"]  = 500 * 1024 * 1024,  // 500MB
+        [".doc"]  = 100 * 1024 * 1024,  // 100MB
+        [".docx"] = 100 * 1024 * 1024,  // 100MB
+        [".xls"]  = 100 * 1024 * 1024,  // 100MB
+        [".xlsx"] = 100 * 1024 * 1024,  // 100MB
+        [".png"]  = 50 * 1024 * 1024,   // 50MB
+        [".jpg"]  = 50 * 1024 * 1024,   // 50MB
+        [".jpeg"] = 50 * 1024 * 1024,   // 50MB
     };
 
     /// <summary>

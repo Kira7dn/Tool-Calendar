@@ -71,10 +71,13 @@ Tài liệu này tổng hợp các "bài học máu xương" (Bloody Lessons) �
     2. **Kestrel & Form Limit:** ASP.NET Core Kestrel có giới hạn mặc định `MaxRequestBodySize` là ~30MB (28.6MB). Cùng với đó, `FormOptions.MultipartBodyLengthLimit` (mặc định 128MB) cũng là một chốt chặn.
       - Nếu vượt qua giới hạn của Kestrel, server sẽ trả về lỗi `413 Payload Too Large`.
       - Ngay cả khi đã mở giới hạn Kestrel, nếu file vượt qua `MultipartBodyLengthLimit`, ASP.NET Core sẽ âm thầm ném `InvalidDataException` trong quá trình Model Binding (`IFormFile file`) và tự động trả về lỗi `400 Bad Request` với response body 144 bytes (`{"status":400,"errors":{"file":["The file field is required."]}}`) mà KHÔNG HỀ in ra exception trong console log của server! Điều này cực kỳ khó debug.
+    3. **Application Validation Limit (FileSignatureValidator):** Ngoài giới hạn hệ thống (Nginx/Kestrel), ứng dụng còn có file `FileSignatureValidator.cs` thực hiện kiểm tra Magic Bytes và cấu hình giới hạn cứng kích thước cho từng loại file qua dictionary `MaxFileSizes` (PDF bị giới hạn cứng ở **50MB**).
+      - Hậu quả: Khi upload file PDF lớn hơn 50MB (nhưng nhỏ hơn giới hạn Nginx/Kestrel), validator trong service `DocumentUploadService.cs` sẽ trả về lỗi "File quá lớn. Giới hạn cho .pdf: 50MB". Lỗi này trả về dạng `400 Bad Request` của `ApiResponse` và không hiển thị trên log hệ thống mà chỉ hiển thị tại Frontend.
   - **Bài học:** 
     - Bắt buộc phải thêm `client_max_body_size 100M;` (hoặc cao hơn) vào cấu hình `nginx.conf` của Nginx Proxy dùng chung.
     - Tại endpoint `[HttpPost("upload")]` trong `DocumentsController.cs` (và các endpoint nhận file khác), bắt buộc phải dùng `[DisableRequestSizeLimit]` và cấu hình giới hạn cực lớn (ví dụ: `536870912` = 500MB) cho `[RequestFormLimits(MultipartBodyLengthLimit = ...)]`.
     - Phải cấu hình cả `builder.WebHost.ConfigureKestrel` và `builder.Services.Configure<FormOptions>` trong `Program.cs` để bảo hiểm 2 lớp, tránh tình trạng Kestrel hay Model Binding âm thầm drop request. Mặc định của framework KHÔNG BAO GIỜ đủ cho tính năng tải lên thư mục/tài liệu hạng nặng của doanh nghiệp.
+    - Đảm bảo kiểm tra các bộ lọc validate định dạng file nội bộ (`FileSignatureValidator.cs`) để nới lỏng giới hạn cứng (`MaxFileSizes`) của ứng dụng đồng bộ với giới hạn của hệ thống.
 
 ## 9. Hạ tầng & Triển khai (Infrastructure & Deployment Gotchas)
 

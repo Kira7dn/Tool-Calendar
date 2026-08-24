@@ -1,3 +1,10 @@
+### [2026-08-24 23:15] fix(api): tăng giới hạn kích thước tệp PDF trong FileSignatureValidator lên 500MB
+- **Mô tả**: Phát hiện ra ngoài giới hạn Kestrel và Nginx, hệ thống còn chặn upload tại `FileSignatureValidator.cs` với cấu hình cứng `MaxFileSizes` giới hạn tệp `.pdf` ở mức 50MB. Đã sửa giới hạn này lên 500MB.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Security/FileSignatureValidator.cs` (Sửa đổi)
+  - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): tang gioi han kich thuoc tep PDF trong FileSignatureValidator len 500MB"`
+
 ### [2026-08-24 23:13] fix(infra): thêm PubkeyAuthentication=no tránh lỗi Too many authentication failures
 - **Mô tả**: Khi máy local có nhiều SSH keys, ssh sẽ thử từng key trước khi dùng password, gây lỗi "Too many authentication failures". Đã thêm `-o PubkeyAuthentication=no` vào lệnh ssh trong `deploy_to_vnpt.sh`.
 - **Tệp thay đổi**:
