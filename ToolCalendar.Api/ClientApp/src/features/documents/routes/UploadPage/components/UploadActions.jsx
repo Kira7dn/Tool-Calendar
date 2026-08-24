@@ -37,9 +37,9 @@ export function UploadActions({
       <div className="flex items-center gap-2">
         <button
           onClick={() => setShowClearConfirm(true)}
-          disabled={isGlobalProcessing}
+          disabled={isGlobalProcessing || isSaving}
           className={`px-4 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${
-            isGlobalProcessing
+            isGlobalProcessing || isSaving
               ? 'border-slate-200 text-slate-400 bg-slate-50 cursor-not-allowed'
               : 'border-slate-200 text-slate-600 hover:bg-slate-50'
           }`}

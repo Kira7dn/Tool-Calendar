@@ -3660,3 +3660,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): delete content-length header in fetch interceptor to prevent JSON parse errors"`
  
+
+### [2026-08-25 00:03] fix(docs): vô hiệu hoá nút Hủy đợt tải khi đang trong quá trình lưu
+- **Mô tả**: Khi người dùng nhấn nút "Lưu & Phân công", toàn bộ batch đang được xử lý, nhưng nút "Hủy đợt tải" chưa bị disabled, dẫn đến có thể bấm hủy ngay lúc đang lưu. Đã thêm prop `isSaving` vào điều kiện `disabled` và `className` của nút này.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadActions.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): disable nut huy dot tai khi dang luu"`
