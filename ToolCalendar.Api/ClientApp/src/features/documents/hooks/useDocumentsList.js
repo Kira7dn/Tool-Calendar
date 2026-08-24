@@ -68,7 +68,7 @@ export function useDocumentsList(filters) {
     } finally {
       setIsLoading(false)
     }
-  }, [page, pageSize, debouncedSearch, status, sort])
+  }, [page, pageSize, debouncedSearch, status, sort, activeTab])
 
   useEffect(() => {
     fetchDocuments()

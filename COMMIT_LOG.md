@@ -3704,3 +3704,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(api): add temporary endpoint to reset all passwords and fix assigned badge"`
+### [2026-08-25 01:00] fix(ui): fix document list tabs not filtering data
+- **Mô tả**: Sửa lỗi bấm các nút (Tất cả, Giao cho tôi, Tôi tải lên) nhưng không lọc dữ liệu do hook useDocumentsList bị thiếu biến activeTab trong dependencies của fetchDocuments. Thêm reset page về 1 khi bấm chuyển tab.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/useDocumentsList.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): fix document list tabs not filtering data"`

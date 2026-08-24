@@ -119,6 +119,7 @@ export function Documents({ onTabChange, filters }) {
                 className={`rounded-full h-7 px-4 text-xs font-semibold transition-all ${activeTab === 'all' ? 'shadow-sm' : ''}`}
                 onClick={() => {
                   setActiveTab('all')
+                  setPage(1)
                 }}
               >
                 Tất cả
@@ -129,6 +130,7 @@ export function Documents({ onTabChange, filters }) {
                 className={`rounded-full h-7 px-4 text-xs font-semibold transition-all ${activeTab === 'assigned_to_me' ? 'shadow-sm' : ''}`}
                 onClick={() => {
                   setActiveTab('assigned_to_me')
+                  setPage(1)
                 }}
               >
                 Giao cho tôi
@@ -139,6 +141,7 @@ export function Documents({ onTabChange, filters }) {
                 className={`rounded-full h-7 px-4 text-xs font-semibold transition-all ${activeTab === 'uploaded_by_me' ? 'shadow-sm' : ''}`}
                 onClick={() => {
                   setActiveTab('uploaded_by_me')
+                  setPage(1)
                 }}
               >
                 Tôi tải lên
@@ -281,7 +284,7 @@ export function Documents({ onTabChange, filters }) {
                             try {
                               const ids = JSON.parse(doc.assignedUserIds || '[]')
                               if (ids.some((id) => Number(id) === currentUserId)) assigned = true
-                            } catch (e) {}
+                            } catch (e) { }
                             if (assigned) {
                               return (
                                 <Badge
