@@ -1,3 +1,9 @@
+### [2026-08-24 23:13] fix(infra): thêm PubkeyAuthentication=no tránh lỗi Too many authentication failures
+- **Mô tả**: Khi máy local có nhiều SSH keys, ssh sẽ thử từng key trước khi dùng password, gây lỗi "Too many authentication failures". Đã thêm `-o PubkeyAuthentication=no` vào lệnh ssh trong `deploy_to_vnpt.sh`.
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): them PubkeyAuthentication=no tranh loi Too many authentication failures"`
+
 ### [2026-08-24 23:13] docs(rules): bổ sung bài học SSH Fail2ban lock vào tc-rule-bloody-lessons.md
 - **Mô tả**: Bổ sung chi tiết lỗi và bài học về việc SSH sai hoặc thiếu mật khẩu/sshpass dẫn đến việc Fail2ban chặn IP cục bộ làm sập script deploy tự động.
 - **Tệp thay đổi**:

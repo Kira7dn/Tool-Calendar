@@ -10,7 +10,7 @@ source .deploy.env
 
 echo "Đang triển khai lên VNPT Server ($VNPT_HOST)..."
 
-sshpass -p "$VNPT_PASS" ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=5 $VNPT_USER@$VNPT_HOST << 'EOF'
+sshpass -p "$VNPT_PASS" ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=no -o ServerAliveInterval=30 -o ServerAliveCountMax=5 $VNPT_USER@$VNPT_HOST << 'EOF'
   set -e
   cd /root/Tool-Calendar || exit 1
 
