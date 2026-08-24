@@ -3735,3 +3735,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `deploy_to_vnpt.sh` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): update deploy_to_vnpt.sh to restart ollama"`
 
+### [2026-08-25 01:17] perf(infra): boost ollama cpu to 3.5 cores and ram to 4gb
+- **Mô tả**: Phát hiện nguyên nhân làm AI trả lời chậm (37s) là do giới hạn CPU cũ chỉ cho AI dùng 1.5 nhân CPU trên tổng số 4 nhân của server. Đã nâng cpus lên 3.5 nhân và RAM lên 4GB (4096m) để AI tính toán nhanh hơn gấp 2-3 lần.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(infra): boost ollama cpu to 3.5 cores and ram to 4gb"`
+

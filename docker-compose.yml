@@ -162,8 +162,8 @@ services:
     container_name: ollama
     volumes:
       - ollama-data:/root/.ollama
-    mem_limit: 2560m
-    cpus: "1.5"
+    mem_limit: 4096m
+    cpus: "3.5"
     restart: unless-stopped
     networks:
       - tool-calendar-net
