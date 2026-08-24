@@ -501,8 +501,8 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             try { _chatHistoryRepo.AddMessage(userId, "assistant", finalReplyForChat); }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể lưu tin nhắn assistant: {Msg}", ex.Message); }
 
-            // Lưu vào Semantic Cache để tái sử dụng
-            if (questionVector != null && questionVector.Length > 0 && !string.IsNullOrWhiteSpace(finalTextNoStream))
+            // Lưu vào Semantic Cache để tái sử dụng (không lưu các câu thông báo lỗi/quá tải)
+            if (questionVector != null && questionVector.Length > 0 && !string.IsNullOrWhiteSpace(finalTextNoStream) && !finalTextNoStream.Contains("quá tải"))
             {
                 try 
                 {

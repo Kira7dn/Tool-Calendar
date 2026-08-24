@@ -3741,3 +3741,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `docker-compose.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "perf(infra): boost ollama cpu to 3.5 cores and ram to 4gb"`
 
+### [2026-08-25 01:22] fix(ai): do not cache error fallback messages in AiSemanticCache
+- **Mô tả**: Phát hiện nguyên nhân khiến câu trả lời bị treo thành "Dạ báo cáo sếp,..." là do lần sập Ollama trước đó, thông báo lỗi "hệ thống bị quá tải" đã bị vô tình lưu vào bộ nhớ đệm AiSemanticCache. Mỗi khi hỏi lại câu cũ, hệ thống lấy nhầm câu báo lỗi cũ ra để trả lời. Đã thêm điều kiện bỏ qua không cache câu báo lỗi và xóa toàn bộ cache lỗi trên DB sản xuất.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): do not cache error fallback messages in AiSemanticCache"`
+
