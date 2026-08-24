@@ -127,8 +127,8 @@ services:
     container_name: doc-clamav
     environment:
       - CLAMAV_NO_FRESHCLAMD=false  # Cập nhật database virus tự động
-      - CLAMD_CONF_MaxFileSize=100M
-      - CLAMD_CONF_StreamMaxLength=100M
+      - CLAMD_CONF_MaxFileSize=500M
+      - CLAMD_CONF_StreamMaxLength=500M
     volumes:
       - clamav-db:/var/lib/clamav  # Database virus được persist giữa các lần khởi động
     mem_limit: 1536m

@@ -52,6 +52,15 @@ sshpass -p "$VNPT_PASS" ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=3
   echo ">>> Deploying containers with zero-downtime..."
   docker compose up -d --no-deps --build official-doc-backend python-ai-service rabbitmq clamav uptime-kuma
 
+  # --- Bước 5.5: Reload Nginx (Áp dụng cấu hình client_max_body_size mới) ---
+  echo ">>> Reloading Nginx proxy..."
+  if docker ps | grep -q nginx-proxy; then
+      docker exec nginx-proxy nginx -s reload
+      echo ">>> Nginx reloaded thành công"
+  else
+      echo ">>> Cảnh báo: Không tìm thấy container nginx-proxy để reload!"
+  fi
+
   echo ">>> Deploy hoàn tất!"
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 

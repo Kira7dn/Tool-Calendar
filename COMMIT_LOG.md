@@ -1,3 +1,11 @@
+### [2026-08-24 23:07] chore(infra): tăng giới hạn Nginx và ClamAV lên 500MB, tự động reload Nginx khi deploy
+- **Mô tả**: Mặc dù đã tăng giới hạn Kestrel lên 500MB, người dùng vẫn gặp lỗi khi tải file > 50MB do cấu hình `client_max_body_size` của Nginx Proxy vẫn ở mức 50MB, và ClamAV giới hạn 100MB. Đã sửa cấu hình Nginx trong `gateway/nginx/conf.d/default.conf` và cấu hình ClamAV trong `docker-compose.yml` lên 500MB. Cập nhật `deploy_to_vnpt.sh` để tự động chạy lệnh `nginx -s reload` nhằm áp dụng cấu hình mới nhất cho container `nginx-proxy` đang chạy.
+- **Tệp thay đổi**:
+  - `gateway/nginx/conf.d/default.conf` (Sửa đổi)
+  - `docker-compose.yml` (Sửa đổi)
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): tang limit nginx va clamav len 500MB, reload nginx khi deploy"`
+
 ### [2026-08-24 23:03] fix(api): tăng giới hạn tải tệp lên 500MB và sửa lỗi 400 Bad Request âm thầm
 - **Mô tả**: Phát hiện ra lỗi "nhanh" không phải 413 mà là 400 Bad Request (144 bytes) do `FormOptions.MultipartBodyLengthLimit` mặc định giới hạn quá trình Model Binding. Đã sửa cấu hình Kestrel và FormOptions trong `Program.cs` thành 500MB để đảm bảo tải các file PDF cực nặng (ví dụ: Cv 1310.signed.pdf) không bị crash âm thầm. Đã bổ sung chi tiết lỗi này vào sổ tay `tc-rule-bloody-lessons.md`.
 - **Tệp thay đổi**:
