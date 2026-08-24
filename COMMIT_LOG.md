@@ -5,7 +5,13 @@
   - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): tang gioi han kich thuoc tep PDF trong FileSignatureValidator len 500MB"`
 
-### [2026-08-24 23:33] docs(rules): tạo tc-rule-bloody-lessons-v2.md và ghi nhận bài học Magic Bytes
+### [2026-08-24 23:41] fix(security): thêm log hex vào FileSignatureValidator để debug lỗi file ký số
+- **Mô tả**: Tạm thời thay đổi thông báo lỗi của trình xác thực Magic Bytes để in ra 16 byte đầu tiên (định dạng Hex) nhằm tìm ra nguyên nhân chính xác khiến file `Cv 1310.signed.pdf` bị từ chối, giúp debug lỗi 144 bytes 400 Bad Request.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Security/FileSignatureValidator.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(security): thêm log hex vào FileSignatureValidator để debug lỗi file ký số"`
+
+
 - **Mô tả**: File `tc-rule-bloody-lessons.md` đã vượt quá độ dài, tiến hành tạo file `tc-rule-bloody-lessons-v2.md` làm phần 2. Đã thêm bài học số 10 về việc các phần mềm ký số đẩy lùi chuỗi `%PDF` xuống dưới (do bọc CMS envelope hoặc UTF-8 BOM), khiến thuật toán kiểm tra Magic Bytes cũ bị sai.
 - **Tệp thay đổi**:
   - `.agents/rules/tc-rule-bloody-lessons-v2.md` (Mới)

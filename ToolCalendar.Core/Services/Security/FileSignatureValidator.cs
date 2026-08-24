@@ -107,7 +107,10 @@ public static class FileSignatureValidator
         }
 
         if (!isSignatureValid)
-            return (false, $"File '{Path.GetFileName(fileName)}' có nội dung không khớp với định dạng {ext}. Có thể file bị giả mạo extension.");
+        {
+            var hex = BitConverter.ToString(header.Take(16).ToArray());
+            return (false, $"File '{Path.GetFileName(fileName)}' sai định dạng. Header: {hex}");
+        }
 
         return (true, null);
     }
