@@ -3710,3 +3710,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ClientApp/src/features/documents/hooks/useDocumentsList.js` (Sửa đổi)
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ui): fix document list tabs not filtering data"`
+### [2026-08-25 01:07] refactor(ai): use qwen2.5:1.5b for both python and c# services to save RAM
+- **Mô tả**: Đồng nhất mô hình AI thành qwen2.5:1.5b cho cả 2 khối dịch vụ (Python AI service và C# backend). Việc này giúp Ollama không phải nạp đi nạp lại 2 mô hình khác nhau vào RAM/VRAM, giúp giảm lag và tiết kiệm tài nguyên.
+- **Tệp thay đổi**:
+  - `python-ai-service/schemas/llm.py` (Sửa đổi)
+  - `python-ai-service/schemas/document.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(ai): unify ai model to qwen2.5:1.5b for all services"`
+

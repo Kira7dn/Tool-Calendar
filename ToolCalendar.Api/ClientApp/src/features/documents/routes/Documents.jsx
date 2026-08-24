@@ -284,7 +284,7 @@ export function Documents({ onTabChange, filters }) {
                             try {
                               const ids = JSON.parse(doc.assignedUserIds || '[]')
                               if (ids.some((id) => Number(id) === currentUserId)) assigned = true
-                            } catch (e) { }
+                            } catch (e) {}
                             if (assigned) {
                               return (
                                 <Badge
