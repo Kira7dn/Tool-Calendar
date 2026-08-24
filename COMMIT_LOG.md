@@ -5,7 +5,13 @@
   - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): tang gioi han kich thuoc tep PDF trong FileSignatureValidator len 500MB"`
 
-### [2026-08-24 23:41] fix(security): thêm log hex vào FileSignatureValidator để debug lỗi file ký số
+### [2026-08-24 23:48] fix(docs): bỏ qua các văn bản nháp (Đang OCR, Chờ lưu) khi kiểm tra trùng lặp
+- **Mô tả**: Khi người dùng tải lên một văn bản nhưng chưa bấm "Lưu & Phân công", văn bản đó sẽ kẹt ở trạng thái "Chờ lưu". Tính năng kiểm tra trùng lặp (dựa vào Hash) trước đây chặn người dùng upload lại văn bản này (gây ức chế). Đã cập nhật `GetByContentHashAsync` để bỏ qua các văn bản nháp.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): bo qua cac van ban nhap khi kiem tra trung lap"`
+
+
 - **Mô tả**: Tạm thời thay đổi thông báo lỗi của trình xác thực Magic Bytes để in ra 16 byte đầu tiên (định dạng Hex) nhằm tìm ra nguyên nhân chính xác khiến file `Cv 1310.signed.pdf` bị từ chối, giúp debug lỗi 144 bytes 400 Bad Request.
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/Security/FileSignatureValidator.cs` (Sửa đổi)

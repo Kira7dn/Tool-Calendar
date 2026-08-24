@@ -763,7 +763,7 @@ namespace ToolCalendar.Core.Data.Repositories
                        Status, Priority, DepartmentId, AssignedTo, AssignedUserIds, AssignedDepartmentIds,
                        EvidencePaths, EvidenceNotes, CompletionDate, LabelId, NgayThem, DaTaoLich, ContentHash, UploadedByUserId
                 FROM Documents
-                WHERE ContentHash = @hash
+                WHERE ContentHash = @hash AND Status NOT IN ('Đang OCR', 'Chờ lưu', 'Lỗi OCR')
                 LIMIT 1";
 
             using var cmd = new SqliteCommand(sql, connection);
