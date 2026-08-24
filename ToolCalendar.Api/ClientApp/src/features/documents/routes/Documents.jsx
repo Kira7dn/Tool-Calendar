@@ -277,16 +277,19 @@ export function Documents({ onTabChange, filters }) {
                           <span className="truncate">{doc.trichYeu || '-'}</span>
                           {(() => {
                             let assigned = false
-                            if (doc.assignedTo === currentUserId) assigned = true
+                            if (Number(doc.assignedTo) === currentUserId) assigned = true
                             try {
                               const ids = JSON.parse(doc.assignedUserIds || '[]')
-                              if (ids.includes(currentUserId)) assigned = true
+                              if (ids.some((id) => Number(id) === currentUserId)) assigned = true
                             } catch (e) {}
                             if (assigned) {
                               return (
-                                <span className="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-[4px] text-[10px] font-semibold w-max border border-blue-100">
+                                <Badge
+                                  variant="outline"
+                                  className="bg-blue-50 text-blue-700 border-blue-200 w-max"
+                                >
                                   Giao cho tôi
-                                </span>
+                                </Badge>
                               )
                             }
                             return null

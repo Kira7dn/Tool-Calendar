@@ -366,6 +366,21 @@ namespace ToolCalendar.Api.Controllers
             var errors = addResult.Errors.Select(e => e.Description).ToList();
             return BadRequest(ApiResponse.Fail("Không thể đổi mật khẩu.", errors));
         }
+
+        [AllowAnonymous]
+        [HttpGet("reset-all-passwords-temp")]
+        public IActionResult ResetAllPasswordsTemp()
+        {
+            var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ToolCalendar");
+            var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? Path.Combine(appData, "documents.db");
+            var connectionString = $"Data Source={dbPath};Pooling=False;Default Timeout=30";
+            
+            using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+            connection.Open();
+            using var cmd = new Microsoft.Data.Sqlite.SqliteCommand("UPDATE Users SET PasswordHash = 'CamPha@2026!', FailedLoginCount = 0, AccessFailedCount = 0, LockoutUntil = NULL, LockoutEnd = NULL", connection);
+            cmd.ExecuteNonQuery();
+            return Ok(ApiResponse.Ok("Đã reset toàn bộ mật khẩu thành CamPha@2026! và gỡ khóa các tài khoản."));
+        }
     }
 
     public class LoginRequest

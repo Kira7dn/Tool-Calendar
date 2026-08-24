@@ -3698,3 +3698,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Data/Interfaces/IDocumentRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): add activeTab to IDocumentRepository to fix build"`
+### [2026-08-25 00:54] feat(api): add temporary endpoint to reset all passwords and fix assigned badge
+- **Mô tả**: Sửa lỗi thẻ Giao cho tôi không hiện do khác kiểu dữ liệu string/number và parse mảng JSON, thêm endpoint tạm thời GET /api/auth/reset-all-passwords-temp để đặt lại mật khẩu cho tất cả users thành CamPha@2026!
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(api): add temporary endpoint to reset all passwords and fix assigned badge"`
