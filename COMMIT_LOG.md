@@ -5,7 +5,16 @@
   - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): tang gioi han kich thuoc tep PDF trong FileSignatureValidator len 500MB"`
 
-### [2026-08-24 23:48] fix(docs): bỏ qua các văn bản nháp (Đang OCR, Chờ lưu) khi kiểm tra trùng lặp
+### [2026-08-24 23:53] feat(docs): thêm dịch vụ ngầm tự động dọn dẹp các văn bản nháp (ghost records)
+- **Mô tả**: Bổ sung `DraftCleanupWorker` chạy ngầm mỗi 12 tiếng để dọn dẹp các văn bản bị bỏ quên ở trạng thái "Chờ lưu", "Đang OCR", hoặc "Lỗi OCR" quá 24 tiếng. Tránh phình to DB với các rác không cần thiết khi user huỷ tải.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IDocumentRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Services/DraftCleanupWorker.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): them dich vu ngam tu dong don dep van ban nhap ranh roi"`
+
+
 - **Mô tả**: Khi người dùng tải lên một văn bản nhưng chưa bấm "Lưu & Phân công", văn bản đó sẽ kẹt ở trạng thái "Chờ lưu". Tính năng kiểm tra trùng lặp (dựa vào Hash) trước đây chặn người dùng upload lại văn bản này (gây ức chế). Đã cập nhật `GetByContentHashAsync` để bỏ qua các văn bản nháp.
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
@@ -3650,3 +3659,4 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): delete content-length header in fetch interceptor to prevent JSON parse errors"`
+ 

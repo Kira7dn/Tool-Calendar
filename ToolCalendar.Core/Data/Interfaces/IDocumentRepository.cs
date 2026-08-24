@@ -42,6 +42,12 @@ namespace ToolCalendar.Core.Data.Interfaces
         /// Trả về null nếu không tìm thấy (file chưa từng được upload).
         /// </summary>
         Task<DocumentRecord?> GetByContentHashAsync(string sha256Hash);
+
+        /// <summary>
+        /// Xóa các văn bản nháp (Đang OCR, Chờ lưu, Lỗi OCR) đã tồn tại quá lâu trong hệ thống.
+        /// Trả về số lượng bản ghi đã bị xóa.
+        /// </summary>
+        Task<int> CleanupOldDraftsAsync(TimeSpan olderThan);
     }
 }
 

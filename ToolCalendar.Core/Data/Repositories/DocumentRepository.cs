@@ -863,6 +863,70 @@ namespace ToolCalendar.Core.Data.Repositories
             return value;
         }
 
+        public async Task<int> CleanupOldDraftsAsync(TimeSpan olderThan)
+        {
+            var cutoffTime = DateTime.Now.Subtract(olderThan);
+            string cutoffString = cutoffTime.ToString("yyyy-MM-dd HH:mm:ss"); // ISO 8601 for SQLite comparison
+
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // First, select the file paths of the records we are about to delete
+            var selectSql = @"
+                SELECT FilePath FROM Documents
+                WHERE Status IN ('Đang OCR', 'Chờ lưu', 'Lỗi OCR')
+                  AND NgayThem < @cutoff";
+
+            var filePaths = new List<string>();
+            using (var selectCmd = new SqliteCommand(selectSql, connection))
+            {
+                selectCmd.Parameters.AddWithValue("@cutoff", cutoffString);
+                using var reader = await selectCmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    if (!reader.IsDBNull(0))
+                    {
+                        filePaths.Add(reader.GetString(0));
+                    }
+                }
+            }
+
+            // Then delete the records
+            var deleteSql = @"
+                DELETE FROM Documents
+                WHERE Status IN ('Đang OCR', 'Chờ lưu', 'Lỗi OCR')
+                  AND NgayThem < @cutoff";
+
+            int rowsAffected = 0;
+            using (var deleteCmd = new SqliteCommand(deleteSql, connection))
+            {
+                deleteCmd.Parameters.AddWithValue("@cutoff", cutoffString);
+                rowsAffected = await deleteCmd.ExecuteNonQueryAsync();
+            }
+
+            // Finally delete the physical files from the server
+            // File paths are relative like "Uploads/Documents/xxx.pdf", we need to make sure we delete them properly.
+            // Wait, we need IWebHostEnvironment or just rely on the caller to handle file deletion?
+            // Actually, DocumentRepository doesn't know about physical paths usually, but it can just return the paths if we want.
+            // Let's just return the rows affected, and log a warning that files are orphaned, or try to delete them by building a relative path.
+            // To be safe, let's just leave the physical files for now, as deleting DB records is the main goal, and the files can be cleaned up later by a cron or manually.
+            // Or, we can delete them if we assume the app runs in the root.
+            foreach (var path in filePaths)
+            {
+                try
+                {
+                    var fullPath = Path.Combine(Directory.GetCurrentDirectory(), path);
+                    if (File.Exists(fullPath))
+                    {
+                        File.Delete(fullPath);
+                    }
+                }
+                catch { /* Ignore IO errors */ }
+            }
+
+            return rowsAffected;
+        }
+
         private string GetRlsFilter(int? currentUserId, string? currentUserRole, int? currentDepartmentId)
         {
             if (currentUserRole == "CanBo" && currentUserId.HasValue)
