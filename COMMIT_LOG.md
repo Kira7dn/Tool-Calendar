@@ -3717,3 +3717,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/schemas/document.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(ai): unify ai model to qwen2.5:1.5b for all services"`
 
+### [2026-08-25 01:07] chore(infra): increase ollama container resources for qwen2.5:1.5b
+- **Mô tả**: Tăng giới hạn RAM cho container Ollama từ 1024m lên 1536m và CPU từ 1.0 lên 1.5 để đảm bảo mô hình qwen2.5:1.5b (dung lượng ~986MB) có đủ khoảng trống xử lý Context (cửa sổ ngữ cảnh) mà không bị Out-Of-Memory (OOM) làm sập container.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): increase ollama container resources for 1.5b model"`
+
