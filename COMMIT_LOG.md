@@ -3693,3 +3693,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
   - `ToolCalendar.Core/Data/Repositories/DocumentRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(docs): show my tasks for admin and add filter tabs"`
+### [2026-08-25 00:43] fix(docs): add activeTab to IDocumentRepository
+- **Mô tả**: Fix lỗi build trên server do thiếu khai báo tham số `activeTab` trong interface `IDocumentRepository`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/IDocumentRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): add activeTab to IDocumentRepository to fix build"`
