@@ -131,7 +131,10 @@ export function useDocDetail(docId, onBack) {
     }
   }, [docId])
 
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+
   const handleUpdateStatus = async (newStatus) => {
+    setIsUpdatingStatus(true)
     try {
       const res = await fetch(`/api/documents/${docId}/status`, {
         method: 'PUT',
@@ -146,6 +149,8 @@ export function useDocDetail(docId, onBack) {
       }
     } catch (err) {
       toast.error('Lỗi kết nối máy chủ.')
+    } finally {
+      setIsUpdatingStatus(false)
     }
   }
 
@@ -302,6 +307,7 @@ export function useDocDetail(docId, onBack) {
     fetchRoutings,
     fetchComments,
     handleUpdateStatus,
+    isUpdatingStatus,
     handleRejectRouting,
     executeDelete,
     handleViewEvidence,

@@ -3666,3 +3666,11 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadActions.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): disable nut huy dot tai khi dang luu"`
+### [2026-08-25 00:15] Cập nhật bộ lọc trạng thái và loading UI cho các nút thao tác văn bản
+- **Mô tả**: Tinh gọn bộ lọc trạng thái trong trang Quản lý và Tìm kiếm (chỉ còn Chưa xử lý và Đã xử lý). Bổ sung trạng thái loading khi ấn các nút thao tác văn bản (Tiếp nhận xử lý, Kết thúc văn bản) để tránh double click, ẩn các nút còn lại.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Search.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/hooks/useDocDetail.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): simplify status filter and add button loading state for document actions"`

@@ -67,6 +67,7 @@ export default function DocDetail({ docId, onBack }) {
     fetchRoutings,
     fetchData,
     handleUpdateStatus,
+    isUpdatingStatus,
     handleRejectRouting,
     executeDelete,
     handleViewEvidence,
@@ -199,16 +200,18 @@ export default function DocDetail({ docId, onBack }) {
             (myRouting.status === 'Chưa xử lý' || myRouting.status === 'Đang xử lý') &&
             myRouting.status !== 'Từ chối' &&
             doc.status !== DOCUMENT_STATUS.DA_XU_LY &&
-            doc.status !== 'Hoàn thành' && (
+            doc.status !== 'Hoàn thành' &&
+            !isUpdatingStatus && (
               <button
                 onClick={() => setIsRejectModalOpen(true)}
+                disabled={isUpdatingStatus}
                 className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-black rounded-xl shadow-lg shadow-orange-500/20 transition-colors"
               >
-                HỦY TIẼP NHẬN
+                HỦY TIẾP NHẬN
               </button>
             )}
 
-          {/* Nút TIẾP NHẬN XỬ LÝ — hiện khi doc chưa xử lý, HOẸC user Cấp 2 chưa tiếp nhận */}
+          {/* Nút TIẾP NHẬN XỬ LÝ — hiện khi doc chưa xử lý, HOẶC user Cấp 2 chưa tiếp nhận */}
           {((!isLevel2 &&
             (doc.status === DOCUMENT_STATUS.CHUA_XU_LY ||
               doc.status === DOCUMENT_STATUS.DA_RA_SOAT) &&
@@ -217,9 +220,10 @@ export default function DocDetail({ docId, onBack }) {
             doc.status !== DOCUMENT_STATUS.DA_XU_LY && (
               <button
                 onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DANG_XU_LY)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-blue-600/20"
+                disabled={isUpdatingStatus}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                TIẾP NHẬN XỬ LÝ
+                {isUpdatingStatus ? 'ĐANG XỬ LÝ...' : 'TIẾP NHẬN XỬ LÝ'}
               </button>
             )}
 
@@ -230,29 +234,35 @@ export default function DocDetail({ docId, onBack }) {
               <>
                 <button
                   onClick={() => handleUpdateStatus(DOCUMENT_STATUS.DA_XU_LY)}
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black rounded-xl shadow-lg shadow-amber-500/20"
+                  disabled={isUpdatingStatus}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black rounded-xl shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  KẾT THÚC VĂN BẢN
+                  {isUpdatingStatus ? 'ĐANG XỬ LÝ...' : 'KẾT THÚC VĂN BẢN'}
                 </button>
-                <button
-                  onClick={() => setIsEvidenceModalOpen(true)}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20"
-                >
-                  BÁO CÁO ĐÃ XỬ LÝ
-                </button>
+                {!isUpdatingStatus && (
+                  <button
+                    onClick={() => setIsEvidenceModalOpen(true)}
+                    disabled={isUpdatingStatus}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    BÁO CÁO ĐÃ XỬ LÝ
+                  </button>
+                )}
               </>
             )}
 
-          <button
-            onClick={() => {
-              const token = localStorage.getItem('auth_token')
-              document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
-              window.open(`/api/documents/${docId}/file`, '_blank')
-            }}
-            className="px-3 py-2 bg-red-600 text-white text-[9px] font-black rounded-xl"
-          >
-            XEM PDF
-          </button>
+          {!isUpdatingStatus && (
+            <button
+              onClick={() => {
+                const token = localStorage.getItem('auth_token')
+                document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
+                window.open(`/api/documents/${docId}/file`, '_blank')
+              }}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-red-600/20"
+            >
+              XEM PDF
+            </button>
+          )}
         </div>
       </div>
 

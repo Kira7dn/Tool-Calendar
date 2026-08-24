@@ -123,11 +123,12 @@ export function Search({ filters, onTabChange }) {
               onChange={(e) => setStatus(e.target.value)}
             >
               <option value="">Tất cả trạng thái</option>
-              {Object.values(DOC_STATUS).map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.icon} {s.label}
-                </option>
-              ))}
+              <option value={DOC_STATUS.CHUA_XU_LY.value}>
+                {DOC_STATUS.CHUA_XU_LY.icon} {DOC_STATUS.CHUA_XU_LY.label}
+              </option>
+              <option value={DOC_STATUS.DA_XU_LY.value}>
+                {DOC_STATUS.DA_XU_LY.icon} {DOC_STATUS.DA_XU_LY.label}
+              </option>
             </select>
           </div>
 
