@@ -71,8 +71,8 @@ public static class FileSignatureValidator
         if (!Signatures.TryGetValue(ext, out var validSigs))
             return (false, $"Không có chữ ký nhị phân cho định dạng {ext}.");
 
-        // Đọc tối đa 8 bytes đầu (đủ để kiểm tra tất cả magic bytes)
-        var header = new byte[8];
+        // Đọc tối đa 1024 bytes đầu (đủ để kiểm tra tất cả magic bytes, đặc biệt là PDF có thể lệch)
+        var header = new byte[1024];
         var originalPosition = fileStream.Position;
         var bytesRead = fileStream.Read(header, 0, header.Length);
         fileStream.Seek(originalPosition, SeekOrigin.Begin); // Reset stream về vị trí ban đầu
@@ -80,10 +80,31 @@ public static class FileSignatureValidator
         if (bytesRead < 4)
             return (false, "File bị hỏng hoặc quá nhỏ để xác thực.");
 
-        var isSignatureValid = validSigs.Any(sig =>
-            bytesRead >= sig.Length &&
-            header.Take(sig.Length).SequenceEqual(sig)
-        );
+        bool isSignatureValid = false;
+        
+        if (ext.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            // PDF: "%PDF" (0x25, 0x50, 0x44, 0x46) có thể nằm bất kỳ đâu trong 1024 bytes đầu tiên
+            var pdfMagic = new byte[] { 0x25, 0x50, 0x44, 0x46 };
+            for (int i = 0; i <= bytesRead - pdfMagic.Length; i++)
+            {
+                if (header[i] == pdfMagic[0] && 
+                    header[i+1] == pdfMagic[1] && 
+                    header[i+2] == pdfMagic[2] && 
+                    header[i+3] == pdfMagic[3])
+                {
+                    isSignatureValid = true;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            isSignatureValid = validSigs.Any(sig =>
+                bytesRead >= sig.Length &&
+                header.Take(sig.Length).SequenceEqual(sig)
+            );
+        }
 
         if (!isSignatureValid)
             return (false, $"File '{Path.GetFileName(fileName)}' có nội dung không khớp với định dạng {ext}. Có thể file bị giả mạo extension.");

@@ -5,7 +5,13 @@
   - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(api): tang gioi han kich thuoc tep PDF trong FileSignatureValidator len 500MB"`
 
-### [2026-08-24 23:13] fix(infra): thêm PubkeyAuthentication=no tránh lỗi Too many authentication failures
+### [2026-08-24 23:31] fix(security): cho phép signature %PDF nằm trong 1024 bytes đầu tiên
+- **Mô tả**: Sửa lỗi "File có nội dung không khớp với định dạng .pdf" khi upload các file PDF đã được ký số (ví dụ: .signed.pdf). Các phần mềm ký số thường bọc file PDF vào envelope CMS hoặc thêm BOM ở đầu file, khiến chuỗi `%PDF` bị đẩy lùi xuống dưới. Việc nới lỏng kiểm tra Magic Bytes cho PDF trong 1024 bytes đầu (theo chuẩn Adobe) giúp giải quyết vấn đề này.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Security/FileSignatureValidator.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(security): cho phep signature %PDF nam trong 1024 bytes dau tien de ho tro file ky so"`
+
+
 - **Mô tả**: Khi máy local có nhiều SSH keys, ssh sẽ thử từng key trước khi dùng password, gây lỗi "Too many authentication failures". Đã thêm `-o PubkeyAuthentication=no` vào lệnh ssh trong `deploy_to_vnpt.sh`.
 - **Tệp thay đổi**:
   - `deploy_to_vnpt.sh` (Sửa đổi)
