@@ -1,3 +1,29 @@
+### [2026-08-24 22:52] fix(api): bổ sung RequestSizeLimit cho API upload file và tạo rule tc-rule-bug-logging.md
+- **Mô tả**: Sửa lỗi Kestrel báo lỗi 413 (Payload Too Large) khi upload file PDF dung lượng lớn hoặc tải thư mục bằng cách bổ sung `[RequestSizeLimit(104857600)]` và `[RequestFormLimits(MultipartBodyLengthLimit = 104857600)]` vào `Upload` endpoint của `DocumentsController`. Đồng thời, tạo mới file rule `.agents/rules/tc-rule-bug-logging.md` để quy định bắt buộc ghi nhận mọi lỗi phát hiện được vào sổ tay `tc-rule-bloody-lessons.md`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+  - `.agents/rules/tc-rule-bug-logging.md` (Mới)
+- **Lệnh git commit**: `git commit -m "fix(api): them RequestSizeLimit 100MB cho upload API va tao rule bug logging"`
+
+### [2026-08-24 22:45] docs(agents): bổ sung bài học về giới hạn dung lượng tải tệp/thư mục vào tc-rule-bloody-lessons.md
+- **Mô tả**: Bổ sung chuyên mục số 8 về "Upload File & Tải thư mục" vào tài liệu bài học máu xương. Cụ thể giải thích nguyên nhân gây ra lỗi HTTP 413 Payload Too Large (lỗi nhanh) khi tải file hoặc thư mục dung lượng lớn, bao gồm: giới hạn `client_max_body_size` mặc định 1MB của Nginx và giới hạn `MaxRequestBodySize` ~30MB của ASP.NET Core Kestrel. Đã note lại cách khắc phục bằng cấu hình Nginx và các Attribute Controller.
+- **Tệp thay đổi**:
+  - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "docs(agents): bo sung bai hoc ve gioi han dung luong tai file vao tc-rule-bloody-lessons"`
+
+### [2026-08-24 22:25] docs(agents): bổ sung bài học về Python AI Service vào tc-rule-bloody-lessons.md
+- **Mô tả**: Bổ sung chuyên mục số 6 về "Dịch vụ AI (Python AI Service)" vào tài liệu bài học máu xương, bao gồm 6 lỗi nghiêm trọng: Tắt hoàn toàn OCR, Fast-path vô hiệu hoá RAG, extract-metadata bằng nguyên văn gây chậm 40-60s, Chunker tự ý thay đổi chunk_size phá vỡ hợp đồng API, lỗi lệch Timezone do Docker container chạy UTC, và lỗi đệ quy vô hạn trong Chunker.
+- **Tệp thay đổi**:
+  - `.agents/rules/tc-rule-bloody-lessons.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "docs(agents): bo sung bai hoc ve python ai service vao tc-rule-bloody-lessons"`
+
+### [2026-08-24 22:23] docs(agents): thêm tài liệu bài học máu xương tc-rule-bloody-lessons.md
+- **Mô tả**: Tổng hợp tất cả các lỗi ngớ ngẩn và sai lầm chết người (như xoá container Nginx dùng chung, rò rỉ RAM, lỗi schema SQLite, proxy buffering SSE...) từ trước tới nay vào một rule file mới `.agents/rules/tc-rule-bloody-lessons.md` để các AI Agent đời sau không lặp lại. Cập nhật thêm liên kết vào `AGENTS.md`.
+- **Tệp thay đổi**:
+  - `.agents/rules/tc-rule-bloody-lessons.md` (Mới)
+  - `.agents/AGENTS.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "docs(agents): them tai lieu bai hoc mau xuong tc-rule-bloody-lessons"`
+
 ### [2026-08-23 21:15] fix(ocr): P0 Hotfix python-ai-service — 6 lỗi nghiêm trọng
 - **Mô tả**: Sửa 6 nhóm lỗi quan trọng nhất (giai đoạn P0) dựa trên tài liệu phân tích `docs/legacy/PYTHON-AI-SERVICE-ANALYSIS.md`. Giải quyết: (1) OCR bị tắt hoàn toàn khiến PDF scan treo vĩnh viễn, (2) RAG pipeline bị bypass với đa số công văn, (3) extract-metadata không giới hạn input gây latency 40-60s, (4) `/api/cache/clear` crash 100% do AttributeError, (5) date_parser dùng UTC sai múi giờ Việt Nam, (6) chunker ghi đè chunk_size caller phá hợp đồng.
 - **Tệp thay đổi**:

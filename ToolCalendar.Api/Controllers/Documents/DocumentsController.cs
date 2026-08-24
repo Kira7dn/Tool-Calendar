@@ -116,6 +116,8 @@ namespace ToolCalendar.Api.Controllers.Documents
         [Authorize(Roles = "Admin,VanThu")]
         [HttpPost("upload")]
         [EnableRateLimiting("upload-limit")] // Tầng 4: tối đa 200 file/phút/user
+        [RequestSizeLimit(104857600)] // Cho phép tối đa 100MB cho 1 request
+        [RequestFormLimits(MultipartBodyLengthLimit = 104857600)]
         public async Task<IActionResult> Upload(IFormFile file)
         {
             // Lấy userId của người đang đăng nhập từ JWT claims
