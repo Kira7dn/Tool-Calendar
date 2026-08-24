@@ -3723,3 +3723,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `docker-compose.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): increase ollama container resources for 1.5b model"`
 
+### [2026-08-25 01:11] chore(infra): bump ollama ram to 2.5gb
+- **Mô tả**: Tăng giới hạn RAM cho Ollama lên 2560m (2.5GB) theo yêu cầu để xử lý mượt mà hơn.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): bump ollama ram limit to 2560m"`
+
