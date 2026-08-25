@@ -3802,3 +3802,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Data/Repositories/DocumentRoutingRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(db): fix SQL parameter case-sensitivity in AreAllRoutingsFinishedAsync"`
+### [2026-08-25 09:21] fix(docs): hide submit evidence button after successful submission
+- **Mô tả**: Ẩn nút BÁO CÁO ĐÃ XỬ LÝ sau khi nộp kết quả thành công để tránh nhầm lẫn
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): hide submit evidence button after successful submission"`

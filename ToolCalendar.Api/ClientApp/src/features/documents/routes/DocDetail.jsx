@@ -239,15 +239,17 @@ export default function DocDetail({ docId, onBack }) {
                 >
                   {isUpdatingStatus ? 'ĐANG XỬ LÝ...' : 'KẾT THÚC VĂN BẢN'}
                 </button>
-                {!isUpdatingStatus && (
-                  <button
-                    onClick={() => setIsEvidenceModalOpen(true)}
-                    disabled={isUpdatingStatus}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    BÁO CÁO ĐÃ XỬ LÝ
-                  </button>
-                )}
+                {!isUpdatingStatus &&
+                  (!doc.evidencePaths || doc.evidencePaths === '[]') &&
+                  (!doc.evidenceNotes || doc.evidenceNotes === '') && (
+                    <button
+                      onClick={() => setIsEvidenceModalOpen(true)}
+                      disabled={isUpdatingStatus}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      BÁO CÁO ĐÃ XỬ LÝ
+                    </button>
+                  )}
               </>
             )}
 
