@@ -67,7 +67,7 @@ async def lifespan(app: FastAPI):
         logger.warning("Model warm-up failed: %s", str(e))
 
     # Khởi động các services
-    _ollama_client = OllamaClient()
+    _ollama_client = OllamaClient(base_url=settings.ollama_url)
     _chunker = SmartTextChunker(chunk_size=800, chunk_overlap=100)
     _compressor = ContextCompressor(
         embedder=_batch_embedder,

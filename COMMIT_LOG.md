@@ -3812,3 +3812,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): use Google Search for AI reference fallback links"`
+### [2026-08-25 09:33] fix(ai): use configured Ollama URL instead of hardcoded host.docker.internal
+- **Mô tả**: Fix lỗi Python AI Service gọi nhầm vào `host.docker.internal:11434` thay vì `ollama:11434` dẫn tới lỗi 404, khiến việc bóc tách từ khoá bằng QWEN bị thất bại.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): use configured Ollama URL instead of hardcoded host.docker.internal"`
