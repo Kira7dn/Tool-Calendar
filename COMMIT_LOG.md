@@ -3780,3 +3780,12 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `docs/legacy/ARCHITECTURE.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "docs(ai): update documentation to reflect qwen2.5:3b upgrade"`
 
+### [2026-08-25 08:44] chore(backend): remove remaining hardcoded qwen2.5:0.5b and 1.5b references
+- **Mô tả**: Thay thế toàn bộ các biến hardcode model cũ (0.5b, 1.5b) còn sót lại trong các file C# (PythonAiService, DocumentProcessingService, AiReferenceService) thành `qwen2.5:3b` để đảm bảo hệ thống thống nhất hoàn toàn trên một model duy nhất.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(backend): remove remaining hardcoded qwen2.5:0.5b and 1.5b references"`
+

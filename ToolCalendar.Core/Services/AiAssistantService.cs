@@ -115,7 +115,7 @@ namespace ToolCalendar.Core.Services
             }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể load memories: {Msg}", ex.Message); }
 
-            // 0. Regex Fast-Path cho các câu hỏi tìm kiếm số công văn cụ thể (tránh việc LLM 1.5b bị ảo giác)
+            // 0. Regex Fast-Path cho các câu hỏi tìm kiếm số công văn cụ thể (tránh việc LLM 3b phải xử lý tốn thời gian)
             var matchSearch = System.Text.RegularExpressions.Regex.Match(message, @"(?:tìm|tra cứu|kiểm tra).*?(?:công văn|văn bản).*?(?:số|mã)\s*([a-zA-Z0-9/\-]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
             if (matchSearch.Success)
             {

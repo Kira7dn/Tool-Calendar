@@ -11,10 +11,10 @@ namespace ToolCalendar.Services
         Task<ChunkResponse> ChunkDocumentAsync(ChunkRequest request);
         Task<BatchEmbedResponse> BatchEmbedAsync(BatchEmbedRequest request);
         Task<GenerateQAResponse> GenerateQAAsync(GenerateQARequest request);
-        Task<HyDEResponse?> HyDEAsync(string question, string model = "qwen2.5:0.5b");
-        Task<DocSummaryResult?> DocSummaryAsync(string text, string docTitle, string model = "qwen2.5:0.5b");
-        Task<ContextualChunkResult?> ContextualChunkAsync(string chunkText, string docTitle, string docSummary, string model = "qwen2.5:0.5b");
-        Task<DocumentMetadataResult?> ExtractMetadataAsync(string text, List<string> deadlineKeywords, List<string> excludeKeywords, string model = "qwen2.5:0.5b");
+        Task<HyDEResponse?> HyDEAsync(string question, string model = "qwen2.5:3b");
+        Task<DocSummaryResult?> DocSummaryAsync(string text, string docTitle, string model = "qwen2.5:3b");
+        Task<ContextualChunkResult?> ContextualChunkAsync(string chunkText, string docTitle, string docSummary, string model = "qwen2.5:3b");
+        Task<DocumentMetadataResult?> ExtractMetadataAsync(string text, List<string> deadlineKeywords, List<string> excludeKeywords, string model = "qwen2.5:3b");
     }
 
     public class PythonAiService : IPythonAiService
@@ -83,7 +83,7 @@ namespace ToolCalendar.Services
             return result ?? new GenerateQAResponse();
         }
 
-        public async Task<HyDEResponse?> HyDEAsync(string question, string model = "qwen2.5:0.5b")
+        public async Task<HyDEResponse?> HyDEAsync(string question, string model = "qwen2.5:3b")
         {
             try
             {
@@ -98,7 +98,7 @@ namespace ToolCalendar.Services
             }
         }
 
-        public async Task<DocSummaryResult?> DocSummaryAsync(string text, string docTitle, string model = "qwen2.5:0.5b")
+        public async Task<DocSummaryResult?> DocSummaryAsync(string text, string docTitle, string model = "qwen2.5:3b")
         {
             try
             {
@@ -113,7 +113,7 @@ namespace ToolCalendar.Services
             }
         }
 
-        public async Task<ContextualChunkResult?> ContextualChunkAsync(string chunkText, string docTitle, string docSummary, string model = "qwen2.5:0.5b")
+        public async Task<ContextualChunkResult?> ContextualChunkAsync(string chunkText, string docTitle, string docSummary, string model = "qwen2.5:3b")
         {
             try
             {
@@ -128,7 +128,7 @@ namespace ToolCalendar.Services
             }
         }
 
-        public async Task<DocumentMetadataResult?> ExtractMetadataAsync(string text, List<string> deadlineKeywords, List<string> excludeKeywords, string model = "qwen2.5:0.5b")
+        public async Task<DocumentMetadataResult?> ExtractMetadataAsync(string text, List<string> deadlineKeywords, List<string> excludeKeywords, string model = "qwen2.5:3b")
         {
             try
             {
@@ -233,7 +233,7 @@ namespace ToolCalendar.Services
         public string Text { get; set; } = string.Empty;
 
         [JsonPropertyName("model")]
-        public string Model { get; set; } = "qwen2.5:0.5b";
+        public string Model { get; set; } = "qwen2.5:3b";
     }
 
     public class GenerateQAResponse
