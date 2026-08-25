@@ -95,12 +95,18 @@ public class DocumentUploadService : IDocumentUploadService
         }
         catch
         {
-            scanResult = ClamAvScanResult.ServiceUnavailable; // Fail-open
+            scanResult = ClamAvScanResult.ServiceUnavailable; // Fail-closed
         }
 
         if (!scanResult.IsClean)
         {
             if (File.Exists(quarantinePath)) File.Delete(quarantinePath);
+            
+            if (scanResult.IsServiceUnavailable)
+            {
+                return UploadResult.Failure("❌ Hệ thống quét virus đang bảo trì hoặc quá tải. Vui lòng thử lại sau.");
+            }
+            
             return UploadResult.Failure(
                 $"❌ File bị từ chối: phát hiện mã độc ({scanResult.VirusName}). Liên hệ quản trị viên.");
         }

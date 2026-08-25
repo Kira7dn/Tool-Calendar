@@ -28,7 +28,7 @@ public class ClamAvService : IClamAvService
         if (!File.Exists(filePath))
         {
             _logger.LogWarning("[ClamAV] File không tồn tại để quét: {Path}", filePath);
-            return ClamAvScanResult.Clean; // Không xử lý được → cho qua (fail-open)
+            return ClamAvScanResult.ServiceUnavailable; // Fail-closed
         }
 
         try

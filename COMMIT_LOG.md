@@ -1,3 +1,11 @@
+### [2026-08-25 10:43] fix(security): enforce fail-closed policy for ClamAV virus scanning
+- **Mô tả**: Sửa lỗi Fail-Open của ClamAV. Thay đổi logic trong `IClamAvService.cs` và `ClamAvService.cs` để khi ClamAV service sập hoặc lỗi, hệ thống sẽ trả về lỗi (Fail-Closed) thay vì cho phép file lọt qua. Cập nhật `DocumentUploadService.cs` trả về thông báo lỗi tường minh "Hệ thống quét virus đang bảo trì hoặc quá tải".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Security/IClamAvService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/Security/ClamAvService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/DocumentUploadService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(security): enforce fail-closed policy for ClamAV virus scanning"`
+
 ### [2026-08-24 23:15] fix(api): tăng giới hạn kích thước tệp PDF trong FileSignatureValidator lên 500MB
 - **Mô tả**: Phát hiện ra ngoài giới hạn Kestrel và Nginx, hệ thống còn chặn upload tại `FileSignatureValidator.cs` với cấu hình cứng `MaxFileSizes` giới hạn tệp `.pdf` ở mức 50MB. Đã sửa giới hạn này lên 500MB.
 - **Tệp thay đổi**:
