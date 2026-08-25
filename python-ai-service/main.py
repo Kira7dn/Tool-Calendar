@@ -22,6 +22,7 @@ from rag.reranker import get_reranker  # Khoj
 
 # Import the new main API router
 from api.router import api_router
+from config import get_settings
 
 from exceptions import AiClientError, AiServerError
 from api.exception_handler import register_exception_handlers
@@ -47,6 +48,8 @@ _docling = get_docling_extractor()  # Docling (lazy)
 async def lifespan(app: FastAPI):
     """Startup / Shutdown lifecycle — học từ FastAPI lifespan pattern"""
     global _batch_embedder, _ollama_client, _chunker, _compressor
+    
+    settings = get_settings()
 
     logger.info("=== Tool-Calendar AI Service v3.0 Starting ===")
 

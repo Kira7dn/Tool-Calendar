@@ -3817,3 +3817,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): use configured Ollama URL instead of hardcoded host.docker.internal"`
+### [2026-08-25 09:34] fix(ai): add missing settings import in main.py
+- **Mô tả**: Fix lỗi undefined variable `settings` trong `main.py` sau khi sửa lỗi Ollama URL.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): add missing settings import in main.py"`
