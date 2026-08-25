@@ -3796,3 +3796,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): force full sentence when generating reminder tag"`
  
+
+### [2026-08-25 09:16] fix(db): fix SQL parameter case-sensitivity in AreAllRoutingsFinishedAsync
+- **Mô tả**: Sửa lỗi "Must add values for the following parameters: @documentId" khi bấm Hoàn thành văn bản. Nguyên nhân do lệnh SQL dùng `@documentId` chữ thường, nhưng code C# lại bind `@DocumentId` (viết hoa chữ D). SQLite binding phân biệt hoa thường nên báo thiếu tham số.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/DocumentRoutingRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(db): fix SQL parameter case-sensitivity in AreAllRoutingsFinishedAsync"`

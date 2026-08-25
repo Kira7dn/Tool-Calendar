@@ -214,7 +214,7 @@ namespace ToolCalendar.Data.Repositories
             await connection.OpenAsync();
             string sql = @"
                 SELECT COUNT(*) FROM DocumentRoutings
-                WHERE DocumentId = @documentId AND Status NOT IN ('Đã xử lý', 'Hoàn thành', 'Từ chối')";
+                WHERE DocumentId = @DocumentId AND Status NOT IN ('Đã xử lý', 'Hoàn thành', 'Từ chối')";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@DocumentId", documentId);
             var count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
