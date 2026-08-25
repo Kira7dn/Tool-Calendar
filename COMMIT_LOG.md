@@ -3822,3 +3822,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/main.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): add missing settings import in main.py"`
+### [2026-08-25 09:38] feat(ai): improve prompt for extracting keywords
+- **Mô tả**: Sửa lại câu lệnh Prompt cho QWEN để bỏ qua phần tiêu đề hành chính (như Sở Y tế) và tập trung vào trích yếu / căn cứ pháp lý để lấy từ khóa chuẩn xác hơn.
+- **Tệp thay đổi**:
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): improve prompt for extracting keywords"`

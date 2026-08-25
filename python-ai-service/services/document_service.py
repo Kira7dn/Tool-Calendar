@@ -164,14 +164,14 @@ class DocumentService:
         if not text_sample:
             text_sample = request.doc_title
 
-        prompt = f"""Bạn là AI chuyên trích xuất từ khóa tìm kiếm (Search Query Generator). 
-Nhiệm vụ của bạn là đọc văn bản/câu hỏi sau và trích xuất ra 1-3 TỪ KHÓA CỐT LÕI NHẤT để tra cứu trên trang Thư viện Pháp luật.
+        prompt = f"""Bạn là chuyên gia phân tích pháp lý. Nhiệm vụ của bạn là đọc nội dung công văn dưới đây và rút trích ra MỘT HOẶC HAI TỪ KHÓA QUAN TRỌNG NHẤT dùng để tra cứu trên Thư viện Pháp luật.
 QUY TẮC BẮT BUỘC:
-- Tuyệt đối không đặt câu hỏi.
-- Từ khóa ngắn gọn, tập trung vào danh từ, số hiệu, tên luật pháp.
-- Mỗi từ khóa trên 1 dòng, KHÔNG đánh số thứ tự, KHÔNG giải thích.
-Văn bản/Câu hỏi: {text_sample}
-Từ khóa:"""
+- BỎ QUA các phần tiêu đề hành chính (như: UBND Tỉnh, Sở Y tế, Bộ Y tế, Cộng hòa xã hội...).
+- TẬP TRUNG vào phần "Trích yếu" (V/v...), phần "Căn cứ" (Luật, Nghị định, Thông tư...) hoặc nội dung chính.
+- Từ khóa phải là tên của một quy định pháp luật, số hiệu văn bản, hoặc chủ đề chính của công văn (VD: Luật Khám bệnh chữa bệnh, Thông tư 22/2023, Quản lý chất thải y tế...).
+- Tuyệt đối không sinh ra câu dài. Mỗi từ khóa trên 1 dòng. KHÔNG đánh số thứ tự, KHÔNG gạch đầu dòng, KHÔNG giải thích.
+Văn bản: {text_sample}
+Từ khóa tìm kiếm:"""
         try:
             messages = [{"role": "user", "content": prompt}]
             ai_text = await self.ollama_client.chat(request.model, messages, format=None)
