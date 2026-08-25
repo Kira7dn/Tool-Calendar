@@ -3807,3 +3807,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(docs): hide submit evidence button after successful submission"`
+### [2026-08-25 09:26] fix(ai): use Google Search for AI reference fallback links
+- **Mô tả**: Thay thế link tìm kiếm cứng của các trang (bị lỗi 404 hoặc không ra kết quả) bằng link Google Search với toán tử `site:` để tăng độ chính xác.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiReferenceService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): use Google Search for AI reference fallback links"`

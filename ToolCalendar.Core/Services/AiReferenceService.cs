@@ -207,31 +207,39 @@ namespace ToolCalendar.Core.Services
         private static List<DocumentReference> BuildFallbackLinks(List<string> keywords)
         {
             var refs = new List<DocumentReference>();
-            var keyword = keywords.Count > 0 ? keywords[0] : "van ban phap luat";
+            var keyword = keywords.Count > 0 ? keywords[0] : "văn bản pháp luật";
             var encoded = HttpUtility.UrlEncode(keyword);
 
             refs.Add(new DocumentReference
             {
-                Title = $"Tim \"{keyword}\" tren Thu vien Phap luat",
-                Url = $"https://thuvienphapluat.vn/tim-van-ban.aspx?keyword={encoded}",
-                Snippet = "Tra cuu van ban phap luat, quyet dinh, nghi dinh, thong tu lien quan.",
+                Title = $"Tìm \"{keyword}\" trên Thư viện Pháp luật (qua Google)",
+                Url = $"https://www.google.com/search?q=site:thuvienphapluat.vn+{encoded}",
+                Snippet = "Tra cứu văn bản pháp luật, quyết định, nghị định liên quan.",
                 Source = "thuvienphapluat.vn"
             });
 
             refs.Add(new DocumentReference
             {
-                Title = $"Tim \"{keyword}\" tren Cong VBPQ Chinh phu",
-                Url = $"https://vanban.chinhphu.vn/?pageid=27160&search={encoded}",
-                Snippet = "He thong van ban phap luat cua Chinh phu Viet Nam.",
+                Title = $"Tìm \"{keyword}\" trên Cổng VBPQ Chính phủ (qua Google)",
+                Url = $"https://www.google.com/search?q=site:vanban.chinhphu.vn+{encoded}",
+                Snippet = "Hệ thống văn bản pháp luật của Chính phủ Việt Nam.",
                 Source = "vanban.chinhphu.vn"
             });
 
             refs.Add(new DocumentReference
             {
-                Title = $"Tim \"{keyword}\" tren Bo Tu phap",
-                Url = $"https://moj.gov.vn/Pages/van-ban-phap-luat.aspx?search={encoded}",
-                Snippet = "Van ban phap luat chinh thuc cua Bo Tu phap.",
-                Source = "moj.gov.vn"
+                Title = $"Tìm \"{keyword}\" trên LuatVietnam (qua Google)",
+                Url = $"https://www.google.com/search?q=site:luatvietnam.vn+{encoded}",
+                Snippet = "Hệ thống tra cứu văn bản pháp luật LuatVietnam.",
+                Source = "luatvietnam.vn"
+            });
+
+            refs.Add(new DocumentReference
+            {
+                Title = $"Tìm kiếm \"{keyword}\" chung trên Google",
+                Url = $"https://www.google.com/search?q={encoded}",
+                Snippet = "Tìm kiếm thông tin, tin tức tổng hợp trên toàn bộ Internet.",
+                Source = "google.com"
             });
 
             return refs;
