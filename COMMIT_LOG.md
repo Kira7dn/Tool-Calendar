@@ -3789,3 +3789,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(backend): remove remaining hardcoded qwen2.5:0.5b and 1.5b references"`
 
+
+### [2026-08-25 08:58] fix(ai): force full sentence when generating reminder tag
+- **Mô tả**: Sửa lỗi AI trả lời cụt lủn (ví dụ chỉ nói "Dạ báo cáo sếp," rồi sinh luôn thẻ `[REMINDER|...]`). Do frontend đã ẩn thẻ `[REMINDER]` nên người dùng lầm tưởng AI đang bị treo hoặc chưa nói xong. Đã thêm hướng dẫn vào System Prompt để bắt AI phải trả lời trọn vẹn một câu xác nhận rồi mới xuất thẻ. Đồng thời xóa bộ nhớ đệm `AiSemanticCache` trên server để reset các câu trả lời lỗi cũ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): force full sentence when generating reminder tag"`
+ 
