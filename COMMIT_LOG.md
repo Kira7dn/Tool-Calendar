@@ -3766,3 +3766,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/SemanticRouterService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "perf(ai): upgrade ollama model to qwen2.5:3b and optimize semantic router"`
 
+### [2026-08-25 08:37] chore(python-ai): update model hardcodes to qwen2.5:3b
+- **Mô tả**: Khi nâng cấp model từ 1.5b lên 3b, vô tình xóa mất bản 1.5b trên server dẫn tới Python AI Service (OCR/Trích xuất dữ liệu) có nguy cơ bị lỗi do vẫn bị hardcode model cũ. Đã đồng bộ toàn bộ model name trong Python AI Service sang `qwen2.5:3b`.
+- **Tệp thay đổi**:
+  - `python-ai-service/schemas/document.py` (Sửa đổi)
+  - `python-ai-service/schemas/llm.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(python-ai): update model hardcodes to qwen2.5:3b"`
+
