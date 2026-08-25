@@ -295,16 +295,17 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             foreach (var msg in history)
                 messages.Add(new { role = msg.Role, content = msg.Content });
 
+            string? routedToolName = null;
             // 2. Semantic Routing (Tool Hint)
             try
             {
                 if (questionVector != null && questionVector.Length > 0)
                 {
-                    string? routedTool = await _semanticRouter.RouteQueryAsync(questionVector);
-                    if (!string.IsNullOrEmpty(routedTool))
+                    routedToolName = await _semanticRouter.RouteQueryAsync(questionVector);
+                    if (!string.IsNullOrEmpty(routedToolName))
                     {
-                        _logger.LogInformation("[AiAssistant] SEMANTIC ROUTING HIT: {Tool}", routedTool);
-                        messages.Add(new { role = "system", content = $"[LỆNH BẮT BUỘC TỪ HỆ THỐNG] Câu hỏi này yêu cầu tra cứu dữ liệu thực tế. Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ BỊA RA SỐ LIỆU. Bạn PHẢI GỌI CÔNG CỤ (TOOL) '{routedTool}' để lấy kết quả. Hãy trích xuất các tham số (như status, thoi_han) từ câu hỏi để truyền vào công cụ này." });
+                        _logger.LogInformation("[AiAssistant] SEMANTIC ROUTING HIT: {Tool}", routedToolName);
+                        messages.Add(new { role = "system", content = $"[LỆNH BẮT BUỘC TỪ HỆ THỐNG] Câu hỏi này yêu cầu tra cứu dữ liệu thực tế. Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ BỊA RA SỐ LIỆU. Bạn PHẢI GỌI CÔNG CỤ (TOOL) '{routedToolName}' để lấy kết quả. Hãy trích xuất các tham số (như status, thoi_han) từ câu hỏi để truyền vào công cụ này." });
                     }
                 }
             }
@@ -402,10 +403,29 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
 
                 if (!hasToolCalls)
                 {
-                    // AI đã sinh text → exit loop
-                    finalTextNoStream = msgNode.GetProperty("content").GetString()?.Trim() ?? "";
-                    foundFinalResponse = true;
-                    break;
+                    if (hop == 0 && routedToolName == "search_documents_by_condition")
+                    {
+                        _logger.LogWarning("[AiAssistant] LLM (Qwen) phớt lờ tool. Ép gọi thủ công công cụ {Tool}.", routedToolName);
+                        hasToolCalls = true;
+                        
+                        string status = "";
+                        string lowerMsg = message.ToLower();
+                        if (lowerMsg.Contains("chưa xử lý") || lowerMsg.Contains("chưa được xử lý")) status = "Chưa xử lý";
+                        else if (lowerMsg.Contains("đang xử lý")) status = "Đang xử lý";
+                        else if (lowerMsg.Contains("hoàn thành") || lowerMsg.Contains("xong")) status = "Hoàn thành";
+                        
+                        string manualArgs = $"{{\"status\": \"{status}\", \"thoi_han\": \"\", \"keyword\": \"\"}}";
+                        string fakeToolJson = $"[{{\"function\": {{\"name\": \"{routedToolName}\", \"arguments\": {manualArgs}}} }}]";
+                        using var fakeDoc = JsonDocument.Parse(fakeToolJson);
+                        toolCallsNode = fakeDoc.RootElement.Clone();
+                    }
+                    else
+                    {
+                        // AI đã sinh text → exit loop
+                        finalTextNoStream = msgNode.GetProperty("content").GetString()?.Trim() ?? "";
+                        foundFinalResponse = true;
+                        break;
+                    }
                 }
 
                 // Có tool calls → xử lý từng tool

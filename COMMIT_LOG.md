@@ -3753,3 +3753,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): force strict tool usage for Qwen 1.5b and reduce temperature to 0"`
 
+### [2026-08-25 08:24] feat(ai): implement manual tool execution fallback for qwen 1.5b
+- **Mô tả**: Qwen 2.5 1.5B quá nhỏ nên dù đã đặt temperature=0 và ép lệnh mạnh, thi thoảng nó vẫn cố chấp sinh ra câu trả lời hội thoại ("Dạ, em báo cáo sếp...") thay vì trả về mảng `tool_calls` JSON. Giải pháp là thiết kế thêm lớp đánh chặn thủ công: nếu Semantic Router đã bắt được ý định gọi `search_documents_by_condition` (score > 0.8) mà Qwen vẫn bướng không chịu trả về JSON `tool_calls`, backend C# sẽ can thiệp, tự động trích xuất regex trạng thái (Chưa xử lý/Đang xử lý/Hoàn thành) và giả lập tạo JSON Tool Call để ép hệ thống gọi Tool thành công.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): implement manual tool execution fallback for qwen 1.5b"`
+
