@@ -304,7 +304,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
                     if (!string.IsNullOrEmpty(routedTool))
                     {
                         _logger.LogInformation("[AiAssistant] SEMANTIC ROUTING HIT: {Tool}", routedTool);
-                        messages.Add(new { role = "system", content = $"GỢI Ý TỪ HỆ THỐNG: Dựa trên ý định của người dùng, bạn HÃY ƯU TIÊN sử dụng công cụ '{routedTool}'. Đảm bảo trích xuất đúng các tham số (ví dụ: status, thoi_han) từ câu hỏi trước khi gọi." });
+                        messages.Add(new { role = "system", content = $"[LỆNH BẮT BUỘC TỪ HỆ THỐNG] Câu hỏi này yêu cầu tra cứu dữ liệu thực tế. Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ BỊA RA SỐ LIỆU. Bạn PHẢI GỌI CÔNG CỤ (TOOL) '{routedTool}' để lấy kết quả. Hãy trích xuất các tham số (như status, thoi_han) từ câu hỏi để truyền vào công cụ này." });
                     }
                 }
             }
@@ -332,8 +332,8 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
 
                 // Nếu đây là hop cuối cùng, bỏ tools để buộc AI sinh text
                 var requestBody = isLastHop
-                    ? (object)new { model = _modelName, messages = messages, stream = false }
-                    : (object)new { model = _modelName, messages = messages, stream = false, tools = tools };
+                    ? (object)new { model = _modelName, messages = messages, stream = false, options = new { temperature = 0.0 } }
+                    : (object)new { model = _modelName, messages = messages, stream = false, tools = tools, options = new { temperature = 0.0 } };
 
                 HttpResponseMessage? response1 = null;
                 bool connectionError = false;

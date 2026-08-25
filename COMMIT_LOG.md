@@ -3747,3 +3747,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): do not cache error fallback messages in AiSemanticCache"`
 
+### [2026-08-25 08:13] fix(ai): force strict tool usage for Qwen 1.5b and reduce temperature to 0
+- **Mô tả**: Sửa lỗi AI bịa đặt số liệu (ảo giác 54 văn bản) thay vì gọi tool. Qwen 1.5b có số lượng tham số nhỏ nên thường phớt lờ system prompt nếu prompt không đủ nghiêm khắc. Đã sửa lại câu lệnh gợi ý từ Semantic Router thành mệnh lệnh BẮT BUỘC gọi tool, đồng thời thêm `temperature = 0.0` để AI ưu tiên tính logic và độ chính xác tuyệt đối.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): force strict tool usage for Qwen 1.5b and reduce temperature to 0"`
+
