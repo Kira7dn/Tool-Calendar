@@ -25,7 +25,11 @@ namespace ToolCalendar.Core.Services
                 "tình hình xử lý", 
                 "công văn đến hạn",
                 "hôm nay có bao nhiêu",
-                "có văn bản nào quá hạn không"
+                "có văn bản nào quá hạn không",
+                "có bao nhiêu văn bản",
+                "tổng số văn bản chưa được xử lý",
+                "đếm số công văn",
+                "liệt kê các văn bản"
             }}
         };
 
@@ -97,8 +101,8 @@ namespace ToolCalendar.Core.Services
 
             _logger.LogInformation("[SemanticRouter] Điểm tương đồng lớn nhất: {Score} (Route: {Route})", bestScore, bestRoute);
 
-            // Ngưỡng 0.8 để xác định ý định
-            if (bestScore >= 0.80f)
+            // Ngưỡng 0.68 để xác định ý định (tăng độ nhạy cho các câu hỏi biến thể)
+            if (bestScore >= 0.68f)
             {
                 return bestRoute;
             }

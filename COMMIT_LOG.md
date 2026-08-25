@@ -3759,3 +3759,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ai): implement manual tool execution fallback for qwen 1.5b"`
 
+### [2026-08-25 08:29] perf(ai): upgrade ollama model to qwen2.5:3b and optimize semantic router
+- **Mô tả**: Nâng cấp từ model 1.5b lên 3b vì RAM máy chủ VNPT vẫn dư dả (còn 4.7GB trống) trong khi 1.5b quá nhỏ để có thể hiểu và thực thi các JSON function calls (Tool calling) một cách ổn định. Đồng thời mở rộng thêm các mẫu câu vào Semantic Router và giảm điểm threshold xuống 0.68 để AI bắt ý định người dùng (công văn đến hạn, văn bản quá hạn) nhạy bén hơn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/SemanticRouterService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ai): upgrade ollama model to qwen2.5:3b and optimize semantic router"`
+

@@ -60,8 +60,8 @@ namespace ToolCalendar.Core.Services
             ILogger<AiAssistantService> logger)
         {
             _httpClient = httpClient;
-            _ollamaUrl = config.GetValue<string>("Ollama:ChatUrl") ?? "http://127.0.0.1:11434/api/chat";
-            _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:1.5b";
+            _ollamaUrl = config.GetValue<string>("Ollama:Url") ?? "http://ollama:11434/api/chat";
+            _modelName = config.GetValue<string>("Ollama:Model") ?? "qwen2.5:3b";
             _reminderRepo = reminderRepo;
             _userRepo = userRepo;
             _chatHistoryRepo = chatHistoryRepo;
