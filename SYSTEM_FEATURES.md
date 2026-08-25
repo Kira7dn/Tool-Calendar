@@ -23,7 +23,7 @@ Tài liệu này là **"Bộ não"** của hệ thống. AI Agent phải đọc 
 | **Embedding** | `paraphrase-multilingual-MiniLM-L12-v2` | 384 dims, CPU |
 | **Rerank** | `cross-encoder/ms-marco-MiniLM-L-2-v2` | CrossEncoder 2-stage |
 | **Extract** | Docling + pypdf | table/heading-aware parse |
-| **LLM** | Ollama `qwen2.5:1.5b` / `qwen2.5:3b` | chạy trên **host**, không container |
+| **LLM** | Ollama `qwen2.5:3b` | chạy trên **host**, không container |
 | **AV** | ClamAV | container riêng, TCP INSTREAM port 3310 |
 | **Gateway** | Nginx alpine | compose độc lập (`gateway/`), TLS wildcard `*.vpdtcampha.vn` |
 

@@ -89,7 +89,7 @@ graph TB
 | Embedding | sentence-transformers `paraphrase-multilingual-MiniLM-L12-v2` | 384 dims | CPU, batch embedder |
 | Rerank | `cross-encoder/ms-marco-MiniLM-L-2-v2` | ~40MB | CrossEncoder 2-stage retrieval |
 | Extract | Docling + pypdf | ≥2.0 | table/heading-aware parse |
-| LLM | Ollama `qwen2.5:1.5b` / `qwen2.5:3b` | — | chạy trên **host**, không containerized |
+| LLM | Ollama `qwen2.5:3b` | — | chạy trên **host**, không containerized |
 | AV | ClamAV | latest | container riêng, TCP INSTREAM |
 | Gateway | Nginx alpine | — | **compose độc lập** (`gateway/`), TLS wildcard |
 | Monitoring | Uptime Kuma | v1 | port 3001 |

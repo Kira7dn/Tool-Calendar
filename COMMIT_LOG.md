@@ -3773,3 +3773,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/schemas/llm.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(python-ai): update model hardcodes to qwen2.5:3b"`
 
+### [2026-08-25 08:43] docs(ai): update documentation to reflect qwen2.5:3b upgrade
+- **Mô tả**: Cập nhật các tài liệu cấu trúc hệ thống (SYSTEM_FEATURES.md và ARCHITECTURE.md) để đồng bộ hoàn toàn thông tin model AI mới `qwen2.5:3b` sau khi xóa bỏ model `1.5b`.
+- **Tệp thay đổi**:
+  - `SYSTEM_FEATURES.md` (Sửa đổi)
+  - `docs/legacy/ARCHITECTURE.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "docs(ai): update documentation to reflect qwen2.5:3b upgrade"`
+
