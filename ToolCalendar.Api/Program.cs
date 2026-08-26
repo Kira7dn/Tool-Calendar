@@ -243,7 +243,7 @@ builder.Services.AddAuthentication(x =>
             }
             return Task.CompletedTask;
         },
-        OnTokenValidated = context =>
+        OnTokenValidated = async context =>
         {
             try
             {
@@ -263,7 +263,7 @@ builder.Services.AddAuthentication(x =>
                 if (string.IsNullOrEmpty(userIdStr))
                 {
                     Console.WriteLine("[AuthWarning] Thiếu UserId/uid claim trong token.");
-                    return Task.CompletedTask;
+                    return;
                 }
 
                 if (int.TryParse(userIdStr, out int userId))
@@ -275,12 +275,12 @@ builder.Services.AddAuthentication(x =>
                     if (string.IsNullOrEmpty(cachedSecStamp))
                     {
                         var userRepo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
-                        var user     = userRepo.GetUserById(userId);
+                        var user     = await userRepo.GetUserByIdAsync(userId);
                         if (user == null)
                         {
                             Console.WriteLine($"[AuthError] Không tìm thấy User ID {userId} trong cơ sở dữ liệu.");
                             context.Fail("Tài khoản không tồn tại.");
-                            return Task.CompletedTask;
+                            return;
                         }
 
                         // Ưu tiên kiểm tra SecurityStamp (Identity) trước, fallback về SessionId cũ
@@ -304,7 +304,7 @@ builder.Services.AddAuthentication(x =>
             {
                 Console.WriteLine($"[AuthFatalError] {ex.Message}\n{ex.StackTrace}");
             }
-            return Task.CompletedTask;
+            return;
         },
         OnChallenge = context =>
         {

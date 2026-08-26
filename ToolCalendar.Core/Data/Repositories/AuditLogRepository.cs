@@ -3,7 +3,9 @@ using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Models;
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.IO;
 
 namespace ToolCalendar.Core.Data.Repositories
@@ -28,14 +30,14 @@ namespace ToolCalendar.Core.Data.Repositories
             }
         }
 
-        public (List<AuditLog> items, int total) GetAuditLogs(int page = 1, int pageSize = 20, string? roleFilter = null)
+        public async Task<(List<AuditLog> items, int total)> GetAuditLogsAsync(int page = 1, int pageSize = 20, string? roleFilter = null)
         {
             var list = new List<AuditLog>();
             int total = 0;
             try
             {
                 using var connection = new SqliteConnection(_connectionString);
-                connection.Open();
+                await connection.OpenAsync();
 
                 string whereSql = string.IsNullOrWhiteSpace(roleFilter) ? "" : "WHERE u.Role = @role";
 
@@ -45,7 +47,7 @@ namespace ToolCalendar.Core.Data.Repositories
                     LEFT JOIN Users u ON a.UserId = u.Id
                     {whereSql}", connection);
                 if (!string.IsNullOrWhiteSpace(roleFilter)) totalCmd.Parameters.AddWithValue("@role", roleFilter);
-                total = Convert.ToInt32(totalCmd.ExecuteScalar());
+                total = Convert.ToInt32(await totalCmd.ExecuteScalarAsync());
 
                 string sql = $@"
                     SELECT a.*, u.FullName as UserFullName 
@@ -58,8 +60,8 @@ namespace ToolCalendar.Core.Data.Repositories
                 if (!string.IsNullOrWhiteSpace(roleFilter)) cmd.Parameters.AddWithValue("@role", roleFilter);
                 cmd.Parameters.AddWithValue("@limit", pageSize);
                 cmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
                 {
                     list.Add(new AuditLog
                     {
@@ -74,24 +76,22 @@ namespace ToolCalendar.Core.Data.Repositories
             catch { }
             return (list, total);
         }
-
-        public void InsertAuditLog(int? userId, string action)
+        public async Task InsertAuditLogAsync(int? userId, string action)
         {
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
             using var cmd = new SqliteCommand("INSERT INTO AuditLogs (UserId, Action, Timestamp) VALUES (@u, @a, @now)", connection);
             cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.Parameters.AddWithValue("@u", (object?)userId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@a", action);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public void InsertLoginAuditLog(string username, int? userId, string? ipAddress, string? userAgent, bool isSuccess, string? failReason = null)
+        public async Task InsertLoginAuditLogAsync(string username, int? userId, string? ipAddress, string? userAgent, bool isSuccess, string? failReason = null)
         {
             try
             {
                 using var connection = new SqliteConnection(_connectionString);
-                connection.Open();
+                await connection.OpenAsync();
                 using var cmd = new SqliteCommand(@"
                     INSERT INTO LoginAuditLog (Username, UserId, IpAddress, UserAgent, IsSuccess, FailReason, CreatedAt)
                     VALUES (@u, @uid, @ip, @ua, @ok, @reason, @now)", connection);
@@ -102,20 +102,19 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@ok",     isSuccess ? 1 : 0);
                 cmd.Parameters.AddWithValue("@reason", (object?)failReason ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@now",    DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[LoginAudit] Lỗi ghi log: {ex.Message}");
             }
         }
-
-        public string? GetLastLoginTime(int userId)
+        public async Task<string?> GetLastLoginTimeAsync(int userId)
         {
             try
             {
                 using var connection = new SqliteConnection(_connectionString);
-                connection.Open();
+                await connection.OpenAsync();
                 using var cmd = new SqliteCommand(@"
                     SELECT CreatedAt 
                     FROM LoginAuditLog 
@@ -123,7 +122,7 @@ namespace ToolCalendar.Core.Data.Repositories
                     ORDER BY CreatedAt DESC 
                     LIMIT 1", connection);
                 cmd.Parameters.AddWithValue("@uid", userId);
-                var result = cmd.ExecuteScalar();
+                var result = await cmd.ExecuteScalarAsync();
                 
                 if (result != null && result != DBNull.Value)
                 {
@@ -140,11 +139,10 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             return null;
         }
-
-        public void ClearAuditLogs()
+        public async Task ClearAuditLogsAsync()
         {
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
             using var transaction = connection.BeginTransaction();
             try
             {
@@ -160,11 +158,10 @@ namespace ToolCalendar.Core.Data.Repositories
                 throw;
             }
         }
-
-        public int DeleteOldAuditLogs(int daysToKeep)
+        public async Task<int> DeleteOldAuditLogsAsync(int daysToKeep)
         {
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
             using var transaction = connection.BeginTransaction();
             try
             {

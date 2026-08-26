@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ToolCalendar.Core.Data.Interfaces
 {
@@ -13,8 +14,8 @@ namespace ToolCalendar.Core.Data.Interfaces
 
     public interface IChatHistoryRepository
     {
-        List<ChatMessageDto> GetHistoryByUserId(int userId, int limit = 20);
-        void AddMessage(int userId, string role, string content);
-        void ClearHistory(int userId);
+        Task<List<ChatMessageDto>> GetHistoryByUserIdAsync(int userId, int limit = 20);
+        Task AddMessageAsync(int userId, string role, string content);
+        Task ClearHistoryAsync(int userId);
     }
 }

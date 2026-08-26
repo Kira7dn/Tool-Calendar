@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Models;
 using ToolCalendar.Core.Data.Interfaces;
@@ -23,95 +24,95 @@ namespace ToolCalendar.Api.Controllers
         // --- DEPARTMENTS ---
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("departments")]
-        public IActionResult GetDepartments() => Ok(ApiResponse.Ok(_adminRepo.GetDepartments()));
+        public async Task<IActionResult> GetDepartments() => Ok(ApiResponse.Ok(await _adminRepo.GetDepartmentsAsync()));
 
         [Authorize(Roles = "Admin")]
         [HttpPost("departments")]
-        public IActionResult AddDepartment([FromBody] Department dept)
+        public async Task<IActionResult> AddDepartment([FromBody] Department dept)
         {
             if (dept == null) return BadRequest(ApiResponse.Fail("Dữ liệu phòng ban không hợp lệ."));
-            int id = _adminRepo.InsertDepartment(dept);
+            int id = await _adminRepo.InsertDepartmentAsync(dept);
             dept.Id = id;
             return Ok(ApiResponse.Ok(dept));
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPut("departments")]
-        public IActionResult UpdateDepartment([FromBody] Department dept)
+        public async Task<IActionResult> UpdateDepartment([FromBody] Department dept)
         {
             if (dept == null) return BadRequest(ApiResponse.Fail("Dữ liệu phòng ban không hợp lệ."));
-            _adminRepo.UpdateDepartment(dept);
+            await _adminRepo.UpdateDepartmentAsync(dept);
             return Ok(ApiResponse.Ok(dept));
         }
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("departments/{id}")]
-        public IActionResult DeleteDepartment(int id)
+        public async Task<IActionResult> DeleteDepartment(int id)
         {
-            _adminRepo.DeleteDepartment(id);
+            await _adminRepo.DeleteDepartmentAsync(id);
             return Ok(ApiResponse.Ok("Xóa phòng ban thành công."));
         }
 
         // --- LABELS ---
         [Authorize(Roles = "Admin")]
         [HttpGet("labels")]
-        public IActionResult GetLabels() => Ok(ApiResponse.Ok(_adminRepo.GetLabels()));
+        public async Task<IActionResult> GetLabels() => Ok(ApiResponse.Ok(await _adminRepo.GetLabelsAsync()));
 
         [Authorize(Roles = "Admin")]
         [HttpPost("labels")]
-        public IActionResult AddLabel([FromBody] DocumentLabel label)
+        public async Task<IActionResult> AddLabel([FromBody] DocumentLabel label)
         {
             if (label == null) return BadRequest(ApiResponse.Fail("Dữ liệu nhãn không hợp lệ."));
-            int id = _adminRepo.InsertLabel(label);
+            int id = await _adminRepo.InsertLabelAsync(label);
             label.Id = id;
             return Ok(ApiResponse.Ok(label));
         }
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("labels/{id}")]
-        public IActionResult DeleteLabel(int id)
+        public async Task<IActionResult> DeleteLabel(int id)
         {
-            _adminRepo.DeleteLabel(id);
+            await _adminRepo.DeleteLabelAsync(id);
             return Ok(ApiResponse.Ok("Xóa nhãn thành công."));
         }
 
         // --- AUTO RULES ---
         [Authorize(Roles = "Admin")]
         [HttpGet("rules")]
-        public IActionResult GetRules() => Ok(ApiResponse.Ok(_adminRepo.GetAutoRules()));
+        public async Task<IActionResult> GetRules() => Ok(ApiResponse.Ok(await _adminRepo.GetAutoRulesAsync()));
 
         [Authorize(Roles = "Admin")]
         [HttpPost("rules")]
-        public IActionResult AddRule([FromBody] AutoRule rule)
+        public async Task<IActionResult> AddRule([FromBody] AutoRule rule)
         {
             if (rule == null) return BadRequest(ApiResponse.Fail("Dữ liệu luật không hợp lệ."));
-            int id = _adminRepo.InsertAutoRule(rule);
+            int id = await _adminRepo.InsertAutoRuleAsync(rule);
             rule.Id = id;
             return Ok(ApiResponse.Ok(rule));
         }
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("rules/{id}")]
-        public IActionResult DeleteRule(int id)
+        public async Task<IActionResult> DeleteRule(int id)
         {
-            _adminRepo.DeleteAutoRule(id);
+            await _adminRepo.DeleteAutoRuleAsync(id);
             return Ok(ApiResponse.Ok("Xóa luật tự động thành công."));
         }
 
         [Authorize(Roles = "Admin")]
         [HttpGet("audit-logs")]
-        public IActionResult GetAuditLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        public async Task<IActionResult> GetAuditLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            var result = _auditLogRepo.GetAuditLogs(page, pageSize);
+            var result = await _auditLogRepo.GetAuditLogsAsync(page, pageSize);
             return Ok(ApiResponse.Ok(new { items = result.items, total = result.total }));
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPost("clear-audit-logs")]
-        public IActionResult ClearAuditLogs()
+        public async Task<IActionResult> ClearAuditLogs()
         {
-            _auditLogRepo.ClearAuditLogs();
-            _auditLogRepo.InsertAuditLog(null, "Quản trị viên đã dọn sạch toàn bộ nhật ký hệ thống.");
+            await _auditLogRepo.ClearAuditLogsAsync();
+            await _auditLogRepo.InsertAuditLogAsync(null, "Quản trị viên đã dọn sạch toàn bộ nhật ký hệ thống.");
             return Ok(ApiResponse.Ok("Đã dọn sạch nhật ký hệ thống."));
         }
     }

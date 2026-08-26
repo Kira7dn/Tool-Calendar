@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
 using System;
+using System.Threading.Tasks;
 using System.IO;
 
 namespace ToolCalendar.Core.Data.Repositories
@@ -25,18 +26,16 @@ namespace ToolCalendar.Core.Data.Repositories
                 }
             }
         }
-
-        public string GetAppSetting(string key, string defaultVal = "")
+        public async Task<string> GetAppSettingAsync(string key, string defaultVal = "")
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             using var cmd = new SqliteCommand("SELECT [Value] FROM AppSettings WHERE [Key]=@k", connection);
             cmd.Parameters.AddWithValue("@k", key);
-            var result = cmd.ExecuteScalar();
+            var result = await cmd.ExecuteScalarAsync();
             return result?.ToString() ?? defaultVal;
         }
-
-        public void SaveAppSetting(string key, string val)
+        public async Task SaveAppSettingAsync(string key, string val)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -46,7 +45,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 ON CONFLICT([Key]) DO UPDATE SET [Value]=@v", connection);
             cmd.Parameters.AddWithValue("@k", key);
             cmd.Parameters.AddWithValue("@v", val);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }

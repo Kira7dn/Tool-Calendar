@@ -3,7 +3,9 @@ using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Models;
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.IO;
 
 namespace ToolCalendar.Core.Data.Repositories
@@ -28,17 +30,17 @@ namespace ToolCalendar.Core.Data.Repositories
             }
         }
 
-        public List<Core.Models.NotificationRecord> GetNotifications(int userId, int limit = 50)
+        public async Task<List<Core.Models.NotificationRecord>> GetNotificationsAsync(int userId, int limit = 50)
         {
             var list = new List<Core.Models.NotificationRecord>();
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
             string sql = "SELECT Id, UserId, Title, Body, Type, DocId, IsRead, CreatedAt FROM Notifications WHERE UserId=@uId ORDER BY CreatedAt DESC LIMIT @limit";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@uId", userId);
             cmd.Parameters.AddWithValue("@limit", limit);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
                 list.Add(new Core.Models.NotificationRecord
                 {
@@ -54,11 +56,10 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             return list;
         }
-
-        public void InsertNotification(Core.Models.NotificationRecord n)
+        public async Task InsertNotificationAsync(Core.Models.NotificationRecord n)
         {
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
             string sql = "INSERT INTO Notifications (UserId, Title, Body, Type, DocId, IsRead, CreatedAt) VALUES (@uId, @t, @b, @type, @docId, 0, @now)";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
@@ -67,37 +68,34 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@b", n.Body);
             cmd.Parameters.AddWithValue("@type", n.Type);
             cmd.Parameters.AddWithValue("@docId", (object?)n.DocId ?? DBNull.Value);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public void MarkNotificationAsRead(int id)
+        public async Task MarkNotificationAsReadAsync(int id)
         {
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
             using var cmd = new SqliteCommand("UPDATE Notifications SET IsRead=1 WHERE Id=@id", connection);
             cmd.Parameters.AddWithValue("@id", id);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public void MarkAllNotificationsAsRead(int userId)
+        public async Task MarkAllNotificationsAsReadAsync(int userId)
         {
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
             using var cmd = new SqliteCommand("UPDATE Notifications SET IsRead=1 WHERE UserId=@uId", connection);
             cmd.Parameters.AddWithValue("@uId", userId);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public List<PushSubscription> GetPushSubscriptions(int userId)
+        public async Task<List<PushSubscription>> GetPushSubscriptionsAsync(int userId)
         {
             var list = new List<PushSubscription>();
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
             string sql = "SELECT Id, UserId, Endpoint, P256dh, Auth, CreatedAt FROM PushSubscriptions WHERE UserId=@uId";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@uId", userId);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
                 list.Add(new PushSubscription
                 {
@@ -111,11 +109,10 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             return list;
         }
-
-        public void InsertPushSubscription(PushSubscription sub)
+        public async Task InsertPushSubscriptionAsync(PushSubscription sub)
         {
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
             string sql = @"
                 INSERT INTO PushSubscriptions (UserId, Endpoint, P256dh, Auth, CreatedAt) 
                 VALUES (@uId, @e, @p, @a, datetime('now', 'localtime'))
@@ -125,16 +122,15 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@e", sub.Endpoint);
             cmd.Parameters.AddWithValue("@p", sub.P256dh);
             cmd.Parameters.AddWithValue("@a", sub.Auth);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public void DeletePushSubscription(string endpoint)
+        public async Task DeletePushSubscriptionAsync(string endpoint)
         {
             using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
             using var cmd = new SqliteCommand("DELETE FROM PushSubscriptions WHERE Endpoint=@e", connection);
             cmd.Parameters.AddWithValue("@e", endpoint);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }

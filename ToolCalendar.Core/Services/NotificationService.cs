@@ -29,7 +29,7 @@ namespace ToolCalendar.Services
                     var settingRepo = scope.ServiceProvider.GetRequiredService<ISettingRepository>();
                     var auditRepo = scope.ServiceProvider.GetRequiredService<IAuditLogRepository>();
 
-                    string scanTimeStr = settingRepo.GetAppSetting("Notification_ScanTime", "08:30");
+                    string scanTimeStr = await settingRepo.GetAppSettingAsync("Notification_ScanTime", "08:30");
                     if (!TimeSpan.TryParse(scanTimeStr, out TimeSpan targetTime))
                     {
                         targetTime = new TimeSpan(8, 30, 0);
@@ -41,19 +41,19 @@ namespace ToolCalendar.Services
                     if (now.Hour == targetTime.Hours && now.Minute == targetTime.Minutes)
                     {
                         string todayStr = now.ToString("yyyy-MM-dd");
-                        string lastScanDate = settingRepo.GetAppSetting("Notification_LastScanDate", "");
+                        string lastScanDate = await settingRepo.GetAppSettingAsync("Notification_LastScanDate", "");
 
                         if (lastScanDate != todayStr)
                         {
                             _logger.LogInformation($"[DeadlineWorker] Bắt đầu quét tự động lúc {now:HH:mm:ss} (Giờ cài đặt: {scanTimeStr})");
                             
                             // Đánh dấu đã quét NGAY LẬP TỨC để tránh quét lặp lại
-                            settingRepo.SaveAppSetting("Notification_LastScanDate", todayStr);
+                            await settingRepo.SaveAppSettingAsync("Notification_LastScanDate", todayStr);
                             
                             await ScanDeadlinesAsync(false);
 
                             // Tự động dọn dẹp nhật ký cũ hơn 30 ngày
-                            int cleaned = auditRepo.DeleteOldAuditLogs(30);
+                            int cleaned = await auditRepo.DeleteOldAuditLogsAsync(30);
                             if (cleaned > 0) _logger.LogInformation($"[DeadlineWorker] Đã dọn dẹp {cleaned} nhật ký cũ.");
                         }
                     }
@@ -133,7 +133,7 @@ namespace ToolCalendar.Services
                     }
                 }
 
-                auditRepo.InsertAuditLog(null, $"[Hệ thống] Hoàn tất quét thời hạn. Tổng số văn bản đang xử lý: {activeDocs.Count}. Đã gửi: {count} thông báo nhắc việc.");
+                await auditRepo.InsertAuditLogAsync(null, $"[Hệ thống] Hoàn tất quét thời hạn. Tổng số văn bản đang xử lý: {activeDocs.Count}. Đã gửi: {count} thông báo nhắc việc.");
                 _logger.LogInformation($"[DeadlineWorker] Đã quét xong {activeDocs.Count} văn bản. Gửi {count} thông báo.");
             }
             catch (Exception ex)
@@ -141,7 +141,7 @@ namespace ToolCalendar.Services
                 _logger.LogError(ex, "[DeadlineWorker] Lỗi trong quá trình quét thời hạn.");
                 using var scope = _serviceProvider.CreateScope();
                 var auditRepo = scope.ServiceProvider.GetRequiredService<IAuditLogRepository>();
-                auditRepo.InsertAuditLog(null, $"[Hệ thống] Lỗi khi quét thời hạn: {ex.Message}");
+                await auditRepo.InsertAuditLogAsync(null, $"[Hệ thống] Lỗi khi quét thời hạn: {ex.Message}");
             }
             finally
             {

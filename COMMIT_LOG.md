@@ -1,3 +1,36 @@
+### [2026-08-26 15:41] chore(db): dọn dẹp các file database backup cũ và file rác trong data_dump
+- **Mô tả**: Xóa toàn bộ các file backup SQLite cũ trong thư mục `data_dump/backups/` và file `documents_vnpt.db` dư thừa để giải phóng dung lượng và làm sạch workspace. Chỉ giữ lại file database chính `data_dump/documents.db`.
+- **Tệp thay đổi**:
+  - `data_dump/backups/*.db` (Xóa)
+  - `data_dump/documents_vnpt.db` (Xóa)
+- **Lệnh git commit**: `git commit -m "chore(db): don dep cac file database backup cu va file rac trong data_dump"`
+
+### [2026-08-26 15:40] fix(db): xoá các bảng dư thừa của module phòng họp trong data_dump/documents.db
+- **Mô tả**: Phát hiện trong file database vật lý SQLite (`documents.db`) vẫn còn sót bảng `QuestionnaireTemplates` (và có thể các bảng khác thuộc module phòng họp). Đã chạy lệnh DROP TABLE để xóa dứt điểm các bảng rác này khỏi schema hiện hành.
+- **Tệp thay đổi**:
+  - `data_dump/documents.db` (Sửa đổi schema)
+- **Lệnh git commit**: `git commit -m "fix(db): xoa cac bang du thua cua module phong hop trong data_dump/documents.db"`
+
+### [2026-08-26 15:39] refactor(api): xoá các class không sử dụng thuộc module phòng họp không giấy tờ
+- **Mô tả**: Dọn dẹp hệ thống bằng cách loại bỏ các class Models và Repositories không còn được sử dụng, vốn thuộc về tính năng phòng họp không giấy tờ (Meeting, Room, Questionnaire) bị copy nhầm hoặc không còn duy trì trong hệ thống Tool-Calendar. Đồng thời dọn dẹp các lệnh tạo bảng liên quan trong file seed_db.sql.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Models/Meeting.cs` (Xóa)
+  - `ToolCalendar.Core/Models/MeetingConclusion.cs` (Xóa)
+  - `ToolCalendar.Core/Models/MeetingNote.cs` (Xóa)
+  - `ToolCalendar.Core/Models/MeetingProceeding.cs` (Xóa)
+  - `ToolCalendar.Core/Models/Questionnaire.cs` (Xóa)
+  - `ToolCalendar.Core/Models/QuestionnaireTemplate.cs` (Xóa)
+  - `ToolCalendar.Core/Models/Room.cs` (Xóa)
+  - `ToolCalendar.Core/Data/Repositories/MeetingConclusionRepository.cs` (Xóa)
+  - `ToolCalendar.Core/Data/Repositories/MeetingNoteRepository.cs` (Xóa)
+  - `ToolCalendar.Core/Data/Repositories/MeetingProceedingRepository.cs` (Xóa)
+  - `ToolCalendar.Core/Data/Repositories/MeetingRepository.cs` (Xóa)
+  - `ToolCalendar.Core/Data/Repositories/QuestionnaireRepository.cs` (Xóa)
+  - `ToolCalendar.Core/Data/Repositories/QuestionnaireTemplateRepository.cs` (Xóa)
+  - `ToolCalendar.Core/Data/Repositories/RoomRepository.cs` (Xóa)
+  - `seed_db.sql` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(api): xoa cac class khong su dung thuoc module phong hop khong giay to"`
+
 ### [2026-08-25 10:43] fix(security): enforce fail-closed policy for ClamAV virus scanning
 - **Mô tả**: Sửa lỗi Fail-Open của ClamAV. Thay đổi logic trong `IClamAvService.cs` và `ClamAvService.cs` để khi ClamAV service sập hoặc lỗi, hệ thống sẽ trả về lỗi (Fail-Closed) thay vì cho phép file lọt qua. Cập nhật `DocumentUploadService.cs` trả về thông báo lỗi tường minh "Hệ thống quét virus đang bảo trì hoặc quá tải".
 - **Tệp thay đổi**:
@@ -3835,3 +3868,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/services/document_service.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ai): improve prompt for extracting keywords"`
+
+### [2026-08-26 15:59] Chuyển đổi toàn bộ Repositories và Controllers sang Async/Await
+- **Mô tả**: Để tối ưu hiệu năng và tránh lock luồng, toàn bộ mã truy xuất cơ sở dữ liệu (Repositories) và các endpoints (Controllers) đã được chuyển đổi để sử dụng async/await. Các interface liên quan cũng được cập nhật tương ứng. Đặc biệt, theo quy tắc kiến trúc (tc-rule-backend-architecture.md), các method đồng bộ bên trong Transaction scope (BeginTransaction) được giữ nguyên, chỉ các hành động đọc ghi độc lập được dùng async. Đồng thời sửa lại `CustomUserStore` để hỗ trợ Identity bằng async. Đã xử lý tất cả lỗi biên dịch phát sinh (CS0535, CS4016, CS4032, CS4008, CS4034, CS8031, etc).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Interfaces/*` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/*` (Sửa đổi)
+  - `ToolCalendar.Core/Services/ReminderWorker.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/*` (Sửa đổi)
+  - `ToolCalendar.Api/Security/CustomUserStore.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(api): chuyển đổi toàn bộ repositories và controllers sang async await"`

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
@@ -62,7 +63,7 @@ namespace ToolCalendar.Api.Controllers
             if (user == null)
             {
                 // Ghi audit log thất bại
-                _auditLogRepo.InsertLoginAuditLog(
+                await _auditLogRepo.InsertLoginAuditLogAsync(
                     username:   request.Username,
                     userId:     null,
                     ipAddress:  clientIp,
@@ -76,7 +77,7 @@ namespace ToolCalendar.Api.Controllers
             // ── Bước 2: Kiểm tra tài khoản bị khóa (Identity Lockout) ────────────
             if (await _userManager.IsLockedOutAsync(user))
             {
-                _auditLogRepo.InsertLoginAuditLog(
+                await _auditLogRepo.InsertLoginAuditLogAsync(
                     username:   request.Username,
                     userId:     user.Id,
                     ipAddress:  clientIp,
@@ -95,7 +96,7 @@ namespace ToolCalendar.Api.Controllers
                 // Identity tự động tăng AccessFailedCount và khóa tài khoản nếu đủ số lần
                 await _userManager.AccessFailedAsync(user);
 
-                _auditLogRepo.InsertLoginAuditLog(
+                await _auditLogRepo.InsertLoginAuditLogAsync(
                     username:   request.Username,
                     userId:     user.Id,
                     ipAddress:  clientIp,
@@ -122,7 +123,7 @@ namespace ToolCalendar.Api.Controllers
 
             // Tạo SessionId mới (duy trì tương thích với hệ thống cũ)
             user.SessionId = Guid.NewGuid().ToString();
-            _userRepository.UpdateSecurityStamp(user.Id, user.SecurityStamp);
+            await _userRepository.UpdateSecurityStampAsync(user.Id, user.SecurityStamp);
 
             // ── Bước 5: Sinh JWT Token ────────────────────────────────────────────
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -132,7 +133,7 @@ namespace ToolCalendar.Api.Controllers
             var key = Encoding.ASCII.GetBytes(jwtSecret);
 
             // Fetch previous login time before inserting the new one
-            var lastLoginTime = _auditLogRepo.GetLastLoginTime(user.Id) ?? "Lần đầu đăng nhập";
+            var lastLoginTime = await _auditLogRepo.GetLastLoginTimeAsync(user.Id) ?? "Lần đầu đăng nhập";
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -161,7 +162,7 @@ namespace ToolCalendar.Api.Controllers
             // Generate Refresh Token
             var refreshToken = GenerateRefreshToken();
             var refreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            _userRepository.UpdateRefreshToken(user.Id, refreshToken, refreshTokenExpiryTime);
+            await _userRepository.UpdateRefreshTokenAsync(user.Id, refreshToken, refreshTokenExpiryTime);
 
             // Gắn token vào HttpOnly Cookie
             Response.Cookies.Append("jwt_cookie", tokenString, new CookieOptions
@@ -181,7 +182,7 @@ namespace ToolCalendar.Api.Controllers
             });
 
             // Ghi audit log thành công
-            _auditLogRepo.InsertLoginAuditLog(
+            await _auditLogRepo.InsertLoginAuditLogAsync(
                 username:  user.Username,
                 userId:    user.Id,
                 ipAddress: clientIp,
@@ -202,12 +203,12 @@ namespace ToolCalendar.Api.Controllers
         // ─── REFRESH TOKEN ───────────────────────────────────────────────────────
 
         [HttpPost("refresh")]
-        public IActionResult RefreshToken()
+        public async Task<IActionResult> RefreshToken()
         {
             if (!Request.Cookies.TryGetValue("refresh_cookie", out var refreshToken))
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy Refresh Token."));
 
-            var user = _userRepository.GetUserByRefreshToken(refreshToken);
+            var user = await _userRepository.GetUserByRefreshTokenAsync(refreshToken);
 
             if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 return Unauthorized(ApiResponse.Fail("Refresh token đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại."));
@@ -244,7 +245,7 @@ namespace ToolCalendar.Api.Controllers
 
             var newRefreshToken = GenerateRefreshToken();
             var newExpiryTime = DateTime.UtcNow.AddDays(7);
-            _userRepository.UpdateRefreshToken(user.Id, newRefreshToken, newExpiryTime);
+            await _userRepository.UpdateRefreshTokenAsync(user.Id, newRefreshToken, newExpiryTime);
             
             // Cập nhật cookie
             Response.Cookies.Append("jwt_cookie", newAccessTokenString, new CookieOptions
@@ -301,14 +302,14 @@ namespace ToolCalendar.Api.Controllers
         // ─── LOGOUT ──────────────────────────────────────────────────────────────
 
         [HttpPost("logout")]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
             if (Request.Cookies.TryGetValue("refresh_cookie", out var refreshToken))
             {
-                var user = _userRepository.GetUserByRefreshToken(refreshToken);
+                var user = await _userRepository.GetUserByRefreshTokenAsync(refreshToken);
                 if (user != null)
                 {
-                    _userRepository.UpdateRefreshToken(user.Id, null, null); // Thu hồi token
+                    await _userRepository.UpdateRefreshTokenAsync(user.Id, null, null); // Thu hồi token
                 }
             }
             Response.Cookies.Delete("jwt_cookie");
@@ -358,7 +359,7 @@ namespace ToolCalendar.Api.Controllers
                 cache?.Remove($"UserSession_{userId}");
 
                 // Thu hồi mọi Refresh Token cũ
-                _userRepository.UpdateRefreshToken(userId, null, null);
+                await _userRepository.UpdateRefreshTokenAsync(userId, null, null);
 
                 return Ok(ApiResponse.Ok("Đổi mật khẩu thành công. Vui lòng đăng nhập lại."));
             }
@@ -369,7 +370,7 @@ namespace ToolCalendar.Api.Controllers
 
         [AllowAnonymous]
         [HttpGet("reset-all-passwords-temp")]
-        public IActionResult ResetAllPasswordsTemp()
+        public async Task<IActionResult> ResetAllPasswordsTemp()
         {
             var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ToolCalendar");
             var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? Path.Combine(appData, "documents.db");

@@ -24,7 +24,7 @@ namespace ToolCalendar.Api.Controllers
         }
 
         [HttpGet("history")]
-        public IActionResult GetHistory()
+        public async Task<IActionResult> GetHistory()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId))
@@ -32,12 +32,12 @@ namespace ToolCalendar.Api.Controllers
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy thông tin người dùng."));
             }
 
-            var history = _chatHistoryRepo.GetHistoryByUserId(userId, 50);
+            var history = await _chatHistoryRepo.GetHistoryByUserIdAsync(userId, 50);
             return Ok(ApiResponse<List<ChatMessageDto>>.Ok(history));
         }
 
         [HttpDelete("history")]
-        public IActionResult ClearHistory()
+        public async Task<IActionResult> ClearHistory()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId))
@@ -45,7 +45,7 @@ namespace ToolCalendar.Api.Controllers
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy thông tin người dùng."));
             }
 
-            _chatHistoryRepo.ClearHistory(userId);
+            await _chatHistoryRepo.ClearHistoryAsync(userId);
             return Ok(ApiResponse.Ok("Đã xóa lịch sử chat."));
         }
 

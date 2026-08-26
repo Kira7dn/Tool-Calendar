@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Models;
@@ -50,9 +51,9 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet]
-        public IActionResult Get([FromQuery] int? departmentId = null)
+        public async Task<IActionResult> Get([FromQuery] int? departmentId = null)
         {
-            var users = _userRepository.GetUsers();
+            var users = await _userRepository.GetUsersAsync();
             if (departmentId.HasValue)
             {
                 users = users.Where(user => user.DepartmentId == departmentId.Value).ToList();
@@ -65,9 +66,9 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin,VanThu")]
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var user = _userRepository.GetUserById(id);
+            var user = await _userRepository.GetUserByIdAsync(id);
             if (user == null) 
                 return NotFound(ApiResponse.Fail("Không tìm thấy người dùng."));
             return Ok(ApiResponse.Ok(user));
@@ -104,7 +105,7 @@ namespace ToolCalendar.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UserUpdateRequest request)
         {
-            var user = _userRepository.GetUserById(id);
+            var user = await _userRepository.GetUserByIdAsync(id);
             if (user == null) 
                 return NotFound(ApiResponse.Fail("Không tìm thấy người dùng."));
 
@@ -133,8 +134,8 @@ namespace ToolCalendar.Api.Controllers
                 else
                 {
                     // Fallback về UserRepository nếu Identity không tìm thấy
-                    _userRepository.UpdateUserPassword(id, request.PasswordHash);
-                    var updatedUser = _userRepository.GetUserById(id);
+                    await _userRepository.UpdateUserPasswordAsync(id, request.PasswordHash);
+                    var updatedUser = await _userRepository.GetUserByIdAsync(id);
                     if (updatedUser != null)
                     {
                         user.PasswordHash = updatedUser.PasswordHash;
@@ -152,7 +153,7 @@ namespace ToolCalendar.Api.Controllers
             // Invalidate token cũ khi Admin cập nhật thông tin user (để các thay đổi quyền có hiệu lực ngay)
             user.SecurityStamp = Guid.NewGuid().ToString();
 
-            _userRepository.UpdateUser(user);
+            await _userRepository.UpdateUserAsync(user);
             
             // Xóa cache session để SecurityStamp mới có hiệu lực ngay lập tức
             var memCache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
@@ -163,13 +164,13 @@ namespace ToolCalendar.Api.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var user = _userRepository.GetUserById(id);
+            var user = await _userRepository.GetUserByIdAsync(id);
             if (user == null)
                 return NotFound(ApiResponse.Fail("Không tìm thấy người dùng."));
 
-            _userRepository.DeleteUser(id);
+            await _userRepository.DeleteUserAsync(id);
             return Ok(ApiResponse.Ok("Xóa người dùng thành công."));
         }
     }

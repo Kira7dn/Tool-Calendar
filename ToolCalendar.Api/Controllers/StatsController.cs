@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Core.Data.Interfaces;
@@ -30,14 +31,14 @@ namespace ToolCalendar.Api.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetSummary()
+        public async Task<IActionResult> GetSummary()
         {
             try
             {
                 // ✅ Cache 30 giây — đủ fresh cho dashboard, tránh 8 DB queries mỗi refresh
                 if (!_cache.TryGetValue(STATS_KEY, out object? stats))
                 {
-                    stats = _statsRepo.GetDashboardStats();
+                    stats = await _statsRepo.GetDashboardStatsAsync();
                     _cache.Set(STATS_KEY, stats, new MemoryCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30),
@@ -54,11 +55,11 @@ namespace ToolCalendar.Api.Controllers
         }
 
         [HttpGet("activities")]
-        public IActionResult GetRecentActivities()
+        public async Task<IActionResult> GetRecentActivities()
         {
             try
             {
-                var (logs, _) = _auditLogRepo.GetAuditLogs(1, 10, "CanBo");
+                var (logs, _) = await _auditLogRepo.GetAuditLogsAsync(1, 10, "CanBo");
                 return Ok(ApiResponse.Ok(logs));
             }
             catch (Exception ex)
@@ -68,7 +69,7 @@ namespace ToolCalendar.Api.Controllers
         }
 
         [HttpGet("deadline-series")]
-        public IActionResult GetDeadlineSeries([FromQuery] int days = 14)
+        public async Task<IActionResult> GetDeadlineSeries([FromQuery] int days = 14)
         {
             try
             {
@@ -76,7 +77,7 @@ namespace ToolCalendar.Api.Controllers
                 string cacheKey = string.Format(TIMELINE_KEY, days);
                 if (!_cache.TryGetValue(cacheKey, out object? series))
                 {
-                    series = _statsRepo.GetDashboardDeadlineSeries(days);
+                    series = await _statsRepo.GetDashboardDeadlineSeriesAsync(days);
                     _cache.Set(cacheKey, series, new MemoryCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60),
@@ -95,7 +96,7 @@ namespace ToolCalendar.Api.Controllers
         /// Invalidate dashboard cache — gọi sau khi upload/cập nhật/xóa văn bản
         /// </summary>
         [HttpPost("invalidate-cache")]
-        public IActionResult InvalidateCache()
+        public async Task<IActionResult> InvalidateCache()
         {
             _cache.Remove(STATS_KEY);
             // Xóa cache timeline cho các giá trị days phổ biến
@@ -105,11 +106,11 @@ namespace ToolCalendar.Api.Controllers
         }
 
         [HttpGet("monthly-report")]
-        public IActionResult GetMonthlyReport([FromQuery] int month, [FromQuery] int year)
+        public async Task<IActionResult> GetMonthlyReport([FromQuery] int month, [FromQuery] int year)
         {
             try
             {
-                var data = _statsRepo.GetMonthlyDepartmentReport(month, year);
+                var data = await _statsRepo.GetMonthlyDepartmentReportAsync(month, year);
                 return Ok(ApiResponse.Ok(data));
             }
             catch (Exception ex)
@@ -120,13 +121,13 @@ namespace ToolCalendar.Api.Controllers
 
         [HttpGet("settings")]
         [Authorize(Roles = "Admin,VanThu")]
-        public IActionResult GetSettings()
+        public async Task<IActionResult> GetSettings()
         {
-            var maxPages = _settingRepo.GetAppSetting("OcrSettings_MaxPagesToScan", "0");
-            var keywords = _settingRepo.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
-            var excludeKeywords = _settingRepo.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
-            var minDays = _settingRepo.GetAppSetting("Document_MinDeadlineDays", "0");
-            var aiThreshold = _settingRepo.GetAppSetting("AiSimilarityThreshold", "0.20");
+            var maxPages = await _settingRepo.GetAppSettingAsync("OcrSettings_MaxPagesToScan", "0");
+            var keywords = await _settingRepo.GetAppSettingAsync("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
+            var excludeKeywords = await _settingRepo.GetAppSettingAsync("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
+            var minDays = await _settingRepo.GetAppSettingAsync("Document_MinDeadlineDays", "0");
+            var aiThreshold = await _settingRepo.GetAppSettingAsync("AiSimilarityThreshold", "0.20");
 
             return Ok(ApiResponse.Ok(new
             {
@@ -134,14 +135,14 @@ namespace ToolCalendar.Api.Controllers
                 deadlineKeywords = keywords,
                 deadlineExcludeKeywords = excludeKeywords,
                 minDeadlineDays = int.Parse(minDays),
-                notificationScanTime = _settingRepo.GetAppSetting("Notification_ScanTime", "08:30"),
+                notificationScanTime = await _settingRepo.GetAppSettingAsync("Notification_ScanTime", "08:30"),
                 aiSimilarityThreshold = float.Parse(aiThreshold)
             }));
         }
 
         [HttpPost("settings")]
         [Authorize(Roles = "Admin,VanThu")]
-        public IActionResult SaveSettings([FromBody] System.Text.Json.JsonElement data)
+        public async Task<IActionResult> SaveSettings([FromBody] System.Text.Json.JsonElement data)
         {
             try
             {
@@ -152,15 +153,15 @@ namespace ToolCalendar.Api.Controllers
                 string scanTime = data.TryGetProperty("notificationScanTime", out var st) ? st.ToString() : "08:30";
                 string aiThreshold = data.TryGetProperty("aiSimilarityThreshold", out var ath) ? ath.ToString() : "0.20";
 
-                _settingRepo.SaveAppSetting("OcrSettings_MaxPagesToScan", maxPages);
-                _settingRepo.SaveAppSetting("Document_DeadlineKeywords", keywords);
-                _settingRepo.SaveAppSetting("Document_DeadlineExcludeKeywords", excludeKeywords);
-                _settingRepo.SaveAppSetting("Document_MinDeadlineDays", minDays);
-                _settingRepo.SaveAppSetting("Notification_ScanTime", scanTime);
-                _settingRepo.SaveAppSetting("AiSimilarityThreshold", aiThreshold);
+                await _settingRepo.SaveAppSettingAsync("OcrSettings_MaxPagesToScan", maxPages);
+                await _settingRepo.SaveAppSettingAsync("Document_DeadlineKeywords", keywords);
+                await _settingRepo.SaveAppSettingAsync("Document_DeadlineExcludeKeywords", excludeKeywords);
+                await _settingRepo.SaveAppSettingAsync("Document_MinDeadlineDays", minDays);
+                await _settingRepo.SaveAppSettingAsync("Notification_ScanTime", scanTime);
+                await _settingRepo.SaveAppSettingAsync("AiSimilarityThreshold", aiThreshold);
 
                 // Reset chặn quét để cho phép quét lại vào giờ mới ngay trong ngày hôm nay
-                _settingRepo.SaveAppSetting("Notification_LastScanDate", "");
+                await _settingRepo.SaveAppSettingAsync("Notification_LastScanDate", "");
 
                 return Ok(ApiResponse.Ok("Lưu cài đặt thành công."));
             }

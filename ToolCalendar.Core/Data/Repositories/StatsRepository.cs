@@ -28,8 +28,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 }
             }
         }
-
-        public object GetDashboardStats()
+        public async Task<object> GetDashboardStatsAsync()
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -120,8 +119,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 TopUrgent    = topUrgent
             };
         }
-
-        public object GetDashboardDeadlineSeries(int days = 14)
+        public async Task<object> GetDashboardDeadlineSeriesAsync(int days = 14)
         {
             if (days < 1) days = 14;
             if (days > 60) days = 60;
@@ -148,7 +146,7 @@ namespace ToolCalendar.Core.Data.Repositories
             {
                 cmd.Parameters.AddWithValue("@today",   todayStr);
                 cmd.Parameters.AddWithValue("@endDate", endStr);
-                using var r = cmd.ExecuteReader();
+                using var r = await cmd.ExecuteReaderAsync();
                 while (r.Read())
                 {
                     var key = r["Bucket"]?.ToString() ?? "";
@@ -185,8 +183,7 @@ namespace ToolCalendar.Core.Data.Repositories
 
             return items;
         }
-
-        public object GetMonthlyDepartmentReport(int month, int year)
+        public async Task<object> GetMonthlyDepartmentReportAsync(int month, int year)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -214,9 +211,9 @@ namespace ToolCalendar.Core.Data.Repositories
             var list = new List<object>();
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@prefix", prefix + "%");
-            using var reader = cmd.ExecuteReader();
+            using var reader = await cmd.ExecuteReaderAsync();
             
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 list.Add(new
                 {

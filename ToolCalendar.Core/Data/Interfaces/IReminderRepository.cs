@@ -1,13 +1,14 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ToolCalendar.Core.Models;
 
 namespace ToolCalendar.Core.Data.Interfaces
 {
     public interface IReminderRepository
     {
-        int AddReminder(int userId, string content, string remindAt);
-        List<Reminder> GetPendingReminders();
-        void MarkAsSent(int id);
-        List<Reminder> GetUserReminders(int userId);
+        Task<int> AddReminderAsync(int userId, string content, string remindAt);
+        Task<List<Reminder>> GetPendingRemindersAsync();
+        Task MarkAsSentAsync(int id);
+        Task<List<Reminder>> GetUserRemindersAsync(int userId);
     }
 }

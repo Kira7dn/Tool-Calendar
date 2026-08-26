@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
@@ -465,7 +466,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             {
                 if (currentUserId > 0)
                 {
-                    _auditRepo.InsertAuditLog(currentUserId, $"Đã nộp bằng chứng hoàn thành văn bản {doc.SoVanBan}.");
+                    await _auditRepo.InsertAuditLogAsync(currentUserId, $"Đã nộp bằng chứng hoàn thành văn bản {doc.SoVanBan}.");
                 }
             }
             catch { }
@@ -644,7 +645,7 @@ namespace ToolCalendar.Api.Controllers.Documents
         // Bảo vệ bằng [Authorize] — chỉ người đã đăng nhập mới xem được file bình luận
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("comment-attachment")]
-        public IActionResult GetCommentAttachment([FromQuery] string path)
+        public async Task<IActionResult> GetCommentAttachment([FromQuery] string path)
         {
             if (string.IsNullOrEmpty(path)) return BadRequest(ApiResponse.Fail("Đường dẫn không hợp lệ."));
             
@@ -815,7 +816,7 @@ namespace ToolCalendar.Api.Controllers.Documents
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]
         [HttpGet("evidence-file")]
-        public IActionResult GetEvidenceFile([FromQuery] string path)
+        public async Task<IActionResult> GetEvidenceFile([FromQuery] string path)
         {
             if (string.IsNullOrEmpty(path)) return BadRequest(ApiResponse.Fail("Đường dẫn không hợp lệ."));
             

@@ -83,14 +83,14 @@ namespace ToolCalendar.Core.Services
             // Xử lý fake-stream để flush headers ngay lập tức, tắt trạng thái "đang tải" của frontend
             yield return "(Đang phân tích yêu cầu...)\n\n";
 
-            var user = _userRepo.GetUserById(userId);
+            var user = await _userRepo.GetUserByIdAsync(userId);
             if (user == null)
             {
                 yield return "Lỗi xác thực người dùng.";
                 yield break;
             }
 
-            try { _chatHistoryRepo.AddMessage(userId, "user", message); }
+            try { await _chatHistoryRepo.AddMessageAsync(userId, "user", message); }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể lưu tin nhắn user: {Msg}", ex.Message); }
 
             string userName = !string.IsNullOrEmpty(user.FullName) ? user.FullName : user.Username;
@@ -125,7 +125,7 @@ namespace ToolCalendar.Core.Services
                 string toolResult = await _toolRegistry.ExecuteToolAsync("search_documents_by_condition", dictArgs);
                 
                 string fastReply = $"Dạ báo cáo sếp, em đã tra cứu theo yêu cầu. Kết quả:\n\n{toolResult}";
-                _chatHistoryRepo.AddMessage(userId, "assistant", fastReply);
+                await _chatHistoryRepo.AddMessageAsync(userId, "assistant", fastReply);
                 
                 foreach (var chunk in SplitIntoChunks(fastReply, 50))
                     yield return chunk;
@@ -146,7 +146,7 @@ namespace ToolCalendar.Core.Services
                     {
                         _logger.LogInformation("[AiAssistant] CACHE HIT! Trả về từ AiSemanticCache.");
                         string finalReplyForChatCache = await HandleSpecialTagsAsync(cachedResponse, userId);
-                        try { _chatHistoryRepo.AddMessage(userId, "assistant", finalReplyForChatCache); }
+                        try { await _chatHistoryRepo.AddMessageAsync(userId, "assistant", finalReplyForChatCache); }
                         catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi lưu tin nhắn assistant: {Msg}", ex.Message); }
                         cacheHitResponse = cachedResponse; // Lưu lại, yield bên ngoài try
                     }
@@ -184,7 +184,7 @@ namespace ToolCalendar.Core.Services
                         try
                         {
                             float simThreshold = 0.65f; // Mặc định của python-ai-service
-                            var settingVal = _settingRepo.GetAppSetting("AiSimilarityThreshold", "");
+                            var settingVal = await _settingRepo.GetAppSettingAsync("AiSimilarityThreshold", "");
                             if (float.TryParse(settingVal, out var t)) simThreshold = t;
 
                             var compressPayload = new
@@ -282,7 +282,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             List<ChatMessageDto> history = new();
             try
             {
-                var fullHistory = _chatHistoryRepo.GetHistoryByUserId(userId, 20);
+                var fullHistory = await _chatHistoryRepo.GetHistoryByUserIdAsync(userId, 20);
                 int totalChars = 0;
                 foreach (var msg in fullHistory.AsEnumerable().Reverse())
                 {
@@ -520,7 +520,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             // Xử lý tags đặc biệt
             string finalReplyForChat = await HandleSpecialTagsAsync(finalTextNoStream, userId);
 
-            try { _chatHistoryRepo.AddMessage(userId, "assistant", finalReplyForChat); }
+            try { await _chatHistoryRepo.AddMessageAsync(userId, "assistant", finalReplyForChat); }
             catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể lưu tin nhắn assistant: {Msg}", ex.Message); }
 
             // Lưu vào Semantic Cache để tái sử dụng (không lưu các câu thông báo lỗi/quá tải)
@@ -562,12 +562,12 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
             }
 
             // Handle REMINDER tag (giữ nguyên logic cũ)
-            result = HandleReminderTag(result, userId);
+            result = await HandleReminderTag(result, userId);
 
             return result;
         }
 
-        private string HandleReminderTag(string finalReply, int userId)
+        private async Task<string> HandleReminderTag(string finalReply, int userId)
         {
             string finalReplyForChat = finalReply;
             var match = Regex.Match(finalReply, @"\[REMINDER\|(.*?)\|(.*?)\]");
@@ -580,7 +580,7 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
                 {
                     try
                     {
-                        _reminderRepo.AddReminder(userId, content.Trim(), remindAt.ToString("yyyy-MM-dd HH:mm:ss"));
+                        await _reminderRepo.AddReminderAsync(userId, content.Trim(), remindAt.ToString("yyyy-MM-dd HH:mm:ss"));
                         _logger.LogInformation("[AiAssistant] Đã lưu nhắc nhở: {Content} lúc {At}", content, remindAt);
                     }
                     catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi lưu reminder: {Msg}", ex.Message); }

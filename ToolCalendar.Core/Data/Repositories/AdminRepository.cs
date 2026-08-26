@@ -3,7 +3,9 @@ using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Models;
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.IO;
 
 namespace ToolCalendar.Core.Data.Repositories
@@ -27,16 +29,15 @@ namespace ToolCalendar.Core.Data.Repositories
                 }
             }
         }
-
-        public List<Department> GetDepartments()
+        public async Task<List<Department>> GetDepartmentsAsync()
         {
             var list = new List<Department>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             string sql = "SELECT Id, Name, Description, IsActive FROM Departments";
             using var cmd = new SqliteCommand(sql, connection);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
                 list.Add(new Department
                 {
@@ -48,8 +49,7 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             return list;
         }
-
-        public int InsertDepartment(Department d)
+        public async Task<int> InsertDepartmentAsync(Department d)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -57,10 +57,9 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@n", d.Name);
             cmd.Parameters.AddWithValue("@d", d.Description);
             cmd.Parameters.AddWithValue("@ia", d.IsActive ? 1 : 0);
-            return Convert.ToInt32(cmd.ExecuteScalar());
+            return Convert.ToInt32(await cmd.ExecuteScalarAsync());
         }
-
-        public void UpdateDepartment(Department d)
+        public async Task UpdateDepartmentAsync(Department d)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -69,26 +68,24 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@d", d.Description);
             cmd.Parameters.AddWithValue("@ia", d.IsActive ? 1 : 0);
             cmd.Parameters.AddWithValue("@id", d.Id);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public void DeleteDepartment(int id)
+        public async Task DeleteDepartmentAsync(int id)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             using var cmd = new SqliteCommand("UPDATE Departments SET IsActive = 0 WHERE Id = @id", connection);
             cmd.Parameters.AddWithValue("@id", id);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public List<DocumentLabel> GetLabels()
+        public async Task<List<DocumentLabel>> GetLabelsAsync()
         {
             var list = new List<DocumentLabel>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             using var cmd = new SqliteCommand("SELECT Id, Name, Color FROM Labels", connection);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
                 list.Add(new DocumentLabel
                 {
@@ -99,18 +96,16 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             return list;
         }
-
-        public int InsertLabel(DocumentLabel l)
+        public async Task<int> InsertLabelAsync(DocumentLabel l)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             using var cmd = new SqliteCommand("INSERT INTO Labels (Name, Color) VALUES (@n, @c); SELECT last_insert_rowid();", connection);
             cmd.Parameters.AddWithValue("@n", l.Name);
             cmd.Parameters.AddWithValue("@c", l.Color);
-            return Convert.ToInt32(cmd.ExecuteScalar());
+            return Convert.ToInt32(await cmd.ExecuteScalarAsync());
         }
-
-        public void DeleteLabel(int id)
+        public async Task DeleteLabelAsync(int id)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -138,15 +133,14 @@ namespace ToolCalendar.Core.Data.Repositories
                 throw;
             }
         }
-
-        public List<AutoRule> GetAutoRules()
+        public async Task<List<AutoRule>> GetAutoRulesAsync()
         {
             var list = new List<AutoRule>();
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             using var cmd = new SqliteCommand("SELECT r.Id, r.Keyword, r.LabelId, r.DepartmentId, r.DefaultDeadlineDays, d.Name as DepartmentName FROM AutoRules r LEFT JOIN Departments d ON r.DepartmentId = d.Id", connection);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
                 list.Add(new AutoRule
                 {
@@ -160,8 +154,7 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             return list;
         }
-
-        public int InsertAutoRule(AutoRule r)
+        public async Task<int> InsertAutoRuleAsync(AutoRule r)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -171,16 +164,15 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@l", (object?)r.LabelId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@dept", (object?)r.DepartmentId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@d", r.DefaultDeadlineDays);
-            return Convert.ToInt32(cmd.ExecuteScalar());
+            return Convert.ToInt32(await cmd.ExecuteScalarAsync());
         }
-
-        public void DeleteAutoRule(int id)
+        public async Task DeleteAutoRuleAsync(int id)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             using var cmd = new SqliteCommand("DELETE FROM AutoRules WHERE Id = @id", connection);
             cmd.Parameters.AddWithValue("@id", id);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }

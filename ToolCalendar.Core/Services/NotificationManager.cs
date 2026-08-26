@@ -42,7 +42,7 @@ namespace ToolCalendar.Services
 
         public async Task SendToUserAsync(int userId, string title, string body, object? data = null)
         {
-            var user = _userRepo.GetUserById(userId);
+            var user = await _userRepo.GetUserByIdAsync(userId);
             if (user == null)
             {
                 _logger.LogWarning($"[NotificationManager] Không tìm thấy user ID {userId} để gửi thông báo.");
@@ -63,7 +63,7 @@ namespace ToolCalendar.Services
             }
 
             // 2. Gửi Web Push (nếu có subscription)
-            var subscriptions = _notificationRepo.GetPushSubscriptions(userId);
+            var subscriptions = await _notificationRepo.GetPushSubscriptionsAsync(userId);
             if (subscriptions.Any())
             {
                 string? url = null;
@@ -112,7 +112,7 @@ namespace ToolCalendar.Services
                 } catch { /* Bỏ qua lỗi parse data */ }
             }
 
-            _notificationRepo.InsertNotification(new Core.Models.NotificationRecord
+            await _notificationRepo.InsertNotificationAsync(new Core.Models.NotificationRecord
             {
                 UserId = userId,
                 Title = title,
@@ -138,7 +138,7 @@ namespace ToolCalendar.Services
             }
 
             // 5. Log vào AuditLog (Tối giản để tránh phình DB)
-            _auditRepo.InsertAuditLog(userId, $"Thông báo: {title}");
+            await _auditRepo.InsertAuditLogAsync(userId, $"Thông báo: {title}");
         }
     }
 }

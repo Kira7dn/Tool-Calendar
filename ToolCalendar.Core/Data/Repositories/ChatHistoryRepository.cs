@@ -1,5 +1,7 @@
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
@@ -17,12 +19,11 @@ namespace ToolCalendar.Core.Data.Repositories
                       ?? "documents.db";
             _connectionString = $"Data Source={dbPath};Pooling=True;Default Timeout=30;Cache=Shared";
         }
-
-        public List<ChatMessageDto> GetHistoryByUserId(int userId, int limit = 20)
+        public async Task<List<ChatMessageDto>> GetHistoryByUserIdAsync(int userId, int limit = 20)
         {
             var list = new List<ChatMessageDto>();
             using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            await conn.OpenAsync();
 
             // Lấy `limit` tin nhắn gần nhất nhưng theo thứ tự cũ trước, mới sau
             using var cmd = conn.CreateCommand();
@@ -38,8 +39,8 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@UserId", userId);
             cmd.Parameters.AddWithValue("@Limit", limit);
 
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
                 list.Add(new ChatMessageDto
                 {
@@ -53,11 +54,10 @@ namespace ToolCalendar.Core.Data.Repositories
 
             return list;
         }
-
-        public void AddMessage(int userId, string role, string content)
+        public async Task AddMessageAsync(int userId, string role, string content)
         {
             using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            await conn.OpenAsync();
 
             using var cmd = conn.CreateCommand();
             cmd.CommandText = @"
@@ -67,19 +67,18 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@Role", role);
             cmd.Parameters.AddWithValue("@Content", content);
 
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public void ClearHistory(int userId)
+        public async Task ClearHistoryAsync(int userId)
         {
             using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            await conn.OpenAsync();
 
             using var cmd = conn.CreateCommand();
             cmd.CommandText = "DELETE FROM ChatMessages WHERE UserId = @UserId";
             cmd.Parameters.AddWithValue("@UserId", userId);
 
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }

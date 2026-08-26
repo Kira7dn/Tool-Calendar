@@ -37,7 +37,7 @@ namespace ToolCalendar.Services
                     {
                         var reminderRepo = scope.ServiceProvider.GetRequiredService<IReminderRepository>();
                         
-                        var pendingReminders = reminderRepo.GetPendingReminders();
+                        var pendingReminders = await reminderRepo.GetPendingRemindersAsync();
                         
                         if (pendingReminders.Any())
                         {
@@ -54,7 +54,7 @@ namespace ToolCalendar.Services
                                     });
 
                                 // Đánh dấu đã gửi
-                                reminderRepo.MarkAsSent(reminder.Id);
+                                await reminderRepo.MarkAsSentAsync(reminder.Id);
                                 _logger.LogInformation($"[ReminderWorker] Đã gửi nhắc nhở {reminder.Id} cho User {reminder.UserId}.");
                             }
                         }

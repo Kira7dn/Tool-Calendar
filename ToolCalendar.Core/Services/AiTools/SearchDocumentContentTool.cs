@@ -70,7 +70,7 @@ namespace ToolCalendar.Core.Services.AiTools
                 string? ngayBanHanh = arguments.TryGetValue("ngay_ban_hanh", out var ngObj) ? ngObj?.ToString() : null;
 
                 float simThreshold = 0.20f;
-                var settingVal = _settingRepo.GetAppSetting("AiSimilarityThreshold", "0.20");
+                var settingVal = await _settingRepo.GetAppSettingAsync("AiSimilarityThreshold", "0.20");
                 if (float.TryParse(settingVal, out var t)) simThreshold = t;
 
                 // ============================================================

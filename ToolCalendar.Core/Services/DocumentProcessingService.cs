@@ -242,8 +242,8 @@ namespace ToolCalendar.Services
             try
             {
                 // Lấy cấu hình từ khóa thời hạn
-                var dlKeywordsStr = settingRepo.GetAppSetting("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
-                var dlExcludeStr = settingRepo.GetAppSetting("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
+                var dlKeywordsStr = await settingRepo.GetAppSettingAsync("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
+                var dlExcludeStr = await settingRepo.GetAppSettingAsync("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
                 
                 var deadlineKeywords = dlKeywordsStr.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
                 var excludeKeywords = dlExcludeStr.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();

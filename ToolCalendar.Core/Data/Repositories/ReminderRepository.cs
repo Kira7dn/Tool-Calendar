@@ -1,5 +1,7 @@
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
@@ -18,11 +20,10 @@ namespace ToolCalendar.Core.Data.Repositories
                       ?? "documents.db";
             _connectionString = $"Data Source={dbPath};Pooling=True;Default Timeout=30;Cache=Shared";
         }
-
-        public int AddReminder(int userId, string content, string remindAt)
+        public async Task<int> AddReminderAsync(int userId, string content, string remindAt)
         {
             using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            await conn.OpenAsync();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = @"
                 INSERT INTO Reminders (UserId, Content, RemindAt)
@@ -32,14 +33,13 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@Content", content);
             cmd.Parameters.AddWithValue("@RemindAt", remindAt);
 
-            return Convert.ToInt32(cmd.ExecuteScalar());
+            return Convert.ToInt32(await cmd.ExecuteScalarAsync());
         }
-
-        public List<Reminder> GetPendingReminders()
+        public async Task<List<Reminder>> GetPendingRemindersAsync()
         {
             var list = new List<Reminder>();
             using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            await conn.OpenAsync();
             using var cmd = conn.CreateCommand();
             // Lấy các reminder chưa gửi và đã đến giờ nhắc
             cmd.CommandText = @"
@@ -47,8 +47,8 @@ namespace ToolCalendar.Core.Data.Repositories
                 FROM Reminders
                 WHERE IsSent = 0 AND datetime(RemindAt) <= datetime('now', 'localtime')";
             
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
                 list.Add(new Reminder
                 {
@@ -62,22 +62,20 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             return list;
         }
-
-        public void MarkAsSent(int id)
+        public async Task MarkAsSentAsync(int id)
         {
             using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            await conn.OpenAsync();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = "UPDATE Reminders SET IsSent = 1 WHERE Id = @Id";
             cmd.Parameters.AddWithValue("@Id", id);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public List<Reminder> GetUserReminders(int userId)
+        public async Task<List<Reminder>> GetUserRemindersAsync(int userId)
         {
             var list = new List<Reminder>();
             using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            await conn.OpenAsync();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = @"
                 SELECT Id, UserId, Content, RemindAt, IsSent, CreatedAt
@@ -86,8 +84,8 @@ namespace ToolCalendar.Core.Data.Repositories
                 ORDER BY RemindAt DESC LIMIT 50";
             cmd.Parameters.AddWithValue("@UserId", userId);
             
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
                 list.Add(new Reminder
                 {

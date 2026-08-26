@@ -27,8 +27,8 @@ namespace ToolCalendar.Services
             using var scope = _scopeFactory.CreateScope();
             var settingRepo = scope.ServiceProvider.GetRequiredService<ISettingRepository>();
 
-            _publicKey = settingRepo.GetAppSetting("Vapid_PublicKey");
-            _privateKey = settingRepo.GetAppSetting("Vapid_PrivateKey");
+            _publicKey = settingRepo.GetAppSettingAsync("Vapid_PublicKey").GetAwaiter().GetResult();
+            _privateKey = settingRepo.GetAppSettingAsync("Vapid_PrivateKey").GetAwaiter().GetResult();
 
             if (string.IsNullOrEmpty(_publicKey) || string.IsNullOrEmpty(_privateKey))
             {
@@ -37,8 +37,8 @@ namespace ToolCalendar.Services
                 _publicKey = keys.PublicKey;
                 _privateKey = keys.PrivateKey;
 
-                settingRepo.SaveAppSetting("Vapid_PublicKey", _publicKey);
-                settingRepo.SaveAppSetting("Vapid_PrivateKey", _privateKey);
+                settingRepo.SaveAppSettingAsync("Vapid_PublicKey", _publicKey).GetAwaiter().GetResult();
+                settingRepo.SaveAppSettingAsync("Vapid_PrivateKey", _privateKey).GetAwaiter().GetResult();
             }
         }
 
@@ -64,7 +64,7 @@ namespace ToolCalendar.Services
                 {
                     using var scope = _scopeFactory.CreateScope();
                     var notificationRepo = scope.ServiceProvider.GetRequiredService<INotificationRepository>();
-                    notificationRepo.DeletePushSubscription(endpoint);
+                    await notificationRepo.DeletePushSubscriptionAsync(endpoint);
                 }
             }
             catch (Exception)

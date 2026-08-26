@@ -107,8 +107,7 @@ namespace ToolCalendar.Core.Data.Repositories
         }
 
         // ─── READ ────────────────────────────────────────────────────────────────
-
-        public List<User> GetUsers()
+        public async Task<List<User>> GetUsersAsync()
         {
             var users = new List<User>();
             using var connection = new SqliteConnection(_connectionString);
@@ -121,13 +120,12 @@ namespace ToolCalendar.Core.Data.Repositories
                 FROM Users u 
                 LEFT JOIN Departments d ON u.DepartmentId = d.Id";
             using var cmd = new SqliteCommand(sql, connection);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
                 users.Add(MapUser(reader));
             return users;
         }
-
-        public User? GetUserById(int id)
+        public async Task<User?> GetUserByIdAsync(int id)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -141,15 +139,15 @@ namespace ToolCalendar.Core.Data.Repositories
                 WHERE u.Id=@id";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
-            using var reader = cmd.ExecuteReader();
-            return reader.Read() ? MapUser(reader, includeSensitive: true) : null;
+            using var reader = await cmd.ExecuteReaderAsync();
+            return await reader.ReadAsync() ? MapUser(reader, includeSensitive: true) : null;
         }
 
         /// <summary>
         /// Tìm user theo username (case-insensitive qua NormalizedUserName).
         /// Được dùng bởi CustomUserStore của Identity.
         /// </summary>
-        public User? GetUserByUsername(string username)
+        public async Task<User?> GetUserByUsernameAsync(string username)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -164,13 +162,12 @@ namespace ToolCalendar.Core.Data.Repositories
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@norm", username.ToUpperInvariant());
             cmd.Parameters.AddWithValue("@raw", username);
-            using var reader = cmd.ExecuteReader();
-            return reader.Read() ? MapUser(reader, includeSensitive: true) : null;
+            using var reader = await cmd.ExecuteReaderAsync();
+            return await reader.ReadAsync() ? MapUser(reader, includeSensitive: true) : null;
         }
 
         // ─── LOGIN (giữ nguyên logic cũ, không thay đổi) ─────────────────────────
-
-        public User? Login(string username, string password)
+        public async Task<User?> LoginAsync(string username, string password)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -182,9 +179,9 @@ namespace ToolCalendar.Core.Data.Repositories
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@u", username);
             cmd.Parameters.AddWithValue("@norm", username.ToUpperInvariant());
-            using var reader = cmd.ExecuteReader();
+            using var reader = await cmd.ExecuteReaderAsync();
 
-            if (!reader.Read()) return null;
+            if (!await reader.ReadAsync()) return null;
 
             int userId            = Convert.ToInt32(reader["Id"]);
             string storedHash     = reader["PasswordHash"]?.ToString() ?? "";
@@ -279,8 +276,7 @@ namespace ToolCalendar.Core.Data.Repositories
         }
 
         // ─── CREATE / UPDATE / DELETE ────────────────────────────────────────────
-
-        public bool CreateUser(User user)
+        public async Task<bool> CreateUserAsync(User user)
         {
             try
             {
@@ -311,13 +307,12 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@d",     (object?)user.DepartmentId ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@stamp", securityStamp);
                 cmd.Parameters.AddWithValue("@norm",  normalizedUserName);
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
                 return true;
             }
             catch { return false; }
         }
-
-        public void UpdateUser(User user)
+        public async Task UpdateUserAsync(User user)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -344,25 +339,22 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@stamp", string.IsNullOrEmpty(user.SecurityStamp) ? Guid.NewGuid().ToString() : user.SecurityStamp);
             cmd.Parameters.AddWithValue("@ph",    user.PasswordHash ?? "");
             cmd.Parameters.AddWithValue("@id",    user.Id);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public void DeleteUser(int id)
+        public async Task DeleteUserAsync(int id)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             using var cmd = new SqliteCommand("DELETE FROM Users WHERE Id=@id", connection);
             cmd.Parameters.AddWithValue("@id", id);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public bool Register(string username, string password, string role = "Guest")
+        public async Task<bool> RegisterAsync(string username, string password, string role = "Guest")
         {
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
-            return CreateUser(new User { Username = username, PasswordHash = hashedPassword, Role = role });
+            return await CreateUserAsync(new User { Username = username, PasswordHash = hashedPassword, Role = role });
         }
-
-        public bool UpdateUserPassword(int userId, string newPassword)
+        public async Task<bool> UpdateUserPasswordAsync(int userId, string newPassword)
         {
             try
             {
@@ -378,7 +370,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@p",     hashedPassword);
                 cmd.Parameters.AddWithValue("@stamp", Guid.NewGuid().ToString());
                 cmd.Parameters.AddWithValue("@id",    userId);
-                return cmd.ExecuteNonQuery() > 0;
+                return await cmd.ExecuteNonQueryAsync() > 0;
             }
             catch { return false; }
         }
@@ -386,7 +378,7 @@ namespace ToolCalendar.Core.Data.Repositories
         // ─── ASP.NET CORE IDENTITY SUPPORT METHODS ───────────────────────────────
 
         /// <summary>Cập nhật SecurityStamp — được gọi khi đổi mật khẩu, đổi role, hoặc bị kick</summary>
-        public void UpdateSecurityStamp(int userId, string securityStamp)
+        public async Task UpdateSecurityStampAsync(int userId, string securityStamp)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -394,11 +386,11 @@ namespace ToolCalendar.Core.Data.Repositories
                 "UPDATE Users SET SecurityStamp = @stamp WHERE Id = @id", connection);
             cmd.Parameters.AddWithValue("@stamp", securityStamp);
             cmd.Parameters.AddWithValue("@id",    userId);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
 
         /// <summary>Cập nhật AccessFailedCount và LockoutEnd (Identity format, đồng bộ với cột cũ)</summary>
-        public void UpdateLockout(int userId, int accessFailedCount, DateTimeOffset? lockoutEnd)
+        public async Task UpdateLockoutAsync(int userId, int accessFailedCount, DateTimeOffset? lockoutEnd)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -413,11 +405,11 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@lockoutEnd",  (object?)lockoutEnd?.ToString("O") ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@lockoutUntil",(object?)lockoutEnd?.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@id",          userId);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
 
         /// <summary>Reset bộ đếm sai sau khi đăng nhập thành công</summary>
-        public void ResetAccessFailedCount(int userId)
+        public async Task ResetAccessFailedCountAsync(int userId)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -427,10 +419,9 @@ namespace ToolCalendar.Core.Data.Repositories
                     LockoutEnd        = NULL, LockoutUntil    = NULL
                 WHERE Id = @id", connection);
             cmd.Parameters.AddWithValue("@id", userId);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-
-        public void UpdateRefreshToken(int userId, string? refreshToken, DateTime? expiryTime)
+        public async Task UpdateRefreshTokenAsync(int userId, string? refreshToken, DateTime? expiryTime)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
@@ -442,9 +433,9 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@rt", string.IsNullOrEmpty(refreshToken) ? DBNull.Value : refreshToken);
             cmd.Parameters.AddWithValue("@exp", expiryTime.HasValue ? expiryTime.Value.ToString("O") : DBNull.Value);
             cmd.Parameters.AddWithValue("@id", userId);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync();
         }
-        public User? GetUserByRefreshToken(string refreshToken)
+        public async Task<User?> GetUserByRefreshTokenAsync(string refreshToken)
         {
             if (string.IsNullOrEmpty(refreshToken)) return null;
 
@@ -453,8 +444,8 @@ namespace ToolCalendar.Core.Data.Repositories
             string sql = "SELECT * FROM Users WHERE RefreshToken = @rt";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@rt", refreshToken);
-            using var reader = cmd.ExecuteReader();
-            if (reader.Read())
+            using var reader = await cmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
             {
                 return MapUser(reader);
             }

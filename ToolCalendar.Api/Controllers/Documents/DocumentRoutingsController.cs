@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Data.Repositories;
@@ -69,7 +70,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             {
                 if (routing.Role == "Chủ trì")
                 {
-                    var receiver = _userRepo.GetUserById(routing.ReceiverId);
+                    var receiver = await _userRepo.GetUserByIdAsync(routing.ReceiverId);
                     await _documentRepo.UpdateHandlerAsync(documentId, routing.ReceiverId, receiver?.DepartmentId);
                 }
 
@@ -138,7 +139,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             }
 
             // Gửi thông báo cho người đã chuyển (SenderId)
-            var receiver = _userRepo.GetUserById(currentUserId);
+            var receiver = await _userRepo.GetUserByIdAsync(currentUserId);
             var docName = doc?.TenCongVan ?? "văn bản";
 
             await _notificationManager.SendToUserAsync(
