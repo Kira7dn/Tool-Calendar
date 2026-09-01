@@ -27,7 +27,11 @@ class EmbedService:
         if request.use_cache:
             self.radix_cache.put(request.text, vector)
 
-        return EmbedResponse(vector=vector, cached=False, dim=len(vector))
+        # Get model version from the original embedder instance
+        from embeddings.semantic_embedder import get_embedder
+        model_name = get_embedder().model_name
+
+        return EmbedResponse(vector=vector, cached=False, dim=len(vector), model_version=model_name)
 
     async def embed_batch(self, request: BatchEmbedRequest) -> BatchEmbedResponse:
         if not request.texts:
@@ -62,7 +66,12 @@ class EmbedService:
                 raise AiServerError("Failed to generate batch embeddings")
 
         final_vectors = [v if v is not None else [] for v in vectors]
-        return BatchEmbedResponse(vectors=final_vectors, count=len(final_vectors))
+        
+        # Lấy model version
+        from embeddings.semantic_embedder import get_embedder
+        model_name = get_embedder().model_name
+        
+        return BatchEmbedResponse(vectors=final_vectors, count=len(final_vectors), model_version=model_name)
     
     def cache_stats(self) -> dict:
         return self.radix_cache.stats()

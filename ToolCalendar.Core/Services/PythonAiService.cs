@@ -225,6 +225,9 @@ namespace ToolCalendar.Services
 
         [JsonPropertyName("count")]
         public int Count { get; set; }
+
+        [JsonPropertyName("model_version")]
+        public string ModelVersion { get; set; } = string.Empty;
     }
 
     public class GenerateQARequest

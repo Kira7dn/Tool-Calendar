@@ -119,26 +119,27 @@ class SmartTextChunker:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
-    def _split_text(self, text: str) -> list[str]:
+    def _split_text(self, text: str, chunk_size: int | None = None) -> list[str]:
         """
         Recursive character splitter — cắt text theo separators theo thứ tự ưu tiên.
-        Logic học từ RecursiveCharacterTextSplitter của langchain (được dùng trong gpt-researcher).
         """
-        # Dọn dẹp OCR noise — xóa ký tự không in được và nhiều khoảng trắng thừa
+        effective_size = chunk_size or self.chunk_size
+        # Dọn dẹp OCR noise
         text = re.sub(r'[^\x20-\x7E\u00C0-\u024F\u1E00-\u1EFF\n\t]', ' ', text)
         text = re.sub(r'\s{3,}', '\n\n', text)
         text = text.strip()
 
-        if len(text) <= self.chunk_size:
+        if len(text) <= effective_size:
             return [text] if text else []
 
         chunks = []
-        self._recursive_split(text, VIETNAMESE_SEPARATORS, chunks)
+        self._recursive_split(text, VIETNAMESE_SEPARATORS, chunks, effective_size)
         return [c for c in chunks if c.strip()]
 
-    def _recursive_split(self, text: str, separators: list[str], chunks: list[str]):
-        """Đệ quy chia text theo separator tốt nhất"""
-        if len(text) <= self.chunk_size:
+    def _recursive_split(self, text: str, separators: list[str], chunks: list[str], chunk_size: int | None = None):
+        """Dệ quy chia text theo separator tốt nhất"""
+        effective_size = chunk_size or self.chunk_size
+        if len(text) <= effective_size:
             chunks.append(text)
             return
 
@@ -154,9 +155,9 @@ class SmartTextChunker:
 
         if not separator:
             # Fallback: cắt thẳng
-            chunks.append(text[:self.chunk_size])
-            remaining = text[self.chunk_size - self.chunk_overlap:]
-            self._recursive_split(remaining, separators, chunks)
+            chunks.append(text[:effective_size])
+            remaining = text[effective_size - self.chunk_overlap:]
+            self._recursive_split(remaining, separators, chunks, effective_size)
             return
 
         # Chia theo separator
@@ -166,21 +167,21 @@ class SmartTextChunker:
         for split in splits:
             candidate = (current_chunk + separator + split).strip() if current_chunk else split.strip()
 
-            if len(candidate) > self.chunk_size and current_chunk:
+            if len(candidate) > effective_size and current_chunk:
                 # Flush current chunk
                 if current_chunk.strip():
                     chunks.append(current_chunk.strip())
                 # Bắt đầu chunk mới với overlap
                 overlap_text = current_chunk[-self.chunk_overlap:] if len(current_chunk) > self.chunk_overlap else current_chunk
                 current_chunk = overlap_text + separator + split if overlap_text else split
-            elif len(candidate) > self.chunk_size:
+            elif len(candidate) > effective_size:
                 # Split đơn lẻ quá lớn — đệ quy với separator nhỏ hơn
                 if new_separators:
-                    self._recursive_split(split, new_separators, chunks)
+                    self._recursive_split(split, new_separators, chunks, effective_size)
                 else:
                     # Force cut
-                    for i in range(0, len(split), self.chunk_size - self.chunk_overlap):
-                        chunks.append(split[i:i + self.chunk_size])
+                    for i in range(0, len(split), effective_size - self.chunk_overlap):
+                        chunks.append(split[i:i + effective_size])
                 current_chunk = ""
             else:
                 current_chunk = candidate
@@ -223,22 +224,19 @@ class SmartTextChunker:
         Returns:
             Danh sách DocumentChunk
         """
-        # DIFY Adaptive Chunk Size — chỉ bật khi adaptive=True (tôn trọng hợp đồng caller)
+        # Fix thread-safety: không ghi đè self.chunk_size nữa
+        # Truyền chunk_size_to_use xuống _split_text/recursive_split như parameter
         if adaptive:
             chunk_size_to_use = compute_adaptive_chunk_size(len(text), self.chunk_size)
         else:
             chunk_size_to_use = self.chunk_size
 
-        # Tạm thời set chunk_size cho lần split này (thread-safe nếu dùng một instance)
-        original_size = self.chunk_size
-        self.chunk_size = chunk_size_to_use
-
         try:
-            raw_chunks = self._split_text(text)
-            # Late Chunking: gộp các đoạn quá ngắn
+            raw_chunks = self._split_text(text, chunk_size=chunk_size_to_use)
             raw_chunks = self._merge_short_chunks(raw_chunks, min_length=80)
-        finally:
-            self.chunk_size = original_size  # Restore luôn — dù adaptive hay không
+        except Exception as e:
+            logger.error("[Chunker] Split error: %s", str(e))
+            raw_chunks = [text]  # Fallback: trả nguyên văn bản
 
         result = []
         for i, chunk_text in enumerate(raw_chunks):

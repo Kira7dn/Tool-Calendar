@@ -12,26 +12,23 @@ class RagService:
     async def compress_context(self, request):
         if not request.query or not request.documents:
             raise AiClientError("query and documents required")
-            
-        compressor = self.compressor
-        if request.similarity_threshold is not None:
-            from rag.compressor import ContextCompressor
-            compressor = ContextCompressor(
-                embedder=self.batch_embedder,
-                chunker=self.chunker,
-                similarity_threshold=request.similarity_threshold,
-                max_results=request.max_results,
-            )
+
+        # Fix: không tạo ContextCompressor mới mỗi request
+        # Truyền params trực tiếp vào compress() — compressor dùng chung singleton
+        effective_threshold = request.similarity_threshold or self.compressor.similarity_threshold
+        effective_max = request.max_results or self.compressor.max_results
 
         try:
-            chunks = await compressor.compress(
+            chunks = await self.compressor.compress(
                 query=request.query,
                 documents=request.documents,
-                max_results=request.max_results,
+                max_results=effective_max,
+                similarity_threshold_override=effective_threshold,
             )
         except Exception as e:
             logger.error("[RagService.compress] Error: %s", str(e))
             raise AiServerError("Compression failed")
+
 
         if chunks:
             context_parts = []

@@ -83,14 +83,15 @@ class ContextCompressor:
         query: str,
         documents: list[dict],
         max_results: Optional[int] = None,
+        similarity_threshold_override: Optional[float] = None,
     ) -> list[dict]:
         """
-        Full RAG Pipeline 3 bước:
-          1. Embedding cosine similarity → top-(k*4) candidates
-          2. Hybrid BM25 + Semantic rerank (Dify)
-          3. CrossEncoder rerank → top-k final (Khoj)
+        Full RAG Pipeline 3 bước.
+        similarity_threshold_override: ghi đè threshold cho request này mà không tạo object mới.
         """
         k = max_results or self.max_results
+        threshold = similarity_threshold_override if similarity_threshold_override is not None else self.similarity_threshold
+
 
         if not query or not documents:
             return []
@@ -156,7 +157,7 @@ class ContextCompressor:
         scored: list[tuple[float, DocumentChunk]] = []
         for chunk, vec in zip(all_chunks, chunk_vecs):
             score = cosine_similarity(query_vec, vec)
-            if score >= self.similarity_threshold:
+            if score >= threshold:
                 scored.append((score, chunk))
 
         scored.sort(key=lambda x: x[0], reverse=True)

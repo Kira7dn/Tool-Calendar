@@ -2,10 +2,11 @@ from pydantic import BaseModel, Field, model_validator
 from typing import Optional
 
 class CompressRequest(BaseModel):
-    query: str
-    documents: list[dict]  # [{text, title, date, source, id}]
-    max_results: int = 8
-    similarity_threshold: Optional[float] = None  # Override default 0.65
+    # R-S03: Giới hạn query và số documents để tránh OOM
+    query: str = Field(..., max_length=2000)
+    documents: list[dict] = Field(..., max_length=50)  # tối đa 50 documents
+    max_results: int = Field(8, ge=1, le=20)
+    similarity_threshold: Optional[float] = Field(None, ge=0.0, le=1.0)
 
 class CompressResponse(BaseModel):
     chunks: list[dict]

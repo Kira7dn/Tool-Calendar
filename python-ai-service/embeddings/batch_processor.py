@@ -29,8 +29,9 @@ BATCH_WAIT_MS = 10
 class EmbedRequest:
     """Một request embed — tương đương server_task trong llama.cpp"""
     text: str
-    future: asyncio.Future = field(default_factory=lambda: asyncio.get_event_loop().create_future())
     normalize: bool = True  # L2-normalize như llama.cpp embd_normalize=2
+    # future được tạo tường minh bởi caller — không dùng default_factory để tránh get_event_loop deprecated
+    future: asyncio.Future = field(default=None)  # type: ignore[assignment]
 
 
 class AsyncBatchEmbedder:
@@ -61,22 +62,30 @@ class AsyncBatchEmbedder:
     async def embed(self, text: str, normalize: bool = True) -> list[float]:
         """
         Gửi 1 request embed vào queue, chờ kết quả.
-        Tương đương post() trong server_queue.h
+        Timeout 30s để tránh treo vĩnh viễn khi worker chết (fix R-C03).
         """
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()  # Fix: get_running_loop() thay vì deprecated get_event_loop()
         req = EmbedRequest(text=text, future=loop.create_future(), normalize=normalize)
         await self._queue.put(req)
-        return await req.future
+        try:
+            return await asyncio.wait_for(req.future, timeout=30.0)
+        except asyncio.TimeoutError:
+            from exceptions import EmbeddingUnavailableError
+            raise EmbeddingUnavailableError("Embedding worker không phản hồi sau 30s — worker có thể đã chết")
 
     async def embed_batch(self, texts: list[str], normalize: bool = True) -> list[list[float]]:
-        """Gửi nhiều text cùng lúc, chờ tất cả kết quả về"""
+        """Gửi nhiều text cùng lúc, chờ tất cả kết quả về. Timeout 60s tổng."""
         futures = []
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()  # Fix: deprecated get_event_loop()
         for text in texts:
             req = EmbedRequest(text=text, future=loop.create_future(), normalize=normalize)
             await self._queue.put(req)
             futures.append(req.future)
-        return await asyncio.gather(*futures)
+        try:
+            return await asyncio.wait_for(asyncio.gather(*futures), timeout=60.0)
+        except asyncio.TimeoutError:
+            from exceptions import EmbeddingUnavailableError
+            raise EmbeddingUnavailableError("Batch embedding timeout sau 60s")
 
     async def _batch_worker(self):
         """
@@ -91,9 +100,10 @@ class AsyncBatchEmbedder:
                 pending.append(first)
 
                 # Chờ thêm BATCH_WAIT_MS để gom batch — giống deferred queue
-                deadline = asyncio.get_event_loop().time() + BATCH_WAIT_MS / 1000
+                loop = asyncio.get_running_loop()  # Fix: deprecated get_event_loop()
+                deadline = loop.time() + BATCH_WAIT_MS / 1000
                 while len(pending) < MAX_BATCH_SIZE:
-                    remaining = deadline - asyncio.get_event_loop().time()
+                    remaining = deadline - loop.time()
                     if remaining <= 0:
                         break
                     try:

@@ -420,7 +420,7 @@ namespace ToolCalendar.Services
                                         var vector = embedResult.Vectors[cIndex];
                                         if (vector != null && vector.Count > 0)
                                         {
-                                            await chunkRepo.AddChunkAsync(docId, (pIndex * 1000) + cIndex, cText, vector.ToArray(), parentDbId);
+                                            await chunkRepo.AddChunkAsync(docId, (pIndex * 1000) + cIndex, cText, vector.ToArray(), parentDbId, embedResult.ModelVersion);
                                             totalChildren++;
                                         }
                                     }

@@ -78,7 +78,7 @@ namespace ToolCalendar.Core.Data.Repositories
             }
         }
 
-        public async Task<int> AddChunkAsync(int documentId, int chunkIndex, string textContent, float[] vector, int? parentChunkId = null)
+        public async Task<int> AddChunkAsync(int documentId, int chunkIndex, string textContent, float[] vector, int? parentChunkId = null, string? embeddingModelVersion = null)
         {
             var vectorJson = JsonSerializer.Serialize(vector);
             using var connection = new SqliteConnection(_connectionString);
@@ -86,8 +86,8 @@ namespace ToolCalendar.Core.Data.Repositories
 
             using var cmd = connection.CreateCommand();
             cmd.CommandText = @"
-                INSERT INTO DocumentChunks (DocumentId, ChunkIndex, TextContent, VectorJson, ParentChunkId)
-                VALUES (@DocumentId, @ChunkIndex, @TextContent, @VectorJson, @ParentChunkId);
+                INSERT INTO DocumentChunks (DocumentId, ChunkIndex, TextContent, VectorJson, ParentChunkId, EmbeddingModelVersion)
+                VALUES (@DocumentId, @ChunkIndex, @TextContent, @VectorJson, @ParentChunkId, @EmbeddingModelVersion);
                 SELECT last_insert_rowid();";
             
             cmd.Parameters.AddWithValue("@DocumentId", documentId);
@@ -95,6 +95,7 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@TextContent", textContent);
             cmd.Parameters.AddWithValue("@VectorJson", vectorJson);
             cmd.Parameters.AddWithValue("@ParentChunkId", parentChunkId.HasValue ? (object)parentChunkId.Value : DBNull.Value);
+            cmd.Parameters.AddWithValue("@EmbeddingModelVersion", (object?)embeddingModelVersion ?? DBNull.Value);
 
             var newIdObj = await cmd.ExecuteScalarAsync();
             int newId = Convert.ToInt32(newIdObj);
@@ -463,5 +464,34 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             return childText; // Fallback
         }
+
+        /// <summary>
+        /// Lấy danh sách model version đang được lưu trong DocumentChunks.
+        /// Dùng để phát hiện mismatch khi đổi embedding model (R-A01).
+        /// Nếu trả về nhiều version hoặc version khác với model hiện tại → cần re-index.
+        /// </summary>
+        public async Task<List<string>> GetDistinctModelVersionsAsync()
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                SELECT DISTINCT COALESCE(EmbeddingModelVersion, 'unknown') as Version, COUNT(*) as Count
+                FROM DocumentChunks
+                GROUP BY EmbeddingModelVersion
+                ORDER BY Count DESC";
+
+            var result = new List<string>();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var version = reader.GetString(0);
+                var count = reader.GetInt32(1);
+                result.Add($"{version} ({count} chunks)");
+            }
+            return result;
+        }
     }
 }
+

@@ -10,6 +10,7 @@ class EmbedResponse(BaseModel):
     vector: list[float]
     cached: bool = False
     dim: int = 0
+    model_version: str = ""  # Embedding model name — dùng để gắn vào DocumentChunks.EmbeddingModelVersion
 
 class BatchEmbedRequest(BaseModel):
     texts: list[str]
@@ -18,3 +19,4 @@ class BatchEmbedRequest(BaseModel):
 class BatchEmbedResponse(BaseModel):
     vectors: list[list[float]]
     count: int
+    model_version: str = ""

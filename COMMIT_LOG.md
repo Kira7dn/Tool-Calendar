@@ -1,4 +1,25 @@
+### [2026-09-01 22:46] security(ai): hardening python-ai-service theo ANALYSIS.md — 12 fix bảo mật và độ ổn định (phần 2/2 - wiring)
+- **Mô tả**: Áp dụng toàn bộ các fix được xác định qua phân tích chuyên sâu PYTHON-AI-SERVICE-ANALYSIS.md. Service trước đây có 4.7/10 do nhiều vấn đề runtime: không auth, timeout không có, race condition, dead code. Các fix này tập trung vào correctness và security mà không thay đổi thuật toán RAG.
+- **Tệp thay đổi**:
+  - `python-ai-service/requirements.txt` (Sửa đổi) — pin versions, thêm pydantic-settings, xóa 6 deps không dùng
+  - `python-ai-service/config.py` (Sửa đổi) — thêm api_secret_key, chuẩn hóa config
+  - `python-ai-service/main.py` (Sửa đổi) — fix Settings injection (None→thật), logging+ngày, /api/cache/clear đúng
+  - `python-ai-service/api/auth_middleware.py` (Mới) — X-API-Key middleware, bỏ qua /health
+  - `python-ai-service/llm_provider/ollama_client.py` (Sửa đổi) — fix hardcode URL → env var OLLAMA_URL
+  - `python-ai-service/embeddings/batch_processor.py` (Sửa đổi) — get_running_loop(), timeout 30s/60s cho embed
+  - `python-ai-service/rag/chunker.py` (Sửa đổi) — fix thread-safety: chunk_size không mutate self nữa
+  - `python-ai-service/rag/compressor.py` (Sửa đổi) — thêm similarity_threshold_override param
+  - `python-ai-service/schemas/document.py` (Sửa đổi) — max_length 500k + path traversal validator
+  - `python-ai-service/schemas/rag.py` (Sửa đổi) — max_length cho CompressRequest query + documents
+  - `python-ai-service/services/rag_service.py` (Sửa đổi) — không tạo ContextCompressor mới mỗi request
+  - `python-ai-service/Dockerfile` (Sửa đổi) — multi-stage build, bake reranker model, USER appuser
+  - `python-ai-service/llm_provider/prompt_cache.py` (Xóa) — dead code
+  - `python-ai-service/utils/json_repair.py` (Xóa) — dead code
+  - `python-ai-service/utils/retry.py` (Xóa) — dead code
+- **Lệnh git commit**: `git commit -m "security(ai): hardening python-ai-service — auth middleware, embed timeout, chunker thread-safety, path traversal fix"`
+
 ### [2026-08-26 15:41] chore(db): dọn dẹp các file database backup cũ và file rác trong data_dump
+
 - **Mô tả**: Xóa toàn bộ các file backup SQLite cũ trong thư mục `data_dump/backups/` và file `documents_vnpt.db` dư thừa để giải phóng dung lượng và làm sạch workspace. Chỉ giữ lại file database chính `data_dump/documents.db`.
 - **Tệp thay đổi**:
   - `data_dump/backups/*.db` (Xóa)
@@ -3879,3 +3900,24 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/Security/CustomUserStore.cs` (Sửa đổi)
   - `ToolCalendar.Api/Program.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(api): chuyển đổi toàn bộ repositories và controllers sang async await"`
+
+### [2026-09-01 22:58] Hoàn thành Hardening, Versioning, Observability, và Evaluation
+- **Mô tả**:
+  - Triển khai Tracking Embedding Model Version trong DocumentChunks (tránh lỗi lệch version sau này, tự động sync model name từ llama.cpp).
+  - Triển khai RequestTracingMiddleware cho Python AI Service, đính kèm X-Request-ID và đo processing duration phục vụ Observability.
+  - Xây dựng RAG Evaluation Service đo 3 metric offline (Faithfulness, Answer Relevance, Context Relevance) sử dụng cosine similarity, phơi API `/api/eval`.
+  - Thay đổi db schema DocumentChunks: thêm cột EmbeddingModelVersion.
+- **Tệp thay đổi**:
+  - `python-ai-service/schemas/embed.py` (Sửa đổi)
+  - `python-ai-service/schemas/eval.py` (Mới)
+  - `python-ai-service/services/embed_service.py` (Sửa đổi)
+  - `python-ai-service/services/eval_service.py` (Mới)
+  - `python-ai-service/api/eval.py` (Mới)
+  - `python-ai-service/api/router.py` (Sửa đổi)
+  - `python-ai-service/api/tracing_middleware.py` (Mới)
+  - `python-ai-service/main.py` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Interfaces/IDocumentChunkRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/DocumentChunkRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ai): triển khai RAG evaluation, model versioning và observability"`

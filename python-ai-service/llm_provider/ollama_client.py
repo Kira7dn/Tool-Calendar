@@ -95,10 +95,11 @@ def get_chat_queue_manager() -> ChatQueueManager:
 
 
 class OllamaClient:
-    def __init__(self, base_url: str = "http://host.docker.internal:11434"):
-        # Chỉ dùng Ollama — chạy hoàn toàn offline trên server nội bộ
-        # Tuyệt đối không gọi ra Internet để đảm bảo bí mật dữ liệu công văn
-        self.base_url = base_url
+    def __init__(self, base_url: str = ""):
+        # Fix R-O04: Đọc URL từ env hoặc caller, không hardcode
+        # Priority: 1) caller truyền tường minh, 2) env OLLAMA_URL, 3) default docker service name
+        import os
+        self.base_url = base_url or os.getenv("OLLAMA_URL", "http://ollama:11434")
 
     async def stream_chat(
         self, model: str, messages: list[dict]

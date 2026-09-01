@@ -162,6 +162,12 @@ builder.Services.AddHttpClient<IPythonAiService, PythonAiService>(client =>
     var pythonAiUrl = builder.Configuration["PythonAiServiceUrl"] ?? "http://python-ai-service:8001";
     client.BaseAddress = new Uri(pythonAiUrl);
     client.Timeout = TimeSpan.FromMinutes(10); // Docling có thể chạy lâu
+
+    // Thêm X-API-Key header để xác thực với python-ai-service middleware (fix R-S01)
+    // Key phải trùng với API_SECRET_KEY env var trong docker-compose
+    var apiKey = builder.Configuration["PythonAiService:ApiKey"] ?? "";
+    if (!string.IsNullOrEmpty(apiKey))
+        client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
 });
 builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();
 

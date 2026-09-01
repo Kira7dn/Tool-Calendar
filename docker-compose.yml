@@ -15,10 +15,15 @@ services:
     volumes:
       - ./ToolCalendar.Api/Uploads:/app/Uploads:ro
     environment:
-      - DOCLING_USE_SIMPLE_PIPELINE=false
+      # Bỏ DOCLING_USE_SIMPLE_PIPELINE → full pipeline với OCR thật cho PDF scan
       - TZ=Asia/Ho_Chi_Minh
+      # Ollama URL — đọc từ env, tránh hardcode trong code
+      - OLLAMA_URL=http://ollama:11434
+      # X-API-Key auth — đặt cùng giá trị với PythonAiService__ApiKey trong C# appsettings
+      - API_SECRET_KEY=${PYTHON_AI_SECRET_KEY}
     mem_limit: 2560m
-    memswap_limit: 2560m
+    # Thêm swap để tránh OOM-kill khi upload hàng loạt (fix R-O02)
+    memswap_limit: 4096m
     cpus: "1.5"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
