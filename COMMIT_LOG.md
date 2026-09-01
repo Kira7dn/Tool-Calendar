@@ -3927,3 +3927,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(infra): tăng script timeout của action deploy lên 45m tránh lỗi timeout khi build image"`
+
+### [2026-09-02 00:22] Fix cold start — thêm keep_alive 15m vào Ollama payload
+- **Mô tả**: Ollama mặc định sẽ swap model ra khỏi RAM sau 5 phút không dùng, gây ra cold start 10-30 giây cho mỗi câu hỏi đầu tiên. Thêm keep_alive=15m để model luôn sẵn sàng trong RAM.
+- **Tệp thay đổi**:
+  - `python-ai-service/llm_provider/ollama_client.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): thêm keep_alive 15m vào Ollama để tránh cold start làm bot trả lời chậm"`

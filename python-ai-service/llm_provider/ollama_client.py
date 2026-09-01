@@ -114,7 +114,12 @@ class OllamaClient:
         4. Release semaphore → request kế tiếp trong queue được phục vụ
         """
         url = f"{self.base_url}/api/chat"
-        payload = {"model": model, "messages": messages, "stream": True}
+        payload = {
+            "model": model,
+            "messages": messages,
+            "stream": True,
+            "keep_alive": "15m",  # Giữ model trong RAM 15 phút sau lần dùng cuối — tránh cold start
+        }
 
         queue_mgr = get_chat_queue_manager()
         try:
@@ -156,7 +161,12 @@ class OllamaClient:
         (extract-metadata, generate-qa, doc-summary...).
         """
         url = f"{self.base_url}/api/chat"
-        payload = {"model": model, "messages": messages, "stream": False}
+        payload = {
+            "model": model,
+            "messages": messages,
+            "stream": False,
+            "keep_alive": "15m",  # Giữ model trong RAM 15 phút sau lần dùng cuối — tránh cold start
+        }
         if format:
             payload["format"] = format
 
