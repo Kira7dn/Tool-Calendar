@@ -22,6 +22,7 @@ jobs:
           username: ${{ secrets.VNPT_USER }}
           password: ${{ secrets.VNPT_PASS }}
           port: 22
+          script_timeout: 45m
           script: |
             set -e
             cd /root/Tool-Calendar || exit 1

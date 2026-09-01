@@ -3921,3 +3921,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/PythonAiService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ai): triển khai RAG evaluation, model versioning và observability"`
+
+### [2026-09-01 23:18] Fix CI/CD deployment timeout issue
+- **Mô tả**: Tăng thời gian script_timeout của ssh-action trong deploy.yml từ default (10m) lên 45m để giải quyết lỗi "Run Command Timeout" khi docker compose build tải các thư viện C++ nặng.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): tăng script timeout của action deploy lên 45m tránh lỗi timeout khi build image"`
