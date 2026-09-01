@@ -11,11 +11,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 
-# Cài torch CPU (tách riêng để tận dụng layer cache)
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+# ── Bước 1: Cài torch CPU-only từ PyTorch CDN (tránh PyPI kéo bản CUDA nặng ~3GB) ──
+# Làm layer riêng để Docker cache lại — không cần build lại khi requirements.txt đổi nhỏ
+RUN pip install --no-cache-dir \
+    torch==2.4.1+cpu \
+    torchvision==0.19.1+cpu \
+    --index-url https://download.pytorch.org/whl/cpu
 
-# Cài toàn bộ requirements
-RUN pip install --no-cache-dir -r requirements.txt
+# ── Bước 2: Cài toàn bộ requirements — bỏ qua torch vì đã có ở bước 1 ──
+# --no-deps không dùng được vì sẽ bỏ qua các deps khác.
+# Dùng constraint file để pip KHÔNG upgrade/reinstall torch từ PyPI.
+RUN pip install --no-cache-dir -r requirements.txt \
+    --extra-index-url https://download.pytorch.org/whl/cpu
 
 # ── Final stage: image sạch, không có compiler ───────────────────────────────
 FROM python:3.11-slim

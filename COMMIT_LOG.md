@@ -3946,3 +3946,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/main.py` (Sửa đổi)
   - `python-ai-service/config.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): thêm Ollama LLM warm-up khi startup để loại bỏ cold start 30 giây"`
+
+### [2026-09-02 00:54] Tối ưu Dockerfile để tránh lỗi hết dung lượng ổ cứng (Errno 28)
+- **Mô tả**: Khi build `python-ai-service`, Docker cài `torch` hai lần (một lần bản CPU 150MB, một lần bản CUDA 3GB từ `requirements.txt`), làm phình dung lượng disk lên 12GB và gây lỗi "No space left on device" trên server VNPT. Sửa Dockerfile để tách riêng layer cài torch bản CPU và dùng flag `--extra-index-url` kết hợp với việc pin version trong `requirements.txt` để ngăn `pip` tự tải bản CUDA. 
+- **Tệp thay đổi**:
+  - `python-ai-service/Dockerfile` (Sửa đổi)
+  - `python-ai-service/requirements.txt` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): tối ưu Dockerfile giảm disk usage khi cài torch cpu"`
