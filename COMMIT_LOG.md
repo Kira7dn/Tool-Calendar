@@ -3953,3 +3953,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/Dockerfile` (Sửa đổi)
   - `python-ai-service/requirements.txt` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(infra): tối ưu Dockerfile giảm disk usage khi cài torch cpu"`
+
+### [2026-09-02 01:25] Fix AI slow cold starts in C# Backend
+- **Mô tả**: Sửa lỗi AI phản hồi chậm (27 giây) khi hỏi lần đầu do Ollama unload mô hình sau 5 phút. Thêm tham số `keep_alive = "60m"` vào các payload gọi sang Ollama trong C# Backend.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): add keep_alive=60m to Ollama requests to prevent 30s cold starts"`

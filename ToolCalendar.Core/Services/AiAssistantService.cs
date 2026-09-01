@@ -335,8 +335,8 @@ Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường v�
 
                 // Nếu đây là hop cuối cùng, bỏ tools để buộc AI sinh text
                 var requestBody = isLastHop
-                    ? (object)new { model = _modelName, messages = messages, stream = false, options = new { temperature = 0.0 } }
-                    : (object)new { model = _modelName, messages = messages, stream = false, tools = tools, options = new { temperature = 0.0 } };
+                    ? (object)new { model = _modelName, messages = messages, stream = false, keep_alive = "60m", options = new { temperature = 0.0 } }
+                    : (object)new { model = _modelName, messages = messages, stream = false, tools = tools, keep_alive = "60m", options = new { temperature = 0.0 } };
 
                 HttpResponseMessage? response1 = null;
                 bool connectionError = false;
