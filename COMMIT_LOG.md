@@ -3933,3 +3933,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/llm_provider/ollama_client.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): thêm keep_alive 15m vào Ollama để tránh cold start làm bot trả lời chậm"`
+
+### [2026-09-02 00:25] Thêm Performance Logging cho Chat API
+- **Mô tả**: Ghi log TTFT (Time To First Token) và Total Duration sau mỗi câu hỏi chat để monitor được tốc độ phản hồi của AI trên server production qua docker logs.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/ChatController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(api): thêm performance logging TTFT và total duration cho chat endpoint"`
