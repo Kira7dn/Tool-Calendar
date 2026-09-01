@@ -3939,3 +3939,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/ChatController.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(api): thêm performance logging TTFT và total duration cho chat endpoint"`
+
+### [2026-09-02 00:38] Thêm Ollama LLM Warm-Up khi startup để tránh cold start
+- **Mô tả**: Đo thực tế trên server VNPT cho thấy câu hỏi đầu tiên mất 37.7 giây do Ollama phải load model Qwen2.5:3b vào RAM. Bổ sung warm-up call ngay trong lifespan startup của Python AI Service để model luôn sẵn sàng trong RAM. Thêm llm_model vào Settings để dễ cấu hình qua env.
+- **Tệp thay đổi**:
+  - `python-ai-service/main.py` (Sửa đổi)
+  - `python-ai-service/config.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): thêm Ollama LLM warm-up khi startup để loại bỏ cold start 30 giây"`

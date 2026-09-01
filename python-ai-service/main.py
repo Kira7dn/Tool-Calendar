@@ -88,6 +88,30 @@ async def lifespan(app: FastAPI):
     app.state.docling = _docling
     app.state.settings = settings  # Fix: inject settings thật thay vì None
 
+    # ── Ollama LLM Warm-Up ────────────────────────────────────────────────
+    # Gọi 1 câu dummy để Ollama load model vào RAM ngay khi service khởi động.
+    # Không có bước này → câu hỏi đầu tiên bị cold start 25-30 giây.
+    logger.info("Warming up Ollama LLM model (loading into RAM)...")
+    try:
+        warmup_msg = [{"role": "user", "content": "Xin chào"}]
+        warmup_response = await _ollama_client.chat(
+            model=settings.llm_model,
+            messages=warmup_msg,
+            format="",  # Không ép JSON format cho warm-up
+        )
+        logger.info(
+            "Ollama LLM warm-up complete. Model '%s' loaded into RAM. Response preview: '%s'",
+            settings.llm_model,
+            (warmup_response or "")[:30],
+        )
+    except Exception as e:
+        logger.warning(
+            "Ollama LLM warm-up failed (Ollama chưa sẵn sàng?): %s — "
+            "Câu hỏi đầu tiên sẽ chậm hơn bình thường.",
+            str(e),
+        )
+    # ─────────────────────────────────────────────────────────────────────
+
     logger.info("=== AI Service Ready ===")
     yield
 

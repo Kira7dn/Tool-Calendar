@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # LLM Provider
     ollama_url: str = "http://ollama:11434"
+    llm_model: str = "qwen2.5:3b"  # Model dùng cho chat/warm-up — override bằng env LLM_MODEL
 
     # RAG Pipeline
     chunk_size: int = 800
