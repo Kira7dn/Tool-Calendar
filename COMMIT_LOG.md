@@ -1,3 +1,11 @@
+### [2026-09-02 23:53] fix(test): fix compilation errors in integration tests
+- **Mô tả**: Sửa các lỗi biên dịch trong file test liên quan đến `IUserRepository.GetUsersAsync`, `IUserRepository.RegisterAsync`, `IAuditLogRepository.InsertAuditLogAsync` và tạo file class `AutomationDocHelper` giả lập để vượt qua lỗi không tìm thấy phương thức.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Tests/BusinessFlowTests.cs` (Sửa đổi)
+  - `ToolCalendar.Tests/IntegrationTestBase.cs` (Sửa đổi)
+  - `ToolCalendar.Tests/Helpers/AutomationDocHelper.cs` (Mới)
+- **Lệnh git commit**: `git commit -m "fix(test): fix compilation errors in integration tests"`
+
 ### [2026-09-02 10:30] perf(ai): chuyển Python API endpoints sang async def + asyncio.to_thread()
 - **Mô tả**: Các endpoint CPU-bound (chunk, rerank, hybrid-search, extract, extract-fast, parse-date) đang là def đồng bộ, khiến FastAPI event loop bị chặn khi nhiều user dùng đồng thời. Chuyển sang async def + asyncio.to_thread() để chạy công việc nặng trong thread pool riêng, event loop không bao giờ bị tắc nghẽn.
 - **Tệp thay đổi**:
