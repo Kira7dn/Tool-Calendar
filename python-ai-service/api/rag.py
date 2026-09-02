@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, Request
 from schemas import CompressRequest, CompressResponse, RerankRequest, HybridSearchRequest, ChunkRequest, ChunkResponse
 from services.rag_service import RagService
@@ -16,13 +17,16 @@ async def compress_context(request: CompressRequest, svc: RagService = Depends(g
     return await svc.compress_context(request)
 
 @router.post("/api/chunk", response_model=ChunkResponse)
-def chunk_document(request: ChunkRequest, svc: RagService = Depends(get_rag_service)):
-    return svc.chunk_document(request)
+async def chunk_document(request: ChunkRequest, svc: RagService = Depends(get_rag_service)):
+    # CPU-bound: dùng asyncio.to_thread để không block event loop
+    return await asyncio.to_thread(svc.chunk_document, request)
 
 @router.post("/api/rerank")
-def rerank_chunks(request: RerankRequest, svc: RagService = Depends(get_rag_service)):
-    return svc.rerank_chunks(request)
+async def rerank_chunks(request: RerankRequest, svc: RagService = Depends(get_rag_service)):
+    # CPU-bound (Cross-Encoder model): chạy trong thread pool
+    return await asyncio.to_thread(svc.rerank_chunks, request)
 
 @router.post("/api/hybrid-search")
-def hybrid_search(request: HybridSearchRequest, svc: RagService = Depends(get_rag_service)):
-    return svc.hybrid_search(request)
+async def hybrid_search(request: HybridSearchRequest, svc: RagService = Depends(get_rag_service)):
+    # CPU-bound (BM25 + cosine scoring): chạy trong thread pool
+    return await asyncio.to_thread(svc.hybrid_search, request)

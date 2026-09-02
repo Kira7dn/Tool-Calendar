@@ -1,3 +1,11 @@
+### [2026-09-02 10:30] perf(ai): chuyển Python API endpoints sang async def + asyncio.to_thread()
+- **Mô tả**: Các endpoint CPU-bound (chunk, rerank, hybrid-search, extract, extract-fast, parse-date) đang là def đồng bộ, khiến FastAPI event loop bị chặn khi nhiều user dùng đồng thời. Chuyển sang async def + asyncio.to_thread() để chạy công việc nặng trong thread pool riêng, event loop không bao giờ bị tắc nghẽn.
+- **Tệp thay đổi**:
+  - `python-ai-service/api/rag.py` (Sửa đổi)
+  - `python-ai-service/api/document.py` (Sửa đổi)
+  - `python-ai-service/api/llm.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ai): convert sync Python API endpoints to async via asyncio.to_thread"`
+
 ### [2026-09-02 10:11] perf(ai): optimize Ollama KV cache reuse by reordering system prompt
 - **Mô tả**: Tối ưu hóa bộ nhớ đệm tiền tố (Longest Common Prefix) của Ollama để giảm thời gian phản hồi từ 30s xuống 1s khi người dùng hỏi các câu liên quan đến văn bản (như "Tóm tắt nội dung văn bản này"). Thay vì đặt `HH:mm:ss` (thay đổi từng giây) ở đầu `systemPrompt` làm hỏng cache của toàn bộ văn bản 3000 ký tự phía sau, ta đã chuyển `documentContext`, `memorySection` và `Thời gian hiện tại` xuống CUỐI CÙNG.
 - **Tệp thay đổi**:

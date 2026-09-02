@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, Request
 from schemas import ChatRequest, ParseDateRequest, ParseDateResponse, GenerateQARequest, GenerateQAResponse, HyDERequest, HyDEResponse, ContextualChunkRequest, ContextualChunkResponse, DocSummaryRequest, DocSummaryResponse
 from services.llm_service import LlmService
@@ -15,8 +16,9 @@ async def chat_stream(request: ChatRequest, svc: LlmService = Depends(get_llm_se
     return await svc.chat_stream(request)
 
 @router.post("/api/parse-date", response_model=ParseDateResponse)
-def parse_date_endpoint(request: ParseDateRequest, svc: LlmService = Depends(get_llm_service)):
-    return svc.parse_date(request)
+async def parse_date_endpoint(request: ParseDateRequest, svc: LlmService = Depends(get_llm_service)):
+    # CPU-bound (regex phân tích ngày tháng): chạy trong thread pool
+    return await asyncio.to_thread(svc.parse_date, request)
 
 @router.post("/api/generate-qa", response_model=GenerateQAResponse)
 async def generate_qa(request: GenerateQARequest, svc: LlmService = Depends(get_llm_service)):
