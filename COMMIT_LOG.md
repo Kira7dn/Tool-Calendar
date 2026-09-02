@@ -1,3 +1,11 @@
+### [2026-09-02 10:05] fix(ai): change keep_alive to integer -1 and add AiWarmupWorker
+- **Mô tả**: Phát hiện lỗi AI vẫn bị chậm (cold start) sau 8.5 tiếng do `keep_alive = "60m"` chỉ giữ mô hình trong RAM được 60 phút. Cập nhật `keep_alive` thành số nguyên `-1` (vô hạn) và bổ sung `AiWarmupWorker` để tự động ping Ollama nạp mô hình vào RAM ngay khi backend khởi động.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Services/AiWarmupWorker.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ai): change keep_alive to integer -1 and add AiWarmupWorker"`
+
 ### [2026-09-01 22:46] security(ai): hardening python-ai-service theo ANALYSIS.md — 12 fix bảo mật và độ ổn định (phần 2/2 - wiring)
 - **Mô tả**: Áp dụng toàn bộ các fix được xác định qua phân tích chuyên sâu PYTHON-AI-SERVICE-ANALYSIS.md. Service trước đây có 4.7/10 do nhiều vấn đề runtime: không auth, timeout không có, race condition, dead code. Các fix này tập trung vào correctness và security mà không thay đổi thuật toán RAG.
 - **Tệp thay đổi**:

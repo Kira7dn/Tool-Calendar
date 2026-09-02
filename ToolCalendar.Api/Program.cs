@@ -184,6 +184,7 @@ builder.Services.AddSingleton<DeadlineWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DeadlineWorker>());
 builder.Services.AddHostedService<ReminderWorker>();
 builder.Services.AddHostedService<ToolCalendar.Api.Services.DraftCleanupWorker>();
+builder.Services.AddHostedService<ToolCalendar.Api.Services.AiWarmupWorker>();
 
 
 // ✅ Security Services
