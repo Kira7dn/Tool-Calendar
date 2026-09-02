@@ -249,7 +249,6 @@ namespace ToolCalendar.Core.Services
             }
 
             var systemPrompt = $@"{persona}
-Hôm nay là {now:dd/MM/yyyy HH:mm:ss}.{documentContext}{memorySection}
 Nhiệm vụ của bạn là trả lời thân thiện theo đúng phong thái trên và hỗ trợ công việc. LUÔN BẮT ĐẦU bằng lời xưng hô (ví dụ: Dạ báo cáo sếp, Chào đồng chí...).
 
 LƯU Ý CỰC KỲ QUAN TRỌNG ĐỂ TRÁNH BỊA ĐẶT (HALLUCINATION):
@@ -276,7 +275,10 @@ NẾU người dùng yêu cầu nhắc nhở công việc, bạn BẮT BUỘC ph
 NẾU người dùng nói 'hãy nhớ...', 'ghi nhớ rằng...', 'nhớ giúp tôi...', bạn BẮT BUỘC phải đính kèm tag sau vào CUỐI câu trả lời:
 [STORE_MEMORY|Nội dung cần ghi nhớ]
 
-Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường và thêm tag đặc biệt ở cuối nếu cần.";
+Lưu ý: Không dùng JSON. Chỉ trả lời bằng Markdown bình thường và thêm tag đặc biệt ở cuối nếu cần.
+
+--- DỮ LIỆU NGỮ CẢNH ---{documentContext}{memorySection}
+Thời gian hiện tại: {now:dd/MM/yyyy HH:mm:ss}";
 
             // DIFY Idea #3: Token-Aware Memory — Cắt tỉa history theo số ký tự
             List<ChatMessageDto> history = new();

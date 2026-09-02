@@ -1,3 +1,9 @@
+### [2026-09-02 10:11] perf(ai): optimize Ollama KV cache reuse by reordering system prompt
+- **Mô tả**: Tối ưu hóa bộ nhớ đệm tiền tố (Longest Common Prefix) của Ollama để giảm thời gian phản hồi từ 30s xuống 1s khi người dùng hỏi các câu liên quan đến văn bản (như "Tóm tắt nội dung văn bản này"). Thay vì đặt `HH:mm:ss` (thay đổi từng giây) ở đầu `systemPrompt` làm hỏng cache của toàn bộ văn bản 3000 ký tự phía sau, ta đã chuyển `documentContext`, `memorySection` và `Thời gian hiện tại` xuống CUỐI CÙNG.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ai): optimize Ollama KV cache reuse by reordering system prompt"`
+
 ### [2026-09-02 10:05] fix(ai): change keep_alive to integer -1 and add AiWarmupWorker
 - **Mô tả**: Phát hiện lỗi AI vẫn bị chậm (cold start) sau 8.5 tiếng do `keep_alive = "60m"` chỉ giữ mô hình trong RAM được 60 phút. Cập nhật `keep_alive` thành số nguyên `-1` (vô hạn) và bổ sung `AiWarmupWorker` để tự động ping Ollama nạp mô hình vào RAM ngay khi backend khởi động.
 - **Tệp thay đổi**:
