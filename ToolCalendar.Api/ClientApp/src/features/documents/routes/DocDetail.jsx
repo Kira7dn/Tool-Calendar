@@ -258,7 +258,13 @@ export default function DocDetail({ docId, onBack }) {
               onClick={() => {
                 const token = localStorage.getItem('auth_token')
                 document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
-                window.open(`/api/documents/${docId}/file`, '_blank')
+                // Mobile: mở fullscreen modal có nút X đóng
+                // Desktop: mở tab mới
+                if (window.innerWidth < 768) {
+                  setIsFullscreenPdf(true)
+                } else {
+                  window.open(`/api/documents/${docId}/file`, '_blank')
+                }
               }}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-red-600/20"
             >

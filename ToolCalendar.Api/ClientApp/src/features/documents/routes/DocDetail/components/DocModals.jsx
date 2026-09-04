@@ -150,11 +150,13 @@ export function DocModals({
             <h3 className="text-xs font-black text-white uppercase tracking-widest">
               XEM TOÀN MÀN HÌNH
             </h3>
+            {/* Nút đóng — vùng tap lớn, màu nổi để dễ thấy trên mobile */}
             <button
               onClick={() => setIsFullscreenPdf(false)}
-              className="p-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-[11px] font-black rounded-xl transition-colors"
             >
-              <X size={20} />
+              <X size={16} />
+              ĐÓNG
             </button>
           </div>
           <div className="flex-1 overflow-hidden bg-slate-100">

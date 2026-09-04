@@ -1,3 +1,10 @@
+### [2026-09-04 09:11] fix(docs): sửa nút XEM PDF trên mobile không có nút đóng
+- **Mô tả**: Trên mobile, nút XEM PDF dùng window.open() mở tab mới — trình duyệt Safari/Chrome không có nút quay lại rõ ràng, người dùng bị kẹt trong PDF không thoát được. Nay sửa: trên mobile (width < 768px) mở fullscreen modal có nút ĐÓNG màu đỏ nổi bật. Desktop vẫn giữ nguyên hành vi cũ (mở tab mới). Đồng thời tăng kích thước tap target nút đóng cho dễ bấm trên màn hình cảm ứng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocModals.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): sửa nút XEM PDF mobile không có nút đóng — dùng fullscreen modal thay window.open"`
+
 ### [2026-09-02 10:30] perf(ai): chuyển Python API endpoints sang async def + asyncio.to_thread()
 - **Mô tả**: Các endpoint CPU-bound (chunk, rerank, hybrid-search, extract, extract-fast, parse-date) đang là def đồng bộ, khiến FastAPI event loop bị chặn khi nhiều user dùng đồng thời. Chuyển sang async def + asyncio.to_thread() để chạy công việc nặng trong thread pool riêng, event loop không bao giờ bị tắc nghẽn.
 - **Tệp thay đổi**:
