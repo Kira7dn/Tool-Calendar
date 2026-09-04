@@ -183,12 +183,20 @@ export default function DocDetail({ docId, onBack }) {
     <div className="h-full font-sans flex flex-col gap-4 overflow-hidden px-2 pb-2">
       {/* 1. Header */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 py-1">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 rounded-xl bg-white border hover:bg-slate-50">
+        <div className="flex items-center gap-4 min-w-0 flex-1">
+          <button
+            onClick={onBack}
+            className="p-2 rounded-xl bg-white border hover:bg-slate-50 shrink-0"
+          >
             <ArrowLeft size={18} />
           </button>
-          <div className="flex flex-col">
-            <h1 className="text-xl font-black text-slate-900">{doc.soVanBan}</h1>
+          <div className="flex flex-col min-w-0">
+            <h1
+              className="text-xl font-black text-slate-900 break-all leading-tight"
+              title={doc.soVanBan}
+            >
+              {doc.soVanBan}
+            </h1>
             <p className="text-[11px] font-bold text-slate-400 truncate max-w-[600px]">
               {doc.trichYeu}
             </p>
