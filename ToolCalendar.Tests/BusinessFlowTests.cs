@@ -18,10 +18,10 @@ namespace ToolCalendar.Tests
         {
             // --- ARRANGE ---
             // 1. Tạo User Cán bộ
-            CreateUser("canbo_test", "canbo@123", "CanBo");
+            await CreateUserAsync("canbo_test", "canbo@123", "CanBo");
             using var scope = Factory.Services.CreateScope();
             var userRepo = scope.ServiceProvider.GetRequiredService<ToolCalendar.Core.Data.Interfaces.IUserRepository>();
-            var allUsers = userRepo.GetUsers();
+            var allUsers = await userRepo.GetUsersAsync();
             var canBoId = allUsers.First(u => u.Username == "canbo_test").Id;
 
             // 2. Chuẩn bị file PDF mẫu (noisy)
@@ -117,7 +117,7 @@ namespace ToolCalendar.Tests
             // Kiểm tra AuditLogs xem có cảnh báo không
             using var auditScope = Factory.Services.CreateScope();
             var auditRepo = auditScope.ServiceProvider.GetRequiredService<IAuditLogRepository>();
-            auditRepo.InsertAuditLog(1, "Hệ thống: Cảnh báo văn bản NOTIFY-7DAYS sắp hết hạn (7 ngày)");
+            await auditRepo.InsertAuditLogAsync(1, "Hệ thống: Cảnh báo văn bản NOTIFY-7DAYS sắp hết hạn (7 ngày)");
             // Verify logic integration
             var allDocs = await Factory.Services.CreateScope().ServiceProvider.GetRequiredService<IDocumentRepository>().GetAllAsync();
             allDocs.Any(d => d.SoVanBan == "NOTIFY-7DAYS").Should().BeTrue();
@@ -127,7 +127,7 @@ namespace ToolCalendar.Tests
         public async Task Scenario3_RBAC_StaffCannotAccessAdminEndpoints()
         {
             // --- ARRANGE ---
-            CreateUser("staff_only", "pass123", "CanBo");
+            await CreateUserAsync("staff_only", "pass123", "CanBo");
             await AuthenticateAsync("staff_only", "pass123");
 
             // --- ACT ---

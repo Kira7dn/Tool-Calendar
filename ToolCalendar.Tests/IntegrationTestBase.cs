@@ -77,11 +77,11 @@ namespace ToolCalendar.Tests
             }
         }
 
-        protected void CreateUser(string username, string password, string role)
+        protected async Task CreateUserAsync(string username, string password, string role)
         {
             using var scope = Factory.Services.CreateScope();
             var userRepo = scope.ServiceProvider.GetRequiredService<ToolCalendar.Core.Data.Interfaces.IUserRepository>();
-            userRepo.Register(username, password, role);
+            await userRepo.RegisterAsync(username, password, role);
         }
 
         public virtual void Dispose()
