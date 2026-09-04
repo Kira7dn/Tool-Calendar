@@ -1,8 +1,8 @@
-### [2026-09-04 09:31] fix(docs): sửa soVanBan bị cắt trên mobile — dùng break-all
-- **Mô tả**: Số văn bản dài không có khoảng trắng như `1310/TTKSBT-SKSS` bị cắt khuất trên mobile. Đã thêm class `break-all` vào thẻ `h1` hiển thị Số văn bản để tự động ngắt dòng vừa với kích thước màn hình.
+### [2026-09-04 09:36] fix(docs): sửa lỗi hiển thị Số văn bản bị khuất bên trái trên mobile
+- **Mô tả**: Số văn bản bị cắt khuất mất nửa đầu (ví dụ chỉ hiện `KSBT-SKSS` thay vì `1310/TTKSBT-SKSS`) và mất luôn nút Back. Nguyên nhân do flexbox cha dùng `items-center` theo chiều dọc (`flex-col`), khiến thẻ con bị bung chiều ngang và tự căn giữa → đẩy phần đầu chữ ra ngoài màn hình. Đã sửa: đổi thành `items-start`, thêm `min-w-0` cho các thẻ con để giới hạn đúng width màn hình, giúp text có thể bẻ dòng (`break-words`) hoặc `truncate` chính xác.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
-- **Lệnh git commit**: `git commit -m "fix(docs): sua soVanBan bi cat tren mobile - dung break-all"`
+- **Lệnh git commit**: `git commit -m "fix(docs): sua loi hien thi soVanBan bi khuat ben trai tren mobile do flexbox"`
 
 ### [2026-09-04 09:11] fix(docs): sửa nút XEM PDF trên mobile không có nút đóng
 - **Mô tả**: Trên mobile, nút XEM PDF dùng window.open() mở tab mới — trình duyệt Safari/Chrome không có nút quay lại rõ ràng, người dùng bị kẹt trong PDF không thoát được. Nay sửa: trên mobile (width < 768px) mở fullscreen modal có nút ĐÓNG màu đỏ nổi bật. Desktop vẫn giữ nguyên hành vi cũ (mở tab mới). Đồng thời tăng kích thước tap target nút đóng cho dễ bấm trên màn hình cảm ứng.

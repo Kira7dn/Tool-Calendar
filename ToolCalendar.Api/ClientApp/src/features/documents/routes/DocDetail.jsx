@@ -182,19 +182,20 @@ export default function DocDetail({ docId, onBack }) {
   return (
     <div className="h-full font-sans flex flex-col gap-4 overflow-hidden px-2 pb-2">
       {/* 1. Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 py-1">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 rounded-xl bg-white border hover:bg-slate-50">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shrink-0 py-1 w-full">
+        <div className="flex items-center gap-3 w-full min-w-0">
+          <button
+            onClick={onBack}
+            className="p-2 rounded-xl bg-white border hover:bg-slate-50 shrink-0"
+          >
             <ArrowLeft size={18} />
           </button>
-          <div className="flex flex-col">
-            <h1 className="text-xl font-black text-slate-900 break-all">{doc.soVanBan}</h1>
-            <p className="text-[11px] font-bold text-slate-400 truncate max-w-[600px]">
-              {doc.trichYeu}
-            </p>
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-xl font-black text-slate-900 break-words">{doc.soVanBan}</h1>
+            <p className="text-[11px] font-bold text-slate-400 truncate w-full">{doc.trichYeu}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
           {isLevel2 &&
             myRouting &&
             (myRouting.status === 'Chưa xử lý' || myRouting.status === 'Đang xử lý') &&
