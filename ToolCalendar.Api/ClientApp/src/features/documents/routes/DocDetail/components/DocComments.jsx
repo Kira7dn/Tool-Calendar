@@ -26,7 +26,7 @@ export function DocComments({
       <div className="px-5 py-3 border-b border-slate-50 flex items-center justify-between bg-slate-50/20 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-[0_0_12px_rgba(220,38,38,0.7)] animate-pulse shrink-0" />
-          <h2 className="text-[10px] md:text-[11px] font-black text-slate-500 uppercase tracking-wider truncate">
+          <h2 className="text-[10px] md:text-[11px] font-black text-slate-500 uppercase tracking-wider">
             THẢO LUẬN TRỰC TUYẾN
           </h2>
         </div>
@@ -48,7 +48,8 @@ export function DocComments({
                     {c.username}
                   </p>
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                    {new Date(c.createdAt).toLocaleTimeString('vi-VN')}
+                    {new Date(c.createdAt).toLocaleTimeString('vi-VN')} -{' '}
+                    {new Date(c.createdAt).toLocaleDateString('vi-VN')}
                   </p>
                 </div>
               </div>

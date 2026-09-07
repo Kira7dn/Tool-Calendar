@@ -1,3 +1,9 @@
+### [2026-09-07 10:45] fix(ui): fix chat title truncation and add date to comment timestamps
+- **Mô tả**: "THẢO LUẬN TRỰC TUYẾN" bị khuất chữ do sử dụng class `truncate` trên thẻ h2 ở màn hình nhỏ. Đã xóa class `truncate` để tiêu đề hiển thị đầy đủ. Bổ sung hiển thị ngày, tháng, năm bên cạnh giờ trong thời gian mỗi bình luận.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): fix chat title truncation and add date to comment timestamps"`
+
 ### [2026-09-04 09:36] fix(docs): sửa lỗi hiển thị Số văn bản bị khuất bên trái trên mobile
 - **Mô tả**: Số văn bản bị cắt khuất mất nửa đầu (ví dụ chỉ hiện `KSBT-SKSS` thay vì `1310/TTKSBT-SKSS`) và mất luôn nút Back. Nguyên nhân do flexbox cha dùng `items-center` theo chiều dọc (`flex-col`), khiến thẻ con bị bung chiều ngang và tự căn giữa → đẩy phần đầu chữ ra ngoài màn hình. Đã sửa: đổi thành `items-start`, thêm `min-w-0` cho các thẻ con để giới hạn đúng width màn hình, giúp text có thể bẻ dòng (`break-words`) hoặc `truncate` chính xác.
 - **Tệp thay đổi**:
