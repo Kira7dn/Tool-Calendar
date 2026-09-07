@@ -1,3 +1,9 @@
+### [2026-09-07 14:02] fix(ui): fix reaction popover hover gap
+- **Mô tả**: Khi người dùng trỏ chuột từ nút "Thích" lên danh sách biểu tượng cảm xúc, danh sách bị tắt giữa chừng do có khoảng cách (`mb-2`). Đã bổ sung một lớp padding ảo bằng pseudo-element (`after:`) để giữ trạng thái hover liền mạch.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocComments.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): fix reaction popover hover gap"`
+
 ### [2026-09-07 10:45] fix(ui): fix chat title truncation and add date to comment timestamps
 - **Mô tả**: "THẢO LUẬN TRỰC TUYẾN" bị khuất chữ do sử dụng class `truncate` trên thẻ h2 ở màn hình nhỏ. Đã xóa class `truncate` để tiêu đề hiển thị đầy đủ. Bổ sung hiển thị ngày, tháng, năm bên cạnh giờ trong thời gian mỗi bình luận.
 - **Tệp thay đổi**:

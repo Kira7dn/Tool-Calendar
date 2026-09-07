@@ -96,7 +96,7 @@ export function DocComments({
                       <ThumbsUp size={14} /> Thích
                     </button>
                     {/* Popover chứa emojis */}
-                    <div className="absolute bottom-full left-0 mb-2 hidden group-hover:flex items-center gap-1 bg-white border border-slate-200 shadow-xl rounded-full p-1.5 z-10 transition-all origin-bottom-left animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute bottom-full left-0 mb-2 hidden group-hover:flex items-center gap-1 bg-white border border-slate-200 shadow-xl rounded-full p-1.5 z-10 transition-all origin-bottom-left animate-in fade-in zoom-in-95 duration-200 after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-2">
                       {Object.keys(REACTION_EMOJIS).map((type) => (
                         <button
                           key={type}
