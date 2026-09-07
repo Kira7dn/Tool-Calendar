@@ -1,3 +1,9 @@
+### [2026-09-07 14:09] fix(api): sửa lỗi không thể thả cảm xúc "Vỗ tay" và "Đã xem"
+- **Mô tả**: Khi người dùng thả cảm xúc "vỗ tay" (clap) hoặc "đã xem" (seen), API trả về lỗi HTTP 400 "Không thể thả cảm xúc" do backend chỉ chấp nhận các loại phản hồi cũ là `like`, `love`, `hate`, `dislike`. Đã cập nhật lại `validTypes` trong `DocumentsController` thành `like, love, clap, seen` để đồng bộ với bộ icon trên frontend.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(api): sua loi validation reaction type mismatch giua frontend va backend"`
+
 ### [2026-09-07 14:02] fix(ui): fix reaction popover hover gap
 - **Mô tả**: Khi người dùng trỏ chuột từ nút "Thích" lên danh sách biểu tượng cảm xúc, danh sách bị tắt giữa chừng do có khoảng cách (`mb-2`). Đã bổ sung một lớp padding ảo bằng pseudo-element (`after:`) để giữ trạng thái hover liền mạch.
 - **Tệp thay đổi**:

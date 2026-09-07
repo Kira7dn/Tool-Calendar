@@ -785,9 +785,9 @@ namespace ToolCalendar.Api.Controllers.Documents
             if (req == null || string.IsNullOrWhiteSpace(req.ReactionType))
                 return BadRequest(ApiResponse.Fail("Loại reaction không hợp lệ."));
 
-            var validTypes = new[] { "like", "love", "hate", "dislike" };
+            var validTypes = new[] { "like", "love", "clap", "seen" };
             if (!validTypes.Contains(req.ReactionType.ToLower()))
-                return BadRequest(ApiResponse.Fail("Reaction type phải là: like, love, hate, dislike."));
+                return BadRequest(ApiResponse.Fail("Reaction type phải là: like, love, clap, seen."));
 
             // Parse userId an toàn
             if (!int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId))
