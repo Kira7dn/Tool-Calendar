@@ -1,3 +1,11 @@
+### [2026-09-07 14:21] style(ui): auto format code
+- **Mô tả**: Tự động format code (xóa khoảng trắng thừa, căn lề) ở các file JS/JSX.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadActions.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/lib/utils.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style(ui): auto format code"`
+
 ### [2026-09-07 14:09] fix(api): sửa lỗi không thể thả cảm xúc "Vỗ tay" và "Đã xem"
 - **Mô tả**: Khi người dùng thả cảm xúc "vỗ tay" (clap) hoặc "đã xem" (seen), API trả về lỗi HTTP 400 "Không thể thả cảm xúc" do backend chỉ chấp nhận các loại phản hồi cũ là `like`, `love`, `hate`, `dislike`. Đã cập nhật lại `validTypes` trong `DocumentsController` thành `like, love, clap, seen` để đồng bộ với bộ icon trên frontend.
 - **Tệp thay đổi**:
