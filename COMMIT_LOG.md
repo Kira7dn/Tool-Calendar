@@ -4020,3 +4020,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ai): add keep_alive=60m to Ollama requests to prevent 30s cold starts"`
+
+### [2026-09-08 10:42] Chuyển CI/CD sang dùng GHCR
+- **Mô tả**: Chuyển việc build Docker image của backend và python-ai-service lên Github Actions để lưu ở GHCR, giúp tiết kiệm bộ nhớ trên VPS.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): use ghcr for python-ai and backend"`

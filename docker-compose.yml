@@ -1,7 +1,6 @@
 services:
   python-ai-service:
-    build:
-      context: ./python-ai-service
+    image: ghcr.io/kira7dn/tool-calendar-python:latest
     container_name: python-ai-service
     expose:
       - "8001"
@@ -36,10 +35,7 @@ services:
       - tool-calendar-net
 
   official-doc-backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      network: host
+    image: ghcr.io/kira7dn/tool-calendar-backend:latest
     container_name: doc-coordination-system
     expose:
       - "5000"

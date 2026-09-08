@@ -5,58 +5,86 @@ on:
     branches:
       - develop
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
+  packages: write
 
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Cần 2 commit để so sánh thay đổi
+          fetch-depth: 2
 
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/kira7dn/tool-calendar-backend:latest
+
+      - name: Check if Python AI changed
+        id: python-changes
+        run: |
+          PYTHON_CHANGED=$(git diff HEAD origin/develop -- python-ai-service/ | wc -l || echo "1")
+          if [ "$PYTHON_CHANGED" -gt "0" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push Python AI Image (if changed)
+        if: steps.python-changes.outputs.changed == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./python-ai-service
+          push: true
+          tags: ghcr.io/kira7dn/tool-calendar-python:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
       - name: Execute remote ssh commands to deploy
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
         with:
           host: ${{ secrets.VNPT_HOST }}
           username: ${{ secrets.VNPT_USER }}
           password: ${{ secrets.VNPT_PASS }}
           port: 22
           script_timeout: 45m
+          envs: GITHUB_TOKEN,GITHUB_ACTOR
           script: |
             set -e
             cd /root/Tool-Calendar || exit 1
             git fetch origin develop
-
-            # Kiểm tra xem python-ai-service có thay đổi không
-            PYTHON_CHANGED=$(git diff HEAD origin/develop -- python-ai-service/ | wc -l)
-
             git reset --hard origin/develop
 
-            # ── C# Backend: luôn rebuild ──────────────────────────────────────
-            docker compose build official-doc-backend
-            docker rm -f $(docker ps -aq -f "name=doc-coordination-system") || true
-            docker compose up -d official-doc-backend
+            echo ">>> Đăng nhập vào Github Container Registry trên VPS..."
+            echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
-            # ── Python AI Service: chỉ rebuild khi Dockerfile/requirements đổi ──
-            if [ "$PYTHON_CHANGED" -gt "0" ]; then
-              echo ">>> [Python AI] Dockerfile/requirements thay đổi — BUILD lại (mất ~5-10 phút)"
-              docker compose build python-ai-service
-              docker rm -f $(docker ps -aq -f "name=python-ai-service") || true
-              docker compose up -d python-ai-service
-            else
-              echo ">>> [Python AI] Không có thay đổi hạ tầng — RESTART container cũ (nhanh)"
-              if docker ps | grep -q python-ai-service; then
-                docker restart $(docker ps -q -f "name=python-ai-service")
-              else
-                # Container không chạy, start lại từ image cũ
-                docker compose up -d python-ai-service
-              fi
-            fi
+            echo ">>> Pull image từ GHCR..."
+            docker-compose pull official-doc-backend
+            docker-compose pull python-ai-service || true
 
-            # Reload Nginx để cập nhật upstream IP
+            echo ">>> Khởi động các container..."
+            docker-compose up -d --no-build official-doc-backend
+            docker-compose up -d --no-build python-ai-service
+
+            # Reload Nginx
             docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy
 
-            # Kiểm tra trạng thái cuối
-            echo "=== Container Status ==="
-            docker ps | grep -E "doc-coordination-system|python-ai-service" || true
+            echo ">>> Dọn dẹp image thừa..."
+            docker image prune -f
