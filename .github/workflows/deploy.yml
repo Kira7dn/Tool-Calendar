@@ -76,12 +76,12 @@ jobs:
             echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
             echo ">>> Pull image từ GHCR..."
-            docker-compose pull official-doc-backend
-            docker-compose pull python-ai-service || true
+            docker compose pull official-doc-backend
+            docker compose pull python-ai-service || true
 
             echo ">>> Khởi động các container..."
-            docker-compose up -d --no-build official-doc-backend
-            docker-compose up -d --no-build python-ai-service
+            docker compose up -d --no-build official-doc-backend
+            docker compose up -d --no-build python-ai-service
 
             # Reload Nginx
             docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy

@@ -1,3 +1,9 @@
+### [2026-09-08 19:02] fix(infra): use docker compose v2 in deploy action
+- **Mô tả**: Thay thế `docker-compose` bằng `docker compose` trong `.github/workflows/deploy.yml` để khắc phục lỗi không nhận diện cấu hình file `docker-compose.yml` (do file mới bỏ qua version, docker-compose v1 sẽ coi cấu trúc services, networks, volumes ở root level là lỗi).
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): use docker compose v2 in deploy action"`
+
 ### [2026-09-07 14:21] style(ui): auto format code
 - **Mô tả**: Tự động format code (xóa khoảng trắng thừa, căn lề) ở các file JS/JSX.
 - **Tệp thay đổi**:
