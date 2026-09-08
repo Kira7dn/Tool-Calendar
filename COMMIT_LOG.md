@@ -1,3 +1,9 @@
+### [2026-09-08 19:11] chore(infra): force build python-ai-service image
+- **Mô tả**: Sửa nhẹ file `Dockerfile` của `python-ai-service` để kích hoạt trigger GitHub Actions build image lần đầu tiên trên GHCR. Khắc phục lỗi `manifest unknown` khi pull image trên VPS. Đồng thời đã clear container `doc-clamav` bị lỗi conflict project name cũ.
+- **Tệp thay đổi**:
+  - `python-ai-service/Dockerfile` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): force build python-ai-service image"`
+
 ### [2026-09-08 19:02] fix(infra): use docker compose v2 in deploy action
 - **Mô tả**: Thay thế `docker-compose` bằng `docker compose` trong `.github/workflows/deploy.yml` để khắc phục lỗi không nhận diện cấu hình file `docker-compose.yml` (do file mới bỏ qua version, docker-compose v1 sẽ coi cấu trúc services, networks, volumes ở root level là lỗi).
 - **Tệp thay đổi**:
