@@ -25,8 +25,13 @@ class RequestTracingMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        # Lấy hoặc tạo request ID
-        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())[:8]
+        # Ưu tiên lấy X-Correlation-ID từ C# backend (end-to-end trace)
+        # Fallback: tự sinh nếu request đến trực tiếp (dev/test)
+        request_id = (
+            request.headers.get("X-Correlation-ID")
+            or request.headers.get("X-Request-ID")
+            or str(uuid.uuid4())[:8]
+        )
 
         # Inject vào request state để các handler khác dùng được
         request.state.request_id = request_id
@@ -38,13 +43,14 @@ class RequestTracingMiddleware(BaseHTTPMiddleware):
         duration_ms = int((time.monotonic() - start_time) * 1000)
 
         # Gắn vào response header để client trace
-        response.headers["X-Request-ID"] = request_id
+        response.headers["X-Correlation-ID"] = request_id
+        response.headers["X-Request-ID"] = request_id  # backward compat
         response.headers["X-Duration-Ms"] = str(duration_ms)
 
         # Log (bỏ qua các path không quan trọng)
         if request.url.path not in _SKIP_LOG_PATHS:
             logger.info(
-                "[TRACE] %s %s → %d | %dms | req=%s",
+                "[TRACE] %s %s → %d | %dms | corr=%s",
                 request.method,
                 request.url.path,
                 response.status_code,
@@ -53,6 +59,7 @@ class RequestTracingMiddleware(BaseHTTPMiddleware):
             )
 
         return response
+
 
 
 def register_tracing_middleware(app: FastAPI) -> None:

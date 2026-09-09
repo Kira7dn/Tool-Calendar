@@ -57,6 +57,8 @@ services:
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
+      # --- Python AI Service HMAC Key (phải trùng với PYTHON_AI_SECRET_KEY) ---
+      - PythonAiService__ApiKey=${PYTHON_AI_SECRET_KEY}
       # --- ClamAV Config ---
       - ClamAv__Host=clamav
       - ClamAv__Port=3310

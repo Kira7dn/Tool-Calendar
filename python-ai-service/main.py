@@ -135,6 +135,10 @@ register_exception_handlers(app)
 from api.tracing_middleware import register_tracing_middleware
 register_tracing_middleware(app)
 
+# Rate limiting — sliding window, chống DoS / resource exhaustion
+from api.rate_limit_middleware import register_rate_limit_middleware
+register_rate_limit_middleware(app)
+
 # Auth middleware (X-API-Key) — bỏ qua nếu api_secret_key rỗng
 settings = get_settings()
 register_auth_middleware(app, settings.api_secret_key)

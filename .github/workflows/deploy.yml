@@ -74,6 +74,17 @@ jobs:
             git fetch origin develop
             git reset --hard origin/develop
 
+            # --- Auto-generate PYTHON_AI_SECRET_KEY nếu chưa có ---
+            # Key này dùng cho HMAC-SHA256 signing giữa C# backend và Python AI service
+            ENV_FILE="/root/Tool-Calendar/.env"
+            if [ ! -f "$ENV_FILE" ] || ! grep -q "PYTHON_AI_SECRET_KEY=" "$ENV_FILE"; then
+              NEW_KEY=$(openssl rand -hex 32)
+              echo "PYTHON_AI_SECRET_KEY=$NEW_KEY" >> "$ENV_FILE"
+              echo ">>> [Security] PYTHON_AI_SECRET_KEY đã được generate và ghi vào .env"
+            else
+              echo ">>> [Security] PYTHON_AI_SECRET_KEY đã tồn tại trong .env, giữ nguyên."
+            fi
+
             echo ">>> Đăng nhập vào Github Container Registry trên VPS..."
             echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 

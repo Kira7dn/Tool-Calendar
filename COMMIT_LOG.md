@@ -1,3 +1,17 @@
+### [2026-09-09 08:28] security(infra): enterprise HMAC-SHA256 microservice security
+- **Mô tả**: Triển khai bảo mật microservice chuẩn enterprise (AWS SigV4-inspired) cho luồng C# → Python AI Service. 5 lớp bảo vệ: (1) X-API-Key auth; (2) HMAC-SHA256 request signing — chống tampering; (3) Timestamp window ±30s — chống replay attack; (4) Sliding window rate limiting 10/30/60 req/phút; (5) X-Correlation-ID end-to-end tracing. Auto-generate PYTHON_AI_SECRET_KEY trên server khi deploy nếu chưa có.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Security/HmacRequestHandler.cs` (Mới) — DelegatingHandler ký HMAC + propagate Correlation ID
+  - `ToolCalendar.Api/Middleware/CorrelationIdMiddleware.cs` (Mới) — Sinh và propagate X-Correlation-ID
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi) — Register HmacRequestHandler, CorrelationIdMiddleware, IHttpContextAccessor
+  - `python-ai-service/api/auth_middleware.py` (Sửa đổi) — Nâng cấp: HMAC verify + timestamp window
+  - `python-ai-service/api/rate_limit_middleware.py` (Mới) — Sliding window rate limiter
+  - `python-ai-service/api/tracing_middleware.py` (Sửa đổi) — Propagate X-Correlation-ID
+  - `python-ai-service/main.py` (Sửa đổi) — Register rate_limit_middleware
+  - `docker-compose.yml` (Sửa đổi) — Thêm PythonAiService__ApiKey cho backend
+  - `.github/workflows/deploy.yml` (Sửa đổi) — Auto-generate PYTHON_AI_SECRET_KEY trên server
+- **Lệnh git commit**: `git commit -m "security(infra): enterprise HMAC-SHA256 microservice security C# to Python AI"`
+
 ### [2026-09-09 08:12] chore(infra): trigger build python-ai-service image lần đầu
 - **Mô tả**: Thêm comment timestamp vào `python-ai-service/Dockerfile` để CI nhận diện `changed=true` và build + push image `ghcr.io/kira7dn/tool-calendar-python:latest` lên GHCR. Image này chưa tồn tại trên GHCR dù đã deploy nhiều lần do logic `git diff HEAD origin/develop` bị lỗi (đã fix ở commit trước).
 - **Tệp thay đổi**:

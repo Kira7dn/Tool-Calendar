@@ -19,8 +19,9 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using ToolCalendar.Middleware;   // ✅ FileAccessSecurityMiddleware
 using ToolCalendar.Policies;    // ✅ AppPolicies (phân quyền tập trung)
-using ToolCalendar.Services.Security; // ✅ ClamAvService, BackupService
+using ToolCalendar.Services.Security; // ✅ ClamAvService, BackupService, HmacRequestHandler
 using Microsoft.Extensions.Caching.Memory; // ✅ IMemoryCache extension methods
+using ToolCalendar.Api.Middleware;          // ✅ CorrelationIdMiddleware
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -157,18 +158,15 @@ builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 builder.Services.AddHttpClient();
 
 // Đăng ký Extraction Services & Python AI
+// HmacRequestHandler: tự động ký HMAC-SHA256 + propagate Correlation ID cho mọi request
+builder.Services.AddTransient<HmacRequestHandler>();
+builder.Services.AddHttpContextAccessor(); // Cần cho HmacRequestHandler đọc Correlation ID
 builder.Services.AddHttpClient<IPythonAiService, PythonAiService>(client =>
 {
     var pythonAiUrl = builder.Configuration["PythonAiServiceUrl"] ?? "http://python-ai-service:8001";
     client.BaseAddress = new Uri(pythonAiUrl);
     client.Timeout = TimeSpan.FromMinutes(10); // Docling có thể chạy lâu
-
-    // Thêm X-API-Key header để xác thực với python-ai-service middleware (fix R-S01)
-    // Key phải trùng với API_SECRET_KEY env var trong docker-compose
-    var apiKey = builder.Configuration["PythonAiService:ApiKey"] ?? "";
-    if (!string.IsNullOrEmpty(apiKey))
-        client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
-});
+}).AddHttpMessageHandler<HmacRequestHandler>(); // ✅ Tự động sign mọi request
 builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();
 
 // Cấu hình Hàng đợi OCR xử lý nền
@@ -367,6 +365,9 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.UseMiddleware<ToolCalendar.Api.Middleware.GlobalExceptionMiddleware>();
+
+// ✅ Correlation ID — phải đăng ký đầu tiên để mọi middleware sau đều có thể dùng
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 // Cấu hình để nhận diện HTTPS từ Nginx Proxy
 var forwardedOptions = new ForwardedHeadersOptions
