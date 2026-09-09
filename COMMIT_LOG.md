@@ -1,3 +1,9 @@
+### [2026-09-09 08:01] fix(infra): sửa CI bug git diff sai ref và python-ai-service up không an toàn
+- **Mô tả**: Workflow `deploy.yml` có 2 bug: (1) `git diff HEAD origin/develop` luôn trả về 0 dòng vì sau `fetch-depth: 2` thì HEAD đã là origin/develop → Python image không bao giờ được build; (2) `docker compose up python-ai-service` không có `|| true` nên fail cả deploy khi image chưa tồn tại trên GHCR. Đã đổi sang `HEAD~1..HEAD` để diff đúng commit hiện tại với commit trước, và thêm `|| true` cho lệnh up python-ai-service.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): sua CI bug git diff sai ref va python-ai-service up khong an toan"`
+
 ### [2026-09-08 19:11] chore(infra): force build python-ai-service image
 - **Mô tả**: Sửa nhẹ file `Dockerfile` của `python-ai-service` để kích hoạt trigger GitHub Actions build image lần đầu tiên trên GHCR. Khắc phục lỗi `manifest unknown` khi pull image trên VPS. Đồng thời đã clear container `doc-clamav` bị lỗi conflict project name cũ.
 - **Tệp thay đổi**:

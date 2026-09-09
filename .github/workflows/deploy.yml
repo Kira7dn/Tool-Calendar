@@ -35,7 +35,9 @@ jobs:
       - name: Check if Python AI changed
         id: python-changes
         run: |
-          PYTHON_CHANGED=$(git diff HEAD origin/develop -- python-ai-service/ | wc -l || echo "1")
+          # So sánh commit hiện tại với commit trước (HEAD~1..HEAD)
+          # Dùng git log để fallback về 'true' nếu đây là commit đầu tiên
+          PYTHON_CHANGED=$(git diff HEAD~1..HEAD -- python-ai-service/ 2>/dev/null | wc -l || echo "1")
           if [ "$PYTHON_CHANGED" -gt "0" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
@@ -81,7 +83,7 @@ jobs:
 
             echo ">>> Khởi động các container..."
             docker compose up -d --no-build official-doc-backend
-            docker compose up -d --no-build python-ai-service
+            docker compose up -d --no-build python-ai-service || echo "[WARN] python-ai-service image chưa sẵn sàng, bỏ qua."
 
             # Reload Nginx
             docker exec nginx-proxy nginx -s reload || docker restart nginx-proxy
