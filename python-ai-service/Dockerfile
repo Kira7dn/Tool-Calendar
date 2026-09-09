@@ -1,4 +1,5 @@
 # ── Build stage: cài gcc/build-essential chỉ ở đây ──────────────────────────
+# trigger: 2026-09-09
 FROM python:3.11-slim AS builder
 
 WORKDIR /build

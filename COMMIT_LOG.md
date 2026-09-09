@@ -1,3 +1,9 @@
+### [2026-09-09 08:12] chore(infra): trigger build python-ai-service image lần đầu
+- **Mô tả**: Thêm comment timestamp vào `python-ai-service/Dockerfile` để CI nhận diện `changed=true` và build + push image `ghcr.io/kira7dn/tool-calendar-python:latest` lên GHCR. Image này chưa tồn tại trên GHCR dù đã deploy nhiều lần do logic `git diff HEAD origin/develop` bị lỗi (đã fix ở commit trước).
+- **Tệp thay đổi**:
+  - `python-ai-service/Dockerfile` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): trigger build python-ai-service image lan dau"`
+
 ### [2026-09-09 08:01] fix(infra): sửa CI bug git diff sai ref và python-ai-service up không an toàn
 - **Mô tả**: Workflow `deploy.yml` có 2 bug: (1) `git diff HEAD origin/develop` luôn trả về 0 dòng vì sau `fetch-depth: 2` thì HEAD đã là origin/develop → Python image không bao giờ được build; (2) `docker compose up python-ai-service` không có `|| true` nên fail cả deploy khi image chưa tồn tại trên GHCR. Đã đổi sang `HEAD~1..HEAD` để diff đúng commit hiện tại với commit trước, và thêm `|| true` cho lệnh up python-ai-service.
 - **Tệp thay đổi**:
