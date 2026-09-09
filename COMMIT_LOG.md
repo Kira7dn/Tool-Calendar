@@ -1,3 +1,9 @@
+### [2026-09-09 09:39] perf(ai): tối ưu AiAssistantService từ bloody lessons
+- **Mô tả**: Áp dụng 3 tối ưu từ bloody lessons vào AiAssistantService: (1) Gộp 2 lần `GenerateEmbedding` thành 1 — tiết kiệm ~300ms; (2) Song song hóa Memory recall + Semantic Cache lookup bằng `Task.WhenAll` — tiết kiệm ~300ms; (3) Fix `new HttpClient` mỗi request (socket exhaustion risk) thay bằng injected `_httpClient` — đảm bảo HMAC auth hoạt động đúng với python-ai-service. Tổng thời gian pre-LLM giảm ~600ms.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ai): optimize embedding reuse and parallel memory+cache lookup"`
+
 ### [2026-09-09 08:31] fix(infra): add missing using Microsoft.AspNetCore.Http in HmacRequestHandler
 - **Mô tả**: Build CI thất bại do `IHttpContextAccessor` không resolve được trong `ToolCalendar.Core` — thiếu `using Microsoft.AspNetCore.Http`. Dù Core đã có `FrameworkReference Microsoft.AspNetCore.App`, implicit usings không tự include namespace này. Fix: thêm explicit using directive.
 - **Tệp thay đổi**:

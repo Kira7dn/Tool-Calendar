@@ -96,24 +96,14 @@ namespace ToolCalendar.Core.Services
             string userName = !string.IsNullOrEmpty(user.FullName) ? user.FullName : user.Username;
             bool isLeader = user.Role == "Admin" || user.Role == "LanhDao";
 
-            // ANYTHINGLLM Idea #5: Long-Term Memory — inject memories vào System Prompt
-            string memorySection = "";
+            // PERF #1: Tính embedding 1 lần duy nhất, dùng chung cho Memory recall VÀ Semantic Cache
+            // Bloody Lesson: tránh gọi GenerateEmbedding 2 lần cho cùng 1 message (lãng phí ~300ms)
+            float[]? sharedVector = null;
             try
             {
-                var memoryVector = await _embeddingService.GenerateEmbeddingAsync(message);
-                List<UserMemoryResult> memories = new();
-                if (memoryVector != null && memoryVector.Length > 0)
-                    memories = await _memoryRepo.RecallMemoriesAsync(userId, memoryVector, topK: 5, minScore: 0.25f);
-                if (memories.Count == 0)
-                    memories = await _memoryRepo.GetRecentMemoriesAsync(userId, limit: 3);
-                if (memories.Count > 0)
-                {
-                    var sb = new StringBuilder("## Những điều tôi nhớ về bạn\n");
-                    foreach (var m in memories) sb.AppendLine($"- {m.Content}");
-                    memorySection = "\n\n" + sb.ToString();
-                }
+                sharedVector = await _embeddingService.GenerateEmbeddingAsync(message);
             }
-            catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể load memories: {Msg}", ex.Message); }
+            catch (Exception ex) { _logger.LogWarning("[AiAssistant] Không thể tạo embedding: {Msg}", ex.Message); }
 
             // 0. Regex Fast-Path cho các câu hỏi tìm kiếm số công văn cụ thể (tránh việc LLM 3b phải xử lý tốn thời gian)
             var matchSearch = System.Text.RegularExpressions.Regex.Match(message, @"(?:tìm|tra cứu|kiểm tra).*?(?:công văn|văn bản).*?(?:số|mã)\s*([a-zA-Z0-9/\-]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
@@ -132,27 +122,51 @@ namespace ToolCalendar.Core.Services
                 yield break;
             }
 
-            // Semantic Caching & Routing
-            float[]? questionVector = null;
-            string? cacheHitResponse = null; // CS1626 fix: không yield trong try-catch
+            // PERF #2: Song song hóa Memory recall + Semantic Cache lookup
+            // Bloody Lesson: chạy tuần tự 2 async task không phụ thuộc nhau = lãng phí ~300ms
+            string memorySection = "";
+            float[]? questionVector = sharedVector; // dùng lại embedding đã tính
+            string? cacheHitResponse = null;
+
             try
             {
-                questionVector = await _embeddingService.GenerateEmbeddingAsync(message);
-                if (questionVector != null && questionVector.Length > 0)
+                // Task A: Memory recall (dùng sharedVector)
+                Task<List<UserMemoryResult>> memoryTask = sharedVector != null && sharedVector.Length > 0
+                    ? _memoryRepo.RecallMemoriesAsync(userId, sharedVector, topK: 5, minScore: 0.25f)
+                    : Task.FromResult(new List<UserMemoryResult>());
+
+                // Task B: Semantic Cache lookup (dùng sharedVector)
+                Task<string?> cacheTask = sharedVector != null && sharedVector.Length > 0
+                    ? _semanticCacheRepo.GetCachedResponseAsync(sharedVector, userId, 0.85f)
+                    : Task.FromResult<string?>(null);
+
+                // Chạy song song — tiết kiệm ~300ms
+                await Task.WhenAll(memoryTask, cacheTask);
+
+                var memories = await memoryTask;
+                var cachedResponse = await cacheTask;
+
+                // ANYTHINGLLM Idea #5: Long-Term Memory
+                if (memories.Count == 0)
+                    memories = await _memoryRepo.GetRecentMemoriesAsync(userId, limit: 3);
+                if (memories.Count > 0)
                 {
-                    // 1. Semantic Cache
-                    var cachedResponse = await _semanticCacheRepo.GetCachedResponseAsync(questionVector, userId, 0.85f);
-                    if (!string.IsNullOrEmpty(cachedResponse))
-                    {
-                        _logger.LogInformation("[AiAssistant] CACHE HIT! Trả về từ AiSemanticCache.");
-                        string finalReplyForChatCache = await HandleSpecialTagsAsync(cachedResponse, userId);
-                        try { await _chatHistoryRepo.AddMessageAsync(userId, "assistant", finalReplyForChatCache); }
-                        catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi lưu tin nhắn assistant: {Msg}", ex.Message); }
-                        cacheHitResponse = cachedResponse; // Lưu lại, yield bên ngoài try
-                    }
+                    var sb = new StringBuilder("## Những điều tôi nhớ về bạn\n");
+                    foreach (var m in memories) sb.AppendLine($"- {m.Content}");
+                    memorySection = "\n\n" + sb.ToString();
+                }
+
+                // Cache hit
+                if (!string.IsNullOrEmpty(cachedResponse))
+                {
+                    _logger.LogInformation("[AiAssistant] CACHE HIT! Trả về từ AiSemanticCache.");
+                    string finalReplyForChatCache = await HandleSpecialTagsAsync(cachedResponse, userId);
+                    try { await _chatHistoryRepo.AddMessageAsync(userId, "assistant", finalReplyForChatCache); }
+                    catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi lưu tin nhắn assistant: {Msg}", ex.Message); }
+                    cacheHitResponse = cachedResponse;
                 }
             }
-            catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi xử lý Caching: {Msg}", ex.Message); }
+            catch (Exception ex) { _logger.LogWarning("[AiAssistant] Lỗi xử lý Memory/Cache: {Msg}", ex.Message); }
 
             // CS1626: yield phải nằm ngoài try-catch block
             if (cacheHitResponse != null)
@@ -205,10 +219,12 @@ namespace ToolCalendar.Core.Services
                                 similarity_threshold = simThreshold
                             };
 
-                            using var compressClient = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+                            // PERF #3 + Security: dùng _httpClient (injected) thay vì new HttpClient
+                            // - Tránh socket exhaustion (Bloody Lesson pattern)
+                            // - _httpClient đã có HmacRequestHandler: tự ký HMAC-SHA256 cho python-ai-service
                             var compressJson = System.Text.Json.JsonSerializer.Serialize(compressPayload);
                             var compressContent = new StringContent(compressJson, System.Text.Encoding.UTF8, "application/json");
-                            var compressResp = await compressClient.PostAsync($"{_pythonAiUrl.TrimEnd('/')}/api/compress", compressContent);
+                            var compressResp = await _httpClient.PostAsync($"{_pythonAiUrl.TrimEnd('/')}/api/compress", compressContent);
 
                             if (compressResp.IsSuccessStatusCode)
                             {
