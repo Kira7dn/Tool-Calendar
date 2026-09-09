@@ -1,3 +1,9 @@
+### [2026-09-09 08:31] fix(infra): add missing using Microsoft.AspNetCore.Http in HmacRequestHandler
+- **Mô tả**: Build CI thất bại do `IHttpContextAccessor` không resolve được trong `ToolCalendar.Core` — thiếu `using Microsoft.AspNetCore.Http`. Dù Core đã có `FrameworkReference Microsoft.AspNetCore.App`, implicit usings không tự include namespace này. Fix: thêm explicit using directive.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Security/HmacRequestHandler.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): add missing using Microsoft.AspNetCore.Http in HmacRequestHandler"`
+
 ### [2026-09-09 08:28] security(infra): enterprise HMAC-SHA256 microservice security
 - **Mô tả**: Triển khai bảo mật microservice chuẩn enterprise (AWS SigV4-inspired) cho luồng C# → Python AI Service. 5 lớp bảo vệ: (1) X-API-Key auth; (2) HMAC-SHA256 request signing — chống tampering; (3) Timestamp window ±30s — chống replay attack; (4) Sliding window rate limiting 10/30/60 req/phút; (5) X-Correlation-ID end-to-end tracing. Auto-generate PYTHON_AI_SECRET_KEY trên server khi deploy nếu chưa có.
 - **Tệp thay đổi**:
