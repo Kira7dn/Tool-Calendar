@@ -17,7 +17,7 @@ services:
       # Bỏ DOCLING_USE_SIMPLE_PIPELINE → full pipeline với OCR thật cho PDF scan
       - TZ=Asia/Ho_Chi_Minh
       # Ollama URL — đọc từ env, tránh hardcode trong code
-      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_URL=http://host.docker.internal:11434
       # X-API-Key auth — đặt cùng giá trị với PythonAiService__ApiKey trong C# appsettings
       - API_SECRET_KEY=${PYTHON_AI_SECRET_KEY}
     mem_limit: 2560m
@@ -51,7 +51,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - DB_PATH=/app/data/documents.db
       - TZ=Asia/Ho_Chi_Minh
-      - Ollama__ChatUrl=http://ollama:11434/api/chat
+      - Ollama__ChatUrl=http://host.docker.internal:11434/api/chat
       - JWT_SECRET=${JWT_SECRET}
       - PUBLIC_ID_SECRET=${PUBLIC_ID_SECRET}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
@@ -160,21 +160,9 @@ services:
     networks:
       - tool-calendar-net
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: ollama
-    volumes:
-      - ollama-data:/root/.ollama
-    mem_limit: 4096m
-    cpus: "3.5"
-    restart: unless-stopped
-    networks:
-      - tool-calendar-net
-
 volumes:
   clamav-db:  # Named volume — ClamAV virus database tồn tại giữa các lần restart
   uptime-kuma-data:
-  ollama-data:
 
 networks:
   tool-calendar-net:
