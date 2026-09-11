@@ -4092,3 +4092,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `COMMIT_LOG.md` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): trigger github actions"`
 
+### [2026-09-11 16:34] Thêm workflow_dispatch
+- **Mô tả**: Thêm trigger thủ công cho deploy pipeline.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): add workflow_dispatch"`
+

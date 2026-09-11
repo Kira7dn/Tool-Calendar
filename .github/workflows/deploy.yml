@@ -1,6 +1,7 @@
 name: Deploy to VNPT Cloud
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
@@ -11,7 +12,8 @@ permissions:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on:
+  workflow_dispatch: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -50,11 +52,13 @@ jobs:
         with:
           context: ./python-ai-service
           push: true
-          tags: ghcr.io/kira7dn/tool-calendar-python:latest
+          tags: ghcr.io/kira7dn/tool-calendar-python:
+  workflow_dispatch:latest
 
   deploy:
     needs: build-and-push
-    runs-on: ubuntu-latest
+    runs-on:
+  workflow_dispatch: ubuntu-latest
     steps:
       - name: Execute remote ssh commands to deploy
         uses: appleboy/ssh-action@v1.0.3
