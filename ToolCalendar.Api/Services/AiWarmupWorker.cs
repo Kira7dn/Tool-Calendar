@@ -10,12 +10,13 @@ namespace ToolCalendar.Api.Services
     {
         private readonly ILogger<AiWarmupWorker> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly string _ollamaUrl = "http://ollama:11434/api/chat";
+        private readonly string _ollamaUrl;
 
-        public AiWarmupWorker(ILogger<AiWarmupWorker> logger, IHttpClientFactory httpClientFactory)
+        public AiWarmupWorker(ILogger<AiWarmupWorker> logger, IHttpClientFactory httpClientFactory, Microsoft.Extensions.Configuration.IConfiguration config)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _ollamaUrl = config.GetValue<string>("Ollama:ChatUrl") ?? "http://127.0.0.1:11434/api/chat";
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

@@ -1,8 +1,10 @@
 ### [2026-09-11 15:56] refactor(infra): gộp Ollama Docker vào Native để tiết kiệm RAM
-- **Mô tả**: Xóa container `ollama` (cùng volume) khỏi `docker-compose.yml` và script deploy. Trỏ kết nối của `python-ai-service` và `official-doc-backend` qua `http://host.docker.internal:11434` để sử dụng bản Ollama Native cài trực tiếp trên server, giúp loại bỏ image 3.5GB và tiết kiệm tài nguyên RAM, giảm rủi ro OOM kill.
+- **Mô tả**: Xóa container `ollama` (cùng volume) khỏi `docker-compose.yml` và script deploy. Trỏ kết nối của `python-ai-service` và `official-doc-backend` qua `http://host.docker.internal:11434` để sử dụng bản Ollama Native cài trực tiếp trên server, giúp loại bỏ image 3.5GB và tiết kiệm tài nguyên RAM, giảm rủi ro OOM kill. Cập nhật mã nguồn C# để đọc đúng URL cấu hình thay vì hardcode.
 - **Tệp thay đổi**:
   - `docker-compose.yml` (Sửa đổi)
   - `deploy_to_vnpt.sh` (Sửa đổi)
+  - `ToolCalendar.Api/Services/AiWarmupWorker.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "refactor(infra): gộp Ollama Docker vào Native để tiết kiệm RAM"`
 
 ### [2026-09-09 09:39] perf(ai): tối ưu AiAssistantService từ bloody lessons
