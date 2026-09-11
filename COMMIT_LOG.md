@@ -4104,3 +4104,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(infra): use scp pipeline to bypass vnpt ghcr throttling"`
 
+### [2026-09-11 16:41] Sửa lỗi quyền file backend.tar
+- **Mô tả**: Thêm lệnh chmod 777 backend.tar để SCP action không bị Permission Denied khi nén file.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): chmod 777 backend.tar for scp access"`
+

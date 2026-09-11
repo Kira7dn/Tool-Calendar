@@ -58,7 +58,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Export Backend Image to Tar
-        run: docker pull ghcr.io/kira7dn/tool-calendar-backend:latest && docker save ghcr.io/kira7dn/tool-calendar-backend:latest -o backend.tar
+        run: |
+          docker pull ghcr.io/kira7dn/tool-calendar-backend:latest
+          docker save ghcr.io/kira7dn/tool-calendar-backend:latest -o backend.tar
+          sudo chmod 777 backend.tar
 
       - name: SCP Backend Image to Server
         uses: appleboy/scp-action@v0.1.7
