@@ -4098,3 +4098,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): add workflow_dispatch"`
 
+### [2026-09-11 16:35] Implement SCP Pipeline
+- **Mô tả**: Thay thế docker pull bằng scp file tar để bypass tốc độ mạng VNPT chậm tải từ GHCR.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): use scp pipeline to bypass vnpt ghcr throttling"`
+

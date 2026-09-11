@@ -12,8 +12,7 @@ permissions:
 
 jobs:
   build-and-push:
-    runs-on:
-  workflow_dispatch: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,14 +51,25 @@ jobs:
         with:
           context: ./python-ai-service
           push: true
-          tags: ghcr.io/kira7dn/tool-calendar-python:
-  workflow_dispatch:latest
+          tags: ghcr.io/kira7dn/tool-calendar-python:latest
 
   deploy:
     needs: build-and-push
-    runs-on:
-  workflow_dispatch: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
+      - name: Export Backend Image to Tar
+        run: docker pull ghcr.io/kira7dn/tool-calendar-backend:latest && docker save ghcr.io/kira7dn/tool-calendar-backend:latest -o backend.tar
+
+      - name: SCP Backend Image to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VNPT_HOST }}
+          username: ${{ secrets.VNPT_USER }}
+          password: ${{ secrets.VNPT_PASS }}
+          port: 22
+          source: "backend.tar"
+          target: "/root/Tool-Calendar"
+
       - name: Execute remote ssh commands to deploy
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -92,8 +102,11 @@ jobs:
             echo ">>> Đăng nhập vào Github Container Registry trên VPS..."
             echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
-            echo ">>> Pull image từ GHCR..."
-            docker compose pull official-doc-backend
+            echo ">>> Load Backend image từ file tar (Bypass VNPT Network)..."
+            docker load -i backend.tar
+            rm backend.tar
+
+            echo ">>> Pull Python AI image từ GHCR (Nếu có cập nhật)..."
             docker compose pull python-ai-service || true
 
             echo ">>> Khởi động các container..."
