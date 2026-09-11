@@ -4086,3 +4086,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `docker-compose.yml` (Sửa đổi)
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(infra): use ghcr for python-ai and backend"`
+### [2026-09-11 16:11] Trigger GH Actions
+- **Mô tả**: Trigger deployment để push image do build local fail trên VNPT.
+- **Tệp thay đổi**:
+  - `COMMIT_LOG.md` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): trigger github actions"`
+
