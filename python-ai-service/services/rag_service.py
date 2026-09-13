@@ -67,7 +67,7 @@ class RagService:
             adaptive=request.adaptive
         )
         from schemas import ChunkResponse
-        return ChunkResponse(chunks=chunks, total_chunks=len(chunks))
+        return ChunkResponse(chunks=[c.to_dict() for c in chunks], total_chunks=len(chunks))
 
     def rerank_chunks(self, request):
         from rag.reranker import get_reranker

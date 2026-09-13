@@ -4253,3 +4253,13 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(infra): chmod 777 backend.tar for scp access"`
 
+
+### [2026-09-13 11:35] Cải thiện trích xuất AI & sửa lỗi ChunkResponse
+- **Mô tả**: 
+  1. Sửa lỗi `ChunkResponse` validation error trong `python-ai-service/services/rag_service.py` do truyền sai kiểu object thay vì dict. Lỗi này làm cho các tiến trình xử lý văn bản bị sập.
+  2. Nâng cấp `pypdf` sang `pypdfium2` trong tiến trình trích xuất nhanh (fast path) để khắc phục tình trạng trích xuất bị lệch dòng do các text box rời rạc trong file PDF.
+  3. Cải thiện regex `SoVanBan` để xử lý các khoảng trắng thừa do OCR sinh ra.
+- **Tệp thay đổi**:
+  - `python-ai-service/services/rag_service.py` (Sửa đổi)
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi ChunkResponse và cải thiện trích xuất bằng pypdfium2"`

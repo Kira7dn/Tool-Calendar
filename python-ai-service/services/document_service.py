@@ -30,11 +30,12 @@ class DocumentService:
             
         try:
             if request.file_path.lower().endswith('.pdf'):
-                import pypdf
-                reader = pypdf.PdfReader(request.file_path)
+                import pypdfium2 as pdfium
+                pdf = pdfium.PdfDocument(request.file_path)
                 fast_text = ""
-                for page in reader.pages:
-                    extracted = page.extract_text()
+                for page in pdf:
+                    textpage = page.get_textpage()
+                    extracted = textpage.get_text_range()
                     if extracted:
                         fast_text += extracted + "\n"
                 return ExtractFastResponse(text=fast_text.strip())
@@ -54,7 +55,7 @@ class DocumentService:
                 "CoQuanChuQuan": "", "Priority": "Thường"
             }
             
-            m = re.search(r'(?m)^[\s]*(?:Số|SỐ)[:\s]+([0-9]+[\s]*[/-][A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+(?:[-/][A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+)*)', text, re.IGNORECASE)
+            m = re.search(r'(?:Số|SỐ)[:\s]+([0-9]+[\s]*[/-][\s]*[A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+(?:[\s]*[-/][\s]*[A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+)*)', text, re.IGNORECASE)
             if m:
                 result["SoVanBan"] = m.group(1).strip().replace(" ", "")
 
