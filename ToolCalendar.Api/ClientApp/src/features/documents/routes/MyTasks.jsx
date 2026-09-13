@@ -226,7 +226,7 @@ export function MyTasks({ onTabChange }) {
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 overflow-hidden flex flex-col p-0">
+        <CardContent className="flex-1 overflow-y-hidden flex flex-col p-0">
           <div className="relative flex-1 overflow-auto pt-px">
             {/* Desktop Table */}
             <Table className="table-fixed w-full hidden md:table">

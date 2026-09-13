@@ -1,3 +1,11 @@
+### [2026-09-13 07:56] fix(style): bật scroll ngang cho bảng dữ liệu khi zoom to hoặc màn hình nhỏ
+- **Mô tả**: `overflow-hidden` trên `CardContent` chặn toàn bộ scroll ngang của bảng con — kể cả khi div bên trong đã có `overflow-auto`. Đổi thành `overflow-y-hidden` để chỉ chặn chiều dọc, giải phóng scroll ngang. Khi người dùng zoom to (hoặc màn hình nhỏ), bảng có `min-w-[1000px]` sẽ hiện thanh scrollbar ngang bình thường.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Search.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/MyTasks.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(style): bật scroll ngang cho bảng dữ liệu khi zoom to"`
+
 ### [2026-09-11 15:56] refactor(infra): gộp Ollama Docker vào Native để tiết kiệm RAM
 - **Mô tả**: Xóa container `ollama` (cùng volume) khỏi `docker-compose.yml` và script deploy. Trỏ kết nối của `python-ai-service` và `official-doc-backend` qua `http://host.docker.internal:11434` để sử dụng bản Ollama Native cài trực tiếp trên server, giúp loại bỏ image 3.5GB và tiết kiệm tài nguyên RAM, giảm rủi ro OOM kill. Cập nhật mã nguồn C# để đọc đúng URL cấu hình thay vì hardcode.
 - **Tệp thay đổi**:
