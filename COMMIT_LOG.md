@@ -1,3 +1,10 @@
+### [2026-09-13 09:27] fix(style): dùng absolute positioning để khóa chết chiều cao bảng Documents
+- **Mô tả**: Mặc dù đã dùng class `strict-viewport-height` nhưng do các trình duyệt có cơ chế tính `100dvh` khác nhau hoặc bị padding của AppShell đánh lừa, chiều cao vẫn bị giãn ra một chút khiến thanh phân trang và thanh cuộn ngang dưới cùng bị cắt mất. Giải pháp triệt để: Đặt `relative` cho wrapper của AppShell, và dùng `absolute top-[var] bottom-[var]...` cho trang Documents. Kỹ thuật này ép trang Documents phải nằm gọn 100% trong không gian còn lại của màn hình mà không bao giờ bị giãn ra bởi flexbox.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(style): dùng absolute positioning để khóa chết chiều cao bảng Documents"`
+
 ### [2026-09-13 09:18] fix(style): khóa cứng chiều cao trang Documents để scrollbar ngang luôn hiển thị
 - **Mô tả**: Bảng Documents bị `.main-content` (có `overflow-y-auto`) làm giãn chiều cao vô hạn, dẫn đến việc scrollbar ngang bị đẩy xuống tận đáy của danh sách dòng thay vì cố định trên màn hình (viewport). Giải pháp: Tạo class CSS `.strict-viewport-height` tính toán chính xác `100dvh - header - padding`, ép trang Documents không được cao hơn viewport. Nhờ đó, scrollbar ngang sẽ cố định ở đáy viewport (như Google Sheets) và bảng sẽ scroll nội bộ một cách chuẩn xác.
 - **Tệp thay đổi**:

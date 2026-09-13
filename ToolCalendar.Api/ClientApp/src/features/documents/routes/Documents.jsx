@@ -93,7 +93,7 @@ export function Documents({ onTabChange, filters }) {
   }
 
   return (
-    <div className="space-y-[var(--space-page)] flex flex-col strict-viewport-height w-full animate-in slide-in-from-bottom-4 duration-700 fill-mode-both">
+    <div className="absolute top-[var(--space-page)] bottom-[var(--space-page)] left-[var(--space-page)] right-[var(--space-page)] max-md:left-4 max-md:right-4 space-y-[var(--space-page)] flex flex-col animate-in slide-in-from-bottom-4 duration-700 fill-mode-both">
       <div className="flex flex-col gap-0 border-l-4 border-primary pl-3 py-0.5">
         <h2 className="text-xl">Quản lý văn bản</h2>
         <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">
