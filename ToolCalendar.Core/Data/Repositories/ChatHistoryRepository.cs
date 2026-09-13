@@ -1,7 +1,3 @@
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;

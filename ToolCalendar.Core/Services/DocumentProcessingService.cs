@@ -6,11 +6,8 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
-using System.Text.Json;
-using System.Linq;
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Hubs;
-using ToolCalendar.Core.Services;
 
 namespace ToolCalendar.Services
 {

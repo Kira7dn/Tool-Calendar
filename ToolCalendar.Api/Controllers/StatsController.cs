@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Core.Data.Interfaces;
-using System;
 
 namespace ToolCalendar.Api.Controllers
 {

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
@@ -15,7 +14,6 @@ using ToolCalendar.Data;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
 using ToolCalendar.Services;
-using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using ToolCalendar.Middleware;   // ✅ FileAccessSecurityMiddleware
 using ToolCalendar.Policies;    // ✅ AppPolicies (phân quyền tập trung)

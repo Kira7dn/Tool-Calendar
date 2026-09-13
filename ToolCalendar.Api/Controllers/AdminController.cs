@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Models;
 using ToolCalendar.Core.Data.Interfaces;

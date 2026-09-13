@@ -1,5 +1,3 @@
-using System;
-
 namespace ToolCalendar.Core.Data.Interfaces
 {
     public interface ISettingRepository

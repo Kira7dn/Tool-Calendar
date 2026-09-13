@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
@@ -9,7 +8,6 @@ using System.Text;                   // Encoding - dùng cho webhook notificatio
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Core.Services;
-using ToolCalendar.Data;
 using ToolCalendar.Data.Repositories;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;

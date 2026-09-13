@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using ToolCalendar.Core.Models;
 
 namespace ToolCalendar.Core.Data.Interfaces

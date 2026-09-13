@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using ToolCalendar.Core.Data.Interfaces;
 
 namespace ToolCalendar.Core.Services.AiTools

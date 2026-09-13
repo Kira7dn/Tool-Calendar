@@ -1,15 +1,9 @@
-using System;
-using System.IO;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ToolCalendar.Core.Data.Interfaces;
 using System.Text.RegularExpressions;
-using System.Linq;
 using ToolCalendar.Core.Services.AiTools;
 
 namespace ToolCalendar.Core.Services

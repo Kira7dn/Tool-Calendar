@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using System.Security.Claims;
 using System.Text.Json;
 using ToolCalendar.Core.Models;

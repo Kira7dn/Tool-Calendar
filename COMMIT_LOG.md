@@ -3691,6 +3691,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Services/AiAssistantService.cs` (Sửa đổi)
   - `ToolCalendar.Core/Services/SemanticRouterService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "feat(ai): add regex fast path for exact document search to bypass LLM"`
+
+### [2026-09-13 11:19] Dọn dẹp thư viện thừa (unused usings) toàn bộ dự án C# Backend
+- **Mô tả**: Dùng dotnet format để xóa hàng loạt unused usings, đồng thời cấu hình bắt buộc IDE0005 để chống lặp lại tình trạng này.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api.csproj`, `ToolCalendar.Core.csproj`, `.editorconfig` (Sửa đổi: bật IDE0005)
+  - Hàng loạt file `.cs` ở Controllers, Data, Services (Sửa đổi: xóa unused usings)
+- **Lệnh git commit**: `git commit -m "refactor(api): dọn dẹp triệt để thư viện using thừa C# trong toàn hệ thống"`
+
 ### [2026-08-17 16:50] Di chuyển hardcoded URL sang cấu hình
 - **Mô tả**: Loại bỏ các URL hardcode "http://python-ai-service:8001" rải rác trong source code. Đưa PythonAiServiceUrl vào appsettings.json và .env để chuẩn hóa kiến trúc Microservices và dễ dàng chạy local.
 - **Tệp thay đổi**:

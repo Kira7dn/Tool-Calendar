@@ -1,9 +1,3 @@
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace ToolCalendar.Api.Services
 {
     public class AiWarmupWorker : BackgroundService

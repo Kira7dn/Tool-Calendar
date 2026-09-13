@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace ToolCalendar.Core.Data.Interfaces
 {
     public interface IAiSemanticCacheRepository

@@ -1,11 +1,9 @@
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Core.Services;
 using ToolCalendar.Core.Data.Interfaces;
-using System.Collections.Generic;
 
 namespace ToolCalendar.Api.Controllers
 {

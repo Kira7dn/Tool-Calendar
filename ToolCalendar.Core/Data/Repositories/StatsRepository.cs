@@ -1,10 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using ToolCalendar.Core.Data.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 using System.Text.Json;
 
 namespace ToolCalendar.Core.Data.Repositories

@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace ToolCalendar.Core.Services.AiTools
 {
     public interface IAiTool
