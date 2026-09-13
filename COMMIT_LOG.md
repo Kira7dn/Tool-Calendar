@@ -1,8 +1,8 @@
-### [2026-09-13 08:00] fix(style): panel trái trang Sổ hóa văn bản bị clip khi zoom to
-- **Mô tả**: `overflow-hidden` trên wrapper cha chặn scroll dọc của panel "Trạng thái đợt tải" khiến nội dung bị cắt khi người dùng zoom to. Fix: đổi wrapper cha thành `overflow-y-auto`, bỏ `lg:overflow-hidden` ở div content, bỏ prefix `lg:` trên panel trái để scroll hoạt động cả desktop lẫn mobile.
+### [2026-09-13 08:09] fix(style): panel trái UploadPage bị clip "Chờ rà soát" — fix lần 2
+- **Mô tả**: Fix lần 1 thêm `overflow-y-auto min-h-0` vào panel trái khiến nó bị co theo chiều cao cha và scroll bên trong — không hiệu quả trên mobile. Fix đúng: bỏ 2 class đó để panel tự mở rộng tự nhiên theo nội dung; div cha `overflow-y-auto` đã lo scroll toàn trang.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
-- **Lệnh git commit**: `git commit -m "fix(style): fix panel trái Sổ hóa văn bản bị clip khi zoom to"`
+- **Lệnh git commit**: `git commit -m "fix(style): bỏ min-h-0 panel trái UploadPage để hiện đủ Chờ rà soát"`
 
 ### [2026-09-13 07:56] fix(style): bật scroll ngang cho bảng dữ liệu khi zoom to hoặc màn hình nhỏ
 - **Mô tả**: `overflow-hidden` trên `CardContent` chặn toàn bộ scroll ngang của bảng con — kể cả khi div bên trong đã có `overflow-auto`. Đổi thành `overflow-y-hidden` để chỉ chặn chiều dọc, giải phóng scroll ngang. Khi người dùng zoom to (hoặc màn hình nhỏ), bảng có `min-w-[1000px]` sẽ hiện thanh scrollbar ngang bình thường.
