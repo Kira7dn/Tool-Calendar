@@ -30,8 +30,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Chỉ cài curl cho healthcheck
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
+# Chỉ cài curl cho healthcheck và poppler-utils (pdftotext) để đọc form/annotation ẩn
+RUN apt-get update && apt-get install -y --no-install-recommends curl poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy site-packages từ builder (không copy gcc/build-essential)

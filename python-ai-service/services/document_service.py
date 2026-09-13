@@ -30,6 +30,22 @@ class DocumentService:
             
         try:
             if request.file_path.lower().endswith('.pdf'):
+                # Ưu tiên dùng pdftotext (poppler) vì nó đọc được các Form Fields, Annotations ẩn
+                # pdftotext -layout giữ nguyên định dạng trực quan (ví dụ: "Số:    05")
+                import subprocess
+                try:
+                    result = subprocess.run(
+                        ["pdftotext", "-layout", "-nopgbrk", request.file_path, "-"],
+                        capture_output=True,
+                        text=True,
+                        check=True
+                    )
+                    if result.stdout and len(result.stdout.strip()) > 10:
+                        return ExtractFastResponse(text=result.stdout.strip())
+                except Exception as e:
+                    logger.warning("[DocumentService.extract_fast] pdftotext failed, fallback to pypdfium2: %s", str(e))
+                
+                # Fallback: dùng pypdfium2 nếu pdftotext không hoạt động
                 import pypdfium2 as pdfium
                 pdf = pdfium.PdfDocument(request.file_path)
                 fast_text = ""
