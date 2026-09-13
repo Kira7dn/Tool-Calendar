@@ -1,3 +1,9 @@
+### [2026-09-13 10:18] fix(style): sửa lỗi đè giao diện toolbar trang Tìm kiếm khi zoom to 125%
+- **Mô tả**: Khi người dùng zoom màn hình lên 125%, các bộ lọc Ngày tiếp nhận và Hạn xử lý trên dòng 2 của thanh công cụ tìm kiếm (`Search.jsx`) bị đẩy và đè lên nhau do thiếu thuộc tính `flex-wrap`. Đã sửa bằng cách thêm `flex-wrap` vào container của dòng 2 để các bộ lọc tự động rớt dòng khi không đủ không gian hiển thị ngang.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Search.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(style): sửa lỗi đè giao diện toolbar trang Tìm kiếm khi zoom to"`
+
 ### [2026-09-13 10:08] fix(ui): thêm mảng columns bị thiếu trong Search.jsx gây crash
 - **Mô tả**: Khi refactor `<Table>` thành `<DataTable>` ở trang Tìm kiếm (`Search.jsx`), mảng `columns` đã vô tình bị xóa mất dẫn đến lỗi `ReferenceError: columns is not defined` làm sập trang. Đã khôi phục lại định nghĩa mảng `columns` (STT, Số văn bản, Trích yếu, Tham mưu, Thời hạn, Trạng thái, Chi tiết) để trang hiển thị đúng chức năng.
 - **Tệp thay đổi**:

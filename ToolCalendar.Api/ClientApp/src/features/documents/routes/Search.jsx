@@ -213,7 +213,7 @@ export function Search({ filters, onTabChange }) {
         </div>
 
         {/* Dòng 2: Ngày tiếp nhận + Hạn xử lý + Nút tìm */}
-        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-3 border-t border-border/40 pt-4 md:pt-2">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-3 border-t border-border/40 pt-4 md:pt-2 flex-wrap">
           <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground shrink-0 flex items-center gap-1.5 md:ml-1">
               <Calendar className="size-3 text-primary" /> Tiếp nhận từ ngày
