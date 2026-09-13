@@ -166,7 +166,7 @@ export function UploadPage() {
 
   return (
     <div
-      className="h-full bg-slate-100 flex flex-col overflow-hidden"
+      className="h-full bg-slate-100 flex flex-col overflow-y-auto"
       style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
     >
       <UploadActions
@@ -177,8 +177,8 @@ export function UploadPage() {
         handleSaveAll={handleSaveAll}
       />
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-y-auto lg:overflow-hidden min-h-0">
-        <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-3 lg:overflow-y-auto lg:pb-2 min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-y-auto min-h-0">
+        <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-3 overflow-y-auto pb-2 min-h-0">
           <UploadDropzone
             isDragging={isDragging}
             setIsDragging={setIsDragging}
