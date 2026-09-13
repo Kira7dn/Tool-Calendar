@@ -1,6 +1,5 @@
 // shell/AppShell.jsx — Layout khung chính (Sidebar + Header + Page content)
 // Sau khi refactor: ~200 dòng thay vì 1183 dòng
-/* eslint-disable */
 /* global CustomEvent */
 import React from 'react'
 import { Bell, CheckSquare, FileText, LayoutDashboard } from 'lucide-react'

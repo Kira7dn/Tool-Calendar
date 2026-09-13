@@ -1,5 +1,3 @@
-/* eslint-disable */
-import React from 'react'
 import { Activity, User, CalendarDays } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'

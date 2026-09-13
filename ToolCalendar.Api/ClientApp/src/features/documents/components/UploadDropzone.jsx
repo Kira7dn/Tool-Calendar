@@ -1,5 +1,4 @@
-/* eslint-disable react/prop-types, no-unused-vars */
-import React, { useRef } from 'react'
+import { useRef } from 'react'
 import { cn } from '../../../lib/utils'
 
 const UploadCloudIcon = () => (

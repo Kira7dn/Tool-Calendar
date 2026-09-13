@@ -1,5 +1,4 @@
-/* eslint-disable */
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 import { DOCUMENT_STATUS } from '@/constants/document'
 
 const DocumentUploadContext = createContext(null)

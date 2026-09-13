@@ -1,4 +1,3 @@
-/* eslint-disable */
 /* global CustomEvent */
 import * as signalR from '@microsoft/signalr'
 

@@ -1,5 +1,4 @@
-/* eslint-disable */
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { X, Paperclip, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 

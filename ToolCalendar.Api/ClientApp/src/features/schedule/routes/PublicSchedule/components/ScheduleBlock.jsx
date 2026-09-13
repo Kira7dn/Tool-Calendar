@@ -1,6 +1,3 @@
-/* eslint-disable */
-import React from 'react'
-
 export function ScheduleBlock({ day, onViewDoc }) {
   return (
     <div className="mb-6">

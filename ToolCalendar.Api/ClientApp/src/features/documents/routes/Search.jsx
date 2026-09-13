@@ -1,15 +1,5 @@
-/* eslint-disable */
-import React from 'react'
-import {
-  Search as SearchIcon,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  ArrowRight,
-} from 'lucide-react'
+import { Search as SearchIcon, Calendar, Loader2, ArrowRight } from 'lucide-react'
 import { getStatusConfig, DOC_STATUS } from '@/lib/constants'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

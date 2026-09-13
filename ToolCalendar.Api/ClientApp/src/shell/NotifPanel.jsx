@@ -1,6 +1,5 @@
 // shell/NotifPanel.jsx
 // Popover thông báo Desktop + Full-screen Mobile (tách từ AppShell)
-import React from 'react'
 import { Bell, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

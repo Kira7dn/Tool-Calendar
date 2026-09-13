@@ -1,5 +1,3 @@
-/* eslint-disable */
-import React from 'react'
 import { DOCUMENT_STATUS } from '@/constants/document'
 import { cn } from '@/lib/utils'
 

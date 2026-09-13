@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { FileText, Printer, Maximize2, X } from 'lucide-react'

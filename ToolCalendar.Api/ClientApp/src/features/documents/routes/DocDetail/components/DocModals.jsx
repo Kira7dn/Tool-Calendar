@@ -1,5 +1,3 @@
-/* eslint-disable react/prop-types, no-unused-vars */
-import React from 'react'
 import { X } from 'lucide-react'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { ForwardDocumentModal } from '@/components/ForwardDocumentModal'

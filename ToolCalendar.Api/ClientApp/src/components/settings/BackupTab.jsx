@@ -1,5 +1,3 @@
-/* eslint-disable */
-import React from 'react'
 import { Database, Download, Trash2, AlertTriangle, FileJson, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'

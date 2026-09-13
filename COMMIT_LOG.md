@@ -4231,6 +4231,14 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `.github/workflows/deploy.yml` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(infra): use scp pipeline to bypass vnpt ghcr throttling"`
 
+### [2026-09-13 11:10] Dọn dẹp triệt để thư viện thừa và cấu hình lại ESLint cho React
+- **Mô tả**: Gỡ bỏ cờ `/* eslint-disable */` khỏi 89 file trong React. Cài đặt và cấu hình `eslint-plugin-unused-imports` để tự động loại bỏ các thư viện không sử dụng. Tắt các rule không cần thiết (như `react/prop-types`, `eqeqeq`, `no-redeclare`) để tránh phát sinh hàng loạt lỗi không liên quan, giúp dự án pass `pre-commit hook` một cách an toàn mà vẫn sạch sẽ import.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/package.json` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/eslint.config.js` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/**/*.jsx` (89 files Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(api): dọn dẹp triệt để thư viện thừa và cấu hình lại eslint cho react"`
+
 ### [2026-09-11 16:41] Sửa lỗi quyền file backend.tar
 - **Mô tả**: Thêm lệnh chmod 777 backend.tar để SCP action không bị Permission Denied khi nén file.
 - **Tệp thay đổi**:

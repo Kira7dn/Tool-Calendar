@@ -1,35 +1,17 @@
-/* eslint-disable */
 // documents/pages/MyTasks.jsx — Trang Việc của tôi (đã refactor)
 // Logic tách vào useMyTasks.js | EvidenceModal tách ra component riêng
-import React, { useState } from 'react'
-import {
-  Search,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  CheckCircle2,
-  Upload,
-  X,
-} from 'lucide-react'
+import { useState } from 'react'
+import { Search, Calendar, ChevronLeft, ChevronRight, CheckCircle2, Upload, X } from 'lucide-react'
 import { getStatusConfig } from '@/lib/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { ErrorState } from '@/components/ui/error-state'
 import { DataTable } from '@/components/ui/data-table'
 import { DOCUMENT_STATUS } from '@/constants/document'
 import { TASK_FILTER } from '../../../constants/document'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+
 import { cn } from '@/lib/utils'
 import { useMyTasks } from '../../../features/tasks/hooks/useMyTasks'
 import { EvidenceModal } from '../../../features/tasks/components/EvidenceModal'

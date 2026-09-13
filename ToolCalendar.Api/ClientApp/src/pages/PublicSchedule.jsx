@@ -1,5 +1,3 @@
-/* eslint-disable */
-import React from 'react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ErrorState } from '@/components/ui/error-state'
 

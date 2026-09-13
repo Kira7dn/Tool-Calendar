@@ -1,6 +1,5 @@
-/* eslint-disable */
 import React, { useState } from 'react'
-import { ChevronRight, ChevronDown, Clock, User, AlertCircle } from 'lucide-react'
+import { ChevronRight, ChevronDown, Clock, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
@@ -100,7 +99,7 @@ export const DocumentRoutingTree = ({ routings }) => {
           <span>Luồng luân chuyển văn bản</span>
         </div>
         <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium">
-          <span className="inline-block w-3 h-3 rounded-sm bg-red-500"></span>
+          <span className="inline-block w-3 h-3 rounded-sm bg-red-500" />
           Đã xử lý quá hạn
         </div>
       </div>

@@ -1,4 +1,3 @@
-/* eslint-disable */
 /**
  * Utility for handling Web Push Notifications
  */

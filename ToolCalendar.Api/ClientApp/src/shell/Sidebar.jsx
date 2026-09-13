@@ -1,6 +1,4 @@
 import { ROLES } from '../constants/roles'
-/* eslint-disable */
-import React from 'react'
 import {
   LayoutDashboard,
   FileText,

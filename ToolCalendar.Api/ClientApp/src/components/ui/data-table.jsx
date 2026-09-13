@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React from 'react'
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table'

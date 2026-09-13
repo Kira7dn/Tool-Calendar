@@ -1,8 +1,6 @@
-/* eslint-disable */
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { DOCUMENT_STATUS } from '@/constants/document'
-import { ArrowLeft, Loader2, FileText, ExternalLink, Edit, Trash2, Play } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { ArrowLeft, Loader2, FileText } from 'lucide-react'
 import { useDocDetail } from './DocDetail/hooks/useDocDetail'
 import { DocOverviewTab } from './DocDetail/components/DocOverviewTab'
 import { DocContentTab } from './DocDetail/components/DocContentTab'

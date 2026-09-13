@@ -1,5 +1,4 @@
-/* eslint-disable */
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
 
 export function useUsers() {

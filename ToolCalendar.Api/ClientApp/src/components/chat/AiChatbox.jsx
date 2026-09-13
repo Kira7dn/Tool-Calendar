@@ -236,7 +236,6 @@ export function AiChatbox({ currentDocId }) {
     'Có bao nhiêu văn bản chưa được xử lý?',
   ]
 
-  /* eslint-disable react/no-array-index-key */
   const renderMessageContent = (content) => {
     if (!content) return null
     const parts = content.split(/(\[DOC\|\d+\|.*?\])/g)

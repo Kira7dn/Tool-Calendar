@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { useState, useEffect } from 'react'
 import { PDFDocument } from 'pdf-lib'
 import { ROLES } from '@/constants/roles'

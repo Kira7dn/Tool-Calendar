@@ -1,5 +1,3 @@
-/* eslint-disable */
-import React from 'react'
 import { Plus, Search, MoreVertical, Eye, Trash2, FileText } from 'lucide-react'
 import { getStatusConfig, DOC_STATUS } from '@/lib/constants'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'

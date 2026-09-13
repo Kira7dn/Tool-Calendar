@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { AlertCircle, RefreshCcw } from 'lucide-react'
 import { Button } from './button'
 

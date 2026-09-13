@@ -1,5 +1,3 @@
-/* eslint-disable react/prop-types */
-
 // features/documents/components/ReviewModal.jsx
 // Modal đối soát PDF + chỉnh sửa thông tin văn bản (tách từ Upload.jsx)
 import {

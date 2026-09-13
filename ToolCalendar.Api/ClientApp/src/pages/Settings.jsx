@@ -1,11 +1,8 @@
-/* eslint-disable */
-/* eslint-disable no-empty */
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Settings as SettingsIcon, Database, History } from 'lucide-react'
 import { getNotificationPermission } from '@/lib/push-notifications'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { ScrollArea } from '@/components/ui/scroll-area'
 
 // Import Tab Components from components/settings
 import { GeneralTab, AuditTab, BackupTab } from '@/components/settings'

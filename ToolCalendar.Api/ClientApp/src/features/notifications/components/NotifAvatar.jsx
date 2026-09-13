@@ -1,7 +1,5 @@
 // features/notifications/components/NotifAvatar.jsx
 // Icon avatar cho từng loại thông báo
-import React from 'react'
-import { cn } from '../../../lib/utils'
 
 export function NotifAvatar({ title, isRead }) {
   const isOverdue = /quá hạn/i.test(title)

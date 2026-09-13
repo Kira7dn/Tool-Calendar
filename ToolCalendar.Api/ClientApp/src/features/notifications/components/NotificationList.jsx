@@ -1,6 +1,5 @@
 // features/notifications/components/NotificationList.jsx
 // Danh sách thông báo theo nhóm Mới / Trước đó (Facebook-style)
-import React from 'react'
 import { cn } from '../../../lib/utils'
 import { NotifAvatar } from './NotifAvatar'
 

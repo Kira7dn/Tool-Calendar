@@ -1,5 +1,4 @@
-/* eslint-disable */
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 export function NavBar() {
   const [activeNav, setActiveNav] = useState('VĂN BẢN ĐẾN HẠN')

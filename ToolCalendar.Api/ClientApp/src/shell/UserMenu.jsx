@@ -1,7 +1,6 @@
 // shell/UserMenu.jsx
 // Avatar + Dropdown menu user + Modal đổi mật khẩu (tách từ AppShell)
-/* eslint-disable */
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   KeyRound,
   LogOut,

@@ -1,4 +1,3 @@
-/* eslint-disable */
 import {
   Document,
   Packer,
@@ -10,7 +9,6 @@ import {
   BorderStyle,
   WidthType,
   AlignmentType,
-  HeadingLevel,
 } from 'docx'
 import { saveAs } from 'file-saver'
 

@@ -1,17 +1,5 @@
-/* eslint-disable */
-import React, { useState } from 'react'
-import {
-  Plus,
-  UserPlus,
-  Search,
-  Edit,
-  Trash2,
-  Mail,
-  Phone,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-} from 'lucide-react'
+import { useState } from 'react'
+import { Plus, Search, Edit, Trash2, Mail, Phone } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

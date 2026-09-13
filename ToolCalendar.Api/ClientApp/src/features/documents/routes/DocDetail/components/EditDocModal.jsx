@@ -1,5 +1,4 @@
-/* eslint-disable react/prop-types, no-unused-vars */
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   X,
   Edit,

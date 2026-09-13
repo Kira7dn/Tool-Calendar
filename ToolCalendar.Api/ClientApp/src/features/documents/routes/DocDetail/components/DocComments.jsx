@@ -1,6 +1,4 @@
-/* eslint-disable */
-import React from 'react'
-import { MessageSquare, Paperclip, X, Image, Send, Loader2, Heart, ThumbsUp } from 'lucide-react'
+import { MessageSquare, Paperclip, X, Image, Send, Loader2, ThumbsUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const REACTION_EMOJIS = {

@@ -1,5 +1,4 @@
-/* eslint-disable */
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 export function useSearch(filters) {
   const [documents, setDocuments] = useState([])

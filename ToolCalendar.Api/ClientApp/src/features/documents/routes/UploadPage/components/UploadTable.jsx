@@ -1,5 +1,3 @@
-/* eslint-disable */
-import React from 'react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ROLES } from '@/constants/roles'
@@ -229,7 +227,7 @@ export function UploadTable({
                     >
                       <option value="">Chọn đơn vị</option>
                       {departments
-                        .filter((d) => d.isActive !== false || d.id === item?.departmentIds?.[0])
+                        .filter((d) => d.isActive !== false || d.id === row?.departmentIds?.[0])
                         .map((d) => (
                           <option key={d.id} value={d.id}>
                             {d.name}

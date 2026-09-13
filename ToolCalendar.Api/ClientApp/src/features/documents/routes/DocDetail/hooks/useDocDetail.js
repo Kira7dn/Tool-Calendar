@@ -1,5 +1,4 @@
-/* eslint-disable */
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 
 export function useDocDetail(docId, onBack) {

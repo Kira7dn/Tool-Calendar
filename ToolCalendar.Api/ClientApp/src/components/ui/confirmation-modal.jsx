@@ -1,13 +1,4 @@
-/* eslint-disable */
-import React from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, Trash2, Info, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'

@@ -1,15 +1,6 @@
 import { ROLES } from '../../constants/roles'
-/* eslint-disable */
-import React, { useEffect, useState } from 'react'
-import {
-  History,
-  RefreshCcw,
-  Trash2,
-  Monitor,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { History, RefreshCcw, Trash2, Monitor } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'

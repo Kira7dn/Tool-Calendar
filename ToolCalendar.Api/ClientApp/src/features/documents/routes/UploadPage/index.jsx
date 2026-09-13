@@ -1,5 +1,4 @@
-/* eslint-disable */
-import React, { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { UploadDropzone } from '../../components/UploadDropzone'
 import { useBulkSelect } from '../../hooks/useBulkSelect'
 import { useSaveAll } from '../../hooks/useSaveAll'
