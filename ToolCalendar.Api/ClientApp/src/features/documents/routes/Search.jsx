@@ -72,6 +72,74 @@ export function Search({ filters, onTabChange }) {
     }
   }
 
+  const columns = [
+    {
+      header: 'STT',
+      width: 'w-14',
+      align: 'center',
+      className: 'text-foreground',
+      cellClassName: 'text-muted-foreground font-medium text-[10px]',
+      cell: (row, index) => (page - 1) * pageSize + index + 1,
+    },
+    {
+      header: 'Số văn bản',
+      width: 'w-40',
+      className: 'text-foreground',
+      cellClassName: 'font-bold text-secondary truncate text-[11px]',
+      cell: (row) => row.soVanBan || '-',
+    },
+    {
+      header: 'Hạn xử lý',
+      width: 'w-36',
+      className: 'text-foreground',
+      cellClassName: 'text-red-600 font-black whitespace-nowrap text-[10px]',
+      cell: (row) => formatDate(row.thoiHan),
+    },
+    {
+      header: 'Trích yếu',
+      className: 'text-foreground',
+      cellClassName: 'text-foreground/80 font-medium truncate text-[11px]',
+      cell: (row) => (
+        <div className="truncate" title={row.trichYeu}>
+          {row.trichYeu || '-'}
+        </div>
+      ),
+    },
+    {
+      header: 'Tham mưu',
+      width: 'w-44',
+      className: 'text-foreground',
+      cellClassName: 'text-muted-foreground font-bold truncate text-[10px]',
+      cell: (row) => (
+        <div className="truncate max-w-[160px]" title={row.coQuanChuQuan}>
+          {row.coQuanChuQuan || '-'}
+        </div>
+      ),
+    },
+    {
+      header: 'Trạng thái',
+      width: 'w-36',
+      className: 'text-foreground',
+      cell: (row) => getStatusBadge(row),
+    },
+    {
+      header: 'Chi tiết',
+      width: 'w-24',
+      align: 'center',
+      className: 'text-foreground',
+      cell: (row) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 rounded-full text-primary hover:bg-primary/10"
+          onClick={() => window.app?.services?.openDocDetail?.(row.id)}
+        >
+          <ArrowRight className="size-3.5" />
+        </Button>
+      ),
+    },
+  ]
+
   return (
     <div className="flex flex-col flex-1 min-w-0 gap-3 animate-in slide-in-from-bottom-4 duration-700 fill-mode-both">
       {/* ── Toolbar 2 dòng ─── */}

@@ -1,3 +1,9 @@
+### [2026-09-13 10:08] fix(ui): thêm mảng columns bị thiếu trong Search.jsx gây crash
+- **Mô tả**: Khi refactor `<Table>` thành `<DataTable>` ở trang Tìm kiếm (`Search.jsx`), mảng `columns` đã vô tình bị xóa mất dẫn đến lỗi `ReferenceError: columns is not defined` làm sập trang. Đã khôi phục lại định nghĩa mảng `columns` (STT, Số văn bản, Trích yếu, Tham mưu, Thời hạn, Trạng thái, Chi tiết) để trang hiển thị đúng chức năng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Search.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): khôi phục mảng columns bị thiếu trong trang Tìm kiếm"`
+
 ### [2026-09-13 10:02] fix(ui): sửa lỗi sai đường dẫn import documentStatus gây lỗi build Vite
 - **Mô tả**: Trong quá trình refactor `MyTasks.jsx`, đường dẫn import `DOCUMENT_STATUS` bị trỏ sai thành `@/constants/documentStatus` (file không tồn tại), gây ra lỗi ENOENT khi chạy GitHub Actions và Vite build. Đã sửa lại đường dẫn đúng là `@/constants/document`.
 - **Tệp thay đổi**:
