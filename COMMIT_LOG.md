@@ -1,3 +1,10 @@
+### [2026-09-13 09:37] feat(ui): tạo component DataTable dùng chung và áp dụng cho bảng Documents
+- **Mô tả**: Đóng gói cấu trúc bảng HTML phức tạp cùng thanh phân trang vào một reusable component `<DataTable />` tại `src/components/ui/data-table.jsx`. Component này xử lý sẵn layout flexbox cho scrollbar, render header/body từ prop `columns` và tích hợp phân trang. Đã refactor `Documents.jsx` sử dụng `DataTable`, giảm đi hàng trăm dòng code lặp lại, chuẩn hóa giao diện và hành vi scroll.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/ui/data-table.jsx` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): tạo component DataTable dùng chung và áp dụng cho bảng Documents"`
+
 ### [2026-09-13 09:27] fix(style): dùng absolute positioning để khóa chết chiều cao bảng Documents
 - **Mô tả**: Mặc dù đã dùng class `strict-viewport-height` nhưng do các trình duyệt có cơ chế tính `100dvh` khác nhau hoặc bị padding của AppShell đánh lừa, chiều cao vẫn bị giãn ra một chút khiến thanh phân trang và thanh cuộn ngang dưới cùng bị cắt mất. Giải pháp triệt để: Đặt `relative` cho wrapper của AppShell, và dùng `absolute top-[var] bottom-[var]...` cho trang Documents. Kỹ thuật này ép trang Documents phải nằm gọn 100% trong không gian còn lại của màn hình mà không bao giờ bị giãn ra bởi flexbox.
 - **Tệp thay đổi**:
