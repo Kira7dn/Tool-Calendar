@@ -1,3 +1,9 @@
+### [2026-09-13 08:51] refactor(style): thiết kế lại layout Documents — để trang scroll tự nhiên
+- **Mô tả**: Root cause thực sự: container `flex-1 h-full` chiếm 100vh → scrollbar ngang nằm ngoài viewport không nhìn thấy được. Giải pháp: bỏ `h-full` + `flex-1` khỏi wrapper và Card → trang scroll tự nhiên qua AppShell → bảng mở rộng theo nội dung → scrollbar ngang xuất hiện ngay dưới hàng cuối trong tầm nhìn. CardHeader dùng `flex-wrap` thay `overflow-x-auto`. CardContent chỉ còn `overflow-x-auto` đơn giản trực tiếp bao Table.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(style): bỏ h-full/flex-1 Documents để trang scroll tự nhiên, scrollbar ngang hiển thị đúng"`
+
 ### [2026-09-13 08:44] fix(style): xóa overflow-hidden trên CardContent chặn scroll ngang bảng
 - **Mô tả**: Lần fix trước vô tình thêm `overflow-hidden` vào CardContent — lớp này tiếp tục clip scrollbar ngang. Xóa bỏ hoàn toàn overflow khỏi CardContent, để div con `overflow-x-auto overflow-y-auto` là scroll container duy nhất. Chain đúng: Card(overflow-y-hidden) → CardContent(không overflow) → div(overflow-x-auto + overflow-y-auto) → Table(min-w-1000px).
 - **Tệp thay đổi**:
