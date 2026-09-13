@@ -1,3 +1,9 @@
+### [2026-09-13 13:33] fix(infra): xử lý lỗi Conflict container name khi deploy
+- **Mô tả**: GitHub Actions báo lỗi "Conflict. The container name /doc-coordination-system is already in use" khi thực hiện `docker compose up`. Nguyên nhân do container cũ chưa được dọn sạch (orphaned container) từ deploy trước. Đã thêm bước `docker container rm -f doc-coordination-system` trước khi gọi `up` và bổ sung flag `--remove-orphans` để tự dọn container rác trong mọi lần deploy tiếp theo.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): xử lý lỗi Conflict container name khi deploy"`
+
 ### [2026-09-13 13:21] style: format code chuẩn C#
 - **Mô tả**: Format lại toàn bộ code C# trong project bằng lệnh `dotnet format` từ phiên làm việc trước đó. Các thay đổi chỉ bao gồm khoảng trắng, xuống dòng, căn lề, không ảnh hưởng đến logic nghiệp vụ.
 - **Tệp thay đổi**:
