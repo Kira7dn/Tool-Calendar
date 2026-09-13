@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ErrorState } from '@/components/ui/error-state'
 import { DataTable } from '@/components/ui/data-table'
-import { DOCUMENT_STATUS } from '@/constants/documentStatus'
+import { DOCUMENT_STATUS } from '@/constants/document'
 import { TASK_FILTER } from '../../../constants/document'
 import {
   Table,

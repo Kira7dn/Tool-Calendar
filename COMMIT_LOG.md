@@ -1,3 +1,9 @@
+### [2026-09-13 10:02] fix(ui): sửa lỗi sai đường dẫn import documentStatus gây lỗi build Vite
+- **Mô tả**: Trong quá trình refactor `MyTasks.jsx`, đường dẫn import `DOCUMENT_STATUS` bị trỏ sai thành `@/constants/documentStatus` (file không tồn tại), gây ra lỗi ENOENT khi chạy GitHub Actions và Vite build. Đã sửa lại đường dẫn đúng là `@/constants/document`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/MyTasks.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi sai đường dẫn import documentStatus gây lỗi build Vite"`
+
 ### [2026-09-13 09:58] refactor(ui): áp dụng DataTable cho toàn bộ các bảng trong hệ thống
 - **Mô tả**: Nâng cấp các bảng HTML thuần túy tại trang Người dùng, Tìm kiếm, Việc của tôi và Lịch sử hệ thống sang sử dụng component `<DataTable />` nhằm đồng bộ giao diện, xử lý phân trang và giữ thanh cuộn ngang cố định trên viewport. Bổ sung thêm tính năng support `error` và `errorContent` vào `<DataTable />` để render lỗi tùy chỉnh cho màn hình tìm kiếm.
 - **Tệp thay đổi**:
