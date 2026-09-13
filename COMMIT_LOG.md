@@ -1,3 +1,10 @@
+### [2026-09-13 13:21] style: format code chuẩn C#
+- **Mô tả**: Format lại toàn bộ code C# trong project bằng lệnh `dotnet format` từ phiên làm việc trước đó. Các thay đổi chỉ bao gồm khoảng trắng, xuống dòng, căn lề, không ảnh hưởng đến logic nghiệp vụ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/**/*.cs` (Sửa đổi)
+  - `ToolCalendar.Core/**/*.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "style: format code chuẩn C#"`
+
 ### [2026-09-13 13:16] feat(ocr): hỗ trợ đọc số/ngày điền đè bằng Form Fields/Annotations trong PDF (pdftotext)
 - **Mô tả**: Khi người dùng tải lên văn bản scan, đôi khi văn thư sử dụng tính năng "Add Text/Form Field" của phần mềm đọc PDF (như Foxit Reader) để điền Số và Ngày vào văn bản. `pypdfium2` mặc định không trích xuất được text nằm trong lớp Widget Annotations (bị ẩn trong Appearance Streams lồng nhau). Đã bổ sung gói `poppler-utils` vào Dockerfile và cập nhật hàm `extract_fast` dùng lệnh `pdftotext -layout` để làm giải pháp ưu tiên, qua đó lấy được nguyên vẹn text kể cả khi chúng được chèn dưới dạng Form Field, giúp Qwen trích xuất chính xác 100% Số và Ngày ban hành mà không bị sót (như lỗi mất số "05", "02").
 - **Tệp thay đổi**:

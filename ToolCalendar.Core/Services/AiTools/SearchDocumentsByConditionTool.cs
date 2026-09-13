@@ -16,7 +16,7 @@ namespace ToolCalendar.Core.Services.AiTools
         }
 
         public string Name => "search_documents_by_condition";
-        
+
         public string Description => "Truy vấn cơ sở dữ liệu công văn dựa trên các điều kiện lọc (ngày đến hạn, trạng thái, từ khóa). Dùng khi người dùng yêu cầu thống kê, đếm số lượng, hoặc lấy danh sách các công văn đến hạn vào một ngày cụ thể, công văn chưa xử lý, hoàn thành, v.v.";
 
         public object ParametersSchema => new
@@ -83,7 +83,7 @@ namespace ToolCalendar.Core.Services.AiTools
                                 using var doc = System.Text.Json.JsonDocument.Parse(respJson);
                                 var startStr = doc.RootElement.TryGetProperty("start_date", out var sd) ? sd.GetString() : null;
                                 var endStr = doc.RootElement.TryGetProperty("end_date", out var ed) ? ed.GetString() : null;
-                                
+
                                 if (!string.IsNullOrEmpty(startStr) && DateTime.TryParse(startStr, out var sD))
                                     filterFromDate = sD;
                                 if (!string.IsNullOrEmpty(endStr) && DateTime.TryParse(endStr, out var eD))
@@ -99,12 +99,12 @@ namespace ToolCalendar.Core.Services.AiTools
 
                 // Gọi Repo để lấy dữ liệu (Page 1, 15 records)
                 var result = await _documentRepo.GetPagedAsync(
-                    page: 1, 
-                    pageSize: 15, 
-                    search: search, 
-                    status: status, 
-                    sort: "deadline_asc", 
-                    fromDate: filterFromDate, 
+                    page: 1,
+                    pageSize: 15,
+                    search: search,
+                    status: status,
+                    sort: "deadline_asc",
+                    fromDate: filterFromDate,
                     toDate: filterToDate
                 );
 
@@ -112,12 +112,12 @@ namespace ToolCalendar.Core.Services.AiTools
                 if ((result.Items == null || result.Items.Count == 0) && !string.IsNullOrEmpty(status) && (filterFromDate.HasValue || !string.IsNullOrEmpty(search)))
                 {
                     var fallbackResult = await _documentRepo.GetPagedAsync(
-                        page: 1, 
-                        pageSize: 15, 
-                        search: search, 
-                        status: "", 
-                        sort: "deadline_asc", 
-                        fromDate: filterFromDate, 
+                        page: 1,
+                        pageSize: 15,
+                        search: search,
+                        status: "",
+                        sort: "deadline_asc",
+                        fromDate: filterFromDate,
                         toDate: filterToDate
                     );
                     if (fallbackResult.Items != null && fallbackResult.Items.Count > 0)

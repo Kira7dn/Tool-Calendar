@@ -30,7 +30,7 @@ namespace ToolCalendar.Core.Data.Repositories
             var list = new List<Comment>();
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            
+
             int offset = (page - 1) * pageSize;
             string sql = "SELECT Id, DocumentId, UserId, Username, Content, AttachmentPaths, CreatedAt FROM Comments WHERE DocumentId=@id ORDER BY CreatedAt ASC LIMIT @pageSize OFFSET @offset";
             using var cmd = new SqliteCommand(sql, connection);
@@ -201,12 +201,12 @@ namespace ToolCalendar.Core.Data.Repositories
             {
                 list.Add(new CommentReaction
                 {
-                    Id           = Convert.ToInt32(reader["Id"]),
-                    CommentId    = Convert.ToInt32(reader["CommentId"]),
-                    UserId       = Convert.ToInt32(reader["UserId"]),
-                    Username     = reader["Username"].ToString() ?? "",
+                    Id = Convert.ToInt32(reader["Id"]),
+                    CommentId = Convert.ToInt32(reader["CommentId"]),
+                    UserId = Convert.ToInt32(reader["UserId"]),
+                    Username = reader["Username"].ToString() ?? "",
                     ReactionType = reader["ReactionType"].ToString() ?? "",
-                    CreatedAt    = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
                 });
             }
             return list;
@@ -244,10 +244,10 @@ namespace ToolCalendar.Core.Data.Repositories
                 ORDER BY ThoiHan ASC NULLS LAST";
 
             using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@userId",       userId);
-            cmd.Parameters.AddWithValue("@exactSingle",   $"[{userId}]");
-            cmd.Parameters.AddWithValue("@patternStart",  $"[{userId},%");
-            cmd.Parameters.AddWithValue("@patternEnd",    $"%,{userId}]");
+            cmd.Parameters.AddWithValue("@userId", userId);
+            cmd.Parameters.AddWithValue("@exactSingle", $"[{userId}]");
+            cmd.Parameters.AddWithValue("@patternStart", $"[{userId},%");
+            cmd.Parameters.AddWithValue("@patternEnd", $"%,{userId}]");
             cmd.Parameters.AddWithValue("@patternMiddle", $"%,{userId},%");
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -466,7 +466,8 @@ namespace ToolCalendar.Core.Data.Repositories
             // 1. Total count
             string countSql = $"SELECT COUNT(*) FROM Documents doc LEFT JOIN Departments dep ON doc.DepartmentId = dep.Id {searchFilter}";
             using var countCmd = new SqliteCommand(countSql, connection);
-            if (hasSearch) {
+            if (hasSearch)
+            {
                 countCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
                 countCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
             }
@@ -494,7 +495,8 @@ namespace ToolCalendar.Core.Data.Repositories
                 LIMIT @pageSize OFFSET @offset";
 
             using var dataCmd = new SqliteCommand(dataSql, connection);
-            if (hasSearch) {
+            if (hasSearch)
+            {
                 dataCmd.Parameters.AddWithValue("@search", $"%{search.ToLower()}%");
                 dataCmd.Parameters.AddWithValue("@searchRaw", $"%{search}%");
             }
@@ -730,7 +732,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 var inClause = string.Join(",", paramNames);
 
                 // Xóa lần lượt từng bảng theo đúng thứ tự phụ thuộc
-                string[] deleteQueries = 
+                string[] deleteQueries =
                 [
                     $"DELETE FROM CommentReactions WHERE CommentId IN (SELECT Id FROM Comments WHERE DocumentId IN ({inClause}))",
                     $"DELETE FROM Comments WHERE DocumentId IN ({inClause})",
@@ -861,14 +863,14 @@ namespace ToolCalendar.Core.Data.Repositories
         private string CleanMangledString(string value)
         {
             if (string.IsNullOrEmpty(value)) return value;
-            
+
             // Map common mangled patterns back to correct Vietnamese
             if (value.Contains("hoÃ") || value.Contains("ho\u00c3")) return "Đã xử lý";
             if (value.Contains("ChÆ") || value.Contains("Ch\u00c6")) return "Chưa xử lý";
             if (value.Contains("ThÆ") || value.Contains("Th\u00c6")) return "Thường";
             if (value.Contains("Kháº") || value.Contains("Kh\u1ea7")) return "Khẩn";
             if (value.Contains("Há»") || value.Contains("H\u1ecf")) return "Hỏa tốc";
-            
+
             return value;
         }
 
@@ -940,10 +942,10 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             if (currentUserRole == "CanBo" && currentUserId.HasValue)
             {
-                string deptFilter = currentDepartmentId.HasValue 
+                string deptFilter = currentDepartmentId.HasValue
                     ? $"doc.DepartmentId = {currentDepartmentId.Value} OR doc.AssignedDepartmentIds LIKE '%[{currentDepartmentId.Value}]%' OR doc.AssignedDepartmentIds LIKE '%[{currentDepartmentId.Value},%' OR doc.AssignedDepartmentIds LIKE '%,{currentDepartmentId.Value}]%' OR doc.AssignedDepartmentIds LIKE '%,{currentDepartmentId.Value},%'"
                     : "0=1";
-                    
+
                 return $@"(
                     doc.UploadedByUserId = {currentUserId.Value} OR
                     doc.AssignedTo = {currentUserId.Value} OR

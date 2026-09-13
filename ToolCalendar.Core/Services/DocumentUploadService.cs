@@ -101,12 +101,12 @@ public class DocumentUploadService : IDocumentUploadService
         if (!scanResult.IsClean)
         {
             if (File.Exists(quarantinePath)) File.Delete(quarantinePath);
-            
+
             if (scanResult.IsServiceUnavailable)
             {
                 return UploadResult.Failure("❌ Hệ thống quét virus đang bảo trì hoặc quá tải. Vui lòng thử lại sau.");
             }
-            
+
             return UploadResult.Failure(
                 $"❌ File bị từ chối: phát hiện mã độc ({scanResult.VirusName}). Liên hệ quản trị viên.");
         }
@@ -157,15 +157,15 @@ public class DocumentUploadService : IDocumentUploadService
                 {
                     // Hết số lần thử mà vẫn lỗi -> Xóa file vừa lưu để tránh file rác
                     if (File.Exists(finalPath)) File.Delete(finalPath);
-                    throw; 
+                    throw;
                 }
-                
+
                 // Exponential Backoff với Jitter (tránh đồng loạt thử lại cùng lúc)
                 int delay = baseDelayMs * (int)Math.Pow(1.5, i) + Random.Shared.Next(10, 50);
                 await Task.Delay(delay);
             }
         }
-        
+
         record.Id = id;
         await _ocrQueue.EnqueueAsync(id);
 

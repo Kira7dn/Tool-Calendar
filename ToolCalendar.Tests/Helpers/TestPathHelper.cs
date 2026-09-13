@@ -1,4 +1,4 @@
-﻿namespace ToolCalendar.Tests.Helpers
+namespace ToolCalendar.Tests.Helpers
 {
     internal static class TestPathHelper
     {

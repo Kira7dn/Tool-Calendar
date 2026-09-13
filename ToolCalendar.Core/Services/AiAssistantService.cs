@@ -107,10 +107,10 @@ namespace ToolCalendar.Core.Services
                 _logger.LogInformation("[AiAssistant] REGEX FAST-PATH HIT: Tìm công văn số {Keyword}", keyword);
                 var dictArgs = new Dictionary<string, object> { { "keyword", keyword } };
                 string toolResult = await _toolRegistry.ExecuteToolAsync("search_documents_by_condition", dictArgs);
-                
+
                 string fastReply = $"Dạ báo cáo sếp, em đã tra cứu theo yêu cầu. Kết quả:\n\n{toolResult}";
                 await _chatHistoryRepo.AddMessageAsync(userId, "assistant", fastReply);
-                
+
                 foreach (var chunk in SplitIntoChunks(fastReply, 50))
                     yield return chunk;
                 yield break;
@@ -366,7 +366,7 @@ Thời gian hiện tại: {now:dd/MM/yyyy HH:mm:ss}";
                             Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
                         };
                         response1 = await _httpClient.SendAsync(req, cts.Token);
-                        
+
                         if (response1.IsSuccessStatusCode)
                         {
                             connectionError = false;
@@ -398,11 +398,11 @@ Thời gian hiện tại: {now:dd/MM/yyyy HH:mm:ss}";
                     {
                         _logger.LogError("[AiAssistant] Ollama trả lỗi HTTP {Code}", (int)response1.StatusCode);
                     }
-                    
+
                     _logger.LogWarning("[AiAssistant] Ollama failed after retries. Graceful degradation.");
-                    
-                    yield return isLeader 
-                        ? "Dạ báo cáo sếp, hệ thống AI hiện đang xử lý khối lượng lớn tài liệu nên bị quá tải. Sếp vui lòng thử lại sau vài giây nhé ạ!" 
+
+                    yield return isLeader
+                        ? "Dạ báo cáo sếp, hệ thống AI hiện đang xử lý khối lượng lớn tài liệu nên bị quá tải. Sếp vui lòng thử lại sau vài giây nhé ạ!"
                         : "Hệ thống AI hiện đang xử lý khối lượng lớn tài liệu nên bị quá tải. Đồng chí vui lòng thử lại sau vài giây nhé!";
                     yield break;
                 }
@@ -421,13 +421,13 @@ Thời gian hiện tại: {now:dd/MM/yyyy HH:mm:ss}";
                     {
                         _logger.LogWarning("[AiAssistant] LLM (Qwen) phớt lờ tool. Ép gọi thủ công công cụ {Tool}.", routedToolName);
                         hasToolCalls = true;
-                        
+
                         string status = "";
                         string lowerMsg = message.ToLower();
                         if (lowerMsg.Contains("chưa xử lý") || lowerMsg.Contains("chưa được xử lý")) status = "Chưa xử lý";
                         else if (lowerMsg.Contains("đang xử lý")) status = "Đang xử lý";
                         else if (lowerMsg.Contains("hoàn thành") || lowerMsg.Contains("xong")) status = "Hoàn thành";
-                        
+
                         string manualArgs = $"{{\"status\": \"{status}\", \"thoi_han\": \"\", \"keyword\": \"\"}}";
                         string fakeToolJson = $"[{{\"function\": {{\"name\": \"{routedToolName}\", \"arguments\": {manualArgs}}} }}]";
                         using var fakeDoc = JsonDocument.Parse(fakeToolJson);
@@ -444,7 +444,7 @@ Thời gian hiện tại: {now:dd/MM/yyyy HH:mm:ss}";
 
                 // Có tool calls → xử lý từng tool
                 _logger.LogInformation("[AiAssistant] Hop {Hop}: Tool Calling detected.", hop + 1);
-                
+
                 yield return $"(Đang tra cứu hệ thống...)\n\n";
 
                 // Tránh lỗi "Cannot access a disposed object" khi doc1 bị dispose ở cuối vòng lặp
@@ -538,7 +538,7 @@ Thời gian hiện tại: {now:dd/MM/yyyy HH:mm:ss}";
             // Lưu vào Semantic Cache để tái sử dụng (không lưu các câu thông báo lỗi/quá tải)
             if (questionVector != null && questionVector.Length > 0 && !string.IsNullOrWhiteSpace(finalTextNoStream) && !finalTextNoStream.Contains("quá tải"))
             {
-                try 
+                try
                 {
                     await _semanticCacheRepo.StoreCacheAsync(questionVector, finalTextNoStream, userId);
                     _logger.LogInformation("[AiAssistant] Đã lưu response vào AiSemanticCache.");

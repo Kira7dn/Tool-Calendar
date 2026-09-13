@@ -74,7 +74,7 @@ public class BackupService : BackgroundService
         File.Copy(dbPath, backupPath, overwrite: true);
 
         var sizeKb = new FileInfo(backupPath).Length / 1024;
-        _logger.LogInformation("[BackupService] ✅ Backup thành công: {File} ({Size}KB)", 
+        _logger.LogInformation("[BackupService] ✅ Backup thành công: {File} ({Size}KB)",
             Path.GetFileName(backupPath), sizeKb);
 
         // Dọn dẹp backup cũ: giữ lại MaxBackupsToKeep bản mới nhất
@@ -90,7 +90,7 @@ public class BackupService : BackgroundService
         }
 
         if (toDelete.Count > 0)
-            _logger.LogInformation("[BackupService] Đã dọn {Count} backup cũ. Còn lại: {Remaining} bản", 
+            _logger.LogInformation("[BackupService] Đã dọn {Count} backup cũ. Còn lại: {Remaining} bản",
                 toDelete.Count, allBackups.Count - toDelete.Count);
 
         return Task.CompletedTask;

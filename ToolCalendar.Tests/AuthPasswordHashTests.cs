@@ -24,10 +24,10 @@ namespace ToolCalendar.Tests
             string rawStr = "pass" + "word123";
             // This is a BCrypt hash of the string above
             string bcryptHash = "$2a$11$0wO.l.s9iT2k71P9K8n/fOu0wU.E0.3f.5Wq2wV8mS0H0gQ6/B35K";
-            
+
             // Act
             var result = _hasher.VerifyHashedPassword(_dummyUser, bcryptHash, rawStr);
-            
+
             // Assert
             result.Should().Be(PasswordVerificationResult.SuccessRehashNeeded);
         }
@@ -38,10 +38,10 @@ namespace ToolCalendar.Tests
             // Arrange
             string wrongStr = "wrong" + "str";
             string bcryptHash = "$2a$11$0wO.l.s9iT2k71P9K8n/fOu0wU.E0.3f.5Wq2wV8mS0H0gQ6/B35K";
-            
+
             // Act
             var result = _hasher.VerifyHashedPassword(_dummyUser, bcryptHash, wrongStr);
-            
+
             // Assert
             result.Should().Be(PasswordVerificationResult.Failed);
         }

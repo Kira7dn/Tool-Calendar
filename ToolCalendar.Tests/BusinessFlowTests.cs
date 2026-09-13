@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using ToolCalendar.Core.Data.Interfaces;
-using ToolCalendar.Data;
 using ToolCalendar.Models;
 using ToolCalendar.Tests.Helpers;
 using Xunit;

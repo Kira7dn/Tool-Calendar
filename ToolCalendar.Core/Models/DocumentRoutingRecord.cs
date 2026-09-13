@@ -20,7 +20,7 @@ namespace ToolCalendar.Models
         public string SenderName { get; set; } = "";
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public string ReceiverName { get; set; } = "";
-        
+
         // Children for Tree Table
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public List<DocumentRoutingRecord> Children { get; set; } = new List<DocumentRoutingRecord>();

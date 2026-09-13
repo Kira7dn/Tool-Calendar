@@ -31,11 +31,11 @@ namespace ToolCalendar.Api.Controllers
             UserManager<User> userManager,
             IAuditLogRepository auditLogRepo)
         {
-            _configuration  = configuration;
-            _hubContext     = hubContext;
+            _configuration = configuration;
+            _hubContext = hubContext;
             _userRepository = userRepository;
-            _userManager    = userManager;
-            _auditLogRepo   = auditLogRepo;
+            _userManager = userManager;
+            _auditLogRepo = auditLogRepo;
         }
 
         // ─── LOGIN ───────────────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ namespace ToolCalendar.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            string? clientIp  = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+            string? clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
                              ?? HttpContext.Connection.RemoteIpAddress?.ToString();
             string? userAgent = Request.Headers["User-Agent"].FirstOrDefault();
 
@@ -63,11 +63,11 @@ namespace ToolCalendar.Api.Controllers
             {
                 // Ghi audit log thất bại
                 await _auditLogRepo.InsertLoginAuditLogAsync(
-                    username:   request.Username,
-                    userId:     null,
-                    ipAddress:  clientIp,
-                    userAgent:  userAgent,
-                    isSuccess:  false,
+                    username: request.Username,
+                    userId: null,
+                    ipAddress: clientIp,
+                    userAgent: userAgent,
+                    isSuccess: false,
                     failReason: "user_not_found"
                 );
                 return Unauthorized(ApiResponse.Fail("Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa."));
@@ -77,11 +77,11 @@ namespace ToolCalendar.Api.Controllers
             if (await _userManager.IsLockedOutAsync(user))
             {
                 await _auditLogRepo.InsertLoginAuditLogAsync(
-                    username:   request.Username,
-                    userId:     user.Id,
-                    ipAddress:  clientIp,
-                    userAgent:  userAgent,
-                    isSuccess:  false,
+                    username: request.Username,
+                    userId: user.Id,
+                    ipAddress: clientIp,
+                    userAgent: userAgent,
+                    isSuccess: false,
                     failReason: "account_locked"
                 );
                 return Unauthorized(ApiResponse.Fail("Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa."));
@@ -96,11 +96,11 @@ namespace ToolCalendar.Api.Controllers
                 await _userManager.AccessFailedAsync(user);
 
                 await _auditLogRepo.InsertLoginAuditLogAsync(
-                    username:   request.Username,
-                    userId:     user.Id,
-                    ipAddress:  clientIp,
-                    userAgent:  userAgent,
-                    isSuccess:  false,
+                    username: request.Username,
+                    userId: user.Id,
+                    ipAddress: clientIp,
+                    userAgent: userAgent,
+                    isSuccess: false,
                     failReason: "wrong_password"
                 );
                 return Unauthorized(ApiResponse.Fail("Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa."));
@@ -126,7 +126,7 @@ namespace ToolCalendar.Api.Controllers
 
             // ── Bước 5: Sinh JWT Token ────────────────────────────────────────────
             var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtSecret    = _configuration["JWT_SECRET"]
+            var jwtSecret = _configuration["JWT_SECRET"]
                             ?? Environment.GetEnvironmentVariable("JWT_SECRET")
                             ?? throw new InvalidOperationException("[SECURITY] JWT_SECRET chưa được cấu hình.");
             var key = Encoding.ASCII.GetBytes(jwtSecret);
@@ -149,13 +149,13 @@ namespace ToolCalendar.Api.Controllers
                     new Claim("sid",                        user.SessionId ?? user.SecurityStamp),
                     new Claim("LastLogin",                  lastLoginTime),
                 }),
-                Expires           = DateTime.UtcNow.AddHours(8),
+                Expires = DateTime.UtcNow.AddHours(8),
                 SigningCredentials = new SigningCredentials(
                     new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256Signature)
             };
 
-            var token       = tokenHandler.CreateToken(tokenDescriptor);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
             // Generate Refresh Token
@@ -167,23 +167,23 @@ namespace ToolCalendar.Api.Controllers
             Response.Cookies.Append("jwt_cookie", tokenString, new CookieOptions
             {
                 HttpOnly = true,
-                Secure   = true,
+                Secure = true,
                 SameSite = SameSiteMode.Lax,
-                Expires  = DateTime.UtcNow.AddHours(8)
+                Expires = DateTime.UtcNow.AddHours(8)
             });
 
             Response.Cookies.Append("refresh_cookie", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure   = true,
+                Secure = true,
                 SameSite = SameSiteMode.Lax,
-                Expires  = refreshTokenExpiryTime
+                Expires = refreshTokenExpiryTime
             });
 
             // Ghi audit log thành công
             await _auditLogRepo.InsertLoginAuditLogAsync(
-                username:  user.Username,
-                userId:    user.Id,
+                username: user.Username,
+                userId: user.Id,
                 ipAddress: clientIp,
                 userAgent: userAgent,
                 isSuccess: true
@@ -191,11 +191,11 @@ namespace ToolCalendar.Api.Controllers
 
             return Ok(ApiResponse.Ok(new
             {
-                token    = tokenString,
+                token = tokenString,
                 username = user.Username,
                 fullName = user.FullName ?? user.Username,
-                role     = user.Role,
-                userId   = user.Id
+                role = user.Role,
+                userId = user.Id
             }));
         }
 
@@ -214,7 +214,7 @@ namespace ToolCalendar.Api.Controllers
 
             var jwtSecret = _configuration["JWT_SECRET"]
                             ?? Environment.GetEnvironmentVariable("JWT_SECRET");
-            
+
             if (string.IsNullOrWhiteSpace(jwtSecret))
                 return StatusCode(500, ApiResponse.Fail("JWT_SECRET không được cấu hình"));
 
@@ -245,22 +245,22 @@ namespace ToolCalendar.Api.Controllers
             var newRefreshToken = GenerateRefreshToken();
             var newExpiryTime = DateTime.UtcNow.AddDays(7);
             await _userRepository.UpdateRefreshTokenAsync(user.Id, newRefreshToken, newExpiryTime);
-            
+
             // Cập nhật cookie
             Response.Cookies.Append("jwt_cookie", newAccessTokenString, new CookieOptions
             {
                 HttpOnly = true,
-                Secure   = true,
+                Secure = true,
                 SameSite = SameSiteMode.Lax,
-                Expires  = DateTime.UtcNow.AddMinutes(15)
+                Expires = DateTime.UtcNow.AddMinutes(15)
             });
 
             Response.Cookies.Append("refresh_cookie", newRefreshToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure   = true,
+                Secure = true,
                 SameSite = SameSiteMode.Lax,
-                Expires  = newExpiryTime
+                Expires = newExpiryTime
             });
 
             return Ok(ApiResponse.Ok(new
@@ -323,7 +323,7 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId)) 
+            if (!int.TryParse(userIdStr, out int userId))
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy thông tin người dùng."));
 
             // Validation
@@ -342,7 +342,7 @@ namespace ToolCalendar.Api.Controllers
 
             // Tìm user qua UserManager
             var user = await _userManager.FindByIdAsync(userId.ToString());
-            if (user == null) 
+            if (user == null)
                 return NotFound(ApiResponse.Fail("Tài khoản không tồn tại."));
 
             // Đặt mật khẩu mới qua UserManager → tự động hash + cập nhật SecurityStamp
@@ -374,7 +374,7 @@ namespace ToolCalendar.Api.Controllers
             var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ToolCalendar");
             var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? Path.Combine(appData, "documents.db");
             var connectionString = $"Data Source={dbPath};Pooling=False;Default Timeout=30";
-            
+
             using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
             connection.Open();
             using var cmd = new Microsoft.Data.Sqlite.SqliteCommand("UPDATE Users SET PasswordHash = 'CamPha@2026!', FailedLoginCount = 0, AccessFailedCount = 0, LockoutUntil = NULL, LockoutEnd = NULL", connection);

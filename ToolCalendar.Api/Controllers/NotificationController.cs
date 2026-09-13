@@ -44,7 +44,7 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> Subscribe([FromBody] PushSubscriptionRequest request)
         {
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId)) 
+            if (!int.TryParse(userIdStr, out int userId))
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy người dùng."));
 
             var subscription = new PushSubscription
@@ -73,11 +73,11 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> TestNotification()
         {
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId)) 
+            if (!int.TryParse(userIdStr, out int userId))
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy người dùng."));
 
             var subscriptions = await _notificationRepo.GetPushSubscriptionsAsync(userId);
-            if (!subscriptions.Any()) 
+            if (!subscriptions.Any())
                 return BadRequest(ApiResponse.Fail("Không tìm thấy đăng ký thông báo đẩy cho người dùng này."));
 
             var payload = JsonSerializer.Serialize(new NotificationPayload
@@ -99,7 +99,7 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> GetMyNotifications()
         {
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId)) 
+            if (!int.TryParse(userIdStr, out int userId))
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy người dùng."));
 
             var list = await _notificationRepo.GetNotificationsAsync(userId);
@@ -117,7 +117,7 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> MarkAllRead()
         {
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId)) 
+            if (!int.TryParse(userIdStr, out int userId))
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy người dùng."));
 
             await _notificationRepo.MarkAllNotificationsAsReadAsync(userId);

@@ -6,10 +6,10 @@ namespace ToolCalendar.Core.Models
     {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
-        
+
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public T? Data { get; set; }
-        
+
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string>? Errors { get; set; }
 

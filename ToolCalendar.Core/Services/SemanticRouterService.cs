@@ -11,14 +11,14 @@ namespace ToolCalendar.Core.Services
     {
         private readonly IOllamaEmbeddingService _embeddingService;
         private readonly ILogger<SemanticRouterService> _logger;
-        
+
         // Cấu hình các route và câu mẫu
         private static readonly Dictionary<string, List<string>> _routeTemplates = new()
         {
-            { "search_documents_by_condition", new List<string> { 
-                "có bao nhiêu công văn", 
-                "thống kê công văn", 
-                "tình hình xử lý", 
+            { "search_documents_by_condition", new List<string> {
+                "có bao nhiêu công văn",
+                "thống kê công văn",
+                "tình hình xử lý",
                 "công văn đến hạn",
                 "hôm nay có bao nhiêu",
                 "có văn bản nào quá hạn không",

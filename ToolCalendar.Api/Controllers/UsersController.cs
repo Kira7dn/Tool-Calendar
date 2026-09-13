@@ -18,7 +18,7 @@ namespace ToolCalendar.Api.Controllers
         public UsersController(IUserRepository userRepository, UserManager<User> userManager)
         {
             _userRepository = userRepository;
-            _userManager    = userManager;
+            _userManager = userManager;
         }
 
         // ─── Quy tắc mật khẩu (chuẩn NIST 800-63B + thực tiễn) ─────────────────
@@ -68,7 +68,7 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var user = await _userRepository.GetUserByIdAsync(id);
-            if (user == null) 
+            if (user == null)
                 return NotFound(ApiResponse.Fail("Không tìm thấy người dùng."));
             return Ok(ApiResponse.Ok(user));
         }
@@ -105,7 +105,7 @@ namespace ToolCalendar.Api.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] UserUpdateRequest request)
         {
             var user = await _userRepository.GetUserByIdAsync(id);
-            if (user == null) 
+            if (user == null)
                 return NotFound(ApiResponse.Fail("Không tìm thấy người dùng."));
 
             // Nếu có đổi mật khẩu → validate trước khi lưu
@@ -121,7 +121,7 @@ namespace ToolCalendar.Api.Controllers
                 {
                     // Hash trực tiếp bằng PasswordHasher của UserManager (PBKDF2)
                     var hash = _userManager.PasswordHasher.HashPassword(identityUser, request.PasswordHash);
-                    
+
                     // Đồng bộ sang biến user để không bị ghi đè lại mật khẩu cũ ở lệnh UpdateUser cuối hàm
                     user.PasswordHash = hash;
                     user.SecurityStamp = identityUser.SecurityStamp;
@@ -143,17 +143,17 @@ namespace ToolCalendar.Api.Controllers
                 }
             }
 
-            user.FullName    = request.FullName;
-            user.Email       = request.Email;
+            user.FullName = request.FullName;
+            user.Email = request.Email;
             user.PhoneNumber = request.PhoneNumber;
-            user.Role        = request.Role;
+            user.Role = request.Role;
             user.DepartmentId = request.DepartmentId;
 
             // Invalidate token cũ khi Admin cập nhật thông tin user (để các thay đổi quyền có hiệu lực ngay)
             user.SecurityStamp = Guid.NewGuid().ToString();
 
             await _userRepository.UpdateUserAsync(user);
-            
+
             // Xóa cache session để SecurityStamp mới có hiệu lực ngay lập tức
             var memCache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
             memCache?.Remove($"UserSession_{user.Id}");

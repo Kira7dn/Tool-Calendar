@@ -29,18 +29,19 @@ namespace ToolCalendar.Services
                     using (var scope = _serviceProvider.CreateScope())
                     {
                         var reminderRepo = scope.ServiceProvider.GetRequiredService<IReminderRepository>();
-                        
+
                         var pendingReminders = await reminderRepo.GetPendingRemindersAsync();
-                        
+
                         if (pendingReminders.Any())
                         {
                             _logger.LogInformation($"[ReminderWorker] Có {pendingReminders.Count} nhắc nhở cần gửi.");
-                            
+
                             foreach (var reminder in pendingReminders)
                             {
                                 // Gửi qua SignalR tới UserId
                                 await _hubContext.Clients.User(reminder.UserId.ToString())
-                                    .SendAsync("ReceiveReminder", new {
+                                    .SendAsync("ReceiveReminder", new
+                                    {
                                         id = reminder.Id,
                                         content = reminder.Content,
                                         remindAt = reminder.RemindAt

@@ -13,7 +13,7 @@ namespace ToolCalendar.Models
         public string? DepartmentName { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public string? SessionId { get; set; }
-        
+
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
 

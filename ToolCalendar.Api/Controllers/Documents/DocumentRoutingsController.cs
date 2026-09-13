@@ -30,12 +30,12 @@ namespace ToolCalendar.Api.Controllers.Documents
             IServiceScopeFactory scopeFactory,
             IHubContext<NotificationHub> hubContext)
         {
-            _routingRepo    = routingRepo;
+            _routingRepo = routingRepo;
             _notificationManager = notificationManager;
-            _documentRepo   = documentRepo;
-            _userRepo        = userRepo;
-            _scopeFactory    = scopeFactory;
-            _hubContext      = hubContext;
+            _documentRepo = documentRepo;
+            _userRepo = userRepo;
+            _scopeFactory = scopeFactory;
+            _hubContext = hubContext;
         }
 
         [HttpGet("{documentId}/routings")]
@@ -76,7 +76,7 @@ namespace ToolCalendar.Api.Controllers.Documents
                 // ✅ Gửi thông báo cho TẤT CẢ các vai trò (Chủ trì, Phối hợp, ...)
                 var doc = await _documentRepo.GetDocumentByIdAsync(documentId);
                 var docName = doc?.TenCongVan ?? "văn bản mới";
-                
+
                 // Fire and forget notification
                 _ = Task.Run(async () =>
                 {
@@ -127,7 +127,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             await _routingRepo.UpdateStatusAsync(id, "Từ chối", reason);
 
             var doc = await _documentRepo.GetDocumentByIdAsync(routing.DocumentId);
-            
+
             // Nếu người từ chối đang là người xử lý chính của văn bản,
             // reset doc.Status về "Chưa xử lý" để người giao việc có thể hành động tiếp.
             // KHÔNG set "Từ chối" vì đó là routing-level status, không phải Document status hợp lệ.

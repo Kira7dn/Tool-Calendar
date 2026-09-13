@@ -42,7 +42,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 SELECT Id, UserId, Content, RemindAt, IsSent, CreatedAt
                 FROM Reminders
                 WHERE IsSent = 0 AND datetime(RemindAt) <= datetime('now', 'localtime')";
-            
+
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
@@ -79,7 +79,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 WHERE UserId = @UserId
                 ORDER BY RemindAt DESC LIMIT 50";
             cmd.Parameters.AddWithValue("@UserId", userId);
-            
+
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {

@@ -36,7 +36,7 @@ namespace ToolCalendar.Services
                     }
 
                     DateTime now = DateTime.UtcNow.AddHours(7);
-                    
+
                     // Kiểm tra xem đã đến giờ quét chưa (trong phạm vi phút hiện tại)
                     if (now.Hour == targetTime.Hours && now.Minute == targetTime.Minutes)
                     {
@@ -46,10 +46,10 @@ namespace ToolCalendar.Services
                         if (lastScanDate != todayStr)
                         {
                             _logger.LogInformation($"[DeadlineWorker] Bắt đầu quét tự động lúc {now:HH:mm:ss} (Giờ cài đặt: {scanTimeStr})");
-                            
+
                             // Đánh dấu đã quét NGAY LẬP TỨC để tránh quét lặp lại
                             await settingRepo.SaveAppSettingAsync("Notification_LastScanDate", todayStr);
-                            
+
                             await ScanDeadlinesAsync(false);
 
                             // Tự động dọn dẹp nhật ký cũ hơn 30 ngày
@@ -70,7 +70,7 @@ namespace ToolCalendar.Services
 
         public async Task ScanDeadlinesAsync(bool force = false)
         {
-            if (!await _scanLock.WaitAsync(0)) 
+            if (!await _scanLock.WaitAsync(0))
             {
                 _logger.LogWarning("[DeadlineWorker] Một tiến trình quét đang chạy, bỏ qua lần quét này.");
                 return;

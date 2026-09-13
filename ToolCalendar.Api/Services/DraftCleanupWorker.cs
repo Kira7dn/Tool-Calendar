@@ -26,11 +26,11 @@ namespace ToolCalendar.Api.Services
                     using (var scope = _serviceProvider.CreateScope())
                     {
                         var documentRepo = scope.ServiceProvider.GetRequiredService<IDocumentRepository>();
-                        
+
                         _logger.LogInformation($"[DraftCleanupWorker] Bắt đầu quét các văn bản nháp cũ hơn {_draftMaxAge.TotalHours} giờ...");
-                        
+
                         int deletedCount = await documentRepo.CleanupOldDraftsAsync(_draftMaxAge);
-                        
+
                         if (deletedCount > 0)
                         {
                             _logger.LogInformation($"[DraftCleanupWorker] Đã dọn dẹp thành công {deletedCount} văn bản nháp (rác).");

@@ -20,7 +20,7 @@ public static class MetadataStripper
     public static async Task<(bool Success, string? Error)> StripImageMetadataAsync(string filePath)
     {
         var ext = Path.GetExtension(filePath).ToLower();
-        
+
         // Chỉ xử lý các file ảnh được hỗ trợ
         if (ext != ".jpg" && ext != ".jpeg" && ext != ".png")
         {
@@ -31,7 +31,7 @@ public static class MetadataStripper
         {
             // ImageSharp tự động tải dữ liệu ảnh vào bộ nhớ
             using var image = await Image.LoadAsync(filePath);
-            
+
             // Xóa bỏ tất cả các loại metadata nhạy cảm
             image.Metadata.ExifProfile = null;
             image.Metadata.IptcProfile = null;

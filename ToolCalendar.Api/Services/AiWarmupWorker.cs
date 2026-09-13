@@ -16,16 +16,16 @@ namespace ToolCalendar.Api.Services
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("[AiWarmup] Bắt đầu ping Ollama để nạp mô hình vào RAM...");
-            
+
             try
             {
                 var client = _httpClientFactory.CreateClient();
                 client.Timeout = System.TimeSpan.FromSeconds(300); // 5 phút để nạp vào RAM
                 var payload = "{\"model\": \"qwen2.5:3b\", \"messages\": [{\"role\": \"user\", \"content\": \"ping\"}], \"stream\": false, \"keep_alive\": -1}";
                 var content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json");
-                
+
                 var response = await client.PostAsync(_ollamaUrl, content, stoppingToken);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("[AiWarmup] Nạp mô hình Ollama thành công. Sẽ giữ trong RAM vĩnh viễn.");

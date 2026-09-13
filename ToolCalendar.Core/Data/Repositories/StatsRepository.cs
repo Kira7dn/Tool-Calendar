@@ -50,10 +50,10 @@ namespace ToolCalendar.Core.Data.Repositories
                 using var r = cmdCounters.ExecuteReader();
                 if (r.Read())
                 {
-                    total   = r["Total"]   == DBNull.Value ? 0 : Convert.ToInt32(r["Total"]);
+                    total = r["Total"] == DBNull.Value ? 0 : Convert.ToInt32(r["Total"]);
                     overdue = r["Overdue"] == DBNull.Value ? 0 : Convert.ToInt32(r["Overdue"]);
-                    today   = r["Today"]   == DBNull.Value ? 0 : Convert.ToInt32(r["Today"]);
-                    urgent  = r["Urgent"]  == DBNull.Value ? 0 : Convert.ToInt32(r["Urgent"]);
+                    today = r["Today"] == DBNull.Value ? 0 : Convert.ToInt32(r["Today"]);
+                    urgent = r["Urgent"] == DBNull.Value ? 0 : Convert.ToInt32(r["Urgent"]);
                 }
             }
 
@@ -95,24 +95,26 @@ namespace ToolCalendar.Core.Data.Repositories
             {
                 using var r = cmdTop.ExecuteReader();
                 while (r.Read())
-                    topUrgent.Add(new {
-                        Id         = Convert.ToInt32(r["Id"]),
-                        SoVanBan   = r["SoVanBan"]?.ToString()   ?? "",
+                    topUrgent.Add(new
+                    {
+                        Id = Convert.ToInt32(r["Id"]),
+                        SoVanBan = r["SoVanBan"]?.ToString() ?? "",
                         TenCongVan = r["TenCongVan"]?.ToString() ?? "",
-                        TrichYeu   = r["TrichYeu"]?.ToString()   ?? "",
-                        ThoiHan    = r["ThoiHan"]?.ToString()
+                        TrichYeu = r["TrichYeu"]?.ToString() ?? "",
+                        ThoiHan = r["ThoiHan"]?.ToString()
                     });
             }
 
-            return new {
-                Total        = total,
-                ByStatus     = statusDict,
-                ByPriority   = prioDict,
-                Overdue      = overdue,
-                Urgent       = urgent,
-                Today        = today,
+            return new
+            {
+                Total = total,
+                ByStatus = statusDict,
+                ByPriority = prioDict,
+                Overdue = overdue,
+                Urgent = urgent,
+                Today = today,
                 ByDepartment = deptDict,
-                TopUrgent    = topUrgent
+                TopUrgent = topUrgent
             };
         }
         public async Task<object> GetDashboardDeadlineSeriesAsync(int days = 14)
@@ -123,10 +125,10 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            var today   = DateTime.Today;
+            var today = DateTime.Today;
             var endDate = today.AddDays(days);
-            var todayStr  = today.ToString("yyyy-MM-dd");
-            var endStr    = endDate.ToString("yyyy-MM-dd");
+            var todayStr = today.ToString("yyyy-MM-dd");
+            var endStr = endDate.ToString("yyyy-MM-dd");
 
             var buckets = new Dictionary<string, int>();
             using (var cmd = new SqliteCommand(@"
@@ -140,7 +142,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 GROUP BY Bucket
             ", connection))
             {
-                cmd.Parameters.AddWithValue("@today",   todayStr);
+                cmd.Parameters.AddWithValue("@today", todayStr);
                 cmd.Parameters.AddWithValue("@endDate", endStr);
                 using var r = await cmd.ExecuteReaderAsync();
                 while (r.Read())
@@ -153,27 +155,29 @@ namespace ToolCalendar.Core.Data.Repositories
             var items = new List<object>();
 
             int overdueCount = buckets.TryGetValue("__overdue__", out int ov) ? ov : 0;
-            items.Add(new {
-                Date         = "overdue",
-                Label        = "Quá hạn",
-                Count        = overdueCount,
+            items.Add(new
+            {
+                Date = "overdue",
+                Label = "Quá hạn",
+                Count = overdueCount,
                 OverdueCount = overdueCount,
-                TodayCount   = 0,
-                UpcomingCount= 0
+                TodayCount = 0,
+                UpcomingCount = 0
             });
 
             for (int i = 0; i < days; i++)
             {
-                var date  = today.AddDays(i);
-                var key   = date.ToString("yyyy-MM-dd");
+                var date = today.AddDays(i);
+                var key = date.ToString("yyyy-MM-dd");
                 int count = buckets.TryGetValue(key, out int c) ? c : 0;
-                items.Add(new {
-                    Date         = key,
-                    Label        = i == 0 ? "Hôm nay" : $"+{i}",
-                    Count        = count,
+                items.Add(new
+                {
+                    Date = key,
+                    Label = i == 0 ? "Hôm nay" : $"+{i}",
+                    Count = count,
                     OverdueCount = 0,
-                    TodayCount   = i == 0 ? count : 0,
-                    UpcomingCount= i > 0  ? count : 0
+                    TodayCount = i == 0 ? count : 0,
+                    UpcomingCount = i > 0 ? count : 0
                 });
             }
 
@@ -208,7 +212,7 @@ namespace ToolCalendar.Core.Data.Repositories
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@prefix", prefix + "%");
             using var reader = await cmd.ExecuteReaderAsync();
-            
+
             while (await reader.ReadAsync())
             {
                 list.Add(new
@@ -275,7 +279,8 @@ namespace ToolCalendar.Core.Data.Repositories
             {
                 while (await r.ReadAsync())
                 {
-                    listHomNay.Add(new {
+                    listHomNay.Add(new
+                    {
                         So = r["SoVanBan"]?.ToString() ?? "(không số)",
                         Ten = r["TenCongVan"]?.ToString(),
                         TrangThai = r["Status"]?.ToString(),
@@ -297,7 +302,8 @@ namespace ToolCalendar.Core.Data.Repositories
             {
                 while (await r2.ReadAsync())
                 {
-                    listQuaHan.Add(new {
+                    listQuaHan.Add(new
+                    {
                         So = r2["SoVanBan"]?.ToString() ?? "(không số)",
                         Ten = r2["TenCongVan"]?.ToString(),
                         Han = r2["ThoiHan"] == DBNull.Value ? "" : Convert.ToDateTime(r2["ThoiHan"]).ToString("dd/MM/yyyy"),
@@ -319,7 +325,8 @@ namespace ToolCalendar.Core.Data.Repositories
             {
                 while (await r3.ReadAsync())
                 {
-                    listSapHan.Add(new {
+                    listSapHan.Add(new
+                    {
                         So = r3["SoVanBan"]?.ToString() ?? "(không số)",
                         Ten = r3["TenCongVan"]?.ToString(),
                         Han = r3["ThoiHan"] == DBNull.Value ? "" : Convert.ToDateTime(r3["ThoiHan"]).ToString("dd/MM/yyyy"),

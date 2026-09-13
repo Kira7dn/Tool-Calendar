@@ -70,12 +70,12 @@ namespace ToolCalendar.Api.Security
         public async Task SetNormalizedUserNameAsync(User user, string? normalizedName, CancellationToken ct)
         {
             user.NormalizedUserName = normalizedName ?? user.Username.ToUpperInvariant();
-                    }
+        }
 
         public async Task SetUserNameAsync(User user, string? userName, CancellationToken ct)
         {
             user.Username = userName ?? user.Username;
-                    }
+        }
 
         public async Task<IdentityResult> UpdateAsync(User user, CancellationToken ct)
         {
@@ -94,7 +94,7 @@ namespace ToolCalendar.Api.Security
         public async Task SetPasswordHashAsync(User user, string? passwordHash, CancellationToken ct)
         {
             user.PasswordHash = passwordHash ?? "";
-                    }
+        }
 
         // ─── IUserSecurityStampStore ─────────────────────────────────────────────
 
@@ -105,7 +105,7 @@ namespace ToolCalendar.Api.Security
         {
             user.SecurityStamp = stamp;
             await _userRepository.UpdateSecurityStampAsync(user.Id, stamp);
-                    }
+        }
 
         // ─── IUserLockoutStore ───────────────────────────────────────────────────
 
@@ -129,23 +129,23 @@ namespace ToolCalendar.Api.Security
         public async Task ResetAccessFailedCountAsync(User user, CancellationToken ct)
         {
             user.AccessFailedCount = 0;
-            user.FailedLoginCount  = 0;
-            user.LockoutEnd        = null;
-            user.LockoutUntil      = null;
+            user.FailedLoginCount = 0;
+            user.LockoutEnd = null;
+            user.LockoutUntil = null;
             await _userRepository.ResetAccessFailedCountAsync(user.Id);
-                    }
+        }
 
         public async Task SetLockoutEnabledAsync(User user, bool enabled, CancellationToken ct)
         {
             user.LockoutEnabled = enabled;
-                    }
+        }
 
         public async Task SetLockoutEndDateAsync(User user, DateTimeOffset? lockoutEnd, CancellationToken ct)
         {
-            user.LockoutEnd   = lockoutEnd;
+            user.LockoutEnd = lockoutEnd;
             user.LockoutUntil = lockoutEnd?.UtcDateTime;
             await _userRepository.UpdateLockoutAsync(user.Id, user.AccessFailedCount, lockoutEnd);
-                    }
+        }
 
         // ─── IUserRoleStore ──────────────────────────────────────────────────────
         // Hệ thống dùng Role string đơn giản (Admin, VanThu, LanhDao, CanBo, Guest)
@@ -155,13 +155,13 @@ namespace ToolCalendar.Api.Security
         {
             user.Role = roleName;
             await _userRepository.UpdateUserAsync(user);
-                    }
+        }
 
         public async Task RemoveFromRoleAsync(User user, string roleName, CancellationToken ct)
         {
             if (user.Role.Equals(roleName, StringComparison.OrdinalIgnoreCase))
                 user.Role = "Guest";
-                    }
+        }
 
         public async Task<IList<string>> GetRolesAsync(User user, CancellationToken ct)
         {

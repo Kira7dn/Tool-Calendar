@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using ToolCalendar.Data;
 using ToolCalendar.Tests.Helpers;
 
 namespace ToolCalendar.Tests
@@ -26,12 +25,12 @@ namespace ToolCalendar.Tests
             var projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", ".."));
             var seedSqlPath = Path.Combine(projectRoot, "seed_db.sql");
             var script = File.ReadAllText(seedSqlPath);
-            
+
             using var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={DbPath}");
             connection.Open();
             using var cmd = new Microsoft.Data.Sqlite.SqliteCommand(script, connection);
             cmd.ExecuteNonQuery();
-            
+
             // Set password of admin to admin123
             using var updateCmd = new Microsoft.Data.Sqlite.SqliteCommand("UPDATE Users SET PasswordHash = @hash WHERE Username = 'admin'", connection);
             updateCmd.Parameters.AddWithValue("@hash", BCrypt.Net.BCrypt.HashPassword("admin123"));

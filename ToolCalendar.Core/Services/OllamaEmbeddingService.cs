@@ -66,6 +66,6 @@ namespace ToolCalendar.Core.Services
 
     public class PythonEmbedResponse
     {
-        public float[] Vector { get; set; }
+        public required float[] Vector { get; set; }
     }
 }

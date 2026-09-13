@@ -39,7 +39,7 @@ namespace ToolCalendar.Api.Middleware
             var errors = _env.IsDevelopment() ? new List<string> { exception.Message, exception.StackTrace ?? "" } : null;
 
             var response = ApiResponse.Fail(message, errors);
-            
+
             var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
             var json = JsonSerializer.Serialize(response, options);
 

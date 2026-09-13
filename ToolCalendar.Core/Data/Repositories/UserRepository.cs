@@ -45,37 +45,37 @@ namespace ToolCalendar.Core.Data.Repositories
         {
             var user = new User
             {
-                Id           = Convert.ToInt32(reader["Id"]),
-                Username     = reader["Username"]?.ToString() ?? "",
-                FullName     = reader["FullName"]?.ToString() ?? "",
-                Email        = reader["Email"]?.ToString() ?? "",
-                PhoneNumber  = reader["PhoneNumber"]?.ToString() ?? "",
-                Role         = reader["Role"]?.ToString() ?? "Guest",
+                Id = Convert.ToInt32(reader["Id"]),
+                Username = reader["Username"]?.ToString() ?? "",
+                FullName = reader["FullName"]?.ToString() ?? "",
+                Email = reader["Email"]?.ToString() ?? "",
+                PhoneNumber = reader["PhoneNumber"]?.ToString() ?? "",
+                Role = reader["Role"]?.ToString() ?? "Guest",
                 DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"]),
                 DepartmentName = HasColumn(reader, "DepartmentName") ? reader["DepartmentName"]?.ToString() : null,
-                SessionId    = reader["SessionId"]?.ToString(),
-                CreatedAt    = reader["CreatedAt"] != DBNull.Value && DateTime.TryParse(reader["CreatedAt"]?.ToString(), out DateTime dt) ? dt : DateTime.UtcNow,
+                SessionId = reader["SessionId"]?.ToString(),
+                CreatedAt = reader["CreatedAt"] != DBNull.Value && DateTime.TryParse(reader["CreatedAt"]?.ToString(), out DateTime dt) ? dt : DateTime.UtcNow,
 
                 // --- Account Lockout cũ ---
                 FailedLoginCount = reader["FailedLoginCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["FailedLoginCount"]),
-                LockoutUntil     = ParseNullableDateTime(reader["LockoutUntil"]?.ToString()),
+                LockoutUntil = ParseNullableDateTime(reader["LockoutUntil"]?.ToString()),
 
-                RefreshToken     = HasColumn(reader, "RefreshToken") ? reader["RefreshToken"]?.ToString() : null,
+                RefreshToken = HasColumn(reader, "RefreshToken") ? reader["RefreshToken"]?.ToString() : null,
                 RefreshTokenExpiryTime = HasColumn(reader, "RefreshTokenExpiryTime") ? ParseNullableDateTime(reader["RefreshTokenExpiryTime"]?.ToString()) : null,
 
                 // --- Identity columns mới — dùng HasColumn() đề phòng migration chưa chạy ---
-                SecurityStamp       = HasColumn(reader, "SecurityStamp")
+                SecurityStamp = HasColumn(reader, "SecurityStamp")
                                         ? (reader["SecurityStamp"]?.ToString() ?? Guid.NewGuid().ToString())
                                         : Guid.NewGuid().ToString(),
-                NormalizedUserName  = HasColumn(reader, "NormalizedUserName")
+                NormalizedUserName = HasColumn(reader, "NormalizedUserName")
                                         ? (reader["NormalizedUserName"]?.ToString() ?? (reader["Username"]?.ToString() ?? "").ToUpperInvariant())
                                         : (reader["Username"]?.ToString() ?? "").ToUpperInvariant(),
-                LockoutEnabled      = HasColumn(reader, "LockoutEnabled")
+                LockoutEnabled = HasColumn(reader, "LockoutEnabled")
                                         && reader["LockoutEnabled"] != DBNull.Value
                                         && Convert.ToInt32(reader["LockoutEnabled"]) == 1,
-                AccessFailedCount   = HasColumn(reader, "AccessFailedCount") && reader["AccessFailedCount"] != DBNull.Value
+                AccessFailedCount = HasColumn(reader, "AccessFailedCount") && reader["AccessFailedCount"] != DBNull.Value
                                         ? Convert.ToInt32(reader["AccessFailedCount"]) : 0,
-                LockoutEnd          = HasColumn(reader, "LockoutEnd")
+                LockoutEnd = HasColumn(reader, "LockoutEnd")
                                         ? ParseNullableDateTimeOffset(reader["LockoutEnd"]?.ToString()) : null,
             };
 
@@ -183,9 +183,9 @@ namespace ToolCalendar.Core.Data.Repositories
 
             if (!await reader.ReadAsync()) return null;
 
-            int userId            = Convert.ToInt32(reader["Id"]);
-            string storedHash     = reader["PasswordHash"]?.ToString() ?? "";
-            string? lockoutRaw    = reader["LockoutUntil"]?.ToString();
+            int userId = Convert.ToInt32(reader["Id"]);
+            string storedHash = reader["PasswordHash"]?.ToString() ?? "";
+            string? lockoutRaw = reader["LockoutUntil"]?.ToString();
 
             // ── Bước 1: Kiểm tra Account Lockout ──────────────────────────────────
             if (!string.IsNullOrEmpty(lockoutRaw) &&
@@ -197,10 +197,10 @@ namespace ToolCalendar.Core.Data.Repositories
 
             var user = new User
             {
-                Id           = userId,
-                Username     = reader["Username"]?.ToString() ?? "",
-                FullName     = reader["FullName"]?.ToString() ?? "",
-                Role         = reader["Role"]?.ToString() ?? "Guest",
+                Id = userId,
+                Username = reader["Username"]?.ToString() ?? "",
+                FullName = reader["FullName"]?.ToString() ?? "",
+                Role = reader["Role"]?.ToString() ?? "Guest",
                 DepartmentId = reader["DepartmentId"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentId"]),
                 SecurityStamp = reader["SecurityStamp"]?.ToString() ?? Guid.NewGuid().ToString(),
             };
@@ -217,7 +217,7 @@ namespace ToolCalendar.Core.Data.Repositories
             {
                 // Mật khẩu cũ plain-text: dùng FixedTimeEquals để chống Timing Attack
                 var storedBytes = System.Text.Encoding.UTF8.GetBytes(storedHash);
-                var inputBytes  = System.Text.Encoding.UTF8.GetBytes(password);
+                var inputBytes = System.Text.Encoding.UTF8.GetBytes(password);
                 var paddedInput = inputBytes.Length == storedBytes.Length
                     ? inputBytes
                     : System.Text.Encoding.UTF8.GetBytes(password.PadRight(storedHash.Length));
@@ -268,7 +268,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 SET SessionId = @s, FailedLoginCount = 0, LockoutUntil = NULL,
                     AccessFailedCount = 0, LockoutEnd = NULL
                 WHERE Id = @id", connection);
-            updateCmd.Parameters.AddWithValue("@s",  user.SessionId);
+            updateCmd.Parameters.AddWithValue("@s", user.SessionId);
             updateCmd.Parameters.AddWithValue("@id", userId);
             updateCmd.ExecuteNonQuery();
 
@@ -289,7 +289,7 @@ namespace ToolCalendar.Core.Data.Repositories
                     : BCrypt.Net.BCrypt.HashPassword(user.PasswordHash ?? "ChangeMe@123", workFactor: 12);
 
                 // Tạo SecurityStamp ngay lúc tạo user để Identity hoạt động đúng
-                var securityStamp     = Guid.NewGuid().ToString();
+                var securityStamp = Guid.NewGuid().ToString();
                 var normalizedUserName = user.Username.ToUpperInvariant();
 
                 string sql = @"
@@ -297,16 +297,16 @@ namespace ToolCalendar.Core.Data.Repositories
                                        SecurityStamp, NormalizedUserName, LockoutEnabled) 
                     VALUES (@u, @p, @f, @e, @pn, @r, @d, @now, @stamp, @norm, 1)";
                 using var cmd = new SqliteCommand(sql, connection);
-                cmd.Parameters.AddWithValue("@now",   DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
-                cmd.Parameters.AddWithValue("@u",     user.Username);
-                cmd.Parameters.AddWithValue("@p",     passwordToStore);
-                cmd.Parameters.AddWithValue("@f",     (object?)user.FullName ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@e",     (object?)user.Email ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@pn",    (object?)user.PhoneNumber ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@r",     (object?)user.Role ?? "Guest");
-                cmd.Parameters.AddWithValue("@d",     (object?)user.DepartmentId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@u", user.Username);
+                cmd.Parameters.AddWithValue("@p", passwordToStore);
+                cmd.Parameters.AddWithValue("@f", (object?)user.FullName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@e", (object?)user.Email ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@pn", (object?)user.PhoneNumber ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@r", (object?)user.Role ?? "Guest");
+                cmd.Parameters.AddWithValue("@d", (object?)user.DepartmentId ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@stamp", securityStamp);
-                cmd.Parameters.AddWithValue("@norm",  normalizedUserName);
+                cmd.Parameters.AddWithValue("@norm", normalizedUserName);
                 await cmd.ExecuteNonQueryAsync();
                 return true;
             }
@@ -330,15 +330,15 @@ namespace ToolCalendar.Core.Data.Repositories
                 WHERE Id = @id";
 
             using var cmd = new SqliteCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@f",     (object?)user.FullName ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@e",     (object?)user.Email ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@pn",    (object?)user.PhoneNumber ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@r",     (object?)user.Role ?? "Guest");
-            cmd.Parameters.AddWithValue("@d",     (object?)user.DepartmentId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@f", (object?)user.FullName ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@e", (object?)user.Email ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@pn", (object?)user.PhoneNumber ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@r", (object?)user.Role ?? "Guest");
+            cmd.Parameters.AddWithValue("@d", (object?)user.DepartmentId ?? DBNull.Value);
             // Sử dụng SecurityStamp từ object để đồng bộ với Identity (tránh lỗi desync)
             cmd.Parameters.AddWithValue("@stamp", string.IsNullOrEmpty(user.SecurityStamp) ? Guid.NewGuid().ToString() : user.SecurityStamp);
-            cmd.Parameters.AddWithValue("@ph",    user.PasswordHash ?? "");
-            cmd.Parameters.AddWithValue("@id",    user.Id);
+            cmd.Parameters.AddWithValue("@ph", user.PasswordHash ?? "");
+            cmd.Parameters.AddWithValue("@id", user.Id);
             await cmd.ExecuteNonQueryAsync();
         }
         public async Task DeleteUserAsync(int id)
@@ -367,9 +367,9 @@ namespace ToolCalendar.Core.Data.Repositories
                     SET PasswordHash  = @p,
                         SecurityStamp = @stamp
                     WHERE Id = @id", connection);
-                cmd.Parameters.AddWithValue("@p",     hashedPassword);
+                cmd.Parameters.AddWithValue("@p", hashedPassword);
                 cmd.Parameters.AddWithValue("@stamp", Guid.NewGuid().ToString());
-                cmd.Parameters.AddWithValue("@id",    userId);
+                cmd.Parameters.AddWithValue("@id", userId);
                 return await cmd.ExecuteNonQueryAsync() > 0;
             }
             catch { return false; }
@@ -385,7 +385,7 @@ namespace ToolCalendar.Core.Data.Repositories
             using var cmd = new SqliteCommand(
                 "UPDATE Users SET SecurityStamp = @stamp WHERE Id = @id", connection);
             cmd.Parameters.AddWithValue("@stamp", securityStamp);
-            cmd.Parameters.AddWithValue("@id",    userId);
+            cmd.Parameters.AddWithValue("@id", userId);
             await cmd.ExecuteNonQueryAsync();
         }
 
@@ -401,10 +401,10 @@ namespace ToolCalendar.Core.Data.Repositories
                     LockoutEnd        = @lockoutEnd,
                     LockoutUntil      = @lockoutUntil
                 WHERE Id = @id", connection);
-            cmd.Parameters.AddWithValue("@count",       accessFailedCount);
-            cmd.Parameters.AddWithValue("@lockoutEnd",  (object?)lockoutEnd?.ToString("O") ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@lockoutUntil",(object?)lockoutEnd?.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@id",          userId);
+            cmd.Parameters.AddWithValue("@count", accessFailedCount);
+            cmd.Parameters.AddWithValue("@lockoutEnd", (object?)lockoutEnd?.ToString("O") ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@lockoutUntil", (object?)lockoutEnd?.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@id", userId);
             await cmd.ExecuteNonQueryAsync();
         }
 

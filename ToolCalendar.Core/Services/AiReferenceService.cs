@@ -94,7 +94,7 @@ namespace ToolCalendar.Core.Services
 
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
                 var response = await _httpClient.PostAsync($"{_pythonAiUrl.TrimEnd('/')}/api/extract-keywords", content, cts.Token);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
@@ -102,7 +102,7 @@ namespace ToolCalendar.Core.Services
                     if (doc.RootElement.TryGetProperty("keywords", out var keywordsElement))
                     {
                         var keywordsList = new List<string>();
-                        foreach(var k in keywordsElement.EnumerateArray())
+                        foreach (var k in keywordsElement.EnumerateArray())
                         {
                             var keywordStr = k.GetString();
                             if (!string.IsNullOrWhiteSpace(keywordStr))
@@ -137,7 +137,7 @@ namespace ToolCalendar.Core.Services
         private async Task<List<DocumentReference>> SearchTavilyAsync(string keyword, string[] domains)
         {
             var refs = new List<DocumentReference>();
-            
+
             if (string.IsNullOrWhiteSpace(_tavilyApiKey))
             {
                 _logger.LogWarning("[AiReference] Tavily Api Key is missing!");
@@ -160,7 +160,7 @@ namespace ToolCalendar.Core.Services
 
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                 var response = await _httpClient.PostAsync("https://api.tavily.com/search", content, cts.Token);
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorMsg = await response.Content.ReadAsStringAsync(cts.Token);
@@ -170,7 +170,7 @@ namespace ToolCalendar.Core.Services
 
                 var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
                 using var doc = JsonDocument.Parse(responseBody);
-                
+
                 if (doc.RootElement.TryGetProperty("results", out var results))
                 {
                     foreach (var result in results.EnumerateArray())
@@ -178,7 +178,7 @@ namespace ToolCalendar.Core.Services
                         var title = result.GetProperty("title").GetString() ?? "";
                         var url = result.GetProperty("url").GetString() ?? "";
                         var snippet = result.GetProperty("content").GetString() ?? "";
-                        
+
                         var uri = new Uri(url);
                         var source = uri.Host.Replace("www.", "");
 

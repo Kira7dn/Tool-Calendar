@@ -13,7 +13,7 @@ namespace ToolCalendar.Core.Services.AiTools
 
         public string Name => "get_document_stats";
         public string Description => "Lấy thông tin thống kê số lượng công văn (chờ xử lý, đang xử lý, đã hoàn thành). Dùng khi sếp hỏi 'có bao nhiêu công văn', 'tình hình xử lý', 'thống kê'.";
-        
+
         public object ParametersSchema => new
         {
             type = "object",

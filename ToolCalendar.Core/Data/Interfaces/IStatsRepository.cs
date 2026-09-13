@@ -5,6 +5,6 @@ namespace ToolCalendar.Core.Data.Interfaces
         Task<object> GetDashboardStatsAsync();
         Task<object> GetDashboardDeadlineSeriesAsync(int days = 14);
         Task<object> GetMonthlyDepartmentReportAsync(int month, int year);
-                Task<string> GetAiContextStatsAsync();
+        Task<string> GetAiContextStatsAsync();
     }
 }

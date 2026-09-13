@@ -40,7 +40,7 @@ namespace ToolCalendar.Data.Repositories
             var allRoutings = new List<DocumentRoutingRecord>();
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            
+
             string sql = @"
                 SELECT 
                     r.Id, r.DocumentId, r.SenderId, r.ReceiverId, r.ParentRoutingId, 
@@ -116,15 +116,15 @@ namespace ToolCalendar.Data.Repositories
 
             return new DocumentRoutingRecord
             {
-                Id            = Convert.ToInt32(reader["Id"]),
-                DocumentId    = Convert.ToInt32(reader["DocumentId"]),
-                SenderId      = Convert.ToInt32(reader["SenderId"]),
-                ReceiverId    = Convert.ToInt32(reader["ReceiverId"]),
+                Id = Convert.ToInt32(reader["Id"]),
+                DocumentId = Convert.ToInt32(reader["DocumentId"]),
+                SenderId = Convert.ToInt32(reader["SenderId"]),
+                ReceiverId = Convert.ToInt32(reader["ReceiverId"]),
                 ParentRoutingId = reader["ParentRoutingId"] != DBNull.Value ? Convert.ToInt32(reader["ParentRoutingId"]) : null,
-                Role          = reader["Role"].ToString() ?? "Chủ trì",
-                Status        = reader["Status"].ToString() ?? "Chưa xử lý",
+                Role = reader["Role"].ToString() ?? "Chủ trì",
+                Status = reader["Status"].ToString() ?? "Chưa xử lý",
                 ProcessingContent = reader["ProcessingContent"].ToString() ?? "",
-                CreatedAt     = DateTime.Parse(reader["CreatedAt"].ToString()!),
+                CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()!),
             };
         }
 
@@ -132,7 +132,7 @@ namespace ToolCalendar.Data.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            
+
             string sql = @"
                 INSERT INTO DocumentRoutings 
                 (DocumentId, SenderId, ReceiverId, ParentRoutingId, Role, ForwardDate, Deadline, Comment, ProcessingContent, Status, CreatedAt)
@@ -161,7 +161,7 @@ namespace ToolCalendar.Data.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            
+
             string sql = @"
                 UPDATE DocumentRoutings
                 SET Status = @Status, ProcessingContent = @ProcessingContent
@@ -178,7 +178,7 @@ namespace ToolCalendar.Data.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            
+
             string sql = @"
                 UPDATE DocumentRoutings
                 SET Status = @Status, ProcessingContent = @ProcessingContent
@@ -195,7 +195,7 @@ namespace ToolCalendar.Data.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            
+
             string sql = @"
                 UPDATE DocumentRoutings
                 SET Role = @NewRole

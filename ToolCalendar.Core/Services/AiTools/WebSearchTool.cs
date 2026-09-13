@@ -39,22 +39,22 @@ namespace ToolCalendar.Core.Services.AiTools
                 }
 
                 string query = queryObj.ToString() ?? "";
-                
+
                 // DuckDuckGo HTML Lite search
                 string searchUrl = $"https://html.duckduckgo.com/html/?q={Uri.EscapeDataString(query)}";
-                
+
                 var request = new HttpRequestMessage(HttpMethod.Get, searchUrl);
                 request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-                
+
                 var response = await _httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
-                
+
                 var html = await response.Content.ReadAsStringAsync();
-                
+
                 // Parse HTML
                 var doc = new HtmlDocument();
                 doc.LoadHtml(html);
-                
+
                 var resultNodes = doc.DocumentNode.SelectNodes("//a[@class='result__snippet']");
                 if (resultNodes == null || resultNodes.Count == 0)
                 {
@@ -63,7 +63,7 @@ namespace ToolCalendar.Core.Services.AiTools
 
                 var sb = new System.Text.StringBuilder();
                 sb.AppendLine($"[Kết quả tra cứu Internet cho: {query}]");
-                
+
                 int count = 0;
                 foreach (var node in resultNodes)
                 {

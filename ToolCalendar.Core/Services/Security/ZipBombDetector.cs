@@ -22,7 +22,7 @@ public static class ZipBombDetector
         try
         {
             var originalPosition = fileStream.Position;
-            
+
             // Đọc cấu trúc zip (không giải nén toàn bộ dữ liệu ra RAM)
             using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read, leaveOpen: true))
             {
@@ -36,7 +36,7 @@ public static class ZipBombDetector
                         return (false, "Phát hiện tệp tin có quá nhiều cấu trúc con (nghi ngờ tấn công CPU Exhaustion).");
 
                     totalUncompressedSize += entry.Length;
-                    
+
                     if (totalUncompressedSize > MAX_UNCOMPRESSED_SIZE)
                         return (false, $"Phát hiện Decompression Bomb! Dung lượng sau giải nén vượt ngưỡng an toàn ({MAX_UNCOMPRESSED_SIZE / 1024 / 1024}MB).");
                 }

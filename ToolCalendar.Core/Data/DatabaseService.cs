@@ -32,7 +32,7 @@ namespace ToolCalendar.Data
             connection.Open();
 
             // Sử dụng DELETE thay vì WAL vì WAL bị lỗi "disk I/O error" trên Docker Desktop Windows
-            try 
+            try
             {
                 using var walCmd = new SqliteCommand("PRAGMA journal_mode=DELETE; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=5000;", connection);
                 walCmd.ExecuteNonQuery();

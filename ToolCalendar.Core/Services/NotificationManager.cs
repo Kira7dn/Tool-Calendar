@@ -102,14 +102,16 @@ namespace ToolCalendar.Services
             int? docIdValue = null;
             if (data != null)
             {
-                try {
+                try
+                {
                     var jsonStr = JsonSerializer.Serialize(data);
                     var dataDict = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonStr);
                     if (dataDict != null && dataDict.TryGetValue("docId", out var dId))
                     {
                         if (int.TryParse(dId?.ToString(), out int parsedId)) docIdValue = parsedId;
                     }
-                } catch { /* Bỏ qua lỗi parse data */ }
+                }
+                catch { /* Bỏ qua lỗi parse data */ }
             }
 
             await _notificationRepo.InsertNotificationAsync(new Core.Models.NotificationRecord
@@ -123,7 +125,7 @@ namespace ToolCalendar.Services
             });
 
             // 3. Gửi Real-time SignalR (nếu user đang mở web) - Bọc Try/Catch để không làm gián đoạn luồng chính
-            try 
+            try
             {
                 await _hubContext.Clients.Group($"User_{userId}").SendAsync("ReceiveNotification", new
                 {

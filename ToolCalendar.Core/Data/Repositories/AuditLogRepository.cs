@@ -90,13 +90,13 @@ namespace ToolCalendar.Core.Data.Repositories
                 using var cmd = new SqliteCommand(@"
                     INSERT INTO LoginAuditLog (Username, UserId, IpAddress, UserAgent, IsSuccess, FailReason, CreatedAt)
                     VALUES (@u, @uid, @ip, @ua, @ok, @reason, @now)", connection);
-                cmd.Parameters.AddWithValue("@u",      username);
-                cmd.Parameters.AddWithValue("@uid",    (object?)userId ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@ip",     (object?)ipAddress ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@ua",     (object?)userAgent ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@ok",     isSuccess ? 1 : 0);
+                cmd.Parameters.AddWithValue("@u", username);
+                cmd.Parameters.AddWithValue("@uid", (object?)userId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@ip", (object?)ipAddress ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@ua", (object?)userAgent ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@ok", isSuccess ? 1 : 0);
                 cmd.Parameters.AddWithValue("@reason", (object?)failReason ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@now",    DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
                 await cmd.ExecuteNonQueryAsync();
             }
             catch (Exception ex)
@@ -118,7 +118,7 @@ namespace ToolCalendar.Core.Data.Repositories
                     LIMIT 1", connection);
                 cmd.Parameters.AddWithValue("@uid", userId);
                 var result = await cmd.ExecuteScalarAsync();
-                
+
                 if (result != null && result != DBNull.Value)
                 {
                     if (DateTime.TryParse(result.ToString(), out DateTime dt))

@@ -11,13 +11,13 @@ namespace ToolCalendar.Policies
     public static class AppPolicies
     {
         // Tên các policy
-        public const string CanViewDocuments   = "CanViewDocuments";
+        public const string CanViewDocuments = "CanViewDocuments";
         public const string CanUploadDocuments = "CanUploadDocuments";
         public const string CanDeleteDocuments = "CanDeleteDocuments";
-        public const string CanViewFiles       = "CanViewFiles";
-        public const string CanManageUsers     = "CanManageUsers";
-        public const string CanSubmitEvidence  = "CanSubmitEvidence";
-        public const string IsAuthenticated    = "IsAuthenticated";
+        public const string CanViewFiles = "CanViewFiles";
+        public const string CanManageUsers = "CanManageUsers";
+        public const string CanSubmitEvidence = "CanSubmitEvidence";
+        public const string IsAuthenticated = "IsAuthenticated";
 
         /// <summary>
         /// Đăng ký tất cả Authorization Policies vào DI container

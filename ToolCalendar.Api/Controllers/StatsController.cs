@@ -17,7 +17,7 @@ namespace ToolCalendar.Api.Controllers
         private readonly ISettingRepository _settingRepo;
 
         // Cache keys
-        private const string STATS_KEY    = "dashboard_stats";
+        private const string STATS_KEY = "dashboard_stats";
         private const string TIMELINE_KEY = "dashboard_timeline_{0}"; // {0} = days
 
         public StatsController(IMemoryCache cache, IStatsRepository statsRepo, IAuditLogRepository auditLogRepo, ISettingRepository settingRepo)

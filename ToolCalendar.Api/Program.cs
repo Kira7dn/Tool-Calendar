@@ -128,16 +128,16 @@ builder.Services.AddScoped<IAiSemanticCacheRepository, AiSemanticCacheRepository
 builder.Services.AddIdentityCore<User>(options =>
 {
     // --- Cấu hình mật khẩu (giữ nguyên quy tắc hiện tại) ---
-    options.Password.RequiredLength         = 8;
-    options.Password.RequireUppercase       = true;
-    options.Password.RequireLowercase       = true;
-    options.Password.RequireDigit           = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireDigit = true;
     options.Password.RequireNonAlphanumeric = true;
 
     // --- Account Lockout (Identity quản lý thay vì code thủ công) ---
     options.Lockout.MaxFailedAccessAttempts = 5;               // Khóa sau 5 lần sai
-    options.Lockout.DefaultLockoutTimeSpan  = TimeSpan.FromMinutes(15); // Khóa 15 phút
-    options.Lockout.AllowedForNewUsers      = true;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15); // Khóa 15 phút
+    options.Lockout.AllowedForNewUsers = true;
 
     // --- User ---
     options.User.RequireUniqueEmail = false; // Không bắt buộc email duy nhất (hệ thống nội bộ)
@@ -226,9 +226,9 @@ builder.Services.AddAuthentication(x =>
         {
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
-            
+
             // 1. Chỉ SignalR mới được dùng query string auth
-            if (!string.IsNullOrEmpty(accessToken) && 
+            if (!string.IsNullOrEmpty(accessToken) &&
                 path.StartsWithSegments("/notificationHub"))
             {
                 context.Token = accessToken;
@@ -271,14 +271,14 @@ builder.Services.AddAuthentication(x =>
 
                 if (int.TryParse(userIdStr, out int userId))
                 {
-                        var cache    = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                    var cache = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                     var cacheKey = $"UserSession_{userId}";
 
                     var cachedSecStamp = cache.Get<string>(cacheKey);
                     if (string.IsNullOrEmpty(cachedSecStamp))
                     {
                         var userRepo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
-                        var user     = await userRepo.GetUserByIdAsync(userId);
+                        var user = await userRepo.GetUserByIdAsync(userId);
                         if (user == null)
                         {
                             Console.WriteLine($"[AuthError] Không tìm thấy User ID {userId} trong cơ sở dữ liệu.");
@@ -313,7 +313,7 @@ builder.Services.AddAuthentication(x =>
         {
             var accept = context.Request.Headers["Accept"].ToString();
             var path = context.Request.Path.Value ?? "";
-            
+
             // Nếu người dùng mở URL trực tiếp trên trình duyệt (Accept: text/html)
             // Thay vì hiện màn hình lỗi 401 mặc định, redirect về trang chủ để báo lỗi thân thiện
             if (accept.Contains("text/html") && path.StartsWith("/api/documents") && path.EndsWith("/file"))
@@ -327,7 +327,7 @@ builder.Services.AddAuthentication(x =>
         {
             var accept = context.Request.Headers["Accept"].ToString();
             var path = context.Request.Path.Value ?? "";
-            
+
             if (accept.Contains("text/html") && path.StartsWith("/api/documents") && path.EndsWith("/file"))
             {
                 context.Response.Redirect("/?error=forbidden");

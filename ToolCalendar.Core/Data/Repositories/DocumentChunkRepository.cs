@@ -65,7 +65,7 @@ namespace ToolCalendar.Core.Data.Repositories
             }
             else
             {
-                _connectionString = configuration.GetConnectionString("DefaultConnection") 
+                _connectionString = configuration.GetConnectionString("DefaultConnection")
                                     ?? "Data Source=data_dump/documents.db";
                 if (string.IsNullOrEmpty(_connectionString))
                 {
@@ -85,7 +85,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 INSERT INTO DocumentChunks (DocumentId, ChunkIndex, TextContent, VectorJson, ParentChunkId, EmbeddingModelVersion)
                 VALUES (@DocumentId, @ChunkIndex, @TextContent, @VectorJson, @ParentChunkId, @EmbeddingModelVersion);
                 SELECT last_insert_rowid();";
-            
+
             cmd.Parameters.AddWithValue("@DocumentId", documentId);
             cmd.Parameters.AddWithValue("@ChunkIndex", chunkIndex);
             cmd.Parameters.AddWithValue("@TextContent", textContent);
@@ -173,7 +173,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 WHERE dc.TextContent LIKE '%' || @Keyword || '%'
                   AND dc.ParentChunkId IS NOT NULL
                 LIMIT @TopK";
-            
+
             cmd.Parameters.AddWithValue("@Keyword", keyword);
             cmd.Parameters.AddWithValue("@TopK", topK);
 
@@ -200,13 +200,13 @@ namespace ToolCalendar.Core.Data.Repositories
             // Lấy chunks từ Keyword Search và Vector Search song song
             var keywordTask = FindByKeywordAsync(query, topK: 10);
             var vectorTask = FetchVectorChunksAsync(soHieu, ngayBanHanh); // Lấy tất cả hoặc lấy qua vector search cơ bản
-            
+
             await Task.WhenAll(keywordTask, vectorTask);
             var keywordResults = keywordTask.Result;
             var allVectorChunks = vectorTask.Result;
 
             // Tính Cosine Score cho tất cả các chunk để lọc
-            var cosineResults = allVectorChunks.Select(chunk => new 
+            var cosineResults = allVectorChunks.Select(chunk => new
             {
                 chunk.DocumentId,
                 chunk.TextContent,
@@ -219,7 +219,7 @@ namespace ToolCalendar.Core.Data.Repositories
 
             // Gộp candidates từ Keyword và Vector (đảm bảo không trùng lặp)
             var candidateDict = new Dictionary<string, (int DocId, string Text, float Cosine, float[] Vec, int? ParentId)>();
-            
+
             foreach (var kw in keywordResults)
             {
                 if (!candidateDict.ContainsKey(kw.TextContent))
@@ -247,7 +247,7 @@ namespace ToolCalendar.Core.Data.Repositories
             // 3. Calculate on-the-fly TF-IDF for candidates
             int totalDocuments = mergedCandidates.Count;
             var keywordIdf = new Dictionary<string, float>();
-            
+
             foreach (var keyword in queryKeywords)
             {
                 int docCountContainingKeyword = mergedCandidates.Count(d => d.Text.ToLower().Contains(keyword));
@@ -266,7 +266,7 @@ namespace ToolCalendar.Core.Data.Repositories
             {
                 var docContentLower = doc.Text.ToLower();
                 var docTfidf = new Dictionary<string, float>();
-                
+
                 foreach (var keyword in queryKeywords)
                 {
                     int tf = (docContentLower.Length - docContentLower.Replace(keyword, "").Length) / keyword.Length;
@@ -376,7 +376,7 @@ namespace ToolCalendar.Core.Data.Repositories
                 using var connection = new SqliteConnection(_connectionString);
                 await connection.OpenAsync();
                 using var cmd = connection.CreateCommand();
-                
+
                 string whereClause = "1=1";
                 if (!string.IsNullOrEmpty(soHieu))
                 {
@@ -389,7 +389,7 @@ namespace ToolCalendar.Core.Data.Repositories
                     cmd.Parameters.AddWithValue("@NgayBanHanh", ngayBanHanh);
                 }
                 cmd.CommandText = $"SELECT Id FROM Documents WHERE {whereClause}";
-                
+
                 using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
@@ -419,7 +419,7 @@ namespace ToolCalendar.Core.Data.Repositories
             float dotProduct = intersection.Sum(k => vec1[k] * vec2[k]);
             float sum1 = vec1.Values.Sum(v => v * v);
             float sum2 = vec2.Values.Sum(v => v * v);
-            
+
             float denominator = (float)(Math.Sqrt(sum1) * Math.Sqrt(sum2));
             return denominator == 0 ? 0 : dotProduct / denominator;
         }
@@ -449,7 +449,7 @@ namespace ToolCalendar.Core.Data.Repositories
         private string GetEffectiveTextContent(int docId, string childText, int? parentChunkId)
         {
             if (!parentChunkId.HasValue) return childText;
-            
+
             if (_vectorCache.TryGetValue(docId, out var chunks))
             {
                 var parent = chunks.FirstOrDefault(c => c.Id == parentChunkId.Value);

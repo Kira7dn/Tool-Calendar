@@ -222,7 +222,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             {
                 record.FullText = existing.FullText;
             }
-            if ((string.IsNullOrEmpty(record.OcrPagesJson) || record.OcrPagesJson == "[]") && 
+            if ((string.IsNullOrEmpty(record.OcrPagesJson) || record.OcrPagesJson == "[]") &&
                 !string.IsNullOrEmpty(existing.OcrPagesJson) && existing.OcrPagesJson != "[]")
             {
                 record.OcrPagesJson = existing.OcrPagesJson;
@@ -253,7 +253,8 @@ namespace ToolCalendar.Api.Controllers.Documents
             // Nếu có sự thay đổi về người được giao → tạo routing record thật trong DB
             if (record.AssignedTo.HasValue && record.AssignedTo != existing?.AssignedTo)
             {
-                try {
+                try
+                {
                     // Tạo bản ghi DocumentRoutings thật để cây luân chuyển luôn chính xác
                     var newRouting = new DocumentRoutingRecord
                     {
@@ -275,14 +276,15 @@ namespace ToolCalendar.Api.Controllers.Documents
                         $"Văn bản {record.SoVanBan} đã được giao cho bạn xử lý.",
                         new { docId = id, type = "assignment" }
                     );
-                } catch { }
+                }
+                catch { }
             }
 
             _ = _hubContext.Clients.All.SendAsync("DocumentUpdated", new { id = id, status = record.Status });
             return Ok(ApiResponse.Ok("Cập nhật văn bản thành công."));
         }
 
-        public class UpdateStatusDto { public string Status { get; set; } }
+        public class UpdateStatusDto { public required string Status { get; set; } }
 
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusDto dto)
@@ -470,31 +472,35 @@ namespace ToolCalendar.Api.Controllers.Documents
             catch { }
 
             // 5. Gửi thông báo cho toàn bộ những người liên quan
-            try {
+            try
+            {
                 var currentUserName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Cán bộ";
 
                 var routings = await _routingRepo.GetTreeByDocumentIdAsync(id);
                 var involvedUserIds = new System.Collections.Generic.HashSet<int>();
                 involvedUserIds.Add(doc.UploadedByUserId);
-                
-                foreach (var r in routings) {
+
+                foreach (var r in routings)
+                {
                     involvedUserIds.Add(r.SenderId);
                     involvedUserIds.Add(r.ReceiverId);
                 }
-                
+
                 // Loại trừ người đang thao tác
                 involvedUserIds.Remove(currentUserId);
 
-                foreach (var uid in involvedUserIds) {
+                foreach (var uid in involvedUserIds)
+                {
                     if (uid <= 0) continue;
                     await _notificationManager.SendToUserAsync(
-                        uid, 
-                        "Công việc đã hoàn thành", 
+                        uid,
+                        "Công việc đã hoàn thành",
                         $"{currentUserName} đã nộp bằng chứng và hoàn thành văn bản: {doc.SoVanBan}",
                         new { docId = id, type = "completed" }
                     );
                 }
-            } catch { }
+            }
+            catch { }
 
             return Ok(ApiResponse.Ok(new { message = "Nộp bằng chứng hoàn thành thành công.", paths = savedPaths }));
         }
@@ -504,7 +510,7 @@ namespace ToolCalendar.Api.Controllers.Documents
         public async Task<IActionResult> GetMyTasks()
         {
             var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId)) 
+            if (!int.TryParse(userIdStr, out int userId))
                 return Unauthorized(ApiResponse.Fail("Chưa đăng nhập hoặc phiên làm việc hết hạn."));
             // ✅ Perf: lọc tại DB thay vì GetAllAsync() + LINQ scan toàn bộ bảng
             var tasks = await _documentRepository.GetTasksByUserIdAsync(userId);
@@ -517,11 +523,11 @@ namespace ToolCalendar.Api.Controllers.Documents
         {
             var doc = await _documentRepository.GetDocumentByIdAsync(id);
             if (doc == null || string.IsNullOrEmpty(doc.FilePath)) return NotFound(ApiResponse.Fail("File không tồn tại."));
-            
+
             // Lấy đường dẫn từ DB và chuẩn hóa dấu gạch chéo cho Linux
             var normalizedPath = doc.FilePath.Replace('\\', '/').TrimStart('/');
             var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
-            
+
             if (!System.IO.File.Exists(filePath)) return NotFound(ApiResponse.Fail($"File vật lý không tìm thấy tại: {normalizedPath}"));
 
             var ext = Path.GetExtension(doc.FilePath).ToLower();
@@ -551,9 +557,9 @@ namespace ToolCalendar.Api.Controllers.Documents
                 var relativePath = paths[index];
                 var normalizedPath = relativePath.Replace('\\', '/').TrimStart('/');
                 var filePath = Path.Combine(_env.ContentRootPath, normalizedPath);
-                
+
                 if (!System.IO.File.Exists(filePath)) return NotFound(ApiResponse.Fail("Không tìm thấy file vật lý."));
-                
+
                 var fileName = Path.GetFileName(filePath);
                 var ext = Path.GetExtension(filePath).ToLower();
                 var mimeType = ext switch
@@ -572,7 +578,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             catch (Exception ex)
             {
                 // Chỉ log chi tiết trong Development, không lộ stack trace ra Production
-                _= ex;
+                _ = ex;
                 return BadRequest(ApiResponse.Fail("Không thể đọc file bằng chứng. Vui lòng thử lại."));
             }
         }
@@ -646,7 +652,7 @@ namespace ToolCalendar.Api.Controllers.Documents
         public async Task<IActionResult> GetCommentAttachment([FromQuery] string path)
         {
             if (string.IsNullOrEmpty(path)) return BadRequest(ApiResponse.Fail("Đường dẫn không hợp lệ."));
-            
+
             // Chuẩn hóa và bảo mật đường dẫn (chỉ cho phép trong thư mục Uploads/Comments)
             var normalizedPath = path.Replace('\\', '/').TrimStart('/');
             if (!normalizedPath.Contains("Uploads/Documents/Comments", StringComparison.OrdinalIgnoreCase))
@@ -817,10 +823,10 @@ namespace ToolCalendar.Api.Controllers.Documents
         public async Task<IActionResult> GetEvidenceFile([FromQuery] string path)
         {
             if (string.IsNullOrEmpty(path)) return BadRequest(ApiResponse.Fail("Đường dẫn không hợp lệ."));
-            
+
             // Bảo mật: Chỉ cho phép truy cập file trong thư mục Evidence
             string normalizedPath = path.TrimStart('/').Replace("\\", "/");
-            if (!normalizedPath.StartsWith("Uploads/Documents/Evidence/", StringComparison.OrdinalIgnoreCase)) 
+            if (!normalizedPath.StartsWith("Uploads/Documents/Evidence/", StringComparison.OrdinalIgnoreCase))
                 return StatusCode(403, ApiResponse.Fail("Truy cập bị cấm."));
 
             // Chuyển đổi đường dẫn tương đối thành đường dẫn tuyệt đối trên server
@@ -892,7 +898,7 @@ namespace ToolCalendar.Api.Controllers.Documents
             var filtered = allDocs
                 .Where(d => d.ThoiHan.HasValue && d.ThoiHan.Value.Date >= now)
                 .OrderBy(d => d.ThoiHan)
-                .Take(50) 
+                .Take(50)
                 .ToList();
 
             // Nhóm theo ngày — ID được MÃ HÓA bằng HMAC, hacker không đoán được ID thật
@@ -904,7 +910,7 @@ namespace ToolCalendar.Api.Controllers.Documents
                     items = g.Select(d => new
                     {
                         docToken = CreatePublicDocToken(d.Id), // ← Trả token mã hóa, KHÔNG trả id thô
-                        time = "08:00", 
+                        time = "08:00",
                         docNumber = d.SoVanBan,
                         content = d.TrichYeu
                     }).ToList()

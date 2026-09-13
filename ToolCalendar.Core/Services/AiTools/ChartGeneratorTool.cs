@@ -49,13 +49,13 @@ namespace ToolCalendar.Core.Services.AiTools
             {
                 string chartType = arguments["chart_type"]?.ToString() ?? "pie";
                 string title = arguments["title"]?.ToString() ?? "Biểu đồ";
-                
+
                 var dataElement = (JsonElement)arguments["data"];
-                
+
                 var sb = new StringBuilder();
                 sb.AppendLine();
                 sb.AppendLine("```mermaid");
-                
+
                 if (chartType == "pie")
                 {
                     sb.AppendLine($"pie title {title}");
@@ -73,23 +73,23 @@ namespace ToolCalendar.Core.Services.AiTools
                     // For simplicity we use xyChart
                     sb.AppendLine($"xychart-beta");
                     sb.AppendLine($"    title \"{title}\"");
-                    
+
                     var xAxis = new List<string>();
                     var yAxis = new List<double>();
-                    
+
                     foreach (var item in dataElement.EnumerateArray())
                     {
                         xAxis.Add($"\"{item.GetProperty("label").GetString()}\"");
                         yAxis.Add(item.GetProperty("value").GetDouble());
                     }
-                    
+
                     sb.AppendLine($"    x-axis [{string.Join(", ", xAxis)}]");
                     sb.AppendLine($"    bar [{string.Join(", ", yAxis)}]");
                 }
-                
+
                 sb.AppendLine("```");
                 sb.AppendLine();
-                
+
                 return Task.FromResult(sb.ToString());
             }
             catch (Exception ex)
