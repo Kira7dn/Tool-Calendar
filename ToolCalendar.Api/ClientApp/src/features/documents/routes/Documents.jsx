@@ -190,7 +190,7 @@ export function Documents({ onTabChange, filters }) {
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 min-h-0 flex flex-col p-0 overflow-hidden">
+        <CardContent className="flex-1 min-h-0 flex flex-col p-0">
           <div className="relative flex-1 overflow-x-auto overflow-y-auto pt-px">
             <Table className="w-full min-w-[1000px] table-fixed">
               <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">

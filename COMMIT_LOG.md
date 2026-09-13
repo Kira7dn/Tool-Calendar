@@ -1,3 +1,9 @@
+### [2026-09-13 08:44] fix(style): xóa overflow-hidden trên CardContent chặn scroll ngang bảng
+- **Mô tả**: Lần fix trước vô tình thêm `overflow-hidden` vào CardContent — lớp này tiếp tục clip scrollbar ngang. Xóa bỏ hoàn toàn overflow khỏi CardContent, để div con `overflow-x-auto overflow-y-auto` là scroll container duy nhất. Chain đúng: Card(overflow-y-hidden) → CardContent(không overflow) → div(overflow-x-auto + overflow-y-auto) → Table(min-w-1000px).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(style): xóa overflow-hidden trên CardContent — lớp clip cuối cùng chặn scroll ngang"`
+
 ### [2026-09-13 08:39] fix(style): bảng Documents vẫn không có scroll ngang — fix dứt điểm
 - **Mô tả**: `overflow-hidden` trên `Card` là root cause thực sự — CSS `overflow:hidden` trên ancestor clip hoàn toàn scrollbar của descendant dù descendant có `overflow-x-auto`. Fix: đổi Card → `overflow-y-hidden` (chỉ clip dọc), CardContent → `overflow-hidden min-h-0`, div con → tách `overflow-x-auto overflow-y-auto` rõ ràng thay vì `overflow-auto` gộp.
 - **Tệp thay đổi**:
