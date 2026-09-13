@@ -1,3 +1,9 @@
+### [2026-09-13 08:17] fix(style): toolbar và bảng Documents.jsx bị cắt khi zoom to 125%
+- **Mô tả**: CardHeader dùng `justify-between` nhưng thiếu `overflow-x-auto` và `flex-shrink-0` trên các nhóm button — khi zoom to, 2 nhóm button bị đẩy đè lên nhau và bị clip. Thêm `overflow-x-auto flex-shrink-0` vào CardHeader, `flex-shrink-0` vào 2 div button group để toolbar scroll ngang thay vì bị lấp. Thêm `min-w-0` vào Card để đảm bảo flex không overflow ra ngoài.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(style): toolbar và bảng Documents bị cắt khi zoom to 125%"`
+
 ### [2026-09-13 08:09] fix(style): panel trái UploadPage bị clip "Chờ rà soát" — fix lần 2
 - **Mô tả**: Fix lần 1 thêm `overflow-y-auto min-h-0` vào panel trái khiến nó bị co theo chiều cao cha và scroll bên trong — không hiệu quả trên mobile. Fix đúng: bỏ 2 class đó để panel tự mở rộng tự nhiên theo nội dung; div cha `overflow-y-auto` đã lo scroll toàn trang.
 - **Tệp thay đổi**:

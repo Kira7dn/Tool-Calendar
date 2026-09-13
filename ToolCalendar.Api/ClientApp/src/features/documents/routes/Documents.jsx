@@ -101,9 +101,9 @@ export function Documents({ onTabChange, filters }) {
         </p>
       </div>
 
-      <Card className="glass-card shadow-sm flex-1 flex flex-col overflow-hidden gap-2 px-2">
-        <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0 border-b border-border bg-muted/20">
-          <div className="flex items-center gap-4">
+      <Card className="glass-card shadow-sm flex-1 flex flex-col overflow-hidden gap-2 px-2 min-w-0">
+        <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0 border-b border-border bg-muted/20 overflow-x-auto flex-shrink-0">
+          <div className="flex items-center gap-4 flex-shrink-0">
             <Button
               size="sm"
               className="rounded-full shadow-lg shadow-primary/20"
@@ -149,7 +149,7 @@ export function Documents({ onTabChange, filters }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0">
             <div className="relative w-64 max-md:hidden">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
