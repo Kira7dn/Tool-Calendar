@@ -25,7 +25,11 @@ export function DataTable({
   return (
     <div className="flex-1 flex flex-col min-h-0 w-full relative">
       <div className="flex-1 overflow-auto min-h-0 custom-scrollbar">
-        <Table className="w-full table-fixed" style={{ minWidth }}>
+        <Table
+          className="w-full table-fixed"
+          wrapperClassName="overflow-visible"
+          style={{ minWidth }}
+        >
           <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
             <TableRow className="hover:bg-transparent border-none">
               {columns.map((col, index) => (

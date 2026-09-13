@@ -1,3 +1,10 @@
+### [2026-09-13 09:44] fix(ui): sửa lỗi thanh cuộn ngang bị ẩn ở dưới cùng bảng
+- **Mô tả**: Component `<Table>` của shadcn/ui mặc định có bọc một thẻ div `overflow-x-auto`, khiến nó vô tình chiếm quyền xử lý thanh cuộn ngang của `<DataTable>`. Hậu quả là thanh cuộn ngang bị đẩy xuống tận đáy của dòng dữ liệu cuối cùng, người dùng phải cuộn dọc xuống hết cỡ mới thấy được thanh cuộn ngang. Đã sửa bằng cách thêm prop `wrapperClassName` cho `<Table>` để cho phép override class, và truyền `overflow-visible` từ `<DataTable>`, trả lại quyền hiển thị thanh cuộn ngang cho container bên ngoài cùng để nó luôn luôn hiển thị trên màn hình.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/ui/table.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/components/ui/data-table.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): sửa lỗi thanh cuộn ngang bị ẩn ở dưới cùng bảng"`
+
 ### [2026-09-13 09:37] feat(ui): tạo component DataTable dùng chung và áp dụng cho bảng Documents
 - **Mô tả**: Đóng gói cấu trúc bảng HTML phức tạp cùng thanh phân trang vào một reusable component `<DataTable />` tại `src/components/ui/data-table.jsx`. Component này xử lý sẵn layout flexbox cho scrollbar, render header/body từ prop `columns` và tích hợp phân trang. Đã refactor `Documents.jsx` sử dụng `DataTable`, giảm đi hàng trăm dòng code lặp lại, chuẩn hóa giao diện và hành vi scroll.
 - **Tệp thay đổi**:
