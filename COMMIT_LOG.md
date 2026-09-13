@@ -1,3 +1,9 @@
+### [2026-09-13 10:47] fix(style): chống đè nút Đăng ký lại ở màn hình Cấu hình chung khi zoom
+- **Mô tả**: Khi người dùng zoom to màn hình (ví dụ 125%), nút "Đăng ký lại (Nếu lỗi)" hoặc "Bật thông báo" trong phần Thông báo trình duyệt bị cắt xén một phần do thẻ div bọc ngoài là flex nhưng không có thuộc tính `flex-wrap`. Đã sửa bằng cách thêm `flex-wrap` để tự động đẩy nút xuống dòng khi khung dọc bị thu hẹp.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/settings/GeneralTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(style): chống đè nút Đăng ký lại ở màn Cấu hình chung"`
+
 ### [2026-09-13 10:27] fix(style): sửa lỗi mất nội dung Trạng thái đợt tải ở trang Tải lên khi zoom to
 - **Mô tả**: Khi người dùng zoom màn hình lên 125%, các phần tử trong thanh bên (sidebar) của trang Tải văn bản mới (`UploadPage`) bị thu nhỏ theo chiều dọc và nội dung bên trong bị cắt mất (ví dụ chữ "Chờ rà soát"). Đã khắc phục bằng cách thêm thuộc tính `shrink-0` vào các thẻ div chứa vùng kéo thả, khối trạng thái tiến trình và khối Trạng thái đợt tải để chúng luôn giữ nguyên kích thước nội dung, kích hoạt thanh cuộn dọc tổng thể của khung thay vì bị co lại.
 - **Tệp thay đổi**:

@@ -131,7 +131,7 @@ export function GeneralTab({
               <Bell className="size-3.5 text-red-500" />
               Thông báo trình duyệt
             </Label>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2 px-5 py-3 h-11 rounded-2xl border border-red-100 bg-red-50/50 w-fit">
                 <span
                   className={cn(
