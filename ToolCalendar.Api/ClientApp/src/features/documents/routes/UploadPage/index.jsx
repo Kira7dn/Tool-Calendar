@@ -186,7 +186,7 @@ export function UploadPage() {
           />
 
           {isProcessing && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -209,7 +209,7 @@ export function UploadPage() {
             </div>
           )}
 
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
             <div className="px-4 py-3 border-b border-slate-100">
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                 Trạng thái đợt tải

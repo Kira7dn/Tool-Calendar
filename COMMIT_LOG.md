@@ -1,3 +1,10 @@
+### [2026-09-13 10:27] fix(style): sửa lỗi mất nội dung Trạng thái đợt tải ở trang Tải lên khi zoom to
+- **Mô tả**: Khi người dùng zoom màn hình lên 125%, các phần tử trong thanh bên (sidebar) của trang Tải văn bản mới (`UploadPage`) bị thu nhỏ theo chiều dọc và nội dung bên trong bị cắt mất (ví dụ chữ "Chờ rà soát"). Đã khắc phục bằng cách thêm thuộc tính `shrink-0` vào các thẻ div chứa vùng kéo thả, khối trạng thái tiến trình và khối Trạng thái đợt tải để chúng luôn giữ nguyên kích thước nội dung, kích hoạt thanh cuộn dọc tổng thể của khung thay vì bị co lại.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/components/UploadDropzone.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(style): chống co cụm làm mất nội dung sidebar trang Tải lên"`
+
 ### [2026-09-13 10:18] fix(style): sửa lỗi đè giao diện toolbar trang Tìm kiếm khi zoom to 125%
 - **Mô tả**: Khi người dùng zoom màn hình lên 125%, các bộ lọc Ngày tiếp nhận và Hạn xử lý trên dòng 2 của thanh công cụ tìm kiếm (`Search.jsx`) bị đẩy và đè lên nhau do thiếu thuộc tính `flex-wrap`. Đã sửa bằng cách thêm `flex-wrap` vào container của dòng 2 để các bộ lọc tự động rớt dòng khi không đủ không gian hiển thị ngang.
 - **Tệp thay đổi**:

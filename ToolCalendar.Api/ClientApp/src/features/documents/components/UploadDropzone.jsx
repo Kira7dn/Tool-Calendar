@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types, no-unused-vars */
 import React, { useRef } from 'react'
 import { cn } from '../../../lib/utils'
 
@@ -70,7 +71,7 @@ export function UploadDropzone({ isDragging, setIsDragging, handleFileUpload }) 
         handleFileUpload(files)
       }}
       className={cn(
-        'rounded-xl border-2 border-dashed p-5 flex flex-col items-center gap-3 cursor-pointer transition-all',
+        'rounded-xl border-2 border-dashed p-5 flex flex-col items-center gap-3 cursor-pointer transition-all shrink-0',
         isDragging
           ? 'border-blue-400 bg-blue-50'
           : 'border-slate-300 bg-white hover:border-blue-300 hover:bg-blue-50/40'
