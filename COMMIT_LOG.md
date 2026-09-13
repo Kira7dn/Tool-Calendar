@@ -1,3 +1,10 @@
+### [2026-09-13 09:18] fix(style): khóa cứng chiều cao trang Documents để scrollbar ngang luôn hiển thị
+- **Mô tả**: Bảng Documents bị `.main-content` (có `overflow-y-auto`) làm giãn chiều cao vô hạn, dẫn đến việc scrollbar ngang bị đẩy xuống tận đáy của danh sách dòng thay vì cố định trên màn hình (viewport). Giải pháp: Tạo class CSS `.strict-viewport-height` tính toán chính xác `100dvh - header - padding`, ép trang Documents không được cao hơn viewport. Nhờ đó, scrollbar ngang sẽ cố định ở đáy viewport (như Google Sheets) và bảng sẽ scroll nội bộ một cách chuẩn xác.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/styles/globals.css` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(style): khóa cứng chiều cao trang Documents để scrollbar ngang luôn cố định trên viewport"`
+
 ### [2026-09-13 09:08] fix(style): sửa lỗi tràn màn hình làm ẩn scrollbar ngang dưới cùng
 - **Mô tả**: Bảng Documents bị tràn xuống dưới màn hình khiến thanh scrollbar ngang và phân trang (pagination) bị cắt ngang/ẩn đi. Nguyên nhân là dùng `h-full` + `space-y` khiến chiều cao vượt quá 100% content box của parent. Giải pháp: thay `h-full` bằng `flex-1 min-h-0` trên thẻ root của Documents để tuân thủ tuyệt đối giới hạn chiều cao của AppShell.
 - **Tệp thay đổi**:

@@ -242,6 +242,13 @@
     .main-content {
       padding-bottom: 4rem; /* 64px = h-16 bottom nav height */
     }
+    .strict-viewport-height {
+      height: calc(100dvh - var(--header-height) - (var(--space-page) * 2) - 4rem) !important;
+    }
+  }
+
+  .strict-viewport-height {
+    height: calc(100dvh - var(--header-height) - (var(--space-page) * 2));
   }
 
   button,
