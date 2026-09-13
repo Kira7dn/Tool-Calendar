@@ -1,3 +1,9 @@
+### [2026-09-13 13:05] fix(ocr): ngăn chặn hệ thống khóa cứng file ở trạng thái "Lỗi OCR" khi quá tải
+- **Mô tả**: Khi người dùng upload văn bản scan (ảnh), hệ thống AI phải dùng PyTorch OCR (Docling) khá nặng. Luồng này có thể mất hơn 10 phút hoặc gây quá tải bộ nhớ (OOM), dẫn đến Exception trong C#. Trước đây, mọi Exception ở luồng này sẽ đánh dấu văn bản là "Lỗi OCR" và khóa cứng không cho người dùng sửa tiếp. Đã khắc phục bằng cách đưa đoạn gọi Docling vào try-catch nội bộ, nếu lỗi (timeout/OOM) thì ghi log cảnh báo và tiếp tục với nội dung thô (nếu có) hoặc rỗng, giữ trạng thái "Chưa xử lý" để người dùng vẫn có thể thao tác nhập số/ngày thủ công trên giao diện thay vì bị kẹt vĩnh viễn ở trạng thái Lỗi.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): bắt lỗi timeout/OOM để tránh khóa chết file ở trạng thái Lỗi OCR"`
+
 ### [2026-09-13 11:03] fix(style): chống đè/cắt xén giao diện trang Cấu hình khi zoom lớn (150%, 175%)
 - **Mô tả**: Khi người dùng zoom màn hình lên 150% - 175%, trang Cấu hình (`Settings.jsx`) gặp một số lỗi giao diện do không gian dọc và ngang bị thu hẹp: 1) Nút "Gửi thông báo thử nghiệm" bị cắt xén, 2) Khối "Phiên bản hệ thống" ở thanh bên bị cắt ngang bên dưới do co rút theo chiều dọc, 3) Ô nhập "Ngưỡng tương tự AI" bị cắt dọc phần bên trái do phần mô tả kế bên chèn ép. Đã sửa bằng cách thêm `shrink-0` cho khối Phiên bản hệ thống, thêm `flex-wrap` cho các nút Kích hoạt/Thử nghiệm, và bố trí lại `flex-wrap` kèm `min-w-[120px]` cho phần nội dung mô tả của Ngưỡng AI (và Thời gian quét).
 - **Tệp thay đổi**:

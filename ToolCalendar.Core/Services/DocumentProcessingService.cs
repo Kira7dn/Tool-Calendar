@@ -39,7 +39,7 @@ namespace ToolCalendar.Services
         public int PendingCount => _pendingCount;
 
         public DocumentProcessingService(
-            IServiceProvider serviceProvider, 
+            IServiceProvider serviceProvider,
             ILogger<DocumentProcessingService> logger,
             IConfiguration configuration)
         {
@@ -230,7 +230,8 @@ namespace ToolCalendar.Services
             _logger.LogInformation("[RabbitMQ Worker] Đang gọi Python AI Service để Extract DocumentId {Id} — '{File}'", docId, Path.GetFileName(absolutePath));
 
             var originalStatus = doc.Status;
-            if (originalStatus != "Đã xử lý") {
+            if (originalStatus != "Đã xử lý")
+            {
                 doc.Status = "Đang OCR";
                 await docRepo.UpdateAsync(doc);
             }
@@ -241,7 +242,7 @@ namespace ToolCalendar.Services
                 // Lấy cấu hình từ khóa thời hạn
                 var dlKeywordsStr = await settingRepo.GetAppSettingAsync("Document_DeadlineKeywords", "hạn, đến ngày, trước ngày, trình, xong, xong trước, hoàn thành");
                 var dlExcludeStr = await settingRepo.GetAppSettingAsync("Document_DeadlineExcludeKeywords", "vào khoảng, phát hiện, sinh năm, xảy ra, tại bãi, vào ngày, ngày xảy, được phát hiện, lúc khoảng");
-                
+
                 var deadlineKeywords = dlKeywordsStr.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
                 var excludeKeywords = dlExcludeStr.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToList();
 
@@ -262,7 +263,7 @@ namespace ToolCalendar.Services
                         if (!string.IsNullOrWhiteSpace(metadata.CoQuanChuQuan)) doc.CoQuanChuQuan = metadata.CoQuanChuQuan;
                         if (!string.IsNullOrWhiteSpace(metadata.Priority)) doc.Priority = metadata.Priority;
                     }
-                    
+
                     // LƯU DB VÀ NOTIFY UI NGAY LẬP TỨC!
                     if (originalStatus == "Đang OCR" || originalStatus == "Chờ lưu") doc.Status = "Chờ lưu";
                     else if (originalStatus != "Đã xử lý") doc.Status = originalStatus;
@@ -271,11 +272,20 @@ namespace ToolCalendar.Services
                 }
 
                 // 2. LUỒNG NẶNG (2-3 phút): Gọi Docling để lấy toàn bộ Cấu trúc (Bảng biểu, Heading) cho RAG
-                var updatedDoc = await extractor.ExtractFromFileAsync(absolutePath);
-                
-                // Cập nhật text từ Docling vào DB
-                doc.FullText = updatedDoc.FullText;
-                
+                try
+                {
+                    var updatedDoc = await extractor.ExtractFromFileAsync(absolutePath);
+
+                    // Cập nhật text từ Docling vào DB
+                    doc.FullText = updatedDoc.FullText;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "[RabbitMQ Worker] Lỗi khi gọi OCR luồng nặng cho DocumentId {Id}. Bỏ qua để hệ thống vẫn đi tiếp.", docId);
+                    // Dù lỗi nhưng vẫn không throw ra ngoài để tránh rơi vào trạng thái "Lỗi OCR" đỏ chót.
+                    doc.FullText = doc.FullText ?? string.Empty;
+                }
+
                 // Nếu luồng nhanh thất bại (vì là ảnh scan), gọi lại Metadata Extraction sau khi OCR xong
                 if (string.IsNullOrWhiteSpace(fastText) && !string.IsNullOrWhiteSpace(doc.FullText))
                 {
@@ -320,7 +330,7 @@ namespace ToolCalendar.Services
                         try
                         {
                             var summaryResult = await aiService.DocSummaryAsync(
-                                doc.FullText, 
+                                doc.FullText,
                                 doc.TenCongVan ?? string.Empty
                             );
                             if (summaryResult != null && !string.IsNullOrWhiteSpace(summaryResult.Summary))
