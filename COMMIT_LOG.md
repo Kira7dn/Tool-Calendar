@@ -1,3 +1,13 @@
+### [2026-09-13 09:58] refactor(ui): áp dụng DataTable cho toàn bộ các bảng trong hệ thống
+- **Mô tả**: Nâng cấp các bảng HTML thuần túy tại trang Người dùng, Tìm kiếm, Việc của tôi và Lịch sử hệ thống sang sử dụng component `<DataTable />` nhằm đồng bộ giao diện, xử lý phân trang và giữ thanh cuộn ngang cố định trên viewport. Bổ sung thêm tính năng support `error` và `errorContent` vào `<DataTable />` để render lỗi tùy chỉnh cho màn hình tìm kiếm.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/ui/data-table.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/pages/Users.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Search.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/MyTasks.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/components/settings/AuditTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(ui): áp dụng DataTable đồng bộ cho các bảng Users, Search, MyTasks, Audit"`
+
 ### [2026-09-13 09:44] fix(ui): sửa lỗi thanh cuộn ngang bị ẩn ở dưới cùng bảng
 - **Mô tả**: Component `<Table>` của shadcn/ui mặc định có bọc một thẻ div `overflow-x-auto`, khiến nó vô tình chiếm quyền xử lý thanh cuộn ngang của `<DataTable>`. Hậu quả là thanh cuộn ngang bị đẩy xuống tận đáy của dòng dữ liệu cuối cùng, người dùng phải cuộn dọc xuống hết cỡ mới thấy được thanh cuộn ngang. Đã sửa bằng cách thêm prop `wrapperClassName` cho `<Table>` để cho phép override class, và truyền `overflow-visible` từ `<DataTable>`, trả lại quyền hiển thị thanh cuộn ngang cho container bên ngoài cùng để nó luôn luôn hiển thị trên màn hình.
 - **Tệp thay đổi**:

@@ -14,14 +14,7 @@ import { toast } from 'sonner'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { DataTable } from '@/components/ui/data-table'
 import { cn } from '@/lib/utils'
 
 function SectionCard({ icon, title, subtitle, children }) {
@@ -76,6 +69,42 @@ export function AuditTab() {
   const pageSize = 8
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
+
+  const columns = [
+    {
+      header: 'Thời gian',
+      width: 'w-48',
+      className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest',
+      cell: (row) => (
+        <span className="text-[11px] font-bold text-slate-400 font-mono">
+          {new Date(row.timestamp).toLocaleString('vi-VN')}
+        </span>
+      ),
+    },
+    {
+      header: 'Người dùng',
+      width: 'w-48',
+      className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest',
+      cell: (row) => (
+        <div className="flex items-center gap-2.5">
+          <Avatar name={row.userFullName} role={row.role} />
+          <span className="text-[11px] font-bold text-slate-700 tracking-tight">
+            {row.userFullName || 'Hệ thống'}
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: 'Hành động',
+      className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest',
+      cellClassName: 'whitespace-normal break-words min-w-[200px]',
+      cell: (row) => (
+        <span className="text-xs font-medium text-slate-500 group-hover:text-slate-900 transition-colors leading-relaxed">
+          {row.action}
+        </span>
+      ),
+    },
+  ]
 
   useEffect(() => {
     fetchAuditLogs(currentPage)
@@ -157,101 +186,19 @@ export function AuditTab() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-        <Table className="min-w-[650px]">
-          <TableHeader className="bg-slate-50/80">
-            <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-5 py-4 w-48">
-                Thời gian
-              </TableHead>
-              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-5 py-4 w-48">
-                Người dùng
-              </TableHead>
-              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-5 py-4">
-                Hành động
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody className="divide-y divide-slate-50">
-            {isLoadingLogs ? (
-              [...Array(6)].map((_, i) => (
-                <TableRow key={i} className="hover:bg-transparent">
-                  <TableCell className="px-5 py-4">
-                    <div className="h-3 w-32 bg-slate-100 rounded animate-pulse" />
-                  </TableCell>
-                  <TableCell className="px-5 py-4">
-                    <div className="h-3 w-24 bg-slate-100 rounded animate-pulse" />
-                  </TableCell>
-                  <TableCell className="px-5 py-4">
-                    <div className="h-3 w-full bg-slate-100 rounded animate-pulse" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : auditLogs.length > 0 ? (
-              auditLogs.map((log, idx) => (
-                <TableRow
-                  key={idx}
-                  className="hover:bg-slate-50/50 transition-colors group border-slate-50"
-                >
-                  <TableCell className="px-5 py-4">
-                    <span className="text-[11px] font-bold text-slate-400 font-mono">
-                      {new Date(log.timestamp).toLocaleString('vi-VN')}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-5 py-4">
-                    <div className="flex items-center gap-2.5">
-                      <Avatar name={log.userFullName} role={log.role} />
-                      <span className="text-[11px] font-bold text-slate-700 tracking-tight">
-                        {log.userFullName || 'Hệ thống'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-5 py-4 whitespace-normal break-words min-w-[200px]">
-                    <span className="text-xs font-medium text-slate-500 group-hover:text-slate-900 transition-colors leading-relaxed">
-                      {log.action}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={3} className="py-20 text-center">
-                  <div className="flex flex-col items-center gap-2 opacity-20">
-                    <History size={40} />
-                    <p className="text-[11px] font-black uppercase tracking-widest">
-                      Chưa có hoạt động nào
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
-        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
-          Trang {currentPage} / {totalPages || 1}
-        </p>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1 || isLoadingLogs}
-            className="rounded-xl h-9 px-4 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-30 transition-all shadow-sm"
-          >
-            <ChevronLeft size={14} className="mr-1.5" /> Trước
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage >= totalPages || isLoadingLogs}
-            className="rounded-xl h-9 px-4 text-[10px] font-black uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 disabled:opacity-30 transition-all shadow-xl shadow-red-100"
-          >
-            Sau <ChevronRight size={14} className="ml-1.5" />
-          </Button>
-        </div>
+      <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm flex-1 flex flex-col min-h-0 relative">
+        <DataTable
+          columns={columns}
+          data={auditLogs}
+          isLoading={isLoadingLogs}
+          emptyMessage="Chưa có hoạt động nào"
+          minWidth="650px"
+          pagination={{
+            page: currentPage,
+            totalPages,
+            onPageChange: setCurrentPage,
+          }}
+        />
       </div>
 
       <ConfirmationModal

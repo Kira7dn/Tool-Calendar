@@ -18,6 +18,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { ErrorState } from '@/components/ui/error-state'
+import { DataTable } from '@/components/ui/data-table'
+import { DOCUMENT_STATUS } from '@/constants/documentStatus'
+import { TASK_FILTER } from '../../../constants/document'
 import {
   Table,
   TableBody,
@@ -27,7 +31,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { DOCUMENT_STATUS, TASK_FILTER } from '../../../constants/document'
 import { useMyTasks } from '../../../features/tasks/hooks/useMyTasks'
 import { EvidenceModal } from '../../../features/tasks/components/EvidenceModal'
 
@@ -86,6 +89,60 @@ export function MyTasks({ onTabChange }) {
   } = useMyTasks()
 
   const [evidenceDocId, setEvidenceDocId] = useState(null)
+
+  const columns = [
+    {
+      header: 'STT',
+      width: 'w-12',
+      align: 'center',
+      className: 'font-bold text-foreground',
+      cellClassName: 'text-muted-foreground font-medium text-[11px]',
+      cell: (row, index) => (currentPage - 1) * PAGE_SIZE + index + 1,
+    },
+    {
+      header: 'Số hiệu',
+      width: 'w-28',
+      className: 'font-bold text-foreground',
+      cellClassName: 'font-bold text-primary text-xs whitespace-nowrap',
+      cell: (row) => row.soVanBan,
+    },
+    {
+      header: 'Trích yếu nội dung',
+      className: 'font-bold text-foreground',
+      cellClassName: 'truncate font-medium text-muted-foreground text-xs',
+      cell: (row) => (
+        <div title={row.trichYeu} className="truncate">
+          {row.trichYeu}
+        </div>
+      ),
+    },
+    {
+      header: 'Thời hạn',
+      width: 'w-28',
+      className: 'font-bold text-foreground',
+      cellClassName: 'text-muted-foreground font-bold text-[10px] whitespace-nowrap uppercase',
+      cell: (row) => (
+        <div className="flex items-center gap-1.5">
+          <Calendar className="size-3 text-muted-foreground/50" />
+          {formatDate(row.hanXuLy)}
+        </div>
+      ),
+    },
+    {
+      header: 'Trạng thái',
+      width: 'w-28',
+      align: 'center',
+      className: 'font-bold text-foreground',
+      cell: (row) => getStatusBadge(row),
+    },
+    {
+      header: 'Thao tác',
+      width: 'w-36',
+      align: 'center',
+      className: 'font-bold text-foreground',
+      cell: (row) => <ActionButtons task={row} />,
+    },
+  ]
 
   const formatDate = (dateStr) => (dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : '-')
 
@@ -229,94 +286,15 @@ export function MyTasks({ onTabChange }) {
         <CardContent className="flex-1 overflow-y-hidden flex flex-col p-0">
           <div className="relative flex-1 overflow-auto pt-px">
             {/* Desktop Table */}
-            <Table className="table-fixed w-full hidden md:table">
-              <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="font-bold text-center w-12 text-foreground">STT</TableHead>
-                  <TableHead className="font-bold text-foreground w-28">Số hiệu</TableHead>
-                  <TableHead className="font-bold text-foreground">Trích yếu nội dung</TableHead>
-                  <TableHead className="font-bold text-foreground w-28">Thời hạn</TableHead>
-                  <TableHead className="font-bold text-center text-foreground w-28">
-                    Trạng thái
-                  </TableHead>
-                  <TableHead className="font-bold text-center text-foreground w-36">
-                    Thao tác
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="relative">
-                {isLoading && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="size-10 text-primary animate-spin" strokeWidth={2.5} />
-                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">
-                        Đang tải dữ liệu...
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {isLoading ? (
-                  Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                    <TableRow key={i} className="h-[48px]">
-                      <TableCell className="text-center w-12">
-                        <Skeleton className="h-4 w-6 mx-auto" />
-                      </TableCell>
-                      <TableCell className="w-28">
-                        <Skeleton className="h-4 w-24" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-full" />
-                      </TableCell>
-                      <TableCell className="w-28">
-                        <Skeleton className="h-4 w-20" />
-                      </TableCell>
-                      <TableCell className="text-center w-28">
-                        <Skeleton className="h-6 w-20 rounded-full mx-auto" />
-                      </TableCell>
-                      <TableCell className="text-center w-36">
-                        <Skeleton className="h-8 w-32 rounded-lg mx-auto" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : tasks.length > 0 ? (
-                  tasks.map((task, index) => (
-                    <TableRow key={task.id} className="group transition-colors h-[48px]">
-                      <TableCell className="text-center text-muted-foreground font-medium text-[11px] w-12">
-                        {(currentPage - 1) * PAGE_SIZE + index + 1}
-                      </TableCell>
-                      <TableCell className="font-bold text-primary text-xs whitespace-nowrap w-28">
-                        {task.soVanBan}
-                      </TableCell>
-                      <TableCell
-                        className="truncate font-medium text-muted-foreground text-xs"
-                        title={task.trichYeu}
-                      >
-                        {task.trichYeu}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground font-bold text-[10px] whitespace-nowrap uppercase w-28">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="size-3 text-muted-foreground/50" />
-                          {formatDate(task.hanXuLy)}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center w-28">{getStatusBadge(task)}</TableCell>
-                      <TableCell className="text-center w-36">
-                        <ActionButtons task={task} />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={6} className="h-[240px] text-center p-0 align-middle">
-                      <div className="flex flex-col items-center justify-center gap-3 opacity-20">
-                        <CheckCircle2 className="size-16" />
-                        <p className="text-sm font-bold">Không có nhiệm vụ nào cần xử lý.</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <div className="hidden md:flex flex-col min-h-0 flex-1 relative">
+              <DataTable
+                columns={columns}
+                data={tasks}
+                isLoading={isLoading}
+                emptyMessage="Không có nhiệm vụ nào cần xử lý."
+                minWidth="1000px"
+              />
+            </div>
 
             {/* Mobile Card List */}
             <div className="md:hidden flex flex-col divide-y divide-border">
@@ -366,7 +344,7 @@ export function MyTasks({ onTabChange }) {
             </div>
           </div>
 
-          <div className="p-4 border-t border-border flex items-center justify-between bg-card/50">
+          <div className="p-4 border-t border-border flex items-center justify-between bg-card/50 z-10">
             <p className="text-xs text-muted-foreground font-medium">
               Trang <span className="text-foreground">{currentPage}</span> /{' '}
               <span className="text-foreground">{totalPages || 1}</span>

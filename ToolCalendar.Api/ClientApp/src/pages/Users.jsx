@@ -12,20 +12,12 @@ import {
   ChevronRight,
   Loader2,
 } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { DataTable } from '@/components/ui/data-table'
 import { cn } from '@/lib/utils'
 import { ROLES } from '@/constants/roles'
 import { useUsers } from '@/features/users/hooks/useUsers'
@@ -43,6 +35,7 @@ export function Users() {
     pageSize,
     setPageSize,
     totalPages,
+    totalCount = users.length,
     deleteConfirm,
     setDeleteConfirm,
     handleDeleteUser,
@@ -57,6 +50,97 @@ export function Users() {
     setEditingUser(user)
     setIsModalOpen(true)
   }
+
+  const columns = [
+    {
+      header: 'STT',
+      width: 'w-12',
+      align: 'center',
+      className: 'font-black text-[10px] uppercase tracking-widest',
+      cellClassName: 'text-muted-foreground font-bold text-xs',
+      cell: (row, index) => (currentPage - 1) * pageSize + index + 1,
+    },
+    {
+      header: 'Người dùng',
+      className: 'font-black text-[10px] uppercase tracking-widest',
+      cell: (row) => (
+        <div className="flex items-center gap-4">
+          <div className="size-10 rounded-2xl bg-primary/5 flex items-center justify-center text-primary font-black group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+            {row.fullName?.charAt(0) || 'U'}
+          </div>
+          <div className="truncate">
+            <div className="font-black text-foreground text-sm truncate">{row.fullName}</div>
+            <div className="text-xs text-muted-foreground font-bold">@{row.username}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Liên hệ',
+      width: 'w-44',
+      className: 'font-black text-[10px] uppercase tracking-widest',
+      cellClassName: 'truncate',
+      cell: (row) => (
+        <div className="flex flex-col gap-1 truncate">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground truncate">
+            <Mail className="size-3 text-muted-foreground/30 shrink-0" />{' '}
+            <span className="truncate">{row.email || '-'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground truncate">
+            <Phone className="size-3 text-muted-foreground/30 shrink-0" />{' '}
+            <span className="truncate">{row.phoneNumber || '-'}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Phòng ban',
+      width: 'w-36',
+      className: 'font-black text-[10px] uppercase tracking-widest',
+      cellClassName: 'truncate',
+      cell: (row) => (
+        <Badge
+          variant="default"
+          className="bg-muted/50 text-muted-foreground font-bold text-[10px] truncate max-w-full"
+        >
+          {row.departmentName || 'Chưa phân phòng'}
+        </Badge>
+      ),
+    },
+    {
+      header: 'Vai trò',
+      width: 'w-28',
+      className: 'font-black text-[10px] uppercase tracking-widest',
+      cell: (row) => getRoleBadge(row.role),
+    },
+    {
+      header: 'Thao tác',
+      width: 'w-24',
+      align: 'right',
+      className: 'font-black text-[10px] uppercase tracking-widest',
+      cell: (row) => (
+        <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 rounded-lg text-info hover:bg-info/10"
+            onClick={() => handleOpenModal(row)}
+          >
+            <Edit className="size-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 rounded-lg text-destructive hover:bg-destructive/10"
+            disabled={row.username === 'admin'}
+            onClick={() => handleDeleteUser(row)}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
 
   const getRoleBadge = (role) => {
     let color = 'bg-muted/50 text-muted-foreground'
@@ -112,194 +196,23 @@ export function Users() {
           </div>
         </CardHeader>
 
-        <CardContent className="p-0 flex-1 flex flex-col min-h-0">
-          <div className="relative flex-1 overflow-auto pt-px">
-            <Table className="table-fixed w-full">
-              <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground text-center w-12">
-                    STT
-                  </TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground">
-                    Người dùng
-                  </TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-44">
-                    Liên hệ
-                  </TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-36">
-                    Phòng ban
-                  </TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground w-28">
-                    Vai trò
-                  </TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-foreground text-right w-24">
-                    Thao tác
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="relative">
-                {isLoading && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/40 backdrop-blur-[1px] transition-all duration-300">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="relative">
-                        <Loader2 className="size-10 text-primary animate-spin" strokeWidth={2.5} />
-                        <div className="absolute inset-0 size-10 border-4 border-primary/10 rounded-full" />
-                      </div>
-                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">
-                        Đang tải người dùng...
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i} className="h-[64px]">
-                      <TableCell className="text-center">
-                        <Skeleton className="h-4 w-4 mx-auto" />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Skeleton className="size-10 rounded-full" />
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-32" />
-                            <Skeleton className="h-3 w-24" />
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <Skeleton className="h-4 w-40" />
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <Skeleton className="h-4 w-32" />
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <Skeleton className="h-6 w-24 rounded-full" />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Skeleton className="h-8 w-24 rounded-xl ml-auto" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : users.length > 0 ? (
-                  users.map((user, index) => (
-                    <TableRow key={user.id} className="group transition-colors h-[64px]">
-                      <TableCell className="text-center text-muted-foreground font-bold text-xs">
-                        {(currentPage - 1) * pageSize + index + 1}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-4">
-                          <div className="size-10 rounded-2xl bg-primary/5 flex items-center justify-center text-primary font-black group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                            {user.fullName?.charAt(0) || 'U'}
-                          </div>
-                          <div className="truncate">
-                            <div className="font-black text-foreground text-sm truncate">
-                              {user.fullName}
-                            </div>
-                            <div className="text-xs text-muted-foreground font-bold">
-                              @{user.username}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="truncate">
-                        <div className="flex flex-col gap-1 truncate">
-                          <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground truncate">
-                            <Mail className="size-3 text-muted-foreground/30 shrink-0" />{' '}
-                            <span className="truncate">{user.email || '-'}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground truncate">
-                            <Phone className="size-3 text-muted-foreground/30 shrink-0" />{' '}
-                            <span className="truncate">{user.phoneNumber || '-'}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="truncate">
-                        <Badge
-                          variant="default"
-                          className="bg-muted/50 text-muted-foreground font-bold text-[10px] truncate max-w-full"
-                        >
-                          {user.departmentName || 'Chưa phân phòng'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{getRoleBadge(user.role)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 rounded-lg text-info hover:bg-info/10"
-                            onClick={() => handleOpenModal(user)}
-                          >
-                            <Edit className="size-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 rounded-lg text-destructive hover:bg-destructive/10"
-                            disabled={user.username === 'admin'}
-                            onClick={() => handleDeleteUser(user)}
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={6} className="h-[320px] text-center p-0 align-middle">
-                      <div className="flex flex-col items-center justify-center opacity-20">
-                        <UserPlus className="size-16 mb-4" />
-                        <p className="text-xl font-black">Không có dữ liệu người dùng</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="p-4 border-t border-border flex items-center justify-between bg-card/50">
-            <div className="flex items-center gap-4">
-              <p className="text-xs text-muted-foreground font-medium">
-                Trang <span className="text-foreground">{currentPage}</span> /{' '}
-                <span className="text-foreground">{totalPages || 1}</span>
-              </p>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground font-medium">Hiển thị:</p>
-                <select
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="text-xs bg-muted border border-border rounded px-2 py-1 focus:outline-none"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage === 1 || isLoading}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                className="h-8 text-xs font-semibold px-3"
-              >
-                <ChevronLeft className="size-4 mr-1" /> Trước
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage === totalPages || totalPages === 0 || isLoading}
-                onClick={() => setCurrentPage((p) => p + 1)}
-                className="h-8 text-xs font-semibold px-3"
-              >
-                Tiếp <ChevronRight className="size-4 ml-1" />
-              </Button>
-            </div>
-          </div>
+        <CardContent className="p-0 flex-1 flex flex-col min-h-0 relative">
+          <DataTable
+            columns={columns}
+            data={users}
+            isLoading={isLoading}
+            emptyMessage="Không có dữ liệu người dùng"
+            minWidth="1000px"
+            pagination={{
+              page: currentPage,
+              totalPages,
+              totalCount,
+              pageSize,
+              onPageChange: setCurrentPage,
+              onPageSizeChange: setPageSize,
+              pageSizeOptions: [10, 20, 25, 50],
+            }}
+          />
         </CardContent>
       </Card>
 

@@ -12,6 +12,8 @@ import { Button } from './button'
  * @param {boolean} isLoading - Loading state
  * @param {string} emptyMessage - Message to display when data is empty
  * @param {string} minWidth - Minimum width of the table to trigger horizontal scroll (e.g., "1000px")
+ * @param {boolean|Error} error - Error state
+ * @param {React.ReactNode} errorContent - Custom error content to display
  * @param {Object} pagination - Pagination config { page, totalPages, totalCount, pageSize, onPageChange, onPageSizeChange, pageSizeOptions }
  */
 export function DataTable({
@@ -19,6 +21,8 @@ export function DataTable({
   data = [],
   isLoading = false,
   emptyMessage = 'Không có dữ liệu',
+  error = false,
+  errorContent = null,
   minWidth = '1000px',
   pagination,
 }) {
@@ -60,6 +64,19 @@ export function DataTable({
                     <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                     <p className="text-sm font-bold animate-pulse">Đang tải dữ liệu...</p>
                   </div>
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-[240px] text-center p-0 align-middle"
+                >
+                  {errorContent || (
+                    <div className="flex flex-col items-center justify-center gap-3 opacity-80 text-destructive">
+                      <p className="text-sm font-bold">Đã xảy ra lỗi khi tải dữ liệu.</p>
+                    </div>
+                  )}
                 </TableCell>
               </TableRow>
             ) : data && data.length > 0 ? (
