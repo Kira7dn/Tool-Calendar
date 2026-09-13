@@ -1,9 +1,10 @@
-### [2026-09-13 08:58] feat(style): thêm thanh scrollbar ngang phía trên bảng Documents (mirror scrollbar)
-- **Mô tả**: Khi người dùng cuộn lên trên cùng của bảng, họ không thấy thanh scrollbar dưới cùng để cuộn ngang. Thêm một thanh scrollbar giả (mirror scrollbar) dính (sticky) ở ngay phía trên bảng. Đồng bộ scroll hai chiều giữa thanh giả này và container chứa bảng (sử dụng 2 `useRef` và sự kiện `onScroll`). Thiết kế giống trải nghiệm của Google Sheets để người dùng luôn có thể cuộn ngang dù đang ở bất kỳ vị trí dọc nào.
+### [2026-09-13 09:02] refactor(style): xóa bỏ mirror scrollbar thừa trên bảng Documents
+- **Mô tả**: Dựa theo feedback của user, chỉ cần 1 thanh cuộn ngang nằm cố định ở đáy viewport như Google Sheets là đủ (đã đạt được ở commit trước đó). Đã xóa thanh cuộn giả (mirror scrollbar) ở trên header bảng để giao diện gọn gàng hơn, không thừa thãi.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
-- **Lệnh git commit**: `git commit -m "feat(style): thêm thanh scrollbar ngang phía trên bảng Documents (mirror scrollbar)"`
+- **Lệnh git commit**: `git commit -m "refactor(style): xóa bỏ mirror scrollbar ngang phía trên bảng Documents"`
 
+### [2026-09-13 08:58] feat(style): thêm thanh scrollbar ngang phía trên bảng Documents (mirror scrollbar)
 ### [2026-09-13 08:55] refactor(style): scrollbar ngang Documents luôn hiển thị dưới viewport
 - **Mô tả**: Người dùng muốn scrollbar ngang luôn hiển thị ở dưới viewport dù cuộn lên trên. Giải pháp: quay lại `h-full` + `flex-1` để Card fill viewport height, div bọc table dùng `flex-1 overflow-x-auto overflow-y-auto min-h-0` — scrollbar nằm đáy viewport, luôn nhìn thấy. Không có `overflow-hidden` ở bất kỳ ancestor nào. Pagination có `flex-shrink-0` để không bị squeeze.
 - **Tệp thay đổi**:
