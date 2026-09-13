@@ -1,3 +1,9 @@
+### [2026-09-13 08:55] refactor(style): scrollbar ngang Documents luôn hiển thị dưới viewport
+- **Mô tả**: Người dùng muốn scrollbar ngang luôn hiển thị ở dưới viewport dù cuộn lên trên. Giải pháp: quay lại `h-full` + `flex-1` để Card fill viewport height, div bọc table dùng `flex-1 overflow-x-auto overflow-y-auto min-h-0` — scrollbar nằm đáy viewport, luôn nhìn thấy. Không có `overflow-hidden` ở bất kỳ ancestor nào. Pagination có `flex-shrink-0` để không bị squeeze.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "refactor(style): scrollbar ngang Documents luôn hiển thị dưới viewport với flex-1 layout"`
+
 ### [2026-09-13 08:51] refactor(style): thiết kế lại layout Documents — để trang scroll tự nhiên
 - **Mô tả**: Root cause thực sự: container `flex-1 h-full` chiếm 100vh → scrollbar ngang nằm ngoài viewport không nhìn thấy được. Giải pháp: bỏ `h-full` + `flex-1` khỏi wrapper và Card → trang scroll tự nhiên qua AppShell → bảng mở rộng theo nội dung → scrollbar ngang xuất hiện ngay dưới hàng cuối trong tầm nhìn. CardHeader dùng `flex-wrap` thay `overflow-x-auto`. CardContent chỉ còn `overflow-x-auto` đơn giản trực tiếp bao Table.
 - **Tệp thay đổi**:
