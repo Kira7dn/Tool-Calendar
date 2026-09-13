@@ -187,7 +187,7 @@ export function Settings() {
           ))}
         </nav>
 
-        <div className="hidden md:block p-4 m-4 rounded-2xl bg-gradient-to-br from-red-50 to-white border border-red-100 shadow-sm">
+        <div className="hidden md:block p-4 m-4 rounded-2xl bg-gradient-to-br from-red-50 to-white border border-red-100 shadow-sm shrink-0">
           <p className="text-[11px] font-black text-red-700 uppercase tracking-wider mb-1">
             Phiên bản hệ thống
           </p>

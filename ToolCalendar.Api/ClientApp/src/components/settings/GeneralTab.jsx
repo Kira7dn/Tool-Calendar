@@ -108,7 +108,7 @@ export function GeneralTab({
               <Clock className="size-3.5 text-red-500" />
               Thời gian quét định kỳ
             </Label>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap sm:items-center gap-3 sm:gap-4">
               <Input
                 type="time"
                 value={config.notificationScanTime || ''}
@@ -116,7 +116,7 @@ export function GeneralTab({
                 onBlur={() => onSave()}
                 className="w-36 h-11 px-4 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-red-300 focus:ring-red-50 shadow-none"
               />
-              <div className="flex items-start gap-2 sm:max-w-[180px]">
+              <div className="flex flex-1 items-start gap-2 sm:max-w-[180px] min-w-[120px]">
                 <Info className="size-3 text-slate-400 mt-0.5 shrink-0" />
                 <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">
                   Hệ thống tự động thực hiện quét vào khung giờ này hàng ngày
@@ -251,7 +251,7 @@ export function GeneralTab({
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+        <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
           <Button
             onClick={onTriggerScan}
             disabled={isTesting}
@@ -292,7 +292,7 @@ export function GeneralTab({
               <Zap className="size-3.5 text-red-500" />
               Ngưỡng tương tự AI (Similarity Threshold)
             </Label>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap sm:items-center gap-3 sm:gap-4">
               <Input
                 type="number"
                 step="0.05"
@@ -305,7 +305,7 @@ export function GeneralTab({
                 onBlur={() => onSave()}
                 className="w-36 h-11 px-4 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-700 focus:border-red-300 focus:ring-red-50 shadow-none"
               />
-              <div className="flex items-start gap-2 sm:max-w-[180px]">
+              <div className="flex flex-1 items-start gap-2 sm:max-w-[180px] min-w-[120px]">
                 <Info className="size-3 text-slate-400 mt-0.5 shrink-0" />
                 <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">
                   Ngưỡng đánh giá độ liên quan của nội dung (0 - 1). Càng cao càng chặt chẽ. Mặc
