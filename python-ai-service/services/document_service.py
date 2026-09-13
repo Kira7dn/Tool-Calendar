@@ -49,13 +49,15 @@ class DocumentService:
             raise AiClientError("Text cannot be empty")
 
         def _regex_extract(text: str) -> dict:
+            import unicodedata
+            text = unicodedata.normalize('NFC', text)
             result = {
                 "SoVanBan": "", "TenCongVan": "CÔNG VĂN", "TrichYeu": "",
                 "NgayBanHanh": "", "ThoiHan": "", "CoQuanBanHanh": "",
                 "CoQuanChuQuan": "", "Priority": "Thường"
             }
             
-            m = re.search(r'(?:Số|SỐ)[:\s]+([0-9]+[\s]*[/-][\s]*[A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+(?:[\s]*[-/][\s]*[A-Z0-9ĐÀ-Ỵa-zà-ỵ&]+)*)', text, re.IGNORECASE)
+            m = re.search(r'(?i:s[oốôóòỏõọ])[:\s]*([0-9]+[\s]*[/-][\s]*[a-z0-9đà-ỵ&]+(?:[\s]*[-/][\s]*[a-z0-9đà-ỵ&]+)*)', text, re.IGNORECASE)
             if m:
                 result["SoVanBan"] = m.group(1).strip().replace(" ", "")
 

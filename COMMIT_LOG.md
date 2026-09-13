@@ -4263,3 +4263,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `python-ai-service/services/rag_service.py` (Sửa đổi)
   - `python-ai-service/services/document_service.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi ChunkResponse và cải thiện trích xuất bằng pypdfium2"`
+
+### [2026-09-13 11:45] Tinh chỉnh Regex trích xuất Số văn bản
+- **Mô tả**: Tối ưu hóa Regex trích xuất `SoVanBan` trong AI Service để xử lý lỗi thiếu dấu cách sau chữ "Số:" và xử lý lỗi font chữ tiếng Việt (decomposed unicode).
+- **Tệp thay đổi**:
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): tối ưu regex số văn bản xử lý unicode decomposed và dính chữ"`
