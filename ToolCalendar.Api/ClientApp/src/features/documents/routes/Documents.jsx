@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React from 'react'
+import React, { useRef, useCallback } from 'react'
 import {
   Plus,
   Search,
@@ -62,6 +62,25 @@ export function Documents({ onTabChange, filters }) {
     setDeleteConfirm,
     executeDelete,
   } = useDocumentsList(filters)
+
+  // Refs để đồng bộ scrollbar ngang giữa top mirror và table
+  const tableScrollRef = useRef(null)
+  const topScrollRef = useRef(null)
+  const isSyncingRef = useRef(false)
+
+  const handleTableScroll = useCallback(() => {
+    if (isSyncingRef.current) return
+    isSyncingRef.current = true
+    if (topScrollRef.current) topScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft
+    isSyncingRef.current = false
+  }, [])
+
+  const handleTopScroll = useCallback(() => {
+    if (isSyncingRef.current) return
+    isSyncingRef.current = true
+    if (tableScrollRef.current) tableScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft
+    isSyncingRef.current = false
+  }, [])
 
   const getStatusBadge = (doc) => {
     const statusText = doc.trangThai || doc.status
@@ -190,8 +209,22 @@ export function Documents({ onTabChange, filters }) {
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col p-0 min-h-0">
-          <div className="flex-1 overflow-x-auto overflow-y-auto min-h-0">
+        <CardContent className="flex-1 flex flex-col p-0 min-h-0 relative">
+          {/* Top Mirror Scrollbar */}
+          <div
+            ref={topScrollRef}
+            onScroll={handleTopScroll}
+            className="overflow-x-auto overflow-y-hidden sticky top-0 z-20 w-full bg-muted/20 border-b border-border custom-scrollbar-thin"
+            style={{ height: '12px' }}
+          >
+            <div style={{ width: 'max(100%, 1000px)', height: '1px' }}></div>
+          </div>
+
+          <div
+            ref={tableScrollRef}
+            onScroll={handleTableScroll}
+            className="flex-1 overflow-x-auto overflow-y-auto min-h-0"
+          >
             <Table className="w-full min-w-[1000px] table-fixed">
               <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
                 <TableRow className="hover:bg-transparent border-none">
