@@ -101,7 +101,7 @@ export function Documents({ onTabChange, filters }) {
         </p>
       </div>
 
-      <Card className="glass-card shadow-sm flex-1 flex flex-col overflow-hidden gap-2 px-2 min-w-0">
+      <Card className="glass-card shadow-sm flex-1 flex flex-col overflow-y-hidden gap-2 px-2 min-w-0">
         <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0 border-b border-border bg-muted/20 overflow-x-auto flex-shrink-0">
           <div className="flex items-center gap-4 flex-shrink-0">
             <Button
@@ -190,8 +190,8 @@ export function Documents({ onTabChange, filters }) {
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 overflow-y-hidden flex flex-col p-0">
-          <div className="relative flex-1 overflow-auto pt-px">
+        <CardContent className="flex-1 min-h-0 flex flex-col p-0 overflow-hidden">
+          <div className="relative flex-1 overflow-x-auto overflow-y-auto pt-px">
             <Table className="w-full min-w-[1000px] table-fixed">
               <TableHeader className="bg-muted/50 sticky top-0 z-10 border-b">
                 <TableRow className="hover:bg-transparent border-none">

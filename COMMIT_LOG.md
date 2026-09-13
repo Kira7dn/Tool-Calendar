@@ -1,3 +1,9 @@
+### [2026-09-13 08:39] fix(style): bảng Documents vẫn không có scroll ngang — fix dứt điểm
+- **Mô tả**: `overflow-hidden` trên `Card` là root cause thực sự — CSS `overflow:hidden` trên ancestor clip hoàn toàn scrollbar của descendant dù descendant có `overflow-x-auto`. Fix: đổi Card → `overflow-y-hidden` (chỉ clip dọc), CardContent → `overflow-hidden min-h-0`, div con → tách `overflow-x-auto overflow-y-auto` rõ ràng thay vì `overflow-auto` gộp.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Documents.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(style): dứt điểm scroll ngang bảng Documents — đổi Card overflow-y-hidden"`
+
 ### [2026-09-13 08:17] fix(style): toolbar và bảng Documents.jsx bị cắt khi zoom to 125%
 - **Mô tả**: CardHeader dùng `justify-between` nhưng thiếu `overflow-x-auto` và `flex-shrink-0` trên các nhóm button — khi zoom to, 2 nhóm button bị đẩy đè lên nhau và bị clip. Thêm `overflow-x-auto flex-shrink-0` vào CardHeader, `flex-shrink-0` vào 2 div button group để toolbar scroll ngang thay vì bị lấp. Thêm `min-w-0` vào Card để đảm bảo flex không overflow ra ngoài.
 - **Tệp thay đổi**:
