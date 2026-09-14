@@ -212,24 +212,33 @@ public class CqdtIntegrationService : ICqdtIntegrationService
             if (!match.Success) break;
 
             string eventTarget = match.Groups[1].Value;
-            var vs = docsDoc.DocumentNode.SelectSingleNode("//input[@id='__VIEWSTATE']")?.GetAttributeValue("value", "");
-            var ev = docsDoc.DocumentNode.SelectSingleNode("//input[@id='__EVENTVALIDATION']")?.GetAttributeValue("value", "");
-            var vsg = docsDoc.DocumentNode.SelectSingleNode("//input[@id='__VIEWSTATEGENERATOR']")?.GetAttributeValue("value", "");
-
-            var pagePostData = new Dictionary<string, string>
+            var hiddenInputs = docsDoc.DocumentNode.SelectNodes("//input[@type='hidden']");
+            var pagePostData = new Dictionary<string, string>();
+            if (hiddenInputs != null)
             {
-                { "__EVENTTARGET", eventTarget },
-                { "__EVENTARGUMENT", "" },
-                { "__VIEWSTATE", vs ?? "" },
-                { "__VIEWSTATEGENERATOR", vsg ?? "" },
-                { "__EVENTVALIDATION", ev ?? "" }
-            };
+                foreach (var input in hiddenInputs)
+                {
+                    var name = input.GetAttributeValue("name", "");
+                    var value = input.GetAttributeValue("value", "");
+                    if (!string.IsNullOrEmpty(name) && !pagePostData.ContainsKey(name))
+                    {
+                        pagePostData[name] = value;
+                    }
+                }
+            }
+            pagePostData["__EVENTTARGET"] = eventTarget;
+            pagePostData["__EVENTARGUMENT"] = "";
 
             var pageContent = new FormUrlEncodedContent(pagePostData);
             var pageResponse = await client.PostAsync(pendingDocsUrl, pageContent);
-            if (!pageResponse.IsSuccessStatusCode) break;
+            if (!pageResponse.IsSuccessStatusCode)
+            {
+                try { await System.IO.File.WriteAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), $"cqdt_html_dump_page_{pageCount+1}_err.txt"), pageResponse.StatusCode.ToString()); } catch { }
+                break;
+            }
             
             currentHtml = await pageResponse.Content.ReadAsStringAsync();
+            try { await System.IO.File.WriteAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), $"cqdt_html_dump_page_{pageCount+1}.txt"), currentHtml); } catch { }
             pageCount++;
         }
         

@@ -1,3 +1,9 @@
+### [2026-09-14 22:18] fix(docs): submit all hidden fields in __doPostBack to fix CQĐT pagination
+- **Mô tả**: Khi chuyển sang trang 2, RadGrid của CQĐT yêu cầu phải submit toàn bộ các hidden input trên trang (như `RadScriptManager`, `__dnnVariable`, v.v.), nếu chỉ gửi mỗi VIEWSTATE thì thao tác lật trang sẽ bị từ chối/không phản hồi. Cập nhật `CqdtIntegrationService.cs` để tự động thu thập toàn bộ thẻ `<input type="hidden">` để gửi kèm trong request lật trang.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): submit all hidden fields in __doPostBack to fix CQĐT pagination"`
+
 ### [2026-09-14 22:08] fix(docs): allow 'số văn bản' and 'thông tin văn bản' keywords for CQĐT HTML parser
 - **Mô tả**: Tên cột bảng trên trang CQĐT đã thay đổi (thành `Số văn bản` thay vì `Số đến`, `Thông tin văn bản` thay vì `Trích yếu`). Update `CqdtIntegrationService` để nhận dạng được các header cột này.
 - **Tệp thay đổi**:
