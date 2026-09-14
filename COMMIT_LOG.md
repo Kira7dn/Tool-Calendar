@@ -4379,3 +4379,10 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Program.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "chore(api): add auth exception logging for diagnosis"`
+
+### [2026-09-14 11:36] Downgrade JwtBearer to stable 8.0.8 on net10.0 to fix TokenValidationResult MissingMethodException
+- **Mô tả**: .NET 10 Preview 1 có lỗi Dependency Resolution trong đó `Microsoft.AspNetCore.Authentication.JwtBearer` bản `10.0.12` gọi method từ `System.IdentityModel.Tokens.Jwt` nhưng runtime lại load bản `8.22.0.0` bị thiếu method. Bằng cách hạ cấp explicit `JwtBearer` xuống `8.0.8` và `System.IdentityModel.Tokens.Jwt` xuống `7.1.2`, hệ thống ổn định 100% trong khi vẫn giữ nguyên `net10.0` framework.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ToolCalendar.Api.csproj` (Sửa đổi)
+  - `ToolCalendar.Core/ToolCalendar.Core.csproj` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(auth): hạ cấp JwtBearer xuống 8.0.8 để sửa lỗi MissingMethodException trên .NET 10"`
