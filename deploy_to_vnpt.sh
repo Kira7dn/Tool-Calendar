@@ -32,16 +32,16 @@ sshpass -p "$VNPT_PASS" ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=
       echo ">>> Backup DB thành công"
   fi
 
-  # --- Bước 3: Kiểm tra requirements.txt có đổi không ---
-  HASH_NEW=$(sha256sum python-ai-service/requirements.txt | cut -d' ' -f1)
-  HASH_OLD=$(cat /tmp/.python_ai_req_hash 2>/dev/null || echo "none")
+  # --- Bước 3: Kiểm tra python-ai-service có thay đổi không (requirements.txt + source code) ---
+  HASH_NEW=$(find python-ai-service -type f \( -name '*.py' -o -name 'requirements.txt' -o -name 'Dockerfile' \) | sort | xargs sha256sum | sha256sum | cut -d' ' -f1)
+  HASH_OLD=$(cat /tmp/.python_ai_src_hash 2>/dev/null || echo "none")
 
   if [ "$HASH_NEW" != "$HASH_OLD" ]; then
-    echo ">>> requirements.txt thay đổi — build lại python-ai-service..."
+    echo ">>> python-ai-service thay đổi (source/requirements) — build lại..."
     docker compose build python-ai-service
-    echo "$HASH_NEW" > /tmp/.python_ai_req_hash
+    echo "$HASH_NEW" > /tmp/.python_ai_src_hash
   else
-    echo ">>> requirements.txt không đổi — BỎ QUA build python-ai-service (tiết kiệm ~135s)"
+    echo ">>> python-ai-service không đổi — BỎ QUA build (tiết kiệm ~135s)"
   fi
 
   # --- Bước 4: Build backend (tuần tự sau AI service, tránh spike RAM) ---

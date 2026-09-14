@@ -1,3 +1,10 @@
+### [2026-09-14 09:25] fix(ocr): cho LLM ưu tiên trích xuất CoQuanBanHanh/CoQuanChuQuan + fix deploy script hash
+- **Mô tả**: 2 fix đồng thời: (1) deploy script chỉ hash `requirements.txt` nên bỏ qua build khi `.py` thay đổi → code Python cũ vẫn chạy. Đổi sang hash toàn bộ `python-ai-service/` (*.py + requirements.txt + Dockerfile). (2) CoQuanBanHanh và CoQuanChuQuan là 2 trường ngữ nghĩa phức tạp, LLM hiểu ngữ cảnh 2 cột tốt hơn Regex. Đổi merge strategy: tạo `LLM_PRIORITY_FIELDS` cho phép LLM override kết quả Regex. Cải thiện prompt với hướng dẫn cụ thể về cấu trúc header 2 cột VN ("UBND ở trên là CoQuanChuQuan, đơn vị bên dưới là CoQuanBanHanh").
+- **Tệp thay đổi**:
+  - `deploy_to_vnpt.sh` (Sửa đổi)
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): ưu tiên LLM cho CoQuanBanHanh/CoQuanChuQuan + fix deploy hash python-ai-service"`
+
 ### [2026-09-14 08:40] fix(ocr): trích xuất đúng CoQuanBanHanh nhiều dòng và CoQuanChuQuan từ UBND header
 - **Mô tả**: 2 lỗi đồng thời: (1) CoQuanBanHanh bị cắt còn 1 dòng ("BAN CHỈ ĐẠO ĐIỀU TRA CƠ") trong khi tên tổ chức thật trải trên 3 dòng ("BAN CHỈ ĐẠO ĐIỀU TRA CƠ SỞ HÀNH CHÍNH, SỰ NGHIỆP NĂM 2026"); (2) CoQuanChuQuan = rỗng → LLM điền sai bằng cụm text trong thân bài ("Sở Hành chính, Sự nghiệp"). Đã viết lại toàn bộ logic: áp dụng _strip_right_col() cho từng dòng trước, xác định dòng UBND là CoQuanChuQuan, sau đó ghép các dòng tiếp theo (đến khi gặp "Số:", "V/v", "Kính gửi") thành CoQuanBanHanh đầy đủ. Kết quả: CoQuanChuQuan="UBND TỈNH QUẢNG NINH", CoQuanBanHanh="BAN CHỈ ĐẠO ĐIỀU TRA CƠ SỞ HÀNH CHÍNH, SỰ NGHIỆP NĂM 2026".
 - **Tệp thay đổi**:

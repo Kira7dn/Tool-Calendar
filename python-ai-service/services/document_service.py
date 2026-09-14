@@ -181,16 +181,24 @@ class DocumentService:
         USE_LLM_METADATA = self.settings.metadata_use_llm if self.settings else True
         MAX_METADATA_CHARS = 1500  # R-P04: Chỉ đọc 1500 ký tự đầu tiên để tránh ngợp & giảm độ trễ
 
+        # Trường có cấu trúc rõ → Regex chính xác hơn, AI chỉ fill-empty
         STRUCTURED_FIELDS = {"SoVanBan", "NgayBanHanh", "ThoiHan"}
+        # Trường ngữ nghĩa → AI hiểu ngữ cảnh tốt hơn, được phép override Regex
+        LLM_PRIORITY_FIELDS = {"CoQuanBanHanh", "CoQuanChuQuan"}
         JUNK_VALUES = {"none", "null", "không có", "không đề cập", "", "n/a"}
 
         if USE_LLM_METADATA:
             try:
                 text_for_llm = request.text[:MAX_METADATA_CHARS]
                 prompt = (
-                    "Bạn là chuyên gia phân tích công văn hành chính. Trích xuất thông tin từ văn bản sau.\n"
+                    "Bạn là chuyên gia phân tích công văn hành chính Việt Nam. Trích xuất thông tin từ văn bản sau.\n"
                     "TRẢ VỀ JSON VỚI CÁC KEY: SoVanBan, TenCongVan, TrichYeu, NgayBanHanh (YYYY-MM-DD), "
                     "ThoiHan (YYYY-MM-DD), CoQuanBanHanh, CoQuanChuQuan, Priority (Thường/Khẩn/Hỏa tốc).\n"
+                    "HƯỚNG DẪN ĐẶC BIỆT:\n"
+                    "- Header văn bản hành chính VN có 2 cột: cột TRÁI là tên cơ quan, cột PHẢI là 'Cộng hòa...Độc lập...'.\n"
+                    "- CoQuanChuQuan: là dòng đầu tiên cột TRÁI (thường là UBND Tỉnh/Huyện/Bộ/Ban...). VD: 'UBND TỈNH QUẢNG NINH'.\n"
+                    "- CoQuanBanHanh: là tên đơn vị ban hành trực tiếp bên dưới CoQuanChuQuan. Có thể trải nhiều dòng. VD: 'BAN CHỈ ĐẠO ĐIỀU TRA CƠ SỞ HÀNH CHÍNH, SỰ NGHIỆP NĂM 2026'.\n"
+                    "- TUYỆT ĐỐI không lấy 'Độc lập - Tự do - Hạnh phúc', địa danh ngày tháng, hay nội dung thân bài vào 2 trường này.\n"
                     "TUYỆT ĐỐI KHÔNG BỊA ĐẶT THÔNG TIN. NẾU KHÔNG THẤY, ĐỂ RỖNG \"\".\n"
                     f"Văn bản:\n{text_for_llm}"
                 )
@@ -208,12 +216,16 @@ class DocumentService:
                     ai_val = str(parsed[k]).strip()
                     if ai_val.lower() in JUNK_VALUES:
                         continue
-                    # R-P04: AI chỉ được điền khi Regex thất bại (giá trị hiện tại đang rỗng)
-                    if not fallback[k]:
+                    if k in LLM_PRIORITY_FIELDS:
+                        # AI được phép override Regex với 2 trường ngữ nghĩa này
+                        fallback[k] = ai_val
+                    elif not fallback[k]:
+                        # R-P04: Các trường khác — AI chỉ điền khi Regex thất bại
                         fallback[k] = ai_val
 
             except Exception as e:
                 logger.warning("[DocumentService.extract_metadata] Lỗi AI, sử dụng Regex: %s", str(e))
+
 
         return ExtractMetadataResponse(**fallback)
 
