@@ -333,19 +333,31 @@ export function UploadPage() {
         isOpen={isCqdtModalOpen}
         onClose={() => setIsCqdtModalOpen(false)}
         onSync={(docs) => {
-          const newItems = docs.map((doc) => ({
-            id: 'cqdt_' + Math.random().toString(36).substr(2, 9),
-            file: { name: `CQDT_${doc.soKyHieu || 'doc'}.pdf`, size: 0 },
-            status: 'ready',
-            progress: 100,
-            extractedData: {
-              soVanBan: doc.soKyHieu,
-              ngayBanHanh: doc.ngayBanHanh || new Date().toISOString().split('T')[0],
-              coQuanBanHanh: doc.coQuanBanHanh,
-              trichYeu: doc.trichYeu,
-              priority: 'Thường',
-            },
-          }))
+          const newItems = docs.map((doc) => {
+            let fileObj = { name: doc.cqdtTenTep || `CQDT_${doc.soKyHieu || 'doc'}.pdf`, size: 0 }
+            if (doc.fileBase64) {
+              const bstr = window.atob(doc.fileBase64)
+              let n = bstr.length
+              const u8arr = new Uint8Array(n)
+              while (n--) {
+                u8arr[n] = bstr.charCodeAt(n)
+              }
+              fileObj = new File([u8arr], fileObj.name, { type: 'application/pdf' })
+            }
+            return {
+              id: 'cqdt_' + Math.random().toString(36).substr(2, 9),
+              file: fileObj,
+              status: 'ready',
+              progress: 100,
+              extractedData: {
+                soVanBan: doc.soKyHieu,
+                ngayBanHanh: doc.ngayBanHanh || new Date().toISOString().split('T')[0],
+                coQuanBanHanh: doc.coQuanBanHanh,
+                trichYeu: doc.trichYeu,
+                priority: 'Thường',
+              },
+            }
+          })
           setBatchItems((prev) => [...prev, ...newItems])
         }}
       />

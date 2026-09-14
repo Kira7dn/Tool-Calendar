@@ -14,4 +14,5 @@ public class CqdtDocumentDto
     public string NgayVanBan { get; set; } = string.Empty;
     public string LoaiVanBan { get; set; } = string.Empty;
     public string CQDTTenTep { get; set; } = string.Empty;
+    public string FileBase64 { get; set; } = string.Empty; // Base64 của file PDF
 }

@@ -114,11 +114,43 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                         
                         if (!string.IsNullOrEmpty(soVanBan))
                         {
+                            // Tìm link tải file (thường có chữ Download, File, hoặc .pdf trong thẻ <a>)
+                            var fileLinkNode = row.SelectSingleNode(".//a[contains(@href, 'pdf') or contains(@href, 'Download') or contains(@href, 'File') or contains(@href, 'Attach')]");
+                            string fileBase64 = "";
+                            string tenTep = "";
+
+                            if (fileLinkNode != null)
+                            {
+                                var href = fileLinkNode.GetAttributeValue("href", "");
+                                if (!string.IsNullOrEmpty(href))
+                                {
+                                    // Sửa link tương đối thành tuyệt đối nếu cần
+                                    if (!href.StartsWith("http"))
+                                    {
+                                        href = "https://congchuc.quangninh.gov.vn/" + href.TrimStart('/');
+                                    }
+                                    
+                                    try
+                                    {
+                                        // Tải nội dung file về dưới dạng byte array
+                                        var fileBytes = await client.GetByteArrayAsync(href);
+                                        fileBase64 = Convert.ToBase64String(fileBytes);
+                                        tenTep = "CQDT_" + (soVanBan.Replace("/", "_").Replace(" ", "")) + ".pdf";
+                                    }
+                                    catch
+                                    {
+                                        // Nếu lỗi tải file, cứ bỏ qua
+                                    }
+                                }
+                            }
+
                             result.Add(new CqdtDocumentDto
                             {
                                 SoKyHieu = WebUtility.HtmlDecode(soVanBan),
                                 CoQuanBanHanh = WebUtility.HtmlDecode(coQuan ?? ""),
-                                TrichYeu = WebUtility.HtmlDecode(trichYeu)
+                                TrichYeu = WebUtility.HtmlDecode(trichYeu),
+                                FileBase64 = fileBase64,
+                                CQDTTenTep = tenTep
                             });
                         }
                     }

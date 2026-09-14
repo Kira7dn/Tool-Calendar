@@ -1,3 +1,11 @@
+### [2026-09-14 15:30] feat(docs): bổ sung lấy file pdf đính kèm từ CQĐT
+- **Mô tả**: Nâng cấp tính năng đồng bộ CQĐT để quét và tải file văn bản đính kèm (PDF) bằng cách tìm thẻ `<a>` chứa từ khóa liên quan đến file. File tải về được chuyển thành chuỗi Base64 trả về cho Frontend (React), sau đó Frontend tự động giải mã `atob` và biến thành object `File` chuẩn của trình duyệt để tiếp tục ném vào hàng đợi OCR như file upload thông thường.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Models/Integration/CqdtDocumentDto.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): bổ sung lấy file pdf đính kèm từ CQĐT"`
+
 ### [2026-09-14 15:25] feat(docs): tích hợp đồng bộ danh sách văn bản chưa xử lý từ CQĐT
 - **Mô tả**: Phát triển tính năng lấy văn bản tự động từ Chính quyền điện tử (CQĐT) bằng cơ chế web scraping (HttpClient + HtmlAgilityPack) vượt qua __VIEWSTATE của ASP.NET WebForms. Cập nhật frontend thêm Modal để người dùng nhập thông tin đăng nhập tạm thời, và map dữ liệu lấy được vào lưới xử lý Số hóa.
 - **Tệp thay đổi**:
