@@ -82,12 +82,9 @@ function StatusBadge({ status, error }) {
 
 export function UploadTable({
   batchItems,
-  tableScrollRef,
-  setTableScrollTop,
   isAllSelected,
   isIndeterminate,
   toggleSelectAll,
-  topSpacer,
   visibleItems,
   selectedIds,
   toggleSelectOne,
@@ -100,15 +97,13 @@ export function UploadTable({
   fetchPdfBlob,
   setIsReviewModalOpen,
   setDeleteItemConfirm,
-  bottomSpacer,
+  currentPage,
+  totalPages,
+  setCurrentPage,
 }) {
   return (
     <div className="flex-1 min-h-[500px] lg:min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden min-w-0">
-      <div
-        ref={tableScrollRef}
-        className="flex-1 overflow-auto"
-        onScroll={(e) => setTableScrollTop(e.currentTarget.scrollTop)}
-      >
+      <div className="flex-1 overflow-auto">
         <table className="w-full text-xs border-collapse min-w-[900px] table-fixed">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
@@ -145,9 +140,11 @@ export function UploadTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {topSpacer > 0 && (
-              <tr style={{ height: topSpacer }}>
-                <td colSpan={8} />
+            {visibleItems.length === 0 && batchItems.length > 0 && (
+              <tr>
+                <td colSpan={8} className="text-center py-10 text-slate-400">
+                  Không có dữ liệu ở trang này
+                </td>
               </tr>
             )}
             {visibleItems.map((row) => {
@@ -323,11 +320,6 @@ export function UploadTable({
                 </tr>
               )
             })}
-            {bottomSpacer > 0 && (
-              <tr style={{ height: bottomSpacer }}>
-                <td colSpan={8} />
-              </tr>
-            )}
           </tbody>
         </table>
         {batchItems.length === 0 && (
@@ -358,11 +350,33 @@ export function UploadTable({
       </div>
       <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
         <p className="text-[10px] text-slate-400 font-medium">
-          Hiển thị {batchItems.length} tệp
+          Hiển thị {visibleItems.length} / {batchItems.length} tệp
           {selectedIds.size > 0 && (
             <span className="ml-2 text-blue-600 font-bold">· Đã chọn {selectedIds.size}</span>
           )}
         </p>
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-2 py-1 text-xs font-medium border border-slate-200 rounded text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Trước
+            </button>
+            <span className="px-3 py-1 text-xs font-bold text-slate-700">
+              Trang {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-2 py-1 text-xs font-medium border border-slate-200 rounded text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Tiếp
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

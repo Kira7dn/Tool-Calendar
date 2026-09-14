@@ -1,3 +1,10 @@
+### [2026-09-14 22:30] feat(ui): add pagination to UploadTable to handle large bulk imports
+- **Mô tả**: Khi người dùng tải lên số lượng lớn văn bản (ví dụ 50 hoặc 100 văn bản từ CQĐT), bảng hiển thị dài theo kiểu virtual scrolling có thể khó quan sát và xử lý. Đã chuyển đổi sang giao diện phân trang truyền thống (mặc định 20 item/trang) tại `UploadPage`. Bổ sung nút chuyển trang "Trước/Tiếp" ở Footer bảng.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): add pagination to UploadTable for large imports"`
+
 ### [2026-09-14 22:26] fix(docs): decode HTML entities in onclick attribute to fix regex match for pagination
 - **Mô tả**: Khi chuyển trang, HtmlAgilityPack lấy giá trị thuộc tính `onclick` của nút Next nhưng không tự động giải mã HTML Entity (`&#39;` thay vì `'`). Điều này làm cho biểu thức Regex `__doPostBack\('([^']+)'` thất bại và vòng lặp phân trang bị ngắt sớm (luôn chỉ lấy được 10 văn bản ở trang 1). Đã bổ sung `WebUtility.HtmlDecode` trước khi chạy Regex.
 - **Tệp thay đổi**:

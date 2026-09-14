@@ -143,33 +143,26 @@ export function UploadPage() {
   const hasProcessingItems = batchItems.some((i) => i.status === 'processing')
   const isGlobalProcessing = isProcessing || hasProcessingItems
 
-  useEffect(() => {
-    const el = tableScrollRef.current
-    if (!el) return
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) setTableHeight(entry.contentRect.height)
-    })
-    ro.observe(el)
-    setTableHeight(el.clientHeight)
-    return () => ro.disconnect()
-  }, [])
-
   const statCounts = {
     ocr: batchItems.filter((f) => f.status === 'processing').length,
     saved: batchItems.filter((f) => f.status === 'success').length,
     pending: batchItems.filter((f) => f.status === 'ready').length,
   }
 
-  const ROW_HEIGHT = 44
-  const BUFFER = 8
-  const visibleStart = Math.max(0, Math.floor(tableScrollTop / ROW_HEIGHT) - BUFFER)
-  const visibleEnd = Math.min(
-    batchItems.length,
-    Math.ceil((tableScrollTop + tableHeight) / ROW_HEIGHT) + BUFFER
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+  const totalPages = Math.ceil(batchItems.length / itemsPerPage)
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages)
+    }
+  }, [totalPages, currentPage])
+
+  const visibleItems = batchItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   )
-  const visibleItems = batchItems.slice(visibleStart, visibleEnd)
-  const topSpacer = visibleStart * ROW_HEIGHT
-  const bottomSpacer = Math.max(0, (batchItems.length - visibleEnd) * ROW_HEIGHT)
 
   return (
     <div
@@ -256,12 +249,9 @@ export function UploadPage() {
 
         <UploadTable
           batchItems={batchItems}
-          tableScrollRef={tableScrollRef}
-          setTableScrollTop={setTableScrollTop}
           isAllSelected={isAllSelected}
           isIndeterminate={isIndeterminate}
           toggleSelectAll={toggleSelectAll}
-          topSpacer={topSpacer}
           visibleItems={visibleItems}
           selectedIds={selectedIds}
           toggleSelectOne={toggleSelectOne}
@@ -274,7 +264,9 @@ export function UploadPage() {
           fetchPdfBlob={fetchPdfBlob}
           setIsReviewModalOpen={setIsReviewModalOpen}
           setDeleteItemConfirm={setDeleteItemConfirm}
-          bottomSpacer={bottomSpacer}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
         />
       </div>
 
