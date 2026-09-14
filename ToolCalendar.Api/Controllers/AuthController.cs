@@ -11,6 +11,7 @@ using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Core.Models;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
+using ToolCalendar.Core.Data.Repositories;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -23,19 +24,28 @@ namespace ToolCalendar.Api.Controllers
         private readonly IUserRepository _userRepository;
         private readonly UserManager<User> _userManager;
         private readonly IAuditLogRepository _auditLogRepo;
+        private readonly ISessionRepository _sessionRepo;
+        private readonly ISecurityLogRepository _secLogRepo;
+        private readonly ToolCalendar.Core.Services.Security.RsaKeyManager _rsaKeyManager;
 
         public AuthController(
             IConfiguration configuration,
             IHubContext<NotificationHub> hubContext,
             IUserRepository userRepository,
             UserManager<User> userManager,
-            IAuditLogRepository auditLogRepo)
+            IAuditLogRepository auditLogRepo,
+            ISessionRepository sessionRepo,
+            ISecurityLogRepository secLogRepo,
+            ToolCalendar.Core.Services.Security.RsaKeyManager rsaKeyManager)
         {
             _configuration = configuration;
             _hubContext = hubContext;
             _userRepository = userRepository;
             _userManager = userManager;
             _auditLogRepo = auditLogRepo;
+            _sessionRepo = sessionRepo;
+            _secLogRepo = secLogRepo;
+            _rsaKeyManager = rsaKeyManager;
         }
 
         // ─── LOGIN ───────────────────────────────────────────────────────────────
@@ -124,14 +134,8 @@ namespace ToolCalendar.Api.Controllers
             user.SessionId = Guid.NewGuid().ToString();
             await _userRepository.UpdateSecurityStampAsync(user.Id, user.SecurityStamp);
 
-            // ── Bước 5: Sinh JWT Token ────────────────────────────────────────────
+            // ── Bước 5: Sinh JWT Token (RSA-256) ────────────────────────────────────────────
             var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtSecret = _configuration["JWT_SECRET"]
-                            ?? Environment.GetEnvironmentVariable("JWT_SECRET")
-                            ?? throw new InvalidOperationException("[SECURITY] JWT_SECRET chưa được cấu hình.");
-            var key = Encoding.ASCII.GetBytes(jwtSecret);
-
-            // Fetch previous login time before inserting the new one
             var lastLoginTime = await _auditLogRepo.GetLastLoginTimeAsync(user.Id) ?? "Lần đầu đăng nhập";
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -142,17 +146,15 @@ namespace ToolCalendar.Api.Controllers
                     new Claim(ClaimTypes.Role,              user.Role),
                     new Claim(ClaimTypes.NameIdentifier,    user.Id.ToString()),
                     new Claim("uid",                        user.Id.ToString()),
-                    new Claim("UserId",                     user.Id.ToString()),  // Tương thích ngược với client cũ
-                    // sec_stamp: SecurityStamp của Identity — dùng để vô hiệu hóa token cũ
+                    new Claim("UserId",                     user.Id.ToString()),  
                     new Claim("sec_stamp",                  user.SecurityStamp),
-                    // Giữ claim "sid" để tương thích với token cũ còn tồn tại
                     new Claim("sid",                        user.SessionId ?? user.SecurityStamp),
                     new Claim("LastLogin",                  lastLoginTime),
                 }),
-                Expires = DateTime.UtcNow.AddHours(8),
+                Expires = DateTime.UtcNow.AddMinutes(15), // ✅ Rút Access Token còn 15 phút
                 SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature)
+                    _rsaKeyManager.GetKey(),
+                    SecurityAlgorithms.RsaSha256Signature) // ✅ Dùng RSA-SHA256
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -160,8 +162,19 @@ namespace ToolCalendar.Api.Controllers
 
             // Generate Refresh Token
             var refreshToken = GenerateRefreshToken();
+            var refreshTokenHash = ComputeSha256Hash(refreshToken); // Hash refresh token trong DB
             var refreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            await _userRepository.UpdateRefreshTokenAsync(user.Id, refreshToken, refreshTokenExpiryTime);
+            
+            // Lưu session vào DB mới
+            await _sessionRepo.CreateSessionAsync(new UserSession
+            {
+                UserId = user.Id,
+                RefreshTokenHash = refreshTokenHash,
+                IpAddress = clientIp,
+                UserAgent = userAgent,
+                ExpiresAt = refreshTokenExpiryTime,
+                CreatedAt = DateTime.UtcNow
+            });
 
             // Gắn token vào HttpOnly Cookie
             Response.Cookies.Append("jwt_cookie", tokenString, new CookieOptions
@@ -188,6 +201,9 @@ namespace ToolCalendar.Api.Controllers
                 userAgent: userAgent,
                 isSuccess: true
             );
+            
+            // Ghi log bảo mật mới
+            await _secLogRepo.LogEventAsync(user.Id, clientIp ?? "", "LoginSuccess", userAgent ?? "");
 
             return Ok(ApiResponse.Ok(new
             {
@@ -207,19 +223,21 @@ namespace ToolCalendar.Api.Controllers
             if (!Request.Cookies.TryGetValue("refresh_cookie", out var refreshToken))
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy Refresh Token."));
 
-            var user = await _userRepository.GetUserByRefreshTokenAsync(refreshToken);
+            var tokenHash = ComputeSha256Hash(refreshToken);
+            var session = await _sessionRepo.GetSessionByTokenHashAsync(tokenHash);
 
-            if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-                return Unauthorized(ApiResponse.Fail("Refresh token đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại."));
+            if (session == null || session.RevokedAt != null || session.ExpiresAt <= DateTime.UtcNow)
+                return Unauthorized(ApiResponse.Fail("Refresh token đã hết hạn hoặc bị thu hồi. Vui lòng đăng nhập lại."));
 
-            var jwtSecret = _configuration["JWT_SECRET"]
-                            ?? Environment.GetEnvironmentVariable("JWT_SECRET");
+            var user = await _userManager.FindByIdAsync(session.UserId.ToString());
+            if (user == null || await _userManager.IsLockedOutAsync(user))
+                return Unauthorized(ApiResponse.Fail("Tài khoản không hợp lệ hoặc bị khóa."));
 
-            if (string.IsNullOrWhiteSpace(jwtSecret))
-                return StatusCode(500, ApiResponse.Fail("JWT_SECRET không được cấu hình"));
+            // Sinh Access Token mới (15 phút)
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var lastLoginTime = await _auditLogRepo.GetLastLoginTimeAsync(user.Id) ?? "Lần đầu đăng nhập";
 
-            // Generate new tokens
-            var newAccessTokenDescriptor = new SecurityTokenDescriptor
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
                 {
@@ -230,21 +248,40 @@ namespace ToolCalendar.Api.Controllers
                     new Claim("UserId",                     user.Id.ToString()),
                     new Claim("sec_stamp",                  user.SecurityStamp),
                     new Claim("sid",                        user.SessionId ?? user.SecurityStamp),
-                    new Claim("LastLogin",                  DateTime.UtcNow.ToString("O")),
+                    new Claim("LastLogin",                  lastLoginTime),
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(15),
                 SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
-                    SecurityAlgorithms.HmacSha256Signature)
+                    _rsaKeyManager.GetKey(),
+                    SecurityAlgorithms.RsaSha256Signature)
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var newAccessToken = tokenHandler.CreateToken(newAccessTokenDescriptor);
+            var newAccessToken = tokenHandler.CreateToken(tokenDescriptor);
             var newAccessTokenString = tokenHandler.WriteToken(newAccessToken);
 
+            // Xoay vòng Refresh Token (Security Best Practice)
+            await _sessionRepo.RevokeSessionAsync(tokenHash); // Thu hồi token cũ
+
             var newRefreshToken = GenerateRefreshToken();
+            var newRefreshTokenHash = ComputeSha256Hash(newRefreshToken);
             var newExpiryTime = DateTime.UtcNow.AddDays(7);
-            await _userRepository.UpdateRefreshTokenAsync(user.Id, newRefreshToken, newExpiryTime);
+
+            string? clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                             ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+            string? userAgent = Request.Headers["User-Agent"].FirstOrDefault();
+
+            await _sessionRepo.CreateSessionAsync(new UserSession
+            {
+                UserId = user.Id,
+                RefreshTokenHash = newRefreshTokenHash,
+                IpAddress = clientIp,
+                UserAgent = userAgent,
+                ExpiresAt = newExpiryTime,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            // Ghi log bảo mật mới
+            await _secLogRepo.LogEventAsync(user.Id, clientIp ?? "", "TokenRefreshed", userAgent ?? "");
 
             // Cập nhật cookie
             Response.Cookies.Append("jwt_cookie", newAccessTokenString, new CookieOptions
@@ -298,6 +335,18 @@ namespace ToolCalendar.Api.Controllers
             return Convert.ToBase64String(randomNumber);
         }
 
+        private static string ComputeSha256Hash(string rawData)
+        {
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+            var builder = new StringBuilder();
+            foreach (var b in bytes)
+            {
+                builder.Append(b.ToString("x2"));
+            }
+            return builder.ToString();
+        }
+
         // ─── LOGOUT ──────────────────────────────────────────────────────────────
 
         [HttpPost("logout")]
@@ -305,10 +354,17 @@ namespace ToolCalendar.Api.Controllers
         {
             if (Request.Cookies.TryGetValue("refresh_cookie", out var refreshToken))
             {
-                var user = await _userRepository.GetUserByRefreshTokenAsync(refreshToken);
-                if (user != null)
+                var tokenHash = ComputeSha256Hash(refreshToken);
+                var session = await _sessionRepo.GetSessionByTokenHashAsync(tokenHash);
+                if (session != null)
                 {
-                    await _userRepository.UpdateRefreshTokenAsync(user.Id, null, null); // Thu hồi token
+                    await _sessionRepo.RevokeSessionAsync(tokenHash); // Thu hồi token
+                    
+                    string? clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                                     ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+                    string? userAgent = Request.Headers["User-Agent"].FirstOrDefault();
+                    
+                    await _secLogRepo.LogEventAsync(session.UserId, clientIp ?? "", "Logout", userAgent ?? "");
                 }
             }
             Response.Cookies.Delete("jwt_cookie");
@@ -357,8 +413,8 @@ namespace ToolCalendar.Api.Controllers
                 var cache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                 cache?.Remove($"UserSession_{userId}");
 
-                // Thu hồi mọi Refresh Token cũ
-                await _userRepository.UpdateRefreshTokenAsync(userId, null, null);
+                // Thu hồi mọi Refresh Token cũ của thiết bị khác
+                await _sessionRepo.RevokeAllSessionsForUserAsync(userId);
 
                 return Ok(ApiResponse.Ok("Đổi mật khẩu thành công. Vui lòng đăng nhập lại."));
             }

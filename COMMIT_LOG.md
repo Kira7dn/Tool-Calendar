@@ -1,3 +1,17 @@
+### [2026-09-14 10:55] feat(auth): Nâng cấp bảo mật Enterprise Auth (RSA + Refresh Token)
+- **Mô tả**: Thay thế HMAC-SHA256 bằng RSA-256 để ký JWT token. Bổ sung bảng UserIdentities, UserSessions và SecurityLogs vào CSDL (bằng migration thủ công). Sửa đổi endpoint Login để cấp Refresh Token, bổ sung các endpoint `/refresh` và `/logout`. Tích hợp gọi API `/logout` ở Frontend React khi người dùng đăng xuất.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/ToolCalendar.Core.csproj` (Sửa đổi)
+  - `ToolCalendar.Core/Services/Security/RsaKeyManager.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/SessionRepository.cs` (Mới)
+  - `ToolCalendar.Core/Data/Repositories/SecurityLogRepository.cs` (Mới)
+  - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/UserRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/hooks/usePublicSchedule.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(auth): nâng cấp bảo mật Enterprise Auth RSA và Refresh Token"`
+
 ### [2026-09-14 10:01] fix(ocr): sửa lỗi hallucination của LLM trong việc trích xuất Cơ quan ban hành
 - **Mô tả**: LLM bị "ảo giác" (hallucinate) do trong prompt có đưa ví dụ cụ thể `VD: 'UBND TỈNH QUẢNG NINH'` và `VD: 'BAN CHỈ ĐẠO ĐIỀU TRA...'`. Vì LLM nhỏ (`qwen2.5:3b`), nó nhầm lẫn ví dụ là đáp án bắt buộc và copy paste y nguyên ví dụ vào mọi văn bản (như văn bản của Phường Cẩm Phả). Sửa prompt để xóa các ví dụ cụ thể này, thêm rule hướng dẫn rõ hơn: "Nếu chỉ có 1 cơ quan (VD: Ủy ban nhân dân Phường X) thì đó là CoQuanBanHanh, còn CoQuanChuQuan để rỗng".
 - **Tệp thay đổi**:

@@ -188,6 +188,10 @@ export function AppShell() {
   const handleLogout = () => {
     setIsLoggingOut(true)
     signalRService.stop()
+
+    // Gọi API để thu hồi token ở server
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
+
     setTimeout(() => {
       localStorage.clear()
       window.location.href = '/'

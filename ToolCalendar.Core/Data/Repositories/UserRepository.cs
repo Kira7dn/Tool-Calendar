@@ -130,12 +130,13 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
             string sql = @"
-                SELECT u.Id, u.Username, u.PasswordHash, u.FullName, u.Email, u.PhoneNumber, u.Role,
+                SELECT u.Id, u.Username, ui.PasswordHash, u.FullName, u.Email, u.PhoneNumber, u.Role,
                        u.DepartmentId, d.Name as DepartmentName, u.SessionId, u.CreatedAt,
                        u.FailedLoginCount, u.LockoutUntil,
                        u.SecurityStamp, u.NormalizedUserName, u.LockoutEnabled, u.AccessFailedCount, u.LockoutEnd
                 FROM Users u 
                 LEFT JOIN Departments d ON u.DepartmentId = d.Id 
+                LEFT JOIN UserIdentities ui ON u.Id = ui.UserId AND ui.Provider = 'local'
                 WHERE u.Id=@id";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", id);
@@ -153,11 +154,13 @@ namespace ToolCalendar.Core.Data.Repositories
             connection.Open();
             // Tìm theo NormalizedUserName (in hoa) trước, fallback về Username thường
             string sql = @"
-                SELECT u.Id, u.Username, u.PasswordHash, u.FullName, u.Email, u.PhoneNumber, u.Role,
+                SELECT u.Id, u.Username, ui.PasswordHash, u.FullName, u.Email, u.PhoneNumber, u.Role,
                        u.DepartmentId, u.SessionId, u.CreatedAt,
                        u.FailedLoginCount, u.LockoutUntil,
-                       u.SecurityStamp, u.NormalizedUserName, u.LockoutEnabled, u.AccessFailedCount, u.LockoutEnd
+                       u.SecurityStamp, u.NormalizedUserName, u.LockoutEnabled, u.AccessFailedCount, u.LockoutEnd,
+                       u.RefreshToken, u.RefreshTokenExpiryTime
                 FROM Users u 
+                LEFT JOIN UserIdentities ui ON u.Id = ui.UserId AND ui.Provider = 'local'
                 WHERE u.NormalizedUserName = @norm OR u.Username = @raw";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@norm", username.ToUpperInvariant());
@@ -172,10 +175,12 @@ namespace ToolCalendar.Core.Data.Repositories
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            string sql = @"SELECT Id, Username, PasswordHash, FullName, Role, DepartmentId,
-                                  FailedLoginCount, LockoutUntil, SecurityStamp, NormalizedUserName,
-                                  LockoutEnabled, AccessFailedCount, LockoutEnd
-                           FROM Users WHERE Username=@u OR NormalizedUserName=@norm";
+            string sql = @"SELECT u.Id, u.Username, ui.PasswordHash, u.FullName, u.Role, u.DepartmentId,
+                                  u.FailedLoginCount, u.LockoutUntil, u.SecurityStamp, u.NormalizedUserName,
+                                  u.LockoutEnabled, u.AccessFailedCount, u.LockoutEnd
+                           FROM Users u
+                           LEFT JOIN UserIdentities ui ON u.Id = ui.UserId AND ui.Provider = 'local'
+                           WHERE u.Username=@u OR u.NormalizedUserName=@norm";
             using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@u", username);
             cmd.Parameters.AddWithValue("@norm", username.ToUpperInvariant());

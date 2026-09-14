@@ -84,6 +84,23 @@ AccessFailedCount, LockoutEnd, LockoutEnabled,
 FailedLoginCount (legacy), LockoutUntil (legacy), CreatedAt
 ```
 
+### `UserIdentities` (Định danh đăng nhập - Security Upgrade)
+```sql
+Id, UserId, Provider, ProviderId (UK: Provider+ProviderId),
+PasswordHash, PasswordSalt, CreatedAt
+```
+
+### `UserSessions` (Phiên làm việc - Security Upgrade)
+```sql
+Id, UserId, RefreshTokenHash (UK), IpAddress, UserAgent,
+DeviceFingerprint, ExpiresAt, RevokedAt, CreatedAt
+```
+
+### `SecurityLogs` (Nhật ký bảo mật - Security Upgrade)
+```sql
+Id, UserId, IpAddress, EventType, UserAgent, CreatedAt
+```
+
 ### `Documents` (Công văn)
 ```sql
 Id, SoVanBan, TenCongVan, TrichYeu,
