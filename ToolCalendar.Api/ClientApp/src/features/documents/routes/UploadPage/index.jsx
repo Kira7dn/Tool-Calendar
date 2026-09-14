@@ -346,16 +346,22 @@ export function UploadPage() {
             }
             return {
               id: 'cqdt_' + Math.random().toString(36).substr(2, 9),
-              file: fileObj,
+              _tempFile: fileObj, // for upload later if needed
+              fileName: fileObj.name,
               status: 'ready',
               progress: 100,
-              extractedData: {
-                soVanBan: doc.soKyHieu,
-                ngayBanHanh: doc.ngayBanHanh || new Date().toISOString().split('T')[0],
-                coQuanBanHanh: doc.coQuanBanHanh,
-                trichYeu: doc.trichYeu,
-                priority: 'Thường',
-              },
+
+              soVanBan: doc.soKyHieu || '',
+              trichYeu: doc.trichYeu || '',
+              coQuanBanHanh: doc.coQuanBanHanh || '',
+              coQuanChuQuan: '',
+              ngayBanHanh: doc.ngayBanHanh
+                ? doc.ngayBanHanh.split('T')[0]
+                : new Date().toISOString().split('T')[0],
+              thoiHan: '',
+              departmentIds: [],
+              assignedToIds: [],
+              priority: 'Thường',
             }
           })
           setBatchItems((prev) => [...prev, ...newItems])

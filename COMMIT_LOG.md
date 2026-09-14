@@ -1,3 +1,9 @@
+### [2026-09-14 18:36] fix(docs): fix Cannot read properties of undefined (reading '0') in UploadTable
+- **Mô tả**: Sửa lỗi trắng trang khi render UploadTable cho các văn bản đồng bộ từ CQĐT. Nguyên nhân do item tạo ra thiếu mảng `departmentIds` và `assignedToIds`, dẫn tới lỗi khi truy cập phần tử `[0]` trong Table. Đã chuẩn hóa lại cấu trúc object item cho khớp với `UploadTable`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): fix Cannot read properties of undefined in UploadTable"`
+
 ### [2026-09-14 18:27] fix(docs): fix Cannot read properties of undefined (reading 'map') in CqdtSyncModal
 - **Mô tả**: Sửa lỗi `Cannot read properties of undefined (reading 'map')` khi đồng bộ CQĐT thành công. Nguyên nhân do Global Fetch Interceptor (`main.jsx`) đã tự động bóc tách (unwrap) `json.data` ra khỏi response `ApiResponse<T>`, do đó `data` ở `CqdtSyncModal.jsx` đã là danh sách văn bản, không cần `.data` nữa.
 - **Tệp thay đổi**:
