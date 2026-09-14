@@ -88,24 +88,51 @@ class DocumentService:
                 ty = re.sub(r'[A-ZÀ-Ỵa-zà-ỵ\s]+,\s*ngày.*$', '', ty).strip()
                 result["TrichYeu"] = ty[:500]
 
-            lines = [l.strip() for l in text.split('\n') if l.strip() and 'CỘNG HÒA' not in l.upper()]
-            if lines:
-                result["CoQuanBanHanh"] = lines[0]
-                if result["CoQuanBanHanh"].upper().startswith("UBND"):
-                    if len(lines) > 1 and "Số" not in lines[1]:
-                        result["CoQuanBanHanh"] = lines[1]
-
-            # Cắt bỏ phần bên phải bị dính do OCR đọc ngang 2 cột PDF:
-            # "BAN CHỈ ĐẠO...     Độc lập - Tự do - Hạnh phúc" → "BAN CHỈ ĐẠO..."
+            # Pattern cắt bỏ nội dung cột phải bị dính (≥2 khoảng trắng + cụm header phải)
             _right_col_patterns = [
                 r'\s{2,}Độc\s+lập',
                 r'\s{2,}Tự\s+do',
                 r'\s{2,}Hạnh\s+phúc',
                 r'\s{2,}CỘNG\s+HÒA',
                 r'\s{2,}Cộng\s+hòa',
+                r'\s{2,}[A-ZÀ-Ỵa-zà-ỵ\s]+,\s*ngày\s+\d',   # "Quảng Ninh, ngày 02..."
             ]
-            for _pat in _right_col_patterns:
-                result["CoQuanBanHanh"] = re.split(_pat, result["CoQuanBanHanh"], maxsplit=1, flags=re.IGNORECASE)[0].strip()
+            def _strip_right_col(s: str) -> str:
+                for _p in _right_col_patterns:
+                    s = re.split(_p, s, maxsplit=1, flags=re.IGNORECASE)[0].strip()
+                return s
+
+            # Lọc: bỏ dòng CỘNG HÒA, strip cột phải, bỏ dòng rỗng sau khi strip
+            lines = []
+            for l in text.split('\n'):
+                l = l.strip()
+                if not l or 'CỘNG HÒA' in l.upper():
+                    continue
+                l = _strip_right_col(l)
+                if l:
+                    lines.append(l)
+
+            # Marker dừng: bắt đầu số hiệu hoặc trích yếu hoặc kính gửi
+            _stop_re = re.compile(r'^(Số[\s:./]|V/v|Kính gửi|Căn cứ)', re.IGNORECASE)
+
+            if lines:
+                if lines[0].upper().startswith('UBND'):
+                    # Dòng UBND → CoQuanChuQuan (nếu chưa có giá trị nào tốt hơn từ LLM sau này)
+                    result["CoQuanChuQuan"] = lines[0]
+                    # Ghép các dòng tiếp theo thành CoQuanBanHanh cho đến khi gặp marker dừng
+                    org_parts = []
+                    for l in lines[1:]:
+                        if _stop_re.match(l):
+                            break
+                        # Bỏ các dòng là năm đơn thuần (vd "NĂM 2026") nếu đứng riêng lẻ
+                        # nhưng vẫn giữ nếu nó là một phần của tên tổ chức có từ kèm theo
+                        org_parts.append(l)
+                    if org_parts:
+                        result["CoQuanBanHanh"] = ' '.join(org_parts)
+                    elif len(lines) > 1:
+                        result["CoQuanBanHanh"] = lines[1]
+                else:
+                    result["CoQuanBanHanh"] = lines[0]
 
             text_upper = text.upper()
             for vb_type in ["QUYẾT ĐỊNH", "THÔNG TƯ", "NGHỊ ĐỊNH", "BÁO CÁO", "TỜ TRÌNH", "CÔNG VĂN"]:

@@ -1,3 +1,9 @@
+### [2026-09-14 08:40] fix(ocr): trích xuất đúng CoQuanBanHanh nhiều dòng và CoQuanChuQuan từ UBND header
+- **Mô tả**: 2 lỗi đồng thời: (1) CoQuanBanHanh bị cắt còn 1 dòng ("BAN CHỈ ĐẠO ĐIỀU TRA CƠ") trong khi tên tổ chức thật trải trên 3 dòng ("BAN CHỈ ĐẠO ĐIỀU TRA CƠ SỞ HÀNH CHÍNH, SỰ NGHIỆP NĂM 2026"); (2) CoQuanChuQuan = rỗng → LLM điền sai bằng cụm text trong thân bài ("Sở Hành chính, Sự nghiệp"). Đã viết lại toàn bộ logic: áp dụng _strip_right_col() cho từng dòng trước, xác định dòng UBND là CoQuanChuQuan, sau đó ghép các dòng tiếp theo (đến khi gặp "Số:", "V/v", "Kính gửi") thành CoQuanBanHanh đầy đủ. Kết quả: CoQuanChuQuan="UBND TỈNH QUẢNG NINH", CoQuanBanHanh="BAN CHỈ ĐẠO ĐIỀU TRA CƠ SỞ HÀNH CHÍNH, SỰ NGHIỆP NĂM 2026".
+- **Tệp thay đổi**:
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): trích xuất đúng CoQuanBanHanh nhiều dòng và CoQuanChuQuan từ UBND header"`
+
 ### [2026-09-14 08:23] fix(ocr): loại bỏ cụm "Độc lập - Tự do - Hạnh phúc" bị dính vào CoQuanBanHanh
 - **Mô tả**: Văn bản hành chính VN có layout 2 cột ở header: cột trái là Cơ quan ban hành, cột phải là "Độc lập - Tự do - Hạnh phúc". Khi pdftotext đọc bằng mode -layout, 2 cột này được đặt trên cùng 1 dòng với nhiều khoảng trắng ở giữa, khiến CoQuanBanHanh bị nhiễm chuỗi "BAN CHỈ ĐẠO ĐIỀU TRA CƠ                            Độc lập - Tự do - Hạnh phúc". Đã thêm hậu xử lý: dùng regex cắt tại vị trí có ≥2 khoảng trắng liên tiếp rồi gặp cụm "Độc lập", "Tự do", "Hạnh phúc", "Cộng hòa" — lấy phần bên trái làm giá trị cuối cùng.
 - **Tệp thay đổi**:
