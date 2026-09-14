@@ -1,3 +1,9 @@
+### [2026-09-14 08:15] fix(ocr): khắc phục lỗi UI mở khoá sớm do SignalR ocr_progress event
+- **Mô tả**: Khi backend phát event `ocr_progress` với status là `Đang OCR` (start processing), frontend có check `if (status !== DOCUMENT_STATUS.DANG_XU_LY)` để bỏ qua. Nhưng do `Đang OCR` khác `Đang xử lý`, frontend vô tình fetch thông tin mới từ DB và map mù quáng thành `ready`, bất chấp status thật của document. Đã sửa lại hàm `handleOcrProgress`: loại bỏ if check, luôn fetch data mới (để hiện Metadata tức thì cho người dùng), nhưng dùng logic map status chuẩn xác (`processing` nếu u.status = Đang xử lý / Đang OCR / Chờ lưu) để UI vẫn khóa chặt cho đến khi RAG hoàn tất.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/contexts/DocumentUploadContext.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi UI mở khoá sớm khi nhận event SignalR"`
+
 ### [2026-09-14 08:05] fix(ocr): khắc phục lỗi UI không khoá ngay sau khi chọn file upload
 - **Mô tả**: Khi người dùng tải file lên, backend trả về `doc.status = "Đang OCR"`. Tuy nhiên frontend ở `handleFileUpload` chỉ kiểm tra `doc.status === DOCUMENT_STATUS.DANG_XU_LY` ("Đang xử lý") để map thành trạng thái `processing`. Do không khớp "Đang OCR", frontend map nhầm thành `ready`, khiến nút LƯU và icon mắt bị bật ngay lập tức. Đã sửa lại logic thêm điều kiện `|| doc.status === 'Đang OCR'` để UI duy trì lock (`processing`) đúng như kỳ vọng từ đầu.
 - **Tệp thay đổi**:

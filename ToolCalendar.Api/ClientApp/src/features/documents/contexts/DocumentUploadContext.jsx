@@ -12,35 +12,40 @@ export function DocumentUploadProvider({ children }) {
 
   useEffect(() => {
     const handleOcrProgress = async (e) => {
-      const { docId, status } = e.detail
+      const { docId } = e.detail
 
-      if (status !== DOCUMENT_STATUS.DANG_XU_LY) {
-        try {
-          const res = await fetch(`/api/documents/${docId}`)
-          if (res.ok) {
-            const u = await res.json()
-            setBatchItems((prev) =>
-              prev.map((b) =>
-                b.id === docId
-                  ? {
-                      ...b,
-                      soVanBan: u.soVanBan || '',
-                      trichYeu: u.trichYeu || '',
-                      coQuanBanHanh: u.coQuanBanHanh || '',
-                      coQuanChuQuan: u.coQuanChuQuan || '',
-                      ngayBanHanh: u.ngayBanHanh ? u.ngayBanHanh.split('T')[0] : '',
-                      thoiHan: u.thoiHan ? u.thoiHan.split('T')[0] : '',
-                      departmentIds: u.departmentId ? [u.departmentId] : [],
-                      assignedToIds: u.assignedTo ? [u.assignedTo] : [],
-                      status: u.status === DOCUMENT_STATUS.LOI_OCR ? 'error' : 'ready',
-                    }
-                  : b
-              )
+      try {
+        const res = await fetch(`/api/documents/${docId}`)
+        if (res.ok) {
+          const u = await res.json()
+          setBatchItems((prev) =>
+            prev.map((b) =>
+              b.id === docId
+                ? {
+                    ...b,
+                    soVanBan: u.soVanBan || '',
+                    trichYeu: u.trichYeu || '',
+                    coQuanBanHanh: u.coQuanBanHanh || '',
+                    coQuanChuQuan: u.coQuanChuQuan || '',
+                    ngayBanHanh: u.ngayBanHanh ? u.ngayBanHanh.split('T')[0] : '',
+                    thoiHan: u.thoiHan ? u.thoiHan.split('T')[0] : '',
+                    departmentIds: u.departmentId ? [u.departmentId] : [],
+                    assignedToIds: u.assignedTo ? [u.assignedTo] : [],
+                    status:
+                      u.status === DOCUMENT_STATUS.DANG_XU_LY ||
+                      u.status === 'Đang OCR' ||
+                      u.status === 'Chờ lưu'
+                        ? 'processing'
+                        : u.status === DOCUMENT_STATUS.LOI_OCR
+                          ? 'error'
+                          : 'ready',
+                  }
+                : b
             )
-          }
-        } catch {
-          /* ignore */
+          )
         }
+      } catch {
+        /* ignore */
       }
     }
 
