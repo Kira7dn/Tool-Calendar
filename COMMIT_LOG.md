@@ -1,3 +1,9 @@
+### [2026-09-14 22:58] fix(ocr): extract PDF links from tooltip in CQDT for accurate file download
+- **Mô tả**: CQĐT đã thay đổi giao diện, ẩn danh sách file đính kèm thực sự bên trong tooltip (thuộc tính `onclick="showToolTip(...)"`). Mã cũ chỉ tìm thẻ `<a>` bên ngoài nên bị miss file PDF, dẫn đến tải xuống file rỗng (0 bytes). Đã cập nhật thuật toán trích xuất dùng Regex để bóc tách link tải PDF trực tiếp từ chuỗi HTML của tooltip.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): extract PDF links from tooltip in CQDT for accurate file download"`
+
 ### [2026-09-14 22:54] feat(ui): display friendly empty state for missing CQDT PDFs
 - **Mô tả**: Thay vì hiển thị khung trình duyệt lỗi xám xịt "Failed to load PDF document" khi xem trước một văn bản không tải được file đính kèm từ CQĐT (file 0 bytes), hệ thống sẽ hiển thị một thông báo thân thiện: "Không có bản xem trước. Bạn vẫn có thể nhập thông tin thủ công...".
 - **Tệp thay đổi**:

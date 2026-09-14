@@ -162,24 +162,41 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                                     continue;
                                 }
                                 
-                                var fileLinkNode = row.SelectSingleNode(".//a[contains(@href, 'pdf') or contains(@href, 'Download') or contains(@href, 'File') or contains(@href, 'Attach') or .//img[contains(@src, 'pdf')]]");
                                 string fileBase64 = "";
                                 string tenTep = "";
-
+                                string href = "";
+                                
+                                // Cách 1: Thử lấy link trực tiếp từ thẻ <a> (nếu có)
+                                var fileLinkNode = row.SelectSingleNode(".//a[contains(@href, 'pdf') or contains(@href, 'Download') or contains(@href, 'File') or contains(@href, 'Attach') or .//img[contains(@src, 'pdf')]]");
                                 if (fileLinkNode != null)
                                 {
-                                    var href = fileLinkNode.GetAttributeValue("href", "");
-                                    if (!string.IsNullOrEmpty(href) && !href.Contains("javascript:"))
+                                    href = fileLinkNode.GetAttributeValue("href", "");
+                                }
+                                
+                                // Cách 2: Trích xuất từ onclick="showToolTip(...)" do CQĐT thường giấu danh sách đính kèm vào tooltip
+                                var tooltipNode = row.SelectSingleNode(".//span[contains(@onclick, 'showToolTip')]");
+                                if (tooltipNode != null)
+                                {
+                                    var onclickAttr = tooltipNode.GetAttributeValue("onclick", "");
+                                    var decoded = WebUtility.HtmlDecode(onclickAttr).Replace("\\'", "'");
+                                    // Ưu tiên tìm file .pdf, .signed.pdf
+                                    var match = System.Text.RegularExpressions.Regex.Match(decoded, @"href=['""]([^'""]+)['""][^>]*>([^<]+\.pdf)</a>", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                                    if (match.Success)
                                     {
-                                        if (!href.StartsWith("http")) href = "https://congchuc.quangninh.gov.vn/" + href.TrimStart('/');
-                                        try
-                                        {
-                                            var fileBytes = await client.GetByteArrayAsync(href);
-                                            fileBase64 = Convert.ToBase64String(fileBytes);
-                                            tenTep = "CQDT_" + (soVanBan.Replace("/", "_").Replace(" ", "")) + ".pdf";
-                                        }
-                                        catch { }
+                                        href = match.Groups[1].Value;
                                     }
+                                }
+
+                                if (!string.IsNullOrEmpty(href) && !href.Contains("javascript:"))
+                                {
+                                    if (!href.StartsWith("http")) href = "https://congchuc.quangninh.gov.vn/" + href.TrimStart('/');
+                                    try
+                                    {
+                                        var fileBytes = await client.GetByteArrayAsync(href);
+                                        fileBase64 = Convert.ToBase64String(fileBytes);
+                                        tenTep = "CQDT_" + (soVanBan.Replace("/", "_").Replace(" ", "")) + ".pdf";
+                                    }
+                                    catch { }
                                 }
 
                                 result.Add(new CqdtDocumentDto
