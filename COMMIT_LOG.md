@@ -1,3 +1,9 @@
+### [2026-09-14 18:16] chore(infra): fix github action syntax for appleboy/ssh-action
+- **Mô tả**: Sửa thuộc tính `script_timeout` thành `command_timeout` trong Github Actions workflow `deploy.yml` do appleboy/ssh-action phiên bản mới đã deprecate thuộc tính cũ gây lỗi pipeline.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): fix github action syntax for appleboy/ssh-action"`
+
 ### [2026-09-14 18:15] fix(docs): sửa lỗi từ chối phiên đăng nhập CQĐT và thêm chức năng xem mật khẩu
 - **Mô tả**: 
   - Fix lỗi `Bị từ chối phiên đăng nhập` khi gọi API đồng bộ CQĐT. Nguyên nhân do form ASP.NET WebForms yêu cầu trường ẩn `__VIEWSTATEENCRYPTED` (dù giá trị rỗng), nếu thiếu sẽ gây lỗi internal ở phía server CQĐT khiến đăng nhập không tạo được cookie hợp lệ.
