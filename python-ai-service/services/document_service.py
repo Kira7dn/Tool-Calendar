@@ -95,6 +95,18 @@ class DocumentService:
                     if len(lines) > 1 and "Số" not in lines[1]:
                         result["CoQuanBanHanh"] = lines[1]
 
+            # Cắt bỏ phần bên phải bị dính do OCR đọc ngang 2 cột PDF:
+            # "BAN CHỈ ĐẠO...     Độc lập - Tự do - Hạnh phúc" → "BAN CHỈ ĐẠO..."
+            _right_col_patterns = [
+                r'\s{2,}Độc\s+lập',
+                r'\s{2,}Tự\s+do',
+                r'\s{2,}Hạnh\s+phúc',
+                r'\s{2,}CỘNG\s+HÒA',
+                r'\s{2,}Cộng\s+hòa',
+            ]
+            for _pat in _right_col_patterns:
+                result["CoQuanBanHanh"] = re.split(_pat, result["CoQuanBanHanh"], maxsplit=1, flags=re.IGNORECASE)[0].strip()
+
             text_upper = text.upper()
             for vb_type in ["QUYẾT ĐỊNH", "THÔNG TƯ", "NGHỊ ĐỊNH", "BÁO CÁO", "TỜ TRÌNH", "CÔNG VĂN"]:
                 if vb_type in text_upper:

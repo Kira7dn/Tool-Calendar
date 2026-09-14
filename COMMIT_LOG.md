@@ -1,3 +1,9 @@
+### [2026-09-14 08:23] fix(ocr): loại bỏ cụm "Độc lập - Tự do - Hạnh phúc" bị dính vào CoQuanBanHanh
+- **Mô tả**: Văn bản hành chính VN có layout 2 cột ở header: cột trái là Cơ quan ban hành, cột phải là "Độc lập - Tự do - Hạnh phúc". Khi pdftotext đọc bằng mode -layout, 2 cột này được đặt trên cùng 1 dòng với nhiều khoảng trắng ở giữa, khiến CoQuanBanHanh bị nhiễm chuỗi "BAN CHỈ ĐẠO ĐIỀU TRA CƠ                            Độc lập - Tự do - Hạnh phúc". Đã thêm hậu xử lý: dùng regex cắt tại vị trí có ≥2 khoảng trắng liên tiếp rồi gặp cụm "Độc lập", "Tự do", "Hạnh phúc", "Cộng hòa" — lấy phần bên trái làm giá trị cuối cùng.
+- **Tệp thay đổi**:
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): cắt bỏ cột phải header bị dính vào CoQuanBanHanh"`
+
 ### [2026-09-14 08:15] fix(ocr): khắc phục lỗi UI mở khoá sớm do SignalR ocr_progress event
 - **Mô tả**: Khi backend phát event `ocr_progress` với status là `Đang OCR` (start processing), frontend có check `if (status !== DOCUMENT_STATUS.DANG_XU_LY)` để bỏ qua. Nhưng do `Đang OCR` khác `Đang xử lý`, frontend vô tình fetch thông tin mới từ DB và map mù quáng thành `ready`, bất chấp status thật của document. Đã sửa lại hàm `handleOcrProgress`: loại bỏ if check, luôn fetch data mới (để hiện Metadata tức thì cho người dùng), nhưng dùng logic map status chuẩn xác (`processing` nếu u.status = Đang xử lý / Đang OCR / Chờ lưu) để UI vẫn khóa chặt cho đến khi RAG hoàn tất.
 - **Tệp thay đổi**:
