@@ -4367,3 +4367,8 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Core/Data/Repositories/SessionRepository.cs` (Sửa đổi)
   - `ToolCalendar.Core/Data/Repositories/SecurityLogRepository.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(auth): sửa lỗi connection string khởi tạo thành in-memory DB khi DefaultConnection rỗng"`
+### [$(date +"%Y-%m-%d %H:%M")] Thêm log chẩn đoán lỗi Auth
+- **Mô tả**: Thêm OnAuthenticationFailed vào JwtBearerEvents để ghi log chi tiết lý do token bị từ chối (báo invalid_token).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(api): add auth exception logging for diagnosis"`

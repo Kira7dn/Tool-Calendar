@@ -317,6 +317,15 @@ builder.Services.AddAuthentication(x =>
             }
             return Task.CompletedTask;
         },
+        OnAuthenticationFailed = context =>
+        {
+            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+            {
+                context.Response.Headers.Add("Token-Expired", "true");
+            }
+            Console.WriteLine($"[AuthFailed] {context.Exception.GetType().Name}: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
         OnForbidden = context =>
         {
             var accept = context.Request.Headers["Accept"].ToString();
