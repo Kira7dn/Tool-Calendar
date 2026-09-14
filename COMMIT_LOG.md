@@ -1,3 +1,10 @@
+### [2026-09-14 11:35] fix(auth): đồng bộ phiên bản JwtBearer 10.0.12 với System.IdentityModel.Tokens.Jwt 8.19.2
+- **Mô tả**: Sửa lỗi `MissingMethodException` liên quan đến `TokenValidationResult` xảy ra khi container chạy trên `dotnet 10.0` nhưng các package JWT bị lệch phiên bản (9.0.0 và 8.22.0). Đã cập nhật `Microsoft.AspNetCore.Authentication.JwtBearer` lên `10.0.12` (trùng runtime 10.0) và `System.IdentityModel.Tokens.Jwt` lên `8.19.2` để resolve đúng dependencies.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ToolCalendar.Api.csproj` (Sửa đổi)
+  - `ToolCalendar.Core/ToolCalendar.Core.csproj` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(auth): đồng bộ phiên bản JwtBearer 10.0.12 với IdentityModel 8.19.2"`
+
 ### [2026-09-14 10:55] feat(auth): Nâng cấp bảo mật Enterprise Auth (RSA + Refresh Token)
 - **Mô tả**: Thay thế HMAC-SHA256 bằng RSA-256 để ký JWT token. Bổ sung bảng UserIdentities, UserSessions và SecurityLogs vào CSDL (bằng migration thủ công). Sửa đổi endpoint Login để cấp Refresh Token, bổ sung các endpoint `/refresh` và `/logout`. Tích hợp gọi API `/logout` ở Frontend React khi người dùng đăng xuất.
 - **Tệp thay đổi**:
