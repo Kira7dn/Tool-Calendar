@@ -171,6 +171,7 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                                 if (fileLinkNode != null)
                                 {
                                     href = fileLinkNode.GetAttributeValue("href", "");
+                                    tenTep = fileLinkNode.InnerText.Trim();
                                 }
                                 
                                 // Cách 2: Trích xuất từ onclick="showToolTip(...)" do CQĐT thường giấu danh sách đính kèm vào tooltip
@@ -184,6 +185,7 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                                     if (match.Success)
                                     {
                                         href = match.Groups[1].Value;
+                                        tenTep = match.Groups[2].Value.Trim();
                                     }
                                 }
 
@@ -194,7 +196,10 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                                     {
                                         var fileBytes = await client.GetByteArrayAsync(href);
                                         fileBase64 = Convert.ToBase64String(fileBytes);
-                                        tenTep = "CQDT_" + (soVanBan.Replace("/", "_").Replace(" ", "")) + ".pdf";
+                                        if (string.IsNullOrEmpty(tenTep) || !tenTep.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            tenTep = "CQDT_" + (soVanBan.Replace("/", "_").Replace(" ", "")) + ".pdf";
+                                        }
                                     }
                                     catch { }
                                 }

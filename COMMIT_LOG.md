@@ -1,3 +1,9 @@
+### [2026-09-14 23:23] fix(ocr): preserve original PDF filename from CQDT instead of generating one
+- **Mô tả**: Mặc dù đã bóc tách được link PDF ẩn trong tooltip, hệ thống vẫn tự động gán tên file theo số ký hiệu (ví dụ: `CQDT_...pdf`). Đã sửa lại để lấy chính xác tên file hiển thị trên tooltip của CQĐT (ví dụ: `CV 2145.signed.pdf`) lưu vào trường `tenTep`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): preserve original PDF filename from CQDT instead of generating one"`
+
 ### [2026-09-14 22:58] fix(ocr): extract PDF links from tooltip in CQDT for accurate file download
 - **Mô tả**: CQĐT đã thay đổi giao diện, ẩn danh sách file đính kèm thực sự bên trong tooltip (thuộc tính `onclick="showToolTip(...)"`). Mã cũ chỉ tìm thẻ `<a>` bên ngoài nên bị miss file PDF, dẫn đến tải xuống file rỗng (0 bytes). Đã cập nhật thuật toán trích xuất dùng Regex để bóc tách link tải PDF trực tiếp từ chuỗi HTML của tooltip.
 - **Tệp thay đổi**:
