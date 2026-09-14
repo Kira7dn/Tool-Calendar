@@ -31,8 +31,15 @@ public class SessionRepository : ISessionRepository
 
     public SessionRepository(IConfiguration configuration)
     {
-        _connectionString = configuration.GetConnectionString("DefaultConnection") 
-            ?? "Data Source=/app/data/documents.db";
+        string? configConnString = configuration.GetConnectionString("DefaultConnection");
+        if (!string.IsNullOrEmpty(configConnString))
+        {
+            _connectionString = configConnString;
+        }
+        else
+        {
+            _connectionString = $"Data Source={Environment.GetEnvironmentVariable("DB_PATH") ?? "/app/data/documents.db"};Pooling=False;Default Timeout=30";
+        }
     }
 
     public async Task CreateSessionAsync(UserSession session)

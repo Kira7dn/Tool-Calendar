@@ -4361,3 +4361,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
 - **Tệp thay đổi**:
   - `python-ai-service/services/document_service.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): tối ưu regex số văn bản xử lý unicode decomposed và dính chữ"`
+### [$(date +'%Y-%m-%d %H:%M')] Fix lỗi connection string khởi tạo thành in-memory DB khi DefaultConnection rỗng
+- **Mô tả**: Khi `DefaultConnection` trong `appsettings.json` là chuỗi rỗng (`""`), toán tử `??` không hoạt động, khiến chuỗi kết nối bị gán thành chuỗi rỗng thay vì fallback về biến môi trường `DB_PATH`. Chuỗi rỗng khiến SQLite khởi tạo thành một in-memory DB trống trơn, dẫn đến lỗi "no such table".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/Repositories/SessionRepository.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Data/Repositories/SecurityLogRepository.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(auth): sửa lỗi connection string khởi tạo thành in-memory DB khi DefaultConnection rỗng"`
