@@ -6,12 +6,12 @@ namespace ToolCalendar.Core.Services.Integration;
 
 public interface ICqdtIntegrationService
 {
-    Task<List<CqdtDocumentDto>> ScrapePendingDocumentsAsync(string username, string password);
+    Task<List<CqdtDocumentDto>> ScrapePendingDocumentsAsync(string username, string password, int limit = 25);
 }
 
 public class CqdtIntegrationService : ICqdtIntegrationService
 {
-    public async Task<List<CqdtDocumentDto>> ScrapePendingDocumentsAsync(string username, string password)
+    public async Task<List<CqdtDocumentDto>> ScrapePendingDocumentsAsync(string username, string password, int limit = 25)
     {
         var cookieContainer = new CookieContainer();
         using var handler = new HttpClientHandler
@@ -87,112 +87,150 @@ public class CqdtIntegrationService : ICqdtIntegrationService
             await System.IO.File.WriteAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "cqdt_html_dump.txt"), docsHtml);
         } catch { }
         
-        // 4. Parse Document Table
+        // 4. Parse Document Table (Multi-page loop)
         var result = new List<CqdtDocumentDto>();
-        var docsDoc = new HtmlDocument();
-        docsDoc.LoadHtml(docsHtml);
-        
-        HtmlNode targetTable = null;
-        var tables = docsDoc.DocumentNode.SelectNodes("//table");
-        if (tables != null)
-        {
-            foreach (var tbl in tables)
-            {
-                var html = tbl.InnerHtml.ToLower();
-                // Bảng văn bản thường có các tiêu đề này
-                if ((html.Contains("ký hiệu") || html.Contains("số đến")) && 
-                    (html.Contains("trích yếu") || html.Contains("nội dung")))
-                {
-                    // Loại bỏ bảng outer nếu nó chứa bảng inner (ASP.NET thường lồng table)
-                    var innerTables = tbl.SelectNodes(".//table");
-                    if (innerTables != null && innerTables.Any(t => t.InnerHtml.ToLower().Contains("trích yếu") && t.InnerHtml.ToLower().Contains("ký hiệu")))
-                    {
-                        continue; 
-                    }
-                    targetTable = tbl;
-                    break;
-                }
-            }
-        }
+        string currentHtml = docsHtml;
+        int pageCount = 1;
 
-        if (targetTable != null)
+        while (result.Count < limit && pageCount <= 20) // Quét tối đa 20 trang để an toàn
         {
-            var rows = targetTable.SelectNodes(".//tr");
-            if (rows != null)
+            var docsDoc = new HtmlDocument();
+            docsDoc.LoadHtml(currentHtml);
+            
+            HtmlNode targetTable = null;
+            var tables = docsDoc.DocumentNode.SelectNodes("//table");
+            if (tables != null)
             {
-                // Tìm vị trí cột động từ dòng đầu tiên
-                int colSoKyHieu = 1, colCoQuan = 2, colTrichYeu = 3;
-                var headerCols = rows[0].SelectNodes(".//th") ?? rows[0].SelectNodes(".//td");
-                if (headerCols != null)
+                foreach (var tbl in tables)
                 {
-                    for (int i = 0; i < headerCols.Count; i++)
+                    var html = tbl.InnerHtml.ToLower();
+                    if ((html.Contains("ký hiệu") || html.Contains("số đến")) && 
+                        (html.Contains("trích yếu") || html.Contains("nội dung")))
                     {
-                        var txt = headerCols[i].InnerText.ToLower();
-                        if (txt.Contains("ký hiệu") || txt.Contains("số đến")) colSoKyHieu = i;
-                        if (txt.Contains("cơ quan") || txt.Contains("nơi gửi")) colCoQuan = i;
-                        if (txt.Contains("trích yếu") || txt.Contains("nội dung")) colTrichYeu = i;
-                    }
-                }
-
-                foreach (var row in rows.Skip(1))
-                {
-                    var cols = row.SelectNodes("td");
-                    if (cols != null && cols.Count > Math.Max(colSoKyHieu, Math.Max(colCoQuan, colTrichYeu))) 
-                    {
-                        try
+                        var innerTables = tbl.SelectNodes(".//table");
+                        if (innerTables != null && innerTables.Any(t => t.InnerHtml.ToLower().Contains("trích yếu") && t.InnerHtml.ToLower().Contains("ký hiệu")))
                         {
-                            var soVanBan = cols[colSoKyHieu]?.InnerText?.Trim();
-                            var coQuan = cols[colCoQuan]?.InnerText?.Trim();
-                            var thongTinHtml = cols[colTrichYeu]?.InnerHtml;
-                            
-                            string trichYeu = "";
-                            if (!string.IsNullOrEmpty(thongTinHtml))
-                            {
-                                var infoDoc = new HtmlDocument();
-                                infoDoc.LoadHtml(thongTinHtml);
-                                trichYeu = infoDoc.DocumentNode.InnerText.Replace("\n", " ").Replace("\r", "").Trim();
-                            }
-
-                            // Lọc bỏ row rác (như dòng calendar hay phân trang)
-                            if (string.IsNullOrEmpty(soVanBan) || soVanBan.Length < 2 || string.IsNullOrEmpty(trichYeu) || trichYeu.Length < 5)
-                            {
-                                continue;
-                            }
-                            
-                            // Tìm link tải file (mở rộng thêm điều kiện img pdf)
-                            var fileLinkNode = row.SelectSingleNode(".//a[contains(@href, 'pdf') or contains(@href, 'Download') or contains(@href, 'File') or contains(@href, 'Attach') or .//img[contains(@src, 'pdf')]]");
-                            string fileBase64 = "";
-                            string tenTep = "";
-
-                            if (fileLinkNode != null)
-                            {
-                                var href = fileLinkNode.GetAttributeValue("href", "");
-                                if (!string.IsNullOrEmpty(href) && !href.Contains("javascript:"))
-                                {
-                                    if (!href.StartsWith("http")) href = "https://congchuc.quangninh.gov.vn/" + href.TrimStart('/');
-                                    try
-                                    {
-                                        var fileBytes = await client.GetByteArrayAsync(href);
-                                        fileBase64 = Convert.ToBase64String(fileBytes);
-                                        tenTep = "CQDT_" + (soVanBan.Replace("/", "_").Replace(" ", "")) + ".pdf";
-                                    }
-                                    catch { }
-                                }
-                            }
-
-                            result.Add(new CqdtDocumentDto
-                            {
-                                SoKyHieu = WebUtility.HtmlDecode(soVanBan),
-                                CoQuanBanHanh = WebUtility.HtmlDecode(coQuan ?? ""),
-                                TrichYeu = WebUtility.HtmlDecode(trichYeu),
-                                FileBase64 = fileBase64,
-                                CQDTTenTep = tenTep
-                            });
+                            continue; 
                         }
-                        catch { }
+                        targetTable = tbl;
+                        break;
                     }
                 }
             }
+
+            if (targetTable != null)
+            {
+                var rows = targetTable.SelectNodes(".//tr");
+                if (rows != null)
+                {
+                    int colSoKyHieu = 1, colCoQuan = 2, colTrichYeu = 3;
+                    var headerCols = rows[0].SelectNodes(".//th") ?? rows[0].SelectNodes(".//td");
+                    if (headerCols != null)
+                    {
+                        for (int i = 0; i < headerCols.Count; i++)
+                        {
+                            var txt = headerCols[i].InnerText.ToLower();
+                            if (txt.Contains("ký hiệu") || txt.Contains("số đến")) colSoKyHieu = i;
+                            if (txt.Contains("cơ quan") || txt.Contains("nơi gửi")) colCoQuan = i;
+                            if (txt.Contains("trích yếu") || txt.Contains("nội dung")) colTrichYeu = i;
+                        }
+                    }
+
+                    foreach (var row in rows.Skip(1))
+                    {
+                        if (result.Count >= limit) break; // Đủ số lượng thì dừng
+
+                        var cols = row.SelectNodes("td");
+                        if (cols != null && cols.Count > Math.Max(colSoKyHieu, Math.Max(colCoQuan, colTrichYeu))) 
+                        {
+                            try
+                            {
+                                var soVanBan = cols[colSoKyHieu]?.InnerText?.Trim();
+                                var coQuan = cols[colCoQuan]?.InnerText?.Trim();
+                                var thongTinHtml = cols[colTrichYeu]?.InnerHtml;
+                                
+                                string trichYeu = "";
+                                if (!string.IsNullOrEmpty(thongTinHtml))
+                                {
+                                    var infoDoc = new HtmlDocument();
+                                    infoDoc.LoadHtml(thongTinHtml);
+                                    trichYeu = infoDoc.DocumentNode.InnerText.Replace("\n", " ").Replace("\r", "").Trim();
+                                }
+
+                                if (string.IsNullOrEmpty(soVanBan) || soVanBan.Length < 2 || string.IsNullOrEmpty(trichYeu) || trichYeu.Length < 5)
+                                {
+                                    continue;
+                                }
+                                
+                                var fileLinkNode = row.SelectSingleNode(".//a[contains(@href, 'pdf') or contains(@href, 'Download') or contains(@href, 'File') or contains(@href, 'Attach') or .//img[contains(@src, 'pdf')]]");
+                                string fileBase64 = "";
+                                string tenTep = "";
+
+                                if (fileLinkNode != null)
+                                {
+                                    var href = fileLinkNode.GetAttributeValue("href", "");
+                                    if (!string.IsNullOrEmpty(href) && !href.Contains("javascript:"))
+                                    {
+                                        if (!href.StartsWith("http")) href = "https://congchuc.quangninh.gov.vn/" + href.TrimStart('/');
+                                        try
+                                        {
+                                            var fileBytes = await client.GetByteArrayAsync(href);
+                                            fileBase64 = Convert.ToBase64String(fileBytes);
+                                            tenTep = "CQDT_" + (soVanBan.Replace("/", "_").Replace(" ", "")) + ".pdf";
+                                        }
+                                        catch { }
+                                    }
+                                }
+
+                                result.Add(new CqdtDocumentDto
+                                {
+                                    SoKyHieu = WebUtility.HtmlDecode(soVanBan),
+                                    CoQuanBanHanh = WebUtility.HtmlDecode(coQuan ?? ""),
+                                    TrichYeu = WebUtility.HtmlDecode(trichYeu),
+                                    FileBase64 = fileBase64,
+                                    CQDTTenTep = tenTep
+                                });
+                            }
+                            catch { }
+                        }
+                    }
+                }
+            }
+
+            // Nếu đã đủ dữ liệu, thoát vòng lặp chuyển trang
+            if (result.Count >= limit) break;
+
+            // Chuyển trang tiếp theo (Pagination)
+            var nextBtn = docsDoc.DocumentNode.SelectSingleNode("//*[@class='rgPageNext' or contains(@class, 'rgPageNext')]");
+            if (nextBtn == null || nextBtn.GetAttributeValue("class", "").Contains("rgDisabled") || nextBtn.GetAttributeValue("disabled", "") == "disabled" || nextBtn.GetAttributeValue("onclick", "").Contains("return false;"))
+            {
+                break; // Không còn trang nào nữa
+            }
+
+            var onclick = nextBtn.GetAttributeValue("onclick", "");
+            var match = System.Text.RegularExpressions.Regex.Match(onclick, @"__doPostBack\('([^']+)'");
+            if (!match.Success) break;
+
+            string eventTarget = match.Groups[1].Value;
+            var vs = docsDoc.DocumentNode.SelectSingleNode("//input[@id='__VIEWSTATE']")?.GetAttributeValue("value", "");
+            var ev = docsDoc.DocumentNode.SelectSingleNode("//input[@id='__EVENTVALIDATION']")?.GetAttributeValue("value", "");
+            var vsg = docsDoc.DocumentNode.SelectSingleNode("//input[@id='__VIEWSTATEGENERATOR']")?.GetAttributeValue("value", "");
+
+            var pagePostData = new Dictionary<string, string>
+            {
+                { "__EVENTTARGET", eventTarget },
+                { "__EVENTARGUMENT", "" },
+                { "__VIEWSTATE", vs ?? "" },
+                { "__VIEWSTATEGENERATOR", vsg ?? "" },
+                { "__EVENTVALIDATION", ev ?? "" }
+            };
+
+            var pageContent = new FormUrlEncodedContent(pagePostData);
+            var pageResponse = await client.PostAsync(pendingDocsUrl, pageContent);
+            if (!pageResponse.IsSuccessStatusCode) break;
+            
+            currentHtml = await pageResponse.Content.ReadAsStringAsync();
+            pageCount++;
         }
         
         return result;

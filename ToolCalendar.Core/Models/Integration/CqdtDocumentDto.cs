@@ -4,6 +4,7 @@ public class CqdtLoginRequest
 {
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public int Limit { get; set; } = 25;
 }
 
 public class CqdtDocumentDto

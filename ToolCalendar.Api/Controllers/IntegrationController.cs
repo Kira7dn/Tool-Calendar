@@ -28,7 +28,7 @@ public class IntegrationController : ControllerBase
 
         try
         {
-            var documents = await _cqdtService.ScrapePendingDocumentsAsync(request.Username, request.Password);
+            var documents = await _cqdtService.ScrapePendingDocumentsAsync(request.Username, request.Password, request.Limit);
             return Ok(ApiResponse<List<CqdtDocumentDto>>.Ok(documents));
         }
         catch (Exception ex)

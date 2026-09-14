@@ -1,3 +1,12 @@
+### [2026-09-14 18:58] feat(integration): Thêm tuỳ chọn số lượng tải văn bản CQĐT
+- **Mô tả**: Hỗ trợ tải văn bản từ CQĐT với giới hạn do người dùng chọn (25, 50, 100 bản). Backend tự động phân trang (pagination) và gửi request POST để lật trang theo cấu trúc RadGrid của ASP.NET.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/CqdtSyncModal.jsx` (Sửa đổi)
+  - `ToolCalendar.Core/Models/Integration/CqdtDocumentDto.cs` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/IntegrationController.cs` (Sửa đổi)
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(integration): thêm tuỳ chọn số lượng tải văn bản CQĐT và logic phân trang"`
+
 ### [2026-09-14 18:48] fix(docs): make CQĐT HTML parser robust and filter out calendar/pagination garbage
 - **Mô tả**: Khi crawl trang CQĐT, thuật toán parse HTML cũ `//table//tr` đã quét nhầm các control như DatePicker Calendar hoặc Pagination, dẫn tới tạo ra các văn bản rác với số hiệu `<` hoặc `1`, `8`, `15`... Đã viết lại thuật toán: tự động dò tìm bảng chứa văn bản (chứa header Trích yếu/Số đến), tự động ánh xạ index các cột dựa trên tên header để không bị sai lệch, và thêm bộ lọc bỏ qua các dòng rác (text quá ngắn). Mở rộng nhận diện link file pdf (qua `img src="pdf"` hoặc `a href`).
 - **Tệp thay đổi**:

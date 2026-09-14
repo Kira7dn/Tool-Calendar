@@ -3,6 +3,7 @@ import { useState } from 'react'
 export function CqdtSyncModal({ isOpen, onClose, onSync }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [limit, setLimit] = useState(25)
   const [showPassword, setShowPassword] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [error, setError] = useState(null)
@@ -18,7 +19,7 @@ export function CqdtSyncModal({ isOpen, onClose, onSync }) {
       const res = await fetch('/api/integration/sync-cqdt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, limit }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -135,6 +136,22 @@ export function CqdtSyncModal({ isOpen, onClose, onSync }) {
                   )}
                 </button>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Số lượng văn bản cần lấy
+              </label>
+              <select
+                value={limit}
+                onChange={(e) => setLimit(Number(e.target.value))}
+                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+              >
+                <option value={25}>25 bản</option>
+                <option value={50}>50 bản</option>
+                <option value={100}>100 bản</option>
+                <option value={200}>200 bản (Có thể chậm)</option>
+              </select>
             </div>
           </div>
 
