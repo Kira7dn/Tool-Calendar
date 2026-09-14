@@ -1,5 +1,10 @@
+### [2026-09-14 23:55] fix(ocr): block AI from hallucinating structured metadata fields
+- **Mô tả**: Chặn LLM ghi đè lên các trường dữ liệu có cấu trúc (SoVanBan, NgayBanHanh, ThoiHan). Tránh tình trạng AI tự đoán mò "2867/UBND" khi Regex không đọc được chữ viết tay.
+- **Tệp thay đổi**:
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): block AI from hallucinating structured metadata fields"`
+
 ### [2026-09-14 23:26] fix(ocr): resolve CS0136 variable shadowing compile error
-- **Mô tả**: Sửa lỗi biên dịch do khai báo trùng tên biến `match` bên trong vòng lặp (với một biến `match` khác ở bên dưới scope) gây lỗi trên GitHub Actions. Đã đổi tên biến thành `pdfMatch` để tách biệt.
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): resolve CS0136 variable shadowing compile error"`

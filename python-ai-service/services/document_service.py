@@ -210,6 +210,7 @@ class DocumentService:
                 except json.JSONDecodeError:
                     parsed = {}
 
+                STRUCTURED_FIELDS = {"SoVanBan", "NgayBanHanh", "ThoiHan"}
                 for k in fallback.keys():
                     if k not in parsed:
                         continue
@@ -220,9 +221,11 @@ class DocumentService:
                         # AI được phép override Regex với 2 trường ngữ nghĩa này
                         fallback[k] = ai_val
                     elif not fallback[k]:
-                        # R-P04: Các trường khác — AI chỉ điền khi Regex thất bại
+                        # Nếu là trường cấu trúc chặt, tuyệt đối cấm AI tự bịa khi Regex đã thất bại
+                        if k in STRUCTURED_FIELDS:
+                            continue
+                        # Các trường khác — AI chỉ điền khi Regex thất bại
                         fallback[k] = ai_val
-
             except Exception as e:
                 logger.warning("[DocumentService.extract_metadata] Lỗi AI, sử dụng Regex: %s", str(e))
 
