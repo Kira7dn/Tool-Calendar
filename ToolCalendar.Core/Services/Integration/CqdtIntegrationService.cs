@@ -82,66 +82,101 @@ public class CqdtIntegrationService : ICqdtIntegrationService
         
         var docsHtml = await docsResponse.Content.ReadAsStringAsync();
         
+        // Dump HTML ra file để debug cấu trúc (Sẽ bị AI xóa sau khi phân tích xong theo tc-rule-no-temporary-files)
+        try {
+            await System.IO.File.WriteAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "cqdt_html_dump.txt"), docsHtml);
+        } catch { }
+        
         // 4. Parse Document Table
         var result = new List<CqdtDocumentDto>();
         var docsDoc = new HtmlDocument();
         docsDoc.LoadHtml(docsHtml);
         
-        // Phân tích HTML từ bảng (Dựa trên cấu trúc thường thấy của hệ thống công văn)
-        // Tìm thẻ table chứa các <tr>. 
-        var rows = docsDoc.DocumentNode.SelectNodes("//table//tr");
-        if (rows != null)
+        HtmlNode targetTable = null;
+        var tables = docsDoc.DocumentNode.SelectNodes("//table");
+        if (tables != null)
         {
-            foreach (var row in rows.Skip(1)) // Bỏ qua dòng tiêu đề
+            foreach (var tbl in tables)
             {
-                var cols = row.SelectNodes("td");
-                // Thông thường bảng có cột: Icon, Số văn bản, Cơ quan, Thông tin, Thao tác
-                if (cols != null && cols.Count >= 4) 
+                var html = tbl.InnerHtml.ToLower();
+                // Bảng văn bản thường có các tiêu đề này
+                if ((html.Contains("ký hiệu") || html.Contains("số đến")) && 
+                    (html.Contains("trích yếu") || html.Contains("nội dung")))
                 {
-                    try
+                    // Loại bỏ bảng outer nếu nó chứa bảng inner (ASP.NET thường lồng table)
+                    var innerTables = tbl.SelectNodes(".//table");
+                    if (innerTables != null && innerTables.Any(t => t.InnerHtml.ToLower().Contains("trích yếu") && t.InnerHtml.ToLower().Contains("ký hiệu")))
                     {
-                        var soVanBan = cols[1]?.InnerText?.Trim();
-                        var coQuan = cols[2]?.InnerText?.Trim();
-                        var thongTinHtml = cols[3]?.InnerHtml;
-                        
-                        string trichYeu = "";
-                        
-                        if (!string.IsNullOrEmpty(thongTinHtml))
+                        continue; 
+                    }
+                    targetTable = tbl;
+                    break;
+                }
+            }
+        }
+
+        if (targetTable != null)
+        {
+            var rows = targetTable.SelectNodes(".//tr");
+            if (rows != null)
+            {
+                // Tìm vị trí cột động từ dòng đầu tiên
+                int colSoKyHieu = 1, colCoQuan = 2, colTrichYeu = 3;
+                var headerCols = rows[0].SelectNodes(".//th") ?? rows[0].SelectNodes(".//td");
+                if (headerCols != null)
+                {
+                    for (int i = 0; i < headerCols.Count; i++)
+                    {
+                        var txt = headerCols[i].InnerText.ToLower();
+                        if (txt.Contains("ký hiệu") || txt.Contains("số đến")) colSoKyHieu = i;
+                        if (txt.Contains("cơ quan") || txt.Contains("nơi gửi")) colCoQuan = i;
+                        if (txt.Contains("trích yếu") || txt.Contains("nội dung")) colTrichYeu = i;
+                    }
+                }
+
+                foreach (var row in rows.Skip(1))
+                {
+                    var cols = row.SelectNodes("td");
+                    if (cols != null && cols.Count > Math.Max(colSoKyHieu, Math.Max(colCoQuan, colTrichYeu))) 
+                    {
+                        try
                         {
-                            var infoDoc = new HtmlDocument();
-                            infoDoc.LoadHtml(thongTinHtml);
-                            trichYeu = infoDoc.DocumentNode.InnerText.Replace("\n", " ").Replace("\r", "").Trim();
-                        }
-                        
-                        if (!string.IsNullOrEmpty(soVanBan))
-                        {
-                            // Tìm link tải file (thường có chữ Download, File, hoặc .pdf trong thẻ <a>)
-                            var fileLinkNode = row.SelectSingleNode(".//a[contains(@href, 'pdf') or contains(@href, 'Download') or contains(@href, 'File') or contains(@href, 'Attach')]");
+                            var soVanBan = cols[colSoKyHieu]?.InnerText?.Trim();
+                            var coQuan = cols[colCoQuan]?.InnerText?.Trim();
+                            var thongTinHtml = cols[colTrichYeu]?.InnerHtml;
+                            
+                            string trichYeu = "";
+                            if (!string.IsNullOrEmpty(thongTinHtml))
+                            {
+                                var infoDoc = new HtmlDocument();
+                                infoDoc.LoadHtml(thongTinHtml);
+                                trichYeu = infoDoc.DocumentNode.InnerText.Replace("\n", " ").Replace("\r", "").Trim();
+                            }
+
+                            // Lọc bỏ row rác (như dòng calendar hay phân trang)
+                            if (string.IsNullOrEmpty(soVanBan) || soVanBan.Length < 2 || string.IsNullOrEmpty(trichYeu) || trichYeu.Length < 5)
+                            {
+                                continue;
+                            }
+                            
+                            // Tìm link tải file (mở rộng thêm điều kiện img pdf)
+                            var fileLinkNode = row.SelectSingleNode(".//a[contains(@href, 'pdf') or contains(@href, 'Download') or contains(@href, 'File') or contains(@href, 'Attach') or .//img[contains(@src, 'pdf')]]");
                             string fileBase64 = "";
                             string tenTep = "";
 
                             if (fileLinkNode != null)
                             {
                                 var href = fileLinkNode.GetAttributeValue("href", "");
-                                if (!string.IsNullOrEmpty(href))
+                                if (!string.IsNullOrEmpty(href) && !href.Contains("javascript:"))
                                 {
-                                    // Sửa link tương đối thành tuyệt đối nếu cần
-                                    if (!href.StartsWith("http"))
-                                    {
-                                        href = "https://congchuc.quangninh.gov.vn/" + href.TrimStart('/');
-                                    }
-                                    
+                                    if (!href.StartsWith("http")) href = "https://congchuc.quangninh.gov.vn/" + href.TrimStart('/');
                                     try
                                     {
-                                        // Tải nội dung file về dưới dạng byte array
                                         var fileBytes = await client.GetByteArrayAsync(href);
                                         fileBase64 = Convert.ToBase64String(fileBytes);
                                         tenTep = "CQDT_" + (soVanBan.Replace("/", "_").Replace(" ", "")) + ".pdf";
                                     }
-                                    catch
-                                    {
-                                        // Nếu lỗi tải file, cứ bỏ qua
-                                    }
+                                    catch { }
                                 }
                             }
 
@@ -154,10 +189,7 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                                 CQDTTenTep = tenTep
                             });
                         }
-                    }
-                    catch
-                    {
-                        // Bỏ qua dòng lỗi parsing
+                        catch { }
                     }
                 }
             }

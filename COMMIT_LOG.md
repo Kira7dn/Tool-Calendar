@@ -1,3 +1,9 @@
+### [2026-09-14 18:48] fix(docs): make CQĐT HTML parser robust and filter out calendar/pagination garbage
+- **Mô tả**: Khi crawl trang CQĐT, thuật toán parse HTML cũ `//table//tr` đã quét nhầm các control như DatePicker Calendar hoặc Pagination, dẫn tới tạo ra các văn bản rác với số hiệu `<` hoặc `1`, `8`, `15`... Đã viết lại thuật toán: tự động dò tìm bảng chứa văn bản (chứa header Trích yếu/Số đến), tự động ánh xạ index các cột dựa trên tên header để không bị sai lệch, và thêm bộ lọc bỏ qua các dòng rác (text quá ngắn). Mở rộng nhận diện link file pdf (qua `img src="pdf"` hoặc `a href`).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): make CQDT HTML parser robust and filter out garbage rows"`
+
 ### [2026-09-14 18:36] fix(docs): fix Cannot read properties of undefined (reading '0') in UploadTable
 - **Mô tả**: Sửa lỗi trắng trang khi render UploadTable cho các văn bản đồng bộ từ CQĐT. Nguyên nhân do item tạo ra thiếu mảng `departmentIds` và `assignedToIds`, dẫn tới lỗi khi truy cập phần tử `[0]` trong Table. Đã chuẩn hóa lại cấu trúc object item cho khớp với `UploadTable`.
 - **Tệp thay đổi**:
