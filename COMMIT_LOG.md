@@ -1,3 +1,9 @@
+### [2026-09-14 22:54] feat(ui): display friendly empty state for missing CQDT PDFs
+- **Mô tả**: Thay vì hiển thị khung trình duyệt lỗi xám xịt "Failed to load PDF document" khi xem trước một văn bản không tải được file đính kèm từ CQĐT (file 0 bytes), hệ thống sẽ hiển thị một thông báo thân thiện: "Không có bản xem trước. Bạn vẫn có thể nhập thông tin thủ công...".
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/components/ReviewModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): display friendly empty state for missing CQDT PDFs"`
+
 ### [2026-09-14 22:46] fix(ui): gracefully handle missing PDFs for CQDT documents
 - **Mô tả**: Khi CQĐT trả về một số văn bản không có link tải PDF (hoặc tải thất bại), `doc.fileBase64` bị rỗng. Điều này làm cho đối tượng `_tempFile` được tạo ra là một Object thường thay vì Blob/File, khiến màn hình xem trước báo lỗi "Không thể tải file PDF" và làm sụp đổ luồng hiển thị. Đã cập nhật để tự động tạo một Blob rỗng `new Blob([], { type: 'application/pdf' })` nếu file gốc không hợp lệ.
 - **Tệp thay đổi**:

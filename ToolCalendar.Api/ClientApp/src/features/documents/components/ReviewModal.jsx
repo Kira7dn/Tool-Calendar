@@ -120,12 +120,31 @@ export function ReviewModal({
                   </div>
                 </div>
               )}
-              <iframe
-                key={`${reviewItem?.id}-${pdfPage}`}
-                src={pdfBlobUrl ? `${pdfBlobUrl}#page=${pdfPage}&view=FitH` : ''}
-                className="w-full h-full border-none"
-                title="PDF Viewer"
-              />
+              {reviewItem?._tempFile?.size === 0 ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-100 z-10 p-8 text-center">
+                  <div className="flex flex-col items-center gap-4 max-w-sm">
+                    <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center text-slate-400">
+                      <FileText size={32} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-700 mb-1">
+                        Không có bản xem trước
+                      </h4>
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        Văn bản này được đồng bộ từ CQĐT nhưng không có file PDF đính kèm. Bạn vẫn
+                        có thể nhập thông tin thủ công ở bảng bên phải.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <iframe
+                  key={`${reviewItem?.id}-${pdfPage}`}
+                  src={pdfBlobUrl ? `${pdfBlobUrl}#page=${pdfPage}&view=FitH` : ''}
+                  className="w-full h-full border-none"
+                  title="PDF Viewer"
+                />
+              )}
             </div>
             {/* PDF Toolbar */}
             <div
