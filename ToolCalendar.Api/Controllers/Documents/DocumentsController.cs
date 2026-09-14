@@ -203,8 +203,14 @@ namespace ToolCalendar.Api.Controllers.Documents
             if (doc == null) return NotFound(ApiResponse.Fail("Văn bản không tồn tại."));
             if (string.IsNullOrEmpty(doc.FilePath) || !System.IO.File.Exists(doc.FilePath))
                 return BadRequest(ApiResponse.Fail("File gốc không tồn tại trên server."));
+
+            // Reset status để pipeline tái xử lý đầy đủ và UI lock đúng
+            doc.Status = "Đang OCR";
+            await _documentRepository.UpdateAsync(doc);
+            _ = _hubContext.Clients.All.SendAsync("DocumentUpdated");
+
             await _ocrQueue.EnqueueAsync(id);
-            return Ok(ApiResponse.Ok("Đã đưa vào hàng đợi xử lý trích xuất và Index (RAG)."));
+            return Ok(ApiResponse.Ok("Đã đưa vào hàng đợi xử lý lại — AI sẽ cập nhật thông tin trong 2–3 phút."));
         }
 
         [Authorize(Roles = "Admin,VanThu,LanhDao,CanBo")]

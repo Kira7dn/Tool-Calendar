@@ -12,6 +12,7 @@ import {
   Building2,
   Save,
   Loader2,
+  RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -63,7 +64,25 @@ export function EditDocModal({
   setPdfPage,
 }) {
   const [isSaving, setIsSaving] = useState(false)
+  const [isReindexing, setIsReindexing] = useState(false)
   const [isFullScreen, setIsFullScreen] = useState(false)
+
+  const handleReindex = async () => {
+    setIsReindexing(true)
+    try {
+      const res = await fetch(`/api/documents/${docId}/reindex`, { method: 'POST' })
+      if (res.ok) {
+        toast.success('Đã đưa vào hàng đợi xử lý lại — AI sẽ cập nhật thông tin trong 2–3 phút')
+        setIsEditModalOpen(false)
+      } else {
+        toast.error('Không thể kích hoạt xử lý lại')
+      }
+    } catch {
+      toast.error('Lỗi kết nối máy chủ')
+    } finally {
+      setIsReindexing(false)
+    }
+  }
 
   const handleSaveEdit = async () => {
     setIsSaving(true)
@@ -288,21 +307,36 @@ export function EditDocModal({
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-slate-100 bg-white shrink-0 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-slate-100 bg-white shrink-0 flex items-center justify-between gap-3">
           <button
-            onClick={() => setIsEditModalOpen(false)}
-            className="px-6 py-2.5 rounded-xl text-[11px] bg-slate-100 font-black uppercase tracking-widest text-slate-600 hover:bg-slate-200 transition-all"
+            onClick={handleReindex}
+            disabled={isReindexing || isSaving}
+            title="Xử lý lại toàn bộ: trích xuất metadata, OCR và RAG indexing"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[11px] border border-blue-200 bg-blue-50 text-blue-700 font-black uppercase tracking-widest hover:bg-blue-100 transition-all disabled:opacity-40"
           >
-            HỦY BỎ
+            {isReindexing ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <RefreshCw size={14} />
+            )}
+            {isReindexing ? 'Đang xử lý...' : 'Xử lý lại AI'}
           </button>
-          <button
-            onClick={handleSaveEdit}
-            disabled={isSaving}
-            className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200 disabled:opacity-50"
-          >
-            {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-            Lưu thay đổi
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsEditModalOpen(false)}
+              className="px-6 py-2.5 rounded-xl text-[11px] bg-slate-100 font-black uppercase tracking-widest text-slate-600 hover:bg-slate-200 transition-all"
+            >
+              HỦY BỎ
+            </button>
+            <button
+              onClick={handleSaveEdit}
+              disabled={isSaving || isReindexing}
+              className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200 disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+              Lưu thay đổi
+            </button>
+          </div>
         </div>
       </div>
     </div>

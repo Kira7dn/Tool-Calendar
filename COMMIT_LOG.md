@@ -1,3 +1,10 @@
+### [2026-09-14 09:51] feat(docs): thêm nút "Xử lý lại AI" trong EditDocModal để re-OCR document cũ
+- **Mô tả**: Document đã xử lý từ trước không tự cập nhật khi code extraction thay đổi do deduplication SHA-256. Thêm nút "Xử lý lại AI" (màu blue, góc trái footer) trong modal Chỉnh sửa thông tin văn bản. Nút gọi POST /api/documents/{id}/reindex — backend reset Status về "Đang OCR", notify SignalR, rồi đẩy vào RabbitMQ queue để AI chạy lại đầy đủ pipeline (OCR + metadata extraction + RAG indexing). UI lock đúng sau khi nhấn nút. Backend endpoint cũng được cải thiện: reset status trước khi enqueue để SignalR lock UI.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/EditDocModal.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/Controllers/Documents/DocumentsController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(docs): thêm nút Xử lý lại AI trong EditDocModal để re-OCR document cũ"`
+
 ### [2026-09-14 09:25] fix(ocr): cho LLM ưu tiên trích xuất CoQuanBanHanh/CoQuanChuQuan + fix deploy script hash
 - **Mô tả**: 2 fix đồng thời: (1) deploy script chỉ hash `requirements.txt` nên bỏ qua build khi `.py` thay đổi → code Python cũ vẫn chạy. Đổi sang hash toàn bộ `python-ai-service/` (*.py + requirements.txt + Dockerfile). (2) CoQuanBanHanh và CoQuanChuQuan là 2 trường ngữ nghĩa phức tạp, LLM hiểu ngữ cảnh 2 cột tốt hơn Regex. Đổi merge strategy: tạo `LLM_PRIORITY_FIELDS` cho phép LLM override kết quả Regex. Cải thiện prompt với hướng dẫn cụ thể về cấu trúc header 2 cột VN ("UBND ở trên là CoQuanChuQuan, đơn vị bên dưới là CoQuanBanHanh").
 - **Tệp thay đổi**:
