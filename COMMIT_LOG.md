@@ -1,3 +1,9 @@
+### [2026-09-14 18:27] fix(docs): fix Cannot read properties of undefined (reading 'map') in CqdtSyncModal
+- **Mô tả**: Sửa lỗi `Cannot read properties of undefined (reading 'map')` khi đồng bộ CQĐT thành công. Nguyên nhân do Global Fetch Interceptor (`main.jsx`) đã tự động bóc tách (unwrap) `json.data` ra khỏi response `ApiResponse<T>`, do đó `data` ở `CqdtSyncModal.jsx` đã là danh sách văn bản, không cần `.data` nữa.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/CqdtSyncModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): fix Cannot read properties of undefined in CqdtSyncModal"`
+
 ### [2026-09-14 18:21] chore(infra): add doc-clamav to remove list in deploy script to fix conflict
 - **Mô tả**: Khi github action gọi `docker compose up -d`, container `doc-clamav` bị lỗi conflict name vì bản cũ vẫn chưa được xóa, dẫn tới việc deploy CI/CD bị gián đoạn. Thêm lệnh `docker rm -f doc-clamav` trước khi start container.
 - **Tệp thay đổi**:

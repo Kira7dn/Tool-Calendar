@@ -22,9 +22,9 @@ export function CqdtSyncModal({ isOpen, onClose, onSync }) {
       })
       const data = await res.json()
       if (!res.ok) {
-        throw new Error(data.message || 'Đồng bộ thất bại')
+        throw new Error(data.message || data.error || 'Đồng bộ thất bại')
       }
-      onSync(data.data) // data.data contains the list of CqdtDocumentDto
+      onSync(data) // The interceptor already unwrapped the response to json.data
       onClose()
     } catch (err) {
       setError(err.message)
