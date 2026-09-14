@@ -295,7 +295,9 @@ export function UploadTable({
                             side="top"
                             className="bg-slate-900 text-white border-none font-bold text-[10px]"
                           >
-                            Đối soát PDF
+                            {row.status === 'processing'
+                              ? 'Đang AI phân tích, vui lòng chờ...'
+                              : 'Đối soát PDF'}
                           </TooltipContent>
                         </Tooltip>
                         <Tooltip>

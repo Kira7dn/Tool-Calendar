@@ -1,3 +1,11 @@
+### [2026-09-14 07:56] fix(ocr): giữ UI lock cho đến khi Docling + RAG indexing hoàn tất
+- **Mô tả**: UI trang "Số hóa văn bản" bị mở khóa (nút LƯU & PHÂN CÔNG, icon mắt) ngay sau luồng nhanh pypdf (~0.1s), trong khi Docling + RAG Indexing vẫn đang chạy 2-3 phút. Người dùng có thể nhấn LƯU ngay khi metadata còn thiếu/sai. Đã sửa bằng cách thay `NotifyProgressAsync(docId, "Chưa xử lý")` sau fast OCR thành `NotifyProgressAsync(docId, "Đang xử lý")` — frontend nhận "Đang xử lý" → giữ nguyên `processing` state → UI lock. Chỉ sau khi Docling + RAG xong hoàn toàn, backend mới set `doc.Status = "Chưa xử lý"` và notify → UI unlock với data đầy đủ. Cũng bổ sung guard cuối pipeline để đảm bảo status luôn về "Chưa xử lý" dù scan hay native PDF. Frontend: tooltip icon mắt khi đang processing đổi thành "Đang AI phân tích, vui lòng chờ..."; badge nút LƯU đổi thành "ĐANG PHÂN TÍCH AI..." cho rõ nghĩa hơn.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/DocumentProcessingService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadActions.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): giữ UI lock đến khi Docling + RAG xong, không chỉ sau fast OCR"`
+
 ### [2026-09-13 13:33] fix(infra): xử lý lỗi Conflict container name khi deploy
 - **Mô tả**: GitHub Actions báo lỗi "Conflict. The container name /doc-coordination-system is already in use" khi thực hiện `docker compose up`. Nguyên nhân do container cũ chưa được dọn sạch (orphaned container) từ deploy trước. Đã thêm bước `docker container rm -f doc-coordination-system` trước khi gọi `up` và bổ sung flag `--remove-orphans` để tự dọn container rác trong mọi lần deploy tiếp theo.
 - **Tệp thay đổi**:

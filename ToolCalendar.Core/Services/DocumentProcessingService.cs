@@ -264,11 +264,12 @@ namespace ToolCalendar.Services
                         if (!string.IsNullOrWhiteSpace(metadata.Priority)) doc.Priority = metadata.Priority;
                     }
 
-                    // LƯU DB VÀ NOTIFY UI NGAY LẬP TỨC!
+                    // LƯU DB METADATA TỨC THỜI, nhưng KHÔNG mở khóa UI — vẫn giữ "Đang xử lý"
+                    // Docling + RAG vẫn đang chạy, UI phải chờ đến khi xong hoàn toàn
                     if (originalStatus == "Đang OCR" || originalStatus == "Chờ lưu") doc.Status = "Chờ lưu";
                     else if (originalStatus != "Đã xử lý") doc.Status = originalStatus;
                     await docRepo.UpdateAsync(doc);
-                    await NotifyProgressAsync(scope, docId, "Chưa xử lý"); // UI MỞ KHÓA NGAY LẬP TỨC TẠI ĐÂY
+                    await NotifyProgressAsync(scope, docId, "Đang xử lý"); // Giữ UI lock — Docling + RAG chưa xong
                 }
 
                 // 2. LUỒNG NẶNG (2-3 phút): Gọi Docling để lấy toàn bộ Cấu trúc (Bảng biểu, Heading) cho RAG
@@ -308,7 +309,8 @@ namespace ToolCalendar.Services
                 }
                 else
                 {
-                    // Vẫn phải lưu lại FullText của Docling vào DB (Status đã là 'Chưa xử lý' từ luồng nhanh)
+                    // Lưu FullText của Docling vào DB và cập nhật Status về "Chưa xử lý"
+                    doc.Status = "Chưa xử lý";
                     await docRepo.UpdateAsync(doc);
                 }
 
@@ -443,6 +445,14 @@ namespace ToolCalendar.Services
                 }
                 // --- KẾT THÚC: RAG ---
 
+                // Set status cuối cùng về "Chưa xử lý" nếu chưa được set
+                if (doc.Status != "Lỗi OCR" && doc.Status != "Đã xử lý" && doc.Status != "Chưa xử lý")
+                {
+                    doc.Status = "Chưa xử lý";
+                    await docRepo.UpdateAsync(doc);
+                }
+
+                // Notify cuối — UI mở khóa, data đã đầy đủ (Docling + RAG xong)
                 await NotifyProgressAsync(scope, docId, doc.Status);
                 _logger.LogInformation("[RabbitMQ Worker] ✅ AI Service xử lý thành công DocumentId {Id}", docId);
             }

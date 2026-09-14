@@ -53,7 +53,7 @@ export function UploadActions({
           }`}
         >
           {isGlobalProcessing
-            ? 'ĐANG XỬ LÝ OCR...'
+            ? 'ĐANG PHÂN TÍCH AI...'
             : isSaving
               ? 'ĐANG LƯU...'
               : 'LƯU & PHÂN CÔNG TẤT CẢ'}
