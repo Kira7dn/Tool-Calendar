@@ -181,11 +181,11 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                                     var onclickAttr = tooltipNode.GetAttributeValue("onclick", "");
                                     var decoded = WebUtility.HtmlDecode(onclickAttr).Replace("\\'", "'");
                                     // Ưu tiên tìm file .pdf, .signed.pdf
-                                    var match = System.Text.RegularExpressions.Regex.Match(decoded, @"href=['""]([^'""]+)['""][^>]*>([^<]+\.pdf)</a>", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                                    if (match.Success)
+                                    var pdfMatch = System.Text.RegularExpressions.Regex.Match(decoded, @"href=['""]([^'""]+)['""][^>]*>([^<]+\.pdf)</a>", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                                    if (pdfMatch.Success)
                                     {
-                                        href = match.Groups[1].Value;
-                                        tenTep = match.Groups[2].Value.Trim();
+                                        href = pdfMatch.Groups[1].Value;
+                                        tenTep = pdfMatch.Groups[2].Value.Trim();
                                     }
                                 }
 

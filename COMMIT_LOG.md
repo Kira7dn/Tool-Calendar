@@ -1,3 +1,9 @@
+### [2026-09-14 23:26] fix(ocr): resolve CS0136 variable shadowing compile error
+- **Mô tả**: Sửa lỗi biên dịch do khai báo trùng tên biến `match` bên trong vòng lặp (với một biến `match` khác ở bên dưới scope) gây lỗi trên GitHub Actions. Đã đổi tên biến thành `pdfMatch` để tách biệt.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): resolve CS0136 variable shadowing compile error"`
+
 ### [2026-09-14 23:23] fix(ocr): preserve original PDF filename from CQDT instead of generating one
 - **Mô tả**: Mặc dù đã bóc tách được link PDF ẩn trong tooltip, hệ thống vẫn tự động gán tên file theo số ký hiệu (ví dụ: `CQDT_...pdf`). Đã sửa lại để lấy chính xác tên file hiển thị trên tooltip của CQĐT (ví dụ: `CV 2145.signed.pdf`) lưu vào trường `tenTep`.
 - **Tệp thay đổi**:
