@@ -41,7 +41,11 @@ export function useUploadPage() {
     try {
       let blob
       if (typeof itemOrId === 'object' && itemOrId._tempFile) {
-        blob = itemOrId._tempFile
+        if (itemOrId._tempFile instanceof Blob) {
+          blob = itemOrId._tempFile
+        } else {
+          blob = new Blob([], { type: 'application/pdf' })
+        }
       } else {
         const docId = typeof itemOrId === 'object' ? itemOrId.id : itemOrId
         const res = await fetch(`/api/documents/${docId}/file`)

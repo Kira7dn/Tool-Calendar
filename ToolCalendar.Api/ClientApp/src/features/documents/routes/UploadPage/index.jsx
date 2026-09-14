@@ -326,7 +326,8 @@ export function UploadPage() {
         onClose={() => setIsCqdtModalOpen(false)}
         onSync={(docs) => {
           const newItems = docs.map((doc) => {
-            let fileObj = { name: doc.cqdtTenTep || `CQDT_${doc.soKyHieu || 'doc'}.pdf`, size: 0 }
+            const fileName = doc.cqdtTenTep || `CQDT_${doc.soKyHieu || 'doc'}.pdf`
+            let fileObj
             if (doc.fileBase64) {
               const bstr = window.atob(doc.fileBase64)
               let n = bstr.length
@@ -334,7 +335,9 @@ export function UploadPage() {
               while (n--) {
                 u8arr[n] = bstr.charCodeAt(n)
               }
-              fileObj = new File([u8arr], fileObj.name, { type: 'application/pdf' })
+              fileObj = new File([u8arr], fileName, { type: 'application/pdf' })
+            } else {
+              fileObj = new File([], fileName, { type: 'application/pdf' })
             }
             return {
               id: 'cqdt_' + Math.random().toString(36).substr(2, 9),

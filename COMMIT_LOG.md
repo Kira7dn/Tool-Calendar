@@ -1,3 +1,10 @@
+### [2026-09-14 22:46] fix(ui): gracefully handle missing PDFs for CQDT documents
+- **Mô tả**: Khi CQĐT trả về một số văn bản không có link tải PDF (hoặc tải thất bại), `doc.fileBase64` bị rỗng. Điều này làm cho đối tượng `_tempFile` được tạo ra là một Object thường thay vì Blob/File, khiến màn hình xem trước báo lỗi "Không thể tải file PDF" và làm sụp đổ luồng hiển thị. Đã cập nhật để tự động tạo một Blob rỗng `new Blob([], { type: 'application/pdf' })` nếu file gốc không hợp lệ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/hooks/useUploadPage.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): gracefully handle missing PDFs for CQDT documents"`
+
 ### [2026-09-14 22:37] fix(ui): allow previewing pdf for unsaved CQDT documents
 - **Mô tả**: Văn bản tải từ CQĐT về chưa được lưu (chưa có ID số nguyên), mà chỉ có một ID tạm thời dạng chuỗi (`cqdt_xyz`) và một file Blob nằm trong RAM (`_tempFile`). Giao diện nút bấm xem trước (Eye icon) trước đây chặn không cho click vào những mục chưa có ID số nguyên. Đã cập nhật lại luồng xem trước để đọc file từ bộ nhớ đệm nếu văn bản có chứa `_tempFile` thay vì gọi API request.
 - **Tệp thay đổi**:
