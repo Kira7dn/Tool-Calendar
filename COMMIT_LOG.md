@@ -1,3 +1,9 @@
+### [2026-09-14 22:26] fix(docs): decode HTML entities in onclick attribute to fix regex match for pagination
+- **Mô tả**: Khi chuyển trang, HtmlAgilityPack lấy giá trị thuộc tính `onclick` của nút Next nhưng không tự động giải mã HTML Entity (`&#39;` thay vì `'`). Điều này làm cho biểu thức Regex `__doPostBack\('([^']+)'` thất bại và vòng lặp phân trang bị ngắt sớm (luôn chỉ lấy được 10 văn bản ở trang 1). Đã bổ sung `WebUtility.HtmlDecode` trước khi chạy Regex.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): decode HTML entities in onclick attribute for pagination"`
+
 ### [2026-09-14 22:18] fix(docs): submit all hidden fields in __doPostBack to fix CQĐT pagination
 - **Mô tả**: Khi chuyển sang trang 2, RadGrid của CQĐT yêu cầu phải submit toàn bộ các hidden input trên trang (như `RadScriptManager`, `__dnnVariable`, v.v.), nếu chỉ gửi mỗi VIEWSTATE thì thao tác lật trang sẽ bị từ chối/không phản hồi. Cập nhật `CqdtIntegrationService.cs` để tự động thu thập toàn bộ thẻ `<input type="hidden">` để gửi kèm trong request lật trang.
 - **Tệp thay đổi**:

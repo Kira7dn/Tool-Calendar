@@ -207,7 +207,7 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                 break; // Không còn trang nào nữa
             }
 
-            var onclick = nextBtn.GetAttributeValue("onclick", "");
+            var onclick = WebUtility.HtmlDecode(nextBtn.GetAttributeValue("onclick", ""));
             var match = System.Text.RegularExpressions.Regex.Match(onclick, @"__doPostBack\('([^']+)'");
             if (!match.Success) break;
 
