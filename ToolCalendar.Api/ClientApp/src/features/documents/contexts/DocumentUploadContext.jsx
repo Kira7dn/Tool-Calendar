@@ -95,7 +95,7 @@ export function DocumentUploadProvider({ children }) {
             assignedToIds: doc.assignedTo ? [doc.assignedTo] : [],
             filePath: doc.filePath || '',
             status:
-              doc.status === DOCUMENT_STATUS.DANG_XU_LY
+              doc.status === DOCUMENT_STATUS.DANG_XU_LY || doc.status === 'Đang OCR'
                 ? 'processing'
                 : doc.status === DOCUMENT_STATUS.LOI_OCR
                   ? 'error'

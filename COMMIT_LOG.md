@@ -1,3 +1,9 @@
+### [2026-09-14 08:05] fix(ocr): khắc phục lỗi UI không khoá ngay sau khi chọn file upload
+- **Mô tả**: Khi người dùng tải file lên, backend trả về `doc.status = "Đang OCR"`. Tuy nhiên frontend ở `handleFileUpload` chỉ kiểm tra `doc.status === DOCUMENT_STATUS.DANG_XU_LY` ("Đang xử lý") để map thành trạng thái `processing`. Do không khớp "Đang OCR", frontend map nhầm thành `ready`, khiến nút LƯU và icon mắt bị bật ngay lập tức. Đã sửa lại logic thêm điều kiện `|| doc.status === 'Đang OCR'` để UI duy trì lock (`processing`) đúng như kỳ vọng từ đầu.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/contexts/DocumentUploadContext.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi UI không khoá ngay lúc chọn file do sai map status"`
+
 ### [2026-09-14 07:56] fix(ocr): giữ UI lock cho đến khi Docling + RAG indexing hoàn tất
 - **Mô tả**: UI trang "Số hóa văn bản" bị mở khóa (nút LƯU & PHÂN CÔNG, icon mắt) ngay sau luồng nhanh pypdf (~0.1s), trong khi Docling + RAG Indexing vẫn đang chạy 2-3 phút. Người dùng có thể nhấn LƯU ngay khi metadata còn thiếu/sai. Đã sửa bằng cách thay `NotifyProgressAsync(docId, "Chưa xử lý")` sau fast OCR thành `NotifyProgressAsync(docId, "Đang xử lý")` — frontend nhận "Đang xử lý" → giữ nguyên `processing` state → UI lock. Chỉ sau khi Docling + RAG xong hoàn toàn, backend mới set `doc.Status = "Chưa xử lý"` và notify → UI unlock với data đầy đủ. Cũng bổ sung guard cuối pipeline để đảm bảo status luôn về "Chưa xử lý" dù scan hay native PDF. Frontend: tooltip icon mắt khi đang processing đổi thành "Đang AI phân tích, vui lòng chờ..."; badge nút LƯU đổi thành "ĐANG PHÂN TÍCH AI..." cho rõ nghĩa hơn.
 - **Tệp thay đổi**:
