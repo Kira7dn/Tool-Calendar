@@ -1,3 +1,9 @@
+### [2026-09-14 18:21] chore(infra): add doc-clamav to remove list in deploy script to fix conflict
+- **Mô tả**: Khi github action gọi `docker compose up -d`, container `doc-clamav` bị lỗi conflict name vì bản cũ vẫn chưa được xóa, dẫn tới việc deploy CI/CD bị gián đoạn. Thêm lệnh `docker rm -f doc-clamav` trước khi start container.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): add doc-clamav to remove list in deploy script to fix conflict"`
+
 ### [2026-09-14 18:16] chore(infra): fix github action syntax for appleboy/ssh-action
 - **Mô tả**: Sửa thuộc tính `script_timeout` thành `command_timeout` trong Github Actions workflow `deploy.yml` do appleboy/ssh-action phiên bản mới đã deprecate thuộc tính cũ gây lỗi pipeline.
 - **Tệp thay đổi**:

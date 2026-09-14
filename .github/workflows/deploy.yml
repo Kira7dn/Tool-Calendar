@@ -113,7 +113,7 @@ jobs:
             docker compose pull python-ai-service || true
 
             echo ">>> Khởi động các container..."
-            docker container rm -f doc-coordination-system 2>/dev/null || true
+            docker container rm -f doc-coordination-system doc-clamav 2>/dev/null || true
             docker compose up -d --no-build --remove-orphans official-doc-backend
             docker compose up -d --no-build python-ai-service || echo "[WARN] python-ai-service image chưa sẵn sàng, bỏ qua."
 
