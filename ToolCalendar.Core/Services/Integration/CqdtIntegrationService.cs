@@ -49,6 +49,7 @@ public class CqdtIntegrationService : ICqdtIntegrationService
             { "__EVENTARGUMENT", "" },
             { "__VIEWSTATE", viewState },
             { "__VIEWSTATEGENERATOR", viewStateGenerator ?? "2B3807B2" },
+            { "__VIEWSTATEENCRYPTED", "" },
             { "__EVENTVALIDATION", eventValidation ?? "" },
             { "IDToken1", username },
             { "IDToken2", password },

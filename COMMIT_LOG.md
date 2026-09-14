@@ -1,3 +1,12 @@
+### [2026-09-14 18:15] fix(docs): sửa lỗi từ chối phiên đăng nhập CQĐT và thêm chức năng xem mật khẩu
+- **Mô tả**: 
+  - Fix lỗi `Bị từ chối phiên đăng nhập` khi gọi API đồng bộ CQĐT. Nguyên nhân do form ASP.NET WebForms yêu cầu trường ẩn `__VIEWSTATEENCRYPTED` (dù giá trị rỗng), nếu thiếu sẽ gây lỗi internal ở phía server CQĐT khiến đăng nhập không tạo được cookie hợp lệ.
+  - Cập nhật UI modal đồng bộ, thêm state `showPassword` và biểu tượng con mắt (eye icon) để người dùng có thể tùy chọn hiện/ẩn mật khẩu khi nhập liệu, tránh nhập sai.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/CqdtSyncModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): sửa lỗi từ chối phiên đăng nhập CQĐT và thêm chức năng xem mật khẩu"`
+
 ### [2026-09-14 15:30] feat(docs): bổ sung lấy file pdf đính kèm từ CQĐT
 - **Mô tả**: Nâng cấp tính năng đồng bộ CQĐT để quét và tải file văn bản đính kèm (PDF) bằng cách tìm thẻ `<a>` chứa từ khóa liên quan đến file. File tải về được chuyển thành chuỗi Base64 trả về cho Frontend (React), sau đó Frontend tự động giải mã `atob` và biến thành object `File` chuẩn của trình duyệt để tiếp tục ném vào hàng đợi OCR như file upload thông thường.
 - **Tệp thay đổi**:
