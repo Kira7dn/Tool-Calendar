@@ -1,3 +1,9 @@
+### [2026-09-14 10:01] fix(ocr): sửa lỗi hallucination của LLM trong việc trích xuất Cơ quan ban hành
+- **Mô tả**: LLM bị "ảo giác" (hallucinate) do trong prompt có đưa ví dụ cụ thể `VD: 'UBND TỈNH QUẢNG NINH'` và `VD: 'BAN CHỈ ĐẠO ĐIỀU TRA...'`. Vì LLM nhỏ (`qwen2.5:3b`), nó nhầm lẫn ví dụ là đáp án bắt buộc và copy paste y nguyên ví dụ vào mọi văn bản (như văn bản của Phường Cẩm Phả). Sửa prompt để xóa các ví dụ cụ thể này, thêm rule hướng dẫn rõ hơn: "Nếu chỉ có 1 cơ quan (VD: Ủy ban nhân dân Phường X) thì đó là CoQuanBanHanh, còn CoQuanChuQuan để rỗng".
+- **Tệp thay đổi**:
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): sửa lỗi LLM hallucinate Cơ quan ban hành do ví dụ trong prompt"`
+
 ### [2026-09-14 09:51] feat(docs): thêm nút "Xử lý lại AI" trong EditDocModal để re-OCR document cũ
 - **Mô tả**: Document đã xử lý từ trước không tự cập nhật khi code extraction thay đổi do deduplication SHA-256. Thêm nút "Xử lý lại AI" (màu blue, góc trái footer) trong modal Chỉnh sửa thông tin văn bản. Nút gọi POST /api/documents/{id}/reindex — backend reset Status về "Đang OCR", notify SignalR, rồi đẩy vào RabbitMQ queue để AI chạy lại đầy đủ pipeline (OCR + metadata extraction + RAG indexing). UI lock đúng sau khi nhấn nút. Backend endpoint cũng được cải thiện: reset status trước khi enqueue để SignalR lock UI.
 - **Tệp thay đổi**:
