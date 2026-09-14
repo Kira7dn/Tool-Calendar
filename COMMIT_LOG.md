@@ -1,5 +1,10 @@
+### [2026-09-15 00:16] fix(ocr): limit regex scope to document header to prevent false positive numbers
+- **Mô tả**: Giới hạn phạm vi tìm kiếm của Regex cho `SoVanBan` và `NgayBanHanh` chỉ trong 1000 ký tự đầu tiên. Ngăn chặn việc Regex tự động tìm thấy các số tham chiếu (VD: 4152/UBND-NC) ở phần thân bài hoặc phần căn cứ khi phần Header bị thiếu số hiệu.
+- **Tệp thay đổi**:
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): limit regex scope to document header to prevent false positive numbers"`
+
 ### [2026-09-14 23:55] fix(ocr): block AI from hallucinating structured metadata fields
-- **Mô tả**: Chặn LLM ghi đè lên các trường dữ liệu có cấu trúc (SoVanBan, NgayBanHanh, ThoiHan). Tránh tình trạng AI tự đoán mò "2867/UBND" khi Regex không đọc được chữ viết tay.
 - **Tệp thay đổi**:
   - `python-ai-service/services/document_service.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): block AI from hallucinating structured metadata fields"`

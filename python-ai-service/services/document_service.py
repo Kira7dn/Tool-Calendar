@@ -73,11 +73,14 @@ class DocumentService:
                 "CoQuanChuQuan": "", "Priority": "Thường"
             }
             
-            m = re.search(r'(?i:s[oốôóòỏõọ])[:\s]*([0-9]+[\s]*[/-][\s]*[a-z0-9đà-ỵ&]+(?:[\s]*[-/][\s]*[a-z0-9đà-ỵ&]+)*)', text, re.IGNORECASE)
+            # Giới hạn tìm kiếm trong 1000 ký tự đầu tiên để tránh nhặt nhầm số trong phần thân bài
+            header_text = text[:1000]
+
+            m = re.search(r'(?i:s[oốôóòỏõọ])[:\s]*([0-9]+[\s]*[/-][\s]*[a-z0-9đà-ỵ&]+(?:[\s]*[-/][\s]*[a-z0-9đà-ỵ&]+)*)', header_text, re.IGNORECASE)
             if m:
                 result["SoVanBan"] = m.group(1).strip().replace(" ", "")
 
-            m = re.search(r'ngày\s*(\d{1,2})\s*tháng\s*(\d{1,2})\s*năm\s*(\d{4})', text, re.IGNORECASE)
+            m = re.search(r'ngày\s*(\d{1,2})\s*tháng\s*(\d{1,2})\s*năm\s*(\d{4})', header_text, re.IGNORECASE)
             if m:
                 d, mo, y = m.groups()
                 result["NgayBanHanh"] = f"{y}-{int(mo):02d}-{int(d):02d}"
