@@ -156,8 +156,8 @@ builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 
 // Cấu hình HTTP Client cho các gọi API bên ngoài (như Gemini)
 builder.Services.AddHttpClient();
-
 // Đăng ký Extraction Services & Python AI
+builder.Services.AddScoped<ToolCalendar.Core.Services.Integration.ICqdtIntegrationService, ToolCalendar.Core.Services.Integration.CqdtIntegrationService>();
 // HmacRequestHandler: tự động ký HMAC-SHA256 + propagate Correlation ID cho mọi request
 builder.Services.AddTransient<HmacRequestHandler>();
 builder.Services.AddHttpContextAccessor(); // Cần cho HmacRequestHandler đọc Correlation ID

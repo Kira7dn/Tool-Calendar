@@ -33,6 +33,24 @@ export function UploadActions({
       </div>
       <div className="flex items-center gap-2">
         <button
+          onClick={() => document.dispatchEvent(new CustomEvent('open-cqdt-sync'))}
+          className="px-4 py-1.5 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 text-[11px] font-bold transition-all shadow-sm flex items-center gap-1.5"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+          </svg>
+          ĐỒNG BỘ CQĐT
+        </button>
+        <button
           onClick={() => setShowClearConfirm(true)}
           disabled={isGlobalProcessing || isSaving}
           className={`px-4 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${

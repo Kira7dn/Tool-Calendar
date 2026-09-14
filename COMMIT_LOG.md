@@ -1,3 +1,15 @@
+### [2026-09-14 15:25] feat(docs): tích hợp đồng bộ danh sách văn bản chưa xử lý từ CQĐT
+- **Mô tả**: Phát triển tính năng lấy văn bản tự động từ Chính quyền điện tử (CQĐT) bằng cơ chế web scraping (HttpClient + HtmlAgilityPack) vượt qua __VIEWSTATE của ASP.NET WebForms. Cập nhật frontend thêm Modal để người dùng nhập thông tin đăng nhập tạm thời, và map dữ liệu lấy được vào lưới xử lý Số hóa.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Mới)
+  - `ToolCalendar.Api/Controllers/IntegrationController.cs` (Mới)
+  - `ToolCalendar.Core/Models/Integration/CqdtDocumentDto.cs` (Mới)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadActions.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/CqdtSyncModal.jsx` (Mới)
+- **Lệnh git commit**: `git commit -m "feat(docs): tích hợp đồng bộ danh sách văn bản chưa xử lý từ CQĐT"`
+
 ### [2026-09-14 11:35] fix(auth): đồng bộ phiên bản JwtBearer 10.0.12 với System.IdentityModel.Tokens.Jwt 8.19.2
 - **Mô tả**: Sửa lỗi `MissingMethodException` liên quan đến `TokenValidationResult` xảy ra khi container chạy trên `dotnet 10.0` nhưng các package JWT bị lệch phiên bản (9.0.0 và 8.22.0). Đã cập nhật `Microsoft.AspNetCore.Authentication.JwtBearer` lên `10.0.12` (trùng runtime 10.0) và `System.IdentityModel.Tokens.Jwt` lên `8.19.2` để resolve đúng dependencies.
 - **Tệp thay đổi**:

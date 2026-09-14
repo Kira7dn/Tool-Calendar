@@ -7,6 +7,7 @@ import { useUploadPage } from './hooks/useUploadPage'
 import { UploadActions } from './components/UploadActions'
 import { UploadTable } from './components/UploadTable'
 import { UploadModals } from './components/UploadModals'
+import { CqdtSyncModal } from './components/CqdtSyncModal'
 
 function Ring({ pct }) {
   const r = 22
@@ -117,6 +118,13 @@ export function UploadPage() {
   const tableScrollRef = useRef(null)
   const [tableScrollTop, setTableScrollTop] = useState(0)
   const [tableHeight, setTableHeight] = useState(600)
+  const [isCqdtModalOpen, setIsCqdtModalOpen] = useState(false)
+
+  useEffect(() => {
+    const handleOpenCqdt = () => setIsCqdtModalOpen(true)
+    document.addEventListener('open-cqdt-sync', handleOpenCqdt)
+    return () => document.removeEventListener('open-cqdt-sync', handleOpenCqdt)
+  }, [])
 
   const {
     selectedIds,
@@ -319,6 +327,27 @@ export function UploadPage() {
         departments={departments}
         users={users}
         setBatchItems={setBatchItems}
+      />
+
+      <CqdtSyncModal
+        isOpen={isCqdtModalOpen}
+        onClose={() => setIsCqdtModalOpen(false)}
+        onSync={(docs) => {
+          const newItems = docs.map((doc) => ({
+            id: 'cqdt_' + Math.random().toString(36).substr(2, 9),
+            file: { name: `CQDT_${doc.soKyHieu || 'doc'}.pdf`, size: 0 },
+            status: 'ready',
+            progress: 100,
+            extractedData: {
+              soVanBan: doc.soKyHieu,
+              ngayBanHanh: doc.ngayBanHanh || new Date().toISOString().split('T')[0],
+              coQuanBanHanh: doc.coQuanBanHanh,
+              trichYeu: doc.trichYeu,
+              priority: 'Thường',
+            },
+          }))
+          setBatchItems((prev) => [...prev, ...newItems])
+        }}
       />
     </div>
   )
