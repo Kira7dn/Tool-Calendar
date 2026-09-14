@@ -270,16 +270,26 @@ export function UploadTable({
                             <div>
                               <button
                                 onClick={() => {
-                                  if (typeof row.id !== 'number') return
+                                  if (
+                                    typeof row.id !== 'number' &&
+                                    !String(row.id).startsWith('cqdt_')
+                                  )
+                                    return
                                   setReviewItem({ ...row })
                                   setPdfPage(1)
-                                  fetchPdfBlob(row.id)
+                                  fetchPdfBlob(row)
                                   setIsReviewModalOpen(true)
                                 }}
-                                disabled={typeof row.id !== 'number' || row.status === 'processing'}
+                                disabled={
+                                  (typeof row.id !== 'number' &&
+                                    !String(row.id).startsWith('cqdt_')) ||
+                                  row.status === 'processing'
+                                }
                                 className={cn(
                                   'p-1 rounded transition-colors',
-                                  typeof row.id === 'number' && row.status !== 'processing'
+                                  (typeof row.id === 'number' ||
+                                    String(row.id).startsWith('cqdt_')) &&
+                                    row.status !== 'processing'
                                     ? 'text-blue-500 hover:bg-blue-50'
                                     : 'text-slate-300 cursor-not-allowed'
                                 )}

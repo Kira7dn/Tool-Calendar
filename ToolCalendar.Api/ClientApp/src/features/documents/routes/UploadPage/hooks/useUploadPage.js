@@ -34,14 +34,20 @@ export function useUploadPage() {
       .catch(() => {})
   }, [])
 
-  const fetchPdfBlob = async (docId) => {
+  const fetchPdfBlob = async (itemOrId) => {
     setIsPdfLoading(true)
     setPdfBlobUrl(null)
     setPdfPageCount(1)
     try {
-      const res = await fetch(`/api/documents/${docId}/file`)
-      if (!res.ok) throw new Error()
-      const blob = await res.blob()
+      let blob
+      if (typeof itemOrId === 'object' && itemOrId._tempFile) {
+        blob = itemOrId._tempFile
+      } else {
+        const docId = typeof itemOrId === 'object' ? itemOrId.id : itemOrId
+        const res = await fetch(`/api/documents/${docId}/file`)
+        if (!res.ok) throw new Error()
+        blob = await res.blob()
+      }
 
       try {
         const arrayBuffer = await blob.arrayBuffer()

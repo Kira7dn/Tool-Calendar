@@ -1,3 +1,10 @@
+### [2026-09-14 22:37] fix(ui): allow previewing pdf for unsaved CQDT documents
+- **Mô tả**: Văn bản tải từ CQĐT về chưa được lưu (chưa có ID số nguyên), mà chỉ có một ID tạm thời dạng chuỗi (`cqdt_xyz`) và một file Blob nằm trong RAM (`_tempFile`). Giao diện nút bấm xem trước (Eye icon) trước đây chặn không cho click vào những mục chưa có ID số nguyên. Đã cập nhật lại luồng xem trước để đọc file từ bộ nhớ đệm nếu văn bản có chứa `_tempFile` thay vì gọi API request.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/components/UploadTable.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/hooks/useUploadPage.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): allow previewing pdf for unsaved CQDT documents"`
+
 ### [2026-09-14 22:30] feat(ui): add pagination to UploadTable to handle large bulk imports
 - **Mô tả**: Khi người dùng tải lên số lượng lớn văn bản (ví dụ 50 hoặc 100 văn bản từ CQĐT), bảng hiển thị dài theo kiểu virtual scrolling có thể khó quan sát và xử lý. Đã chuyển đổi sang giao diện phân trang truyền thống (mặc định 20 item/trang) tại `UploadPage`. Bổ sung nút chuyển trang "Trước/Tiếp" ở Footer bảng.
 - **Tệp thay đổi**:
