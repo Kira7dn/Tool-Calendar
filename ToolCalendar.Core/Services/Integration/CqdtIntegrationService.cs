@@ -104,11 +104,11 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                 foreach (var tbl in tables)
                 {
                     var html = tbl.InnerHtml.ToLower();
-                    if ((html.Contains("ký hiệu") || html.Contains("số đến")) && 
-                        (html.Contains("trích yếu") || html.Contains("nội dung")))
+                    if ((html.Contains("ký hiệu") || html.Contains("số đến") || html.Contains("số văn bản")) && 
+                        (html.Contains("trích yếu") || html.Contains("nội dung") || html.Contains("thông tin văn bản")))
                     {
                         var innerTables = tbl.SelectNodes(".//table");
-                        if (innerTables != null && innerTables.Any(t => t.InnerHtml.ToLower().Contains("trích yếu") && t.InnerHtml.ToLower().Contains("ký hiệu")))
+                        if (innerTables != null && innerTables.Any(t => (t.InnerHtml.ToLower().Contains("trích yếu") || t.InnerHtml.ToLower().Contains("thông tin văn bản")) && (t.InnerHtml.ToLower().Contains("ký hiệu") || t.InnerHtml.ToLower().Contains("số văn bản"))))
                         {
                             continue; 
                         }
@@ -130,9 +130,9 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                         for (int i = 0; i < headerCols.Count; i++)
                         {
                             var txt = headerCols[i].InnerText.ToLower();
-                            if (txt.Contains("ký hiệu") || txt.Contains("số đến")) colSoKyHieu = i;
+                            if (txt.Contains("ký hiệu") || txt.Contains("số đến") || txt.Contains("số văn bản")) colSoKyHieu = i;
                             if (txt.Contains("cơ quan") || txt.Contains("nơi gửi")) colCoQuan = i;
-                            if (txt.Contains("trích yếu") || txt.Contains("nội dung")) colTrichYeu = i;
+                            if (txt.Contains("trích yếu") || txt.Contains("nội dung") || txt.Contains("thông tin văn bản")) colTrichYeu = i;
                         }
                     }
 

@@ -1,3 +1,9 @@
+### [2026-09-14 22:08] fix(docs): allow 'số văn bản' and 'thông tin văn bản' keywords for CQĐT HTML parser
+- **Mô tả**: Tên cột bảng trên trang CQĐT đã thay đổi (thành `Số văn bản` thay vì `Số đến`, `Thông tin văn bản` thay vì `Trích yếu`). Update `CqdtIntegrationService` để nhận dạng được các header cột này.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(docs): allow 'số văn bản' and 'thông tin văn bản' keywords for CQĐT HTML parser"`
+
 ### [2026-09-14 18:58] feat(integration): Thêm tuỳ chọn số lượng tải văn bản CQĐT
 - **Mô tả**: Hỗ trợ tải văn bản từ CQĐT với giới hạn do người dùng chọn (25, 50, 100 bản). Backend tự động phân trang (pagination) và gửi request POST để lật trang theo cấu trúc RadGrid của ASP.NET.
 - **Tệp thay đổi**:
