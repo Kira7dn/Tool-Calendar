@@ -80,11 +80,16 @@ class DocumentService:
             if m:
                 result["SoVanBan"] = m.group(1).strip().replace(" ", "")
 
-            # Nới lỏng regex (dùng dấu chấm) để chống lỗi OCR nhận sai dấu của chữ "ngày", "tháng", "năm"
-            m = re.search(r'ng.y\s*(\d{1,2})\s*th.ng\s*(\d{1,2})\s*n.m\s*(\d{4})', header_text, re.IGNORECASE)
+            # Nới lỏng regex tối đa: bắt các trường hợp chữ có/không dấu, bắt số bị cắt vụn (vd: 3 1)
+            m = re.search(r'ng.y\s*([\d\s]{1,3})\s*th.ng\s*([\d\s]{1,3})\s*n.m\s*([\d\s]{4,7})', header_text, re.IGNORECASE)
             if m:
-                d, mo, y = m.groups()
-                result["NgayBanHanh"] = f"{y}-{int(mo):02d}-{int(d):02d}"
+                try:
+                    d = m.group(1).replace(" ", "")
+                    mo = m.group(2).replace(" ", "")
+                    y = m.group(3).replace(" ", "")
+                    result["NgayBanHanh"] = f"{int(y):04d}-{int(mo):02d}-{int(d):02d}"
+                except:
+                    pass
 
             m = re.search(r'(?:V/v|V/v:|Về việc)[:\s]*(.+?)(?=\nKính gửi|\n\n|\r\n\r\n|Kính gửi:)', text, re.IGNORECASE | re.DOTALL)
             if m:

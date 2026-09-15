@@ -350,7 +350,13 @@ export function UploadPage() {
               trichYeu: doc.trichYeu || '',
               coQuanBanHanh: doc.coQuanBanHanh || '',
               coQuanChuQuan: '',
-              ngayBanHanh: '',
+              ngayBanHanh: (() => {
+                const dateMatch = (doc.trichYeu || '').match(
+                  /Ngày văn bản:\s*(\d{2})\/(\d{2})\/(\d{4})/i
+                )
+                if (dateMatch) return `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`
+                return ''
+              })(),
               thoiHan: '',
               departmentIds: [],
               assignedToIds: [],

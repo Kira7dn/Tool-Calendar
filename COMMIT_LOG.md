@@ -1,5 +1,11 @@
+### [2026-09-15 08:41] feat(ui): prefill NgayBanHanh from CQDT TrichYeu and ultra-relax OCR date regex
+- **Mô tả**: Giao diện đồng bộ CQĐT hiển thị trống Ngày Ban Hành vì AI chưa chạy (chỉ chạy sau khi bấm lưu). Để UX tốt hơn, đã parse trực tiếp chuỗi "Ngày văn bản: dd/mm/yyyy" ẩn bên trong phần Trích Yếu trả về từ website CQĐT làm giá trị mặc định cho UI. Đồng thời nới lỏng tối đa Regex của Ngày Ban Hành ở Python để chấp nhận số có dính khoảng trắng do lỗi OCR (vd: `3 1`).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): prefill NgayBanHanh from CQDT TrichYeu and ultra-relax OCR date regex"`
+
 ### [2026-09-15 08:16] fix(ui): remove default today date for CQDT sync and relax OCR date regex
-- **Mô tả**: Khi đồng bộ từ CQĐT, nếu văn bản không có `NgayBanHanh`, UI sẽ tự động điền ngày hôm nay (15/09/2026). Việc này gây nhầm lẫn nếu AI không nhận diện được ngày thực tế. Đã gỡ bỏ tính năng tự điền này. Đồng thời nới lỏng Regex của `NgayBanHanh` và `SoVanBan` ở Python (chấp nhận `ng.y` thay vì `ngày`) để chịu lỗi khi OCR đọc sai dấu.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
   - `python-ai-service/services/document_service.py` (Sửa đổi)
