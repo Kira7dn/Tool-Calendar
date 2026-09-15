@@ -76,11 +76,12 @@ class DocumentService:
             # Giới hạn tìm kiếm trong 1000 ký tự đầu tiên để tránh nhặt nhầm số trong phần thân bài
             header_text = text[:1000]
 
-            m = re.search(r'(?i:s[oốôóòỏõọ])[:\s]*([0-9]+[\s]*[/-][\s]*[a-z0-9đà-ỵ&]+(?:[\s]*[-/][\s]*[a-z0-9đà-ỵ&]+)*)', header_text, re.IGNORECASE)
+            m = re.search(r'(?i:s[oốôóòỏõọ06])[:\s]*([0-9]+[\s]*[/-][\s]*[a-z0-9đà-ỵ&]+(?:[\s]*[-/][\s]*[a-z0-9đà-ỵ&]+)*)', header_text, re.IGNORECASE)
             if m:
                 result["SoVanBan"] = m.group(1).strip().replace(" ", "")
 
-            m = re.search(r'ngày\s*(\d{1,2})\s*tháng\s*(\d{1,2})\s*năm\s*(\d{4})', header_text, re.IGNORECASE)
+            # Nới lỏng regex (dùng dấu chấm) để chống lỗi OCR nhận sai dấu của chữ "ngày", "tháng", "năm"
+            m = re.search(r'ng.y\s*(\d{1,2})\s*th.ng\s*(\d{1,2})\s*n.m\s*(\d{4})', header_text, re.IGNORECASE)
             if m:
                 d, mo, y = m.groups()
                 result["NgayBanHanh"] = f"{y}-{int(mo):02d}-{int(d):02d}"

@@ -1,5 +1,11 @@
+### [2026-09-15 08:16] fix(ui): remove default today date for CQDT sync and relax OCR date regex
+- **Mô tả**: Khi đồng bộ từ CQĐT, nếu văn bản không có `NgayBanHanh`, UI sẽ tự động điền ngày hôm nay (15/09/2026). Việc này gây nhầm lẫn nếu AI không nhận diện được ngày thực tế. Đã gỡ bỏ tính năng tự điền này. Đồng thời nới lỏng Regex của `NgayBanHanh` và `SoVanBan` ở Python (chấp nhận `ng.y` thay vì `ngày`) để chịu lỗi khi OCR đọc sai dấu.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): remove default today date for CQDT sync and relax OCR date regex"`
+
 ### [2026-09-15 00:16] fix(ocr): limit regex scope to document header to prevent false positive numbers
-- **Mô tả**: Giới hạn phạm vi tìm kiếm của Regex cho `SoVanBan` và `NgayBanHanh` chỉ trong 1000 ký tự đầu tiên. Ngăn chặn việc Regex tự động tìm thấy các số tham chiếu (VD: 4152/UBND-NC) ở phần thân bài hoặc phần căn cứ khi phần Header bị thiếu số hiệu.
 - **Tệp thay đổi**:
   - `python-ai-service/services/document_service.py` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(ocr): limit regex scope to document header to prevent false positive numbers"`

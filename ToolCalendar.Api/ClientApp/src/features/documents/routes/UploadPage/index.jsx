@@ -350,9 +350,7 @@ export function UploadPage() {
               trichYeu: doc.trichYeu || '',
               coQuanBanHanh: doc.coQuanBanHanh || '',
               coQuanChuQuan: '',
-              ngayBanHanh: doc.ngayBanHanh
-                ? doc.ngayBanHanh.split('T')[0]
-                : new Date().toISOString().split('T')[0],
+              ngayBanHanh: '',
               thoiHan: '',
               departmentIds: [],
               assignedToIds: [],
