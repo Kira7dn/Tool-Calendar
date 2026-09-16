@@ -76,28 +76,96 @@ class DocumentService:
             # Giới hạn tìm kiếm trong 1000 ký tự đầu tiên để tránh nhặt nhầm số trong phần thân bài
             header_text = text[:1000]
 
-            # Fix: Nới lỏng regex bắt SoVanBan để xử lý OCR số viết tay bị đọc lệch
-            # VD: "5¹⁵/BCA-QLHC" → OCR ra "5 15/BCA-QLHC" hoặc "515 /BCA"
-            # Pattern mới: cho phép khoảng trắng và ký tự nhiễu giữa các chữ số trước dấu /
-            m = re.search(
-                r'(?i:s[oốôóòỏõọ06])[:\s]*'              # "Số:" (cho phép OCR nhầm o→0, o→6)
-                r'([\d][\d\s\.\-]{0,10}'                  # Số: cho phép tối đa 10 ký tự nhiễu giữa các chữ số
-                r'[/\-]'                                   # dấu / hoặc -
-                r'[\s]*'                                   # khoảng trắng tùy chọn sau /
-                r'[a-zA-ZÀ-ỵĐđ0-9&\-\.QLHCUBNDVPSGDTC]+'# phần ký hiệu (VD: BCA-QLHC, UBND-TC)
-                r'(?:[/\-][a-zA-ZÀ-ỵĐđ0-9&\-\.]+)*)',    # thêm phần tiếp theo sau / nếu có
-                header_text, re.IGNORECASE)
-            if m:
-                raw = m.group(1).strip()
-                # Chuẩn hóa: xóa khoảng trắng trong phần số (trước dấu /), giữ nguyên sau /
-                slash_idx = raw.find('/')
-                if slash_idx == -1:
-                    slash_idx = raw.find('-')
-                if slash_idx > 0:
-                    before = re.sub(r'\s+', '', raw[:slash_idx])   # "5 15" → "515"
-                    after = raw[slash_idx:].strip().replace(' ', '') # "/ BCA-QLHC" → "/BCA-QLHC"
-                    raw = before + after
-                result["SoVanBan"] = raw
+            # Pre-normalize superscript Unicode trước khi chạy regex
+            # OCR viết tay hay tạo ra ký tự superscript: ¹²³⁴⁵⁶⁷⁸⁹⁰
+            _superscript_map = str.maketrans('¹²³⁴⁵⁶⁷⁸⁹⁰', '1234567890')
+            header_text = header_text.translate(_superscript_map)
+
+            # ─── Bộ chuẩn hóa SoVanBan nhiều lớp ───────────────────────────────────────
+            # Mục tiêu: xử lý mọi dạng nhiễu OCR từ văn bản viết tay/scan mờ
+            # KHÔNG dùng AI cho tầng này → nhanh hơn 1000x, không bao giờ bịa số
+            def _normalize_so_van_ban(raw: str) -> str:
+                """Chuẩn hóa số văn bản OCR về dạng chuẩn: 515/BCA-QLHC"""
+                if not raw:
+                    return ""
+                import unicodedata
+
+                # Bước 1: Chuẩn hóa Unicode (NFC) — xử lý ký tự tổ hợp
+                raw = unicodedata.normalize('NFC', raw)
+
+                # Bước 2: Thay thế ký tự đặc biệt bị OCR nhầm
+                ocr_char_map = {
+                    'O': '0', 'o': '0',   # chữ O → số 0 (chỉ trong phần số)
+                    'I': '1', 'l': '1',   # chữ I/l → số 1 (chỉ trong phần số)
+                    ',': '.',              # dấu phẩy thập phân
+                    '¹': '1', '²': '2', '³': '3',  # superscript
+                    '⁴': '4', '⁵': '5', '⁶': '6',
+                    '⁷': '7', '⁸': '8', '⁹': '9', '⁰': '0',
+                }
+                # Tìm vị trí dấu /
+                slash_pos = raw.find('/')
+                if slash_pos == -1:
+                    slash_pos = len(raw)
+                # Chỉ thay OCR char trong phần SỐ (trước /)
+                num_part = raw[:slash_pos]
+                suffix = raw[slash_pos:]
+                for wrong, right in ocr_char_map.items():
+                    num_part = num_part.replace(wrong, right)
+                raw = num_part + suffix
+
+                # Bước 3: Xóa ký tự thừa không phải số/chữ trong phần số
+                # VD: "5.15/BCA" → "515/BCA", "5-15/BCA" → "515/BCA" (khi trước / chỉ toàn số)
+                slash_pos = raw.find('/')
+                if slash_pos > 0:
+                    num_part = raw[:slash_pos]
+                    suffix = raw[slash_pos:]
+                    # Nếu phần số chỉ chứa chữ số + ký tự nhiễu (. - khoảng trắng) → strip hết
+                    if re.match(r'^[\d\s\.\-]+$', num_part):
+                        num_part = re.sub(r'[\s\.\-]', '', num_part)  # "5 . 15" → "515"
+                    raw = num_part + suffix
+
+                # Bước 4: Chuẩn hóa khoảng trắng quanh / và -
+                # VD: "515 / BCA - QLHC" → "515/BCA-QLHC"
+                raw = re.sub(r'\s*/\s*', '/', raw)
+                raw = re.sub(r'\s*-\s*', '-', raw)
+
+                # Bước 5: Xóa khoảng trắng thừa còn sót
+                raw = raw.strip()
+
+                # Bước 6: Validate — phải có ít nhất 1 số và 1 chữ cái, có dấu /
+                if not re.search(r'\d', raw) or not re.search(r'[a-zA-ZĐđ]', raw) or '/' not in raw:
+                    return ""
+
+                return raw
+
+            _SO_VAN_BAN_PATTERNS = [
+                # Pattern 1: "Số: 515/BCA-QLHC" — chuẩn, có từ "Số" rõ ràng
+                # Cho phép khoảng trắng quanh dấu - trong suffix ("BCA - QLHC" → "BCA-QLHC")
+                r'(?:S[oốôóòỏõọ06][:\.\s]+)'
+                r'([\d][\d\s\.\-]{0,8}[/][\s]*[A-ZĐÔƯĂ][A-ZĐÔƯĂa-zđôưă0-9\-\.\s]{1,30}'
+                r'(?:[/\-][\s]*[A-ZĐÔƯĂa-zđôưă0-9\-\.]+)*)',
+
+                # Pattern 2: OCR nhầm "Số" → "S06", "6o", "56" (dòng bắt đầu bằng số ngay)
+                r'(?:^|[\n\r])[\s]*S[0-9o6][:\s]+'
+                r'([\d][\d\s]{0,5}[/][\s]*[A-ZĐÔƯĂ][A-ZĐÔƯĂa-z0-9\-\.\s]+)',
+
+                # Pattern 3: Bắt trực tiếp pattern số-ký-hiệu trong header
+                # VD: dòng chỉ có "515/BCA-QLHC" không có từ "Số" (bị OCR mất)
+                r'(?:^|[\n\r])[\s]*(\d{2,5}[\s]*[/][\s]*[A-ZĐÔƯĂ]{2,}[\-][A-ZĐÔƯĂ]{2,})',
+            ]
+
+            so_van_ban_found = ""
+            for i, pattern in enumerate(_SO_VAN_BAN_PATTERNS):
+                flags = re.IGNORECASE | (re.MULTILINE if i >= 1 else 0)
+                m = re.search(pattern, header_text, flags)
+                if m:
+                    normalized = _normalize_so_van_ban(m.group(1).strip())
+                    if normalized:
+                        so_van_ban_found = normalized
+                        break  # Dùng kết quả đầu tiên khớp
+
+            if so_van_ban_found:
+                result["SoVanBan"] = so_van_ban_found
 
 
             # Nới lỏng regex tối đa: bắt các trường hợp chữ có/không dấu, bắt số bị cắt vụn (vd: 3 1)

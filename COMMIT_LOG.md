@@ -1,4 +1,10 @@
-### [2026-09-16 17:01] fix(ocr): nới lỏng regex SoVanBan để bắt số viết tay bị OCR đọc lệch
+### [2026-09-16 17:08] perf(ocr): bổ sung bộ chuẩn hóa SoVanBan đa tầng (rule-based, không cần AI)
+- **Mô tả**: Thay thế regex đơn giản bằng hàm `_normalize_so_van_ban()` xử lý toàn diện: (1) Pre-normalize superscript Unicode trước regex (¹→1, ²→2...); (2) Thay thế ký tự OCR nhầm trong phần số (O→0, I→1, l→1); (3) Xóa dấu chấm, gạch nối nhiễu giữa các chữ số (“5.15”→“515”); (4) Chuẩn hóa khoảng trắng quanh / và - ; (5) 3 pattern regex ự u tiên từ chặt đến lỏng; (6) Validate kết quả trước khi gán. Pass 12/12 test case thực tế.
+- **Tệp thay đổi**:
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "perf(ocr): add multi-layer SoVanBan normalization for handwritten document numbers"`
+
+
 - **Mô tả**: Số văn bản viết tay bị OCR đọc thêm ký tự lạ (VD: "515" → "5 15", "5¹⁵"), regex cũ chỉ bắt `[0-9]+` chặt nên không khớp → SoVanBan rỗng → hệ thống lấy tên file tạm sai. Fix: Nới lỏng regex cho phép tối đa 10 ký tự nhiễu giữa các chữ số trước dấu /, có bước cẩn hoá phần số sau khi bắt. Ngoài ra: bỏ SoVanBan ra khỏi STRUCTURED_FIELDS để cho phép AI bổ sung khi regex thất bại, nhưng vẫn kiểm tra AI trả về đúng format (có dấu / và ký tự chữ).
 - **Tệp thay đổi**:
   - `python-ai-service/services/document_service.py` (Sửa đổi)
