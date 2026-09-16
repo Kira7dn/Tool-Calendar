@@ -146,7 +146,7 @@ export function EditDocModal({
             <div className="flex-1 relative overflow-hidden">
               <iframe
                 key={pdfPage}
-                src={`/api/documents/${docId}/file?access_token=${localStorage.getItem('auth_token')}#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                src={`/api/documents/${docId}/file#page=${pdfPage}&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
                 className="w-full h-full border-none shadow-inner"
                 title="PDF Comparison"
               />

@@ -123,8 +123,6 @@ export function DocContentTab({ doc, docId, pdfUrl, setIsFullscreenPdf }) {
           <button
             className="text-[10px] font-black text-red-600 hover:underline uppercase tracking-widest"
             onClick={() => {
-              const token = localStorage.getItem('auth_token')
-              document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
               if (window.innerWidth < 768) setIsFullscreenPdf(true)
               else window.open(`/api/documents/${docId}/file`, '_blank')
             }}

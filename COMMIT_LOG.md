@@ -1,5 +1,13 @@
+### [2026-09-16 16:10] fix(ui): fix PDF loading failure by relying on HttpOnly jwt_cookie instead of URL access_token
+- **Mô tả**: Vá lỗi "Failed to load PDF document" trên Chrome/PDF viewer. Sự cố xảy ra do `access_token` ở query string lấy từ `localStorage` bị cũ (sau 15 phút), bị backend chặn (401) vì token hết hạn, dù interceptor đã refresh token mới nhưng component không re-render. Giải pháp: Xóa bỏ việc đính kèm `access_token` vào URL của PDF và xóa logic thủ công set `document.cookie` trên JS. Thay vào đó, iframe sẽ tự động gửi `jwt_cookie` (HttpOnly, SameSite=Lax) mà backend đã cấp phát và liên tục làm mới. Cập nhật endpoint `/api/documents/{id}/file` thay vì đường dẫn file vật lý ở màn hình Review.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/DocContentTab.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/Review.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail/components/EditDocModal.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): fix PDF loading failure by relying on HttpOnly jwt_cookie instead of URL access_token"`
+
 ### [2026-09-16 11:24] security(auth): hardening bảo mật login — xóa backdoor, thêm JTI blacklist, CSRF, cải thiện logging
-- **Mô tả**: Vá 6 lỗ hổng bảo mật phát hiện qua phân tích so sánh với auth-service enterprise. (1) Xóa endpoint `reset-all-passwords-temp` — backdoor unauthenticated cực kỳ nguy hiểm có thể reset toàn bộ mật khẩu hệ thống. (2) Xóa ghi file `login_ips.txt` debug code, thay bằng `SecurityLog` chuẩn. (3) Thêm log `LoginFailed_WrongPassword` vào SecurityLogs khi sai mật khẩu. (4) Thêm JTI Blacklist (IMemoryCache, TTL tự expire) để thu hồi Access Token ngay khi logout, không phải chờ 15 phút. (5) Thêm CSRF double-submit cookie middleware (constant-time compare). (6) Xóa dead code `GetPrincipalFromExpiredToken` dùng sai algorithm HS256.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi — xóa backdoor, xóa debug, thêm JTI blacklist tại logout, thêm security log)
   - `ToolCalendar.Api/Program.cs` (Sửa đổi — đăng ký ITokenBlacklistService, thêm JTI check vào OnTokenValidated, thêm UseCsrfProtection)

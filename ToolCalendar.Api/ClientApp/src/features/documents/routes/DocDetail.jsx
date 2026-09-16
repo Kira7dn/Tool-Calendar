@@ -175,7 +175,7 @@ export default function DocDetail({ docId, onBack }) {
   // Chỉ Cấp 1 (và Admin) mới được chuyển xử lý — Cấp 2 bị khóa
   const canForward = (isLevel1 || isAdmin) && !isLevel2
 
-  const pdfUrl = `/api/documents/${docId}/file?access_token=${localStorage.getItem('auth_token')}#page=${pdfPage}&toolbar=0&navpanes=0`
+  const pdfUrl = `/api/documents/${docId}/file#page=${pdfPage}&toolbar=0&navpanes=0`
 
   return (
     <div className="h-full font-sans flex flex-col gap-4 overflow-hidden px-2 pb-2">
@@ -255,8 +255,6 @@ export default function DocDetail({ docId, onBack }) {
           {!isUpdatingStatus && (
             <button
               onClick={() => {
-                const token = localStorage.getItem('auth_token')
-                document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
                 // Mobile: mở fullscreen modal có nút X đóng
                 // Desktop: mở tab mới
                 if (window.innerWidth < 768) {

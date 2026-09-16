@@ -145,7 +145,7 @@ export function Review({ onBack }) {
             <span className="text-foreground text-xs font-bold">{currentDoc.fileName}</span>
             <div className="h-3 w-px bg-border" />
             <a
-              href={currentDoc.filePath}
+              href={`/api/documents/${currentDoc.id}/file`}
               target="_blank"
               className="text-foreground hover:text-info"
             >
@@ -154,7 +154,7 @@ export function Review({ onBack }) {
           </div>
           <div className="flex-1">
             <iframe
-              src={`${currentDoc.filePath}?access_token=${localStorage.getItem('auth_token')}#toolbar=0&navpanes=0`}
+              src={`/api/documents/${currentDoc.id}/file#toolbar=0&navpanes=0`}
               className="w-full h-full border-none"
               title="PDF Preview"
             />
