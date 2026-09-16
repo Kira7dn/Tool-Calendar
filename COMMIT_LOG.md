@@ -1,4 +1,10 @@
-### [2026-09-16 16:58] fix(integration): sửa thuật toán parse số ký hiệu văn bản từ CQĐT
+### [2026-09-16 17:01] fix(ocr): nới lỏng regex SoVanBan để bắt số viết tay bị OCR đọc lệch
+- **Mô tả**: Số văn bản viết tay bị OCR đọc thêm ký tự lạ (VD: "515" → "5 15", "5¹⁵"), regex cũ chỉ bắt `[0-9]+` chặt nên không khớp → SoVanBan rỗng → hệ thống lấy tên file tạm sai. Fix: Nới lỏng regex cho phép tối đa 10 ký tự nhiễu giữa các chữ số trước dấu /, có bước cẩn hoá phần số sau khi bắt. Ngoài ra: bỏ SoVanBan ra khỏi STRUCTURED_FIELDS để cho phép AI bổ sung khi regex thất bại, nhưng vẫn kiểm tra AI trả về đúng format (có dấu / và ký tự chữ).
+- **Tệp thay đổi**:
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ocr): broaden SoVanBan regex to handle handwritten number OCR noise"`
+
+
 - **Mô tả**: Bảng CQĐT có 2 cột riêng biệt: "Số đến" (số tiếp nhận, VD: 688) và "Ký hiệu" (số văn bản thật, VD: 1849/UBND-VHXH). Code cũ gộp cả hai vào cùng điều kiện OR dẫn đến việc chọn cột "Số đến" thay vì "Ký hiệu". Fix: Tách thành 2 biến riêng, ưu tiên "ký hiệu" tuyệt đối, chỉ fallback sang "số đến" khi không có cột ký hiệu. Thêm bước làm sạch soVanBan (xóa khoảng trắng quanh dấu /). Xóa các lệnh dump file debug vi phạm tc-rule-no-temporary-files.
 - **Tệp thay đổi**:
   - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)

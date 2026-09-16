@@ -76,9 +76,29 @@ class DocumentService:
             # Giới hạn tìm kiếm trong 1000 ký tự đầu tiên để tránh nhặt nhầm số trong phần thân bài
             header_text = text[:1000]
 
-            m = re.search(r'(?i:s[oốôóòỏõọ06])[:\s]*([0-9]+[\s]*[/-][\s]*[a-z0-9đà-ỵ&]+(?:[\s]*[-/][\s]*[a-z0-9đà-ỵ&]+)*)', header_text, re.IGNORECASE)
+            # Fix: Nới lỏng regex bắt SoVanBan để xử lý OCR số viết tay bị đọc lệch
+            # VD: "5¹⁵/BCA-QLHC" → OCR ra "5 15/BCA-QLHC" hoặc "515 /BCA"
+            # Pattern mới: cho phép khoảng trắng và ký tự nhiễu giữa các chữ số trước dấu /
+            m = re.search(
+                r'(?i:s[oốôóòỏõọ06])[:\s]*'              # "Số:" (cho phép OCR nhầm o→0, o→6)
+                r'([\d][\d\s\.\-]{0,10}'                  # Số: cho phép tối đa 10 ký tự nhiễu giữa các chữ số
+                r'[/\-]'                                   # dấu / hoặc -
+                r'[\s]*'                                   # khoảng trắng tùy chọn sau /
+                r'[a-zA-ZÀ-ỵĐđ0-9&\-\.QLHCUBNDVPSGDTC]+'# phần ký hiệu (VD: BCA-QLHC, UBND-TC)
+                r'(?:[/\-][a-zA-ZÀ-ỵĐđ0-9&\-\.]+)*)',    # thêm phần tiếp theo sau / nếu có
+                header_text, re.IGNORECASE)
             if m:
-                result["SoVanBan"] = m.group(1).strip().replace(" ", "")
+                raw = m.group(1).strip()
+                # Chuẩn hóa: xóa khoảng trắng trong phần số (trước dấu /), giữ nguyên sau /
+                slash_idx = raw.find('/')
+                if slash_idx == -1:
+                    slash_idx = raw.find('-')
+                if slash_idx > 0:
+                    before = re.sub(r'\s+', '', raw[:slash_idx])   # "5 15" → "515"
+                    after = raw[slash_idx:].strip().replace(' ', '') # "/ BCA-QLHC" → "/BCA-QLHC"
+                    raw = before + after
+                result["SoVanBan"] = raw
+
 
             # Nới lỏng regex tối đa: bắt các trường hợp chữ có/không dấu, bắt số bị cắt vụn (vd: 3 1)
             m = re.search(r'ng.y\s*([\d\s]{1,3})\s*th.ng\s*([\d\s]{1,3})\s*n.m\s*([\d\s]{4,7})', header_text, re.IGNORECASE)
@@ -191,7 +211,9 @@ class DocumentService:
         MAX_METADATA_CHARS = 1500  # R-P04: Chỉ đọc 1500 ký tự đầu tiên để tránh ngợp & giảm độ trễ
 
         # Trường có cấu trúc rõ → Regex chính xác hơn, AI chỉ fill-empty
-        STRUCTURED_FIELDS = {"SoVanBan", "NgayBanHanh", "ThoiHan"}
+        # Lưu ý: SoVanBan đã được tách khỏi STRUCTURED_FIELDS — AI được phép bổ sung khi regex thất bại
+        # (văn bản viết tay/dấu in mờ bị OCR đọc lệch, regex không bắt được)
+        STRUCTURED_FIELDS = {"NgayBanHanh", "ThoiHan"}
         # Trường ngữ nghĩa → AI hiểu ngữ cảnh tốt hơn, được phép override Regex
         LLM_PRIORITY_FIELDS = {"CoQuanBanHanh", "CoQuanChuQuan"}
         JUNK_VALUES = {"none", "null", "không có", "không đề cập", "", "n/a"}
@@ -219,18 +241,26 @@ class DocumentService:
                 except json.JSONDecodeError:
                     parsed = {}
 
-                STRUCTURED_FIELDS = {"SoVanBan", "NgayBanHanh", "ThoiHan"}
+                STRUCTURED_FIELDS = {"NgayBanHanh", "ThoiHan"}
                 for k in fallback.keys():
                     if k not in parsed:
                         continue
                     ai_val = str(parsed[k]).strip()
                     if ai_val.lower() in JUNK_VALUES:
                         continue
-                    if k in LLM_PRIORITY_FIELDS:
+                    if k == "SoVanBan":
+                        # AI chỉ điền SoVanBan khi Regex thất bại (số viết tay OCR lệch)
+                        # Nhưng AI vẫn bị giới hạn: giá trị phải có dấu / hoặc - để tránh AI bịạ
+                        if not fallback[k] and re.search(r'[0-9].*[/\-].*[A-Za-zĐđ]', ai_val):
+                            # Làm sạch SoVanBan do AI trả về: xóa khoảng trắng quanh dấu /
+                            ai_val = re.sub(r'\s*/\s*', '/', ai_val)
+                            ai_val = re.sub(r'\s*-\s*', '-', ai_val)
+                            fallback[k] = ai_val
+                    elif k in LLM_PRIORITY_FIELDS:
                         # AI được phép override Regex với 2 trường ngữ nghĩa này
                         fallback[k] = ai_val
                     elif not fallback[k]:
-                        # Nếu là trường cấu trúc chặt, tuyệt đối cấm AI tự bịa khi Regex đã thất bại
+                        # Nếu là trường cấu trúc chặt, tuyệt đối cấm AI tự bọa khi Regex đã thất bại
                         if k in STRUCTURED_FIELDS:
                             continue
                         # Các trường khác — AI chỉ điền khi Regex thất bại
