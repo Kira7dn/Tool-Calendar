@@ -1,4 +1,10 @@
-### [2026-09-16 16:15] fix(ui): remove redundant manual jwt_cookie manipulation in JS
+### [2026-09-16 16:47] fix(ui): sửa lỗi nhập nhánh đen khi click tab NỘI DUNG trong DocDetail
+- **Mô tả**: Tab "Nội dung" dùng `{activeTab === 'content' && <DocContentTab/>}` khiến React unmount/mount lại `<iframe>` PDF mỗi lần đổi tab, gây màn hình đen nhập nhánh trong lúc iframe tải lại. Fix: Đổi sang dùng `className={activeTab === 'content' ? 'flex...' : 'hidden'}` để giữ iframe sống trong DOM, chỉ ẩn/hiện qua CSS.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): remove iframe remount on tab switch to fix black flash"`
+
+
 - **Mô tả**: Xóa các đoạn code Javascript cố gắng gán cứng `document.cookie = 'jwt_cookie=...'` trên trình duyệt. Cookie `jwt_cookie` đã được backend cấu hình `HttpOnly = true` nên JS không thể và không được phép can thiệp. Việc JS tự set cookie này có thể tạo ra cookie rác không có flag HttpOnly, gây xung đột auth.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)

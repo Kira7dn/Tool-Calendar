@@ -287,23 +287,24 @@ export default function DocDetail({ docId, onBack }) {
       {/* 3. Main Content */}
       <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pb-10 lg:pb-0">
         <div className="flex-none lg:flex-1 flex flex-col min-h-0 min-w-0">
-          {activeTab === 'overview' && (
+          {/* Dùng hidden thay vì conditional render để giữ iframe sống — tránh nhấp nhánh đen khi đổi tab */}
+          <div className={activeTab === 'overview' ? 'flex flex-col h-full' : 'hidden'}>
             <DocOverviewTab
               doc={doc}
               departments={departments}
               users={users}
               handleViewEvidence={handleViewEvidence}
             />
-          )}
-          {activeTab === 'content' && (
+          </div>
+          <div className={activeTab === 'content' ? 'flex flex-col h-full' : 'hidden'}>
             <DocContentTab
               doc={doc}
               docId={docId}
               pdfUrl={pdfUrl}
               setIsFullscreenPdf={setIsFullscreenPdf}
             />
-          )}
-          {activeTab === 'routing' && (
+          </div>
+          <div className={activeTab === 'routing' ? 'flex flex-col h-full' : 'hidden'}>
             <DocRoutingTab
               doc={doc}
               displayRoutings={displayRoutings}
@@ -311,8 +312,10 @@ export default function DocDetail({ docId, onBack }) {
               setIsForwardModalOpen={setIsForwardModalOpen}
               canForward={canForward}
             />
-          )}
-          {activeTab === 'history' && <DocHistoryTab doc={doc} users={users} routings={routings} />}
+          </div>
+          <div className={activeTab === 'history' ? 'flex flex-col h-full' : 'hidden'}>
+            <DocHistoryTab doc={doc} users={users} routings={routings} />
+          </div>
         </div>
 
         {/* Right Panel */}
