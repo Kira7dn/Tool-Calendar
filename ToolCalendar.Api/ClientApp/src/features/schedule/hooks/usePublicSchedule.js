@@ -183,7 +183,6 @@ export function usePublicSchedule() {
       localStorage.removeItem('user_full_name')
       localStorage.removeItem('user_role')
       localStorage.removeItem('user_id')
-      document.cookie = 'jwt_cookie=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
       setUser(null)
       setIsLoggingOut(false)
     }, 1500)

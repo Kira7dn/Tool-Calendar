@@ -114,8 +114,6 @@ export function AppShell() {
     window.app.services.openDocDetail = (id) => setCurrentDocId(id)
     window.app.services.openReview = () => setIsReviewOpen(true)
     window.app.services.openPdfPreview = (id) => {
-      const token = localStorage.getItem('auth_token')
-      document.cookie = `jwt_cookie=${token}; path=/; max-age=3600; Secure; SameSite=Lax`
       window.open(`/api/documents/${id}/file`, '_blank')
     }
 

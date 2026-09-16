@@ -1,3 +1,10 @@
+### [2026-09-16 16:15] fix(ui): remove redundant manual jwt_cookie manipulation in JS
+- **Mô tả**: Xóa các đoạn code Javascript cố gắng gán cứng `document.cookie = 'jwt_cookie=...'` trên trình duyệt. Cookie `jwt_cookie` đã được backend cấu hình `HttpOnly = true` nên JS không thể và không được phép can thiệp. Việc JS tự set cookie này có thể tạo ra cookie rác không có flag HttpOnly, gây xung đột auth.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/shell/AppShell.jsx` (Sửa đổi)
+  - `ToolCalendar.Api/ClientApp/src/features/schedule/hooks/usePublicSchedule.js` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(ui): remove redundant manual jwt_cookie manipulation in JS"`
+
 ### [2026-09-16 16:10] fix(ui): fix PDF loading failure by relying on HttpOnly jwt_cookie instead of URL access_token
 - **Mô tả**: Vá lỗi "Failed to load PDF document" trên Chrome/PDF viewer. Sự cố xảy ra do `access_token` ở query string lấy từ `localStorage` bị cũ (sau 15 phút), bị backend chặn (401) vì token hết hạn, dù interceptor đã refresh token mới nhưng component không re-render. Giải pháp: Xóa bỏ việc đính kèm `access_token` vào URL của PDF và xóa logic thủ công set `document.cookie` trên JS. Thay vào đó, iframe sẽ tự động gửi `jwt_cookie` (HttpOnly, SameSite=Lax) mà backend đã cấp phát và liên tục làm mới. Cập nhật endpoint `/api/documents/{id}/file` thay vì đường dẫn file vật lý ở màn hình Review.
 - **Tệp thay đổi**:
