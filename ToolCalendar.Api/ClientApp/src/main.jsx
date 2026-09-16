@@ -2,9 +2,35 @@
 import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 
-// ─── Global Fetch Interceptor for standardized ApiResponse ────────────────
+// ─── CSRF Token Helper ─────────────────────────────────────────────────────
+// Đọc csrf_token cookie (NOT HttpOnly — JS được phép đọc)
+function getCsrfToken() {
+  const match = document.cookie.split('; ').find((r) => r.startsWith('csrf_token='))
+  return match ? match.split('=')[1] : null
+}
+
+// ─── Global Fetch Interceptor for standardized ApiResponse + CSRF ──────────
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH'])
 const originalFetch = window.fetch
 window.fetch = async (...args) => {
+  // ── Inject CSRF Token cho mọi mutating request ────────────────────────
+  const input = args[0]
+  let init = args[1]
+  const method = (init?.method || 'GET').toUpperCase()
+
+  if (MUTATING_METHODS.has(method)) {
+    const csrfToken = getCsrfToken()
+    if (csrfToken) {
+      init = init ? { ...init } : {}
+      init.headers = new Headers(init.headers || {})
+      // Không ghi đè nếu đã có (cho phép caller tự set nếu cần)
+      if (!init.headers.has('X-CSRF-Token')) {
+        init.headers.set('X-CSRF-Token', csrfToken)
+      }
+      args = [input, init]
+    }
+  }
+
   const response = await originalFetch(...args)
   const contentType = response.headers.get('content-type')
   if (contentType && contentType.includes('application/json')) {

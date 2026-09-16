@@ -12,6 +12,7 @@ using ToolCalendar.Core.Models;
 using ToolCalendar.Hubs;
 using ToolCalendar.Models;
 using ToolCalendar.Core.Data.Repositories;
+using ToolCalendar.Core.Services.Security;
 
 namespace ToolCalendar.Api.Controllers
 {
@@ -26,7 +27,8 @@ namespace ToolCalendar.Api.Controllers
         private readonly IAuditLogRepository _auditLogRepo;
         private readonly ISessionRepository _sessionRepo;
         private readonly ISecurityLogRepository _secLogRepo;
-        private readonly ToolCalendar.Core.Services.Security.RsaKeyManager _rsaKeyManager;
+        private readonly RsaKeyManager _rsaKeyManager;
+        private readonly ITokenBlacklistService _tokenBlacklist;
 
         public AuthController(
             IConfiguration configuration,
@@ -36,7 +38,8 @@ namespace ToolCalendar.Api.Controllers
             IAuditLogRepository auditLogRepo,
             ISessionRepository sessionRepo,
             ISecurityLogRepository secLogRepo,
-            ToolCalendar.Core.Services.Security.RsaKeyManager rsaKeyManager)
+            RsaKeyManager rsaKeyManager,
+            ITokenBlacklistService tokenBlacklist)
         {
             _configuration = configuration;
             _hubContext = hubContext;
@@ -46,6 +49,7 @@ namespace ToolCalendar.Api.Controllers
             _sessionRepo = sessionRepo;
             _secLogRepo = secLogRepo;
             _rsaKeyManager = rsaKeyManager;
+            _tokenBlacklist = tokenBlacklist;
         }
 
         // ─── LOGIN ───────────────────────────────────────────────────────────────
@@ -58,13 +62,8 @@ namespace ToolCalendar.Api.Controllers
                              ?? HttpContext.Connection.RemoteIpAddress?.ToString();
             string? userAgent = Request.Headers["User-Agent"].FirstOrDefault();
 
-            try
-            {
-                var logPath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "login_ips.txt");
-                var logLine = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] IP: {clientIp ?? "Unknown"} | Tải khoản: {request.Username}\n";
-                System.IO.File.AppendAllText(logPath, logLine);
-            }
-            catch { /* Bỏ qua nếu lỗi ghi file */ }
+            // Ghi security log ngay khi nhận request login (trước khi validate)
+            await _secLogRepo.LogEventAsync(null, clientIp ?? "", "LoginAttempt", userAgent ?? "");
 
             // ── Bước 1: Tìm user qua Identity UserManager ────────────────────────
             var user = await _userManager.FindByNameAsync(request.Username);
@@ -113,6 +112,8 @@ namespace ToolCalendar.Api.Controllers
                     isSuccess: false,
                     failReason: "wrong_password"
                 );
+                // Ghi security log khi sai mật khẩu — phục vụ alert brute-force
+                await _secLogRepo.LogEventAsync(user.Id, clientIp ?? "", "LoginFailed_WrongPassword", userAgent ?? "");
                 return Unauthorized(ApiResponse.Fail("Tài khoản hoặc mật khẩu không chính xác, hoặc tài khoản đang tạm thời bị khóa."));
             }
 
@@ -306,26 +307,6 @@ namespace ToolCalendar.Api.Controllers
             }));
         }
 
-        private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token, string secret)
-        {
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false,
-                ValidateIssuer = false,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secret)),
-                ValidateLifetime = false // Here we are saying that we don't care about the token's expiration date
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
-
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid token");
-
-            return principal;
-        }
 
         private static string GenerateRefreshToken()
         {
@@ -352,23 +333,44 @@ namespace ToolCalendar.Api.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
+            string? clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                             ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+            string? userAgent = Request.Headers["User-Agent"].FirstOrDefault();
+
+            // Thu hồi Refresh Token trong DB
             if (Request.Cookies.TryGetValue("refresh_cookie", out var refreshToken))
             {
                 var tokenHash = ComputeSha256Hash(refreshToken);
                 var session = await _sessionRepo.GetSessionByTokenHashAsync(tokenHash);
                 if (session != null)
                 {
-                    await _sessionRepo.RevokeSessionAsync(tokenHash); // Thu hồi token
-                    
-                    string? clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
-                                     ?? HttpContext.Connection.RemoteIpAddress?.ToString();
-                    string? userAgent = Request.Headers["User-Agent"].FirstOrDefault();
-                    
+                    await _sessionRepo.RevokeSessionAsync(tokenHash);
                     await _secLogRepo.LogEventAsync(session.UserId, clientIp ?? "", "Logout", userAgent ?? "");
                 }
             }
+
+            // JTI Blacklist: thu hồi Access Token ngay lập tức (không chờ 15 phút expire)
+            if (Request.Cookies.TryGetValue("jwt_cookie", out var jwtCookie) && !string.IsNullOrEmpty(jwtCookie))
+            {
+                try
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    // ReadJwtToken không validate chữ ký — chỉ cần đọc JTI claim
+                    var parsedToken = handler.ReadJwtToken(jwtCookie);
+                    var jti = parsedToken.Id; // "jti" claim
+                    var remaining = parsedToken.ValidTo - DateTime.UtcNow;
+                    if (!string.IsNullOrEmpty(jti) && remaining > TimeSpan.Zero)
+                    {
+                        _tokenBlacklist.Blacklist(jti, remaining);
+                    }
+                }
+                catch { /* Token đã hết hạn hoặc malformed — bỏ qua */ }
+            }
+
             Response.Cookies.Delete("jwt_cookie");
             Response.Cookies.Delete("refresh_cookie");
+            // Xóa csrf_token cookie
+            Response.Cookies.Delete("csrf_token");
             return Ok(ApiResponse.Ok("Đăng xuất thành công"));
         }
 
@@ -423,20 +425,7 @@ namespace ToolCalendar.Api.Controllers
             return BadRequest(ApiResponse.Fail("Không thể đổi mật khẩu.", errors));
         }
 
-        [AllowAnonymous]
-        [HttpGet("reset-all-passwords-temp")]
-        public async Task<IActionResult> ResetAllPasswordsTemp()
-        {
-            var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ToolCalendar");
-            var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? Path.Combine(appData, "documents.db");
-            var connectionString = $"Data Source={dbPath};Pooling=False;Default Timeout=30";
 
-            using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
-            connection.Open();
-            using var cmd = new Microsoft.Data.Sqlite.SqliteCommand("UPDATE Users SET PasswordHash = 'CamPha@2026!', FailedLoginCount = 0, AccessFailedCount = 0, LockoutUntil = NULL, LockoutEnd = NULL", connection);
-            cmd.ExecuteNonQuery();
-            return Ok(ApiResponse.Ok("Đã reset toàn bộ mật khẩu thành CamPha@2026! và gỡ khóa các tài khoản."));
-        }
     }
 
     public class LoginRequest

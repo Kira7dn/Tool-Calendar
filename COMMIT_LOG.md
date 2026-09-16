@@ -1,4 +1,16 @@
+### [2026-09-16 11:24] security(auth): hardening bảo mật login — xóa backdoor, thêm JTI blacklist, CSRF, cải thiện logging
+- **Mô tả**: Vá 6 lỗ hổng bảo mật phát hiện qua phân tích so sánh với auth-service enterprise. (1) Xóa endpoint `reset-all-passwords-temp` — backdoor unauthenticated cực kỳ nguy hiểm có thể reset toàn bộ mật khẩu hệ thống. (2) Xóa ghi file `login_ips.txt` debug code, thay bằng `SecurityLog` chuẩn. (3) Thêm log `LoginFailed_WrongPassword` vào SecurityLogs khi sai mật khẩu. (4) Thêm JTI Blacklist (IMemoryCache, TTL tự expire) để thu hồi Access Token ngay khi logout, không phải chờ 15 phút. (5) Thêm CSRF double-submit cookie middleware (constant-time compare). (6) Xóa dead code `GetPrincipalFromExpiredToken` dùng sai algorithm HS256.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi — xóa backdoor, xóa debug, thêm JTI blacklist tại logout, thêm security log)
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi — đăng ký ITokenBlacklistService, thêm JTI check vào OnTokenValidated, thêm UseCsrfProtection)
+  - `ToolCalendar.Core/Services/Security/ITokenBlacklistService.cs` (Mới)
+  - `ToolCalendar.Api/Services/Security/TokenBlacklistService.cs` (Mới)
+  - `ToolCalendar.Api/Middleware/CsrfMiddleware.cs` (Mới)
+  - `ToolCalendar.Api/ClientApp/src/main.jsx` (Sửa đổi — tự động inject X-CSRF-Token header cho mọi POST/PUT/DELETE)
+- **Lệnh git commit**: `git commit -m "security(auth): hardening login — xoa backdoor, them JTI blacklist, CSRF protection, security logging"`
+
 ### [2026-09-15 08:41] feat(ui): prefill NgayBanHanh from CQDT TrichYeu and ultra-relax OCR date regex
+
 - **Mô tả**: Giao diện đồng bộ CQĐT hiển thị trống Ngày Ban Hành vì AI chưa chạy (chỉ chạy sau khi bấm lưu). Để UX tốt hơn, đã parse trực tiếp chuỗi "Ngày văn bản: dd/mm/yyyy" ẩn bên trong phần Trích Yếu trả về từ website CQĐT làm giá trị mặc định cho UI. Đồng thời nới lỏng tối đa Regex của Ngày Ban Hành ở Python để chấp nhận số có dính khoảng trắng do lỗi OCR (vd: `3 1`).
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/UploadPage/index.jsx` (Sửa đổi)

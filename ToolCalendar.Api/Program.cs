@@ -9,6 +9,7 @@ using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Core.Data.Repositories;
 using ToolCalendar.Core.Services;
 using ToolCalendar.Core.Services.AiTools;
+using ToolCalendar.Core.Services.Security; // ✅ ITokenBlacklistService
 
 using ToolCalendar.Data;
 using ToolCalendar.Hubs;
@@ -20,6 +21,7 @@ using ToolCalendar.Policies;    // ✅ AppPolicies (phân quyền tập trung)
 using ToolCalendar.Services.Security; // ✅ ClamAvService, BackupService, HmacRequestHandler
 using Microsoft.Extensions.Caching.Memory; // ✅ IMemoryCache extension methods
 using ToolCalendar.Api.Middleware;          // ✅ CorrelationIdMiddleware
+using ToolCalendar.Api.Services.Security;   // ✅ TokenBlacklistService
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,7 +44,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddMemoryCache(); // ✅ Dashboard stats caching
 builder.Services.AddHealthChecks(); // ✅ Thêm HealthChecks cho Docker Monitoring
 
-
+// ✅ JTI Blacklist — singleton vì IMemoryCache là singleton
+builder.Services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
 
 // Đăng ký SignalR
 builder.Services.AddSignalR();
@@ -251,6 +254,19 @@ builder.Services.AddAuthentication(x =>
                     Console.WriteLine($"[AuthDebug] Kiểm tra token cho User: {context.Principal?.Identity?.Name}. Claims: {string.Join(", ", claims ?? Array.Empty<string>())}");
                 }
 
+                // Kiểm tra JTI blacklist trước tiên — token đã logout thì từ chối ngay lập tức
+                var jtiClaim = context.Principal?.FindFirst("jti")?.Value
+                            ?? context.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
+                if (!string.IsNullOrEmpty(jtiClaim))
+                {
+                    var blacklist = context.HttpContext.RequestServices.GetRequiredService<ITokenBlacklistService>();
+                    if (blacklist.IsBlacklisted(jtiClaim))
+                    {
+                        context.Fail("Token đã bị thu hồi. Vui lòng đăng nhập lại.");
+                        return;
+                    }
+                }
+
                 var userIdStr = context.Principal?.FindFirst("uid")?.Value
                               ?? context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value
                               ?? context.Principal?.FindFirst("UserId")?.Value;
@@ -426,6 +442,9 @@ if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
 
 app.UseAuthentication();
 app.UseAuthorization();
+// ✅ CSRF Protection: kiểm tra X-CSRF-Token header cho mọi mutating request có auth
+// Phải đặt SAU UseAuthorization() để biết request đã authenticated chưa
+app.UseCsrfProtection();
 // Áp dụng Rate Limiter "fixed" làm mặc định cho tất cả Controllers và Hub
 app.MapControllers().RequireRateLimiting("fixed");
 app.MapHub<NotificationHub>("/notificationHub").RequireRateLimiting("fixed");
