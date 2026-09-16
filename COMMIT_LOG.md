@@ -1,4 +1,10 @@
-### [2026-09-16 16:47] fix(ui): sửa lỗi nhập nhánh đen khi click tab NỘI DUNG trong DocDetail
+### [2026-09-16 16:58] fix(integration): sửa thuật toán parse số ký hiệu văn bản từ CQĐT
+- **Mô tả**: Bảng CQĐT có 2 cột riêng biệt: "Số đến" (số tiếp nhận, VD: 688) và "Ký hiệu" (số văn bản thật, VD: 1849/UBND-VHXH). Code cũ gộp cả hai vào cùng điều kiện OR dẫn đến việc chọn cột "Số đến" thay vì "Ký hiệu". Fix: Tách thành 2 biến riêng, ưu tiên "ký hiệu" tuyệt đối, chỉ fallback sang "số đến" khi không có cột ký hiệu. Thêm bước làm sạch soVanBan (xóa khoảng trắng quanh dấu /). Xóa các lệnh dump file debug vi phạm tc-rule-no-temporary-files.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Services/Integration/CqdtIntegrationService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(integration): fix CQDT column detection to prioritize ky hieu over so den"`
+
+
 - **Mô tả**: Tab "Nội dung" dùng `{activeTab === 'content' && <DocContentTab/>}` khiến React unmount/mount lại `<iframe>` PDF mỗi lần đổi tab, gây màn hình đen nhập nhánh trong lúc iframe tải lại. Fix: Đổi sang dùng `className={activeTab === 'content' ? 'flex...' : 'hidden'}` để giữ iframe sống trong DOM, chỉ ẩn/hiện qua CSS.
 - **Tệp thay đổi**:
   - `ToolCalendar.Api/ClientApp/src/features/documents/routes/DocDetail.jsx` (Sửa đổi)

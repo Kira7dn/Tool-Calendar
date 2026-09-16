@@ -82,10 +82,7 @@ public class CqdtIntegrationService : ICqdtIntegrationService
         
         var docsHtml = await docsResponse.Content.ReadAsStringAsync();
         
-        // Dump HTML ra file để debug cấu trúc (Sẽ bị AI xóa sau khi phân tích xong theo tc-rule-no-temporary-files)
-        try {
-            await System.IO.File.WriteAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), "cqdt_html_dump.txt"), docsHtml);
-        } catch { }
+        // Dump HTML ra file để debug cấu trúc (Đã tắt — tuân thủ tc-rule-no-temporary-files)
         
         // 4. Parse Document Table (Multi-page loop)
         var result = new List<CqdtDocumentDto>();
@@ -123,17 +120,29 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                 var rows = targetTable.SelectNodes(".//tr");
                 if (rows != null)
                 {
-                    int colSoKyHieu = 1, colCoQuan = 2, colTrichYeu = 3;
+                    // colSoKyHieu: ƯU TIÊN "ký hiệu" (số ký hiệu văn bản thật) trước.
+                    // CHỈ fallback sang "số đến" nếu KHÔNG tìm thấy cột "ký hiệu".
+                    // Không gộp chung: bảng CQĐT có thể có cả 2 cột ("Số đến" = số tiếp nhận, "Ký hiệu" = số thật).
+                    int colSoKyHieu = -1, colSoDen = -1, colCoQuan = 2, colTrichYeu = 3;
                     var headerCols = rows[0].SelectNodes(".//th") ?? rows[0].SelectNodes(".//td");
                     if (headerCols != null)
                     {
                         for (int i = 0; i < headerCols.Count; i++)
                         {
                             var txt = headerCols[i].InnerText.ToLower();
-                            if (txt.Contains("ký hiệu") || txt.Contains("số đến") || txt.Contains("số văn bản")) colSoKyHieu = i;
+                            // Ưu tiên 1: "ký hiệu" hoặc "số văn bản" (số ký hiệu thật)
+                            if (txt.Contains("ký hiệu") || txt.Contains("số văn bản")) colSoKyHieu = i;
+                            // Ưu tiên 2 (fallback): "số đến" — là số thứ tự tiếp nhận, chỉ dùng khi không có cột ký hiệu
+                            if (txt.Contains("số đến")) colSoDen = i;
                             if (txt.Contains("cơ quan") || txt.Contains("nơi gửi")) colCoQuan = i;
                             if (txt.Contains("trích yếu") || txt.Contains("nội dung") || txt.Contains("thông tin văn bản")) colTrichYeu = i;
                         }
+                        // Nếu không tìm thấy cột "ký hiệu" → fallback sang "số đến"
+                        if (colSoKyHieu == -1) colSoKyHieu = colSoDen == -1 ? 1 : colSoDen;
+                    }
+                    else
+                    {
+                        colSoKyHieu = 1;
                     }
 
                     foreach (var row in rows.Skip(1))
@@ -145,7 +154,13 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                         {
                             try
                             {
-                                var soVanBan = cols[colSoKyHieu]?.InnerText?.Trim();
+                                // Làm sạch soVanBan: loại bỏ whitespace thừa, newline từ HTML cell
+                                // VD: "1849 /UBND-VHXH" → "1849/UBND-VHXH"
+                                var soVanBan = System.Text.RegularExpressions.Regex
+                                    .Replace(cols[colSoKyHieu]?.InnerText?.Trim() ?? "", @"\s+", " ")
+                                    .Replace(" /", "/")  // xử lý khoảng trắng trước dấu /
+                                    .Replace("/ ", "/")  // xử lý khoảng trắng sau dấu /
+                                    .Trim();
                                 var coQuan = cols[colCoQuan]?.InnerText?.Trim();
                                 var thongTinHtml = cols[colTrichYeu]?.InnerHtml;
                                 
@@ -155,6 +170,15 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                                     var infoDoc = new HtmlDocument();
                                     infoDoc.LoadHtml(thongTinHtml);
                                     trichYeu = infoDoc.DocumentNode.InnerText.Replace("\n", " ").Replace("\r", "").Trim();
+                                    // Nếu cột ký hiệu trống, thử lấy từ trichYeu (pattern: "Số: 1849/UBND-VHXH")
+                                    if (string.IsNullOrWhiteSpace(soVanBan))
+                                    {
+                                        var kyHieuMatch = System.Text.RegularExpressions.Regex.Match(
+                                            trichYeu,
+                                            @"(?:Số|Mã ký hiệu|Ký hiệu)[:\s]+([A-Z0-9\-\/]+(?:\/[A-ZĐÔƯĂ\-]+)+)",
+                                            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                                        if (kyHieuMatch.Success) soVanBan = kyHieuMatch.Groups[1].Value.Trim();
+                                    }
                                 }
 
                                 if (string.IsNullOrEmpty(soVanBan) || soVanBan.Length < 2 || string.IsNullOrEmpty(trichYeu) || trichYeu.Length < 5)
@@ -260,7 +284,6 @@ public class CqdtIntegrationService : ICqdtIntegrationService
             }
             
             currentHtml = await pageResponse.Content.ReadAsStringAsync();
-            try { await System.IO.File.WriteAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), $"cqdt_html_dump_page_{pageCount+1}.txt"), currentHtml); } catch { }
             pageCount++;
         }
         
