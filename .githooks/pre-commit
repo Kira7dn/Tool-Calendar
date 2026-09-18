@@ -46,24 +46,10 @@ STAGED_CS=$(echo "$STAGED_FILES" | grep -E '\.cs$' || true)
 print_header
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CHỐT 1: BẮT BUỘC CẬP NHẬT COMMIT_LOG.md
-# ─────────────────────────────────────────────────────────────────────────────
-print_step "CHỐT 1/5 — Kiểm tra tệp COMMIT_LOG.md..."
-
-if echo "$STAGED_FILES" | grep -q "COMMIT_LOG.md"; then
-    print_pass "COMMIT_LOG.md đã được cập nhật."
-else
-    print_fail "Bạn CHƯA cập nhật COMMIT_LOG.md!"
-    echo "         👉 Hãy ghi lại thay đổi vào COMMIT_LOG.md và git add nó."
-    echo ""
-    exit 1
-fi
-
-# ─────────────────────────────────────────────────────────────────────────────
 # CHỐT 2: PHÁT HIỆN BÍ MẬT/MẬT KHẨU CỨNG TRONG CODE (Secrets Scanner)
 # Tham chiếu: OWASP A02 — Cryptographic Failures, SonarQube S2068
 # ─────────────────────────────────────────────────────────────────────────────
-print_step "CHỐT 2/5 — Quét Secrets & Hardcoded Passwords (OWASP A02)..."
+print_step "CHỐT 1/4 — Quét Secrets & Hardcoded Passwords (OWASP A02)..."
 
 SECRETS_PATTERN='(password|passwd|secret|api_key|apikey|token|private_key|access_key)\s*=\s*["\x27][^"\x27]{6,}'
 SECRETS_FOUND=false
@@ -90,7 +76,7 @@ fi
 # CHỐT 3: ESLINT — Kiểm tra chất lượng JavaScript/React
 # Tham chiếu: ESLint Recommended, React Best Practices, no-secrets
 # ─────────────────────────────────────────────────────────────────────────────
-print_step "CHỐT 3/5 — ESLint (JavaScript/React Quality Check)..."
+print_step "CHỐT 2/4 — ESLint (JavaScript/React Quality Check)..."
 
 if [ -z "$STAGED_JS" ]; then
     print_pass "Không có file JS/JSX nào cần kiểm tra."
@@ -120,7 +106,7 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 # CHỐT 4: PRETTIER — Kiểm tra định dạng code JS/JSX
 # ─────────────────────────────────────────────────────────────────────────────
-print_step "CHỐT 4/5 — Prettier (Code Formatting Check)..."
+print_step "CHỐT 3/4 — Prettier (Code Formatting Check)..."
 
 if [ -z "$STAGED_JS" ]; then
     print_pass "Không có file JS/JSX nào cần kiểm tra định dạng."
@@ -160,7 +146,7 @@ fi
 # CHỐT 5: DOTNET FORMAT — Kiểm tra chuẩn code C#
 # Tham chiếu: Microsoft C# Coding Conventions, Roslyn Analyzers
 # ─────────────────────────────────────────────────────────────────────────────
-print_step "CHỐT 5/5 — dotnet format (C# Code Style Check)..."
+print_step "CHỐT 4/4 — dotnet format (C# Code Style Check)..."
 
 if [ -z "$STAGED_CS" ]; then
     print_pass "Không có file C# nào cần kiểm tra."

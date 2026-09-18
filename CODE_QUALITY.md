@@ -6,7 +6,7 @@ Tài liệu này mô tả toàn bộ quy tắc và tiêu chuẩn chất lượng
 
 ## Kiến trúc Cổng Kiểm duyệt (Quality Gates)
 
-Mọi lần `git commit` đều phải vượt qua **5 chốt chặn** tự động. Nếu bất kỳ chốt nào thất bại, commit sẽ bị từ chối.
+Mọi lần `git commit` đều phải vượt qua **4 chốt chặn** tự động. Nếu bất kỳ chốt nào thất bại, commit sẽ bị từ chối.
 
 ```
 Developer / AI
@@ -18,11 +18,10 @@ Developer / AI
 ┌─────────────────────────────────────────────────────┐
 │             PRE-COMMIT HOOK                         │
 │                                                     │
-│  Chốt 1: COMMIT_LOG.md đã được cập nhật?  ─── ❌ BLOCK
-│  Chốt 2: Có Secrets/Password cứng không?  ─── ❌ BLOCK
-│  Chốt 3: ESLint (JS/React chất lượng)?    ─── ❌ BLOCK
-│  Chốt 4: Prettier (định dạng code)?       ─── ❌ BLOCK
-│  Chốt 5: dotnet format (chuẩn C#)?        ─── ❌ BLOCK
+│  Chốt 1: Có Secrets/Password cứng không?  ─── ❌ BLOCK
+│  Chốt 2: ESLint (JS/React chất lượng)?    ─── ❌ BLOCK
+│  Chốt 3: Prettier (định dạng code)?       ─── ❌ BLOCK
+│  Chốt 4: dotnet format (chuẩn C#)?        ─── ❌ BLOCK
 └─────────────────────────────────────────────────────┘
       │
       ▼
@@ -41,17 +40,12 @@ Developer / AI
 
 ## Chi tiết Từng Chốt
 
-### Chốt 1 — Bắt buộc cập nhật `COMMIT_LOG.md`
-- **Lý do**: Mọi thay đổi phải được ghi lại để AI hiểu ngữ cảnh hệ thống nhanh hơn, không cần quét lại toàn bộ source code.
-- **Cách pass**: Ghi thêm một entry vào `COMMIT_LOG.md` và `git add COMMIT_LOG.md`.
-- **Tham chiếu**: Quy trình nội bộ dự án.
-
-### Chốt 2 — Quét Secrets & Hardcoded Passwords
+### Chốt 1 — Quét Secrets & Hardcoded Passwords
 - **Lý do**: Ngăn chặn rò rỉ thông tin bảo mật lên Git repository.
 - **Cách pass**: Không được có mật khẩu, API key, token cứng trong code. Hãy dùng biến môi trường (`.env`).
 - **Tham chiếu**: OWASP A02 — Cryptographic Failures, SonarQube rule S2068.
 
-### Chốt 3 — ESLint (JavaScript/React)
+### Chốt 2 — ESLint (JavaScript/React)
 - **Lý do**: Đảm bảo code React không có bug ẩn và tuân thủ best practices.
 - **Quy tắc chính**:
   - Bắt buộc `===` thay vì `==`
@@ -64,12 +58,12 @@ Developer / AI
 - **Cách pass**: Chạy `cd ToolCalendar.Api/ClientApp && npx eslint src/` để kiểm tra trước.
 - **Tham chiếu**: ESLint Recommended, React Best Practices.
 
-### Chốt 4 — Prettier (Định dạng code)
+### Chốt 3 — Prettier (Định dạng code)
 - **Lý do**: Đảm bảo toàn bộ code JS/JSX trong dự án có định dạng nhất quán (indent, dấu chấm phẩy, nháy đơn...).
 - **Cách pass**: Chạy `cd ToolCalendar.Api/ClientApp && npx prettier --write .` trước khi commit.
 - **Config**: Xem file `.prettierrc` trong thư mục `ClientApp`.
 
-### Chốt 5 — dotnet format (C#)
+### Chốt 4 — dotnet format (C#)
 - **Lý do**: Đảm bảo code C# tuân thủ Microsoft C# Coding Conventions và Roslyn Analyzers.
 - **Cách pass**: Chạy `dotnet format` ở thư mục gốc để tự động sửa trước khi commit.
 - **Tham chiếu**: Microsoft C# Coding Conventions, .editorconfig.
@@ -125,3 +119,19 @@ dotnet format
 # Cài dev dependencies lần đầu
 cd ToolCalendar.Api/ClientApp && npm install
 ```
+
+---
+
+## Thư mục `scripts/`
+
+Các script tiện ích và script deploy nằm trong thư mục `scripts/` ở thư mục gốc:
+
+| File | Mục đích |
+|---|---|
+| `deploy_gateway.sh` | Script deploy API Gateway |
+| `deploy_to_vnpt.sh` | Script deploy lên máy chủ VNPT |
+| `gen_jwt.py` | Script sinh JWT token thủ công để test |
+| `test_regex.cs` / `test_regex.py` | Script kiểm tra regex phân tích công văn |
+| `fix_cqdt_parser.cs` | Script sửa lỗi parser CQDT |
+
+> **Lưu ý:** Đây là các script tiện ích nội bộ, **không phải** là file mã nguồn của ứng dụng.
