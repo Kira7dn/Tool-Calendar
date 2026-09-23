@@ -21,8 +21,6 @@ services:
       # X-API-Key auth — đặt cùng giá trị với PythonAiService__ApiKey trong C# appsettings
       - API_SECRET_KEY=${PYTHON_AI_SECRET_KEY}
     mem_limit: 2560m
-    # Thêm swap để tránh OOM-kill khi upload hàng loạt (fix R-O02)
-    memswap_limit: 4096m
     cpus: "1.5"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
@@ -84,7 +82,6 @@ services:
         max-size: "10m"
         max-file: "3"
     mem_limit: 512m
-    memswap_limit: 512m
     cpus: "1.0"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]

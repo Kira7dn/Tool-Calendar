@@ -1,3 +1,9 @@
+### [2026-09-23 15:43] chore(infra): xóa memswap_limit khỏi docker-compose.yml để fix warning kernel
+- **Mô tả**: Khi deploy lên VNPT VPS, docker-compose báo cảnh báo `Your kernel does not support swap limit capabilities or the cgroup is not mounted`. Nguyên nhân do server Linux VPS thường bị tắt tính năng swap accounting trên kernel. Việc đặt `memswap_limit` không có tác dụng và chỉ gây ra warning rác. Fix: xóa `memswap_limit` khỏi cấu hình của `python-ai-service` và `official-doc-backend`.
+- **Tệp thay đổi**:
+  - `docker-compose.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): remove memswap_limit to suppress kernel warning on VPS"`
+
 ### [2026-09-23 15:22] fix(ocr): thêm Pattern 4 bắt format "Số 904-CV/VPTU" và fix normalize không strip dấu - khi phần trước / có chữ
 - **Mô tả**: Văn bản dạng "Số 904 -CV/VPTU" (Công văn VPTU) bị OCR trả sai số vì Pattern 1-3 chỉ bắt format số/CƠ-QUAN (dấu / ngay sau số), không bắt được format số-LOẠIVB/CƠ-QUAN. Thêm Pattern 4 với whitelist loại VB (CV, TB, QĐ, NQ...). Đồng thời fix _normalize_so_van_ban: khi phần trước / có chữ cái (VD: "904-CV") chỉ strip khoảng trắng, không strip dấu - (trước đây strip hết khiến "904-CV" → "904CV" → validate fail).
 - **Tệp thay đổi**:
