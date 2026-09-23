@@ -1,3 +1,9 @@
+### [2026-09-23 15:05] fix(infra): sửa bug ClamAV bị xóa sau mỗi lần deploy không được khởi động lại
+- **Mô tả**: Script deploy (dòng 116) chạy `docker container rm -f doc-coordination-system doc-clamav` rồi chỉ up lại backend, KHÔNG up lại clamav. Kết quả: sau mỗi lần deploy, container `doc-clamav` biến mất → upload file trả lỗi "Hệ thống quét virus đang bảo trì". Fix: bỏ `doc-clamav` khỏi lệnh `rm -f`, thêm `docker compose up -d --no-build clamav` sau mỗi deploy để đảm bảo ClamAV luôn chạy.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(infra): ensure clamav container restarts after each deploy"`
+
 ### [2026-09-16 17:08] perf(ocr): bổ sung bộ chuẩn hóa SoVanBan đa tầng (rule-based, không cần AI)
 - **Mô tả**: Thay thế regex đơn giản bằng hàm `_normalize_so_van_ban()` xử lý toàn diện: (1) Pre-normalize superscript Unicode trước regex (¹→1, ²→2...); (2) Thay thế ký tự OCR nhầm trong phần số (O→0, I→1, l→1); (3) Xóa dấu chấm, gạch nối nhiễu giữa các chữ số (“5.15”→“515”); (4) Chuẩn hóa khoảng trắng quanh / và - ; (5) 3 pattern regex ự u tiên từ chặt đến lỏng; (6) Validate kết quả trước khi gán. Pass 12/12 test case thực tế.
 - **Tệp thay đổi**:

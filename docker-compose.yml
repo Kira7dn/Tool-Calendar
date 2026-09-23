@@ -74,7 +74,6 @@ services:
       - RabbitMQ__Password=${RABBITMQ_PASS}
     depends_on:
       - rabbitmq
-      - clamav
     volumes:
       - ./data_dump:/app/data
       - ./ToolCalendar.Api/Uploads:/app/Uploads
@@ -95,6 +94,7 @@ services:
     restart: unless-stopped
     networks:
       - tool-calendar-net
+      - cabinet_default  # Kết nối với ClamAV container từ Cabinet project
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -122,30 +122,8 @@ services:
     networks:
       - tool-calendar-net
 
-  # ✅ Tầng 1: ClamAV Anti-Virus Scanner
-  # Container riêng biệt, cô lập hoàn toàn với backend
-  clamav:
-    image: clamav/clamav:latest
-    platform: linux/amd64
-    container_name: doc-clamav
-    environment:
-      - CLAMAV_NO_FRESHCLAMD=false  # Cập nhật database virus tự động
-      - CLAMD_CONF_MaxFileSize=500M
-      - CLAMD_CONF_StreamMaxLength=500M
-    volumes:
-      - clamav-db:/var/lib/clamav  # Database virus được persist giữa các lần khởi động
-    mem_limit: 1536m
-    cpus: "1.0"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    restart: unless-stopped
-    networks:
-      - tool-calendar-net
-
-
+  # NOTE: ClamAV (doc-clamav) chạy trong Cabinet project (cabinet_default network)
+  # Backend join cabinet_default để kết nối. KHÔNG định nghĩa clamav service ở đây.
 
   uptime-kuma:
     image: louislam/uptime-kuma:1
@@ -161,9 +139,10 @@ services:
       - tool-calendar-net
 
 volumes:
-  clamav-db:  # Named volume — ClamAV virus database tồn tại giữa các lần restart
   uptime-kuma-data:
 
 networks:
   tool-calendar-net:
     driver: bridge
+  cabinet_default:      # External network — ClamAV chạy trong Cabinet project
+    external: true
