@@ -115,13 +115,17 @@ class DocumentService:
 
                 # Bước 3: Xóa ký tự thừa không phải số/chữ trong phần số
                 # VD: "5.15/BCA" → "515/BCA", "5-15/BCA" → "515/BCA" (khi trước / chỉ toàn số)
+                # KHÔNG strip nếu phần trước / có cả chữ (VD: "904-CV/VPTU" → giữ nguyên)
                 slash_pos = raw.find('/')
                 if slash_pos > 0:
                     num_part = raw[:slash_pos]
                     suffix = raw[slash_pos:]
-                    # Nếu phần số chỉ chứa chữ số + ký tự nhiễu (. - khoảng trắng) → strip hết
+                    # Chỉ strip nhiễu khi phần trước / toàn số (không có chữ cái)
                     if re.match(r'^[\d\s\.\-]+$', num_part):
                         num_part = re.sub(r'[\s\.\-]', '', num_part)  # "5 . 15" → "515"
+                    # Nếu có chữ cái (VD: "904 -CV") → chỉ strip khoảng trắng thừa
+                    else:
+                        num_part = num_part.strip()
                     raw = num_part + suffix
 
                 # Bước 4: Chuẩn hóa khoảng trắng quanh / và -
@@ -138,6 +142,7 @@ class DocumentService:
 
                 return raw
 
+
             _SO_VAN_BAN_PATTERNS = [
                 # Pattern 1: "Số: 515/BCA-QLHC" — chuẩn, có từ "Số" rõ ràng
                 # Cho phép khoảng trắng quanh dấu - trong suffix ("BCA - QLHC" → "BCA-QLHC")
@@ -152,7 +157,16 @@ class DocumentService:
                 # Pattern 3: Bắt trực tiếp pattern số-ký-hiệu trong header
                 # VD: dòng chỉ có "515/BCA-QLHC" không có từ "Số" (bị OCR mất)
                 r'(?:^|[\n\r])[\s]*(\d{2,5}[\s]*[/][\s]*[A-ZĐÔƯĂ]{2,}[\-][A-ZĐÔƯĂ]{2,})',
+
+                # Pattern 4: Format "Số 904 -CV/VPTU" — số + dấu - + loại VB + /cơ quan
+                # VD: "Số 904 -CV/VPTU", "904-CV/VPTU", "Số904 - CV/VPTU"
+                # Khác Pattern 1-3: loại văn bản (CV, TB, QĐ...) nằm SAU dấu - và TRƯỚC dấu /
+                r'(?:S[oốôóòỏõọ06][:\.\s]*)?'
+                r'(\d{1,5}[\s]*[-][\s]*(?:CV|TB|QĐ|QD|NQ|TT|CT|BC|KH|HD|PB|TL|VB|VP|GM|PC|ĐA|DA|TG|KT|UBND|HĐND)'
+                r'[\s]*/[\s]*[A-ZĐÔƯĂ][A-ZĐÔƯĂa-z0-9\-\.]{1,30}'
+                r'(?:[/\-][A-ZĐÔƯĂa-z0-9\-\.]+)*)',
             ]
+
 
             so_van_ban_found = ""
             for i, pattern in enumerate(_SO_VAN_BAN_PATTERNS):

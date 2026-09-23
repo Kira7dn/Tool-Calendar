@@ -1,3 +1,10 @@
+### [2026-09-23 15:22] fix(ocr): thêm Pattern 4 bắt format "Số 904-CV/VPTU" và fix normalize không strip dấu - khi phần trước / có chữ
+- **Mô tả**: Văn bản dạng "Số 904 -CV/VPTU" (Công văn VPTU) bị OCR trả sai số vì Pattern 1-3 chỉ bắt format số/CƠ-QUAN (dấu / ngay sau số), không bắt được format số-LOẠIVB/CƠ-QUAN. Thêm Pattern 4 với whitelist loại VB (CV, TB, QĐ, NQ...). Đồng thời fix _normalize_so_van_ban: khi phần trước / có chữ cái (VD: "904-CV") chỉ strip khoảng trắng, không strip dấu - (trước đây strip hết khiến "904-CV" → "904CV" → validate fail).
+- **Tệp thay đổi**:
+  - `python-ai-service/services/document_service.py` (Sửa đổi)
+- **Test cases pass**: "Số 904 -CV/VPTU" → "904-CV/VPTU" ✅ | "Số904-CV/VPTU" → "904-CV/VPTU" ✅ | "904 - CV/VPTU" → "904-CV/VPTU" ✅
+- **Lệnh git commit**: `git commit -m "fix(ocr): add Pattern4 for số-CV/VPTU format and fix normalize strip logic"`
+
 ### [2026-09-23 15:05] fix(infra): sửa bug ClamAV bị xóa sau mỗi lần deploy không được khởi động lại
 - **Mô tả**: Script deploy (dòng 116) chạy `docker container rm -f doc-coordination-system doc-clamav` rồi chỉ up lại backend, KHÔNG up lại clamav. Kết quả: sau mỗi lần deploy, container `doc-clamav` biến mất → upload file trả lỗi "Hệ thống quét virus đang bảo trì". Fix: bỏ `doc-clamav` khỏi lệnh `rm -f`, thêm `docker compose up -d --no-build clamav` sau mỗi deploy để đảm bảo ClamAV luôn chạy.
 - **Tệp thay đổi**:
