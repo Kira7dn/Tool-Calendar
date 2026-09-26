@@ -143,6 +143,7 @@ namespace ToolCalendar.Api.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
+                    new Claim(JwtRegisteredClaimNames.Jti,  Guid.NewGuid().ToString()),
                     new Claim(ClaimTypes.Name,              user.Username),
                     new Claim(ClaimTypes.Role,              user.Role),
                     new Claim(ClaimTypes.NameIdentifier,    user.Id.ToString()),
@@ -242,6 +243,7 @@ namespace ToolCalendar.Api.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
+                    new Claim(JwtRegisteredClaimNames.Jti,  Guid.NewGuid().ToString()),
                     new Claim(ClaimTypes.Name,              user.Username),
                     new Claim(ClaimTypes.Role,              user.Role),
                     new Claim(ClaimTypes.NameIdentifier,    user.Id.ToString()),
@@ -385,6 +387,8 @@ namespace ToolCalendar.Api.Controllers
                 return Unauthorized(ApiResponse.Fail("Không tìm thấy thông tin người dùng."));
 
             // Validation
+            if (string.IsNullOrWhiteSpace(request.OldPassword))
+                return BadRequest(ApiResponse.Fail("Vui lòng nhập mật khẩu cũ."));
             if (string.IsNullOrWhiteSpace(request.NewPassword))
                 return BadRequest(ApiResponse.Fail("Mật khẩu mới không được để trống."));
             if (request.NewPassword.Length < 8)
@@ -403,13 +407,9 @@ namespace ToolCalendar.Api.Controllers
             if (user == null)
                 return NotFound(ApiResponse.Fail("Tài khoản không tồn tại."));
 
-            // Đặt mật khẩu mới qua UserManager → tự động hash + cập nhật SecurityStamp
-            var removeResult = await _userManager.RemovePasswordAsync(user);
-            if (!removeResult.Succeeded)
-                return BadRequest(ApiResponse.Fail("Không thể đổi mật khẩu. Vui lòng thử lại."));
-
-            var addResult = await _userManager.AddPasswordAsync(user, request.NewPassword);
-            if (addResult.Succeeded)
+            // Đổi mật khẩu qua UserManager (yêu cầu mật khẩu cũ) → tự động hash + cập nhật SecurityStamp
+            var changeResult = await _userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
+            if (changeResult.Succeeded)
             {
                 // Xóa cache để token validation nhận SecurityStamp mới ngay lập tức
                 var cache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
@@ -421,8 +421,8 @@ namespace ToolCalendar.Api.Controllers
                 return Ok(ApiResponse.Ok("Đổi mật khẩu thành công. Vui lòng đăng nhập lại."));
             }
 
-            var errors = addResult.Errors.Select(e => e.Description).ToList();
-            return BadRequest(ApiResponse.Fail("Không thể đổi mật khẩu.", errors));
+            var errors = changeResult.Errors.Select(e => e.Description).ToList();
+            return BadRequest(ApiResponse.Fail("Không thể đổi mật khẩu. Mật khẩu cũ có thể không đúng.", errors));
         }
 
 
@@ -436,6 +436,7 @@ namespace ToolCalendar.Api.Controllers
 
     public class ChangePasswordRequest
     {
+        public string OldPassword { get; set; } = "";
         public string NewPassword { get; set; } = "";
     }
 }

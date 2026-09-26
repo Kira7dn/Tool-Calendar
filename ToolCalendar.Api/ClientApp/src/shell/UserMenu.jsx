@@ -29,13 +29,19 @@ import { toast } from 'sonner'
 export function UserMenu({ user, onLogout, onNavigate }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [showOldPassword, setShowOldPassword] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const handleChangePassword = async () => {
+    const oldPass = document.getElementById('current-user-old-password').value
     const newPass = document.getElementById('current-user-new-password').value
     const confirmPass = document.getElementById('current-user-confirm-password').value
 
+    if (!oldPass) {
+      toast.error('Vui lòng nhập mật khẩu cũ!')
+      return
+    }
     if (newPass.length < 4) {
       toast.error('Mật khẩu mới phải có ít nhất 4 ký tự!')
       return
@@ -49,11 +55,12 @@ export function UserMenu({ user, onLogout, onNavigate }) {
       const response = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword: newPass }),
+        body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass }),
       })
       if (response.ok) {
         toast.success('Đổi mật khẩu thành công!')
         setIsPasswordModalOpen(false)
+        document.getElementById('current-user-old-password').value = ''
         document.getElementById('current-user-new-password').value = ''
         document.getElementById('current-user-confirm-password').value = ''
       } else {
@@ -155,6 +162,30 @@ export function UserMenu({ user, onLogout, onNavigate }) {
           </DialogHeader>
           <div className="p-5 md:p-6 space-y-6 flex-1 overflow-y-auto">
             <div className="space-y-4">
+              <div className="space-y-2 group">
+                <Label
+                  htmlFor="current-user-old-password"
+                  className="text-xs font-black uppercase tracking-widest text-muted-foreground group-focus-within:text-primary transition-colors"
+                >
+                  Mật khẩu cũ
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="current-user-old-password"
+                    type={showOldPassword ? 'text' : 'password'}
+                    placeholder="Nhập mật khẩu hiện tại..."
+                    className="h-12 bg-muted/30 focus:bg-background transition-all pl-4 pr-10 font-medium"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1 h-10 w-10 text-muted-foreground hover:text-primary hover:bg-transparent"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                  >
+                    {showOldPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </Button>
+                </div>
+              </div>
               <div className="space-y-2 group">
                 <Label
                   htmlFor="current-user-new-password"
