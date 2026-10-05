@@ -293,6 +293,9 @@ namespace ToolCalendar.Data
                 "ALTER TABLE Users ADD COLUMN LockoutEnd TEXT",
                 "ALTER TABLE Users ADD COLUMN RefreshToken TEXT",
                 "ALTER TABLE Users ADD COLUMN RefreshTokenExpiryTime TEXT",
+                "ALTER TABLE Users ADD COLUMN SessionId TEXT",
+                "ALTER TABLE Users ADD COLUMN SecurityStamp TEXT DEFAULT ''",
+                "ALTER TABLE Users ADD COLUMN CreatedAt TEXT",
                 // Departments
                 "ALTER TABLE Departments ADD COLUMN Code TEXT",
                 "ALTER TABLE Departments ADD COLUMN ParentId INTEGER",

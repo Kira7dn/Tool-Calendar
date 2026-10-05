@@ -1,3 +1,9 @@
+### [2026-10-05 16:07] Tiếp tục sửa lỗi 500 khi đăng nhập trên production
+- **Mô tả**: Bổ sung `ALTER TABLE` cho 3 cột `SessionId`, `SecurityStamp`, và `CreatedAt` vào `DatabaseService.cs`. Lần trước mới chỉ thêm `AccessFailedCount` và `LockoutEnd`, nhưng backend vẫn ném ra 500 do thiếu 3 cột này khi gọi lệnh SELECT trong `UserRepository.GetUserByUsernameAsync`. 
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(db): add missing migrations for SessionId, SecurityStamp, CreatedAt"`
+
 ### [2026-10-05 15:58] Sửa lỗi 500 khi đăng nhập trên production
 - **Mô tả**: Bổ sung `ALTER TABLE` cho 2 cột `AccessFailedCount` và `LockoutEnd` vào `DatabaseService.cs`. Trước đây 2 cột này được thêm vào lệnh `CREATE TABLE IF NOT EXISTS Users`, nhưng do bảng `Users` đã tồn tại trên Production nên SQLite bỏ qua lệnh CREATE, dẫn đến lỗi "no such column" khi backend thực hiện truy vấn lúc đăng nhập.
 - **Tệp thay đổi**:
