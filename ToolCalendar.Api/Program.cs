@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
-using System.Text;
 using ToolCalendar.Api.Security;          // ✅ CustomUserStore, HybridPasswordHasher
 using ToolCalendar.Core.Data.Interfaces;
 using ToolCalendar.Core.Data.Repositories;
@@ -110,7 +109,14 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IReminderRepository, ReminderRepository>();
 builder.Services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();
-builder.Services.AddScoped<IOllamaEmbeddingService, OllamaEmbeddingService>();
+// OllamaEmbeddingService gọi Python AI Service → phải dùng typed HttpClient với HmacRequestHandler
+// Fix lỗi 401 Unauthorized: trước đây dùng AddScoped với HttpClient thường (không có HMAC signature)
+builder.Services.AddHttpClient<IOllamaEmbeddingService, OllamaEmbeddingService>(client =>
+{
+    var pythonAiUrl = builder.Configuration["PythonAiServiceUrl"] ?? "http://python-ai-service:8001";
+    client.BaseAddress = new Uri(pythonAiUrl);
+    client.Timeout = TimeSpan.FromSeconds(15);
+}).AddHttpMessageHandler<HmacRequestHandler>(); // ✅ Tự động ký HMAC-SHA256 → không còn 401
 builder.Services.AddScoped<IDocumentChunkRepository, DocumentChunkRepository>();
 builder.Services.AddScoped<IUserMemoryRepository, UserMemoryRepository>(); // ANYTHINGLLM Idea #5: Long-Term Memory
 
@@ -449,7 +455,7 @@ app.UseCsrfProtection();
 app.MapControllers().RequireRateLimiting("fixed");
 app.MapHub<NotificationHub>("/notificationHub").RequireRateLimiting("fixed");
 app.MapHealthChecks("/health"); // ✅ Endpoint healthcheck cho Docker
-app.MapGet("/.well-known/jwks.json", (ToolCalendar.Core.Services.Security.RsaKeyManager keyManager) => 
+app.MapGet("/.well-known/jwks.json", (ToolCalendar.Core.Services.Security.RsaKeyManager keyManager) =>
 {
     return Results.Ok(keyManager.GetJwks());
 }).AllowAnonymous();

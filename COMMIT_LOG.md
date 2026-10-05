@@ -1,4 +1,10 @@
-### [2026-09-23 15:43] chore(infra): xóa memswap_limit khỏi docker-compose.yml để fix warning kernel
+### [2026-10-05 08:45] fix(api): sửa lỗi 401 Unauthorized khi OllamaEmbeddingService gọi Python AI service
+- **Mô tả**: `OllamaEmbeddingService` được đăng ký bằng `AddScoped` nên nhận `HttpClient` thường — không có `HmacRequestHandler`, do đó mọi request tạo embedding sang Python AI service đều thiếu chữ ký HMAC-SHA256 → Python service trả 401 Unauthorized. Hậu quả: toàn bộ tính năng Semantic Cache, Memory Recall, RAG tìm kiếm ngữ nghĩa bị vô hiệu. Fix: chuyển sang `AddHttpClient<IOllamaEmbeddingService, OllamaEmbeddingService>(...).AddHttpMessageHandler<HmacRequestHandler>()` giống như `PythonAiService`. Phát hiện qua log container `docker logs doc-coordination-system`.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Program.cs` (Sửa đổi — dòng 113)
+- **Lệnh git commit**: `git commit -m "fix(api): fix 401 Unauthorized on OllamaEmbeddingService by adding HmacRequestHandler"`
+
+
 - **Mô tả**: Khi deploy lên VNPT VPS, docker-compose báo cảnh báo `Your kernel does not support swap limit capabilities or the cgroup is not mounted`. Nguyên nhân do server Linux VPS thường bị tắt tính năng swap accounting trên kernel. Việc đặt `memswap_limit` không có tác dụng và chỉ gây ra warning rác. Fix: xóa `memswap_limit` khỏi cấu hình của `python-ai-service` và `official-doc-backend`.
 - **Tệp thay đổi**:
   - `docker-compose.yml` (Sửa đổi)
