@@ -20,27 +20,27 @@ public class CqdtIntegrationService : ICqdtIntegrationService
             UseCookies = true,
             AllowAutoRedirect = false
         };
-        
+
         using var client = new HttpClient(handler);
         client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-        
+
         // 1. GET Login Page to get __VIEWSTATE
         var loginUrl = "https://congchuc.quangninh.gov.vn/sso/Login.aspx";
         var getResponse = await client.GetAsync(loginUrl);
         var getHtml = await getResponse.Content.ReadAsStringAsync();
-        
+
         var doc = new HtmlDocument();
         doc.LoadHtml(getHtml);
-        
+
         var viewState = doc.DocumentNode.SelectSingleNode("//input[@id='__VIEWSTATE']")?.GetAttributeValue("value", "");
         var eventValidation = doc.DocumentNode.SelectSingleNode("//input[@id='__EVENTVALIDATION']")?.GetAttributeValue("value", "");
         var viewStateGenerator = doc.DocumentNode.SelectSingleNode("//input[@id='__VIEWSTATEGENERATOR']")?.GetAttributeValue("value", "");
-        
+
         if (string.IsNullOrEmpty(viewState))
         {
             throw new Exception("Không thể lấy mã bảo mật __VIEWSTATE. Trang đăng nhập CQĐT có thể đang bảo trì hoặc thay đổi giao diện.");
         }
-        
+
         // 2. POST Login Form
         var loginData = new Dictionary<string, string>
         {
@@ -56,10 +56,10 @@ public class CqdtIntegrationService : ICqdtIntegrationService
             { "ctlCaptcha$CaptchaTextBox", "" },
             { "btnLogin", "Đăng nhập" }
         };
-        
+
         var content = new FormUrlEncodedContent(loginData);
         var postResponse = await client.PostAsync(loginUrl, content);
-        
+
         // ASP.NET WebForms returns a 302 Redirect on successful login
         if (postResponse.StatusCode != HttpStatusCode.Found && postResponse.StatusCode != HttpStatusCode.Redirect)
         {
@@ -69,21 +69,21 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                 throw new Exception("Sai tài khoản hoặc mật khẩu CQĐT. Vui lòng kiểm tra lại.");
             }
         }
-        
+
         // 3. GET Pending Documents (Theo URL từ ảnh của user: tabid=1101)
         var pendingDocsUrl = "https://congchuc.quangninh.gov.vn/Default.aspx?tabid=1101";
         var docsResponse = await client.GetAsync(pendingDocsUrl);
-        
+
         // If redirect back to login, it means session failed
         if (docsResponse.StatusCode == HttpStatusCode.Found)
         {
             throw new Exception("Đăng nhập CQĐT thất bại (Bị từ chối phiên đăng nhập).");
         }
-        
+
         var docsHtml = await docsResponse.Content.ReadAsStringAsync();
-        
+
         // Dump HTML ra file để debug cấu trúc (Đã tắt — tuân thủ tc-rule-no-temporary-files)
-        
+
         // 4. Parse Document Table (Multi-page loop)
         var result = new List<CqdtDocumentDto>();
         string currentHtml = docsHtml;
@@ -93,7 +93,7 @@ public class CqdtIntegrationService : ICqdtIntegrationService
         {
             var docsDoc = new HtmlDocument();
             docsDoc.LoadHtml(currentHtml);
-            
+
             HtmlNode targetTable = null;
             var tables = docsDoc.DocumentNode.SelectNodes("//table");
             if (tables != null)
@@ -101,13 +101,13 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                 foreach (var tbl in tables)
                 {
                     var html = tbl.InnerHtml.ToLower();
-                    if ((html.Contains("ký hiệu") || html.Contains("số đến") || html.Contains("số văn bản")) && 
+                    if ((html.Contains("ký hiệu") || html.Contains("số đến") || html.Contains("số văn bản")) &&
                         (html.Contains("trích yếu") || html.Contains("nội dung") || html.Contains("thông tin văn bản")))
                     {
                         var innerTables = tbl.SelectNodes(".//table");
                         if (innerTables != null && innerTables.Any(t => (t.InnerHtml.ToLower().Contains("trích yếu") || t.InnerHtml.ToLower().Contains("thông tin văn bản")) && (t.InnerHtml.ToLower().Contains("ký hiệu") || t.InnerHtml.ToLower().Contains("số văn bản"))))
                         {
-                            continue; 
+                            continue;
                         }
                         targetTable = tbl;
                         break;
@@ -150,7 +150,7 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                         if (result.Count >= limit) break; // Đủ số lượng thì dừng
 
                         var cols = row.SelectNodes("td");
-                        if (cols != null && cols.Count > Math.Max(colSoKyHieu, Math.Max(colCoQuan, colTrichYeu))) 
+                        if (cols != null && cols.Count > Math.Max(colSoKyHieu, Math.Max(colCoQuan, colTrichYeu)))
                         {
                             try
                             {
@@ -163,7 +163,7 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                                     .Trim();
                                 var coQuan = cols[colCoQuan]?.InnerText?.Trim();
                                 var thongTinHtml = cols[colTrichYeu]?.InnerHtml;
-                                
+
                                 string trichYeu = "";
                                 if (!string.IsNullOrEmpty(thongTinHtml))
                                 {
@@ -185,11 +185,11 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                                 {
                                     continue;
                                 }
-                                
+
                                 string fileBase64 = "";
                                 string tenTep = "";
                                 string href = "";
-                                
+
                                 // Cách 1: Thử lấy link trực tiếp từ thẻ <a> (nếu có)
                                 var fileLinkNode = row.SelectSingleNode(".//a[contains(@href, 'pdf') or contains(@href, 'Download') or contains(@href, 'File') or contains(@href, 'Attach') or .//img[contains(@src, 'pdf')]]");
                                 if (fileLinkNode != null)
@@ -197,7 +197,7 @@ public class CqdtIntegrationService : ICqdtIntegrationService
                                     href = fileLinkNode.GetAttributeValue("href", "");
                                     tenTep = fileLinkNode.InnerText.Trim();
                                 }
-                                
+
                                 // Cách 2: Trích xuất từ onclick="showToolTip(...)" do CQĐT thường giấu danh sách đính kèm vào tooltip
                                 var tooltipNode = row.SelectSingleNode(".//span[contains(@onclick, 'showToolTip')]");
                                 if (tooltipNode != null)
@@ -279,14 +279,14 @@ public class CqdtIntegrationService : ICqdtIntegrationService
             var pageResponse = await client.PostAsync(pendingDocsUrl, pageContent);
             if (!pageResponse.IsSuccessStatusCode)
             {
-                try { await System.IO.File.WriteAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), $"cqdt_html_dump_page_{pageCount+1}_err.txt"), pageResponse.StatusCode.ToString()); } catch { }
+                try { await System.IO.File.WriteAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), $"cqdt_html_dump_page_{pageCount + 1}_err.txt"), pageResponse.StatusCode.ToString()); } catch { }
                 break;
             }
-            
+
             currentHtml = await pageResponse.Content.ReadAsStringAsync();
             pageCount++;
         }
-        
+
         return result;
     }
 }

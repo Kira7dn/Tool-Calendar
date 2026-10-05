@@ -7,5 +7,9 @@ namespace ToolCalendar.Models
         public string? UserFullName { get; set; }
         public string Action { get; set; } = "";
         public DateTime Timestamp { get; set; } = DateTime.Now;
+        public string? IpAddress { get; set; }
+        public string? UserAgent { get; set; }
+        public bool IsSuccess { get; set; } = true;
+        public string? FailReason { get; set; }
     }
 }

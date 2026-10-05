@@ -233,6 +233,30 @@ namespace ToolCalendar.Data
                     HitCount INTEGER DEFAULT 0
                 )";
 
+            string createUserIdentitiesTable = @"
+                CREATE TABLE IF NOT EXISTS UserIdentities (
+                    UserId INTEGER NOT NULL,
+                    Provider TEXT NOT NULL,
+                    ProviderKey TEXT,
+                    PasswordHash TEXT,
+                    PRIMARY KEY (UserId, Provider),
+                    FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                )";
+
+            string createUserSessionsTable = @"
+                CREATE TABLE IF NOT EXISTS UserSessions (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    UserId INTEGER NOT NULL,
+                    RefreshTokenHash TEXT NOT NULL,
+                    IpAddress TEXT,
+                    UserAgent TEXT,
+                    DeviceFingerprint TEXT,
+                    ExpiresAt TEXT NOT NULL,
+                    RevokedAt TEXT,
+                    CreatedAt TEXT DEFAULT (datetime('now', 'localtime')),
+                    FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                )";
+
             new SqliteCommand(createDocumentsTable, connection).ExecuteNonQuery();
             new SqliteCommand(createUsersTable, connection).ExecuteNonQuery();
             new SqliteCommand(createDepartmentsTable, connection).ExecuteNonQuery();
@@ -249,6 +273,8 @@ namespace ToolCalendar.Data
             new SqliteCommand(createChatMessagesTable, connection).ExecuteNonQuery();
             new SqliteCommand(createRemindersTable, connection).ExecuteNonQuery();
             new SqliteCommand(createAiSemanticCacheTable, connection).ExecuteNonQuery();
+            new SqliteCommand(createUserIdentitiesTable, connection).ExecuteNonQuery();
+            new SqliteCommand(createUserSessionsTable, connection).ExecuteNonQuery();
 
             // ── Safe Column Migrations (ALTER TABLE IF NOT EXISTS column) ──────────
             // SQLite không hỗ trợ IF NOT EXISTS cho ALTER TABLE, nên dùng try/catch.
@@ -264,6 +290,8 @@ namespace ToolCalendar.Data
                 "ALTER TABLE Users ADD COLUMN LockoutEnabled INTEGER DEFAULT 1",
                 "ALTER TABLE Users ADD COLUMN FailedLoginCount INTEGER DEFAULT 0",
                 "ALTER TABLE Users ADD COLUMN LockoutUntil TEXT",
+                "ALTER TABLE Users ADD COLUMN RefreshToken TEXT",
+                "ALTER TABLE Users ADD COLUMN RefreshTokenExpiryTime TEXT",
                 // Departments
                 "ALTER TABLE Departments ADD COLUMN Code TEXT",
                 "ALTER TABLE Departments ADD COLUMN ParentId INTEGER",
@@ -273,6 +301,38 @@ namespace ToolCalendar.Data
                 "ALTER TABLE AiSemanticCache ADD COLUMN LastAccessedAt TEXT DEFAULT (datetime('now', 'localtime'))",
                 "ALTER TABLE AiSemanticCache ADD COLUMN HitCount INTEGER DEFAULT 0",
                 "ALTER TABLE AiSemanticCache ADD COLUMN UserId INTEGER DEFAULT 0",
+                // AuditLogs — truy vết nguồn gốc request (IP, UA, kết quả). DB cũ chưa có các cột này.
+                "ALTER TABLE AuditLogs ADD COLUMN IpAddress TEXT",
+                "ALTER TABLE AuditLogs ADD COLUMN UserAgent TEXT",
+                "ALTER TABLE AuditLogs ADD COLUMN IsSuccess INTEGER DEFAULT 1",
+                "ALTER TABLE AuditLogs ADD COLUMN FailReason TEXT",
+                "CREATE INDEX IF NOT EXISTS idx_auditlogs_timestamp ON AuditLogs(Timestamp DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_auditlogs_userid ON AuditLogs(UserId)",
+                "CREATE INDEX IF NOT EXISTS idx_auditlogs_ip ON AuditLogs(IpAddress)",
+                // Bảng nhật ký — trước đây chỉ có khi chạy tay data_dump/migrate_security.sql (SecurityLogs)
+                // hoặc nằm trong dump production (LoginAuditLog) → cài mới thiếu bảng, login ghi log sẽ lỗi.
+                @"CREATE TABLE IF NOT EXISTS SecurityLogs (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    UserId INTEGER,
+                    IpAddress TEXT,
+                    EventType TEXT NOT NULL,
+                    UserAgent TEXT,
+                    CreatedAt TEXT DEFAULT (datetime('now', 'localtime'))
+                )",
+                "CREATE INDEX IF NOT EXISTS idx_securitylogs_userid ON SecurityLogs(UserId)",
+                "CREATE INDEX IF NOT EXISTS idx_securitylogs_ip ON SecurityLogs(IpAddress)",
+                @"CREATE TABLE IF NOT EXISTS LoginAuditLog (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Username TEXT NOT NULL,
+                    UserId INTEGER NULL,
+                    IpAddress TEXT,
+                    UserAgent TEXT,
+                    IsSuccess INTEGER DEFAULT 0,
+                    FailReason TEXT NULL,
+                    CreatedAt TEXT NOT NULL
+                )",
+                "CREATE INDEX IF NOT EXISTS idx_loginaudit_createdat ON LoginAuditLog(CreatedAt DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_loginaudit_ip ON LoginAuditLog(IpAddress)",
             };
 
             foreach (var alterSql in safeAlters)
@@ -295,12 +355,21 @@ namespace ToolCalendar.Data
                 // Mật khẩu mặc định: admin
                 string hash = BCrypt.Net.BCrypt.HashPassword("admin");
                 string sql = @"
-                    INSERT INTO Users (Username, PasswordHash, FullName, Role, CreatedAt, SecurityStamp) 
-                    VALUES ('admin', @hash, 'Administrator', 'Admin', datetime('now', 'localtime'), @stamp)";
+                    INSERT INTO Users (Username, PasswordHash, FullName, Role, CreatedAt, SecurityStamp, NormalizedUserName) 
+                    VALUES ('admin', @hash, 'Administrator', 'Admin', datetime('now', 'localtime'), @stamp, 'ADMIN');
+                    SELECT last_insert_rowid();";
                 using var insertCmd = new SqliteCommand(sql, connection);
                 insertCmd.Parameters.AddWithValue("@hash", hash);
                 insertCmd.Parameters.AddWithValue("@stamp", Guid.NewGuid().ToString());
-                insertCmd.ExecuteNonQuery();
+                long adminId = (long)insertCmd.ExecuteScalar();
+
+                string identSql = @"
+                    INSERT INTO UserIdentities (UserId, Provider, PasswordHash) 
+                    VALUES (@uid, 'local', @hash)";
+                using var identCmd = new SqliteCommand(identSql, connection);
+                identCmd.Parameters.AddWithValue("@uid", adminId);
+                identCmd.Parameters.AddWithValue("@hash", hash);
+                identCmd.ExecuteNonQuery();
             }
         }
     }

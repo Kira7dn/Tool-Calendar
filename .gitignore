@@ -70,3 +70,8 @@ __pycache__/
 .Python
 
 .deploy.env
+
+# Runtime logs (audit/app) — chứa IP, user, hành động: KHÔNG commit
+**/logs/
+data_dump/logs/
+*.jsonl

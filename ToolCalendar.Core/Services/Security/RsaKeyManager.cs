@@ -29,7 +29,7 @@ public class RsaKeyManager
     public object GetJwks()
     {
         var parameters = _rsa.ExportParameters(false); // Chỉ lấy public key
-        
+
         return new
         {
             keys = new[]

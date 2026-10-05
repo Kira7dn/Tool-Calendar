@@ -1,3 +1,4 @@
+using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -21,8 +22,12 @@ using ToolCalendar.Services.Security; // ✅ ClamAvService, BackupService, HmacR
 using Microsoft.Extensions.Caching.Memory; // ✅ IMemoryCache extension methods
 using ToolCalendar.Api.Middleware;          // ✅ CorrelationIdMiddleware
 using ToolCalendar.Api.Services.Security;   // ✅ TokenBlacklistService
+using ToolCalendar.Api.Logging;             // ✅ SerilogSetup, AuditLogChannel
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ✅ Logging doanh nghiệp: Serilog → console + app log (90 ngày) + audit log JSON (365 ngày)
+builder.Host.UseSerilog(SerilogSetup.Configure);
 
 // Cấu hình vô hiệu hoá hoàn toàn giới hạn kích thước tệp tải lên (Dùng cho các file PDF siêu nặng > 100MB)
 builder.WebHost.ConfigureKestrel(options =>
@@ -297,7 +302,7 @@ builder.Services.AddAuthentication(x =>
                         var user = await userRepo.GetUserByIdAsync(userId);
                         if (user == null)
                         {
-                            Console.WriteLine($"[AuthError] Không tìm thấy User ID {userId} trong cơ sở dữ liệu.");
+                            LogAuthEvent(context.HttpContext, $"Không tìm thấy User ID {userId} trong cơ sở dữ liệu (token hợp lệ nhưng tài khoản đã bị xóa).");
                             context.Fail("Tài khoản không tồn tại.");
                             return;
                         }
@@ -314,7 +319,7 @@ builder.Services.AddAuthentication(x =>
 
                     if (!string.IsNullOrEmpty(tokenStamp) && cachedSecStamp != tokenStamp)
                     {
-                        Console.WriteLine($"[AuthError] SecurityStamp không khớp → phiên đăng nhập bị vô hiệu hóa.");
+                        LogAuthEvent(context.HttpContext, $"SecurityStamp không khớp cho User ID {userId} → phiên bị vô hiệu hóa (đăng nhập nơi khác hoặc đổi mật khẩu).");
                         context.Fail("Phiên đăng nhập đã hết hạn hoặc tài khoản đã đăng nhập ở nơi khác.");
                     }
                 }
@@ -345,7 +350,7 @@ builder.Services.AddAuthentication(x =>
             {
                 context.Response.Headers.Add("Token-Expired", "true");
             }
-            Console.WriteLine($"[AuthFailed] {context.Exception.GetType().Name}: {context.Exception.Message}");
+            LogAuthEvent(context.HttpContext, $"Xác thực JWT thất bại: {context.Exception.GetType().Name}");
             return Task.CompletedTask;
         },
         OnForbidden = context =>
@@ -400,6 +405,9 @@ var forwardedOptions = new ForwardedHeadersOptions
 forwardedOptions.KnownNetworks.Clear(); // Tin tưởng mọi mạng (cần thiết cho Nginx proxy)
 forwardedOptions.KnownProxies.Clear();   // Tin tưởng mọi proxy
 app.UseForwardedHeaders(forwardedOptions);
+
+// ✅ Audit Trail — đặt SAU ForwardedHeaders (có IP thật) và TRƯỚC Authentication (bắt cả 401/403/429)
+app.UseMiddleware<AuditTrailMiddleware>();
 
 // 2. Khởi tạo Database
 DatabaseService.Initialize();
@@ -463,6 +471,17 @@ app.MapFallbackToFile("index.html");
 
 // Chạy ứng dụng
 app.Run();
+
+// Ghi sự kiện xác thực bất thường vào kênh Audit (kèm IP + CorrelationId, đã làm sạch chống log injection)
+static void LogAuthEvent(HttpContext httpContext, string message)
+{
+    var logger = httpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(AuditLogChannel.Name);
+    var address = httpContext.Connection.RemoteIpAddress;
+    var ip = address == null ? "unknown" : (address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address).ToString();
+    var cid = AuditLogSanitizer.Clean(httpContext.Items["X-Correlation-ID"] as string, 64);
+    logger.LogWarning("AUDIT AuthEvent {Message} ip={ClientIp} cid={CorrelationId} path={Path}",
+        message, ip, cid, AuditLogSanitizer.Clean(httpContext.Request.Path.Value, 200));
+}
 
 public partial class Program { }
 

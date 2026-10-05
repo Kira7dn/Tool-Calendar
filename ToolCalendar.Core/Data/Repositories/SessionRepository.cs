@@ -1,6 +1,5 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
-using ToolCalendar.Core.Models; // assuming UserSession will be defined here, or I can define it in the same file if not yet existing.
 
 namespace ToolCalendar.Core.Data.Repositories;
 
@@ -49,7 +48,7 @@ public class SessionRepository : ISessionRepository
         string sql = @"
             INSERT INTO UserSessions (UserId, RefreshTokenHash, IpAddress, UserAgent, DeviceFingerprint, ExpiresAt, RevokedAt)
             VALUES (@userId, @hash, @ip, @ua, @fingerprint, @expires, NULL)";
-        
+
         using var cmd = new SqliteCommand(sql, connection);
         cmd.Parameters.AddWithValue("@userId", session.UserId);
         cmd.Parameters.AddWithValue("@hash", session.RefreshTokenHash);
@@ -57,7 +56,7 @@ public class SessionRepository : ISessionRepository
         cmd.Parameters.AddWithValue("@ua", session.UserAgent ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("@fingerprint", session.DeviceFingerprint ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("@expires", session.ExpiresAt.ToString("O"));
-        
+
         await cmd.ExecuteNonQueryAsync();
     }
 
@@ -66,11 +65,11 @@ public class SessionRepository : ISessionRepository
         using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync();
         string sql = "SELECT * FROM UserSessions WHERE RefreshTokenHash = @hash";
-        
+
         using var cmd = new SqliteCommand(sql, connection);
         cmd.Parameters.AddWithValue("@hash", tokenHash);
         using var reader = await cmd.ExecuteReaderAsync();
-        
+
         if (await reader.ReadAsync())
         {
             return new UserSession
@@ -94,7 +93,7 @@ public class SessionRepository : ISessionRepository
         using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync();
         string sql = "UPDATE UserSessions SET RevokedAt = datetime('now', 'localtime') WHERE RefreshTokenHash = @hash";
-        
+
         using var cmd = new SqliteCommand(sql, connection);
         cmd.Parameters.AddWithValue("@hash", tokenHash);
         await cmd.ExecuteNonQueryAsync();
@@ -105,7 +104,7 @@ public class SessionRepository : ISessionRepository
         using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync();
         string sql = "UPDATE UserSessions SET RevokedAt = datetime('now', 'localtime') WHERE UserId = @userId AND RevokedAt IS NULL";
-        
+
         using var cmd = new SqliteCommand(sql, connection);
         cmd.Parameters.AddWithValue("@userId", userId);
         await cmd.ExecuteNonQueryAsync();

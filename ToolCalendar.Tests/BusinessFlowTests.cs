@@ -37,8 +37,14 @@ namespace ToolCalendar.Tests
             content.Add(new StreamContent(fileStream), "file", "test_document.pdf");
 
             var uploadResponse = await Client.PostAsync("/api/documents/upload", content);
+            if (!uploadResponse.IsSuccessStatusCode)
+            {
+                var errorStr = await uploadResponse.Content.ReadAsStringAsync();
+                throw new Exception($"Upload failed: {uploadResponse.StatusCode}, {errorStr}");
+            }
             uploadResponse.EnsureSuccessStatusCode();
-            var uploadedDoc = await uploadResponse.Content.ReadFromJsonAsync<DocumentRecord>();
+            var uploadApiResp = await uploadResponse.Content.ReadFromJsonAsync<ToolCalendar.Core.Models.ApiResponse<DocumentRecord>>(new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var uploadedDoc = uploadApiResp?.Data;
             uploadedDoc.Should().NotBeNull();
             int docId = uploadedDoc!.Id;
 
@@ -47,7 +53,8 @@ namespace ToolCalendar.Tests
             for (int i = 0; i < 30; i++)
             {
                 var getResponse = await Client.GetAsync($"/api/documents/{docId}");
-                processedDoc = await getResponse.Content.ReadFromJsonAsync<DocumentRecord>();
+                var apiResp = await getResponse.Content.ReadFromJsonAsync<ToolCalendar.Core.Models.ApiResponse<DocumentRecord>>(new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                processedDoc = apiResp?.Data;
                 if (processedDoc?.Status == "Chưa xử lý") break;
                 await Task.Delay(1000);
             }
@@ -75,9 +82,10 @@ namespace ToolCalendar.Tests
 
             // BƯỚC 5: Kiểm tra trạng thái cuối cùng
             var finalDocResponse = await Client.GetAsync($"/api/documents/{docId}");
-            var finalDoc = await finalDocResponse.Content.ReadFromJsonAsync<DocumentRecord>();
+            var finalApiResp = await finalDocResponse.Content.ReadFromJsonAsync<ToolCalendar.Core.Models.ApiResponse<DocumentRecord>>(new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var finalDoc = finalApiResp?.Data;
 
-            finalDoc?.Status.Should().Be("Đã hoàn thành");
+            finalDoc?.Status.Should().Be("Hoàn thành");
             finalDoc?.CompletionDate.Should().NotBeNull();
             finalDoc?.EvidenceNotes.Should().Be("Đã hoàn thành xử lý đúng hạn.");
 
@@ -130,8 +138,8 @@ namespace ToolCalendar.Tests
             await AuthenticateAsync("staff_only", "pass123");
 
             // --- ACT ---
-            // Truy cập endpoint cấu hình phòng ban (chỉ dành cho Admin)
-            var response = await Client.GetAsync("/api/admin/departments");
+            // Truy cập endpoint cấu hình nhãn (chỉ dành cho Admin)
+            var response = await Client.GetAsync("/api/admin/labels");
 
             // --- ASSERT ---
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);

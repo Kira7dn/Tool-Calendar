@@ -21,9 +21,9 @@ namespace ToolCalendar.Tests
         public void VerifyHashedPassword_WithBCrypt_ShouldSucceed_AndRehash()
         {
             // Arrange
-            string rawStr = "pass" + "word123";
-            // This is a BCrypt hash of the string above
-            string bcryptHash = "$2a$11$0wO.l.s9iT2k71P9K8n/fOu0wU.E0.3f.5Wq2wV8mS0H0gQ6/B35K";
+            string rawStr = "password123";
+            // Generate a real BCrypt hash on the fly to avoid hardcoded hash mismatch
+            string bcryptHash = BCrypt.Net.BCrypt.HashPassword(rawStr);
 
             // Act
             var result = _hasher.VerifyHashedPassword(_dummyUser, bcryptHash, rawStr);

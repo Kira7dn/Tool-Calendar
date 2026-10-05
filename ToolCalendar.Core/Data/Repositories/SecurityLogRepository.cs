@@ -42,13 +42,13 @@ public class SecurityLogRepository : ISecurityLogRepository
         string sql = @"
             INSERT INTO SecurityLogs (UserId, IpAddress, EventType, UserAgent)
             VALUES (@userId, @ip, @eventType, @userAgent)";
-        
+
         using var cmd = new SqliteCommand(sql, connection);
         cmd.Parameters.AddWithValue("@userId", userId.HasValue ? (object)userId.Value : DBNull.Value);
         cmd.Parameters.AddWithValue("@ip", ipAddress ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("@eventType", eventType);
         cmd.Parameters.AddWithValue("@userAgent", userAgent ?? (object)DBNull.Value);
-        
+
         await cmd.ExecuteNonQueryAsync();
     }
 }

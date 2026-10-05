@@ -64,7 +64,7 @@ export function AuditTab() {
   const columns = [
     {
       header: 'Thời gian',
-      width: 'w-48',
+      width: 'w-40',
       className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest',
       cell: (row) => (
         <span className="text-[11px] font-bold text-slate-400 font-mono">
@@ -93,6 +93,50 @@ export function AuditTab() {
         <span className="text-xs font-medium text-slate-500 group-hover:text-slate-900 transition-colors leading-relaxed">
           {row.action}
         </span>
+      ),
+    },
+    {
+      header: 'Trạng thái',
+      width: 'w-32',
+      className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest',
+      cell: (row) => (
+        <div className="flex flex-col gap-1">
+          {row.isSuccess ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 w-fit">
+              Thành công
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-100 w-fit">
+              Thất bại
+            </span>
+          )}
+          {!row.isSuccess && row.failReason && (
+            <span
+              className="text-[10px] text-red-500 font-medium truncate max-w-[150px] leading-tight"
+              title={row.failReason}
+            >
+              {row.failReason}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: 'Nguồn',
+      width: 'w-40',
+      className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest',
+      cell: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[11px] font-bold text-slate-600 font-mono">
+            {row.ipAddress || '-'}
+          </span>
+          <span
+            className="text-[9px] font-medium text-slate-400 truncate max-w-[150px]"
+            title={row.userAgent}
+          >
+            {row.userAgent || '-'}
+          </span>
+        </div>
       ),
     },
   ]

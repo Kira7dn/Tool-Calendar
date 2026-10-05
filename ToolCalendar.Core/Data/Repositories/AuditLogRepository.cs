@@ -64,7 +64,11 @@ namespace ToolCalendar.Core.Data.Repositories
                         UserId = reader["UserId"] == DBNull.Value ? null : Convert.ToInt32(reader["UserId"]),
                         UserFullName = reader["UserFullName"]?.ToString() ?? "Hệ thống",
                         Action = reader["Action"].ToString() ?? "",
-                        Timestamp = DateTime.Parse(reader["Timestamp"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString())
+                        Timestamp = DateTime.Parse(reader["Timestamp"].ToString() ?? DateTime.UtcNow.AddHours(7).ToString()),
+                        IpAddress = ReadOptionalString(reader, "IpAddress"),
+                        UserAgent = ReadOptionalString(reader, "UserAgent"),
+                        IsSuccess = ReadOptionalString(reader, "IsSuccess") != "0",
+                        FailReason = ReadOptionalString(reader, "FailReason")
                     });
                 }
             }
@@ -80,6 +84,41 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@u", (object?)userId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@a", action);
             await cmd.ExecuteNonQueryAsync();
+        }
+
+        private static string? ReadOptionalString(SqliteDataReader reader, string column)
+        {
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                if (string.Equals(reader.GetName(i), column, StringComparison.OrdinalIgnoreCase))
+                    return reader.IsDBNull(i) ? null : Convert.ToString(reader.GetValue(i));
+            }
+            return null;
+        }
+
+        public async Task InsertAuditEventAsync(int? userId, string action, string? ipAddress, string? userAgent, bool isSuccess, string? failReason = null)
+        {
+            // Ghi nhật ký không bao giờ được làm hỏng request nghiệp vụ → nuốt lỗi, chỉ báo ra console
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+                using var cmd = new SqliteCommand(@"
+                    INSERT INTO AuditLogs (UserId, Action, Timestamp, IpAddress, UserAgent, IsSuccess, FailReason)
+                    VALUES (@u, @a, @now, @ip, @ua, @ok, @reason)", connection);
+                cmd.Parameters.AddWithValue("@u", (object?)userId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@a", action);
+                cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@ip", (object?)ipAddress ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@ua", (object?)userAgent ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@ok", isSuccess ? 1 : 0);
+                cmd.Parameters.AddWithValue("@reason", (object?)failReason ?? DBNull.Value);
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AuditEvent] Lỗi ghi nhật ký audit: {ex.Message}");
+            }
         }
         public async Task InsertLoginAuditLogAsync(string username, int? userId, string? ipAddress, string? userAgent, bool isSuccess, string? failReason = null)
         {

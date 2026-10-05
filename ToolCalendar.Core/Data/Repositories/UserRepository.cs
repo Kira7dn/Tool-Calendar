@@ -300,7 +300,8 @@ namespace ToolCalendar.Core.Data.Repositories
                 string sql = @"
                     INSERT INTO Users (Username, PasswordHash, FullName, Email, PhoneNumber, Role, DepartmentId, CreatedAt,
                                        SecurityStamp, NormalizedUserName, LockoutEnabled) 
-                    VALUES (@u, @p, @f, @e, @pn, @r, @d, @now, @stamp, @norm, 1)";
+                    VALUES (@u, @p, @f, @e, @pn, @r, @d, @now, @stamp, @norm, 1);
+                    SELECT last_insert_rowid();";
                 using var cmd = new SqliteCommand(sql, connection);
                 cmd.Parameters.AddWithValue("@now", DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"));
                 cmd.Parameters.AddWithValue("@u", user.Username);
@@ -312,7 +313,16 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@d", (object?)user.DepartmentId ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@stamp", securityStamp);
                 cmd.Parameters.AddWithValue("@norm", normalizedUserName);
-                await cmd.ExecuteNonQueryAsync();
+                long newUserId = (long)await cmd.ExecuteScalarAsync();
+
+                string identSql = @"
+                    INSERT INTO UserIdentities (UserId, Provider, PasswordHash) 
+                    VALUES (@uid, 'local', @hash)";
+                using var identCmd = new SqliteCommand(identSql, connection);
+                identCmd.Parameters.AddWithValue("@uid", newUserId);
+                identCmd.Parameters.AddWithValue("@hash", passwordToStore);
+                await identCmd.ExecuteNonQueryAsync();
+
                 return true;
             }
             catch { return false; }
@@ -345,6 +355,16 @@ namespace ToolCalendar.Core.Data.Repositories
             cmd.Parameters.AddWithValue("@ph", user.PasswordHash ?? "");
             cmd.Parameters.AddWithValue("@id", user.Id);
             await cmd.ExecuteNonQueryAsync();
+
+            if (!string.IsNullOrEmpty(user.PasswordHash))
+            {
+                using var uiCmd = new SqliteCommand(@"
+                    INSERT OR REPLACE INTO UserIdentities (UserId, Provider, PasswordHash) 
+                    VALUES (@id, 'local', @ph)", connection);
+                uiCmd.Parameters.AddWithValue("@id", user.Id);
+                uiCmd.Parameters.AddWithValue("@ph", user.PasswordHash);
+                await uiCmd.ExecuteNonQueryAsync();
+            }
         }
         public async Task DeleteUserAsync(int id)
         {
@@ -375,7 +395,14 @@ namespace ToolCalendar.Core.Data.Repositories
                 cmd.Parameters.AddWithValue("@p", hashedPassword);
                 cmd.Parameters.AddWithValue("@stamp", Guid.NewGuid().ToString());
                 cmd.Parameters.AddWithValue("@id", userId);
-                return await cmd.ExecuteNonQueryAsync() > 0;
+                await cmd.ExecuteNonQueryAsync();
+
+                using var uiCmd = new SqliteCommand(@"
+                    INSERT OR REPLACE INTO UserIdentities (UserId, Provider, PasswordHash) 
+                    VALUES (@id, 'local', @p)", connection);
+                uiCmd.Parameters.AddWithValue("@p", hashedPassword);
+                uiCmd.Parameters.AddWithValue("@id", userId);
+                return await uiCmd.ExecuteNonQueryAsync() > 0;
             }
             catch { return false; }
         }

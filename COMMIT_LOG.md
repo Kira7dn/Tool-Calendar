@@ -1,3 +1,9 @@
+### [2026-10-05 09:00] feat(ui): hiển thị thêm IP, User Agent và Trạng thái tại tab Nhật ký hệ thống
+- **Mô tả**: Giao diện tab Nhật ký hệ thống (Audit logs) trước đây chỉ hiển thị Thời gian, Người dùng, Hành động. Đã bổ sung thêm 2 cột mới: "Trạng thái" (Thành công/Thất bại kèm nguyên nhân `failReason`) và "Nguồn" (IP Address, User Agent) để trở thành hệ thống giám sát Audit Trail (SIEM-ready) chuẩn Enterprise. Đã chạy `eslint` và `prettier` chuẩn formating.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/ClientApp/src/components/settings/AuditTab.jsx` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(ui): add IP, User Agent and Status columns to Audit UI"`
+
 ### [2026-10-05 08:45] fix(api): sửa lỗi 401 Unauthorized khi OllamaEmbeddingService gọi Python AI service
 - **Mô tả**: `OllamaEmbeddingService` được đăng ký bằng `AddScoped` nên nhận `HttpClient` thường — không có `HmacRequestHandler`, do đó mọi request tạo embedding sang Python AI service đều thiếu chữ ký HMAC-SHA256 → Python service trả 401 Unauthorized. Hậu quả: toàn bộ tính năng Semantic Cache, Memory Recall, RAG tìm kiếm ngữ nghĩa bị vô hiệu. Fix: chuyển sang `AddHttpClient<IOllamaEmbeddingService, OllamaEmbeddingService>(...).AddHttpMessageHandler<HmacRequestHandler>()` giống như `PythonAiService`. Phát hiện qua log container `docker logs doc-coordination-system`.
 - **Tệp thay đổi**:
@@ -4615,3 +4621,9 @@ Tệp này lưu trữ lịch sử các thay đổi và tính năng mới đượ
   - `ToolCalendar.Api/ToolCalendar.Api.csproj` (Sửa đổi)
   - `ToolCalendar.Core/ToolCalendar.Core.csproj` (Sửa đổi)
 - **Lệnh git commit**: `git commit -m "fix(auth): hạ cấp JwtBearer xuống 8.0.8 để sửa lỗi MissingMethodException trên .NET 10"`
+### [2026-10-05 09:15] Fix integration test flakiness due to missing mocks and incorrect JSON deserialization
+- **Mô tả**: Sửa lỗi 400 Bad Request và lỗi timeout trong bài test `Scenario1_GoldenPath` bằng cách giả lập (mock) `IPythonAiService` và `IOcrQueueService` trực tiếp trong môi trường test để chạy trực tiếp logic không cần chờ RabbitMQ. Sửa lỗi parse JSON cho `DocumentRecord` bị rỗng do API trả về dạng `ApiResponse<T>`. 
+- **Tệp thay đổi**:
+  - `ToolCalendar.Tests/IntegrationTestBase.cs` (Sửa đổi)
+  - `ToolCalendar.Tests/BusinessFlowTests.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(test): sửa lỗi thiếu mock OCR service và lỗi parse JSON trong BusinessFlowTests"`

@@ -148,7 +148,7 @@ namespace ToolCalendar.Api.Controllers
                     new Claim(ClaimTypes.Role,              user.Role),
                     new Claim(ClaimTypes.NameIdentifier,    user.Id.ToString()),
                     new Claim("uid",                        user.Id.ToString()),
-                    new Claim("UserId",                     user.Id.ToString()),  
+                    new Claim("UserId",                     user.Id.ToString()),
                     new Claim("sec_stamp",                  user.SecurityStamp),
                     new Claim("sid",                        user.SessionId ?? user.SecurityStamp),
                     new Claim("LastLogin",                  lastLoginTime),
@@ -166,7 +166,7 @@ namespace ToolCalendar.Api.Controllers
             var refreshToken = GenerateRefreshToken();
             var refreshTokenHash = ComputeSha256Hash(refreshToken); // Hash refresh token trong DB
             var refreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            
+
             // Lưu session vào DB mới
             await _sessionRepo.CreateSessionAsync(new UserSession
             {
@@ -203,7 +203,7 @@ namespace ToolCalendar.Api.Controllers
                 userAgent: userAgent,
                 isSuccess: true
             );
-            
+
             // Ghi log bảo mật mới
             await _secLogRepo.LogEventAsync(user.Id, clientIp ?? "", "LoginSuccess", userAgent ?? "");
 
