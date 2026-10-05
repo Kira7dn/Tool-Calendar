@@ -1,3 +1,9 @@
+### [2026-10-05 12:24] chore(infra): revert VNPT_KEY support, fallback to password auth
+- **Mô tả**: Hủy cấu hình `key` trong `deploy.yml` để ép sử dụng lại xác thực SSH bằng Password (`VNPT_PASS`). Việc truyền cả key và pass cùng lúc gây lỗi `kex_exchange_identification` do Key trên GitHub Secrets bị sai định dạng.
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): revert VNPT_KEY support, fallback to password auth"`
+
 ### [2026-10-05 09:59] chore(infra): thêm hỗ trợ VNPT_KEY cho GitHub Actions deploy
 - **Mô tả**: Cập nhật file deploy.yml thêm tham số `key: ${{ secrets.VNPT_KEY }}` cho `appleboy/scp-action` và `appleboy/ssh-action` để hỗ trợ đăng nhập SSH bằng Private Key (do server cấu hình từ chối Password).
 - **Tệp thay đổi**:
