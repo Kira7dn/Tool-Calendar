@@ -316,10 +316,11 @@ namespace ToolCalendar.Core.Data.Repositories
                 long newUserId = (long)await cmd.ExecuteScalarAsync();
 
                 string identSql = @"
-                    INSERT INTO UserIdentities (UserId, Provider, PasswordHash) 
-                    VALUES (@uid, 'local', @hash)";
+                    INSERT INTO UserIdentities (UserId, Provider, ProviderId, PasswordHash) 
+                    VALUES (@uid, 'local', @pid, @hash)";
                 using var identCmd = new SqliteCommand(identSql, connection);
                 identCmd.Parameters.AddWithValue("@uid", newUserId);
+                identCmd.Parameters.AddWithValue("@pid", user.Username);
                 identCmd.Parameters.AddWithValue("@hash", passwordToStore);
                 await identCmd.ExecuteNonQueryAsync();
 
@@ -359,8 +360,8 @@ namespace ToolCalendar.Core.Data.Repositories
             if (!string.IsNullOrEmpty(user.PasswordHash))
             {
                 using var uiCmd = new SqliteCommand(@"
-                    INSERT OR REPLACE INTO UserIdentities (UserId, Provider, PasswordHash) 
-                    VALUES (@id, 'local', @ph)", connection);
+                    INSERT OR REPLACE INTO UserIdentities (UserId, Provider, ProviderId, PasswordHash) 
+                    VALUES (@id, 'local', (SELECT Username FROM Users WHERE Id = @id), @ph)", connection);
                 uiCmd.Parameters.AddWithValue("@id", user.Id);
                 uiCmd.Parameters.AddWithValue("@ph", user.PasswordHash);
                 await uiCmd.ExecuteNonQueryAsync();
@@ -398,8 +399,8 @@ namespace ToolCalendar.Core.Data.Repositories
                 await cmd.ExecuteNonQueryAsync();
 
                 using var uiCmd = new SqliteCommand(@"
-                    INSERT OR REPLACE INTO UserIdentities (UserId, Provider, PasswordHash) 
-                    VALUES (@id, 'local', @p)", connection);
+                    INSERT OR REPLACE INTO UserIdentities (UserId, Provider, ProviderId, PasswordHash) 
+                    VALUES (@id, 'local', (SELECT Username FROM Users WHERE Id = @id), @p)", connection);
                 uiCmd.Parameters.AddWithValue("@p", hashedPassword);
                 uiCmd.Parameters.AddWithValue("@id", userId);
                 return await uiCmd.ExecuteNonQueryAsync() > 0;

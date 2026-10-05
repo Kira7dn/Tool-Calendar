@@ -235,12 +235,15 @@ namespace ToolCalendar.Data
 
             string createUserIdentitiesTable = @"
                 CREATE TABLE IF NOT EXISTS UserIdentities (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     UserId INTEGER NOT NULL,
                     Provider TEXT NOT NULL,
-                    ProviderKey TEXT,
+                    ProviderId TEXT NOT NULL,
                     PasswordHash TEXT,
-                    PRIMARY KEY (UserId, Provider),
-                    FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                    PasswordSalt TEXT,
+                    CreatedAt TEXT DEFAULT (datetime('now', 'localtime')),
+                    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE,
+                    UNIQUE (Provider, ProviderId)
                 )";
 
             string createUserSessionsTable = @"
