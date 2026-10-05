@@ -1,3 +1,9 @@
+### [2026-10-05 15:58] Sửa lỗi 500 khi đăng nhập trên production
+- **Mô tả**: Bổ sung `ALTER TABLE` cho 2 cột `AccessFailedCount` và `LockoutEnd` vào `DatabaseService.cs`. Trước đây 2 cột này được thêm vào lệnh `CREATE TABLE IF NOT EXISTS Users`, nhưng do bảng `Users` đã tồn tại trên Production nên SQLite bỏ qua lệnh CREATE, dẫn đến lỗi "no such column" khi backend thực hiện truy vấn lúc đăng nhập.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(db): add missing migrations for AccessFailedCount and LockoutEnd"`
+
 ### [2026-10-05 12:24] chore(infra): revert VNPT_KEY support, fallback to password auth
 - **Mô tả**: Hủy cấu hình `key` trong `deploy.yml` để ép sử dụng lại xác thực SSH bằng Password (`VNPT_PASS`). Việc truyền cả key và pass cùng lúc gây lỗi `kex_exchange_identification` do Key trên GitHub Secrets bị sai định dạng.
 - **Tệp thay đổi**:

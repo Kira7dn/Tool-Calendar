@@ -285,11 +285,12 @@ namespace ToolCalendar.Data
                 "ALTER TABLE Documents ADD COLUMN AssignedUserIds TEXT DEFAULT '[]'",
                 "ALTER TABLE Documents ADD COLUMN AssignedDepartmentIds TEXT DEFAULT '[]'",
                 "ALTER TABLE Documents ADD COLUMN UpdatedAt TEXT",
-                // Users
                 "ALTER TABLE Users ADD COLUMN NormalizedUserName TEXT",
                 "ALTER TABLE Users ADD COLUMN LockoutEnabled INTEGER DEFAULT 1",
                 "ALTER TABLE Users ADD COLUMN FailedLoginCount INTEGER DEFAULT 0",
                 "ALTER TABLE Users ADD COLUMN LockoutUntil TEXT",
+                "ALTER TABLE Users ADD COLUMN AccessFailedCount INTEGER DEFAULT 0",
+                "ALTER TABLE Users ADD COLUMN LockoutEnd TEXT",
                 "ALTER TABLE Users ADD COLUMN RefreshToken TEXT",
                 "ALTER TABLE Users ADD COLUMN RefreshTokenExpiryTime TEXT",
                 // Departments
