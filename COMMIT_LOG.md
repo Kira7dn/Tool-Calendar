@@ -1,3 +1,9 @@
+### [2026-10-05 21:19] Tạm thời bypass đăng nhập Admin trên Production
+- **Mô tả**: Tạm thời bypass logic đăng nhập cho user `admin` để vào thẳng hệ thống theo yêu cầu khẩn cấp của user (bỏ qua mọi lỗi 500 phát sinh từ việc thiếu schema).
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Controllers/AuthController.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "feat(auth): emergency bypass login for admin"`
+
 ### [2026-10-05 16:07] Tiếp tục sửa lỗi 500 khi đăng nhập trên production
 - **Mô tả**: Bổ sung `ALTER TABLE` cho 3 cột `SessionId`, `SecurityStamp`, và `CreatedAt` vào `DatabaseService.cs`. Lần trước mới chỉ thêm `AccessFailedCount` và `LockoutEnd`, nhưng backend vẫn ném ra 500 do thiếu 3 cột này khi gọi lệnh SELECT trong `UserRepository.GetUserByUsernameAsync`. 
 - **Tệp thay đổi**:
