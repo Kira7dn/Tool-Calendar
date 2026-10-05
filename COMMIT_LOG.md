@@ -1,3 +1,9 @@
+### [2026-10-05 09:59] chore(infra): thêm hỗ trợ VNPT_KEY cho GitHub Actions deploy
+- **Mô tả**: Cập nhật file deploy.yml thêm tham số `key: ${{ secrets.VNPT_KEY }}` cho `appleboy/scp-action` và `appleboy/ssh-action` để hỗ trợ đăng nhập SSH bằng Private Key (do server cấu hình từ chối Password).
+- **Tệp thay đổi**:
+  - `.github/workflows/deploy.yml` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "chore(infra): add VNPT_KEY support for SSH deployment"`
+
 ### [2026-10-05 09:00] feat(ui): hiển thị thêm IP, User Agent và Trạng thái tại tab Nhật ký hệ thống
 - **Mô tả**: Giao diện tab Nhật ký hệ thống (Audit logs) trước đây chỉ hiển thị Thời gian, Người dùng, Hành động. Đã bổ sung thêm 2 cột mới: "Trạng thái" (Thành công/Thất bại kèm nguyên nhân `failReason`) và "Nguồn" (IP Address, User Agent) để trở thành hệ thống giám sát Audit Trail (SIEM-ready) chuẩn Enterprise. Đã chạy `eslint` và `prettier` chuẩn formating.
 - **Tệp thay đổi**:
