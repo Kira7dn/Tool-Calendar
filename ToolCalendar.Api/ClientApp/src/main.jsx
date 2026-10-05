@@ -13,11 +13,26 @@ function getCsrfToken() {
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH'])
 const originalFetch = window.fetch
 window.fetch = async (...args) => {
-  // ── Inject CSRF Token cho mọi mutating request ────────────────────────
   const input = args[0]
   let init = args[1]
   const method = (init?.method || 'GET').toUpperCase()
+  const url =
+    typeof input === 'string' ? input : input instanceof URL ? input.href : (input?.url ?? '')
 
+  // ── Inject Authorization Bearer token cho mọi request đến /api ─────────
+  if (url && (url.startsWith('/api') || url.includes('/api/'))) {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      init = init ? { ...init } : {}
+      init.headers = new Headers(init.headers || {})
+      if (!init.headers.has('Authorization')) {
+        init.headers.set('Authorization', `Bearer ${token}`)
+      }
+      args = [input, init]
+    }
+  }
+
+  // ── Inject CSRF Token cho mọi mutating request ────────────────────────
   if (MUTATING_METHODS.has(method)) {
     const csrfToken = getCsrfToken()
     if (csrfToken) {

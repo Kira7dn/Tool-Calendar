@@ -246,7 +246,16 @@ builder.Services.AddAuthentication(x =>
             {
                 context.Token = accessToken;
             }
-            // 2. Đọc token từ HttpOnly Cookie (jwt_cookie) do AuthController set lúc Login
+            // 2. Đọc token từ Authorization header (Bearer token từ localStorage frontend)
+            else if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+            {
+                var bearerToken = authHeader.FirstOrDefault();
+                if (!string.IsNullOrEmpty(bearerToken) && bearerToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Token = bearerToken["Bearer ".Length..].Trim();
+                }
+            }
+            // 3. Đọc token từ HttpOnly Cookie (jwt_cookie) do AuthController set lúc Login
             // Giúp mở file PDF an toàn bằng iframe/window.open không cần token trên URL
             else if (context.Request.Cookies.TryGetValue("jwt_cookie", out var cookieToken))
             {

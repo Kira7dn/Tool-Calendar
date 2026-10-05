@@ -35,7 +35,7 @@ namespace ToolCalendar.Api.Middleware
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-            var message = $"Đã xảy ra lỗi hệ thống: {exception.Message}";
+            var message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.";
             var errors = _env.IsDevelopment() ? new List<string> { exception.Message, exception.StackTrace ?? "" } : null;
 
             var response = ApiResponse.Fail(message, errors);
