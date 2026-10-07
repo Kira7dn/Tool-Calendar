@@ -33,6 +33,7 @@ services:
       - tool-calendar-net
 
   official-doc-backend:
+    build: .
     image: ghcr.io/kira7dn/tool-calendar-backend:latest
     container_name: doc-coordination-system
     expose:
