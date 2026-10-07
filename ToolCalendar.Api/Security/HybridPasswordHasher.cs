@@ -68,11 +68,13 @@ namespace ToolCalendar.Api.Security
             // ── Trường hợp 3: Mật khẩu cũ là Plain-Text ──
             var storedBytes = System.Text.Encoding.UTF8.GetBytes(hashedPassword);
             var inputBytes = System.Text.Encoding.UTF8.GetBytes(providedPassword);
-            var paddedInput = inputBytes.Length == storedBytes.Length
-                ? inputBytes
-                : System.Text.Encoding.UTF8.GetBytes(providedPassword.PadRight(hashedPassword.Length));
 
-            if (System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(storedBytes, paddedInput))
+            if (storedBytes.Length != inputBytes.Length)
+            {
+                return PasswordVerificationResult.Failed;
+            }
+
+            if (System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(storedBytes, inputBytes))
             {
                 return PasswordVerificationResult.SuccessRehashNeeded;
             }

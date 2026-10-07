@@ -1,3 +1,21 @@
+### [2026-10-07 09:38] fix(db): add missing ProviderId migration for UserIdentities
+- **Mô tả**: Khi chạy unit test và trên môi trường thật, lệnh `INSERT INTO UserIdentities` bị lỗi do thiếu cột `ProviderId` (do lệnh `CREATE TABLE` gốc chưa có cột này khi bảng được tạo trước đó). Đã bổ sung `ALTER TABLE UserIdentities ADD COLUMN ProviderId` vào `DatabaseService.cs` và sửa lại truy vấn thêm tài khoản admin mặc định.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Core/Data/DatabaseService.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(db): add missing ProviderId migration for UserIdentities and fix admin seed"`
+
+### [2026-10-07 09:37] fix(auth): sửa lỗi 500 khi đăng nhập do sai độ dài mật khẩu
+- **Mô tả**: Khi người dùng đăng nhập bằng mật khẩu có độ dài khác với mật khẩu plain-text lưu trong cơ sở dữ liệu, logic đệm chuỗi `PadRight` bị sai làm cho hai mảng byte truyền vào `CryptographicOperations.FixedTimeEquals` có độ dài khác nhau. Điều này khiến .NET ném ra ngoại lệ `ArgumentException` gây ra lỗi 500 Internal Server Error thay vì 401 Unauthorized. Đã sửa lại logic kiểm tra độ dài để trả về 401 hợp lệ.
+- **Tệp thay đổi**:
+  - `ToolCalendar.Api/Security/HybridPasswordHasher.cs` (Sửa đổi)
+- **Lệnh git commit**: `git commit -m "fix(auth): fix 500 error on login caused by ArgumentException in FixedTimeEquals"`
+
+### [2026-10-05 22:15] Sửa lỗi UFW block kết nối nội bộ đến ClamAV trên server
+- **Mô tả**: Sửa lỗi "Hệ thống quét virus đang bảo trì hoặc quá tải" khi upload file trên môi trường production. Nguyên nhân do `ufw deny 3310` đã tạo ra luật `DROP` trong chain `DOCKER-USER` của iptables, dẫn đến việc block cả traffic nội bộ giữa các container trong cùng mạng `tool-calendar-net`. Đã fix trực tiếp trên server bằng cách xóa luật chặn nội bộ.
+- **Tệp thay đổi**:
+  - `Server Config` (Sửa đổi `iptables` rules)
+- **Lệnh git commit**: `git commit -m "fix(infra): resolve clamav connection timeout caused by ufw rules"`
+
 ### [2026-10-05 16:07] Tiếp tục sửa lỗi 500 khi đăng nhập trên production
 - **Mô tả**: Bổ sung `ALTER TABLE` cho 3 cột `SessionId`, `SecurityStamp`, và `CreatedAt` vào `DatabaseService.cs`. Lần trước mới chỉ thêm `AccessFailedCount` và `LockoutEnd`, nhưng backend vẫn ném ra 500 do thiếu 3 cột này khi gọi lệnh SELECT trong `UserRepository.GetUserByUsernameAsync`. 
 - **Tệp thay đổi**:

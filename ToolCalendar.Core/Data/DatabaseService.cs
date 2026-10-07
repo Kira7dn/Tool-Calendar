@@ -299,6 +299,8 @@ namespace ToolCalendar.Data
                 "ALTER TABLE Users ADD COLUMN SessionId TEXT",
                 "ALTER TABLE Users ADD COLUMN SecurityStamp TEXT DEFAULT ''",
                 "ALTER TABLE Users ADD COLUMN CreatedAt TEXT",
+                // UserIdentities
+                "ALTER TABLE UserIdentities ADD COLUMN ProviderId TEXT DEFAULT ''",
                 // Departments
                 "ALTER TABLE Departments ADD COLUMN Code TEXT",
                 "ALTER TABLE Departments ADD COLUMN ParentId INTEGER",
@@ -371,8 +373,8 @@ namespace ToolCalendar.Data
                 long adminId = (long)insertCmd.ExecuteScalar();
 
                 string identSql = @"
-                    INSERT INTO UserIdentities (UserId, Provider, PasswordHash) 
-                    VALUES (@uid, 'local', @hash)";
+                    INSERT INTO UserIdentities (UserId, Provider, ProviderId, PasswordHash) 
+                    VALUES (@uid, 'local', 'admin', @hash)";
                 using var identCmd = new SqliteCommand(identSql, connection);
                 identCmd.Parameters.AddWithValue("@uid", adminId);
                 identCmd.Parameters.AddWithValue("@hash", hash);

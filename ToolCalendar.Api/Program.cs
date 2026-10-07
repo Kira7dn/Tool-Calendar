@@ -71,14 +71,14 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromSeconds(10)
             }));
 
-    // Policy STRICT cho Login: tối đa 5 lần thử / 60 giây / mỗi IP → chống Brute Force
+    // Policy STRICT cho Login: tối đa 20 lần thử / 60 giây / mỗi IP → chống Brute Force
     options.AddPolicy("login-policy", httpContext =>
         RateLimitPartition.GetSlidingWindowLimiter(
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: partition => new SlidingWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
-                PermitLimit = 5,
+                PermitLimit = 20,
                 SegmentsPerWindow = 6,
                 QueueLimit = 0,
                 Window = TimeSpan.FromSeconds(60)

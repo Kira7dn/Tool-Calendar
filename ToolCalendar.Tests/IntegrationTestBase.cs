@@ -36,7 +36,7 @@ namespace ToolCalendar.Tests
             using var updateCmd = new Microsoft.Data.Sqlite.SqliteCommand("UPDATE Users SET PasswordHash = @hash WHERE Username = 'admin'", connection);
             updateCmd.Parameters.AddWithValue("@hash", hash);
             updateCmd.ExecuteNonQuery();
-            
+
             // Wait, we need to create the table since it's only created later by DatabaseService
             using var createUiCmd = new Microsoft.Data.Sqlite.SqliteCommand(@"
                 CREATE TABLE IF NOT EXISTS UserIdentities (
@@ -69,7 +69,7 @@ namespace ToolCalendar.Tests
                         };
                         config.AddInMemoryCollection(configData);
                     });
-                    
+
                     builder.ConfigureServices(services =>
                     {
                         var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ToolCalendar.Services.Security.IClamAvService));
@@ -104,7 +104,7 @@ namespace ToolCalendar.Tests
             {
                 var token = tokenElement.GetString();
                 Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                
+
                 // --- Xử lý CSRF cho các test POST/PUT/DELETE ---
                 // Fake 1 GET request để lấy cookie csrf_token
                 var getResponse = await Client.GetAsync("/api/auth/me");
@@ -119,7 +119,7 @@ namespace ToolCalendar.Tests
                         if (Client.DefaultRequestHeaders.Contains("X-CSRF-Token"))
                             Client.DefaultRequestHeaders.Remove("X-CSRF-Token");
                         Client.DefaultRequestHeaders.Add("X-CSRF-Token", csrfToken);
-                        
+
                         // We also need to add the cookie to subsequent requests.
                         // HttpClient by default doesn't persist cookies unless we configure a CookieContainer,
                         // but setting the Cookie header works for tests.
